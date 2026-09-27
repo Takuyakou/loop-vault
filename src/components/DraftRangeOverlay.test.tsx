@@ -42,7 +42,6 @@ async function mount() {
         draft={draft}
         timeline={timeline}
         totalBars={12}
-        language="en"
         onChange={onChange}
         onPreview={onPreview}
       />,
@@ -96,7 +95,6 @@ async function mountPrimary(
         timeline={primaryTimeline}
         totalBars={totalBars}
         beatsPerBar={4}
-        language="en"
         trackHeightRem={6}
         sourceCandidateIndex={6}
         onChange={onChange}
@@ -141,9 +139,9 @@ describe("DraftRangeOverlay", () => {
 
     expect(harness.container.querySelectorAll('input[type="range"]')).toHaveLength(2);
     expect(harness.container.textContent).toContain("2.1 – 5.4");
-    expect(harness.container.textContent).toContain("Bar");
-    expect(harness.container.textContent).toContain("Harmonic");
-    expect(harness.container.textContent).toContain("Beat");
+    expect(harness.container.textContent).toContain("小節");
+    expect(harness.container.textContent).toContain("コード境界");
+    expect(harness.container.textContent).toContain("拍");
 
     await act(async () => harness.root.unmount());
   });
@@ -154,7 +152,7 @@ describe("DraftRangeOverlay", () => {
       '[data-testid="draft-range-overlay"]',
     )!;
     const harmonic = [...harness.container.querySelectorAll("button")]
-      .find((button) => button.textContent === "Harmonic")!;
+      .find((button) => button.textContent === "コード境界")!;
 
     await act(async () => harmonic.click());
     const harmonicDraft = harness.onChange.mock.calls[0]?.[0];
@@ -191,8 +189,8 @@ describe("DraftRangeOverlay", () => {
     expect(harness.container.querySelector("[data-current-selection]")).not.toBeNull();
     expect(harness.container.querySelector("[data-selection-handle='start']")).not.toBeNull();
     expect(harness.container.querySelector("[data-selection-handle='end']")).not.toBeNull();
-    expect(harness.container.textContent).toContain("Selection: 2.1–5.4");
-    expect(harness.container.textContent).toContain("Created from a manual range");
+    expect(harness.container.textContent).toContain("選択範囲: 2.1〜5.4");
+    expect(harness.container.textContent).toContain("手動範囲から作成");
 
     await act(async () => harness.root.unmount());
   });
@@ -264,10 +262,10 @@ describe("DraftRangeOverlay", () => {
       endHandle.dispatchEvent(pointerEvent("pointerdown", 160));
       harness.track.dispatchEvent(pointerEvent("pointermove", 240));
     });
-    expect(harness.container.textContent).toContain("Selection: 1.1–12.4");
-    expect(harness.container.textContent).toContain("Length: 12 bars");
-    expect(harness.container.textContent).toContain("Chords: 12 events");
-    expect(harness.container.textContent).toContain("Current 1-12 · 12 bars · changing");
+    expect(harness.container.textContent).toContain("選択範囲: 1.1〜12.4");
+    expect(harness.container.textContent).toContain("長さ: 12小節");
+    expect(harness.container.textContent).toContain("コード: 12イベント");
+    expect(harness.container.textContent).toContain("現在 1〜12小節・12小節・変更中");
 
     await act(async () => {
       harness.track.dispatchEvent(pointerEvent("pointerup", 240));
@@ -281,7 +279,7 @@ describe("DraftRangeOverlay", () => {
       endBeat: 4,
     });
     await harness.render(changed);
-    expect(harness.container.textContent).toContain("Current 1-12 · 12 bars · changed");
+    expect(harness.container.textContent).toContain("現在 1〜12小節・12小節・変更済み");
     await act(async () => harness.root.unmount());
   });
 
@@ -295,7 +293,7 @@ describe("DraftRangeOverlay", () => {
       endHandle.dispatchEvent(pointerEvent("pointerdown", 200));
       harness.track.dispatchEvent(pointerEvent("pointermove", 360));
     });
-    expect(harness.container.textContent).toContain("changing");
+    expect(harness.container.textContent).toContain("変更中");
 
     await act(async () => {
       harness.track.dispatchEvent(pointerEvent("lostpointercapture", 360, { buttons: 0 }));
@@ -304,8 +302,8 @@ describe("DraftRangeOverlay", () => {
     });
 
     expect(harness.onChange).not.toHaveBeenCalled();
-    expect(harness.container.textContent).toContain("Selection: 2.1–5.4");
-    expect(harness.container.textContent).not.toContain("changing");
+    expect(harness.container.textContent).toContain("選択範囲: 2.1〜5.4");
+    expect(harness.container.textContent).not.toContain("変更中");
     await act(async () => harness.root.unmount());
   });
 
@@ -323,7 +321,7 @@ describe("DraftRangeOverlay", () => {
     });
 
     expect(harness.onChange).not.toHaveBeenCalled();
-    expect(harness.container.textContent).toContain("Selection: 2.1–5.4");
+    expect(harness.container.textContent).toContain("選択範囲: 2.1〜5.4");
     await act(async () => harness.root.unmount());
   });
 

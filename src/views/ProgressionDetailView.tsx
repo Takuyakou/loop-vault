@@ -70,7 +70,6 @@ import { registerCloseBlocker } from "../store/closeBlocker";
 import {
   progressionDetailCopy,
   type AppCopy,
-  type AppLanguage,
 } from "../i18n";
 import {
   ArrowLeft,
@@ -101,7 +100,6 @@ interface ProgressionDetailViewProps {
   onDirtyChange?: (dirty: boolean) => void;
   setToast: (message: string) => void;
   copy: AppCopy;
-  language: AppLanguage;
   controller?: PlaybackController;
   loadMidiSource?: (path: string) => Promise<MidiSongData>;
   midiExportEnabled?: boolean;
@@ -124,13 +122,12 @@ export function ProgressionDetailView({
   onDirtyChange,
   setToast,
   copy,
-  language,
   controller = playbackController,
   loadMidiSource,
   midiExportEnabled,
   midiExportActions,
 }: ProgressionDetailViewProps) {
-  const text = progressionDetailCopy[language];
+  const text = progressionDetailCopy.ja;
   const meter = beatsPerBar(block.timeSignature);
   const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
@@ -234,10 +231,10 @@ export function ProgressionDetailView({
       };
     } catch (error) {
       return {
-        disabledReason: midiExportDisabledReason(error, language),
+        disabledReason: midiExportDisabledReason(error),
       };
     }
-  }, [editingBlock, idea.bpm, language, showMidiExport]);
+  }, [editingBlock, idea.bpm, showMidiExport]);
 
   function saveChanges() {
     const saved = updateProgressionBlock(
@@ -351,16 +348,12 @@ export function ProgressionDetailView({
 
   async function reextractSourceVoicings() {
     if (!sourceAsset?.path || !loadMidiSource) {
-      setToast(language === "ja"
-        ? "元MIDIファイルを見つけられませんでした。"
-        : "The source MIDI file could not be found.");
+      setToast("元MIDIファイルを見つけられませんでした。");
       return;
     }
     if (
       editable.slots.some((slot) => slot.voicingMemory?.sourceVoicing)
-      && !globalThis.confirm(language === "ja"
-        ? `現在の進行 ${editable.slots.length} コードの元MIDIボイシングを再取得します。続けますか？`
-        : `Re-extract source voicings for ${editable.slots.length} chords?`)
+      && !globalThis.confirm(`現在の進行 ${editable.slots.length} コードの元MIDIボイシングを再取得します。続けますか？`)
     ) {
       return;
     }
@@ -393,12 +386,10 @@ export function ProgressionDetailView({
           : [];
       });
       setEditable((current) => setEditableVoicingMemories(current, updates));
-      setToast(language === "ja"
-        ? `${updates.length}/${editable.slots.length} コードのボイシングを取得しました。保存すると反映されます。`
-        : `Extracted voicings for ${updates.length}/${editable.slots.length} chords. Save to keep them.`);
+      setToast(`${updates.length}/${editable.slots.length} コードのボイシングを取得しました。保存すると反映されます。`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : (
-        language === "ja" ? "元MIDIから取得できませんでした。" : "Could not extract from source MIDI."
+        "元MIDIから取得できませんでした。"
       ));
     } finally {
       setReextracting(false);
@@ -437,7 +428,6 @@ export function ProgressionDetailView({
           ))}
           keySignature={keySignature}
           authorReferenceIndex={authorReferenceIndex}
-          language={language}
           showConfidenceReview={block.analyzerVersion !== TEXT_PROGRESSION_ANALYZER_VERSION}
           quickEditor={{
             onPreview: (slotId, chord) => void previewChord(chord, slotId),
@@ -472,12 +462,10 @@ export function ProgressionDetailView({
                 })),
               ));
             }
-            setToast(language === "ja"
-              ? `元MIDI再生に変更: ${result.changedCount}件`
-              : `Changed to source playback: ${result.changedCount} cards`);
+            setToast(`元MIDI再生に変更: ${result.changedCount}件`);
           }}
         >
-          {language === "ja" ? "対象カードを元MIDI再生に変更" : "Set eligible cards to source playback"}
+          {"対象カードを元MIDI再生に変更"}
         </button>
       </section>
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] py-3">
@@ -501,7 +489,6 @@ export function ProgressionDetailView({
           <span className="mt-2 inline-flex">
             <PracticeProgressBadge
               block={block}
-              language={language}
               effectiveKeySignature={block.detectedKey ?? idea.key}
             />
           </span>
@@ -523,7 +510,7 @@ export function ProgressionDetailView({
             <div className="flex flex-wrap items-center justify-end gap-2" data-testid="chord-context-handoff">
               {selectedChordContextSection ? (
                 <label className="text-xs text-[var(--lv-text-secondary)]">
-                  {language === "ja" ? "Chord Context セクション" : "Chord Context section"}
+                  {"Chord Context セクション"}
                   <select
                     aria-label="Chord Context section"
                     className="ml-1 rounded border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 text-sm text-[var(--lv-text)]"
@@ -533,7 +520,7 @@ export function ProgressionDetailView({
                   >
                     {chordContextSections.map((section) => (
                       <option key={section.id} value={section.id}>
-                        {language === "ja" ? `${section.startBar}–${section.endBar}小節` : `Bars ${section.startBar}–${section.endBar}`}
+                        {`${section.startBar}–${section.endBar}小節`}
                       </option>
                     ))}
                   </select>
@@ -551,7 +538,7 @@ export function ProgressionDetailView({
                 onClick={startChordContextPractice}
               >
                 <Dumbbell aria-hidden="true" size={16} />
-                {language === "ja" ? "練習する" : "Practice"}
+                {"練習する"}
               </Button>
             </div>
           ) : null}
@@ -613,7 +600,6 @@ export function ProgressionDetailView({
           <ProgressionMidiControl
             result={midiExport.result}
             disabledReason={midiExport.disabledReason}
-            language={language}
             setToast={setToast}
             actions={midiExportActions}
           />
@@ -639,7 +625,7 @@ export function ProgressionDetailView({
         </Button>
       </div>
 
-      <SourceBasslineStatus block={editingBlock} progressionEdited={dirty} language={language} />
+      <SourceBasslineStatus block={editingBlock} progressionEdited={dirty} />
 
       <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]" data-progression-detail-editor>
         <section className="min-w-0">
@@ -650,13 +636,11 @@ export function ProgressionDetailView({
             onUndo={() => setEditable((current) => undoProgressionEdit(current))}
             onRedo={() => setEditable((current) => redoProgressionEdit(current))}
             onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
-            language={language}
           />
           <div className="mt-6 border-t border-[var(--lv-border)] pt-4">
             <ProgressionTagsEditor
               block={editingBlock}
               keySignature={block.detectedKey ?? idea.key}
-              language={language}
               onChange={(changes) => {
                 const updated = updateProgressionBlock(idea.id, block.id, changes);
                 if (updated === false) setToast(text.saveFailed);
@@ -681,7 +665,6 @@ export function ProgressionDetailView({
           <ChordInspector
             slot={selectedSlot}
             quickCandidates={selectedQuickCandidates}
-            language={language}
             onPreview={(chord) => void previewChord(chord)}
             playbackSource={playbackSource}
             previewSound={previewSound}
@@ -724,7 +707,6 @@ export function ProgressionDetailView({
                 chord={selectedSlot.currentChord}
                 memory={selectedSlot.voicingMemory}
                 generatedNotes={(block.textSource ? [...voiceTextChordForAudition(selectedSlot.currentChord)] : voiceChordForPreview(selectedSlot.currentChord).notes)}
-                language={language}
                 sourceAvailable={Boolean(sourceAsset?.path && loadMidiSource)}
                 reextracting={reextracting}
                 onMemoryChange={(memory) => setEditable((current) => (
@@ -757,18 +739,16 @@ export function progressionDetailUpdateChanges(
 export function SourceBasslineStatus({
   block,
   progressionEdited,
-  language,
 }: {
   block: SavedProgressionBlock;
   progressionEdited: boolean;
-  language: AppLanguage;
 }) {
   const snapshot = block.sourceBassline;
   if (!snapshot) {
     return (
       <section className="border-b border-[var(--lv-border)] py-3 text-sm" data-testid="source-bassline-detail-status">
         <p className="font-semibold text-[var(--lv-text-secondary)]">
-          {language === "ja" ? "元ベースライン: 未保存" : "Source bassline: Not saved"}
+          {"元ベースライン: 未保存"}
         </p>
       </section>
     );
@@ -776,9 +756,7 @@ export function SourceBasslineStatus({
   const bars = formatExactBars(snapshot.length);
   const relationship = "unavailable" as const;
   const noteFacts = sourceBasslineNoteFacts(snapshot.notes);
-  const harmonyCopy = language === "ja"
-    ? "保存時の和声比較は利用できません。"
-    : "Captured-harmony comparison is unavailable.";
+  const harmonyCopy = "保存時の和声比較は利用できません。";
   return (
     <section
       className="min-w-0 border-b border-[var(--lv-border)] py-3 text-sm"
@@ -787,26 +765,20 @@ export function SourceBasslineStatus({
       data-harmony-relationship={relationship}
     >
       <h3 id="source-bassline-detail-title" className="font-semibold text-[var(--lv-text)]">
-        {language === "ja" ? "元ベースライン: 保存済み" : "Source bassline: Saved"}
+        {"元ベースライン: 保存済み"}
       </h3>
       <p className="mt-1 break-words text-[var(--lv-text-secondary)]">
-        {language === "ja"
-          ? `${snapshot.notes.length}音・${bars}小節・Vault書き出しに含まれます`
-          : `${snapshot.notes.length} notes · ${bars} bars · Included in Vault export`}
+        {`${snapshot.notes.length}音・${bars}小節・Vault書き出しに含まれます`}
       </p>
       <p className="mt-1 break-words text-xs text-[var(--lv-text-muted)]">
-        {language === "ja"
-          ? `${noteFacts.simultaneous ? "同時発音あり" : "同時発音なし"}・${noteFacts.overlap ? "重なりあり" : "重なりなし"}`
-          : `${noteFacts.simultaneous ? "Simultaneous notes present" : "No simultaneous notes"} · ${noteFacts.overlap ? "Overlaps present" : "No overlaps"}`}
+        {`${noteFacts.simultaneous ? "同時発音あり" : "同時発音なし"}・${noteFacts.overlap ? "重なりあり" : "重なりなし"}`}
       </p>
       <p className="mt-1 break-words text-xs text-[var(--lv-text-muted)]">
         {harmonyCopy}
       </p>
       {progressionEdited ? (
         <p className="mt-1 break-words text-xs text-amber-100" aria-live="polite">
-          {language === "ja"
-            ? "コード進行を編集中です。保存済みの元ベースラインは変更されません。"
-            : "The progression is being edited. The saved source bassline remains unchanged."}
+          {"コード進行を編集中です。保存済みの元ベースラインは変更されません。"}
         </p>
       ) : null}
     </section>
@@ -844,18 +816,14 @@ function chordPreviewKey(chord: SavedProgressionBlock["chords"][number]["chord"]
 
 function midiExportDisabledReason(
   error: unknown,
-  language: AppLanguage,
 ): string {
-  const ja = language === "ja";
   if (error instanceof ProgressionMidiExportError) {
     const position = error.eventIndex === undefined
       ? ""
-      : (ja ? `コード${error.eventIndex + 1}: ` : `Chord ${error.eventIndex + 1}: `);
-    return `${position}${ja ? "MIDIに書き出せない内容があります。" : "This item cannot be exported to MIDI."}`;
+      : (`コード${error.eventIndex + 1}: `);
+    return `${position}${"MIDIに書き出せない内容があります。"}`;
   }
-  return ja
-    ? "この進行はMIDIに書き出せません。"
-    : "This progression cannot be exported to MIDI.";
+  return "この進行はMIDIに書き出せません。";
 }
 
 function MetadataBadge({ label, value }: { label: string; value: string }) {

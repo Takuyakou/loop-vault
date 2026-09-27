@@ -1,18 +1,16 @@
 import type { ProgressionEditSummaryItem } from "../../domain/progressionEditing";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 
 interface ProgressionEditSummaryProps {
   items: ProgressionEditSummaryItem[];
-  language: AppLanguage;
   onSelect?: (slotId: string) => void;
 }
 
 export function ProgressionEditSummary({
   items,
-  language,
   onSelect,
 }: ProgressionEditSummaryProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   if (items.length === 0) {
     return null;
   }

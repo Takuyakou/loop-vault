@@ -9,7 +9,6 @@ import {
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
 import type { TimelineRange } from "../domain/midi/manualRange";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
-import type { AppLanguage } from "../i18n";
 import {
   groupTimelineCandidates,
   type TimelineCandidateGroup,
@@ -36,7 +35,6 @@ export interface SongMiniMapProps {
   candidateDatasetKey: string;
   draft?: ManualCandidateDraft;
   activeCandidateId?: string;
-  language: AppLanguage;
   copy: SongMiniMapCopy;
   onCandidateSelect: (candidateId: string) => void;
   onCandidateDoubleClick?: (candidateId: string) => void;
@@ -95,7 +93,6 @@ export function SongMiniMap({
   candidateDatasetKey,
   draft,
   activeCandidateId,
-  language,
   copy,
   onCandidateSelect,
   onCandidateDoubleClick,
@@ -286,7 +283,6 @@ export function SongMiniMap({
           timeline={timeline}
           totalBars={totalBars}
           beatsPerBar={beatsPerBar}
-          language={language}
           trackHeightRem={laneCount * 2 + 2.75}
           {...(draft === undefined ? {} : { draft })}
           {...(sourceCandidateIndex === undefined || sourceCandidateIndex < 1
@@ -313,12 +309,8 @@ export function SongMiniMap({
                 candidate.endBar,
               );
               const label = hasVariants
-                ? language === "ja"
-                  ? `${baseLabel}。候補グループ ${groupIndex + 1}、${group.variants.length}個のバリアント`
-                  : `${baseLabel}. Candidate group ${groupIndex + 1}, ${group.variants.length} variants`
-                : language === "ja"
-                  ? `${baseLabel}。採集範囲の選択プリセット`
-                  : `${baseLabel}. Capture range selection preset`;
+                ? `${baseLabel}。候補グループ ${groupIndex + 1}、${group.variants.length}個のバリアント`
+                : `${baseLabel}。採集範囲の選択プリセット`;
               return (
                 <button
                   key={group.anchor.id}
@@ -341,12 +333,8 @@ export function SongMiniMap({
                       }
                     : {})}
                   title={hasVariants
-                    ? language === "ja"
-                      ? `${label}。クリックしてバリアントを表示`
-                      : `${label}. Click to show variants`
-                    : language === "ja"
-                      ? `${label}・ダブルクリックで候補カードへ移動`
-                      : `${label}. Double-click to reveal the candidate card`}
+                    ? `${label}。クリックしてバリアントを表示`
+                    : `${label}・ダブルクリックで候補カードへ移動`}
                   className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition-shadow focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
                       ? "border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
@@ -383,7 +371,7 @@ export function SongMiniMap({
               data-harmonic-activity-lane
               className="pointer-events-none absolute inset-x-0 bottom-2 z-10 h-2 overflow-hidden border-y border-teal-100/10"
               role="group"
-              aria-label={harmonicActivityLaneLabel(language)}
+              aria-label={harmonicActivityLaneLabel()}
             >
               {harmonicActivity.map((activity) => (
                 <span
@@ -394,7 +382,6 @@ export function SongMiniMap({
                   aria-label={harmonicActivityAriaLabel(
                     activity.bar,
                     activity.level,
-                    language,
                   )}
                   className={`absolute bottom-0 ${harmonicActivityLevelClass(activity.level)}`}
                   style={{
@@ -412,12 +399,10 @@ export function SongMiniMap({
           data-harmonic-activity-legend
           className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--lv-text-muted)]"
           role="group"
-          aria-label={language === "ja"
-            ? "\u548c\u58f0\u6d3b\u52d5\u306e\u51e1\u4f8b"
-            : "Harmonic activity legend"}
+          aria-label={"\u548c\u58f0\u6d3b\u52d5\u306e\u51e1\u4f8b"}
         >
           <span className="font-semibold text-[var(--lv-text-secondary)]">
-            {harmonicActivityLaneLabel(language)}
+            {harmonicActivityLaneLabel()}
           </span>
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1" role="list">
             {(["inactive", "low", "medium", "high"] as const).map((level) => (
@@ -430,7 +415,7 @@ export function SongMiniMap({
                 <span aria-hidden="true" className="w-3 text-center font-mono">
                   {harmonicActivitySymbol(level)}
                 </span>
-                <span>{harmonicActivityTerm(level, language)}</span>
+                <span>{harmonicActivityTerm(level)}</span>
               </span>
             ))}
           </span>
@@ -444,23 +429,19 @@ export function SongMiniMap({
           data-song-minimap-variant-selector={openGroup.anchor.id}
           className="mt-3 min-w-0 border border-teal-300/40 bg-[var(--lv-surface)]/80 p-3"
           role="group"
-          aria-label={language === "ja"
-            ? `候補グループ ${openGroupIndex + 1} のバリアント`
-            : `Candidate group ${openGroupIndex + 1} variants`}
+          aria-label={`候補グループ ${openGroupIndex + 1} のバリアント`}
           onKeyDown={(event) => handleVariantSelectorKeyDown(event, openGroup)}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="min-w-0 break-words text-xs font-semibold text-[var(--lv-text-secondary)]">
-              {language === "ja"
-                ? `候補グループ ${openGroupIndex + 1} · ${openGroup.variants.length}件`
-                : `Candidate group ${openGroupIndex + 1} · ${openGroup.variants.length} variants`}
+              {`候補グループ ${openGroupIndex + 1} · ${openGroup.variants.length}件`}
             </p>
             <button
               type="button"
               className="min-h-8 border border-[var(--lv-border)] px-2 text-xs text-[var(--lv-text-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--lv-accent)]"
               onClick={() => closeVariantSelector(openGroup, true)}
             >
-              {language === "ja" ? "閉じる" : "Close"}
+              {"閉じる"}
             </button>
           </div>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -492,7 +473,6 @@ export function SongMiniMap({
                     variant,
                     openGroupIndex + 1,
                     variantIndex + 1,
-                    language,
                   )}
                   aria-pressed={isActive}
                   className={`flex min-h-10 min-w-0 items-center border px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
@@ -517,7 +497,7 @@ export function SongMiniMap({
                     activateVariant(variant.id, openGroup, false);
                   }}
                 >
-                  <span className="min-w-0 flex-1 break-words">{variantVisibleLabel(variant, language)}</span>
+                  <span className="min-w-0 flex-1 break-words">{variantVisibleLabel(variant)}</span>
                   {isActive ? <Check aria-hidden="true" className="ml-2 inline shrink-0" size={16} /> : null}
                 </button>
               );
@@ -535,39 +515,29 @@ export function SongMiniMap({
 
 function variantVisibleLabel(
   candidate: ProgressionBlockCandidate,
-  language: AppLanguage,
 ): string {
-  return language === "ja"
-    ? `${candidate.lengthBars}小節 · Bar ${candidate.startBar}–${candidate.endBar}`
-    : `${candidate.lengthBars} bars · Bars ${candidate.startBar}–${candidate.endBar}`;
+  return `${candidate.lengthBars}小節 · Bar ${candidate.startBar}–${candidate.endBar}`;
 }
 
 function variantAriaLabel(
   candidate: ProgressionBlockCandidate,
   groupIndex: number,
   variantIndex: number,
-  language: AppLanguage,
 ): string {
-  return language === "ja"
-    ? `候補グループ ${groupIndex}、バリアント ${variantIndex}。${candidate.lengthBars}小節、Bar ${candidate.startBar}–${candidate.endBar}`
-    : `Candidate group ${groupIndex}, variant ${variantIndex}. ${candidate.lengthBars} bars, Bars ${candidate.startBar}–${candidate.endBar}`;
+  return `候補グループ ${groupIndex}、バリアント ${variantIndex}。${candidate.lengthBars}小節、Bar ${candidate.startBar}–${candidate.endBar}`;
 }
 
-function harmonicActivityLaneLabel(language: AppLanguage): string {
-  return language === "ja" ? "\u548c\u58f0\u6d3b\u52d5" : "Harmonic activity";
+function harmonicActivityLaneLabel(): string {
+  return "\u548c\u58f0\u6d3b\u52d5";
 }
 
 function harmonicActivityTerm(
   level: HarmonicActivityLevel,
-  language: AppLanguage,
 ): string {
-  if (language === "ja") {
-    if (level === "inactive") return "\u6d3b\u52d5\u306a\u3057";
-    if (level === "low") return "\u4f4e";
-    if (level === "medium") return "\u4e2d";
-    return "\u9ad8";
-  }
-  return level;
+  if (level === "inactive") return "\u6d3b\u52d5\u306a\u3057";
+  if (level === "low") return "\u4f4e";
+  if (level === "medium") return "\u4e2d";
+  return "\u9ad8";
 }
 
 function harmonicActivitySymbol(level: HarmonicActivityLevel): string {
@@ -580,12 +550,9 @@ function harmonicActivitySymbol(level: HarmonicActivityLevel): string {
 function harmonicActivityAriaLabel(
   bar: number,
   level: HarmonicActivityLevel,
-  language: AppLanguage,
 ): string {
-  const term = harmonicActivityTerm(level, language);
-  return language === "ja"
-    ? `\u548c\u58f0\u6d3b\u52d5: Bar ${bar}\u3001\u5f37\u5ea6 ${term}`
-    : `Harmonic activity: Bar ${bar}, intensity ${term}`;
+  const term = harmonicActivityTerm(level);
+  return `\u548c\u58f0\u6d3b\u52d5: Bar ${bar}\u3001\u5f37\u5ea6 ${term}`;
 }
 
 function harmonicActivityLevelClass(level: HarmonicActivityLevel): string {

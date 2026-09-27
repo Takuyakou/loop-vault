@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { TransportButton } from "../TransportButton";
 import type { TextPlaybackSnapshot, TextTransport, TextTransportState } from "../../audio/textTransport";
-import type { AppLanguage } from "../../i18n";
 
 interface Props {
-  readonly language: AppLanguage;
   readonly transport: TextTransport;
   readonly state: TextTransportState;
   readonly snapshot: TextPlaybackSnapshot;
@@ -19,9 +17,8 @@ function isEditing(target: EventTarget | null): boolean {
   return Boolean(target.closest("input, textarea, select, button, a, [contenteditable='true'], [role='textbox'], [role='spinbutton'], [role='button']"));
 }
 
-export function TextTransportBar({ language, transport, state, snapshot, disabled, sourceMatches,
+export function TextTransportBar({ transport, state, snapshot, disabled, sourceMatches,
   primaryTestId = "text-transport-primary", frozenTestId = "text-transport-frozen" }: Props) {
-  const ja = language === "ja";
   const primary = () => {
     if (disabled) return;
     if (state.status === "playing") transport.pause();
@@ -38,24 +35,24 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   });
-  const primaryLabel = state.status === "playing" ? (ja ? "Ⅱ 一時停止" : "Ⅱ Pause")
-    : state.status === "paused" ? (ja ? "▶ 再開" : "▶ Resume") : (ja ? "▶ 再生" : "▶ Play");
+  const primaryLabel = state.status === "playing" ? ("Ⅱ 一時停止")
+    : state.status === "paused" ? ("▶ 再開") : ("▶ 再生");
   return <div className="lv-text-transport flex items-center gap-1" data-testid="text-transport">
     <TransportButton variant="primary" fixedPrimary data-testid={primaryTestId}
       disabled={disabled || (state.status === "stopped" && snapshot.lengthBeats <= 0)} onClick={primary}>{primaryLabel}</TransportButton>
     <TransportButton variant="neutral" data-testid="text-transport-stop"
-      disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{ja ? "■ 停止" : "■ Stop"}</TransportButton>
+      disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{"■ 停止"}</TransportButton>
     <TransportButton variant="neutral" data-testid="text-transport-beginning"
-      disabled={disabled} aria-label={ja ? "最初から" : "Beginning"} title={ja ? "最初から" : "Beginning"} onClick={() => transport.beginning()}>{ja ? "|◀ 最初から" : "|◀ Beginning"}</TransportButton>
+      disabled={disabled} aria-label={"最初から"} title={"最初から"} onClick={() => transport.beginning()}>{"|◀ 最初から"}</TransportButton>
     <TransportButton variant="loop" active={state.loop} data-testid="text-transport-loop"
-      disabled={disabled} aria-pressed={state.loop} aria-label={(ja ? "全体ループ " : "Loop all ") + (state.loop ? "ON" : "OFF")} onClick={() => transport.setLoop(!state.loop)}>
-      {ja ? "↻ ループ" : "↻ Loop"}</TransportButton>
+      disabled={disabled} aria-pressed={state.loop} aria-label={("全体ループ ") + (state.loop ? "ON" : "OFF")} onClick={() => transport.setLoop(!state.loop)}>
+      {"↻ ループ"}</TransportButton>
     <span className="lv-text-transport-position font-mono text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
     <span className="sr-only" role="status" aria-live="polite" data-testid="text-transport-status">
-      {primaryLabel}{state.status === "stopped" ? (ja ? "・停止中" : " · stopped") : ""}
+      {primaryLabel}{state.status === "stopped" ? ("・停止中") : ""}
     </span>
     {state.snapshot && !sourceMatches ? <span className="text-xs text-[var(--lv-warning)]" data-testid={frozenTestId}>
-      {ja ? "編集中の変更は次回再生から反映されます" : "Edits apply on the next Play."}
+      {"編集中の変更は次回再生から反映されます"}
     </span> : null}
   </div>;
 }

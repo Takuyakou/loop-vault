@@ -105,12 +105,12 @@ describe("SettingsDialog sections", () => {
   });
 
   it("renders the same four-section hierarchy in English", async () => {
-    const mounted = await renderSettings({ language: "en", copy: appCopy.en });
+    const mounted = await renderSettings({ copy: appCopy.ja });
     const text = dialogs()[0]?.textContent;
-    expect(text).toContain(appCopy.en.settingsUi.general);
-    expect(text).toContain(appCopy.en.settingsUi.liveMidiTitle);
-    expect(text).toContain(appCopy.en.settingsUi.data);
-    expect(text).toContain(appCopy.en.settingsUi.analysis);
+    expect(text).toContain(appCopy.ja.settingsUi.general);
+    expect(text).toContain(appCopy.ja.settingsUi.liveMidiTitle);
+    expect(text).toContain(appCopy.ja.settingsUi.data);
+    expect(text).toContain(appCopy.ja.settingsUi.analysis);
     expect(dialogs()[0]?.querySelector("[data-testid='piano-sample-attribution']")?.textContent)
       .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
@@ -160,15 +160,13 @@ describe("SettingsDialog sections", () => {
   });
 
   it("keeps general setting callbacks connected", async () => {
-    const setLanguage = vi.fn();
     const setShowRomanNumerals = vi.fn();
-    const mounted = await renderSettings({ setLanguage, setShowRomanNumerals });
+    const mounted = await renderSettings({ setShowRomanNumerals });
 
-    await changeSelect(document.querySelector<HTMLSelectElement>("#settings-language"), "en");
+    expect(document.querySelector("#settings-language")).toBeNull();
     const degreeToggle = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
     await click(degreeToggle);
 
-    expect(setLanguage).toHaveBeenCalledWith("en");
     expect(document.querySelector("#settings-monthly-goal")).toBeNull();
     expect(setShowRomanNumerals).toHaveBeenCalledWith(false);
     await mounted.unmount();
@@ -327,11 +325,9 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
   await act(async () => {
     root.render(
       <SettingsDialog
-        language="ja"
         showRomanNumerals
         ideas={[]}
         backups={[{ name: "data-backup.json", path: "C:/LoopVault/data-backup.json", createdAt: "2026-07-15T00:00:00.000Z" }]}
-        setLanguage={vi.fn()}
         setShowRomanNumerals={vi.fn()}
         refreshBackups={vi.fn(async () => undefined)}
         restoreBackup={vi.fn(async () => undefined)}

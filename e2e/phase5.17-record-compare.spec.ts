@@ -20,7 +20,7 @@ async function openBasslineReview(page: Page) {
   await page.getByTestId("bass-practice-home-card").getByRole("button").click();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await expect(page.getByTestId("bassline-echo-view")).toBeVisible();
-  await page.getByRole("button", { name: /^(レビュー|Review)$/ }).click();
+  await page.getByRole("button", { name: /^(レビュー)$/ }).click();
 }
 
 test("record, listen back and keep a take with a fake input device", async ({ page }) => {

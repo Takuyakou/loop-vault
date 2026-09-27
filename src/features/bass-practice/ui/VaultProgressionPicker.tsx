@@ -1,5 +1,4 @@
 import { useDeferredValue, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import type { AppLanguage } from "../../../i18n";
 import { Modal } from "../../../components/Modal";
 import { Button } from "../../../components/ui/primitives";
 import {
@@ -12,7 +11,6 @@ import type { VaultChordContextSnapshot } from "../domain";
 const MAX_VISIBLE_CANDIDATES = 50;
 
 export interface VaultProgressionPickerProps {
-  readonly language: AppLanguage;
   readonly candidates: readonly VaultPickerCandidateView[];
   readonly activeSignature?: string;
   readonly disabled?: boolean;
@@ -26,7 +24,6 @@ export interface VaultProgressionPickerProps {
  * The active practice source stays untouched until the user confirms.
  */
 export function VaultProgressionPicker({
-  language,
   candidates,
   activeSignature,
   disabled = false,
@@ -34,7 +31,6 @@ export function VaultProgressionPicker({
   error,
   onConfirm,
 }: VaultProgressionPickerProps) {
-  const ja = language === "ja";
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedSignature, setSelectedSignature] = useState<string>();
@@ -94,7 +90,7 @@ export function VaultProgressionPicker({
       disabled={disabled}
       onClick={openPicker}
     >
-      {ja ? "Vaultから選ぶ" : "Choose from Vault"}
+      {"Vaultから選ぶ"}
     </Button>
     {open ? <Modal
       ariaLabelledBy="vault-progression-picker-heading"
@@ -104,19 +100,19 @@ export function VaultProgressionPicker({
       <section className="min-w-0 p-4 sm:p-5" data-testid="vault-progression-picker">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{ja ? "読み取り専用" : "Read-only"}</p>
+            <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{"読み取り専用"}</p>
             <h2 id="vault-progression-picker-heading" className="mt-1 text-lg font-semibold">
-              {ja ? "Vaultからコード進行を選ぶ" : "Choose a progression from Vault"}
+              {"Vaultからコード進行を選ぶ"}
             </h2>
             <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">
-              {ja ? "確認するまで、現在の練習用コード進行は変わりません。" : "Your current practice progression stays unchanged until you confirm."}
+              {"確認するまで、現在の練習用コード進行は変わりません。"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={closePicker}>{ja ? "閉じる" : "Close"}</Button>
+          <Button variant="ghost" size="sm" onClick={closePicker}>{"閉じる"}</Button>
         </div>
 
         <label className="mt-4 block text-sm font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-progression-picker-search">
-          {ja ? "検索" : "Search"}
+          {"検索"}
         </label>
         <input
           id="vault-progression-picker-search"
@@ -131,20 +127,20 @@ export function VaultProgressionPicker({
             if (event.key === "ArrowDown") moveSelection(event, 1);
             if (event.key === "ArrowUp") moveSelection(event, -1);
           }}
-          placeholder={ja ? "\u30bf\u30a4\u30c8\u30eb\u3001\u30ad\u30fc\u3001\u30b3\u30fc\u30c9\u3001\u30bb\u30af\u30b7\u30e7\u30f3\u3067\u691c\u7d22" : "Search title, key, chords, or section"}
+          placeholder={"\u30bf\u30a4\u30c8\u30eb\u3001\u30ad\u30fc\u3001\u30b3\u30fc\u30c9\u3001\u30bb\u30af\u30b7\u30e7\u30f3\u3067\u691c\u7d22"}
         />
 
-        {loading ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "Vaultの進行を読み込んでいます…" : "Loading Vault progressions…"}</p> : null}
+        {loading ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{"Vaultの進行を読み込んでいます…"}</p> : null}
         {!loading && error ? <p className="mt-4 text-sm text-[var(--lv-danger)]" role="alert">{error}</p> : null}
-        {!loading && !error && candidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "選択できる対応済みの4/4コード進行はまだありません。" : "There are no supported 4/4 Vault progressions to choose from yet."}</p> : null}
-        {!loading && !error && candidates.length > 0 && filteredCandidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "検索に一致するコード進行はありません。" : "No Vault progressions match your search."}</p> : null}
+        {!loading && !error && candidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{"選択できる対応済みの4/4コード進行はまだありません。"}</p> : null}
+        {!loading && !error && candidates.length > 0 && filteredCandidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{"検索に一致するコード進行はありません。"}</p> : null}
 
         {!loading && !error && visibleProgressions.length > 0 ? <>
           <div
             id="vault-progression-picker-candidates"
             className="mt-4 max-h-64 overflow-y-auto rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-2"
             role="group"
-            aria-label={ja ? "Vaultのコード進行候補" : "Vault progression candidates"}
+            aria-label={"Vaultのコード進行候補"}
             onKeyDown={(event) => {
               if (event.key === "ArrowDown") moveSelection(event, 1);
               if (event.key === "ArrowUp") moveSelection(event, -1);
@@ -155,7 +151,7 @@ export function VaultProgressionPicker({
               const snapshot = candidate.safeSnapshot;
               const selected = progression.id === selectedProgression?.id;
               const chords = snapshot.section.chords.map((chord) => chord.label).join(" \u00b7 ");
-              const facts = pickerSnapshotLabel(snapshot, language);
+              const facts = pickerSnapshotLabel(snapshot);
               return <button
                 key={progression.id}
                 ref={(element) => {
@@ -181,14 +177,14 @@ export function VaultProgressionPicker({
               </button>;
             })}
           </div>
-          {filteredProgressions.length > MAX_VISIBLE_CANDIDATES ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" role="status">{ja ? `最初の${MAX_VISIBLE_CANDIDATES}件を表示しています。検索で絞り込んでください。` : `Showing the first ${MAX_VISIBLE_CANDIDATES} matches. Refine your search to narrow the list.`}</p> : null}
+          {filteredProgressions.length > MAX_VISIBLE_CANDIDATES ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" role="status">{`最初の${MAX_VISIBLE_CANDIDATES}件を表示しています。検索で絞り込んでください。`}</p> : null}
           {selectedCandidate ? <section className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-live="polite" data-testid="vault-progression-picker-preview">
-            <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{ja ? "選択したセクション" : "Selected section"}</p>
+            <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{"選択したセクション"}</p>
             <p data-testid="vault-progression-picker-preview-title" className="mt-1 break-words font-medium">{selectedCandidate.displayTitle}</p>
             <p data-testid="vault-progression-picker-preview-chords" className="mt-1 break-words text-sm text-[var(--lv-text-secondary)]">{selectedCandidate.safeSnapshot.section.chords.map((chord) => chord.label).join(" \u00b7 ")}</p>
-            <p data-testid="vault-progression-picker-preview-facts" className="mt-1 text-xs text-[var(--lv-text-muted)]">{pickerSnapshotLabel(selectedCandidate.safeSnapshot, language)}</p>
+            <p data-testid="vault-progression-picker-preview-facts" className="mt-1 text-xs text-[var(--lv-text-muted)]">{pickerSnapshotLabel(selectedCandidate.safeSnapshot)}</p>
             {selectedProgression && selectedProgression.candidates.length > 1 ? <label className="mt-3 block text-sm font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-progression-picker-section">
-              {ja ? "練習する範囲" : "Practice section"}
+              {"練習する範囲"}
               <select
                 id="vault-progression-picker-section"
                 data-testid="vault-progression-picker-section"
@@ -198,7 +194,7 @@ export function VaultProgressionPicker({
                 onKeyDown={(event) => event.stopPropagation()}
               >
                 {selectedProgression.candidates.map((sectionCandidate) => <option key={sectionCandidate.safeSnapshot.signature} value={sectionCandidate.safeSnapshot.signature}>
-                  {pickerSectionLabel(sectionCandidate.safeSnapshot, language)}
+                  {pickerSectionLabel(sectionCandidate.safeSnapshot)}
                 </option>)}
               </select>
             </label> : null}
@@ -206,9 +202,9 @@ export function VaultProgressionPicker({
         </> : null}
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={closePicker}>{ja ? "キャンセル" : "Cancel"}</Button>
+          <Button variant="secondary" onClick={closePicker}>{"キャンセル"}</Button>
           <Button data-testid="vault-progression-picker-confirm" variant="primary" disabled={!selectedCandidate || loading || Boolean(error)} onClick={confirm}>
-            {ja ? "このセクションを使う" : "Use this section"}
+            {"このセクションを使う"}
           </Button>
         </div>
       </section>
@@ -216,13 +212,11 @@ export function VaultProgressionPicker({
   </>;
 }
 
-function pickerSnapshotLabel(snapshot: VaultChordContextSnapshot, language: AppLanguage): string {
-  const bars = language === "ja"
-    ? `${snapshot.section.startBar}–${snapshot.section.endBar}小節`
-    : `bars ${snapshot.section.startBar}–${snapshot.section.endBar}`;
+function pickerSnapshotLabel(snapshot: VaultChordContextSnapshot): string {
+  const bars = `${snapshot.section.startBar}–${snapshot.section.endBar}小節`;
   return `${snapshot.tonalContext.key} · ${bars} · ${snapshot.originalBpm} BPM`;
 }
-function pickerSectionLabel(snapshot: VaultChordContextSnapshot, language: AppLanguage): string {
+function pickerSectionLabel(snapshot: VaultChordContextSnapshot): string {
   const range = `${snapshot.section.startBar}–${snapshot.section.endBar}`;
-  return language === "ja" ? `${range}小節` : `Bars ${range}`;
+  return `${range}小節`;
 }

@@ -78,7 +78,6 @@ import {
   appCopy,
   progressionDetailCopy,
   type AppCopy,
-  type AppLanguage,
 } from "./i18n";
 import {
   registerBrowserCloseGuard,
@@ -214,7 +213,6 @@ function App() {
   const initialize = useStore(defaultVaultStore, (state) => state.initialize);
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
   const backups = useStore(defaultVaultStore, (state) => state.backups);
-  const setLanguage = useStore(defaultVaultStore, (state) => state.setLanguage);
   const setShowRomanNumerals = useStore(defaultVaultStore, (state) => state.setShowRomanNumerals);
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
   const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
@@ -342,28 +340,28 @@ function App() {
     () => view === "practice" && practiceMode === "bass-practice"
       ? buildVaultPickerCandidateViews(
         visibleIdeas,
-        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+        "\u7121\u984c\u306e\u9032\u884c",
       )
       : EMPTY_VAULT_PICKER_CANDIDATES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const vaultSourceBasslines = useMemo(
     () => view === "practice" && practiceMode === "bass-practice"
       ? buildVaultSourceBasslineCandidateViews(
         visibleIdeas,
-        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+        "\u7121\u984c\u306e\u9032\u884c",
       )
       : EMPTY_VAULT_SOURCE_BASSLINES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const voicingLoopVaultCandidates = useMemo(
     () => view === "practice" && practiceMode === "voicing-loop"
       ? buildVoicingLoopVaultCandidates(
         visibleIdeas,
-        settings.language === "ja" ? "無題の進行" : "Untitled progression",
+        "無題の進行",
       )
       : EMPTY_VOICING_LOOP_VAULT_CANDIDATES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const chordContextSnapshots = useMemo(
     () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
@@ -401,18 +399,14 @@ function App() {
   const progressionBlock = progressionIdea?.progressionBlocks?.find(
     (block) => block.id === selectedProgression?.blockId,
   );
-  const language = settings.language;
-  const copy = appCopy[language];
+  const copy = appCopy.ja;
 
   // P8.9-02: a failed save is announced once as a sticky error toast (the header also marks it).
   useEffect(() => {
     if (error && loadStatus === "ready") notifications.notify({ tone: "error", message: error });
   }, [error, loadStatus, notifications]);
 
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
-  const progressionCopy = progressionDetailCopy[language];
+  const progressionCopy = progressionDetailCopy.ja;
 
   useEffect(() => {
     void initialize();
@@ -476,7 +470,7 @@ function App() {
     let unlistenCommand: (() => void) | undefined;
     const sendSnapshot = () => {
       void sendLiveMidiSnapshot(
-        createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+        createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState()),
       ).catch(() => undefined);
     };
     const unsubscribeStore = defaultLiveMidiStore.subscribe(sendSnapshot);
@@ -515,7 +509,7 @@ function App() {
       unsubscribeStore();
       unlistenCommand?.();
     };
-  }, [language]);
+  }, []);
 
   function openDirectVoicingLoop() {
     requestProgressionLeave(() => {
@@ -556,9 +550,7 @@ function App() {
   function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
     const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
     if (!result.ok) {
-      setToast(language === "ja"
-        ? "保存済み進行を確認できないため、Voicing Loopを開始できません。"
-        : "Voicing Loop could not start because the saved progression is unavailable or invalid.");
+      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。");
       return false;
     }
     setPracticeTarget(undefined);
@@ -603,7 +595,7 @@ function App() {
         }
         if (isTauri()) {
           await sendLiveMidiSnapshot(
-            createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+            createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState()),
           ).catch(() => undefined);
         }
       } catch (error) {
@@ -777,7 +769,7 @@ function App() {
           id="main-content"
           ref={mainContentRef}
           tabIndex={-1}
-          aria-label={viewLabel(view, copy)}
+          aria-label={shellTitle(view, practiceMode)}
           className={`min-h-0 min-w-0 flex-1 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
             view === "practice" && practiceMode === "voicing-loop"
               ? "overflow-x-hidden overflow-y-auto py-2"
@@ -789,10 +781,9 @@ function App() {
         }`}>
         {loadStatus === "ready" ? (
           <>
-            <QuarantineNotice count={quarantine.length} copy={copy} language={language} />
+            <QuarantineNotice count={quarantine.length} copy={copy} />
             {sizeRecovery ? (
               <SizeRecoveryNotice
-                language={language}
                 saving={saving}
                 error={error}
                 onOpenVault={() => navigateTo("library")}
@@ -805,7 +796,6 @@ function App() {
                 ) : undefined}
                 ideas={visibleIdeas}
                 copy={copy}
-                language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
                 openDetail={openDetail}
                 openCapture={() => navigateTo("capture")}
@@ -824,13 +814,11 @@ function App() {
                 updateProgressionBlock={updateProgressionBlock}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
               />
             ) : null}
             {view === "capture" ? (
               <CaptureRenderBoundary
-                language={language}
                 resetKey={[
                   analysis.status,
                   analysis.result?.sourceFingerprint,
@@ -878,14 +866,13 @@ function App() {
                       && idea.progressionBlocks?.some((block) => block.id === blockId))) {
                       openProgression(ideaId, blockId);
                     } else {
-                      setToast(language === "ja" ? "保存済み進行を確認できません。" : "The saved progression is unavailable.");
+                      setToast("保存済み進行を確認できません。");
                     }
                   }}
                   openSavedTextProgressionPractice={openProgressionVoicingPractice}
                   updateIdea={updateIdea}
                   setToast={setToast}
                   copy={copy}
-                  language={language}
                   showRomanNumerals={settings.showRomanNumerals ?? true}
                 />
               </CaptureRenderBoundary>
@@ -901,7 +888,6 @@ function App() {
                 requestDelete={requestDelete}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 recoveryPending={Boolean(sizeRecovery)}
               />
             ) : null}
@@ -923,7 +909,6 @@ function App() {
                 onDirtyChange={setProgressionDetailDirty}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 loadMidiSource={loadMidiSource}
               />
             ) : null}
@@ -936,7 +921,6 @@ function App() {
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
                       {practiceData.status === "ready" ? <BassPracticeView
                         key={practiceSession.id}
-                        language={language}
                         chordContextSnapshot={chordContextSnapshot}
                         chordContextSnapshots={chordContextSnapshots}
                         vaultPickerCandidates={vaultPickerCandidates}
@@ -1027,7 +1011,6 @@ function App() {
                     <PracticeView
                       ideas={visibleIdeas}
                       initialTarget={practiceTarget}
-                      language={language}
                       updateProgressionBlock={updateProgressionBlock}
                       openProgression={openProgression}
                       openSettings={() => {
@@ -1042,7 +1025,6 @@ function App() {
                       key={voicingPracticeHandoff?.snapshots[voicingPracticeHandoff.initialSelection]?.fingerprint
                         ?? P527_E2E_FIXTURE?.snapshots[P527_E2E_FIXTURE.initialSelection]?.fingerprint
                         ?? "empty-voicing-loop"}
-                      language={language}
                       snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
@@ -1078,10 +1060,8 @@ function App() {
       {isSettingsOpen ? (
         <SettingsDialog
           ideas={visibleIdeas}
-          language={language}
           backups={backups}
           error={error}
-          setLanguage={setLanguage}
           showRomanNumerals={settings.showRomanNumerals ?? true}
           setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
           refreshBackups={refreshBackups}
@@ -1249,15 +1229,13 @@ function StartupState({
   );
 }
 
-function QuarantineNotice({ count, copy, language }: { count: number; copy: AppCopy; language: AppLanguage }) {
+function QuarantineNotice({ count, copy }: { count: number; copy: AppCopy;}) {
   if (count === 0) return null;
   return (
     <div className="mt-4 border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
       <p>{copy.startup.quarantine(count)}</p>
       <p className="mt-1 text-xs">
-        {language === "ja"
-          ? "不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"
-          : "This Vault is non-writing to prevent an incomplete overwrite. Recover with replace import or a valid backup."}
+        {"不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"}
       </p>
     </div>
   );
@@ -1285,15 +1263,6 @@ function StatusPanel({ title, body }: { title: string; body: string }) {
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 ${className}`}>{children}</section>;
-}
-
-function viewLabel(view: View, copy: AppCopy): string {
-  if (view === "capture") return copy.nav.capture;
-  if (view === "practice") return copy.nav.practice;
-  if (view === "library" || view === "detail" || view === "progression-detail") {
-    return copy.nav.library;
-  }
-  return copy.nav.home;
 }
 
 /** P8.9-02: header screen names follow the Japanese sidebar (proper names stay as they are). */

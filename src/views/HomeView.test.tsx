@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import { appCopy, type AppLanguage } from "../i18n";
+import { appCopy } from "../i18n";
 import { HomeView } from "./HomeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -90,15 +90,6 @@ describe("HomeView hierarchy", () => {
     expect(buttonTexts(container)).not.toContain(appCopy.ja.home.newIdea);
   });
 
-  it("renders the primary heading, summary, and empty actions in English", async () => {
-    const container = await renderHome([], "en");
-
-    expect(container.querySelector("h2")?.textContent).toBe("Today's Loop");
-    expect(buttonTexts(container)).toEqual(expect.arrayContaining([
-      appCopy.en.home.startCapture,
-      appCopy.en.home.openVault,
-    ]));
-  });
 });
 
 function dashboardIdeas(): SongIdea[] {
@@ -155,7 +146,6 @@ function progressionBlock(index: number): SavedProgressionBlock {
 
 async function renderHome(
   ideas: SongIdea[],
-  language: AppLanguage = "ja",
   overrides: {
     setToast?: (message: string) => void;
   } = {},
@@ -164,13 +154,12 @@ async function renderHome(
   document.body.append(container);
   const root = createRoot(container);
   roots.push(root);
-  const copy = appCopy[language];
+  const copy = appCopy.ja;
   await act(async () => {
     root.render(
       <HomeView
         ideas={ideas}
         copy={copy}
-        language={language}
         showRomanNumerals={false}
         openDetail={vi.fn()}
         openCapture={vi.fn()}

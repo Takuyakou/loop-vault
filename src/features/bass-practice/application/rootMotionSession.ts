@@ -121,10 +121,10 @@ export class RootMotionPracticeSession {
 }
 
 function validateAnswerForLevel(level: RootMotionLevel, answer: RootMotionIdentifyAnswer): string | undefined {
-  if (answer.direction !== "same" && answer.direction !== "up" && answer.direction !== "down") return "Choose a direction.";
-  if (level >= 2 && !["same", "second", "third", "fourth", "tritone", "fifth"].includes(String(answer.category))) return "Choose an interval category.";
+  if (answer.direction !== "same" && answer.direction !== "up" && answer.direction !== "down") return "方向を選んでください。";
+  if (level >= 2 && !["same", "second", "third", "fourth", "tritone", "fifth"].includes(String(answer.category))) return "音程の種類を選んでください。";
   const semitones = answer.semitones;
-  if (level >= 3 && (semitones === undefined || !Number.isInteger(semitones) || semitones < 0 || semitones > 7)) return "Choose the exact interval.";
+  if (level >= 3 && (semitones === undefined || !Number.isInteger(semitones) || semitones < 0 || semitones > 7)) return "正確な音程を選んでください。";
   return undefined;
 }
 

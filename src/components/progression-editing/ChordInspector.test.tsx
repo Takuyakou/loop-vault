@@ -29,7 +29,6 @@ describe("ChordInspector playback", () => {
       root.render(
         <ChordInspector
           slot={slot}
-          language="ja"
           keySignature="C major"
           previousChord={{ root: 9, quality: "min7", tensions: [], label: "Am7" }}
           onPreview={vi.fn()}
@@ -87,10 +86,9 @@ describe("ChordInspector playback", () => {
       root.render(
         <ChordInspector
           slot={slot}
-          language="en"
           onPreview={onPreview}
           playbackSource={{ kind: "capture", id: "analysis:test:candidate:one" }}
-          stopLabel="Stop"
+          stopLabel="停止"
           controller={controller}
           onApply={vi.fn()}
           onReset={vi.fn()}
@@ -100,24 +98,24 @@ describe("ChordInspector playback", () => {
 
     const button = (label: string) => container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
 
-    await act(async () => button("Preview original")?.click());
-    expect(button("Stop")?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button("元の検出値を試聴")?.click());
+    expect(button("停止")?.getAttribute("aria-pressed")).toBe("true");
     expect(controller.getState().source?.id).toBe("analysis:test:candidate:one:inspector:slot-1:original");
     expect(onPreview).not.toHaveBeenCalled();
 
-    await act(async () => button("Preview current")?.click());
-    expect(button("Preview original")?.getAttribute("aria-pressed")).toBe("false");
-    expect(button("Stop")?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button("現在のコードを試聴")?.click());
+    expect(button("元の検出値を試聴")?.getAttribute("aria-pressed")).toBe("false");
+    expect(button("停止")?.getAttribute("aria-pressed")).toBe("true");
     expect(controller.getState().source?.id).toBe("analysis:test:candidate:one:inspector:slot-1:current");
 
-    await act(async () => button("Stop")?.click());
+    await act(async () => button("停止")?.click());
     expect(controller.getState().status).toBe("idle");
-    expect(button("Preview current")?.getAttribute("aria-pressed")).toBe("false");
+    expect(button("現在のコードを試聴")?.getAttribute("aria-pressed")).toBe("false");
 
-    await act(async () => button("Preview")?.click());
-    expect(button("Stop")?.textContent).toContain("Stop");
+    await act(async () => button("試聴")?.click());
+    expect(button("停止")?.textContent).toContain("停止");
     expect(controller.getState().source?.id).toBe("analysis:test:candidate:one:inspector:slot-1:draft");
-    await act(async () => button("Stop")?.click());
+    await act(async () => button("停止")?.click());
     expect(controller.getState().status).toBe("idle");
 
     expect(driver.playChord).toHaveBeenCalledTimes(3);
@@ -144,7 +142,6 @@ describe("ChordInspector playback", () => {
       root.render(
         <ChordInspector
           slot={slot}
-          language="ja"
           expanded={false}
           onExpandedChange={onExpandedChange}
           onPreview={vi.fn()}

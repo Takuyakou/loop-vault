@@ -1,9 +1,7 @@
 import { useRef } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
-import type { AppLanguage } from "../../i18n";
 
 interface PreAnalysisTimeScrollbarProps {
-  language: AppLanguage;
   totalBeats: number;
   visibleBeats: number;
   viewportStartBeat: number;
@@ -13,7 +11,6 @@ interface PreAnalysisTimeScrollbarProps {
 }
 
 export function PreAnalysisTimeScrollbar({
-  language,
   totalBeats,
   visibleBeats,
   viewportStartBeat,
@@ -35,9 +32,7 @@ export function PreAnalysisTimeScrollbar({
     Math.max(1, Math.ceil(safeTotal / beatsPerBar)),
     Math.floor(clampedPosition / beatsPerBar) + 1,
   );
-  const valueText = language === "ja"
-    ? `${currentBar}小節目へ移動`
-    : `Move to bar ${currentBar}`;
+  const valueText = `${currentBar}小節目へ移動`;
 
   function updateFromClientX(clientX: number) {
     const track = trackRef.current;
@@ -95,9 +90,7 @@ export function PreAnalysisTimeScrollbar({
     <div className="mt-2">
       <div className="mb-1 flex items-center justify-between gap-3 text-xs text-[var(--lv-text-muted)]">
         <span>
-          {language === "ja"
-            ? "白いバーを動かして移動"
-            : "Drag the white bar to move"}
+          {"白いバーを動かして移動"}
         </span>
         <span aria-live="polite">{valueText}</span>
       </div>
@@ -106,9 +99,7 @@ export function PreAnalysisTimeScrollbar({
         className="relative h-6 touch-none cursor-pointer border-y border-[var(--lv-border-strong)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
         role="slider"
         tabIndex={0}
-        aria-label={language === "ja"
-          ? "ピアノロールの白い移動バー"
-          : "Piano roll white navigation bar"}
+        aria-label={"ピアノロールの白い移動バー"}
         aria-orientation="horizontal"
         aria-valuemin={0}
         aria-valuemax={Math.round(safeTotal * 100) / 100}

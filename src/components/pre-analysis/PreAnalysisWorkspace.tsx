@@ -32,7 +32,6 @@ import {
   type PreAnalysisSelectionPreset,
   type PreAnalysisVoiceRole,
 } from "../../domain/midi/preAnalysis";
-import type { AppLanguage } from "../../i18n";
 import type { VoiceContributionPreset } from "../../domain/midi/types";
 import { needsPreAnalysisReview } from "../../storage/preAnalysisSettings";
 import {
@@ -48,7 +47,6 @@ type PianoRollDisplayScope = "analysis-targets" | "all-voices";
 
 interface PreAnalysisWorkspaceProps {
   session: AnalysisSession;
-  language: AppLanguage;
   busy?: boolean;
   requiresReanalysis?: boolean;
   defaultDetailsExpanded?: boolean;
@@ -63,7 +61,6 @@ interface PreAnalysisWorkspaceProps {
 
 export function PreAnalysisWorkspace({
   session,
-  language,
   busy = false,
   requiresReanalysis = false,
   defaultDetailsExpanded = false,
@@ -75,7 +72,7 @@ export function PreAnalysisWorkspace({
   onPlay,
   onStop,
 }: PreAnalysisWorkspaceProps) {
-  const copy = workspaceCopy(language);
+  const copy = workspaceCopy();
   const [selectedVoiceId, setSelectedVoiceId] = useState(
     session.voices[0]?.id,
   );
@@ -318,7 +315,7 @@ export function PreAnalysisWorkspace({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="lv-section-kicker">
-              MIDI ANALYSIS
+              MIDI解析
             </p>
             <h2 className="mt-1.5 text-xl font-bold">{copy.loadedMidi}</h2>
             <p className="mt-1 max-w-3xl text-sm text-[var(--lv-text-secondary)]">
@@ -404,7 +401,7 @@ export function PreAnalysisWorkspace({
                 {source.displayName}
               </p>
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-                {sourceSummary(source, language)}
+                {sourceSummary(source)}
               </p>
             </div>
           ))}
@@ -452,7 +449,7 @@ export function PreAnalysisWorkspace({
                   checked={follow}
                   onChange={(event) => setFollow(event.currentTarget.checked)}
                 />
-                Follow
+                追従
               </label>
               <span className="ml-auto text-sm text-[var(--lv-text-muted)]">
                 {formatBeatTime(playheadBeat)} / {formatBeatTime(sessionDuration(session))}
@@ -468,7 +465,6 @@ export function PreAnalysisWorkspace({
               <div className="min-w-0">
                 <PreAnalysisPianoRoll
                   session={session}
-                  language={language}
                   selectedVoiceId={selectedVoiceId}
                   zoom={zoom}
                   viewportStartBeat={viewportStartBeat}
@@ -485,7 +481,6 @@ export function PreAnalysisWorkspace({
                   }}
                 />
                 <PreAnalysisTimeScrollbar
-                  language={language}
                   totalBeats={sessionDuration(session)}
                   visibleBeats={pianoRollVisibleBeatCount(session, zoom)}
                   viewportStartBeat={viewportStartBeat}
@@ -813,7 +808,7 @@ export function PreAnalysisWorkspace({
                                       key={kind}
                                       className="border border-sky-400/50 px-2 py-0.5 text-[10px] text-sky-100"
                                     >
-                                      {roleEvidenceLabel(kind, language)}
+                                      {roleEvidenceLabel(kind)}
                                     </span>
                                   ))}
                                   {confidenceBucketForVoice(voice) === "low" ? (
@@ -847,7 +842,7 @@ export function PreAnalysisWorkspace({
               <StatusMessage className="mt-5" tone="warning" title={copy.warnings}>
                 <ul className="mt-2 grid gap-1 text-sm text-amber-100/80">
                   {[...new Set(session.warnings.map((warning) =>
-                    warningLabel(warning.code, language)))].map((warning) => (
+                    warningLabel(warning.code)))].map((warning) => (
                     <li key={warning}>{warning}</li>
                   ))}
                 </ul>
@@ -945,9 +940,8 @@ function confidenceBucketForVoice(
   return "low";
 }
 
-function roleEvidenceLabel(kind: string, language: AppLanguage): string {
-  const labels = language === "ja"
-    ? {
+function roleEvidenceLabel(kind: string): string {
+  const labels = {
         "channel-10": "Channel 10",
         "dominant-program": "主要プログラム",
         "track-name-hint": "トラック名ヒント",
@@ -960,22 +954,8 @@ function roleEvidenceLabel(kind: string, language: AppLanguage): string {
         "percussion-soft-signature": "打楽器傾向",
         "mixed-fallback": "混在の可能性",
         "manual-override": "手動指定",
-      }
-    : {
-        "channel-10": "Channel 10",
-        "dominant-program": "Dominant program",
-        "track-name-hint": "Track-name hint",
-        "low-pitch-center": "Low register",
-        "high-pitch-center": "High register",
-        "time-weighted-monophony": "Monophonic pattern",
-        "time-weighted-polyphony": "Polyphonic pattern",
-        "sustained-duration": "Sustained duration",
-        "stepwise-motion": "Stepwise motion",
-        "percussion-soft-signature": "Percussion pattern",
-        "mixed-fallback": "Mixed fallback",
-        "manual-override": "Manual override",
       };
-  return labels[kind as keyof typeof labels] ?? (language === "ja" ? "追加の根拠" : "Additional evidence");
+  return labels[kind as keyof typeof labels] ?? ("追加の根拠");
 }
 
 function selectableRoleFor(
@@ -986,7 +966,6 @@ function selectableRoleFor(
 
 function sourceSummary(
   source: AnalysisSession["sources"][number],
-  language: AppLanguage,
 ): string {
   const bpm = source.representativeBpm ?? 120;
   const meter = source.timeSignatures[0];
@@ -999,13 +978,12 @@ function sourceSummary(
     formatClock(durationSeconds),
     `${Math.round(bpm)} BPM`,
     meter ? `${meter.numerator}/${meter.denominator}` : "4/4",
-    tempoVariationLabel(source, language),
+    tempoVariationLabel(source),
   ].filter(Boolean).join(" · ");
 }
 
 function tempoVariationLabel(
   source: AnalysisSession["sources"][number],
-  language: AppLanguage,
 ): string | undefined {
   const lowBpm = source.tempoDiagnostics?.weightedP05Bpm;
   const highBpm = source.tempoDiagnostics?.weightedP95Bpm;
@@ -1014,9 +992,7 @@ function tempoVariationLabel(
     || highBpm === undefined) return undefined;
   const low = Math.round(lowBpm);
   const high = Math.round(highBpm);
-  return language === "ja"
-    ? `テンポ変動あり ${low}〜${high} BPM`
-    : `Tempo changes ${low}–${high} BPM`;
+  return `テンポ変動あり ${low}〜${high} BPM`;
 }
 
 function voiceMetadata(
@@ -1078,7 +1054,7 @@ function roleOptions(copy: ReturnType<typeof workspaceCopy>): {
   ];
 }
 
-function warningLabel(code: AnalysisSessionWarningCode, language: AppLanguage): string {
+function warningLabel(code: AnalysisSessionWarningCode): string {
   const ja: Record<AnalysisSessionWarningCode, string> = {
     "tempo-map-mismatch": "追加MIDIのテンポマップがmasterと異なります。masterのテンポを使用します。",
     "time-signature-mismatch": "追加MIDIの拍子がmasterと異なります。",
@@ -1087,152 +1063,75 @@ function warningLabel(code: AnalysisSessionWarningCode, language: AppLanguage): 
     "exact-duplicate": "完全に同じVoiceを検出し、解析の二重加算から除外しました。",
     "near-duplicate": "よく似たVoiceがあります。自動除外せず両方を残しています。",
   };
-  const en: Record<AnalysisSessionWarningCode, string> = {
-    "tempo-map-mismatch": "An added MIDI has a different tempo map. The master tempo will be used.",
-    "time-signature-mismatch": "An added MIDI has a different time signature.",
-    "duration-mismatch": "An added MIDI is substantially different in length.",
-    "start-position-mismatch": "An added MIDI may start at a different position. No automatic alignment is applied.",
-    "exact-duplicate": "An exact duplicate Voice was excluded from double counting.",
-    "near-duplicate": "A similar Voice was found. Both remain included for review.",
-  };
-  return (language === "ja" ? ja : en)[code];
+  return ja[code];
 }
 
-function workspaceCopy(language: AppLanguage) {
-  if (language === "ja") {
-    return {
-      title: "解析するパートを確認",
-      description: "コード解析を始める前に、使うVoiceと役割を確認します。ファイル名とMIDI内容はこの画面だけで使用します。",
-      addMidi: "MIDIを追加",
-      partDetails: "パート詳細",
-      voiceCount: (count: number) => `${count} Voice`,
-      analysisParts: "解析するパート",
-      compactSummary: (name: string) => `解析対象: ${name} 1パート`,
-      optionalDetails: "必要なときだけパート詳細を調整できます",
-      unknownVoice: "Voice",
-      play: "再生",
-      stop: "停止",
-      zoom: "ズーム",
-      pianoRollDisplay: "ピアノロールの表示対象",
-      display: "表示",
-      analysisTargets: "解析対象",
-      allVoices: "全Voice",
-      preset: "解析プリセット",
-      auto: "おまかせ（推奨）",
-      harmonyBass: "和声＋ベース",
-      accompaniment: "伴奏のみ",
-      allPitched: "全パート",
-      custom: "カスタム",
-      voiceContributionPreset: "和声コアの重み",
-      standardContribution: "標準",
-      harmonicCore: "和声コア",
-      harmonicCoreDescription: "テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします",
-      contributionApplyHint: "選択後は「この設定で解析」を押すと結果に反映されます。",
-      harmonicCorePianoRollPreview: "ピアノロールに反映中: 和声を強調し、同じVoice内でも和声音は濃く、メロディ寄りの音は薄く表示し、ベースを解析対象から除外します。結果へ適用するには「この設定で解析」を押してください。",
-      reanalysisRequired: "再解析が必要です",
-      reanalysisRequiredDescription: "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
-      resetAuto: "自動推定に戻す",
-      loadedMidi: "読み込んだMIDI",
-      hideSource: "ファイルを非表示",
-      showSource: "ファイルを表示",
-      muteSource: "ファイルをミュート",
-      unmuteSource: "ファイルのミュートを解除",
-      removeSource: "MIDIを削除",
-      hideVoice: (name: string) => `${name}を非表示`,
-      showVoice: (name: string) => `${name}を表示`,
-      includeVoice: (name: string) => `${name}を解析対象にする`,
-      soloVoice: (name: string) => `${name}をSolo`,
-      muteVoice: (name: string) => `${name}をミュート`,
-      unmuteVoice: (name: string) => `${name}のミュートを解除`,
-      roleFor: (name: string) => `${name}の解析役割`,
-      roleConfidence: (bucket: "high" | "medium" | "low") => `信頼度: ${bucket === "high" ? "High" : bucket === "medium" ? "Medium" : "Low"}`,
-      notes: (count: number) => `${count} notes`,
-      unknownRange: "音域不明",
-      solo: "Solo",
-      harmony: "和声",
-      bass: "ベース",
-      melodyWeak: "メロディ（弱い証拠）",
-      exclude: "除外",
-      review: "\u8981\u78ba\u8a8d",
-      programChanges: "音色変更あり",
-      duplicateExcluded: "重複除外",
-      warnings: "確認事項",
-      analyze: "この構成で解析",
-      preparing: "準備中…",
-      noAudibleVoices: "再生できるVoiceがありません。Solo / Muteを確認してください。",
-      playbackFailed: "MIDIパートを再生できませんでした。",
-      recommendation: (harmony: number, bass: number, excluded: number) =>
-        `解析対象: 和声 ${harmony} / ベース ${bass}・除外 ${excluded}`,
-      targetSummary: (included: number, total: number) =>
-        `${total} Voice中 ${included} Voiceを解析します`,
-      selectAtLeastOne: "解析するVoiceを1つ以上選んでください。",
-    };
-  }
+function workspaceCopy() {
   return {
-    title: "Review parts for analysis",
-    description: "Confirm which Voices and roles to use before chord analysis. File names and MIDI content stay in this runtime screen.",
-    addMidi: "Add MIDI",
-    partDetails: "Part details",
-    voiceCount: (count: number) => `${count} Voices`,
-    analysisParts: "Parts for analysis",
-    compactSummary: (name: string) => `Analysis target: 1 ${name} part`,
-    optionalDetails: "Open part details only when you need to adjust the input",
+    title: "解析するパートを確認",
+    description: "コード解析を始める前に、使うVoiceと役割を確認します。ファイル名とMIDI内容はこの画面だけで使用します。",
+    addMidi: "MIDIを追加",
+    partDetails: "パート詳細",
+    voiceCount: (count: number) => `${count} Voice`,
+    analysisParts: "解析するパート",
+    compactSummary: (name: string) => `解析対象: ${name} 1パート`,
+    optionalDetails: "必要なときだけパート詳細を調整できます",
     unknownVoice: "Voice",
-    play: "Play",
-    stop: "Stop",
-    zoom: "Zoom",
-    pianoRollDisplay: "Piano roll display scope",
-    display: "Display",
-    analysisTargets: "Analysis targets",
-    allVoices: "All Voices",
-    preset: "Analysis preset",
-    auto: "Auto (recommended)",
-    harmonyBass: "Harmony + bass",
-    accompaniment: "Accompaniment only",
-    allPitched: "All parts",
-    custom: "Custom",
-    voiceContributionPreset: "Voice contribution",
-    standardContribution: "Standard",
-    harmonicCore: "Harmonic Core",
-    harmonicCoreDescription: "Reduces melody-derived false detections at the cost of some missed tensions.",
-    contributionApplyHint: "After selecting a mode, choose Analyze this configuration to apply it.",
-    harmonicCorePianoRollPreview: "Piano roll preview: even within one Voice, harmonic notes are stronger, melody-like notes are faded, and bass is excluded. Choose Analyze this configuration to apply it to results.",
-    reanalysisRequired: "Analysis needs to be run again",
-    reanalysisRequiredDescription: "Your changes are not reflected in the result yet. Choose Analyze this configuration.",
-    resetAuto: "Reset to auto",
-    loadedMidi: "Loaded MIDI",
-    hideSource: "Hide file",
-    showSource: "Show file",
-    muteSource: "Mute file",
-    unmuteSource: "Unmute file",
-    removeSource: "Remove MIDI",
-    hideVoice: (name: string) => `Hide ${name}`,
-    showVoice: (name: string) => `Show ${name}`,
-    includeVoice: (name: string) => `Include ${name} in analysis`,
-    soloVoice: (name: string) => `Solo ${name}`,
-    muteVoice: (name: string) => `Mute ${name}`,
-    unmuteVoice: (name: string) => `Unmute ${name}`,
-    roleFor: (name: string) => `Analysis role for ${name}`,
-    roleConfidence: (bucket: "high" | "medium" | "low") => `Confidence: ${bucket === "high" ? "High" : bucket === "medium" ? "Medium" : "Low"}`,
+    play: "再生",
+    stop: "停止",
+    zoom: "ズーム",
+    pianoRollDisplay: "ピアノロールの表示対象",
+    display: "表示",
+    analysisTargets: "解析対象",
+    allVoices: "全Voice",
+    preset: "解析プリセット",
+    auto: "おまかせ（推奨）",
+    harmonyBass: "和声＋ベース",
+    accompaniment: "伴奏のみ",
+    allPitched: "全パート",
+    custom: "カスタム",
+    voiceContributionPreset: "和声コアの重み",
+    standardContribution: "標準",
+    harmonicCore: "和声コア",
+    harmonicCoreDescription: "テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします",
+    contributionApplyHint: "選択後は「この設定で解析」を押すと結果に反映されます。",
+    harmonicCorePianoRollPreview: "ピアノロールに反映中: 和声を強調し、同じVoice内でも和声音は濃く、メロディ寄りの音は薄く表示し、ベースを解析対象から除外します。結果へ適用するには「この設定で解析」を押してください。",
+    reanalysisRequired: "再解析が必要です",
+    reanalysisRequiredDescription: "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
+    resetAuto: "自動推定に戻す",
+    loadedMidi: "読み込んだMIDI",
+    hideSource: "ファイルを非表示",
+    showSource: "ファイルを表示",
+    muteSource: "ファイルをミュート",
+    unmuteSource: "ファイルのミュートを解除",
+    removeSource: "MIDIを削除",
+    hideVoice: (name: string) => `${name}を非表示`,
+    showVoice: (name: string) => `${name}を表示`,
+    includeVoice: (name: string) => `${name}を解析対象にする`,
+    soloVoice: (name: string) => `${name}をSolo`,
+    muteVoice: (name: string) => `${name}をミュート`,
+    unmuteVoice: (name: string) => `${name}のミュートを解除`,
+    roleFor: (name: string) => `${name}の解析役割`,
+    roleConfidence: (bucket: "high" | "medium" | "low") => `信頼度: ${bucket === "high" ? "高" : bucket === "medium" ? "中" : "低"}`,
     notes: (count: number) => `${count} notes`,
-    unknownRange: "range unknown",
+    unknownRange: "音域不明",
     solo: "Solo",
-    harmony: "Harmony",
-    bass: "Bass",
-    melodyWeak: "Melody (weak evidence)",
-    exclude: "Exclude",
-    review: "Review",
-    programChanges: "Program changes",
-    duplicateExcluded: "Duplicate excluded",
-    warnings: "Review notes",
-    analyze: "Analyze this configuration",
-    preparing: "Preparing…",
-    noAudibleVoices: "No audible Voice. Check Solo and Mute.",
-    playbackFailed: "The MIDI parts could not be played.",
+    harmony: "和声",
+    bass: "ベース",
+    melodyWeak: "メロディ（弱い証拠）",
+    exclude: "除外",
+    review: "\u8981\u78ba\u8a8d",
+    programChanges: "音色変更あり",
+    duplicateExcluded: "重複除外",
+    warnings: "確認事項",
+    analyze: "この構成で解析",
+    preparing: "準備中…",
+    noAudibleVoices: "再生できるVoiceがありません。Solo / Muteを確認してください。",
+    playbackFailed: "MIDIパートを再生できませんでした。",
     recommendation: (harmony: number, bass: number, excluded: number) =>
-      `Included: ${harmony} harmony / ${bass} bass · ${excluded} excluded`,
+      `解析対象: 和声 ${harmony} / ベース ${bass}・除外 ${excluded}`,
     targetSummary: (included: number, total: number) =>
-      `${included} of ${total} Voices will be analyzed`,
-    selectAtLeastOne: "Select at least one Voice to analyze.",
+      `${total} Voice中 ${included} Voiceを解析します`,
+    selectAtLeastOne: "解析するVoiceを1つ以上選んでください。",
   };
 }

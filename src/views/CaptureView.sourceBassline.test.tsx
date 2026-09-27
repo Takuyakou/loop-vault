@@ -74,7 +74,6 @@ describe("Capture source bassline save integration", () => {
         onCopyProgression={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         isExpanded
       />
     );

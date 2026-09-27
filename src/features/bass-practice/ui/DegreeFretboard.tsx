@@ -50,7 +50,7 @@ export function DegreeFretboard({
             フレットボード
           </h3>
           <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-            {tuning.length}弦 · {handedness === "left" ? "左利き表示" : "右利き表示"} · fret {fretRange.min}–{fretRange.max}
+            {tuning.length}弦 · {handedness === "left" ? "左利き表示" : "右利き表示"} · フレット {fretRange.min}–{fretRange.max}
           </p>
         </div>
         <div
@@ -64,7 +64,7 @@ export function DegreeFretboard({
             aria-pressed={display === "degree"}
             onClick={() => setDisplay("degree")}
           >
-            Degree
+            度数
           </button>
           <button
             type="button"
@@ -72,7 +72,7 @@ export function DegreeFretboard({
             aria-pressed={display === "note"}
             onClick={() => setDisplay("note")}
           >
-            Note Name
+            音名
           </button>
         </div>
       </div>
@@ -92,7 +92,7 @@ export function DegreeFretboard({
           aria-hidden="true"
         >
           <div className="bg-[var(--lv-surface-raised)] px-2 py-1.5 text-center text-[10px] font-semibold text-[var(--lv-text-muted)]">
-            STRING
+            弦
           </div>
           {visualFrets.map((fret) => (
             <div key={`fret-label-${fret}`} className="bg-[var(--lv-surface-raised)] px-2 py-1.5 text-center text-[10px] font-semibold text-[var(--lv-text-muted)]">

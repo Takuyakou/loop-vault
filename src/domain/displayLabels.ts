@@ -1,6 +1,6 @@
-import type { AppLanguage, Status } from "./types";
+import type { Status } from "./types";
 
-const statusLabels: Record<AppLanguage, Record<Status, string>> = {
+const statusLabels: Record<"ja", Record<Status, string>> = {
   ja: {
     idea: "Idea",
     loop: "ループ",
@@ -10,18 +10,9 @@ const statusLabels: Record<AppLanguage, Record<Status, string>> = {
     hold: "保留",
     abandoned: "没",
   },
-  en: {
-    idea: "Idea",
-    loop: "Loop",
-    arrange: "Arrange",
-    mix: "Mix",
-    done: "Done",
-    hold: "Hold",
-    abandoned: "Abandoned",
-  },
 };
 
-const candidateLabels: Record<AppLanguage, Record<string, string>> = {
+const candidateLabels: Record<"ja", Record<string, string>> = {
   ja: {
     main: "メイン",
     "intro-like": "イントロ向き",
@@ -30,30 +21,22 @@ const candidateLabels: Record<AppLanguage, Record<string, string>> = {
     "chorus-like": "サビ向き",
     "bridge-like": "ブリッジ向き",
   },
-  en: {
-    main: "Main",
-    "intro-like": "Intro-like",
-    turnaround: "Turnaround",
-    variation: "Variation",
-    "chorus-like": "Chorus-like",
-    "bridge-like": "Bridge-like",
-  },
 };
 
-export function statusLabel(status: Status, language: AppLanguage): string {
-  return statusLabels[language][status];
+export function statusLabel(status: Status): string {
+  return statusLabels.ja[status];
 }
 
-export function candidateLabel(label: string, language: AppLanguage): string {
-  return candidateLabels[language][label] ?? label;
+export function candidateLabel(label: string): string {
+  return candidateLabels.ja[label] ?? label;
 }
 
-export function candidateLabelList(labels: readonly string[], language: AppLanguage): string[] {
-  return labels.map((label) => candidateLabel(label, language));
+export function candidateLabelList(labels: readonly string[]): string[] {
+  return labels.map((label) => candidateLabel(label));
 }
 
-export function displayKey(key: string | undefined, language: AppLanguage): string | undefined {
-  if (!key || language !== "ja") return key;
+export function displayKey(key: string | undefined): string | undefined {
+  if (!key) return key;
 
   const match = /^([A-G](?:#|b)?)(?:\s*(major|minor)|m)?$/i.exec(key.trim());
   if (!match) return key;

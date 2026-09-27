@@ -24,7 +24,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "  Changed title  ");
@@ -32,12 +32,12 @@ describe("DetailView save policy", () => {
 
     await blur(title);
     expect(updateIdea).toHaveBeenCalledWith(idea.id, { title: "Changed title" });
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
 
     await act(async () => vi.advanceTimersByTime(599));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
     await act(async () => vi.advanceTimersByTime(1));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
 
     updateIdea.mockClear();
     await focus(title);
@@ -56,7 +56,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await act(async () => title.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
@@ -77,7 +77,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ bpm: 120 });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const bpm = field<HTMLInputElement>(mounted.container, "Edit BPM");
+    const bpm = field<HTMLInputElement>(mounted.container, "BPMを編集");
 
     await focus(bpm);
     await changeValue(bpm, "");
@@ -103,7 +103,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "Local draft");
@@ -129,20 +129,20 @@ describe("DetailView save policy", () => {
   it("resets an active save flash and its timer when the idea changes", async () => {
     const idea = makeIdea({ title: "Original" });
     const mounted = await mountDetail(idea);
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "Saved old title");
     await blur(title);
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
 
     await mounted.render(makeIdea({
       id: "22222222-2222-4222-8222-222222222222",
       title: "Other idea",
     }));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
     await act(async () => vi.advanceTimersByTime(600));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
     await mounted.unmount();
   });
 
@@ -163,8 +163,7 @@ async function mountDetail(
         removeProgressionBlock={vi.fn()}
         requestDelete={vi.fn()}
         setToast={vi.fn()}
-        copy={appCopy.en}
-        language="en"
+        copy={appCopy.ja}
         {...overrides}
       />,
     ));

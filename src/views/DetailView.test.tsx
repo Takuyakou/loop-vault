@@ -49,12 +49,11 @@ describe("DetailView status reasons", () => {
       removeProgressionBlock,
       enqueueUndo,
       vaultEpoch: 7,
-      copy: appCopy.en,
-      language: "en",
+      copy: appCopy.ja,
     });
 
     const deleteButtons = [...mounted.container.querySelectorAll("button")]
-      .filter((button) => button.textContent === "Delete");
+      .filter((button) => button.textContent === "削除");
     expect(deleteButtons).toHaveLength(2);
     await act(async () => deleteButtons[1]?.click());
 
@@ -97,7 +96,7 @@ describe("DetailView status reasons", () => {
     await empty.unmount();
   });
 
-  it("localizes the saved MIDI fallback and clipboard-unavailable toast", async () => {
+  it("shows the saved MIDI fallback and clipboard-unavailable toast in Japanese", async () => {
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
     const block = {
       id: "localized-block",
@@ -116,10 +115,6 @@ describe("DetailView status reasons", () => {
     await clickButton(japanese.container, appCopy.ja.capture.copyProgression);
     expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.detail.copyFailed);
     await japanese.unmount();
-
-    const english = await renderDetail(idea, { copy: appCopy.en, language: "en" });
-    expect(english.container.textContent).toContain("Captured MIDI · Bars 2–5");
-    await english.unmount();
   });
 
   it("uses the Idea fallback key for progression practice state", async () => {
@@ -143,8 +138,7 @@ describe("DetailView status reasons", () => {
       key: "C major",
       progressionBlocks: [practiced],
     }), {
-      copy: appCopy.en,
-      language: "en",
+      copy: appCopy.ja,
     });
 
     const badge = mounted.container.querySelector<HTMLElement>(
@@ -172,7 +166,6 @@ async function renderDetail(
         requestDelete={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         {...overrides}
       />,
     );

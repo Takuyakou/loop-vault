@@ -22,26 +22,26 @@ describe("Root Motion Practice view", () => {
     const playback: RootMotionPlayback = async (_notes, _bpm, callbacks) => { callbacks.onEnded("completed"); };
     const initialSettings = { version: 1 as const, singEnabled: true, singingReferenceMode: "auto" as const, stringCount: 4 as const, handedness: "right" as const, fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 };
     await act(async () => root?.render(<RootMotionPracticeView initialSettings={initialSettings} playback={playback} onHistoryRecorded={onHistoryRecorded} />));
-    await act(async () => button(container, "Listen to example").click());
-    await act(async () => button(container, "Same").click());
-    await act(async () => button(container, "Record answer").click());
+    await act(async () => button(container, "お手本を聴く").click());
+    await act(async () => button(container, "同じ").click());
+    await act(async () => button(container, "回答を確定").click());
     expect(container.querySelector("[data-testid='root-motion-first-answer']")).not.toBeNull();
-    await act(async () => button(container, "Continue to Play").click());
-    await act(async () => button(container, "Finish Play and review").click());
+    await act(async () => button(container, "歌って演奏へ").click());
+    await act(async () => button(container, "演奏を終えてレビューへ").click());
     expect(container.querySelector("[data-testid='root-motion-fretboard']")).not.toBeNull();
     await act(async () => button(container, "good").click());
     expect(onHistoryRecorded).toHaveBeenCalledTimes(1);
-    expect(button(container, "Transfer to a new starting root")).toBeInstanceOf(HTMLButtonElement);
-    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("Transfer");
+    expect(button(container, "別の開始音で移調")).toBeInstanceOf(HTMLButtonElement);
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("移調");
     await act(async () => root?.render(<RootMotionPracticeView initialSettings={{ ...initialSettings, fretRange: { min: 0, max: 12 } }} playback={playback} onHistoryRecorded={onHistoryRecorded} />));
-    expect(button(container, "Transfer to a new starting root")).toBeInstanceOf(HTMLButtonElement);
-    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("Transfer");
+    expect(button(container, "別の開始音で移調")).toBeInstanceOf(HTMLButtonElement);
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("移調");
     expect(JSON.stringify(recordedEntries[0])).not.toMatch(/path|device|audio|rawMidi/i);
   });
 
   test("uses Japanese phase labels and supports an explicit playback stop", async () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
-    await act(async () => root?.render(<RootMotionPracticeView language="ja" playback={async () => undefined} />));
+    await act(async () => root?.render(<RootMotionPracticeView playback={async () => undefined} />));
     expect(container.querySelector("[aria-label='Root Motion Echo\u306e\u9032\u884c']")?.textContent).toContain("\u8074\u304f");
     expect(container.querySelector("label[for='root-motion-note-count']")?.textContent).toBe("\u97f3\u6570");
     await act(async () => button(container, "\u304a\u624b\u672c\u3092\u8074\u304f").click());
@@ -70,7 +70,7 @@ test("lets the player select and persist an eight-note root chain", async () => 
   const captured: Array<{ readonly durationBeats: number }> = [];
   const eightNotePlayback: RootMotionPlayback = async (notes, _bpm, callbacks) => { captured.push(...notes); callbacks.onEnded("completed"); };
   await act(async () => root?.render(<RootMotionPracticeView initialSettings={{ ...initialSettings, rootMotionNoteCount: 8 }} playback={eightNotePlayback} onNoteCountChange={onNoteCountChange} />));
-  await act(async () => button(container, "Listen to example").click());
+  await act(async () => button(container, "お手本を聴く").click());
   expect(captured).toHaveLength(8);
   expect(captured.map((note) => note.durationBeats)).toEqual(Array.from({ length: 8 }, () => 2));
   expect((container.querySelector("[data-testid='root-motion-note-count']") as HTMLSelectElement).value).toBe("8");

@@ -29,7 +29,6 @@ describe("ProgressionLibraryRail", () => {
           entries={entries}
           selectedTagIds={["feature.slash-bass", "use.loop"]}
           scope="all"
-          language="en"
           onToggleTag={onToggleTag}
           onScopeChange={vi.fn()}
         />,
@@ -37,9 +36,9 @@ describe("ProgressionLibraryRail", () => {
     });
 
     const slashBass = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("Slash Bass"));
+      .find((button) => button.textContent?.includes("分数コード"));
     const loop = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("Loop"));
+      .find((button) => button.textContent?.includes("ループ"));
     expect(slashBass?.textContent).toContain("2");
     expect(slashBass?.getAttribute("aria-pressed")).toBe("true");
     expect(loop?.textContent).toContain("2");

@@ -513,7 +513,6 @@ async function renderCaptureProduct(
         updateIdea={vi.fn()}
         setToast={setToast}
         copy={appCopy.ja}
-        language="ja"
         showRomanNumerals
       />
     );

@@ -40,7 +40,6 @@ import {
 } from "../../domain/textProgressionVoicing";
 import type { ChordVoicingMemory } from "../../domain/types";
 import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
-import type { AppLanguage } from "../../i18n";
 import { VoicingPanel } from "../voicing/VoicingPanel";
 import { BpmScrubField } from "../BpmScrubField";
 import { usePreviewSound } from "../PreviewSoundProvider";
@@ -54,7 +53,6 @@ export interface TextProgressionConvertedDraft {
 }
 
 interface TextProgressionCapturePanelProps {
-  readonly language: AppLanguage;
   readonly showRomanNumerals: boolean;
   /** Once converted, the existing ManualCandidateDraft is authoritative. */
   readonly draftActive?: boolean;
@@ -76,7 +74,6 @@ interface TextProgressionCapturePanelProps {
  * explicitly converts a fully valid result into the existing session Draft.
  */
 export function TextProgressionCapturePanel({
-  language,
   showRomanNumerals,
   draftActive = false,
   onConvert,
@@ -141,11 +138,11 @@ export function TextProgressionCapturePanel({
   const styleOptions = useMemo(
     () => TEXT_PROGRESSION_VOICING_STYLES.map((styleId) => ({
       value: styleId,
-      label: voicingStyleLabel(styleId, language),
+      label: voicingStyleLabel(styleId),
       disabled: selectedEvent === undefined
         || textProgressionVoicingNotes(selectedEvent.chord, styleId) === undefined,
     })),
-    [language, selectedEvent],
+    [selectedEvent],
   );
   const selectedStyleValue = selectedMemory?.practiceVoicingOverride?.source === "live-played"
     ? "live-custom"
@@ -156,12 +153,12 @@ export function TextProgressionCapturePanel({
           ...styleOptions,
           {
             value: "live-custom",
-            label: text(language, "Keyboard capture", "鍵盤で記録"),
+            label: "鍵盤で記録",
             disabled: true,
           },
         ]
       : styleOptions,
-    [language, selectedStyleValue, styleOptions],
+    [selectedStyleValue, styleOptions],
   );
 
   useEffect(() => () => onStop(), [onStop]);
@@ -192,7 +189,7 @@ export function TextProgressionCapturePanel({
     onStop();
     const state = confirmedTextProgressionKeyState(keyInput);
     if (state.kind !== "confirmed") {
-      setKeyError(text(language, "Enter a supported key, for example C major.", "C major のような対応キーを入力してください。"));
+      setKeyError("C major のような対応キーを入力してください。");
       return;
     }
     setKeyError(undefined);
@@ -311,28 +308,28 @@ export function TextProgressionCapturePanel({
     keyLabel: confirmedKey ?? null, errors: visibleDiagnostics.length, warnings: 0,
     practiceLimits: 0, hasSource: Boolean(input.trim()),
   });
-  const saveReason = textCaptureSaveReason(statusModel, language);
+  const saveReason = textCaptureSaveReason(statusModel);
   const confirmed = result.keyState.kind === "confirmed";
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
   const modeSelector = (
-    <div className="flex shrink-0 items-center gap-1" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
-      <span className="text-xs text-[var(--lv-text-muted)]">{text(language, "Reading", "読み方")}</span>
+    <div className="flex shrink-0 items-center gap-1" role="group" aria-label={"テキスト記法"}>
+      <span className="text-xs text-[var(--lv-text-muted)]">{"読み方"}</span>
       <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
         onClick={() => switchDialect("standard")}>
-        {text(language, "Standard", "通常")}
+        {"通常"}
       </button>
       <button type="button" className={dialect === "extended" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "extended"} disabled={disabled} data-testid="text-mode-extended"
         onClick={() => switchDialect("extended")}>
-        {text(language, "Extended", "拡張")}
+        {"拡張"}
       </button>
     </div>
   );
   if (dialect === "extended") {
-    return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive}>
-      <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
+    return <TextCaptureShell dialect={dialect} draftActive={draftActive}>
+      <ExtendedTextIntakePanel input={input} disabled={disabled}
         controller={controller} sound={selectedSound} modeSelector={modeSelector}
         onInput={setInput} editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
@@ -341,42 +338,42 @@ export function TextProgressionCapturePanel({
   }
 
   return (
-    <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive}>
+    <TextCaptureShell dialect={dialect} draftActive={draftActive}>
       {/^(?:\s*#|\s*[<>]\s*$)/m.test(input) || /N\.C\./i.test(input) ? (
         <div className="mt-3 flex items-center gap-2 text-sm" data-testid="text-extended-suggestion">
-          <span>{text(language, "This looks like extended notation.", "拡張記法の形式に見えます。")}</span>
+          <span>{"拡張記法の形式に見えます。"}</span>
           <button type="button" className="lv-button-secondary px-2 py-1" disabled={disabled}
             onClick={() => switchDialect("extended")}>
-            {text(language, "Read as Extended", "拡張で読む")}
+            {"拡張で読む"}
           </button>
         </div>
       ) : null}
       <div className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]" data-testid="standard-text-intake">
       <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
         {modeSelector}
-        <label className="lv-text-toolbar-meter text-xs" title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")}>
-          {text(language, "Meter", "拍子")}
-          <select disabled aria-label={text(language, "Meter", "拍子")} title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")} value="4/4" onChange={() => undefined}><option>4/4</option></select>
+        <label className="lv-text-toolbar-meter text-xs" title={"通常モードは4/4のみ"}>
+          {"拍子"}
+          <select disabled aria-label={"拍子"} title={"通常モードは4/4のみ"} value="4/4" onChange={() => undefined}><option>4/4</option></select>
         </label>
         <div className="lv-text-toolbar-key">
-          <span className="text-xs">{text(language, "Key", "キー")}</span>
+          <span className="text-xs">{"キー"}</span>
           <details className="lv-text-key-picker relative">
             <summary className="lv-field-control flex min-h-9 min-w-24 cursor-pointer list-none items-center justify-between gap-2 px-2 text-xs"
-              data-testid="text-key-picker">{confirmedKey ?? text(language, "Unset", "未確定")} <span aria-hidden="true">▾</span></summary>
+              data-testid="text-key-picker">{confirmedKey ?? "未確定"} <span aria-hidden="true">▾</span></summary>
             <div className="lv-text-key-menu absolute left-0 top-full z-40 min-w-64 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-2 shadow-lg">
-              <label htmlFor="text-progression-key" className="sr-only">{text(language, "Key", "キー")}</label>
+              <label htmlFor="text-progression-key" className="sr-only">{"キー"}</label>
               <input id="text-progression-key" list="text-progression-key-options" data-testid="text-progression-key"
                 className="lv-field-control min-h-9 w-36 px-2 text-xs" value={keyInput} disabled={disabled}
                 onChange={event => { onStop(); setKeyInput(event.target.value); }}
-                placeholder={text(language, "Unset", "未確定")} />
+                placeholder={"未確定"} />
               <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
                 <option key={root + mode} value={root + " " + mode} />))}</datalist>
               <button type="button" className="lv-button-secondary ml-1 min-h-9 px-2 text-xs" disabled={disabled}
-                aria-label={text(language, "Confirm key", "キーを確定")} onClick={confirmKey}>
-                {text(language, "Set", "確定")}</button>
+                aria-label={"キーを確定"} onClick={confirmKey}>
+                {"確定"}</button>
               <button type="button" className="lv-button-ghost ml-1 min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey}
-                onClick={clearKey} title={text(language, "Clear key", "キーをクリア")}
-                aria-label={text(language, "Clear key", "キーをクリア")}>×</button>
+                onClick={clearKey} title={"キーをクリア"}
+                aria-label={"キーをクリア"}>×</button>
               {suggestions.length ? <div className="mt-2 flex flex-wrap gap-1" data-testid="text-progression-key-suggestions">
                 {suggestions.map(candidate => <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
                   disabled={disabled} onClick={() => chooseSuggestedKey(candidate.key)}>{candidate.key}</button>)}
@@ -387,19 +384,19 @@ export function TextProgressionCapturePanel({
         <div className="lv-text-toolbar-bpm">
           <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
             label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
-            dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
+            dragLabel={"上下にドラッグしてBPMを変更"}
             value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
             onChange={value => { if (transportState.status === "stopped") onStop();
               transport.setBpm(value); setBpmInput(String(value)); }}
             onExplicitInput={value => { if (transportState.status === "stopped") onStop();
               transport.setBpm(value); setBpmInput(String(value)); }} />
-          {explicitBpm === undefined ? <small className="whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "audition 120", "試聴120")}</small> : null}
+          {explicitBpm === undefined ? <small className="whitespace-nowrap text-[var(--lv-text-muted)]">{"試聴120"}</small> : null}
         </div>
-        <TextTransportBar language={language} transport={transport} state={transportState}
+        <TextTransportBar transport={transport} state={transportState}
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
         {onSaveStandard ? <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
-          <label className="text-xs">{text(language, "Name", "名前")}
+          <label className="text-xs">{"名前"}
             <input className="lv-field-control ml-1 min-h-9 w-24 px-2" maxLength={80}
               data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
               onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
@@ -409,13 +406,13 @@ export function TextProgressionCapturePanel({
             data-testid="text-progression-save" disabled={disabled || !result.canConvert}
             title={!result.canConvert ? saveReason : undefined}
             aria-describedby={!result.canConvert ? "text-progression-save-reason" : undefined}
-            onClick={saveStandard}>{text(language, "Save", "Vaultに保存")}</button>
+            onClick={saveStandard}>{"Vaultに保存"}</button>
           {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="text-progression-save-reason"
             title={saveReason}
             className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
         </div> : null}
       </div>
-      <StandardTextScoreWorkspace language={language} input={input} result={result} statusModel={statusModel} disabled={disabled}
+      <StandardTextScoreWorkspace input={input} result={result} statusModel={statusModel} disabled={disabled}
         editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
         transport={transport} transportState={transportState}
@@ -423,28 +420,24 @@ export function TextProgressionCapturePanel({
           setSaved(false); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
         onSeekBar={bar => transport.seek((bar - 1) * 4)} />
       <p id="text-progression-format" className="sr-only text-[var(--lv-text-muted)]">
-        {text(
-          language,
-          `4/4 only; each bar has 1, 2, or 4 cells; maximum ${TEXT_PROGRESSION_MAX_BARS} bars / ${TEXT_PROGRESSION_MAX_TOKENS} cells. % repeats, _ rests, = holds without re-attack.`,
-          `4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`,
-        )}
+        {`4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`}
       </p>
 
       <span className="sr-only" data-testid="text-progression-key-state">
-        {confirmed ? text(language, `Confirmed: ${result.keyState.key}`, `確定: ${result.keyState.key}`)
-          : text(language, "Only an explicitly confirmed key enables Roman/numeric input and degree display.", "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。")}
+        {confirmed ? `確定: ${result.keyState.key}`
+          : "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。"}
       </span>
       {keyError ? <p role="alert" className="mt-1 text-xs text-[var(--lv-danger)]">{keyError}</p> : null}
 
-      <TextDiagnostics diagnostics={visibleDiagnostics} language={language} />
+      <TextDiagnostics diagnostics={visibleDiagnostics} />
 
       <footer ref={statusBarRef} className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
         <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
-          {textCaptureSummary(statusModel, language)}
+          {textCaptureSummary(statusModel)}
         </span>
         {result.tokens.length ? <details name="capture-details" className="lv-text-detail-popover" data-testid="standard-text-card-details">
           <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
-            {text(language, "Cards", "カード一覧")}
+            {"カード一覧"}
           </summary>
           <TextProgressionCards
             events={result.events}
@@ -454,23 +447,22 @@ export function TextProgressionCapturePanel({
             selectedKey={selectedKey}
             confirmedKey={confirmed ? result.keyState.key : undefined}
             showRomanNumerals={showRomanNumerals}
-            language={language}
             disabled={disabled}
             onSelect={selectEvent}
           />
         </details> : null}
         {selectedEvent && !draftActive ? (
           <details name="capture-details" className="lv-text-detail-popover" data-testid="text-progression-inspector">
-            <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "Selected chord", "選択音")}: <span className="font-mono">{selectedEvent.canonical}</span></summary>
+            <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{"選択音"}: <span className="font-mono">{selectedEvent.canonical}</span></summary>
             <div className="lv-text-inspector-content border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-                  {text(language, "Selected chord", "選択中のコード")}
+                  {"選択中のコード"}
                 </p>
                 <h3 className="mt-1 font-mono text-xl font-semibold">{selectedEvent.canonical}</h3>
                 <p className="mt-1 text-sm text-[var(--lv-text-muted)]">
-                  {timingLabel(selectedEvent, language)}
+                  {timingLabel(selectedEvent)}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -481,7 +473,7 @@ export function TextProgressionCapturePanel({
                   disabled={disabled}
                   onClick={previewSelected}
                 >
-                  {text(language, "Play notes to save", "保存予定音を再生")}
+                  {"保存予定音を再生"}
                 </button>
                 <button
                   type="button"
@@ -489,32 +481,27 @@ export function TextProgressionCapturePanel({
                   disabled={disabled}
                   onClick={onStop}
                 >
-                  {text(language, "Stop", "停止")}
+                  {"停止"}
                 </button>
               </div>
             </div>
             <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-auto-generated">
-              {text(
-                language,
-                `Generated style: ${voicingStyleLabel(selectedStyle, language)}. It is not source MIDI.`,
-                `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
-              )}
+              {`生成スタイル: ${voicingStyleLabel(selectedStyle)}。元MIDIではありません。`}
             </p>
             <details className="mt-3" data-testid="text-progression-detail-expander">
-              <summary className="cursor-pointer text-sm">{text(language, "Chord details", "コード詳細")}</summary>
+              <summary className="cursor-pointer text-sm">{"コード詳細"}</summary>
             <VoicingPanel
               key={selectedKey}
               chord={selectedEvent.chord}
               memory={selectedMemory}
               generatedNotes={selectedGeneratedNotes}
-              language={language}
               sourceAvailable={false}
               sourceApplicable={false}
               onMemoryChange={updateVoicing}
               onReextract={() => undefined}
               styleSelector={{
                 value: selectedStyleValue,
-                label: text(language, "Generated style", "生成スタイル"),
+                label: "生成スタイル",
                 options: selectedStyleOptions,
                 onChange: selectVoicingStyle,
               }}
@@ -524,14 +511,14 @@ export function TextProgressionCapturePanel({
           </details>
         ) : null}
         <details name="capture-details" className="relative ml-auto" data-testid="text-progression-capability-details">
-          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "Availability", "利用条件")}</summary>
-          <TextCapabilityList capabilities={capabilities} language={language} />
+          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{"利用条件"}</summary>
+          <TextCapabilityList capabilities={capabilities} />
         </details>
         <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" data-testid="text-progression-convert"
-          disabled={disabled || !result.canConvert} onClick={convert}>{text(language, "Advanced edit", "詳細編集")}</button>
-        {saved ? <span role="status" className="text-[var(--lv-accent)]">{text(language, "Saved", "保存しました")}</span> : null}
+          disabled={disabled || !result.canConvert} onClick={convert}>{"詳細編集"}</button>
+        {saved ? <span role="status" className="text-[var(--lv-accent)]">{"保存しました"}</span> : null}
         {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">
-          {text(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}</span> : null}
+          {"保存できませんでした。入力内容は保持されています。"}</span> : null}
         <span id="text-progression-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">{saveReason}</span>
       </footer>
       </div>
@@ -547,7 +534,6 @@ function TextProgressionCards({
   selectedKey,
   confirmedKey,
   showRomanNumerals,
-  language,
   disabled,
   onSelect,
 }: {
@@ -558,7 +544,6 @@ function TextProgressionCards({
   readonly selectedKey?: string;
   readonly confirmedKey?: string;
   readonly showRomanNumerals: boolean;
-  readonly language: AppLanguage;
   readonly disabled: boolean;
   readonly onSelect: (event: TextProgressionEvent) => void;
 }) {
@@ -574,18 +559,18 @@ function TextProgressionCards({
     bars.set(token.bar, entries);
   }
   return (
-    <section className="mt-4" aria-label={text(language, "Parsed chords", "\u89e3\u6790\u6e08\u307f\u30b3\u30fc\u30c9")}>
+    <section className="mt-4" aria-label={"\u89e3\u6790\u6e08\u307f\u30b3\u30fc\u30c9"}>
       <div className="space-y-3">
         {[...bars.entries()].map(([bar, barTokens]) => (
           <section
             key={bar}
             role="group"
-            aria-label={barLabel(bar, language)}
+            aria-label={barLabel(bar)}
             data-testid="text-progression-bar"
             className="border-l-2 border-[var(--lv-border)] pl-3"
           >
             <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--lv-text-muted)]">
-              {barLabel(bar, language)}
+              {barLabel(bar)}
             </h3>
             <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               {barTokens.map((token) => {
@@ -593,8 +578,8 @@ function TextProgressionCards({
                 if (!event && valid && (token.raw === "_" || token.raw === "=")) {
                   return (
                     <div key={`${token.index}:${token.range.start}`} className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3" data-testid="text-progression-control-card">
-                      <span className="block font-semibold">{token.raw === "_" ? text(language, "Rest", "休符") : text(language, "Hold", "保持（再発音なし）")}</span>
-                      <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{tokenLocation(token, language)}</span>
+                      <span className="block font-semibold">{token.raw === "_" ? "休符" : "保持（再発音なし）"}</span>
+                      <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{tokenLocation(token)}</span>
                     </div>
                   );
                 }
@@ -607,10 +592,10 @@ function TextProgressionCards({
                     >
                       <span className="block font-semibold text-amber-50">{token.raw}</span>
                       <span className="mt-1 block text-xs text-amber-100">
-                        {text(language, "Needs correction", "\u4fee\u6b63\u304c\u5fc5\u8981")}
+                        {"\u4fee\u6b63\u304c\u5fc5\u8981"}
                       </span>
                       <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">
-                        {tokenLocation(token, language)}
+                        {tokenLocation(token)}
                       </span>
                     </div>
                   );
@@ -619,10 +604,10 @@ function TextProgressionCards({
                 const practice = voicingOverrides.get(key)?.practiceVoicingOverride;
                 const styleId = textProgressionStyleFromSnapshot(practice, event.chord);
                 const voicingState = practice?.source === "live-played"
-                  ? text(language, "Custom / Live MIDI", "カスタム / Live MIDI")
+                  ? "カスタム / Live MIDI"
                   : styleId
-                    ? voicingStyleLabel(styleId, language)
-                    : text(language, "Default / Generated", "標準 / 自動生成");
+                    ? voicingStyleLabel(styleId)
+                    : "標準 / 自動生成";
                 const degree = confirmedKey && showRomanNumerals
                   ? romanNumeralHint(event.chord, confirmedKey)?.label
                   : undefined;
@@ -638,7 +623,7 @@ function TextProgressionCards({
                     onClick={() => onSelect(event)}
                   >
                     <span className="block font-mono font-semibold text-[var(--lv-text)]">{event.canonical}</span>
-                    <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{timingLabel(event, language)}</span>
+                    <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{timingLabel(event)}</span>
                     {degree ? <span className="mt-1 block text-xs text-teal-200">{degree}</span> : null}
                     <span className="mt-1 block text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-voicing-state">
                       {voicingState}
@@ -654,20 +639,18 @@ function TextProgressionCards({
 }
 function TextDiagnostics({
   diagnostics,
-  language,
 }: {
   readonly diagnostics: readonly TextProgressionDiagnostic[];
-  readonly language: AppLanguage;
 }) {
   if (!diagnostics.length) return null;
   return (
     <section id="text-progression-diagnostics" className="mt-2 border-l-2 border-[var(--lv-danger)] px-3 py-1 text-xs" role="status" aria-live="polite" data-testid="text-progression-diagnostics">
-      <h3 className="font-semibold text-[var(--lv-danger)]">{text(language, "Fix before converting", "変換前に修正")}</h3>
+      <h3 className="font-semibold text-[var(--lv-danger)]">{"変換前に修正"}</h3>
       <ul className="mt-1 space-y-1 text-[var(--lv-text-secondary)]">
         {diagnostics.map((diagnostic, index) => (
           <li key={`${diagnostic.code}:${diagnostic.range.start}:${index}`} className="min-w-0 break-words [overflow-wrap:anywhere]">
-            <span className="font-medium">{diagnosticLocation(diagnostic, language)}: </span>
-            {diagnosticMessage(diagnostic, language)}
+            <span className="font-medium">{diagnosticLocation(diagnostic)}: </span>
+            {diagnosticMessage(diagnostic)}
           </li>
         ))}
       </ul>
@@ -677,18 +660,16 @@ function TextDiagnostics({
 
 function TextCapabilityList({
   capabilities,
-  language,
 }: {
   readonly capabilities: readonly TextProgressionCapability[];
-  readonly language: AppLanguage;
 }) {
   return (
     <dl className="mt-4 grid gap-2 text-xs sm:grid-cols-2" data-testid="text-progression-capabilities">
       {capabilities.map((capability) => (
         <div key={capability.name} className="border border-[var(--lv-border)] px-3 py-2">
-          <dt className="font-semibold text-[var(--lv-text)]">{capabilityName(capability.name, language)}</dt>
+          <dt className="font-semibold text-[var(--lv-text)]">{capabilityName(capability.name)}</dt>
           <dd className="mt-1 text-[var(--lv-text-muted)]" data-capability-status={capability.status}>
-            {capabilityStatus(capability.status, language)}: {capabilityReason(capability, language)}
+            {capabilityStatus(capability.status)}: {capabilityReason(capability)}
           </dd>
         </div>
       ))}
@@ -696,8 +677,7 @@ function TextCapabilityList({
   );
 }
 
-function diagnosticMessage(diagnostic: TextProgressionDiagnostic, language: AppLanguage): string {
-  if (language !== "ja") return diagnostic.message;
+function diagnosticMessage(diagnostic: TextProgressionDiagnostic): string {
   const messages: Record<TextProgressionDiagnostic["code"], string> = {
     "empty-input": "少なくとも1つのコード・トークンを入力してください。",
     "input-too-long": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS.toLocaleString("en-US")} UTF-16コード単位です。`,
@@ -723,18 +703,16 @@ function diagnosticMessage(diagnostic: TextProgressionDiagnostic, language: AppL
 
 function capabilityStatus(
   status: TextProgressionCapability["status"],
-  language: AppLanguage,
 ): string {
   const japanese: Record<TextProgressionCapability["status"], string> = {
     supported: "利用可能",
     unsupported: "利用不可",
     unknown: "未判定",
   };
-  return text(language, status, japanese[status]);
+  return japanese[status];
 }
 
-function capabilityReason(capability: TextProgressionCapability, language: AppLanguage): string {
-  if (language !== "ja") return capability.reason;
+function capabilityReason(capability: TextProgressionCapability): string {
   const direct = japaneseCapabilityReason(capability.reason);
   if (direct !== undefined) return direct;
 
@@ -742,7 +720,7 @@ function capabilityReason(capability: TextProgressionCapability, language: AppLa
   if (bassPractice) {
     const upstream = japaneseChordContextReason(bassPractice[2]!)
       ?? "コードコンテキストの利用条件を確認してください。";
-    return `コードコンテキストの条件により、Bass Practiceは${capabilityStatus(capability.status, language)}です。${upstream}`;
+    return `コードコンテキストの条件により、Bass Practiceは${capabilityStatus(capability.status)}です。${upstream}`;
   }
 
   const rootMotion = /^Root Motion depends on an eligible Chord Context snapshot: (.+)$/.exec(capability.reason);
@@ -757,7 +735,7 @@ function capabilityReason(capability: TextProgressionCapability, language: AppLa
     return `選択したRoot Motionチェーンには、${rootCount[1]}個のコード・ルートを含む選択可能で安全なChord Contextセクションがありません。`;
   }
 
-  return `${capabilityName(capability.name, language)}の利用可否は現在「${capabilityStatus(capability.status, language)}」です。`;
+  return `${capabilityName(capability.name)}の利用可否は現在「${capabilityStatus(capability.status)}」です。`;
 }
 
 function japaneseCapabilityReason(reason: string): string | undefined {
@@ -789,14 +767,14 @@ function japaneseChordContextReason(reason: string): string | undefined {
   };
   return messages[reason];
 }
-function voicingStyleLabel(styleId: TextProgressionVoicingStyleId, language: AppLanguage): string {
-  const labels: Record<TextProgressionVoicingStyleId, readonly [string, string]> = {
-    "generated-close": ["Default close", "標準クローズ"],
-    "shell-17": ["Shell 1–7", "シェル 1–7"],
-    "open-17": ["Open 1–7", "オープン 1–7"],
-    "rootless-ab": ["Rootless A/B", "ルートレス A/B"],
+function voicingStyleLabel(styleId: TextProgressionVoicingStyleId): string {
+  const labels: Record<TextProgressionVoicingStyleId, string> = {
+    "generated-close": "標準クローズ",
+    "shell-17": "シェル 1–7",
+    "open-17": "オープン 1–7",
+    "rootless-ab": "ルートレス A/B",
   };
-  return text(language, labels[styleId][0], labels[styleId][1]);
+  return labels[styleId];
 }
 
 function parseExplicitBpm(value: string): number | undefined {
@@ -805,37 +783,30 @@ function parseExplicitBpm(value: string): number | undefined {
   return Number.isFinite(parsed) && parsed >= 30 && parsed <= 240 ? parsed : undefined;
 }
 
-function barLabel(bar: number, language: AppLanguage): string {
-  return text(language, `Bar ${bar}`, `${bar}\u5c0f\u7bc0\u76ee`);
+function barLabel(bar: number): string {
+  return `${bar}\u5c0f\u7bc0\u76ee`;
 }
-function timingLabel(event: TextProgressionEvent, language: AppLanguage): string {
-  return text(
-    language,
-    `Bar ${event.bar}, beat ${event.startBeat}, ${event.durationBeats} beat${event.durationBeats === 1 ? "" : "s"}`,
-    `${event.bar}\u5c0f\u7bc0\u76ee\u30fb${event.startBeat}\u62cd\u76ee\u30fb${event.durationBeats}\u62cd`,
-  );
+function timingLabel(event: TextProgressionEvent): string {
+  return `${event.bar}\u5c0f\u7bc0\u76ee\u30fb${event.startBeat}\u62cd\u76ee\u30fb${event.durationBeats}\u62cd`;
 }
-function tokenLocation(token: TextProgressionToken, language: AppLanguage): string {
+function tokenLocation(token: TextProgressionToken): string {
   const chars = `${token.range.start + 1}-${token.range.end}`;
-  return text(language, `bar ${token.bar}, characters ${chars}`, `${token.bar}\u5c0f\u7bc0\u76ee\u30fb\u6587\u5b57 ${chars}`);
+  return `${token.bar}\u5c0f\u7bc0\u76ee\u30fb\u6587\u5b57 ${chars}`;
 }
-function diagnosticLocation(diagnostic: TextProgressionDiagnostic, language: AppLanguage): string {
+function diagnosticLocation(diagnostic: TextProgressionDiagnostic): string {
   const chars = `${diagnostic.range.start + 1}-${diagnostic.range.end}`;
   return diagnostic.bar === undefined
-    ? text(language, `characters ${chars}`, `\u6587\u5b57 ${chars}`)
-    : text(language, `bar ${diagnostic.bar}, characters ${chars}`, `${diagnostic.bar}\u5c0f\u7bc0\u76ee\u30fb\u6587\u5b57 ${chars}`);
+    ? `\u6587\u5b57 ${chars}`
+    : `${diagnostic.bar}\u5c0f\u7bc0\u76ee\u30fb\u6587\u5b57 ${chars}`;
 }
-function capabilityName(name: TextProgressionCapability["name"], language: AppLanguage): string {
-  const names: Record<TextProgressionCapability["name"], readonly [string, string]> = {
-    "vault-save": ["Vault Save", "Vault\u3078\u4fdd\u5b58"],
-    "chord-dojo": ["Chord Dojo", "Chord Dojo"],
-    "bass-practice": ["Bass Practice", "Bass Practice"],
-    "chord-context": ["Chord Context", "Chord Context"],
-    "root-motion": ["Root Motion", "Root Motion"],
-    "voicing-memory": ["Voicing Memory", "\u30dc\u30a4\u30b7\u30f3\u30b0\u8a18\u61b6"],
+function capabilityName(name: TextProgressionCapability["name"]): string {
+  const names: Record<TextProgressionCapability["name"], string> = {
+    "vault-save": "Vault\u3078\u4fdd\u5b58",
+    "chord-dojo": "Chord Dojo",
+    "bass-practice": "Bass Practice",
+    "chord-context": "Chord Context",
+    "root-motion": "Root Motion",
+    "voicing-memory": "\u30dc\u30a4\u30b7\u30f3\u30b0\u8a18\u61b6",
   };
-  return text(language, names[name][0], names[name][1]);
-}
-function text(language: AppLanguage, english: string, japanese: string): string {
-  return language === "ja" ? japanese : english;
+  return names[name];
 }

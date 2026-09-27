@@ -21,7 +21,7 @@ describe("Voicing Loop timeline geometry", () => {
 
 describe("VL-07 visual presentation", () => {
   it("rounds only the label and keeps sub-beat status explicit", () => {
-    expect([3.312, 2.98, 1.02, 1, 0.72].map((value) => remainingBeatsLabel(value, "ja")))
+    expect([3.312, 2.98, 1.02, 1, 0.72].map((value) => remainingBeatsLabel(value)))
       .toEqual(["あと4拍", "あと3拍", "あと2拍", "あと1拍", "あと1拍未満"]);
   });
   it("bounds visual interpolation to one audio callback interval", () => {

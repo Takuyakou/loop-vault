@@ -73,7 +73,7 @@ async function renderShell({
       settingsOpen={settingsOpen}
       standardTitleBar={standardTitleBar}
       voicingLoopActive={voicingLoopActive}
-      copy={appCopy.en}
+      copy={appCopy.ja}
       saveStatus={saveStatus}
       masterVolume={masterVolume}
       onMasterVolumeChange={onMasterVolumeChange}
@@ -98,7 +98,7 @@ describe("AppShell (P8.9-02)", () => {
     expect(quiet?.getAttribute("aria-label")).toBeNull();
     await act(async () => saved.root.unmount());
 
-    for (const [status, label] of [["saving", "Saving…"], ["unsaved", "Unsaved"], ["error", "Save failed"]] as const) {
+    for (const [status, label] of [["saving", "保存中…"], ["unsaved", "未保存"], ["error", "保存できません"]] as const) {
       const { container, root } = await renderShell({ saveStatus: status });
       const mark = container.querySelector(`[data-save-status="${status}"]`);
       expect(mark?.getAttribute("aria-label")).toBe(label);
@@ -162,15 +162,15 @@ describe("AppShell (P8.9-02)", () => {
     const { container, root } = await renderShell({ masterVolume: 72, onMasterVolumeChange });
     const actions = container.querySelector("[data-global-actions]")!;
     expect([...actions.children].map((child) => child.getAttribute("data-midi-status") ? "midi"
-      : child.getAttribute("aria-label") === "Preview sound" ? "sound"
+      : child.getAttribute("aria-label") === "試聴音色" ? "sound"
         : child.getAttribute("data-testid") === "global-metronome" ? "metronome"
           : child.classList.contains("lv-volume-group") ? "volume"
               : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "metronome", "volume", "save"]);
-    expect(container.querySelector('input[aria-label="Master volume"]')).toBeNull();
+    expect(container.querySelector('input[aria-label="マスター音量"]')).toBeNull();
     const trigger = container.querySelector<HTMLButtonElement>("[data-volume-trigger]");
-    expect(trigger?.getAttribute("aria-label")).toBe("Master volume 72%");
+    expect(trigger?.getAttribute("aria-label")).toBe("マスター音量 72%");
     await act(async () => trigger?.click());
-    const input = container.querySelector<HTMLInputElement>('input[aria-label="Master volume"]');
+    const input = container.querySelector<HTMLInputElement>('input[aria-label="マスター音量"]');
     expect(input?.value).toBe("72");
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, "41");
@@ -198,7 +198,7 @@ describe("AppShell (P8.9-02)", () => {
     await act(async () => callbacks?.onStarted?.());
     const stopButton = container.querySelector<HTMLButtonElement>("[data-playback-level-meter]");
     expect(stopButton?.closest(".lv-volume-group")).not.toBeNull();
-    expect(stopButton?.getAttribute("aria-label")).toBe("Stop current playback");
+    expect(stopButton?.getAttribute("aria-label")).toBe("再生中の音を停止");
     expect(stopButton?.disabled).toBe(false);
     await act(async () => stopButton?.click());
     expect(controller.getState()).toEqual({ status: "idle" });

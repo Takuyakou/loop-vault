@@ -21,14 +21,13 @@ import {
 import { formatProgressionText } from "../domain/progressionText";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import type { AppCopy, AppLanguage } from "../i18n";
+import type { AppCopy } from "../i18n";
 
 
 export function HomeView({
   bassPracticeCard,
   ideas,
   copy,
-  language,
   showRomanNumerals,
   openDetail,
   openCapture,
@@ -38,7 +37,6 @@ export function HomeView({
   bassPracticeCard?: ReactNode;
   ideas: SongIdea[];
   copy: AppCopy;
-  language: AppLanguage;
   showRomanNumerals: boolean;
   openDetail: (id: string) => void;
   openCapture: () => void;
@@ -76,7 +74,7 @@ export function HomeView({
                 </h2>
                 <p className="mt-1.5 text-xs text-[var(--lv-text-muted)]">
                   {focus.focus.bpm ? `${focus.focus.bpm} BPM` : copy.home.bpmUnset}
-                  {focus.focus.key ? ` · ${displayKey(focus.focus.key, language)}` : ""}
+                  {focus.focus.key ? ` · ${displayKey(focus.focus.key)}` : ""}
                 </p>
               </>
             ) : (

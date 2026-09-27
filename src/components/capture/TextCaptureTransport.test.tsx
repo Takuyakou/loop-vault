@@ -26,7 +26,7 @@ function mount() {
   const container = document.createElement("div"); document.body.append(container); containers.push(container);
   const root = createRoot(container);
   return { container, controller, driver,
-    async render() { await act(async () => root.render(<TextProgressionCapturePanel language="en"
+    async render() { await act(async () => root.render(<TextProgressionCapturePanel
       showRomanNumerals={false} controller={controller} onConvert={vi.fn()}
       onPreview={vi.fn()} onStop={() => controller.stop()} onSaveExtended={vi.fn()} />)); },
     async unmount() { await act(async () => root.unmount()); },

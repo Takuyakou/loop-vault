@@ -97,7 +97,7 @@ describe("ProgressionDetailView", () => {
       idea={idea} block={midiBlock} updateProgressionBlock={vi.fn(() => true)}
       duplicateProgressionBlock={vi.fn()} openProgression={vi.fn()} openIdea={vi.fn()}
       openVault={vi.fn()} requestDelete={vi.fn()} setToast={vi.fn()}
-      copy={appCopy.ja} language="ja" />));
+      copy={appCopy.ja} />));
     expect(container.querySelector("[data-chord-card]")?.textContent).toContain("要確認");
     await act(async () => root.unmount());
   });
@@ -119,7 +119,7 @@ describe("ProgressionDetailView", () => {
       idea={idea} block={textBlock} updateProgressionBlock={vi.fn(() => true)}
       duplicateProgressionBlock={vi.fn()} openProgression={vi.fn()} openIdea={vi.fn()}
       openVault={vi.fn()} requestDelete={vi.fn()} setToast={vi.fn()}
-      copy={appCopy.ja} language="ja" />));
+      copy={appCopy.ja} />));
     const card = container.querySelector<HTMLButtonElement>("[data-chord-card]")!;
     expect(card.textContent).not.toContain("要確認");
     await act(async () => card.click());
@@ -151,7 +151,6 @@ describe("ProgressionDetailView", () => {
           requestDelete={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           midiExportEnabled
           midiExportActions={{
             save,
@@ -215,8 +214,7 @@ describe("ProgressionDetailView", () => {
           openVault={vi.fn()}
           requestDelete={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
@@ -251,7 +249,6 @@ describe("ProgressionDetailView", () => {
         requestDelete={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
       />
     );
 
@@ -309,7 +306,6 @@ describe("ProgressionDetailView", () => {
           requestDelete={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
         />,
       );
     });
@@ -369,15 +365,14 @@ describe("ProgressionDetailView", () => {
           openVault={vi.fn()}
           requestDelete={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           controller={controller}
         />,
       );
     });
 
     const electricPiano = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === appCopy.en.capture.electricPiano)!;
+      .find((button) => button.textContent === appCopy.ja.capture.electricPiano)!;
     await act(async () => electricPiano.click());
 
     const card = container.querySelector<HTMLElement>("[data-chord-card]")!;
@@ -396,7 +391,7 @@ describe("ProgressionDetailView", () => {
     expect(document.querySelectorAll("[data-quick-candidate]")).toHaveLength(5);
     expect(document.querySelector("[data-candidate-source='harmonicContext']")).not.toBeNull();
     expect(document.querySelector("[data-style-candidate-unavailable]")?.textContent)
-      .toBe("Style candidates appear after more progressions or accepted edits are verified.");
+      .toBe("スタイル候補は、確認済み進行や採用した修正が増えると表示されます。");
 
     await act(async () => root.unmount());
   });
@@ -450,7 +445,6 @@ describe("ProgressionDetailView", () => {
           requestDelete={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
         />,
       );
     });
@@ -506,21 +500,20 @@ describe("ProgressionDetailView", () => {
           openVault={vi.fn()}
           requestDelete={vi.fn()}
           setToast={setToast}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
 
     const buttons = () => [...container.querySelectorAll<HTMLButtonElement>("button")];
-    const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.en.saveChanges)!;
+    const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;
     expect(save.disabled).toBe(true);
 
     await act(async () => {
       buttons().find((button) => button.textContent?.trim().startsWith("G7"))?.click();
     });
     await act(async () => {
-      buttons().find((button) => button.textContent?.trim() === "Apply")?.click();
+      buttons().find((button) => button.textContent?.trim() === "適用")?.click();
     });
     expect(save.disabled).toBe(false);
 
@@ -535,7 +528,7 @@ describe("ProgressionDetailView", () => {
         chords: [expect.objectContaining({ chord: expect.objectContaining({ label: "G7" }) })],
       }),
     );
-    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.en.savedToast);
+    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.ja.savedToast);
     expect(save.disabled).toBe(true);
 
     await act(async () => root.unmount());
@@ -564,8 +557,7 @@ describe("ProgressionDetailView", () => {
           requestLeave={requestLeave}
           onDirtyChange={onDirtyChange}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
@@ -576,13 +568,13 @@ describe("ProgressionDetailView", () => {
     });
     await act(async () => {
       [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.trim() === "Apply")
+        .find((button) => button.textContent?.trim() === "適用")
         ?.click();
     });
 
     expect(onDirtyChange).toHaveBeenLastCalledWith(true);
     const back = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes(progressionDetailCopy.en.backToVault))!;
+      .find((button) => button.textContent?.includes(progressionDetailCopy.ja.backToVault))!;
     await act(async () => back.click());
 
     expect(requestLeave).toHaveBeenCalledOnce();
@@ -646,8 +638,7 @@ describe("ProgressionDetailView", () => {
           openVault={vi.fn()}
           requestDelete={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
@@ -682,11 +673,11 @@ describe("ProgressionDetailView", () => {
       buttons().find((button) => button.textContent?.trim().startsWith("F7"))?.click();
     });
     await act(async () => {
-      buttons().find((button) => button.textContent?.trim() === "Apply")?.click();
+      buttons().find((button) => button.textContent?.trim() === "適用")?.click();
     });
     expect(cards[1]?.getAttribute("data-selected")).toBe("true");
 
-    const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.en.saveChanges)!;
+    const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;
     await act(async () => save.click());
 
     expect(updateProgressionBlock).toHaveBeenCalledWith(

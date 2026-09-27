@@ -54,8 +54,7 @@ describe("Progression Detail Chord Context handoff", () => {
           requestDelete={vi.fn()}
           openPractice={openPractice}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
@@ -67,7 +66,7 @@ describe("Progression Detail Chord Context handoff", () => {
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
     const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Practice")!;
+      .find((button) => button.textContent?.trim() === "練習する")!;
     await act(async () => practice.click());
 
     expect(openPractice).toHaveBeenCalledOnce();
@@ -104,13 +103,12 @@ describe("Progression Detail Chord Context handoff", () => {
           requestDelete={vi.fn()}
           openPractice={openPractice}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
     const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Practice")!;
+      .find((button) => button.textContent?.trim() === "練習する")!;
     expect(practice.disabled).toBe(true);
     expect(openPractice).not.toHaveBeenCalled();
     await act(async () => root.unmount());
@@ -138,14 +136,13 @@ describe("Progression Detail Chord Context handoff", () => {
           openPractice={openPractice}
           openVoicingPractice={openVoicingPractice}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
         />,
       );
     });
 
     const chordContext = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Practice")!;
+      .find((button) => button.textContent?.trim() === "練習する")!;
     expect(chordContext.disabled).toBe(true);
     const voicingLoop = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-handoff']")!;
     expect(voicingLoop.disabled).toBe(false);

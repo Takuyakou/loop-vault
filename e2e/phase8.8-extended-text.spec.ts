@@ -6,7 +6,7 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   const errors = await capturePageErrors(page);
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-mode-extended").click();
   const intake = capture.getByTestId("extended-text-intake");
@@ -18,13 +18,13 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   await expect(intake.getByTestId("text-preview-attack")).toHaveCount(3);
   await expect(intake.getByTestId("text-preview-rest")).toHaveCount(1);
   await expect(intake.getByTestId("extended-text-metadata")).toHaveCount(0);
-  await intake.getByRole("button", { name: /キー C majorを使う|Use Key: C major/ }).click();
-  await intake.getByRole("button", { name: /BPM 120を使う|Use BPM 120/ }).click();
+  await intake.getByRole("button", { name: /キー C majorを使う/ }).click();
+  await intake.getByRole("button", { name: /BPM 120を使う/ }).click();
   await expect(intake.getByTestId("extended-text-metadata")).toContainText("120 BPM");
   await expect(input).toHaveValue(raw);
   await intake.getByTestId("extended-text-save").click();
-  await expect(page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習|Practice in Voicing Loop/ })).toBeVisible();
-  await page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習|Practice in Voicing Loop/ }).click();
+  await expect(page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習/ })).toBeVisible();
+  await page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習/ }).click();
   await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -34,7 +34,7 @@ test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-mode-extended").focus();
   await page.keyboard.press("Enter");
@@ -54,7 +54,7 @@ test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow
 test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across breakpoints", async ({ page }) => {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   await page.getByTestId("text-mode-extended").click();
   const intake = page.getByTestId("extended-text-intake");
   const input = intake.getByTestId("extended-text-input");
@@ -74,8 +74,8 @@ test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across b
   await page.setViewportSize({ width: 1024, height: 720 });
   await assertNoHorizontalOverflow(page);
   await page.setViewportSize({ width: 899, height: 720 });
-  await expect(intake.getByRole("tab", { name: /入力|Input/ })).toBeVisible();
-  await intake.getByRole("tab", { name: /プレビュー|Preview/ }).click();
+  await expect(intake.getByRole("tab", { name: /入力/ })).toBeVisible();
+  await intake.getByRole("tab", { name: /プレビュー/ }).click();
   await expect(intake.getByTestId("extended-text-preview")).toBeVisible();
   await expect(intake.getByTestId("extended-text-editor")).toBeHidden();
   for (const width of [853, 768, 640]) {
@@ -84,6 +84,6 @@ test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across b
   }
   await page.setViewportSize({ width: 320, height: 720 });
   await assertNoHorizontalOverflow(page);
-  await intake.getByRole("tab", { name: /入力|Input/ }).click();
+  await intake.getByRole("tab", { name: /入力/ }).click();
   await expect(input).toBeVisible();
 });

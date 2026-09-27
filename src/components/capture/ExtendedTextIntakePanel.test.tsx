@@ -27,7 +27,7 @@ describe("P8.8 extended Capture intake", () => {
     document.body.append(container);
     const root = createRoot(container);
     const onSaveExtended = vi.fn((_result: ExtendedTextResult, _title: string) => true);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
     expect(container.querySelector('[data-testid="text-mode-standard"]')?.getAttribute("aria-pressed")).toBe("true");
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="text-progression-input"]')!, "# Key: C major\nC %|= =");
@@ -65,7 +65,7 @@ describe("P8.8 extended Capture intake", () => {
     document.body.append(container);
     const root = createRoot(container);
     const onSaveExtended = vi.fn((_result: ExtendedTextResult) => true);
-    await act(async () => root.render(<TextProgressionCapturePanel language="en" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "C _ =|F");
@@ -81,7 +81,7 @@ describe("P8.8 extended Capture intake", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={vi.fn()} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C///E | F |");
@@ -105,7 +105,7 @@ describe("P8.8 extended Capture intake", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={vi.fn()} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     const editor = container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!;
@@ -144,7 +144,7 @@ describe("P8.8 extended Capture intake", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       controller={controller} onConvert={vi.fn()} onPreview={vi.fn()} onStop={() => controller.stop()}
       onSaveExtended={vi.fn()} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
@@ -182,15 +182,15 @@ describe("P8.8 extended Capture intake", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    await act(async () => root.render(<TextProgressionCapturePanel language="en" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       controller={controller} onConvert={vi.fn()} onPreview={vi.fn()} onStop={() => controller.stop()}
       onSaveExtended={vi.fn()} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C |");
     expect([...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find(button => button.textContent?.includes("Metronome"))).toBeUndefined();
+      .find(button => button.textContent?.includes("メトロノーム"))).toBeUndefined();
     await press([...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find(button => button.textContent?.includes("Loop"))!);
+      .find(button => button.textContent?.includes("ループ"))!);
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
     expect(played).toHaveLength(1);
     expect(played[0]?.every(note => note.velocity !== 46)).toBe(true);
@@ -199,7 +199,7 @@ describe("P8.8 extended Capture intake", () => {
     // timer owns the loop boundary and must not restart early.
     expect(played).toHaveLength(1);
     expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')?.textContent)
-      .toContain("Pause");
+      .toContain("一時停止");
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-transport-stop"]')!);
     await act(async () => root.unmount());
     container.remove();
@@ -210,7 +210,7 @@ describe("P8.8 extended Capture intake", () => {
     document.body.append(container);
     const root = createRoot(container);
     const onSaveExtended = vi.fn(() => true);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!,
@@ -229,7 +229,7 @@ describe("P8.8 extended Capture intake", () => {
     document.body.append(container);
     const root = createRoot(container);
     const onSaveExtended = vi.fn((_result: ExtendedTextResult) => true);
-    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+    await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     const chart = extendedTextSyntheticChart(150);

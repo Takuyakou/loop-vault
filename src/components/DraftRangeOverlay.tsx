@@ -20,13 +20,11 @@ import type {
   CandidateDraftSnapMode,
   ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
-import type { AppLanguage } from "../i18n";
 import { GripVertical, MoveHorizontal } from "lucide-react";
 
 interface DraftRangeOverlayBaseProps {
   timeline: readonly ChordTimelineItem[];
   totalBars: number;
-  language: AppLanguage;
   onPreview?(): void;
 }
 
@@ -65,7 +63,6 @@ function StandaloneDraftRangeOverlay({
   draft,
   timeline,
   totalBars,
-  language,
   onChange,
   onPreview,
 }: StandaloneDraftRangeOverlayProps) {
@@ -171,11 +168,11 @@ function StandaloneDraftRangeOverlay({
   }
 
   const source = draft.source.type === "automatic-candidate"
-    ? language === "ja" ? "自動候補" : "Automatic candidate"
-    : language === "ja" ? "手動範囲" : "Manual range";
-  const title = language === "ja" ? "編集中の範囲" : "Editing range";
-  const startLabel = language === "ja" ? "開始ハンドル" : "Start handle";
-  const endLabel = language === "ja" ? "終了ハンドル" : "End handle";
+    ? "自動候補"
+    : "手動範囲";
+  const title = "編集中の範囲";
+  const startLabel = "開始ハンドル";
+  const endLabel = "終了ハンドル";
 
   return (
     <section
@@ -193,12 +190,12 @@ function StandaloneDraftRangeOverlay({
             {" – "}
             {draft.selectedRange.endBar}.{draft.selectedRange.endBeat}
             {" · "}
-            {draft.lengthBars} {language === "ja" ? "小節" : "bars"}
+            {draft.lengthBars} {"小節"}
             {" · "}
-            {draft.events.length} {language === "ja" ? "コード" : "events"}
+            {draft.events.length} {"コード"}
           </p>
         </div>
-        <div className="flex flex-wrap gap-1" role="group" aria-label={language === "ja" ? "スナップ" : "Snap"}>
+        <div className="flex flex-wrap gap-1" role="group" aria-label={"スナップ"}>
           {(["bar", "harmonic", "beat"] as const).map((mode) => (
             <button
               key={mode}
@@ -211,7 +208,7 @@ function StandaloneDraftRangeOverlay({
               aria-pressed={draft.snapMode === mode}
               onClick={() => setSnap(mode)}
             >
-              {snapLabel(mode, language)}
+              {snapLabel(mode)}
             </button>
           ))}
         </div>
@@ -292,17 +289,13 @@ function StandaloneDraftRangeOverlay({
       </div>
 
       <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
-        {language === "ja"
-          ? "←/→: 範囲移動 · Shift+←/→: 終了 · Alt+Shift+←/→: 開始 · G: スナップ"
-          : "←/→: move · Shift+←/→: end · Alt+Shift+←/→: start · G: snap"}
+        {"←/→: 範囲移動 · Shift+←/→: 終了 · Alt+Shift+←/→: 開始 · G: スナップ"}
       </p>
 
       {confirmDraft === undefined ? null : (
         <div className="mt-3 border border-amber-300/50 p-3" role="alertdialog">
           <p className="text-xs text-amber-100">
-            {language === "ja"
-              ? "この範囲変更では範囲外の編集が失われます。変更を適用しますか？"
-              : "This range change drops edits outside the range. Apply it?"}
+            {"この範囲変更では範囲外の編集が失われます。変更を適用しますか？"}
           </p>
           <div className="mt-2 flex gap-2">
             <button
@@ -310,7 +303,7 @@ function StandaloneDraftRangeOverlay({
               className="min-h-9 border border-amber-300 px-3 text-xs"
               onClick={() => onChange(confirmDraft)}
             >
-              {language === "ja" ? "適用" : "Apply"}
+              {"適用"}
             </button>
             <button
               type="button"
@@ -320,7 +313,7 @@ function StandaloneDraftRangeOverlay({
                 setPending(absolute);
               }}
             >
-              {language === "ja" ? "キャンセル" : "Cancel"}
+              {"キャンセル"}
             </button>
           </div>
         </div>
@@ -359,7 +352,6 @@ function PrimaryDraftRangeOverlay({
   draft,
   timeline,
   totalBars,
-  language,
   beatsPerBar,
   children,
   trackHeightRem,
@@ -668,7 +660,7 @@ function PrimaryDraftRangeOverlay({
   const width = visibleRange
     ? ((visibleRange.endBeat - visibleRange.startBeat) / maximum) * 100
     : 0;
-  const labels = primaryCopy[language];
+  const labels = primaryCopy.ja;
   const source = draft?.source.type === "automatic-candidate"
     ? labels.automaticSource(sourceCandidateIndex)
     : labels.manualSource;
@@ -802,7 +794,7 @@ function PrimaryDraftRangeOverlay({
                   aria-pressed={draft.snapMode === mode}
                   onClick={() => onChange?.(setDraftSnapMode(draft, mode))}
                 >
-                  {snapLabel(mode, language)}
+                  {snapLabel(mode)}
                 </button>
               ))}
             </div>
@@ -875,39 +867,6 @@ const primaryCopy = {
     apply: "適用",
     cancel: "キャンセル",
   },
-  en: {
-    currentSelection: "Current capture range",
-    moveHandle: "Move capture range",
-    selectionBar: (
-      startBar: number,
-      endBar: number,
-      lengthBars: number,
-      changing: boolean,
-      changed: boolean,
-    ) => `Current ${startBar}-${endBar} · ${formatNumber(lengthBars)} bars${
-      changing ? " · changing" : changed ? " · changed" : ""
-    }`,
-    startHandle: "Capture range start handle",
-    endHandle: "Capture range end handle",
-    selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
-      `Current capture range from bar ${startBar} beat ${startBeat} to bar ${endBar} beat ${endBeat}`,
-    range: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
-      `Selection: ${startBar}.${startBeat}–${endBar}.${endBeat}`,
-    length: (bars: number) => `Length: ${formatNumber(bars)} bars`,
-    events: (count: number) => `Chords: ${count} events`,
-    automaticSource: (index?: number) => index
-      ? `Created from automatic candidate ${index}`
-      : "Created from an automatic candidate",
-    manualSource: "Created from a manual range",
-    dirty: "Edited",
-    snap: "Snap",
-    emptySelection: "Choose a candidate or drag an empty area to create a capture range.",
-    keyboardHelp:
-      "←/→ move · Shift+←/→ resize end · Alt+Shift+←/→ resize start · G snap · Space preview · Enter edit",
-    lostEdit: "This range change drops edits outside the range. Apply it?",
-    apply: "Apply",
-    cancel: "Cancel",
-  },
 } as const;
 
 function formatNumber(value: number): string {
@@ -918,8 +877,7 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
-function snapLabel(mode: CandidateDraftSnapMode, language: AppLanguage): string {
-  if (language === "en") return mode === "bar" ? "Bar" : mode === "harmonic" ? "Harmonic" : "Beat";
+function snapLabel(mode: CandidateDraftSnapMode): string {
   return mode === "bar" ? "小節" : mode === "harmonic" ? "コード境界" : "拍";
 }
 

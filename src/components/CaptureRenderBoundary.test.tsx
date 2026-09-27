@@ -24,7 +24,7 @@ describe("CaptureRenderBoundary", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     const onReset = vi.fn();
     await render(
-      <CaptureRenderBoundary language="ja" resetKey="midi-a" onReset={onReset}>
+      <CaptureRenderBoundary resetKey="midi-a" onReset={onReset}>
         <BrokenCapture />
       </CaptureRenderBoundary>,
     );
@@ -42,14 +42,14 @@ describe("CaptureRenderBoundary", () => {
   it("recovers automatically when a different analysis is supplied", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     await render(
-      <CaptureRenderBoundary language="en" resetKey="midi-a" onReset={vi.fn()}>
+      <CaptureRenderBoundary resetKey="midi-a" onReset={vi.fn()}>
         <BrokenCapture />
       </CaptureRenderBoundary>,
     );
     expect(host?.querySelector('[role="alert"]')).not.toBeNull();
 
     await act(async () => root?.render(
-      <CaptureRenderBoundary language="en" resetKey="midi-b" onReset={vi.fn()}>
+      <CaptureRenderBoundary resetKey="midi-b" onReset={vi.fn()}>
         <p>Recovered Capture</p>
       </CaptureRenderBoundary>,
     ));

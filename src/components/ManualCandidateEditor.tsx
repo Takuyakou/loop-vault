@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { AppCopy, AppLanguage } from "../i18n";
+import type { AppCopy } from "../i18n";
 import type { ChordTimelineItem } from "../domain/types";
 import { replaceEditableChord } from "../domain/progressionEditing/chordReplacement";
 import { selectEditableSlot } from "../domain/progressionEditing/editableProgression";
@@ -76,7 +76,6 @@ export interface ManualCandidateEditorProps {
   timeline: readonly ChordTimelineItem[];
   totalBars: number;
   copy: AppCopy;
-  language: AppLanguage;
   keySignature?: string;
   /** Text-entry drafts have no source timeline to retarget. */
   allowRangeAdjustment?: boolean;
@@ -100,7 +99,6 @@ export function ManualCandidateEditor({
   timeline,
   totalBars,
   copy,
-  language,
   keySignature,
   allowRangeAdjustment = true,
   allowStructuralEdits = true,
@@ -128,16 +126,10 @@ export function ManualCandidateEditor({
     [draft, timeline],
   );
   const sourceLabel = draft.source.type === "automatic-candidate"
-    ? language === "ja"
-      ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
-      : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`
+    ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
     : draft.source.type === "text-progression"
-      ? language === "ja"
-        ? "テキスト入力から作成"
-        : "Created from text entry"
-      : language === "ja"
-        ? "手動範囲から作成"
-        : "Created from manual range";
+      ? "テキスト入力から作成"
+      : "手動範囲から作成";
 
   useEffect(() => {
     setEditable(createEditable(draft));
@@ -444,7 +436,6 @@ export function ManualCandidateEditor({
           onSelect={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
           onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
           {...(keySignature === undefined ? {} : { keySignature })}
-          language={language}
           showConfidenceReview={showConfidenceReview}
           {...(allowStructuralEdits ? {
             contextActions: {
@@ -479,7 +470,6 @@ export function ManualCandidateEditor({
 
       {allowRangeAdjustment ? <DraftBoundaryHandles
         draft={draft}
-        language={language}
         onChange={applyHistoryDraft}
       /> : null}
 
@@ -504,19 +494,17 @@ export function ManualCandidateEditor({
 
       <div className="mt-3" data-testid="draft-voicing">
         {restOnly ? <p className="text-sm text-[var(--lv-text-secondary)]" data-testid="draft-rest-only">
-          {language === "ja" ? `休符のみ · ${draft.lengthBars}小節（発音なし）` : `Rests only · ${draft.lengthBars} bars (silent)`}
+          {`休符のみ · ${draft.lengthBars}小節（発音なし）`}
         </p> : <VoicingSourceChip
           status={voicingSource.status}
           reason={voicingSource.reason}
           sourceAbsentByDesign={draft.source.type === "text-progression"}
-          language={language}
           testId="capture-voicing-source-chip"
         />}
       </div>
 
       <CaptureEditHistoryPanel
         draft={draft}
-        language={language}
         onJump={(historyIndex) => applyHistoryDraft(
           jumpCaptureDraftHistory(draft, historyIndex),
         )}

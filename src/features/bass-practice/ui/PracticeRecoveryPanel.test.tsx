@@ -21,14 +21,14 @@ test("offers honest retry and selected validated-backup recovery controls", asyn
       onStartFresh={startFresh}
     />,
   ));
-  expect(container.textContent).toContain("fully validated before replacement");
+  expect(container.textContent).toContain("置き換える前にすべて検証します");
   expect(container.textContent).not.toMatch(/accuracy|automatic score/i);
   const buttons = [...container.querySelectorAll("button")];
-  await act(async () => buttons.find(({ textContent }) => textContent?.includes("Restore backup r7"))?.click());
+  await act(async () => buttons.find(({ textContent }) => textContent?.includes("バックアップ r7 を復元"))?.click());
   expect(restore).toHaveBeenCalledWith("practice-20260802-123456-000000.json");
-  await act(async () => buttons.find(({ textContent }) => textContent?.includes("Retry load"))?.click());
+  await act(async () => buttons.find(({ textContent }) => textContent?.includes("もう一度読み込む"))?.click());
   expect(retry).toHaveBeenCalledOnce();
-  await act(async () => buttons.find(({ textContent }) => textContent?.includes("Start Fresh"))?.click());
+  await act(async () => buttons.find(({ textContent }) => textContent?.includes("新しく始める"))?.click());
   expect(startFresh).toHaveBeenCalledOnce();
 });
 
@@ -37,7 +37,7 @@ test("shows future-version as read-only without restore or Start Fresh actions",
   await act(async () => root?.render(
     <PracticeRecoveryPanel backups={[]} error="Practice fileVersion 2 is newer." onRetry={async () => undefined} readOnly />,
   ));
-  expect(container.textContent).toContain("canonical file will not be replaced or hidden");
-  expect(container.textContent).not.toContain("Restore backup");
-  expect(container.textContent).not.toContain("Start Fresh");
+  expect(container.textContent).toContain("元のファイルは置き換えも非表示もしません");
+  expect(container.textContent).not.toContain("を復元");
+  expect(container.textContent).not.toContain("新しく始める");
 });

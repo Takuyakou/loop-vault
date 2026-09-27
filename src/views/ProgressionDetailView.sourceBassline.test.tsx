@@ -102,22 +102,22 @@ const currentChord = {
 let host: HTMLDivElement;
 afterEach(() => host?.remove());
 
-function render(block: SavedProgressionBlock, progressionEdited: boolean, language: "ja" | "en") {
+function render(block: SavedProgressionBlock, progressionEdited: boolean) {
   host = document.createElement("div");
   document.body.append(host);
   act(() => createRoot(host).render(
-    <SourceBasslineStatus block={block} progressionEdited={progressionEdited} language={language} />,
+    <SourceBasslineStatus block={block} progressionEdited={progressionEdited} />,
   ));
 }
 
 describe("Progression Detail source bassline status", () => {
   it("states absence factually for legacy blocks", () => {
-    render(base, false, "en");
-    expect(host.textContent).toContain("Source bassline: Not saved");
+    render(base, false);
+    expect(host.textContent).toContain("元ベースライン: 未保存");
   });
 
   it("shows count, bars, export inclusion and honest harmony availability", () => {
-    render({ ...base, sourceBassline }, false, "ja");
+    render({ ...base, sourceBassline }, false);
     expect(host.textContent).toContain("元ベースライン: 保存済み");
     expect(host.textContent).toContain("1音・1小節・Vault書き出しに含まれます");
     expect(host.textContent).toContain("保存時の和声比較は利用できません");
@@ -126,8 +126,8 @@ describe("Progression Detail source bassline status", () => {
   });
 
   it("discloses that progression edits do not mutate the source snapshot", () => {
-    render({ ...base, sourceBassline }, true, "en");
-    expect(host.textContent).toContain("saved source bassline remains unchanged");
+    render({ ...base, sourceBassline }, true);
+    expect(host.textContent).toContain("保存済みの元ベースラインは変更されません");
     expect(host.querySelector('[aria-live="polite"]')).not.toBeNull();
   });
   it("keeps harmony unavailable without exact current authority and compares note facts rationally", () => {
@@ -150,9 +150,9 @@ describe("Progression Detail source bassline status", () => {
       ...base,
       chords: [currentChord],
       sourceBassline: rationalFactsSnapshot,
-    }, false, "en");
+    }, false);
     expect(host.querySelector("[data-harmony-relationship=unavailable]")).not.toBeNull();
-    expect(host.textContent).toContain("Captured-harmony comparison is unavailable.");
-    expect(host.textContent).toContain("Simultaneous notes present");
-    expect(host.textContent).toContain("Overlaps present");
+    expect(host.textContent).toContain("保存時の和声比較は利用できません。");
+    expect(host.textContent).toContain("同時発音あり");
+    expect(host.textContent).toContain("重なりあり");
   });});

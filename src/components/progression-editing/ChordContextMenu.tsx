@@ -7,13 +7,11 @@ import {
   type ChordContextAction,
   type EditableProgression,
 } from "../../domain/progressionEditing";
-import type { AppLanguage } from "../../i18n";
 
 interface ChordContextMenuProps {
   editable: EditableProgression;
   slotId: string;
   anchorElement: HTMLElement;
-  language: AppLanguage;
   canCutRange: boolean;
   onEdit(): void;
   onAction(action: ChordContextAction): void;
@@ -24,7 +22,6 @@ export function ChordContextMenu({
   editable,
   slotId,
   anchorElement,
-  language,
   canCutRange,
   onEdit,
   onAction,
@@ -44,7 +41,7 @@ export function ChordContextMenu({
     && pair[1]
     && canMergeEditableChords(editable, pair[0].id, pair[1].id),
   );
-  const copy = contextCopy(language);
+  const copy = contextCopy();
 
   useLayoutEffect(() => {
     function updatePosition() {
@@ -217,32 +214,7 @@ function MenuButton({
   );
 }
 
-function contextCopy(language: AppLanguage) {
-  if (language === "en") {
-    return {
-      title: "Edit actions",
-      edit: "Edit chord",
-      editDescription: "Open chord candidates and structure controls.",
-      delete: "Delete chord",
-      extendPrevious: "Extend previous chord",
-      extendPreviousDescription: "Delete this chord and give its time to the previous chord.",
-      extendNext: "Extend next chord",
-      extendNextDescription: "Delete this chord and give its time to the next chord.",
-      closeGap: "Close the gap",
-      closeGapDescription: "Delete this chord and shift all following chords earlier.",
-      noChord: "Replace with N.C.",
-      noChordDescription: "Keep the timing as an explicit no-chord event.",
-      structure: "Structure",
-      split: "Split in two",
-      splitDescription: "Duplicate the chord and divide its duration equally.",
-      mergeLeft: "Merge and keep left chord",
-      mergeLeftDescription: "Join the adjacent pair using the left chord and voicing.",
-      mergeRight: "Merge and keep right chord",
-      mergeRightDescription: "Join the adjacent pair using the right chord and voicing.",
-      cutRange: "Cut range here",
-      cutRangeDescription: "End the Draft at this chord's boundary.",
-    };
-  }
+function contextCopy() {
   return {
     title: "編集",
     edit: "コードを編集",

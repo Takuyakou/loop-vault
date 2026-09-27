@@ -1,6 +1,6 @@
 import { makeChordSymbol } from "../../domain/chords";
 import type { ChordQuality, ChordSymbol } from "../../domain/types";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 
 const noteNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"] as const;
 const qualityOptions: Array<{ value: ChordQuality; label: string }> = [
@@ -30,15 +30,13 @@ const qualityOptions: Array<{ value: ChordQuality; label: string }> = [
 interface ChordStructureEditorProps {
   chord: ChordSymbol;
   onChange: (chord: ChordSymbol) => void;
-  language: AppLanguage;
 }
 
 export function ChordStructureEditor({
   chord,
   onChange,
-  language,
 }: ChordStructureEditorProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   function update(root: number, quality: ChordQuality, bass: number | undefined) {
     onChange(makeChordSymbol(root, quality, [...chord.tensions], bass));
   }

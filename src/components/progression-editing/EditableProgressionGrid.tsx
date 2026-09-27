@@ -7,7 +7,7 @@ import {
   type QuickCandidateSelectionMetadata,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 import { EditableChordCard } from "./EditableChordCard";
 import { ChordContextMenu } from "./ChordContextMenu";
 import { QuickChordEditor } from "./QuickChordEditor";
@@ -41,7 +41,6 @@ interface EditableProgressionGridProps {
   onInsertAfter?: (slotId: string) => void;
   keySignature?: string;
   authorReferenceIndex?: AuthorReferenceIndex;
-  language: AppLanguage;
   /** Suppresses confidence-review badges for sources without analyzer confidence. */
   showConfidenceReview?: boolean;
   quickEditor?: QuickChordEditorControls;
@@ -58,12 +57,11 @@ export function EditableProgressionGrid({
   onInsertAfter,
   keySignature,
   authorReferenceIndex,
-  language,
   showConfidenceReview = true,
   quickEditor,
   contextActions,
 }: EditableProgressionGridProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   const cardButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const [quickEdit, setQuickEdit] = useState<{
     slotId: string;
@@ -147,12 +145,11 @@ export function EditableProgressionGrid({
                   : openQuickEditor(slot.id, index, anchorElement)
                 : undefined}
               openActionLabel={contextActions
-                ? language === "ja" ? "編集メニュー" : "Edit actions"
+                ? "編集メニュー"
                 : undefined}
               onInsertAfter={onInsertAfter ? () => onInsertAfter(slot.id) : undefined}
               buttonRef={(element) => { cardButtons.current[index] = element; }}
               showConfidenceReview={showConfidenceReview}
-              language={language}
             />
           ))}
         </div>
@@ -163,7 +160,6 @@ export function EditableProgressionGrid({
           slot={quickSlot}
           candidates={quickCandidates}
           anchorElement={quickEdit.anchorElement}
-          language={language}
           resetLabel={quickEditor.resetLabel}
           onPreview={(chord) => quickEditor.onPreview(quickSlot.id, chord)}
           onApply={(chord, source, selection) => quickEditor.onApply(
@@ -182,7 +178,6 @@ export function EditableProgressionGrid({
           editable={editable}
           slotId={contextMenu.slotId}
           anchorElement={contextMenu.anchorElement}
-          language={language}
           canCutRange={contextActions.canCutRange?.(contextMenu.slotId) ?? false}
           onEdit={() => {
             const current = contextMenu;
@@ -194,7 +189,6 @@ export function EditableProgressionGrid({
               editable,
               contextMenu.slotId,
               action,
-              language,
             );
             if (contextActions.onAction(contextMenu.slotId, action)) {
               setActionToast(message);
@@ -219,31 +213,14 @@ function contextActionMessage(
   editable: EditableProgression,
   slotId: string,
   action: ChordContextAction,
-  language: AppLanguage,
 ): string {
   const index = editable.slots.findIndex((slot) => slot.id === slotId);
   const slot = editable.slots[index];
-  if (!slot) return language === "ja" ? "変更しました" : "Changed";
+  if (!slot) return "変更しました";
   const previous = editable.slots[index - 1];
   const next = editable.slots[index + 1];
   const beats = slot.position.durationBeats;
   const pair = next ? [slot, next] as const : previous ? [previous, slot] as const : undefined;
-  if (language === "en") {
-    if (action === "delete-extend-previous") {
-      return `Deleted ${slot.currentChord.label} and extended ${previous?.currentChord.label} by ${beats} beats.`;
-    }
-    if (action === "delete-extend-next") {
-      return `Deleted ${slot.currentChord.label} and extended ${next?.currentChord.label} by ${beats} beats.`;
-    }
-    if (action === "delete-close-gap") {
-      return `Deleted ${slot.currentChord.label} and shifted following chords by ${beats} beats.`;
-    }
-    if (action === "replace-no-chord") return `Replaced ${slot.currentChord.label} with N.C.`;
-    if (action === "split") return `Split ${slot.currentChord.label} into two equal events.`;
-    if (action === "cut-range-here") return `Cut the Draft range at the end of ${slot.currentChord.label}.`;
-    const kept = action === "merge-keep-left" ? pair?.[0] : pair?.[1];
-    return `Merged ${pair?.[0].currentChord.label} and ${pair?.[1].currentChord.label}, keeping ${kept?.currentChord.label}.`;
-  }
   if (action === "delete-extend-previous") {
     return `${slot.currentChord.label}を削除し、前の${previous?.currentChord.label}を${beats}拍延長しました`;
   }

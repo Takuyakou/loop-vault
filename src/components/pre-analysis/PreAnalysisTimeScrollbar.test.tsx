@@ -103,7 +103,6 @@ async function renderScrollbar() {
     );
     return (
       <PreAnalysisTimeScrollbar
-        language="ja"
         totalBeats={totalBeats}
         visibleBeats={visibleBeats}
         viewportStartBeat={viewportStartBeat}

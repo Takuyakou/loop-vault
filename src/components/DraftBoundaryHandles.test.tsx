@@ -58,7 +58,6 @@ describe("DraftBoundaryHandles", () => {
     await act(async () => root.render(
       <DraftBoundaryHandles
         draft={makeDraft()}
-        language="en"
         onChange={onChange}
       />,
     ));
@@ -66,7 +65,7 @@ describe("DraftBoundaryHandles", () => {
       '[data-testid="draft-boundary-handles"]',
     )!;
     expect(details.open).toBe(false);
-    expect(details.textContent).toContain("Details: adjust chord boundaries (1)");
+    expect(details.textContent).toContain("詳細：コード境界を調整（1箇所）");
     await act(async () => container.querySelector<HTMLElement>("summary")?.click());
     expect(details.open).toBe(true);
     const slider = container.querySelector<HTMLInputElement>(
@@ -114,13 +113,13 @@ describe("DraftBoundaryHandles", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(
-      <DraftBoundaryHandles draft={draft} language="en" onChange={vi.fn()} />,
+      <DraftBoundaryHandles draft={draft} onChange={vi.fn()} />,
     ));
 
     const details = container.querySelector<HTMLDetailsElement>("details")!;
     const scrollRegion = container.querySelector<HTMLElement>("[data-boundary-scroll-region]")!;
     expect(details.open).toBe(false);
-    expect(details.textContent).toContain("Details: adjust chord boundaries (49)");
+    expect(details.textContent).toContain("詳細：コード境界を調整（49箇所）");
     expect(scrollRegion.className).toContain("max-h-72");
     expect(scrollRegion.className).toContain("overflow-y-auto");
 

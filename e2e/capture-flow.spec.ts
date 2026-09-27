@@ -37,7 +37,7 @@ test("MIDIをドロップし、Voice確認から解析結果へ進める", async
   );
   await expect(page.getByTestId(
     "pre-analysis-harmonic-core-preview",
-  )).toContainText(/和声を強調|harmony emphasized/);
+  )).toContainText(/和声を強調/);
   expect(Number(await pianoRoll.getAttribute("data-visible-note-count")))
     .toBeLessThan(standardVisibleNotes);
   await expect(page.locator('[data-capture-stage="pre-analysis"]')).toBeVisible();
@@ -54,7 +54,7 @@ test("MIDIをドロップし、Voice確認から解析結果へ進める", async
     "aria-expanded",
     "true",
   );
-  await expect(page.getByText(/選択中・編集対象|Selected and editing/)).toBeVisible();
+  await expect(page.getByText(/選択中・編集対象/)).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 
@@ -66,7 +66,7 @@ test("11 Voiceとドラムを解析前一覧に表示する", async ({ page }) =
     "all-instruments-generated.mid",
   );
 
-  const partDetails = page.getByRole("button", { name: /パート詳細|Part details/ });
+  const partDetails = page.getByRole("button", { name: /パート詳細/ });
   if (await partDetails.getAttribute("aria-expanded") !== "true") {
     await partDetails.click();
   }
@@ -102,7 +102,7 @@ test("Web版のファイル選択はデスクトップ操作が必要と通知�
   await page.getByTestId("capture-choose-midi").click();
 
   await expect(page.locator('[data-toast-tone="info"]')).toContainText(
-    /デスクトップ|desktop/i,
+    /デスクトップ/i,
   );
 });
 
@@ -121,22 +121,22 @@ test("未保存のコード修正を残した候補切替では確認し、キ�
   const selectedCandidate = page.locator('[data-candidate-state="selected"]');
   const selectedCandidateId = await selectedCandidate.locator("[data-candidate-toggle]").getAttribute("data-candidate-id");
 
-  await page.getByRole("button", { name: /展開|Expand/, exact: true }).click();
+  await page.getByRole("button", { name: /展開/, exact: true }).click();
   const chordLabel = page.locator("[data-chord-inspector]").locator('input[id^="chord-label-"]');
   await chordLabel.fill("Dm7");
   await chordLabel.press("Enter");
-  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中|Editing/);
+  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中/);
   await expect(analysisProgress).toBeHidden();
   await expect(selectedCandidate).toContainText("Dm7");
-  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中|Editing/);
+  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中/);
 
   const secondCandidate = page.locator("[data-candidate-toggle]").filter({
-    hasNotText: /選択中・編集対象|Selected for editing/,
+    hasNotText: /選択中・編集対象/,
   }).first();
   await secondCandidate.click();
-  const dialog = page.getByRole("dialog", { name: /未保存|Unsaved/i });
+  const dialog = page.getByRole("dialog", { name: /未保存/i });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: /キャンセル|Cancel/i }).click();
+  await dialog.getByRole("button", { name: /キャンセル/i }).click();
 
   await expect(dialog).toBeHidden();
   await expect(selectedCandidate.locator("[data-candidate-toggle]")).toHaveAttribute(

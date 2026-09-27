@@ -87,7 +87,6 @@ async function mount(draft: ManualCandidateDraft, options: EditorOptions = {}): 
           timeline={options.timeline ?? timeline}
           totalBars={options.totalBars ?? TOTAL_BARS}
           copy={appCopy.ja}
-          language="ja"
           {...(options.allowRangeAdjustment === undefined ? {} : { allowRangeAdjustment: options.allowRangeAdjustment })}
           {...(options.allowStructuralEdits === undefined ? {} : { allowStructuralEdits: options.allowStructuralEdits })}
           {...(options.showConfidenceReview === undefined ? {} : { showConfidenceReview: options.showConfidenceReview })}

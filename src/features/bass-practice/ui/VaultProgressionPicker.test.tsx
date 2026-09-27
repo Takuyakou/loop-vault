@@ -28,7 +28,7 @@ describe("VaultProgressionPicker", () => {
     const container = await renderPicker({ candidates, activeSignature: snapshots[0]!.signature, onConfirm });
 
     await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
-    expect(document.querySelector("[role='dialog']")?.textContent).toContain("Choose a progression from Vault");
+    expect(document.querySelector("[role='dialog']")?.textContent).toContain("Vaultからコード進行を選ぶ");
     expect(onConfirm).not.toHaveBeenCalled();
 
     const candidateButtons = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
@@ -44,7 +44,7 @@ describe("VaultProgressionPicker", () => {
     expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("G major");
     expect(onConfirm).not.toHaveBeenCalled();
 
-    await click(findButton(document.body, "Cancel"));
+    await click(findButton(document.body, "キャンセル"));
     expect(document.querySelector("[role='dialog']")).toBeNull();
     expect(onConfirm).not.toHaveBeenCalled();
 
@@ -109,7 +109,7 @@ describe("VaultProgressionPicker", () => {
       section?.dispatchEvent(new Event("change", { bubbles: true }));
       await Promise.resolve();
     });
-    expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("bars 1–2");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("1–2小節");
     await click(document.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-confirm']"));
     expect(onConfirm).toHaveBeenCalledWith(snapshots[1]!.signature);
   });
@@ -117,7 +117,7 @@ describe("VaultProgressionPicker", () => {
   it("renders loading, empty, error, and bounded large-list states", async () => {
     const container = await renderPicker({ candidates: [], loading: true, onConfirm: vi.fn() });
     await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
-    expect(document.querySelector("[role='status']")?.textContent).toContain("Loading Vault progressions");
+    expect(document.querySelector("[role='status']")?.textContent).toContain("Vaultの進行を読み込んでいます");
     expect(document.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-confirm']")?.disabled).toBe(true);
 
     await act(async () => root?.unmount());
@@ -140,7 +140,7 @@ describe("VaultProgressionPicker", () => {
     const largeContainer = await renderPicker({ candidates: manyCandidates, onConfirm: vi.fn() });
     await click(largeContainer.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(50);
-    expect(document.querySelector("[role='status']")?.textContent).toContain("Showing the first 50 matches");
+    expect(document.querySelector("[role='status']")?.textContent).toContain("最初の50件を表示しています");
   });
 });
 
@@ -149,7 +149,7 @@ async function renderPicker(props: Partial<Parameters<typeof VaultProgressionPic
   document.body.append(container);
   root = createRoot(container);
   await act(async () => {
-    root?.render(<VaultProgressionPicker language="en" candidates={[]} onConfirm={vi.fn()} {...props} />);
+    root?.render(<VaultProgressionPicker candidates={[]} onConfirm={vi.fn()} {...props} />);
   });
   return container;
 }

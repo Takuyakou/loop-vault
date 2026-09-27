@@ -1,5 +1,4 @@
 import { useEffect, useState, type ComponentProps } from "react";
-import type { AppLanguage } from "../../../i18n";
 import {
   isBassPracticeBasslineEchoEnabled,
   isBassPracticeChordContextEnabled,
@@ -16,7 +15,6 @@ import { RootMotionPracticeView } from "./RootMotionPracticeView";
 
 type Mode = "degree" | "rhythm" | "bassline" | "root-motion";
 type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
-  readonly language?: AppLanguage;
   readonly onRhythmAttemptCompleted?: (attempt: RhythmPracticeAttempt) => Promise<void>;
   readonly chordContextSnapshot?: VaultChordContextSnapshot;
   readonly chordContextSnapshots?: readonly VaultChordContextSnapshot[];
@@ -36,7 +34,7 @@ type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
  * live Practice session, so unmounting it merely to reveal another mode would
  * incorrectly mark that session abandoned.
  */
-export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted, chordContextSnapshot, chordContextSnapshots, vaultPickerCandidates, vaultSourceBasslines, onChordContextHistoryRecorded, sourceBasslineHistory, onSourceBasslineHistoryRecorded, onSourceBasslineWindowBarsChange, onRootMotionHistoryRecorded, onRootMotionNoteCountChange, ...degreeProps }: BassPracticeModeViewProps) {
+export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSnapshot, chordContextSnapshots, vaultPickerCandidates, vaultSourceBasslines, onChordContextHistoryRecorded, sourceBasslineHistory, onSourceBasslineHistoryRecorded, onSourceBasslineWindowBarsChange, onRootMotionHistoryRecorded, onRootMotionNoteCountChange, ...degreeProps }: BassPracticeModeViewProps) {
   const degreeEnabled = isBassPracticeDegreeEchoEnabled();
   const rhythmEnabled = isBassPracticeRhythmEchoEnabled();
   const basslineEnabled = isBassPracticeBasslineEchoEnabled();
@@ -48,7 +46,7 @@ export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted
   useEffect(() => { if (enabledChordContextSnapshot && basslineEnabled) setMode("bassline"); }, [basslineEnabled, enabledChordContextSnapshot?.signature]);
 
   if (!degreeEnabled && !rhythmEnabled && !basslineEnabled && !rootMotionEnabled) return null;
-  if (degreeEnabled && !rhythmEnabled && !basslineEnabled) return <BassPracticeView language={language} {...degreeProps} />;
+  if (degreeEnabled && !rhythmEnabled && !basslineEnabled) return <BassPracticeView {...degreeProps} />;
 
   const tabClass = (selected: boolean) =>
     `min-h-10 rounded-[var(--lv-radius-sm)] border px-4 text-sm font-semibold transition-colors ${
@@ -59,16 +57,16 @@ export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted
 
   return (
     <div className="space-y-4">
-      <div role="tablist" aria-label="Bass Practice mode" className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="Bass Practice のモード" className="flex flex-wrap gap-2">
         {degreeEnabled ? <button type="button" role="tab" aria-selected={mode === "degree"} className={tabClass(mode === "degree")} onClick={() => setMode("degree")}>Degree Echo</button> : null}
         {rhythmEnabled ? <button type="button" role="tab" aria-selected={mode === "rhythm"} className={tabClass(mode === "rhythm")} onClick={() => setMode("rhythm")}>Rhythm Echo</button> : null}
         {basslineEnabled ? <button type="button" role="tab" aria-selected={mode === "bassline"} className={tabClass(mode === "bassline")} onClick={() => setMode("bassline")}>Bassline Echo</button> : null}
         {rootMotionEnabled ? <button type="button" role="tab" aria-selected={mode === "root-motion"} className={tabClass(mode === "root-motion")} onClick={() => setMode("root-motion")}>Root Motion Echo</button> : null}
       </div>
-      {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView language={language} {...degreeProps} /></div> : null}
-      {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView language={language} onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "root-motion" && rootMotionEnabled ? <RootMotionPracticeView language={language} initialSettings={degreeProps.initialSettings} vaultSnapshots={chordContextEnabled ? (chordContextSnapshot ? [chordContextSnapshot, ...(chordContextSnapshots ?? []).filter((snapshot) => snapshot.signature !== chordContextSnapshot.signature)] : chordContextSnapshots) : undefined} onHistoryRecorded={onRootMotionHistoryRecorded} onNoteCountChange={onRootMotionNoteCountChange} /> : null}
-      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView language={language} initialWindowBars={degreeProps.initialSettings?.sourceBasslineWindowBars} chordContextSnapshot={enabledChordContextSnapshot} chordContextSnapshots={chordContextEnabled ? chordContextSnapshots : undefined} vaultPickerCandidates={chordContextEnabled ? vaultPickerCandidates : undefined} vaultSourceBasslines={vaultSourceBasslines} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} sourceBasslineHistory={sourceBasslineHistory} onSourceBasslineHistoryRecorded={onSourceBasslineHistoryRecorded} onSourceBasslineWindowBarsChange={onSourceBasslineWindowBarsChange} /> : null}
+      {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView {...degreeProps} /></div> : null}
+      {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
+      {mode === "root-motion" && rootMotionEnabled ? <RootMotionPracticeView initialSettings={degreeProps.initialSettings} vaultSnapshots={chordContextEnabled ? (chordContextSnapshot ? [chordContextSnapshot, ...(chordContextSnapshots ?? []).filter((snapshot) => snapshot.signature !== chordContextSnapshot.signature)] : chordContextSnapshots) : undefined} onHistoryRecorded={onRootMotionHistoryRecorded} onNoteCountChange={onRootMotionNoteCountChange} /> : null}
+      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView initialWindowBars={degreeProps.initialSettings?.sourceBasslineWindowBars} chordContextSnapshot={enabledChordContextSnapshot} chordContextSnapshots={chordContextEnabled ? chordContextSnapshots : undefined} vaultPickerCandidates={chordContextEnabled ? vaultPickerCandidates : undefined} vaultSourceBasslines={vaultSourceBasslines} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} sourceBasslineHistory={sourceBasslineHistory} onSourceBasslineHistoryRecorded={onSourceBasslineHistoryRecorded} onSourceBasslineWindowBarsChange={onSourceBasslineWindowBarsChange} /> : null}
     </div>
   );
 }

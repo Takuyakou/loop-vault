@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Ear, Lightbulb, Music2, Play, Square } from "lucide-react";
 import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
-import type { AppLanguage } from "../../../i18n";
 import { previewMidiNotes, stopPreview, type PreviewEndReason } from "../../../audio/chordPreview";
 import {
   ROOT_MOTION_GENERATOR_VERSION,
@@ -27,8 +26,7 @@ import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
 import { RootMotionFretboard } from "./RootMotionFretboard";
 
-const STEPS: Record<AppLanguage, readonly string[]> = {
-  en: ["Listen", "Identify", "Sing", "Play", "Review", "Transfer"],
+const STEPS: Record<"ja", readonly string[]> = {
   ja: ["\u8074\u304f", "\u898b\u5206\u3051\u308b", "\u6b4c\u3046", "\u6f14\u594f", "\u30ec\u30d3\u30e5\u30fc", "\u79fb\u8abf"],
 };
 const DIRECTIONS: readonly RootMotionDirection[] = ["same", "up", "down"];
@@ -38,7 +36,6 @@ const NOTE_COUNTS: readonly RootMotionNoteCount[] = [2, 3, 4, 5, 6, 7, 8];
 export type RootMotionPlayback = (notes: Parameters<typeof previewMidiNotes>[0], bpm: number, callbacks: { onEnded: (reason: PreviewEndReason) => void }) => Promise<void>;
 
 export interface RootMotionPracticeViewProps {
-  readonly language?: AppLanguage;
   readonly playback?: RootMotionPlayback;
   readonly initialSettings?: PracticeSettings;
   readonly onHistoryRecorded?: (entry: RootMotionHistoryEntry) => Promise<void>;
@@ -48,7 +45,7 @@ export interface RootMotionPracticeViewProps {
   readonly vaultSnapshots?: readonly VaultChordContextSnapshot[];
 }
 
-export function RootMotionPracticeView({ language = "en", playback, initialSettings, onHistoryRecorded, onNoteCountChange, vaultSnapshots = [] }: RootMotionPracticeViewProps) {
+export function RootMotionPracticeView({ playback, initialSettings, onHistoryRecorded, onNoteCountChange, vaultSnapshots = [] }: RootMotionPracticeViewProps) {
   const [level, setLevel] = useState<RootMotionLevel>(1);
   const configuredNoteCount = initialSettings?.rootMotionNoteCount ?? 2;
   const [noteCount, setNoteCount] = useState<RootMotionNoteCount>(configuredNoteCount);
@@ -130,7 +127,7 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     const play = playback ?? ((target, bpm, callbacks) => previewMidiNotes(target, bpm, "freepats-finger-bass", { onEnded: callbacks.onEnded }));
     void play(notes, exercise.tempo, { onEnded: (reason) => { if (reason === "completed") mutate(() => session.completeListen()); } }).catch((error: unknown) => {
       mutate(() => session.cancelListen());
-      setMessage(error instanceof Error ? error.message : "Playback could not start.");
+      setMessage(error instanceof Error ? error.message : "再生を開始できませんでした。");
     });
   }, [exercise, mutate, playback, session]);
 
@@ -143,19 +140,16 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     savedHistoryIds.current.add(entry.id);
     void onHistoryRecorded(entry).catch((error: unknown) => {
       savedHistoryIds.current.delete(entry.id);
-      setMessage(error instanceof Error ? error.message : "Practice history could not be saved.");
+      setMessage(error instanceof Error ? error.message : "練習の記録を保存できませんでした。");
     });
   }, [exercise, onHistoryRecorded, retainedTakeReference, session, transferOfExerciseId]);
 
   const currentStep = !snapshot ? 0 : snapshot.status === "ready" || snapshot.status === "listening" ? 0
     : snapshot.status === "identify" ? 1 : snapshot.status === "sing" ? 2
       : snapshot.status === "play" ? 3 : snapshot.status === "review" ? 4 : snapshot.status === "completed" ? 5 : 0;
-  const labels = language === "ja" ? {
+  const labels = {
     title: "Root Motion Echo", kicker: "\u30d9\u30fc\u30b9\u7df4\u7fd2", badge: "\u81ea\u5df1\u8a55\u4fa1\u5f0f\u3001\u81ea\u52d5\u63a1\u70b9\u306f\u3057\u307e\u305b\u3093", description: "\u30eb\u30fc\u30c8\u9593\u306e\u52d5\u304d\u3092\u898b\u5206\u3051\u3001\u6b4c\u3063\u3066\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u307e\u3059\u3002",
     level: "\u30ec\u30d9\u30eb", listen: "\u304a\u624b\u672c\u3092\u8074\u304f", replay: "\u3082\u3046\u4e00\u5ea6\u8074\u304f", hint: "\u30d2\u30f3\u30c8", identify: "\u56de\u7b54\u3092\u78ba\u5b9a", direction: "\u65b9\u5411", category: "\u97f3\u7a0b\u306e\u7a2e\u985e", exact: "\u6b63\u78ba\u306a\u534a\u97f3\u6570", sing: "\u6b4c\u3063\u3066\u6f14\u594f\u3078", play: "\u6f14\u594f\u3092\u7d42\u3048\u3066\u30ec\u30d3\u30e5\u30fc\u3078", review: "\u81ea\u5df1\u8a55\u4fa1", next: "\u6b21\u306e\u30d5\u30ec\u30fc\u30ba", transfer: "\u5225\u306e\u958b\u59cb\u97f3\u3067\u79fb\u8abf", first: "\u6700\u521d\u306e\u56de\u7b54\u3092\u8a18\u9332\u3057\u307e\u3057\u305f", stopped: "\u505c\u6b62", same: "\u540c\u3058", up: "\u4e0a\u884c", down: "\u4e0b\u884c", noteCount: "\u97f3\u6570",
-  } : {
-    title: "Root Motion Echo", kicker: "Bass Practice", badge: "Objective Identify / self review", description: "Identify the movement between roots, then sing and play it. Sing and Play are not automatically scored.",
-    level: "Level", listen: "Listen to example", replay: "Replay", hint: "Hint", identify: "Record answer", direction: "Direction", category: "Category", exact: "Exact semitones", sing: "Continue to Play", play: "Finish Play and review", review: "Self review", next: "Next exercise", transfer: "Transfer to a new starting root", first: "First answer recorded", stopped: "Stop", same: "Same", up: "Up", down: "Down", noteCount: "Note count",
   };
   const directionLabel = (value: RootMotionDirection) => value === "same" ? labels.same : value === "up" ? labels.up : labels.down;
   const selectedVaultRootCount = selectedVaultSnapshot?.section.chords.length ?? 0;
@@ -170,34 +164,28 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     beginNewExercise();
     setNoteCount(nextNoteCount);
     if (onNoteCountChange) void onNoteCountChange(nextNoteCount).catch((error: unknown) => {
-      setMessage(error instanceof Error ? error.message : "Practice settings could not be saved.");
+      setMessage(error instanceof Error ? error.message : "練習の設定を保存できませんでした。");
     });
   };
   const sourceCaption = sourceKind === "vault-root-path"
-    ? language === "ja"
-      ? `Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9\u3002${selectedVaultRootCount}\u500b\u306e\u30eb\u30fc\u30c8\u3092\u5229\u7528\u3067\u304d\u3001\u5143\u306e\u30d9\u30fc\u30b9\u30e9\u30a4\u30f3\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002`
-      : `Vault-derived root path with ${selectedVaultRootCount} available roots; not an original bassline.`
+    ? `Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9\u3002${selectedVaultRootCount}\u500b\u306e\u30eb\u30fc\u30c8\u3092\u5229\u7528\u3067\u304d\u3001\u5143\u306e\u30d9\u30fc\u30b9\u30e9\u30a4\u30f3\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002`
     : snapshot
-      ? language === "ja"
-        ? `\u8996\u8074 ${snapshot.listenCount}\u56de \u30fb \u30d2\u30f3\u30c8 ${snapshot.hintLevel}/4`
-        : `${snapshot.listenCount} listens / Hint ${snapshot.hintLevel}/4`
-      : language === "ja"
-        ? "\u518d\u751f\u53ef\u80fd\u306a\u30eb\u30fc\u30c8\u30d1\u30b9\u3092\u9078\u3073\u307e\u3059\u3002"
-        : "Choose a source and phrase length with a playable root path.";
+      ? `\u8996\u8074 ${snapshot.listenCount}\u56de \u30fb \u30d2\u30f3\u30c8 ${snapshot.hintLevel}/4`
+      : "\u518d\u751f\u53ef\u80fd\u306a\u30eb\u30fc\u30c8\u30d1\u30b9\u3092\u9078\u3073\u307e\u3059\u3002";
   const sourceControls = <div className="flex flex-wrap items-end gap-3">
-    <Field label={language === "ja" ? "\u30bd\u30fc\u30b9" : "Source"} htmlFor="root-motion-source" className="w-64"><select id="root-motion-source" data-testid="root-motion-source" aria-label={language === "ja" ? "Root Motion\u306e\u30bd\u30fc\u30b9" : "Root Motion source"} value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as "generated" | "vault-root-path"); beginNewExercise(); }}><option value="generated">{language === "ja" ? "\u751f\u6210\u3055\u308c\u305f\u30eb\u30fc\u30c8\u30e2\u30fc\u30b7\u30e7\u30f3" : "Generated Root Motion"}</option><option value="vault-root-path" disabled={!selectedVaultSnapshot}>{language === "ja" ? "Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9" : "Vault-derived root path"}</option></select></Field>
-    {sourceKind === "vault-root-path" && vaultSnapshots.length > 1 ? <Field label={language === "ja" ? "\u30bb\u30af\u30b7\u30e7\u30f3" : "Vault section"} htmlFor="root-motion-vault-section" className="w-64"><select id="root-motion-vault-section" value={selectedVaultSnapshot?.signature ?? ""} onChange={(event) => { setSelectedVaultSignature(event.target.value); beginNewExercise(); }}>{vaultSnapshots.map((candidate) => <option key={candidate.signature} value={candidate.signature}>{candidate.source.safeLabel}</option>)}</select></Field> : null}
-    <Field label={labels.level} htmlFor="root-motion-level" className="w-44"><select id="root-motion-level" aria-label={language === "ja" ? "Root Motion\u306e\u30ec\u30d9\u30eb" : "Root Motion level"} value={level} onChange={(event) => { setLevel(Number(event.target.value) as RootMotionLevel); beginNewExercise(); }}><option value={1}>1 / {language === "ja" ? "\u65b9\u5411" : "Direction"}</option><option value={2}>2 / {language === "ja" ? "\u97f3\u7a0b\u306e\u7a2e\u985e" : "Category"}</option><option value={3}>3 / {language === "ja" ? "\u6b63\u78ba\u306a\u97f3\u7a0b" : "Exact interval"}</option><option value={4}>4 / {language === "ja" ? "\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306e\u5f62" : "Shape"}</option><option value={5}>5 / {language === "ja" ? "\u79fb\u8abf" : "Transfer"}</option></select></Field>
-    <Field label={labels.noteCount} htmlFor="root-motion-note-count" className="w-44"><select id="root-motion-note-count" data-testid="root-motion-note-count" aria-label={language === "ja" ? "Root Motion\u306e\u97f3\u6570" : "Root Motion note count"} value={noteCount} onChange={(event) => chooseNoteCount(Number(event.target.value) as RootMotionNoteCount)}>{NOTE_COUNTS.map((candidate) => <option key={candidate} value={candidate} disabled={sourceKind === "vault-root-path" && candidate > selectedVaultRootCount}>{language === "ja" ? `${candidate}\u97f3\u30fb${rootMotionPhraseLengthBeats(candidate)}\u62cd` : `${candidate} notes / ${rootMotionPhraseLengthBeats(candidate)} beats`}</option>)}</select></Field>
+    <Field label={"\u30bd\u30fc\u30b9"} htmlFor="root-motion-source" className="w-64"><select id="root-motion-source" data-testid="root-motion-source" aria-label={"Root Motion\u306e\u30bd\u30fc\u30b9"} value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as "generated" | "vault-root-path"); beginNewExercise(); }}><option value="generated">{"\u751f\u6210\u3055\u308c\u305f\u30eb\u30fc\u30c8\u30e2\u30fc\u30b7\u30e7\u30f3"}</option><option value="vault-root-path" disabled={!selectedVaultSnapshot}>{"Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9"}</option></select></Field>
+    {sourceKind === "vault-root-path" && vaultSnapshots.length > 1 ? <Field label={"\u30bb\u30af\u30b7\u30e7\u30f3"} htmlFor="root-motion-vault-section" className="w-64"><select id="root-motion-vault-section" value={selectedVaultSnapshot?.signature ?? ""} onChange={(event) => { setSelectedVaultSignature(event.target.value); beginNewExercise(); }}>{vaultSnapshots.map((candidate) => <option key={candidate.signature} value={candidate.signature}>{candidate.source.safeLabel}</option>)}</select></Field> : null}
+    <Field label={labels.level} htmlFor="root-motion-level" className="w-44"><select id="root-motion-level" aria-label={"Root Motion\u306e\u30ec\u30d9\u30eb"} value={level} onChange={(event) => { setLevel(Number(event.target.value) as RootMotionLevel); beginNewExercise(); }}><option value={1}>1 / {"\u65b9\u5411"}</option><option value={2}>2 / {"\u97f3\u7a0b\u306e\u7a2e\u985e"}</option><option value={3}>3 / {"\u6b63\u78ba\u306a\u97f3\u7a0b"}</option><option value={4}>4 / {"\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306e\u5f62"}</option><option value={5}>5 / {"\u79fb\u8abf"}</option></select></Field>
+    <Field label={labels.noteCount} htmlFor="root-motion-note-count" className="w-44"><select id="root-motion-note-count" data-testid="root-motion-note-count" aria-label={"Root Motion\u306e\u97f3\u6570"} value={noteCount} onChange={(event) => chooseNoteCount(Number(event.target.value) as RootMotionNoteCount)}>{NOTE_COUNTS.map((candidate) => <option key={candidate} value={candidate} disabled={sourceKind === "vault-root-path" && candidate > selectedVaultRootCount}>{`${candidate}\u97f3\u30fb${rootMotionPhraseLengthBeats(candidate)}\u62cd`}</option>)}</select></Field>
     <p className="max-w-xl pb-2 text-sm text-[var(--lv-text-secondary)]">{sourceCaption}</p>
   </div>;
 
   if (!exercise || !session || !snapshot) return <section data-testid="root-motion-echo-view" className="space-y-4">
     <EchoPracticeHeader kicker={labels.kicker} title={labels.title} description={labels.description} badge={labels.badge} />
-    <EchoPracticeProgress ariaLabel={language === "ja" ? "Root Motion Echo\u306e\u9032\u884c" : "Root Motion Echo progress"} currentIndex={currentStep} steps={STEPS[language]} />
+    <EchoPracticeProgress ariaLabel={"Root Motion Echo\u306e\u9032\u884c"} currentIndex={currentStep} steps={STEPS.ja} />
     <Surface className="space-y-5 border-[var(--lv-border)] bg-[var(--lv-surface)] p-5">
       {sourceControls}
-      <StatusMessage tone="error" title="Root Motion Echo">{sourceKind === "vault-root-path" ? (vaultGenerated?.ok === false ? vaultGenerated.error.message : "Select a supported Vault-derived root path.") : (generated.ok ? "Session is unavailable." : generated.error.message)}</StatusMessage>
+      <StatusMessage tone="error" title="Root Motion Echo">{sourceKind === "vault-root-path" ? (vaultGenerated?.ok === false ? vaultGenerated.error.message : "Vault から作れる対応したルートの流れを選んでください。") : (generated.ok ? "セッションを開始できません。" : generated.error.message)}</StatusMessage>
     </Surface>
   </section>;
   const answer: RootMotionIdentifyAnswer = { direction: selectedDirection, category: selectedCategory, semitones: selectedSemitones };
@@ -208,20 +196,20 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
 
   return <section data-testid="root-motion-echo-view" className="space-y-4">
     <EchoPracticeHeader kicker={labels.kicker} title={labels.title} description={labels.description} badge={labels.badge} />
-    <EchoPracticeProgress ariaLabel={language === "ja" ? "Root Motion Echo\u306e\u9032\u884c" : "Root Motion Echo progress"} currentIndex={currentStep} steps={STEPS[language]} />
+    <EchoPracticeProgress ariaLabel={"Root Motion Echo\u306e\u9032\u884c"} currentIndex={currentStep} steps={STEPS.ja} />
     <Surface className="space-y-5 border-[var(--lv-border)] bg-[var(--lv-surface)] p-5">
       {sourceControls}
       {snapshot.status === "ready" || snapshot.status === "identify" ? <div className="flex flex-wrap gap-2"><Button data-testid="root-motion-listen" onClick={listen}><Ear className="size-4" />{snapshot.listenCount > 0 ? labels.replay : labels.listen}</Button><Button variant="secondary" onClick={() => mutate(() => session.nextHint())} disabled={snapshot.status === "ready" || snapshot.hintLevel >= 4}><Lightbulb className="size-4" />{labels.hint}</Button></div> : null}
-      {snapshot.status === "listening" ? <div className="flex items-center gap-2 text-sm text-[var(--lv-text-secondary)]"><Music2 className="size-4" />{language === "ja" ? "\u518d\u751f\u4e2d…" : "Playing…"}<Button variant="secondary" onClick={() => { stopPreview(); mutate(() => session.cancelListen()); }}><Square className="size-4" />{labels.stopped}</Button></div> : null}
-      {snapshot.hintLevel > 0 ? <HintText hintLevel={snapshot.hintLevel} motion={exercise.motions[0]} language={language} /> : null}
-      {snapshot.hintLevel === 4 || snapshot.status === "review" || snapshot.status === "completed" ? <RootMotionFretboard exercise={exercise} handedness={settings.handedness} language={language} /> : null}
-      {snapshot.status === "identify" ? <div className="space-y-4 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-4"><p className="font-semibold text-[var(--lv-text)]">{language === "ja" ? "\u30eb\u30fc\u30c8\u306f\u3069\u3046\u52d5\u304d\u307e\u3057\u305f\u304b\uff1f" : "How did the root move?"}</p><AnswerButtons label={labels.direction} values={DIRECTIONS} selected={selectedDirection} onSelect={setSelectedDirection} labelFor={directionLabel} />{level >= 2 ? <AnswerButtons label={labels.category} values={CATEGORIES} selected={selectedCategory} onSelect={setSelectedCategory} labelFor={(value) => value} /> : null}{level >= 3 ? <AnswerButtons label={labels.exact} values={[0, 1, 2, 3, 4, 5, 6, 7]} selected={selectedSemitones} onSelect={setSelectedSemitones} labelFor={(value) => String(value)} /> : null}<Button onClick={() => mutate(() => session.submitIdentify(answer))}>{labels.identify}</Button></div> : null}
-      {snapshot.status === "sing" ? <div className="space-y-3"><p className="text-sm text-[var(--lv-text-secondary)]">{language === "ja" ? "\u6b4c\u3063\u3066\u97f3\u7a0b\u3092\u78ba\u304b\u3081\u305f\u3089\u3001\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u3053\u308c\u306f\u81ea\u5df1\u8a55\u4fa1\u5f0f\u3067\u3059\u3002" : "Sing the movement, then reproduce it on bass. This remains self-reviewed."}</p><Button onClick={() => mutate(() => session.continueToPlay())}>{labels.sing}</Button></div> : null}
-      {snapshot.status === "play" ? <div className="space-y-3"><p className="text-sm text-[var(--lv-text-secondary)]">{language === "ja" ? "\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u305f\u3089\u30ec\u30d3\u30e5\u30fc\u306b\u9032\u307f\u307e\u3059\u3002\u81ea\u52d5\u63a1\u70b9\u306f\u884c\u3044\u307e\u305b\u3093\u3002" : "Reproduce it on bass, then continue to your self review. No automatic scoring is performed."}</p><Button onClick={() => mutate(() => session.completePlay())}><Play className="size-4" />{labels.play}</Button></div> : null}
-      {snapshot.status === "review" || snapshot.status === "completed" ? <RecordCompareSection language={language} mode="root-motion" resetKey={`root-motion:${exercise.id}`} practiceSessionId={`root-motion:${exercise.id}`} countInMs={Math.round((4 * 60_000) / exercise.tempo)} onTakeKept={setRetainedTakeReference} targetPlayer={createTargetPlayer((onEnded) => void previewMidiNotes(exercise.targetEvents.map((event) => ({ pitch: event.midiNote, startBeat: event.startBeat, durationBeats: event.durationBeats, velocity: event.velocity })), exercise.tempo, "freepats-finger-bass", { onEnded }), stopPreview)} /> : null}
+      {snapshot.status === "listening" ? <div className="flex items-center gap-2 text-sm text-[var(--lv-text-secondary)]"><Music2 className="size-4" />{"\u518d\u751f\u4e2d…"}<Button variant="secondary" onClick={() => { stopPreview(); mutate(() => session.cancelListen()); }}><Square className="size-4" />{labels.stopped}</Button></div> : null}
+      {snapshot.hintLevel > 0 ? <HintText hintLevel={snapshot.hintLevel} motion={exercise.motions[0]} /> : null}
+      {snapshot.hintLevel === 4 || snapshot.status === "review" || snapshot.status === "completed" ? <RootMotionFretboard exercise={exercise} handedness={settings.handedness} /> : null}
+      {snapshot.status === "identify" ? <div className="space-y-4 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-4"><p className="font-semibold text-[var(--lv-text)]">{"\u30eb\u30fc\u30c8\u306f\u3069\u3046\u52d5\u304d\u307e\u3057\u305f\u304b\uff1f"}</p><AnswerButtons label={labels.direction} values={DIRECTIONS} selected={selectedDirection} onSelect={setSelectedDirection} labelFor={directionLabel} />{level >= 2 ? <AnswerButtons label={labels.category} values={CATEGORIES} selected={selectedCategory} onSelect={setSelectedCategory} labelFor={(value) => value} /> : null}{level >= 3 ? <AnswerButtons label={labels.exact} values={[0, 1, 2, 3, 4, 5, 6, 7]} selected={selectedSemitones} onSelect={setSelectedSemitones} labelFor={(value) => String(value)} /> : null}<Button onClick={() => mutate(() => session.submitIdentify(answer))}>{labels.identify}</Button></div> : null}
+      {snapshot.status === "sing" ? <div className="space-y-3"><p className="text-sm text-[var(--lv-text-secondary)]">{"\u6b4c\u3063\u3066\u97f3\u7a0b\u3092\u78ba\u304b\u3081\u305f\u3089\u3001\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u3053\u308c\u306f\u81ea\u5df1\u8a55\u4fa1\u5f0f\u3067\u3059\u3002"}</p><Button onClick={() => mutate(() => session.continueToPlay())}>{labels.sing}</Button></div> : null}
+      {snapshot.status === "play" ? <div className="space-y-3"><p className="text-sm text-[var(--lv-text-secondary)]">{"\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u305f\u3089\u30ec\u30d3\u30e5\u30fc\u306b\u9032\u307f\u307e\u3059\u3002\u81ea\u52d5\u63a1\u70b9\u306f\u884c\u3044\u307e\u305b\u3093\u3002"}</p><Button onClick={() => mutate(() => session.completePlay())}><Play className="size-4" />{labels.play}</Button></div> : null}
+      {snapshot.status === "review" || snapshot.status === "completed" ? <RecordCompareSection mode="root-motion" resetKey={`root-motion:${exercise.id}`} practiceSessionId={`root-motion:${exercise.id}`} countInMs={Math.round((4 * 60_000) / exercise.tempo)} onTakeKept={setRetainedTakeReference} targetPlayer={createTargetPlayer((onEnded) => void previewMidiNotes(exercise.targetEvents.map((event) => ({ pitch: event.midiNote, startBeat: event.startBeat, durationBeats: event.durationBeats, velocity: event.velocity })), exercise.tempo, "freepats-finger-bass", { onEnded }), stopPreview)} /> : null}
       {snapshot.status === "review" ? <div className="space-y-3"><p className="font-semibold text-[var(--lv-text)]">{labels.review}</p><div className="flex flex-wrap gap-2">{(["again", "hard", "good", "easy"] as const).map((rating) => <Button key={rating} variant="secondary" onClick={() => rate(rating)}>{rating}</Button>)}</div></div> : null}
       {snapshot.status === "completed" ? <div className="flex flex-wrap gap-2"><p className="basis-full font-semibold text-[var(--lv-success)]">{labels.first}</p><Button onClick={() => setRound((value) => value + 1)}>{labels.next}</Button><Button variant="secondary" onClick={() => { const result = deriveRootMotionTransfer(exercise); if (result.ok) { setTransferOfExerciseId(exercise.id); setTransfer(result.exercise); } else setMessage(result.error.message); }}>{labels.transfer}</Button></div> : null}
-      {snapshot.firstAnswer ? <p data-testid="root-motion-first-answer" className="text-sm text-[var(--lv-text-secondary)]">{labels.first} / {snapshot.firstAnswer.directionCorrect ? "direction ✓" : "direction ✕"} / {snapshot.firstAnswer.assistance}</p> : null}
+      {snapshot.firstAnswer ? <p data-testid="root-motion-first-answer" className="text-sm text-[var(--lv-text-secondary)]">{labels.first} / {snapshot.firstAnswer.directionCorrect ? "方向 ✓" : "方向 ✕"} / {snapshot.firstAnswer.assistance}</p> : null}
       {message ? <StatusMessage tone="error" title="Root Motion Echo">{message}</StatusMessage> : null}
     </Surface>
   </section>;
@@ -231,8 +219,8 @@ function AnswerButtons<T extends string | number>({ label, values, selected, onS
   return <fieldset className="space-y-2"><legend className="text-sm font-semibold text-[var(--lv-text-secondary)]">{label}</legend><div className="flex flex-wrap gap-2">{values.map((value) => <Button key={String(value)} variant={selected === value ? "primary" : "secondary"} onClick={() => onSelect(value)}>{labelFor(value)}</Button>)}</div></fieldset>;
 }
 
-function HintText({ hintLevel, motion, language }: { readonly hintLevel: number; readonly motion: { readonly direction: RootMotionDirection; readonly category: RootMotionCategory; readonly semitones: number }; readonly language: AppLanguage }) {
-  const direction = language === "ja" ? (motion.direction === "same" ? "\u540c\u3058" : motion.direction === "up" ? "\u4e0a\u884c" : "\u4e0b\u884c") : motion.direction;
-  const text = hintLevel === 1 ? `${language === "ja" ? "\u65b9\u5411" : "Direction"}: ${direction}` : hintLevel === 2 ? `${language === "ja" ? "\u7a2e\u985e" : "Category"}: ${motion.category}` : hintLevel === 3 ? `${language === "ja" ? "\u534a\u97f3\u6570" : "Exact semitones"}: ${motion.semitones}` : language === "ja" ? "\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306b\u30eb\u30fc\u30c8\u306e\u5f62\u3092\u8868\u793a\u3057\u307e\u3059\u3002" : "The fretboard shape is now available.";
+function HintText({ hintLevel, motion }: { readonly hintLevel: number; readonly motion: { readonly direction: RootMotionDirection; readonly category: RootMotionCategory; readonly semitones: number };}) {
+  const direction = (motion.direction === "same" ? "\u540c\u3058" : motion.direction === "up" ? "\u4e0a\u884c" : "\u4e0b\u884c");
+  const text = hintLevel === 1 ? `${"\u65b9\u5411"}: ${direction}` : hintLevel === 2 ? `${"\u7a2e\u985e"}: ${motion.category}` : hintLevel === 3 ? `${"\u534a\u97f3\u6570"}: ${motion.semitones}` : "\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306b\u30eb\u30fc\u30c8\u306e\u5f62\u3092\u8868\u793a\u3057\u307e\u3059\u3002";
   return <p className="rounded-[var(--lv-radius-sm)] bg-[var(--lv-accent-soft)] px-3 py-2 text-sm text-[var(--lv-text)]">{text}</p>;
 }

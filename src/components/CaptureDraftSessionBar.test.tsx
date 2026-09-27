@@ -19,7 +19,6 @@ describe("CaptureDraftSessionBar", () => {
     const onRequestDiscard = vi.fn();
     await act(async () => root.render(
       <CaptureDraftSessionBar
-        language="en"
         dirty
         sourceAvailable
         playing={null}
@@ -35,13 +34,13 @@ describe("CaptureDraftSessionBar", () => {
     await act(async () => {
       source.click();
       edited.click();
-      container.querySelector<HTMLButtonElement>('[aria-label="Stop preview"]')?.click();
+      container.querySelector<HTMLButtonElement>('[aria-label="試聴を停止"]')?.click();
     });
 
     expect(onPreviewSource).toHaveBeenCalledOnce();
     expect(onPreviewEdited).toHaveBeenCalledOnce();
     expect(onStop).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain("Unsaved");
+    expect(container.textContent).toContain("未保存");
     expect(container.textContent).toContain("Shift+F10/Menu");
 
     await act(async () => root.unmount());
@@ -52,7 +51,6 @@ describe("CaptureDraftSessionBar", () => {
     const root = createRoot(container);
     await act(async () => root.render(
       <CaptureDraftSessionBar
-        language="en"
         dirty={false}
         sourceAvailable={false}
         playing={null}
@@ -66,8 +64,8 @@ describe("CaptureDraftSessionBar", () => {
     expect(container.querySelector<HTMLButtonElement>(
       '[data-preview-side="source"]',
     )?.disabled).toBe(true);
-    expect(container.textContent).toContain("Saved state");
-    expect(container.querySelector('[aria-label="Stop preview"]')?.className)
+    expect(container.textContent).toContain("保存済みの状態");
+    expect(container.querySelector('[aria-label="試聴を停止"]')?.className)
       .toContain("h-10");
 
     await act(async () => root.unmount());

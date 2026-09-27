@@ -21,7 +21,6 @@ it("keeps ten fixed fingers while KEEP has a continuation band and empty slots s
       loopWrap={false}
       hasNext
       accidentalStyle="sharp"
-      language="ja"
     />));
     const groups = host.querySelectorAll("[data-testid='voicing-loop-next-move-hand-group']");
     expect(groups).toHaveLength(2);

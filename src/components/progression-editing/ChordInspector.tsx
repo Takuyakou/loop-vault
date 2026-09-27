@@ -11,7 +11,7 @@ import {
   type SimilarSegmentCandidate,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 import type { PreviewSound } from "../../audio/chordPreview";
 import {
   playbackController,
@@ -26,7 +26,6 @@ import { Trash2, TriangleAlert } from "lucide-react";
 
 interface ChordInspectorProps {
   slot?: EditableChordSlot;
-  language: AppLanguage;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
   onPreview: (chord: ChordSymbol) => void;
@@ -67,7 +66,6 @@ interface ChordInspectorProps {
 
 export function ChordInspector({
   slot,
-  language,
   expanded = true,
   onExpandedChange,
   onPreview,
@@ -96,7 +94,7 @@ export function ChordInspector({
   keySignature,
   previousChord,
 }: ChordInspectorProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   const quickCandidates = providedQuickCandidates
     ?? analyzerQuickCandidates(slot?.alternatives ?? []);
   const resolvedStopLabel = stopLabel ?? text.stop;
@@ -302,7 +300,6 @@ export function ChordInspector({
           candidates={quickCandidates}
           selected={draftSource === "alternative" ? draftChord : undefined}
           onSelect={selectAlternative}
-          language={language}
         />
         <label className="mt-4 block text-xs text-[var(--lv-text-muted)]" htmlFor={`chord-label-${slot.id}`}>
           {text.chordLabel}
@@ -342,7 +339,6 @@ export function ChordInspector({
         {draftChord ? (
           <ChordStructureEditor
             chord={draftChord}
-            language={language}
             onChange={(chord) => {
               onEditStart?.();
               setDraftChord(chord);
@@ -398,7 +394,6 @@ export function ChordInspector({
           chord={propagation.chord}
           candidates={propagation.candidates}
           slots={propagation.slots}
-          language={language}
           playbackSource={sourceBase}
           previewSound={previewSound}
           stopLabel={resolvedStopLabel}

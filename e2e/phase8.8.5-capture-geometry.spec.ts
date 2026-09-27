@@ -12,21 +12,21 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
     await expect(tabs).toHaveCount(1);
     await frame.evaluate(element => element.setAttribute("data-stability-token", "same-node"));
     await tabs.getByRole("button", { name: "MIDI" }).evaluate(element => element.setAttribute("data-stability-token", "midi"));
-    await tabs.getByRole("button", { name: /テキスト|Text/ }).evaluate(element => element.setAttribute("data-stability-token", "text"));
+    await tabs.getByRole("button", { name: /テキスト/ }).evaluate(element => element.setAttribute("data-stability-token", "text"));
     const before = {
       frame: await frame.boundingBox(),
       midi: await tabs.getByRole("button", { name: "MIDI" }).boundingBox(),
-      text: await tabs.getByRole("button", { name: /テキスト|Text/ }).boundingBox(),
+      text: await tabs.getByRole("button", { name: /テキスト/ }).boundingBox(),
     };
-    await tabs.getByRole("button", { name: /テキスト|Text/ }).click();
+    await tabs.getByRole("button", { name: /テキスト/ }).click();
     await expect(tabs).toHaveCount(1);
     await expect(frame).toHaveAttribute("data-stability-token", "same-node");
     await expect(tabs.getByRole("button", { name: "MIDI" })).toHaveAttribute("data-stability-token", "midi");
-    await expect(tabs.getByRole("button", { name: /テキスト|Text/ })).toHaveAttribute("data-stability-token", "text");
+    await expect(tabs.getByRole("button", { name: /テキスト/ })).toHaveAttribute("data-stability-token", "text");
     for (const [name, locator] of [
       ["frame", frame],
       ["midi", tabs.getByRole("button", { name: "MIDI" })],
-      ["text", tabs.getByRole("button", { name: /テキスト|Text/ })],
+      ["text", tabs.getByRole("button", { name: /テキスト/ })],
     ] as const) {
       const after = await locator.boundingBox();
       const initial = before[name];
@@ -39,7 +39,7 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
     await tabs.getByRole("button", { name: "MIDI" }).click();
     await expect(frame).toHaveAttribute("data-stability-token", "same-node");
     await expect(tabs.getByRole("button", { name: "MIDI" })).toHaveAttribute("data-stability-token", "midi");
-    await expect(tabs.getByRole("button", { name: /テキスト|Text/ })).toHaveAttribute("data-stability-token", "text");
+    await expect(tabs.getByRole("button", { name: /テキスト/ })).toHaveAttribute("data-stability-token", "text");
     await assertNoHorizontalOverflow(page);
   }
 });
@@ -51,10 +51,10 @@ test("P8.8.5 header owns persistent metronome ON/OFF across Capture modes", asyn
   await global.click();
   await expect(global).toHaveAttribute("aria-label", "メトロノーム：ON");
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   await page.getByTestId("text-mode-extended").click();
   await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("extended-text-intake").getByRole("button", { name: /Metronome|メトロノーム/ })).toHaveCount(0);
+  await expect(page.getByTestId("extended-text-intake").getByRole("button", { name: /メトロノーム/ })).toHaveCount(0);
   await page.reload();
   await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
 });

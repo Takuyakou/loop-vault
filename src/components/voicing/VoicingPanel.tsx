@@ -15,7 +15,6 @@ import {
 } from "../../domain/voicing";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import { liveMidiActivation, type LiveMidiActivationLease } from "../../liveMidi/activationLease";
-import type { AppLanguage } from "../../i18n";
 import { KeyboardVisualizer } from "./KeyboardVisualizer";
 import { midiNoteName } from "./midiNoteName";
 import { VoicingSourceChip } from "./VoicingSourceChip";
@@ -24,7 +23,6 @@ interface VoicingPanelProps {
   chord: ChordSymbol;
   memory?: ChordVoicingMemory;
   generatedNotes: readonly number[];
-  language: AppLanguage;
   sourceAvailable: boolean;
   /** False for sources that do not exist (for example text entry), not missing files. */
   sourceApplicable?: boolean;
@@ -74,47 +72,12 @@ const copy = {
     midiNotes: "MIDIノート",
     captured: "鍵盤入力を記録しました。Vault保存時にこのコードへ適用されます。",
   },
-  en: {
-    title: "Voicing",
-    playbackChoice: "Playback notes",
-    choiceLegacy: "Legacy automatic",
-    choiceSource: "Source MIDI",
-    choiceGenerated: "Generated",
-    choiceCustom: "Keyboard capture",
-    used: "In use",
-    practice: "Keyboard capture",
-    selectedStyle: "Selected style",
-    sourceEstimate: "Estimated from source MIDI",
-    generated: "Generated",
-    aggregated: "Aggregated note set",
-    stale: "The source voicing belongs to the chord before editing. Generated voicing is in use.",
-    record: "Capture from keyboard",
-    replace: "Play and replace",
-    recordPrompt: "Play a voicing, release the keys, then confirm the notes to save",
-    monitorReady: "Input sound: Piano",
-    monitorUnavailable: "Piano monitoring could not start. Keyboard capture is still available.",
-    capturedCandidate: "Captured candidate",
-    stable: "Stable",
-    confirm: "Use these notes for saving",
-    retry: "Try again",
-    cancel: "Cancel",
-    clearPractice: "Clear practice voicing",
-    clearSource: "Clear source voicing",
-    reextract: "Extract from source MIDI",
-    missing: "The source MIDI file was not found. You can capture a practice voicing from a keyboard.",
-    mismatch: "The held notes have low coverage for the current chord. Please review them.",
-    detail: "Only pitches and octave placement are saved. Sound, velocity, and note order are not saved.",
-    savedNotes: "Notes to save for this chord",
-    midiNotes: "MIDI notes",
-    captured: "Keyboard input recorded. These notes will be applied to this chord when you save to Vault.",
-  },
 } as const;
 
 export function VoicingPanel({
   chord,
   memory,
   generatedNotes,
-  language,
   sourceAvailable,
   sourceApplicable = true,
   reextracting,
@@ -122,7 +85,7 @@ export function VoicingPanel({
   onReextract,
   styleSelector,
 }: VoicingPanelProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const liveState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeld = useMemo(() => heldNotes(liveState), [liveState]);
   const [recording, setRecording] = useState(false);
@@ -312,7 +275,6 @@ export function VoicingPanel({
             status={sourceStatus.status}
             reason={sourceStatus.reason}
             sourceAbsentByDesign={!sourceApplicable}
-            language={language}
             testId="detail-voicing-source-chip"
           />
           <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-teal-100">

@@ -9,7 +9,7 @@ import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
 import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
-import { appCopy, type AppLanguage } from "../i18n";
+import { appCopy } from "../i18n";
 import { VaultView } from "./VaultView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -80,7 +80,6 @@ describe("VaultView keyboard shortcuts", () => {
         updateProgressionBlock={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         showRomanNumerals={false}
       />
     );
@@ -125,8 +124,7 @@ describe("VaultView keyboard shortcuts", () => {
             updateIdea={vi.fn()}
             updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
-            copy={appCopy.en}
-            language="en"
+            copy={appCopy.ja}
             showRomanNumerals={false}
           />,
         );
@@ -137,7 +135,7 @@ describe("VaultView keyboard shortcuts", () => {
     const modeButtons = [...container.querySelectorAll<HTMLButtonElement>(
       "[role='group'][aria-label='Vault'] button",
     )];
-    expect(modeButtons.map((button) => button.textContent)).toEqual(["Library", "List", "Idea"]);
+    expect(modeButtons.map((button) => button.textContent)).toEqual(["ライブラリ", "一覧", "Idea"]);
     expect(modeButtons[0]?.getAttribute("aria-pressed")).toBe("true");
 
     await act(async () => modeButtons[2]!.click());
@@ -159,8 +157,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
@@ -194,15 +191,14 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={updateIdea}
           updateProgressionBlock={updateProgressionBlock}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
     });
 
     await act(async () => {
-      container.querySelector<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)?.click();
+      container.querySelector<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.addFavorite}"]`)?.click();
     });
 
     expect(updateProgressionBlock).toHaveBeenCalledWith(visibleIdea.id, visibleBlock.id, { pinned: true });
@@ -235,16 +231,15 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
     });
 
-    const openButtons = container.querySelectorAll<HTMLButtonElement>('[aria-label="Open progression"]');
+    const openButtons = container.querySelectorAll<HTMLButtonElement>('[aria-label="進行を開く"]');
     expect(openButtons).toHaveLength(2);
-    expect(openButtons[1].title).toBe("Open progression");
+    expect(openButtons[1].title).toBe("進行を開く");
     await act(async () => openButtons[1].click());
     expect(openProgression).toHaveBeenCalledTimes(1);
     expect(openProgression).toHaveBeenLastCalledWith("idea-second", "block-second");
@@ -266,7 +261,6 @@ describe("VaultView keyboard shortcuts", () => {
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals={false}
         />,
       );
@@ -295,8 +289,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
@@ -317,7 +310,7 @@ describe("VaultView keyboard shortcuts", () => {
     expect(openProgression).toHaveBeenCalledTimes(1);
 
     openProgression.mockClear();
-    const openButton = container.querySelector<HTMLButtonElement>('[aria-label="Open progression"]')!;
+    const openButton = container.querySelector<HTMLButtonElement>('[aria-label="進行を開く"]')!;
     await act(async () => {
       openButton.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
       openButton.click();
@@ -334,7 +327,7 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => root.unmount());
   });
 
-  it("localizes row actions and keeps selection when favorite and copy are clicked", async () => {
+  it("labels row actions in Japanese and keeps selection when favorite and copy are clicked", async () => {
     const firstIdea = makeIdea({
       id: "idea-selected",
       progressionBlocks: [{ ...progressionBlock, id: "block-selected" }],
@@ -355,7 +348,7 @@ describe("VaultView keyboard shortcuts", () => {
     document.body.append(container);
     const root = createRoot(container);
 
-    const render = async (language: AppLanguage) => {
+    const render = async () => {
       await act(async () => {
         root.render(
           <VaultView
@@ -365,36 +358,35 @@ describe("VaultView keyboard shortcuts", () => {
             updateIdea={updateIdea}
             updateProgressionBlock={updateProgressionBlock}
             setToast={vi.fn()}
-            copy={appCopy[language]}
-            language={language}
+            copy={appCopy.ja}
             showRomanNumerals={false}
           />,
         );
       });
     };
 
-    await render("en");
+    await render();
     const search = container.querySelector<HTMLInputElement>("#vault-search");
-    expect(search?.placeholder).toBe(appCopy.en.library.searchPlaceholder);
+    expect(search?.placeholder).toBe(appCopy.ja.library.searchPlaceholder);
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-search"]')?.textContent)
-      .toBe(appCopy.en.library.search);
+      .toBe(appCopy.ja.library.search);
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-search"]')?.className)
       .not.toContain("sr-only");
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-sort"]')?.textContent)
-      .toBe(appCopy.en.library.sort);
+      .toBe(appCopy.ja.library.sort);
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-sort"]')?.className)
       .not.toContain("sr-only");
-    expect(container.querySelector('[role="group"][aria-label="Filter by bar count"]'))
+    expect(container.querySelector('[role="group"][aria-label="小節数で絞り込み"]'))
       .not.toBeNull();
-    expect(container.querySelectorAll('[role="group"][aria-label="Filter by bar count"] button[aria-pressed="true"]'))
+    expect(container.querySelectorAll('[role="group"][aria-label="小節数で絞り込み"] button[aria-pressed="true"]'))
       .toHaveLength(1);
-    expect(container.textContent).toContain(appCopy.en.library.all);
+    expect(container.textContent).toContain(appCopy.ja.library.all);
     expect(container.querySelector('[role="status"][aria-live="polite"]')?.textContent)
       .toContain("2");
-    const favorite = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)[1]!;
-    const copyButton = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.copyProgression}"]`)[1]!;
-    expect(favorite.title).toBe(appCopy.en.library.addFavorite);
-    expect(copyButton.title).toBe(appCopy.en.library.copyProgression);
+    const favorite = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.addFavorite}"]`)[1]!;
+    const copyButton = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.copyProgression}"]`)[1]!;
+    expect(favorite.title).toBe(appCopy.ja.library.addFavorite);
+    expect(copyButton.title).toBe(appCopy.ja.library.copyProgression);
     await act(async () => {
       favorite.click();
       copyButton.click();
@@ -408,7 +400,7 @@ describe("VaultView keyboard shortcuts", () => {
     });
     expect(openDetail).toHaveBeenLastCalledWith(firstIdea.id);
 
-    await render("ja");
+    await render();
     expect(container.querySelector<HTMLInputElement>("#vault-search")?.placeholder).toBe(appCopy.ja.library.searchPlaceholder);
     expect(container.textContent).toContain(appCopy.ja.library.all);
     expect(container.textContent).not.toContain("All");
@@ -445,8 +437,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals
         />,
       );
@@ -502,8 +493,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
@@ -522,44 +512,6 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => root.unmount());
   });
 
-  it("uses the latest language for a Space playback failure", async () => {
-    const setToast = vi.fn();
-    vi.spyOn(playbackController, "toggle").mockRejectedValue(undefined);
-    const idea = makeIdea({ progressionBlocks: [progressionBlock] });
-    const container = document.createElement("div");
-    document.body.append(container);
-    const root = createRoot(container);
-
-    const render = async (language: AppLanguage) => {
-      await act(async () => {
-        root.render(
-          <VaultView
-            ideas={[idea]}
-            openDetail={vi.fn()}
-            openCapture={vi.fn()}
-            updateIdea={vi.fn()}
-            updateProgressionBlock={vi.fn()}
-            setToast={setToast}
-            copy={appCopy[language]}
-            language={language}
-            showRomanNumerals={false}
-          />,
-        );
-      });
-    };
-
-    await render("ja");
-    await render("en");
-    await act(async () => {
-      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
-    });
-
-    expect(setToast).toHaveBeenCalledWith(appCopy.en.toast.chordPreviewFailed);
-    expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.chordPreviewFailed);
-
-    await act(async () => root.unmount());
-  });
-
   it("uses the shared preview sound for Vault playback", async () => {
     const toggle = vi.spyOn(playbackController, "toggle")
       .mockResolvedValue(undefined);
@@ -571,7 +523,7 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => {
       root.render(
         <PreviewSoundProvider>
-          <GlobalPreviewSoundSelector copy={appCopy.en} />
+          <GlobalPreviewSoundSelector copy={appCopy.ja} />
           <VaultView
             ideas={[idea]}
             openDetail={vi.fn()}
@@ -579,8 +531,7 @@ describe("VaultView keyboard shortcuts", () => {
             updateIdea={vi.fn()}
             updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
-            copy={appCopy.en}
-            language="en"
+            copy={appCopy.ja}
             showRomanNumerals={false}
           />
         </PreviewSoundProvider>,
@@ -593,7 +544,7 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => electricPiano?.click());
     await act(async () => {
       container.querySelector<HTMLButtonElement>(
-        'button[aria-label="Preview"]',
+        'button[aria-label="試聴"]',
       )?.click();
     });
 
@@ -621,7 +572,6 @@ describe("VaultView keyboard shortcuts", () => {
           updateProgressionBlock={vi.fn()}
           setToast={setToast}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals={false}
         />,
       );
@@ -658,8 +608,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
@@ -669,18 +618,18 @@ describe("VaultView keyboard shortcuts", () => {
     await setInputValue(search, "Library");
     await act(async () => {
       [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === "Library")?.click();
+        .find((button) => button.textContent === "ライブラリ")?.click();
     });
     expect(search.value).toBe("Library");
     const slashFilter = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("Slash Bass"));
+      .find((button) => button.textContent?.includes("分数コード"));
     await act(async () => slashFilter?.click());
     expect(container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
     expect(container.querySelector(".lv-vault-progression-primary")?.textContent).toContain("Cmaj7/E");
 
     await act(async () => {
       [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === "List")?.click();
+        .find((button) => button.textContent === "一覧")?.click();
     });
     expect(search.value).toBe("Library");
     await act(async () => root.unmount());
@@ -704,8 +653,7 @@ describe("VaultView keyboard shortcuts", () => {
           updateIdea={vi.fn()}
           updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals={false}
         />,
       );
@@ -722,7 +670,7 @@ describe("VaultView keyboard shortcuts", () => {
     expect(compactRow.querySelector(".lv-vault-progression")?.getAttribute("title"))
       .toContain("Cmaj7");
     expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(100);
-    expect(container.textContent).toContain("1000 items");
+    expect(container.textContent).toContain("1000件");
     await act(async () => root.unmount());
   });
 });

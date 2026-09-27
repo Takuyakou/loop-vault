@@ -83,7 +83,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={openProgression}
         openSettings={vi.fn()}
@@ -159,7 +158,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -198,7 +196,6 @@ describe("PracticeView", () => {
       await act(async () => root.render(
         <PracticeView
           ideas={[idea]}
-          language="ja"
           updateProgressionBlock={vi.fn(() => true)}
           openProgression={vi.fn()}
           openSettings={vi.fn()}
@@ -256,7 +253,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -293,7 +289,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -322,7 +317,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -394,7 +388,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -434,7 +427,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -459,7 +451,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -468,15 +459,15 @@ describe("PracticeView", () => {
     ));
 
     expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
-      .toBe("Key C major");
+      .toBe("キー C major");
 
-    const levels = ["L2 Play by name", "L3 Play by degree"];
+    const levels = ["L2 名前で弾く", "L3 度数で弾く"];
     for (const label of levels) {
       const levelButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
         .find((button) => button.textContent === label);
       await act(async () => levelButton?.click());
       expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
-        .toBe("Key C major");
+        .toBe("キー C major");
     }
 
     expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
@@ -497,7 +488,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -540,7 +530,6 @@ describe("PracticeView", () => {
       <PracticeView
         ideas={[idea]}
         initialTarget={{ ideaId: idea.id, blockId: block.id }}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -589,7 +578,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -605,7 +593,7 @@ describe("PracticeView", () => {
       selector.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("unsupported by the selected style");
+    expect(container.textContent).toContain("選択中のStyleへ未対応のコード");
     expect(container.querySelector<HTMLButtonElement>('[data-testid="practice-start"]')?.disabled)
       .toBe(true);
     const fallback = container.querySelector<HTMLInputElement>(
@@ -615,7 +603,7 @@ describe("PracticeView", () => {
 
     expect(container.querySelector<HTMLButtonElement>('[data-testid="practice-start"]')?.disabled)
       .toBe(false);
-    expect(container.textContent).toContain("Automatic");
+    expect(container.textContent).toContain("自動");
     await act(async () => root.unmount());
   });
 
@@ -631,7 +619,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -647,10 +634,10 @@ describe("PracticeView", () => {
       selector.dispatchEvent(new Event("change", { bubbles: true }));
     });
     const electricPiano = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Electric piano");
+      .find((button) => button.textContent === "エレピ");
     await act(async () => electricPiano?.click());
     const preview = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("Preview progression"));
+      .find((button) => button.textContent?.includes("進行を試聴"));
     await act(async () => preview?.click());
 
     expect(toggle).toHaveBeenCalledWith(
@@ -678,7 +665,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -734,7 +720,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={openProgression}
         openSettings={vi.fn()}
@@ -742,16 +727,16 @@ describe("PracticeView", () => {
       />,
     ));
 
-    const l4 = findButton(container, "L4 Nearby keys");
-    const l5 = findButton(container, "L5 Any key");
+    const l4 = findButton(container, "L4 近くのキーでも");
+    const l5 = findButton(container, "L5 どのキーでも");
     expect(l4?.disabled).toBe(true);
     expect(l5?.disabled).toBe(true);
     expect(container.textContent).toContain(
-      "L4/L5 requires a supported major or minor key.",
+      "L4/L5にはメジャーまたはマイナーのキー設定が必要です。",
     );
     await act(async () => findButton(
       container,
-      "Set the key in progression details",
+      "進行詳細でキーを設定",
     )?.click());
     expect(openProgression).toHaveBeenCalledWith(idea.id, block.id);
 
@@ -773,7 +758,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -852,7 +836,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -860,14 +843,14 @@ describe("PracticeView", () => {
       />,
     ));
 
-    expect(container.textContent).toContain("Confirm another day · L4 keys 6/6");
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    expect(container.textContent).toContain("別日確認 · L4 キー 6/6");
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("6 / 6");
     expect(container.querySelector(
       '[data-testid="transposition-confirmation-progress"]',
-    )?.textContent).toContain("Confirmation");
+    )?.textContent).toContain("確認チャレンジ");
     expect(container.querySelectorAll(
       '[data-key-state="confirmation"], [data-key-state="current"]',
     )).toHaveLength(2);
@@ -902,7 +885,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -910,11 +892,11 @@ describe("PracticeView", () => {
       />,
     ));
 
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("6 / 6");
-    expect(container.textContent).not.toContain("Clean 0/2");
+    expect(container.textContent).not.toContain("クリーン 0/2");
     await act(async () => root.unmount());
   });
 
@@ -968,7 +950,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1022,7 +1003,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1034,7 +1014,7 @@ describe("PracticeView", () => {
       '[data-testid="practice-queue-scroll"] button',
     )].find((candidate) => candidate.textContent?.includes("Stale transposition"));
     expect(queueItem?.textContent).not.toContain("6/6");
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
@@ -1074,14 +1054,13 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
       />,
     ));
-    await act(async () => findButton(container, "L5 Any key")?.click());
+    await act(async () => findButton(container, "L5 どのキーでも")?.click());
 
     const keys = [
       ...container.querySelectorAll<HTMLButtonElement>("[data-key-pitch-class]"),
@@ -1117,14 +1096,13 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
     const firstCard = container.querySelector<HTMLButtonElement>(
       '[data-progression-index="0"]',
     );
@@ -1148,7 +1126,7 @@ describe("PracticeView", () => {
       selector.value = "open-17";
       selector.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    expect(selector?.textContent).toContain("Open 1-7");
+    expect(selector?.textContent).toContain("オープン 1-7");
     expect(container.querySelector('[data-testid="practice-style-chip"]')).toBeNull();
     expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
       .not.toContain(block.chords[0].chord.label);
@@ -1181,7 +1159,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1220,7 +1197,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1302,7 +1278,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1311,8 +1286,8 @@ describe("PracticeView", () => {
       />,
     ));
 
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-progression-index="0"]',
     )?.click());
@@ -1409,7 +1384,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1418,8 +1392,8 @@ describe("PracticeView", () => {
       />,
     ));
 
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
@@ -1478,7 +1452,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1486,21 +1459,21 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
-    await act(async () => findButton(container, "Pause")?.click());
+    await act(async () => findButton(container, "一時停止")?.click());
 
     expect(clock.pause).toHaveBeenCalled();
-    expect(findButton(container, "Resume")?.disabled).toBe(false);
-    await act(async () => findButton(container, "End")?.click());
+    expect(findButton(container, "再開")?.disabled).toBe(false);
+    await act(async () => findButton(container, "終了")?.click());
     const stopCountBeforeResolution = clock.stop.mock.calls.length;
     deferred.resolve();
     await act(async () => Promise.resolve());
 
     expect(clock.stop).toHaveBeenCalledTimes(stopCountBeforeResolution);
-    expect(findButton(container, "Resume")).toBeUndefined();
+    expect(findButton(container, "再開")).toBeUndefined();
     expect(container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.disabled).toBe(false);
@@ -1530,7 +1503,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1538,18 +1510,18 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
     await act(async () => starts[0]?.callbacks.onTargetOpen(0));
     await playMidiNotes([60, 64, 71]);
 
-    expect(container.textContent).toContain("Ready");
-    expect(container.textContent).not.toContain("Matched");
+    expect(container.textContent).toContain("準備完了");
+    expect(container.textContent).not.toContain("合っています");
     deferred.resolve();
     await act(async () => Promise.resolve());
-    await act(async () => findButton(container, "End")?.click());
+    await act(async () => findButton(container, "終了")?.click());
 
     await act(async () => root.unmount());
   });
@@ -1579,7 +1551,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1587,19 +1558,19 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
     const targetBefore = container.querySelector(
       '[data-testid="transposition-target-key"]',
     )?.textContent;
-    await act(async () => findButton(container, "Pause")?.click());
+    await act(async () => findButton(container, "一時停止")?.click());
     await act(async () => starts[0]?.callbacks.onRoundCompleted());
 
     expect(starts).toHaveLength(1);
-    expect(findButton(container, "Resume")).toBeDefined();
+    expect(findButton(container, "再開")).toBeDefined();
     expect(container.querySelector(
       '[data-testid="transposition-target-key"]',
     )?.textContent).toBe(targetBefore);
@@ -1634,7 +1605,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1642,35 +1612,35 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
     await act(async () => starts[0]?.callbacks.onTargetOpen(0));
     await playMidiNotes([60, 64, 71]);
     await act(async () => starts[0]?.callbacks.onRoundCompleted());
-    expect(container.textContent).toContain("Round 2");
+    expect(container.textContent).toContain("2周目");
 
-    await act(async () => findButton(container, "Pause")?.click());
+    await act(async () => findButton(container, "一時停止")?.click());
     await act(async () => starts[0]?.callbacks.onRoundCompleted());
-    expect(container.textContent).toContain("Round 2");
-    await act(async () => findButton(container, "Resume")?.click());
+    expect(container.textContent).toContain("2周目");
+    await act(async () => findButton(container, "再開")?.click());
     await act(async () => Promise.resolve());
 
     expect(clock.start).toHaveBeenCalledTimes(1);
     expect(clock.resume).toHaveBeenCalledTimes(1);
-    expect(container.textContent).toContain("Almost there");
-    expect(container.textContent).not.toContain("Matched");
+    expect(container.textContent).toContain("あと少し");
+    expect(container.textContent).not.toContain("合っています");
 
     await reAttackMidiNotes([60, 64, 71]);
-    expect(container.textContent).toContain("Matched");
+    expect(container.textContent).toContain("合っています");
 
     await act(async () => root.unmount());
   });
 
   it.each([
-    ["resolve", "L4 Nearby keys"],
-    ["reject", "L5 Any key"],
+    ["resolve", "L4 近くのキーでも"],
+    ["reject", "L5 どのキーでも"],
   ] as const)(
     "starts a fresh %s Flow after pending pause without letting stale A stop B",
     async (settlement, levelLabel) => {
@@ -1698,7 +1668,6 @@ describe("PracticeView", () => {
       await act(async () => root.render(
         <PracticeView
           ideas={[idea]}
-          language="en"
           updateProgressionBlock={vi.fn(() => true)}
           openProgression={vi.fn()}
           openSettings={vi.fn()}
@@ -1707,13 +1676,13 @@ describe("PracticeView", () => {
         />,
       ));
       await act(async () => findButton(container, levelLabel)?.click());
-      await act(async () => findButton(container, "Flow")?.click());
+      await act(async () => findButton(container, "フロー")?.click());
       await act(async () => container.querySelector<HTMLButtonElement>(
         '[data-testid="practice-start"]',
       )?.click());
       await act(async () => starts[0]?.callbacks.onTargetOpen(2));
-      await act(async () => findButton(container, "Pause")?.click());
-      await act(async () => findButton(container, "Resume")?.click());
+      await act(async () => findButton(container, "一時停止")?.click());
+      await act(async () => findButton(container, "再開")?.click());
       await act(async () => Promise.resolve());
 
       expect(starts).toHaveLength(2);
@@ -1733,7 +1702,7 @@ describe("PracticeView", () => {
       expect(clock.stop).toHaveBeenCalledTimes(stopCountAfterB);
       expect(setToast).not.toHaveBeenCalled();
       await act(async () => starts[1]?.callbacks.onRoundCompleted());
-      expect(container.textContent).toContain("Round 2");
+      expect(container.textContent).toContain("2周目");
 
       await act(async () => root.unmount());
     },
@@ -1766,7 +1735,6 @@ describe("PracticeView", () => {
       await act(async () => root.render(
         <PracticeView
           ideas={[idea]}
-          language="en"
           updateProgressionBlock={vi.fn(() => true)}
           openProgression={vi.fn()}
           openSettings={vi.fn()}
@@ -1774,11 +1742,11 @@ describe("PracticeView", () => {
           practiceClock={clock}
         />,
       ));
-      await act(async () => findButton(container, "Flow")?.click());
+      await act(async () => findButton(container, "フロー")?.click());
       await act(async () => container.querySelector<HTMLButtonElement>(
         '[data-testid="practice-start"]',
       )?.click());
-      await act(async () => findButton(container, "End")?.click());
+      await act(async () => findButton(container, "終了")?.click());
 
       const restart = container.querySelector<HTMLButtonElement>(
         '[data-testid="practice-start"]',
@@ -1799,9 +1767,9 @@ describe("PracticeView", () => {
 
       expect(clock.stop).toHaveBeenCalledTimes(stopCountAfterB);
       expect(setToast).toHaveBeenCalledTimes(toastCountAfterB);
-      expect(findButton(container, "Pause")).toBeDefined();
+      expect(findButton(container, "一時停止")).toBeDefined();
       await act(async () => starts[1]?.callbacks.onRoundCompleted());
-      expect(container.textContent).toContain("Round 2");
+      expect(container.textContent).toContain("2周目");
 
       await act(async () => root.unmount());
     },
@@ -1830,7 +1798,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1838,7 +1805,7 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
@@ -1847,13 +1814,13 @@ describe("PracticeView", () => {
     }));
 
     expect(clock.stop).toHaveBeenCalled();
-    expect(findButton(container, "Pause")).toBeUndefined();
-    expect(findButton(container, "Resume")?.disabled).toBe(true);
+    expect(findButton(container, "一時停止")).toBeUndefined();
+    expect(findButton(container, "再開")?.disabled).toBe(true);
     await act(async () => defaultLiveMidiStore.setState({
       status: "connected",
     }));
-    expect(findButton(container, "Resume")?.disabled).toBe(false);
-    await act(async () => findButton(container, "Resume")?.click());
+    expect(findButton(container, "再開")?.disabled).toBe(false);
+    await act(async () => findButton(container, "再開")?.click());
     await act(async () => Promise.resolve());
     expect(starts).toHaveLength(2);
     const stopCountAfterB = clock.stop.mock.calls.length;
@@ -1862,7 +1829,7 @@ describe("PracticeView", () => {
     await act(async () => Promise.resolve());
     expect(clock.stop).toHaveBeenCalledTimes(stopCountAfterB);
     expect(setToast).not.toHaveBeenCalled();
-    expect(findButton(container, "Pause")).toBeDefined();
+    expect(findButton(container, "一時停止")).toBeDefined();
 
     await act(async () => root.unmount());
   });
@@ -1887,7 +1854,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1895,7 +1861,7 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
@@ -1903,10 +1869,10 @@ describe("PracticeView", () => {
 
     expect(clock.stop).toHaveBeenCalled();
     expect(setToast).toHaveBeenCalledWith(
-      "Flow practice could not start. Check the MIDI connection and audio settings.",
+      "フロー練習を開始できませんでした。MIDI接続とオーディオ設定を確認してください。",
     );
-    expect(findButton(container, "Pause")).toBeUndefined();
-    expect(findButton(container, "Resume")).toBeDefined();
+    expect(findButton(container, "一時停止")).toBeUndefined();
+    expect(findButton(container, "再開")).toBeDefined();
 
     await act(async () => root.unmount());
   });
@@ -1928,7 +1894,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1936,19 +1901,19 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
 
     for (const [index, label] of [
-      "L1 See and play",
-      "L2 Play by name",
-      "L3 Play by degree",
+      "L1 見て弾く",
+      "L2 名前で弾く",
+      "L3 度数で弾く",
     ].entries()) {
       if (index > 0) await act(async () => findButton(container, label)?.click());
       await act(async () => container.querySelector<HTMLButtonElement>(
         '[data-testid="practice-start"]',
       )?.click());
       expect(clock.start).toHaveBeenCalledTimes(index + 1);
-      await act(async () => findButton(container, "End")?.click());
+      await act(async () => findButton(container, "終了")?.click());
     }
 
     await act(async () => root.unmount());
@@ -1971,7 +1936,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -1979,11 +1943,11 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
-    await act(async () => findButton(container, "Pause")?.click());
+    await act(async () => findButton(container, "一時停止")?.click());
 
     const bpmInput = container.querySelector<HTMLInputElement>('input[type="number"]');
     expect(bpmInput?.value).toBe("60");
@@ -2023,7 +1987,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2031,8 +1994,8 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     const targetBefore = container.querySelector(
       '[data-testid="transposition-target-key"]',
     )?.textContent;
@@ -2046,7 +2009,7 @@ describe("PracticeView", () => {
       '[data-testid="transposition-target-key"]',
     )?.textContent).toBe(targetBefore);
     expect(clock.stop).toHaveBeenCalledTimes(stopCountBeforeRound);
-    expect(container.textContent).toContain("Retrying the same key.");
+    expect(container.textContent).toContain("このキーをもう一度練習します。");
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
@@ -2101,7 +2064,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2109,8 +2071,8 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-progression-index="0"]',
     )?.click());
@@ -2131,9 +2093,9 @@ describe("PracticeView", () => {
     expect(clock.stop.mock.calls.length).toBeGreaterThan(stopCountBeforeBoundary);
     expect(starts).toHaveLength(2);
     expect(starts[1]?.events[0]?.chord.root).not.toBe(firstRoot);
-    expect(findButton(container, "Resume")?.disabled).toBe(true);
+    expect(findButton(container, "再開")?.disabled).toBe(true);
     await act(async () => starts[1]?.callbacks.onTargetClose(0));
-    expect(container.textContent).not.toContain("Retrying the same key.");
+    expect(container.textContent).not.toContain("このキーをもう一度練習します。");
     restart.resolve();
     await act(async () => Promise.resolve());
     expect(container.querySelector(
@@ -2179,7 +2141,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2187,8 +2148,8 @@ describe("PracticeView", () => {
         practiceClock={clock}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
     const targetBefore = container.querySelector(
       '[data-testid="transposition-target-key"]',
     )?.textContent;
@@ -2213,7 +2174,7 @@ describe("PracticeView", () => {
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
-    expect(container.textContent).toContain("at least 70 BPM");
+    expect(container.textContent).toContain("70 BPM以上");
 
     await act(async () => root.unmount());
   });
@@ -2244,7 +2205,6 @@ describe("PracticeView", () => {
     const render = (nextIdea: typeof idea) => (
       <PracticeView
         ideas={[nextIdea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2253,7 +2213,7 @@ describe("PracticeView", () => {
       />
     );
     await act(async () => root.render(render(idea)));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="practice-start"]',
     )?.click());
@@ -2275,7 +2235,7 @@ describe("PracticeView", () => {
     )).not.toBeNull();
     expect(container.querySelector(
       '[data-testid="transposition-target-key"]',
-    )?.textContent).toContain("major");
+    )?.textContent).toContain("メジャー");
 
     await act(async () => root.unmount());
   });
@@ -2310,7 +2270,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2345,7 +2304,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2353,7 +2311,7 @@ describe("PracticeView", () => {
       />,
     ));
 
-    await act(async () => findButton(container, "Mix selection")?.click());
+    await act(async () => findButton(container, "ミックス選択")?.click());
     const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"][aria-label^="Mix item"]',
     )];
@@ -2361,13 +2319,13 @@ describe("PracticeView", () => {
     for (const checkbox of checkboxes.slice(0, 5)) {
       await act(async () => checkbox.click());
     }
-    expect(container.textContent).toContain("5 selected");
+    expect(container.textContent).toContain("5件選択");
     expect(checkboxes[5].disabled).toBe(true);
     expect(container.querySelector('[data-testid="mix-setup"]')).not.toBeNull();
 
-    await act(async () => findButton(container, "Clear selection")?.click());
-    expect(container.textContent).toContain("0 selected");
-    await act(async () => findButton(container, "Cancel")?.click());
+    await act(async () => findButton(container, "選択を解除")?.click());
+    expect(container.textContent).toContain("0件選択");
+    await act(async () => findButton(container, "キャンセル")?.click());
     expect(container.querySelector('[data-testid="mix-setup"]')).toBeNull();
 
     await act(async () => root.unmount());
@@ -2397,7 +2355,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2445,7 +2402,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="ja"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2500,7 +2456,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="ja"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2543,7 +2498,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2552,13 +2506,13 @@ describe("PracticeView", () => {
     ));
     await openTwoItemMix(container);
 
-    await act(async () => findButton(container, "Start this progression")?.click());
+    await act(async () => findButton(container, "この進行を開始")?.click());
     await setMidiNotesImmediately([60, 64, 71]);
     await act(async () => {
       vi.advanceTimersByTime(120);
       await Promise.resolve();
     });
-    await act(async () => findButton(container, "Start this progression")?.click());
+    await act(async () => findButton(container, "この進行を開始")?.click());
     await reAttackMidiNotesImmediately([60, 64, 71]);
     await act(async () => {
       vi.advanceTimersByTime(120);
@@ -2598,7 +2552,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2609,21 +2562,21 @@ describe("PracticeView", () => {
     await openTwoItemMix(container, { flow: true });
 
     for (let round = 0; round < 2; round += 1) {
-      await act(async () => findButton(container, "Start this progression")?.click());
+      await act(async () => findButton(container, "この進行を開始")?.click());
       await act(async () => starts[round]?.callbacks.onRoundCompleted());
     }
     expect(container.querySelector('[data-testid="mix-summary"]')).not.toBeNull();
     await act(async () => findButton(
       container,
-      "Retry only progressions that were not clean",
+      "クリーンでなかった進行だけ、もう一巡",
     )?.click());
 
     for (let round = 2; round < 4; round += 1) {
-      await act(async () => findButton(container, "Start this progression")?.click());
+      await act(async () => findButton(container, "この進行を開始")?.click());
       await act(async () => starts[round]?.callbacks.onRoundCompleted());
     }
-    await act(async () => findButton(container, "Repeat the same selection")?.click());
-    expect(findButton(container, "Start this progression")).toBeDefined();
+    await act(async () => findButton(container, "同じ選択でもう一度")?.click());
+    expect(findButton(container, "この進行を開始")).toBeDefined();
     await act(async () => document.body.dispatchEvent(new KeyboardEvent("keydown", {
       key: "Escape",
       bubbles: true,
@@ -2649,7 +2602,6 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={ideas}
-        language="en"
         updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
@@ -2657,8 +2609,8 @@ describe("PracticeView", () => {
       />,
     ));
     await openTwoItemMix(container, { targetSource: "shell-17" });
-    await act(async () => findButton(container, "Start this progression")?.click());
-    await act(async () => findButton(container, "End")?.click());
+    await act(async () => findButton(container, "この進行を開始")?.click());
+    await act(async () => findButton(container, "終了")?.click());
 
     expect(updateProgressionBlock).not.toHaveBeenCalled();
     expect(save).not.toHaveBeenCalled();
@@ -2689,7 +2641,6 @@ describe("PracticeView", () => {
       await act(async () => root.render(
         <PracticeView
           ideas={ideas}
-          language="en"
           updateProgressionBlock={updateProgressionBlock}
           openProgression={vi.fn()}
           openSettings={vi.fn()}
@@ -2698,9 +2649,9 @@ describe("PracticeView", () => {
         />,
       ));
       await openTwoItemMix(container, { flow: true });
-      await act(async () => findButton(container, "Start this progression")?.click());
+      await act(async () => findButton(container, "この進行を開始")?.click());
       if (operation === "end") {
-        await act(async () => findButton(container, "End")?.click());
+        await act(async () => findButton(container, "終了")?.click());
       } else {
         await act(async () => root.unmount());
       }
@@ -2744,16 +2695,16 @@ describe("PracticeView", () => {
     const root = createRoot(container);
     await act(async () => root.render(<PracticeView ideas={ideas} {...props} />));
     await openTwoItemMix(container, { flow: true });
-    await act(async () => findButton(container, "Start this progression")?.click());
+    await act(async () => findButton(container, "この進行を開始")?.click());
 
     await act(async () => root.render(<PracticeView ideas={changedIdeas} {...props} />));
     expect(container.querySelector('[data-testid="mix-snapshot-drift"]')).not.toBeNull();
     expect(clock.stop).toHaveBeenCalled();
-    expect(findButton(container, "Resume")).toBeUndefined();
-    await act(async () => findButton(container, "Reload current data")?.click());
+    expect(findButton(container, "再開")).toBeUndefined();
+    await act(async () => findButton(container, "最新データで再読込")?.click());
 
     expect(container.querySelector('[data-testid="mix-snapshot-drift"]')).toBeNull();
-    expect(findButton(container, "Start this progression")).toBeDefined();
+    expect(findButton(container, "この進行を開始")).toBeDefined();
     expect(updateProgressionBlock).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
@@ -2769,15 +2720,14 @@ describe("PracticeView", () => {
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
-        language="en"
         updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
       />,
     ));
-    await act(async () => findButton(container, "L4 Nearby keys")?.click());
-    expect(findButton(container, "Mix selection")?.disabled).toBe(true);
+    await act(async () => findButton(container, "L4 近くのキーでも")?.click());
+    expect(findButton(container, "ミックス選択")?.disabled).toBe(true);
 
     await act(async () => root.unmount());
   });
@@ -2947,14 +2897,14 @@ async function openTwoItemMix(
   container: HTMLElement,
   options: { flow?: boolean; targetSource?: string } = {},
 ): Promise<void> {
-  await act(async () => findButton(container, "Mix selection")?.click());
+  await act(async () => findButton(container, "ミックス選択")?.click());
   const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
     'input[type="checkbox"]',
   )];
   await act(async () => checkboxes[0]?.click());
   await act(async () => checkboxes[1]?.click());
   if (options.flow) {
-    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => findButton(container, "フロー")?.click());
   }
   if (options.targetSource) {
     const targetSelect = [...container.querySelectorAll<HTMLSelectElement>("select")]
@@ -2967,5 +2917,5 @@ async function openTwoItemMix(
       targetSelect.dispatchEvent(new Event("change", { bubbles: true }));
     });
   }
-  await act(async () => findButton(container, "Start Mix practice")?.click());
+  await act(async () => findButton(container, "ミックス練習を開始")?.click());
 }

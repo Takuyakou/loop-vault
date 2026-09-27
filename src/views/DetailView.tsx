@@ -11,7 +11,7 @@ import {
   progressionBlockAnchor,
   type PendingProgressionBlockDeletion,
 } from "../domain/undoDeletion";
-import type { AppCopy, AppLanguage } from "../i18n";
+import type { AppCopy } from "../i18n";
 import { type DraftParseResult, useDraftSave } from "../hooks/useDraftSave";
 import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
@@ -46,7 +46,6 @@ function ProgressionBlockCard({
   onCopyProgression,
   onPreviewError,
   copy,
-  language,
   effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
@@ -57,7 +56,6 @@ function ProgressionBlockCard({
   onCopyProgression: () => void;
   onPreviewError: (error: unknown) => void;
   copy: AppCopy;
-  language: AppLanguage;
   effectiveKeySignature?: string;
 }) {
   const { sound: previewSound } = usePreviewSound();
@@ -72,7 +70,6 @@ function ProgressionBlockCard({
           <span className="mt-2 inline-flex">
             <PracticeProgressBadge
               block={block}
-              language={language}
               effectiveKeySignature={effectiveKeySignature}
             />
           </span>
@@ -111,7 +108,6 @@ export function DetailView({
   requestDelete,
   setToast,
   copy,
-  language,
   recoveryPending = false,
 }: {
   idea: SongIdea;
@@ -125,7 +121,6 @@ export function DetailView({
   requestDelete: (idea: SongIdea) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
-  language: AppLanguage;
   recoveryPending?: boolean;
 }) {
 
@@ -282,7 +277,6 @@ export function DetailView({
                     });
                   }}
                   copy={copy}
-                  language={language}
                 />
               ))}
             </div>

@@ -39,7 +39,7 @@ describe("CaptureView text progression entry", () => {
       const midiButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
         .find((button) => button.textContent === "MIDI");
       const textButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
-        .find((button) => button.textContent === "Text");
+        .find((button) => button.textContent === "テキスト");
 
       expect(mounted.container.querySelector("[data-capture-stage='text']")).not.toBeNull();
       expect(textButton?.getAttribute("aria-pressed")).toBe("true");
@@ -62,15 +62,15 @@ describe("CaptureView text progression entry", () => {
       expect(save?.disabled).toBe(false);
       await act(async () => save?.click());
       expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledOnce();
-      expect(mounted.container.textContent).toContain("Practice limit: invalid-timing");
+      expect(mounted.container.textContent).toContain("練習制限: invalid-timing");
       const practice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
         .find(button => button.textContent?.trim() === "Voicing Loop");
       expect(practice).toBeUndefined();
       const disabledPractice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "Practice in Voicing Loop");
+        .find(button => button.textContent?.trim() === "Voicing Loopで練習");
       expect(disabledPractice?.disabled).toBe(true);
       const view = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "Open progression");
+        .find(button => button.textContent?.trim() === "進行を開く");
       expect(view?.disabled).toBe(false);
     } finally {
       await mounted.unmount();
@@ -108,7 +108,7 @@ describe("CaptureView text progression entry", () => {
       const midiButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
         .find((button) => button.textContent === "MIDI");
       const textButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
-        .find((button) => button.textContent === "Text");
+        .find((button) => button.textContent === "テキスト");
 
       expect(midiButton?.getAttribute("aria-pressed")).toBe("true");
       expect(textButton?.tagName).toBe("BUTTON");
@@ -188,7 +188,7 @@ describe("CaptureView text progression entry", () => {
     try {
       const textButton = [...mounted.container.querySelectorAll<HTMLButtonElement>(
         "[data-testid='capture-input-mode'] button",
-      )].find((button) => button.textContent === "Text");
+      )].find((button) => button.textContent === "テキスト");
       await act(async () => textButton?.click());
 
       await setInput(
@@ -204,7 +204,7 @@ describe("CaptureView text progression entry", () => {
 
       expect(mounted.container.querySelector("[data-testid='manual-candidate-editor']")).not.toBeNull();
       expect(mounted.container.querySelector("[data-testid='draft-source']")?.textContent)
-        .toContain("Created from text entry");
+        .toContain("テキスト入力から作成");
       for (const action of ["split", "merge", "insert", "delete"]) {
         expect(mounted.container.querySelector(`button[data-action="${action}"]`)).toBeNull();
       }
@@ -212,7 +212,7 @@ describe("CaptureView text progression entry", () => {
       const sourceChip = mounted.container.querySelector<HTMLElement>(
         "[data-testid='capture-voicing-source-chip']",
       );
-      expect(sourceChip?.getAttribute("title")).toBe("Auto-generated from this text entry.");
+      expect(sourceChip?.getAttribute("title")).toBe("テキスト入力から自動生成したボイシングです。");
       expect(mounted.container.textContent).not.toContain("Source MIDI");
       expect(mounted.createIdeaFromDraft).not.toHaveBeenCalled();
       expect(mounted.appendBlockToIdea).not.toHaveBeenCalled();
@@ -221,7 +221,7 @@ describe("CaptureView text progression entry", () => {
 
       const draftEditor = mounted.container.querySelector("[data-testid='manual-candidate-editor']");
       const saveToVault = [...(draftEditor?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
-        .find((button) => button.textContent?.includes(appCopy.en.capture.saveToVault));
+        .find((button) => button.textContent?.includes(appCopy.ja.capture.saveToVault));
       await act(async () => saveToVault?.click());
 
       const title = mounted.container.querySelector<HTMLInputElement>("input[name='progression-title']");
@@ -249,11 +249,11 @@ describe("CaptureView text progression entry", () => {
       expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
       expect(mounted.clearAnalysis).not.toHaveBeenCalled();
 
-      expect(mounted.container.textContent).toContain("Your saved progression is ready to practice");
+      expect(mounted.container.textContent).toContain("保存した進行を練習できます");
       const voicingLoop = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
         .find((button) => button.textContent?.trim() === "Voicing Loop");
       const viewSaved = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.trim() === "View saved progression");
+        .find((button) => button.textContent?.trim() === "保存した進行を見る");
       await act(async () => voicingLoop?.click());
       await act(async () => viewSaved?.click());
       expect(mounted.openSavedTextProgressionPractice).toHaveBeenCalledWith({
@@ -310,8 +310,7 @@ async function renderCapture(initialInputMode: "midi" | "text" = "midi") {
         openSavedTextProgressionPractice={openSavedTextProgressionPractice}
         updateIdea={vi.fn()}
         setToast={vi.fn()}
-        copy={appCopy.en}
-        language="en"
+        copy={appCopy.ja}
         showRomanNumerals
         controller={controller}
       />,

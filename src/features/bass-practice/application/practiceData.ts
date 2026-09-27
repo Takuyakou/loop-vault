@@ -368,11 +368,11 @@ function regenerateQueueExercise(item: ReviewQueueItem, source: PracticeAttempt)
 }
 
 function recoveryMessage(result: PracticeLoadResult): string | undefined {
-  if (result.recovery) return "Practice data was isolated because it could not be validated. Vault data was not changed.";
-  if (result.quarantine.length) return `${result.quarantine.length} invalid Practice attempt(s) were isolated and excluded from summaries.`;
+  if (result.recovery) return "練習データを検証できなかったため、別に分けて保管しました。Vault のデータは変わっていません。";
+  if (result.quarantine.length) return `無効な練習記録 ${result.quarantine.length} 件を別に分け、集計から外しました。`;
   return undefined;
 }
-function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "Practice progress could not be loaded."; }
+function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "練習の記録を読み込めませんでした。"; }
 function addAttemptAndAcknowledgeClaim(file: PracticeFileV2, attempt: PracticeAttempt): PracticeFileV2 {
   return addCompletedAttempt(file, attempt);
 }

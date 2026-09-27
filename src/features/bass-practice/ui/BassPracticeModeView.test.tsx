@@ -16,8 +16,8 @@ describe("Bass Practice production modes", () => {
     await act(async () => root?.render(<BassPracticeModeView />));
     const degree = container.querySelector("[data-testid='degree-echo-view']");
     expect(degree).not.toBeNull();
-    expect(degree?.querySelector("[aria-label='Degree Echo progress']")?.textContent)
-      .toContain("ListenSingThinkPlayReviewTransfer");
+    expect(degree?.querySelector("[aria-label='Degree Echoの進行']")?.textContent)
+      .toContain("聴く歌う考える演奏レビュー移調");
     expect(Array.from(container.querySelectorAll("[role='tab']")).map((tab) => tab.textContent)).toEqual([
       "Degree Echo", "Rhythm Echo", "Bassline Echo", "Root Motion Echo",
     ]);
@@ -37,13 +37,13 @@ describe("Bass Practice production modes", () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
     await act(async () => root?.render(<BassPracticeModeView />));
     expect(container.querySelector("[data-testid='rhythm-echo-view']")).not.toBeNull();
-    expect(container.querySelector("[data-testid='rhythm-grid']")?.textContent).toContain("hidden");
-    for (let index = 0; index < 4; index += 1) await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Hint"))?.click());
+    expect(container.querySelector("[data-testid='rhythm-grid']")?.textContent).toContain("隠れています");
+    for (let index = 0; index < 4; index += 1) await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("ヒント"))?.click());
     expect(container.querySelector("[data-testid='rhythm-grid']")?.textContent).toContain("0+");
   });
   test("uses the selected Japanese language for Rhythm Echo and Bassline Echo controls", async () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
-    await act(async () => root?.render(<BassPracticeModeView language="ja" />));
+    await act(async () => root?.render(<BassPracticeModeView />));
     const degree = container.querySelector("[data-testid='degree-echo-view']");
     expect(degree?.querySelector("[aria-label='Degree Echoの進行']")?.textContent)
       .toContain("聴く歌う考える演奏レビュー移調");

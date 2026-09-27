@@ -76,7 +76,6 @@ import {
   type TranspositionSessionState,
 } from "../domain/practiceTransposition";
 import type {
-  AppLanguage,
   ChordTimelineItem,
   SavedProgressionBlock,
   SongIdea,
@@ -122,7 +121,6 @@ interface PracticeVoicingGuide {
 interface PracticeViewProps {
   ideas: readonly SongIdea[];
   initialTarget?: PracticeTarget;
-  language: AppLanguage;
   updateProgressionBlock: (
     ideaId: string,
     blockId: string,
@@ -151,7 +149,7 @@ const copy = {
     title: "進行を、自分の手で覚える",
     queue: "練習キュー",
     recommended: "おすすめ",
-    favorite: "Favorite",
+    favorite: "お気に入り",
     unstarted: "未着手",
     confirmation: "確認待ち",
     noProgressions: "保存済みのコード進行がありません。",
@@ -188,7 +186,7 @@ const copy = {
     progressionOverview: "進行全体",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
     previewChord: (label: string) => `${label}を試聴`,
-    currentKey: (key: string) => `Key ${key}`,
+    currentKey: (key: string) => `キー ${key}`,
     barLabel: (bar: number) => `${bar}小節`,
     stepCurrent: "いま",
     stepComplete: "完了",
@@ -200,7 +198,7 @@ const copy = {
     sourceInferred: "元MIDIから推定",
     practice: "鍵盤で記録",
     held: "押している音",
-    bass: "Bass",
+    bass: "ベース",
     partial: "あと少し",
     match: "合っています",
     wrong: "構成外の音があります",
@@ -271,144 +269,18 @@ const copy = {
     mixExact: "指定音高",
     mixPitchClass: "ピッチクラス",
   },
-  en: {
-    eyebrow: "CHORD DOJO",
-    title: "Turn progressions into muscle memory",
-    queue: "Practice queue",
-    recommended: "Recommended",
-    favorite: "Favorite",
-    unstarted: "Unstarted",
-    confirmation: "Confirmation",
-    noProgressions: "No saved chord progressions yet.",
-    noMatches: "No progressions match this filter.",
-    openDetail: "Open progression",
-    selectPrompt: "Choose a progression from the practice queue.",
-    level: "Level",
-    l1: "L1 See and play",
-    l2: "L2 Play by name",
-    l3: "L3 Play by degree",
-    l4: "L4 Nearby keys",
-    l5: "L5 Any key",
-    leniency: "Judgement",
-    easy: "Easy",
-    normal: "Normal",
-    strict: "Strict",
-    modeLabel: "Mode",
-    step: "Step",
-    flow: "Flow",
-    midi: "MIDI input",
-    connected: "Connected",
-    connecting: "Connecting",
-    disconnected: "Not connected",
-    reconnect: "Reconnect",
-    midiActivationFailed: "MIDI input could not start. Check the connection and reconnect.",
-    settings: "Settings",
-    start: "Start practice",
-    pause: "Pause",
-    resume: "Resume",
-    end: "End",
-    flowClockStartFailed: "Flow practice could not start. Check the MIDI connection and audio settings.",
-    current: "Now",
-    next: "Next",
-    progressionOverview: "Full progression",
-    progressionPosition: (current: number, total: number) => `${current} / ${total}`,
-    previewChord: (label: string) => `Preview ${label}`,
-    currentKey: (key: string) => `Key ${key}`,
-    barLabel: (bar: number) => `Bar ${bar}`,
-    stepCurrent: "Now",
-    stepComplete: "Complete",
-    stepMissed: "Retry",
-    stepUpcoming: "Upcoming",
-    guide: "Guide",
-    generated: "Generated",
-    source: "Source MIDI",
-    sourceInferred: "Inferred from MIDI",
-    practice: "Keyboard capture",
-    held: "Held notes",
-    bass: "Bass",
-    partial: "Almost there",
-    match: "Matched",
-    wrong: "A foreign tone is held",
-    ready: "Ready",
-    clean: "Clean",
-    round: (value: number) => `Round ${value}`,
-    bpm: "BPM",
-    targetTempo: (value: number) => `Level target ${value} BPM`,
-    flowUnsupported: "Flow currently supports 4/4. Step mode is still available.",
-    l3NeedsKey: "Set a key on the progression to use L3.",
-    transpositionNeedsKey: "L4/L5 requires a supported major or minor key.",
-    transpositionOpenDetail: "Set the key in progression details",
-    transpositionPractice: "Transposition practice",
-    targetPlanRangeUnavailable: "This voicing does not fit the playable keyboard range after transposition. Choose another voicing.",
-    stepToFlow: "Try this key in Flow mode?",
-    startFlow: "Practice in Flow",
-    dirtyRetry: "Retrying the same key.",
-    skipKey: "Next key",
-    chordAsBlock: "Play the notes as a held chord in this phase. Arpeggio practice is planned later.",
-    noSound: "Built-in sound and MIDI Thru for silent controllers are outside this phase.",
-    provisional: "Provisional",
-    confirmationDue: "Confirm another day",
-    confirmed: (level: number) => `L${level} confirmed`,
-    stale: "Progression changed",
-    staleConfirm: "The chord content changed. Start practice progress again for the current progression?",
-    staleReset: "Practice progress was reset for the current progression.",
-    saved: "Practice progress saved.",
-    saveFailed: "Could not save practice progress.",
-    flowSuggestion: "Round complete. Try it in Flow mode?",
-    miniSummaryEmpty: "No chord data",
-    styleChangeConfirm: "Pause and change the voicing? The current round will be discarded.",
-    styleStartBlocked: "Unsupported chords remain. Allow automatic fallback or choose another voicing.",
-    previewFailed: "Could not start the voicing preview.",
-    replaceVoicing: "Play and replace",
-    leftGuide: "Left-hand guide",
-    rightGuide: "Right-hand guide",
-    shape: (count: number) => `${count}-note shape`,
-    styleShell: "Shell 1-7",
-    styleOpen: "Open 1-7",
-    styleRootless: (variant?: string) => `Rootless ${variant ?? "A/B"}`,
-    styleClose: "Automatic",
-    addedColor: (intervals: readonly string[]) => `Added color tones: ${intervals.join(", ")}`,
-    mixSelect: "Mix selection",
-    mixUnavailable: "Mix cannot be selected while L4/L5 transposition practice is active.",
-    mixSelected: (count: number) => `${count} selected`,
-    mixMaximum: "Mix practice supports up to five progressions.",
-    mixClear: "Clear selection",
-    mixCancel: "Cancel",
-    mixSetup: "Shared Mix practice settings",
-    mixStart: "Start Mix practice",
-    mixCycles: "Cycles",
-    mixCycle: (count: number) => `${count} cycle${count === 1 ? "" : "s"}`,
-    mixNeedSelection: "Select two to five progressions.",
-    mixPreflightTitle: "Mix practice cannot start.",
-    mixMissingBlock: "The progression could not be found.",
-    mixMissingKey: "A key is required to use L3.",
-    mixUnsupportedKey: "Check that the key is major or minor.",
-    mixFlowSignature: "Flow supports only 4/4 progressions.",
-    mixTargetUnavailable: "The selected practice voicing could not be generated.",
-    mixInvalid: "Check the chord progression data.",
-    mixTargetSource: "Practice voicing",
-    mixResolved: "Saved voicing",
-    mixClose: "Automatic (close)",
-    mixShell: "Shell 1-7",
-    mixOpen: "Open 1-7",
-    mixRootless: "Rootless A/B",
-    mixFallback: "Use Automatic (close) only for unsupported chords",
-    mixExact: "Exact pitch",
-    mixPitchClass: "Pitch class",
-  },
 } as const;
 
 export function PracticeView({
   ideas,
   initialTarget,
-  language,
   updateProgressionBlock,
   openProgression,
   openSettings,
   setToast,
   practiceClock,
 }: PracticeViewProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const localDate = localDateString(new Date());
   const recommendations = useMemo(
     () => recommendPracticeBlocks(ideas, localDate),
@@ -790,7 +662,7 @@ export function PracticeView({
     ? practiceEvents[(displayedEventIndex + 1) % practiceEvents.length]
     : undefined;
   const displayedKeySignature = transpositionMode && transposedProgression
-    ? formatKeySignature(transposedProgression.targetKey, language)
+    ? formatKeySignature(transposedProgression.targetKey)
     : keySignature;
   const sessionContext = useMemo(
     () => ({
@@ -2036,7 +1908,6 @@ export function PracticeView({
                 item={item}
                 active={selected?.ideaId === item.ideaId && selected.block.id === item.block.id}
                 localDate={localDate}
-                language={language}
                 concealProgression={transpositionMode}
                 disabled={mixActive}
                 selectionMode={mixSelecting}
@@ -2068,7 +1939,6 @@ export function PracticeView({
           {mixInitialState ? (
             <MixPracticeWorkspace
               initialState={mixInitialState}
-              language={language}
               practiceClock={clockRef.current}
               candidates={mixCandidates}
               styleOptions={mixStyleOptions}
@@ -2125,7 +1995,6 @@ export function PracticeView({
                     <PracticeBadge
                       block={block}
                       localDate={localDate}
-                      language={language}
                       effectiveKeySignature={selected.effectiveKeySignature}
                     />
                     {block.pinned ? (
@@ -2174,7 +2043,6 @@ export function PracticeView({
                       <VoicingSourceChip
                         status={currentVoicingSource.status}
                         reason={currentVoicingSource.reason}
-                        language={language}
                         testId="dojo-voicing-source-chip"
                       />
                       {currentVoicingSource.status !== "source" ? (
@@ -2226,7 +2094,7 @@ export function PracticeView({
                   />
                   <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
                     <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
-                    {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
+                    {mode === "flow" ? <span>{text.bpm} {bpm} · {beat}拍目</span> : null}
                     {!transpositionMode ? (
                       <span className="text-[var(--lv-text-muted)]">
                         {text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2
@@ -2349,7 +2217,6 @@ export function PracticeView({
               {transpositionMode && transpositionSession ? (
                 <TranspositionPracticeControls
                   state={transpositionSession}
-                  language={language}
                   manualSelectionDisabled={Boolean(
                     running
                     || flowRestartPending
@@ -2371,7 +2238,6 @@ export function PracticeView({
               ) : null}
 
               <VoicingPracticeControls
-                language={language}
                 targetSource={targetSource}
                 preferences={voicingPreferences}
                 matchMode={styleMatchMode}
@@ -2477,7 +2343,6 @@ export function PracticeView({
                     allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
                     requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
                     level={level}
-                    language={language}
                     matchState={session?.lastMatch?.state}
                     concealNoteNames={transpositionMode}
                   />
@@ -2598,7 +2463,6 @@ function QueueItem({
   item,
   active,
   localDate,
-  language,
   concealProgression,
   disabled = false,
   selectionMode = false,
@@ -2610,7 +2474,6 @@ function QueueItem({
   item: PracticeRecommendation;
   active: boolean;
   localDate: string;
-  language: AppLanguage;
   concealProgression: boolean;
   disabled?: boolean;
   selectionMode?: boolean;
@@ -2643,7 +2506,7 @@ function QueueItem({
           <span className="block truncate text-sm font-semibold">{item.ideaTitle}</span>
           <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
             {item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ")
-              || copy[language].miniSummaryEmpty}
+              || copy.ja.miniSummaryEmpty}
           </span>
         </span>
       </label>
@@ -2663,9 +2526,9 @@ function QueueItem({
       </span>
       <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
         {concealProgression
-          ? copy[language].transpositionPractice
+          ? copy.ja.transpositionPractice
           : item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ")
-            || copy[language].miniSummaryEmpty}
+            || copy.ja.miniSummaryEmpty}
       </span>
       <span className={`mt-2 inline-flex border px-1.5 py-0.5 text-[10px] ${
         state === "confirmation-due"
@@ -2677,7 +2540,6 @@ function QueueItem({
         {stateLabel(
           item.block,
           state,
-          language,
         )}
       </span>
     </button>
@@ -2687,12 +2549,10 @@ function QueueItem({
 function PracticeBadge({
   block,
   localDate,
-  language,
   effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
   localDate: string;
-  language: AppLanguage;
   effectiveKeySignature?: string;
 }) {
   const state = practiceProgressState(block, localDate, effectiveKeySignature);
@@ -2709,7 +2569,7 @@ function PracticeBadge({
     }`}>
       {state === "stale" ? <AlertTriangle aria-hidden="true" size={16} /> : null}
       {state === "confirmed" ? <Check aria-hidden="true" size={16} /> : null}
-      {stateLabel(block, state, language)}
+      {stateLabel(block, state)}
     </span>
   );
 }
@@ -2730,7 +2590,7 @@ function ProgressionOverview({
   currentIndex: number;
   level: PracticeSessionLevel;
   keySignature?: string;
-  text: typeof copy.ja | typeof copy.en;
+  text: typeof copy.ja;
   previewDisabled: boolean;
   previewableEvents: readonly boolean[];
   onPreviewChord: (index: number) => void;
@@ -2894,7 +2754,7 @@ function formatGuideNotes(notes: readonly number[]): string {
 
 function styleGuideLabel(
   guide: PracticeVoicingGuide,
-  text: typeof copy.ja | typeof copy.en,
+  text: typeof copy.ja,
 ): string {
   if (guide.fallback) return text.styleClose;
   if (guide.styleId === "shell-17") return text.styleShell;
@@ -2910,7 +2770,7 @@ function MatchState({
   state: PracticeSessionState["lastMatch"] extends infer _Value
     ? "empty" | "partial" | "match" | "wrong" | undefined
     : never;
-  text: typeof copy.ja | typeof copy.en;
+  text: typeof copy.ja;
 }) {
   const label = state === "match"
     ? text.match
@@ -2953,7 +2813,7 @@ function MixSetupPanel({
   onAllowUnsupportedFallbackChange,
   onStart,
 }: {
-  text: typeof copy.ja | typeof copy.en;
+  text: typeof copy.ja;
   level: DojoPracticeLevel;
   mode: PracticeMode;
   leniency: PracticeLeniency;
@@ -2979,7 +2839,7 @@ function MixSetupPanel({
   return (
     <section data-testid="mix-setup" aria-labelledby="mix-setup-title">
       <div className="border-b border-[var(--lv-border)] pb-4">
-        <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">MIX SESSION</p>
+        <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">ミックスセッション</p>
         <h3 id="mix-setup-title" className="mt-1 text-xl font-semibold">{text.mixSetup}</h3>
         <p className="mt-2 text-sm text-[var(--lv-text-muted)]" aria-live="polite">
           {text.mixSelected(selectedCount)}
@@ -3150,7 +3010,7 @@ function mixTargetSourceFromValue(value: string): PracticeTargetSource {
 
 function mixErrorLabel(
   error: MixPreflightError,
-  text: typeof copy.ja | typeof copy.en,
+  text: typeof copy.ja,
 ): string {
   if (error.code === "selection-count") return text.mixNeedSelection;
   if (error.code === "missing-block") return text.mixMissingBlock;
@@ -3170,9 +3030,8 @@ function mixErrorLabel(
 function stateLabel(
   block: SavedProgressionBlock,
   state: ReturnType<typeof practiceProgressState>,
-  language: AppLanguage,
 ): string {
-  const text = copy[language];
+  const text = copy.ja;
   const base = state === "stale"
     ? text.stale
     : state === "confirmation-due"
@@ -3182,7 +3041,7 @@ function stateLabel(
         : state === "confirmed"
           ? text.confirmed(block.practice?.confirmedLevel ?? 1)
           : text.unstarted;
-  const coverage = transpositionProgressLabel(block, language);
+  const coverage = transpositionProgressLabel(block);
   return coverage && state !== "stale"
     ? `${base} · ${coverage}`
     : base;
@@ -3213,15 +3072,12 @@ function matchesQueueFilter(
 
 function transpositionProgressLabel(
   block: SavedProgressionBlock,
-  language: AppLanguage,
 ): string | undefined {
   const count = block.practice?.transposition?.clearedKeyPitchClasses.length;
   if (count === undefined) return undefined;
   const summary = transpositionCoverageSummary(block.practice);
   if (!summary) return undefined;
-  return language === "ja"
-    ? `L${summary.level} キー ${summary.cleared}/${summary.total}`
-    : `L${summary.level} keys ${summary.cleared}/${summary.total}`;
+  return `L${summary.level} キー ${summary.cleared}/${summary.total}`;
 }
 
 function segmentClass(active: boolean): string {

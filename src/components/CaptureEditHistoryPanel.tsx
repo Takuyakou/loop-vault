@@ -2,22 +2,19 @@ import type {
   CaptureEditHistoryEntry,
   ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
-import type { AppLanguage } from "../i18n";
 
 export interface CaptureEditHistoryPanelProps {
   draft: ManualCandidateDraft;
-  language: AppLanguage;
   onJump(historyIndex: number): void;
 }
 
 export function CaptureEditHistoryPanel({
   draft,
-  language,
   onJump,
 }: CaptureEditHistoryPanelProps) {
   if (draft.history.length === 0) return null;
-  const title = language === "ja" ? "操作履歴" : "Edit history";
-  const initial = language === "ja" ? "開始時点" : "Initial state";
+  const title = "操作履歴";
+  const initial = "開始時点";
 
   return (
     <section
@@ -41,7 +38,7 @@ export function CaptureEditHistoryPanel({
           <HistoryButton
             key={entry.id}
             current={draft.historyIndex === index}
-            label={`${index + 1}. ${historyLabel(entry, language)}`}
+            label={`${index + 1}. ${historyLabel(entry)}`}
             onClick={() => onJump(index)}
           />
         ))}
@@ -77,9 +74,7 @@ function HistoryButton({
 
 function historyLabel(
   entry: CaptureEditHistoryEntry,
-  language: AppLanguage,
 ): string {
-  if (language === "en") return entry.label;
   switch (entry.operation.type) {
     case "create-from-range": return "範囲から作成";
     case "create-from-text": return "テキスト入力から作成";

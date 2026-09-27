@@ -41,9 +41,9 @@ test("production defaults expose and start every shipped Bass Practice mode with
   const bassline = page.getByTestId("bassline-echo-view");
   await expect(bassline).toBeVisible();
   await bassline.getByTestId("bassline-listen").click();
-  await expect(bassline.getByTestId("bassline-listen")).toHaveText(/^(停止|Stop)$/, { timeout: 10_000 });
+  await expect(bassline.getByTestId("bassline-listen")).toHaveText(/^(停止)$/, { timeout: 10_000 });
   await bassline.getByTestId("bassline-listen").click();
-  await bassline.getByRole("button", { name: /^(レビュー|Review)$/ }).click();
+  await bassline.getByRole("button", { name: /^(レビュー)$/ }).click();
   await expect(bassline.getByTestId("record-accompaniment")).toBeVisible();
   await expect(bassline.getByTestId("chord-context-history-save")).toBeVisible();
 
@@ -65,10 +65,10 @@ test("Vault Detail opens Bass Practice in the production default", async ({ page
   await createSavedProgression(page, "P5.16 production activation");
   await openVault(page);
   const row = page.locator(".lv-vault-row").first();
-  await row.getByRole("button", { name: /Open progression|進行を開く/ }).click();
+  await row.getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
-  await detail.getByRole("button", { name: /Practice|練習する/ }).click();
+  await detail.getByRole("button", { name: /練習する/ }).click();
   const bassline = page.getByTestId("bassline-echo-view");
   await expect(bassline).toBeVisible();
-  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行|Vault source/);
+  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行/);
 });

@@ -35,9 +35,9 @@ describe("DegreeFretboard", () => {
     expect(container.textContent).toContain("丸印は答えの候補位置");
 
     const degreeToggle = Array.from(container.querySelectorAll("button"))
-      .find((button) => button.textContent === "Degree");
+      .find((button) => button.textContent === "度数");
     const noteToggle = Array.from(container.querySelectorAll("button"))
-      .find((button) => button.textContent === "Note Name");
+      .find((button) => button.textContent === "音名");
     expect(degreeToggle?.getAttribute("aria-pressed")).toBe("true");
     await act(async () => noteToggle?.click());
     expect(noteToggle?.getAttribute("aria-pressed")).toBe("true");

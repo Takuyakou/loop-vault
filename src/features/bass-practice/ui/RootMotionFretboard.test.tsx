@@ -22,7 +22,7 @@ function eightNoteExercise(seed: string) {
 test("shows all eight roots in their ordered fretboard sequence", async () => {
   const exercise = eightNoteExercise("p519-06-fretboard");
   const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
-  await act(async () => root?.render(<RootMotionFretboard exercise={exercise} handedness="right" language="ja" />));
+  await act(async () => root?.render(<RootMotionFretboard exercise={exercise} handedness="right" />));
   expect(container.querySelector("[data-testid='root-motion-fretboard-summary']")?.textContent).toContain("\u30b9\u30c6\u30c3\u30d7 8");
   expect(container.textContent).toContain("\u30eb\u30fc\u30c8\u306e\u9806\u756a");
   expect(Array.from(container.querySelectorAll("[data-root-motion-step-markers]")).some((marker) => marker.getAttribute("data-root-motion-step-markers")?.split("/").includes("8"))).toBe(true);
@@ -40,12 +40,12 @@ test("retains both real fingering positions when an eight-note chain changes phy
   const sharedStep = String(discontinuityIndex + 1);
 
   const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
-  await act(async () => root?.render(<RootMotionFretboard exercise={exercise} handedness="right" language="en" />));
+  await act(async () => root?.render(<RootMotionFretboard exercise={exercise} handedness="right" />));
   const targetMarker = container.querySelector(`[data-root-motion-position="${previousTarget.stringIndex}:${previousTarget.fret}"]`);
   const sourceMarker = container.querySelector(`[data-root-motion-position="${nextSource.stringIndex}:${nextSource.fret}"]`);
   expect(targetMarker?.getAttribute("data-root-motion-step-markers")?.split("/")).toContain(sharedStep);
   expect(sourceMarker?.getAttribute("data-root-motion-step-markers")?.split("/")).toContain(sharedStep);
   const summary = container.querySelector("[data-testid='root-motion-fretboard-summary']")?.textContent;
-  expect(summary).toContain(`Step ${sharedStep} target: string ${exercise.generatorSnapshot.tuning.length - previousTarget.stringIndex}, fret ${previousTarget.fret}.`);
-  expect(summary).toContain(`Step ${sharedStep} source: string ${exercise.generatorSnapshot.tuning.length - nextSource.stringIndex}, fret ${nextSource.fret};`);
+  expect(summary).toContain(`ステップ ${sharedStep} 移動先: 弦 ${exercise.generatorSnapshot.tuning.length - previousTarget.stringIndex}, フレット ${previousTarget.fret}.`);
+  expect(summary).toContain(`ステップ ${sharedStep} 開始: 弦 ${exercise.generatorSnapshot.tuning.length - nextSource.stringIndex}, フレット ${nextSource.fret};`);
 });

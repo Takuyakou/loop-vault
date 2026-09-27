@@ -43,7 +43,6 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={slot}
           anchorElement={anchor}
-          language="en"
           onPreview={onPreview}
           onApply={onApply}
           onReset={vi.fn()}
@@ -94,7 +93,6 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={slot}
           anchorElement={anchor}
-          language="en"
           onPreview={onPreview}
           onApply={onApply}
           onReset={vi.fn()}
@@ -119,9 +117,9 @@ describe("QuickChordEditor", () => {
       panel.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
     expect(onClose).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("Keep this chord edit?");
+    expect(document.body.textContent).toContain("編集したコードをどうしますか？");
     const applyAndClose = [...document.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Apply and close")!;
+      .find((button) => button.textContent === "適用して閉じる")!;
     await act(async () => applyAndClose.click());
     expect(onApply).toHaveBeenCalledWith(
       expect.objectContaining({ root: 1 }),
@@ -148,7 +146,6 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={slot}
           anchorElement={anchor}
-          language="en"
           onPreview={vi.fn()}
           onApply={onApply}
           onReset={vi.fn()}
@@ -165,10 +162,10 @@ describe("QuickChordEditor", () => {
       outside.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     });
     expect(onClose).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("Keep this chord edit?");
+    expect(document.body.textContent).toContain("編集したコードをどうしますか？");
 
     const discard = [...document.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Discard and close")!;
+      .find((button) => button.textContent === "破棄して閉じる")!;
     await act(async () => discard.click());
     expect(onApply).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledOnce();
@@ -190,7 +187,6 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={slot}
           anchorElement={anchor}
-          language="en"
           onPreview={vi.fn()}
           onApply={vi.fn()}
           onReset={onReset}
@@ -235,7 +231,6 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={manyAlternatives}
           anchorElement={anchor}
-          language="en"
           onPreview={onPreview}
           onApply={onApply}
           onReset={vi.fn()}

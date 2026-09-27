@@ -85,7 +85,7 @@ test("pointer flow completes the dwell and plays a real different-key Transfer",
   await expect(relation).toContainText("同じ度数・同じリズム");
   await expect(view.getByTestId("degree-answer")).toHaveText(sourceDegrees ?? "");
   await expect(view.getByTestId("degree-status-announcement"))
-    .toHaveText("Degree Echo: Transfer C → G。移調先はGです。");
+    .toHaveText("Degree Echo: 移調 C → G。移調先はGです。");
 
   const transferReference = view.locator("[data-transfer-reference-action]");
   await transferReference.click();

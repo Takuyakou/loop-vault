@@ -145,13 +145,13 @@ describe("closeLiveMidiModeSafely", () => {
       saveBounds: vi.fn(),
       hidePreview: () => { previewVisible = false; },
       preserveHistory,
-      reportFailure: () => { feedback = appCopy.en.liveMidi.miniModeCloseFailed; },
+      reportFailure: () => { feedback = appCopy.ja.liveMidi.miniModeCloseFailed; },
     })).resolves.toBeUndefined();
 
     expect(releaseLease).toHaveBeenCalledOnce();
     expect(previewVisible).toBe(false);
     expect(preserveHistory).toHaveBeenCalledOnce();
-    expect(feedback).toBe("Could not close Mini Mode. The main window returned safely.");
+    expect(feedback).toBe("ミニモードを終了できませんでした。メイン画面は安全に復帰しました。");
     expect(feedback).not.toContain(rawFailure.message);
   });
 });

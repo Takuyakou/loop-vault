@@ -67,7 +67,7 @@ export const PianoKey = memo(function PianoKey({
       data-guide-hand={guideHand}
     >
       {!concealNoteName ? (
-        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})${fingerLabel ? `, ${fingerLabel}` : ""}${guideBass ? ", BASS reference" : ""}`}</title>
+        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})${fingerLabel ? `, ${fingerLabel}` : ""}${guideBass ? "、ベースの参考音" : ""}`}</title>
       ) : null}
       <rect
         x={x}
