@@ -32,8 +32,10 @@ test("VL-03 seeks by card, overview, ruler, and shortcuts without previewing", a
   await ruler.click({ position: { x: (await cards.first().boundingBox())!.width * 2.2, y: 8 } });
   await expect(cards.nth(2)).toHaveAttribute("aria-current", "step");
   await expect(workspace.getByTestId("voicing-loop-event-preview")).toHaveCount(0);
+  const metronome = page.getByTestId("global-metronome");
+  const previousMetronome = await metronome.getAttribute("aria-pressed");
   await page.keyboard.press("m");
-  await expect(workspace.getByTestId("voicing-loop-transport")).toContainText("メトロノーム: OFF");
+  await expect(metronome).toHaveAttribute("aria-pressed", previousMetronome === "true" ? "false" : "true");
   await page.keyboard.press("r");
   await expect(workspace.getByRole("checkbox", { name: "お手本音" })).not.toBeChecked();
 });
