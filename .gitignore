@@ -44,3 +44,7 @@ src-tauri/gen/
 playwright-report/
 test-results/
 blob-report/
+
+# Phase 8.9: generated screenshots and machine-local Claude Code settings
+p89-generated/
+.claude/settings.local.json
