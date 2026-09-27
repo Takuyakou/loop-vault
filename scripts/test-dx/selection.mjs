@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 const ownerContracts = Object.freeze({
   "test-infrastructure": {
     smoke: [], vitest: [], browser: [],
-    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
+    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/test-dx/check-gallery-excluded.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
   },
   "text-capture": {
     smoke: ["src/components/capture/textCaptureStatus.test.ts"],
