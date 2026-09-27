@@ -1717,7 +1717,7 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
+          <Surface className="lv-voicing-loop-transport h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
             <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
               <BpmScrubField

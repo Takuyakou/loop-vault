@@ -238,7 +238,138 @@
   }
 }
 
+/* P8.9 toast stack (bottom right). Mock: RHome.dc.html .toast / lvToastIn / lvToastTime. */
+@layer components {
+  .lv-toast-stack {
+    position: fixed;
+    right: 16px;
+    z-index: var(--lv-z-toast);
+    display: flex;
+    width: min(340px, calc(100vw - 32px));
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .lv-toast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lv-toast {
+    --lv-toast-tone: var(--lv-info);
+    --lv-toast-tone-soft: var(--lv-info-soft);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    overflow: hidden;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid var(--lv-toast-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-toast-surface);
+    box-shadow: inset 3px 0 0 var(--lv-toast-tone), var(--lv-toast-shadow);
+    pointer-events: auto;
+    animation: lvToastIn var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-toast[data-tone="success"] { --lv-toast-tone: var(--lv-success); --lv-toast-tone-soft: var(--lv-success-soft); }
+  .lv-toast[data-tone="warning"] { --lv-toast-tone: var(--lv-warning); --lv-toast-tone-soft: var(--lv-warning-soft); }
+  .lv-toast[data-tone="error"] { --lv-toast-tone: var(--lv-danger); --lv-toast-tone-soft: var(--lv-danger-soft); }
+
+  .lv-toast-icon {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--lv-toast-tone-soft);
+    color: var(--lv-toast-tone);
+  }
+
+  .lv-toast-message {
+    min-width: 0;
+    flex-grow: 1;
+    color: var(--lv-text);
+    font-size: var(--lv-text-13);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .lv-toast-action {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: var(--lv-accent);
+    font-size: var(--lv-text-12);
+    font-weight: 600;
+  }
+
+  .lv-toast-action:hover {
+    background: var(--lv-accent-soft);
+  }
+
+  .lv-toast-close {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--lv-text-muted);
+  }
+
+  .lv-toast-close:hover {
+    background: var(--lv-surface-overlay);
+    color: var(--lv-text);
+  }
+
+  .lv-toast-bar {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--lv-toast-tone);
+    opacity: 0.55;
+    transform-origin: left center;
+    animation: lvToastTime linear forwards;
+  }
+
+  .lv-toast[data-paused="true"] .lv-toast-bar {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes lvToastIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lvToastTime {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Keep toasts clear of bottom bars (the Capture inspector adds its own height via
+   --lv-sticky-inspector-height). */
+:root:has(.lv-text-status-bar) { --lv-toast-offset-bottom: 64px; }
+:root:has(.lv-voicing-loop-transport) { --lv-toast-offset-bottom: 112px; }
+:root:has(.lv-web-live-midi-preview) { --lv-toast-offset-bottom: 288px; }
+
 @media (prefers-reduced-motion: reduce) {
+  .lv-toast {
+    animation: none;
+  }
+
+  .lv-toast-bar {
+    display: none;
+  }
+
   .lv-button-neutral,
   .lv-button-state,
   .lv-tooltip,
