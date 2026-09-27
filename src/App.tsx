@@ -17,12 +17,6 @@ import {
   playbackController,
   type PlaybackController,
 } from "./audio/playbackController";
-import {
-  applyMasterVolume,
-  loadMasterVolume,
-  normalizeMasterVolume,
-  saveMasterVolume,
-} from "./audio/masterVolume";
 import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
@@ -61,6 +55,8 @@ import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { createNotificationStore, NotificationProvider } from "./components/notifications";
+import { useAppNavigation } from "./hooks/useAppNavigation";
+import { useMasterVolume } from "./hooks/useMasterVolume";
 import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
@@ -245,7 +241,26 @@ function App() {
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
-  const [view, setView] = useState<View>("home");
+  const {
+    view,
+    setView,
+    selectedId,
+    setSelectedId,
+    selectedProgression,
+    setSelectedProgression,
+    setProgressionDetailDirty,
+    pendingProgressionLeave,
+    setPendingProgressionLeave,
+    requestProgressionLeave,
+    navigateTo,
+    openDetail,
+    openProgression,
+  } = useAppNavigation({
+    onNavigate: (nextView, previousView) => {
+      setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, previousView, nextView));
+      if (nextView === "capture") setCaptureInitialInputMode("midi");
+    },
+  });
   const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled() || isBassPracticeRootMotionEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
@@ -253,8 +268,6 @@ function App() {
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
-  const [selectedId, setSelectedId] = useState<string>();
-  const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
@@ -267,11 +280,9 @@ function App() {
     if (message) notifications.notify({ message });
   }, [notifications]);
   const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
-  const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
+  const { masterVolume, changeMasterVolume } = useMasterVolume();
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
-  const [progressionDetailDirty, setProgressionDetailDirty] = useState(false);
-  const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
   const mainContentRef = useRef<HTMLElement>(null);
   const previousViewRef = useRef(view);
@@ -420,10 +431,6 @@ function App() {
   }, [initialize]);
 
   useEffect(() => {
-    applyMasterVolume(masterVolume);
-  }, [masterVolume]);
-
-  useEffect(() => {
     if (undoEpochRef.current !== vaultEpoch) undoQueue.clearAll();
     undoEpochRef.current = vaultEpoch;
   }, [undoQueue.clearAll, vaultEpoch]);
@@ -511,28 +518,6 @@ function App() {
     };
   }, [language]);
 
-  function openDetail(id: string) {
-    setSelectedProgression(undefined);
-    setSelectedId(id);
-    setView("detail");
-  }
-
-  function requestProgressionLeave(action: () => void) {
-    if (view === "progression-detail" && progressionDetailDirty) {
-      setPendingProgressionLeave(() => action);
-      return;
-    }
-    action();
-  }
-
-  function navigateTo(nextView: View) {
-    requestProgressionLeave(() => {
-      setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, view, nextView));
-      if (nextView === "capture") setCaptureInitialInputMode("midi");
-      setView(nextView);
-    });
-  }
-
   function openDirectVoicingLoop() {
     requestProgressionLeave(() => {
       setVoicingPracticeHandoff(undefined);
@@ -548,18 +533,6 @@ function App() {
       setCaptureInitialInputMode("text");
       setView("capture");
     });
-  }
-
-  function changeMasterVolume(value: number) {
-    const normalized = normalizeMasterVolume(value);
-    setMasterVolume(normalized);
-    saveMasterVolume(normalized);
-  }
-
-  function openProgression(ideaId: string, blockId: string) {
-    setSelectedId(ideaId);
-    setSelectedProgression({ ideaId, blockId });
-    setView("progression-detail");
   }
 
   /** Receives a detached P5.18 snapshot only; raw Vault data never crosses this boundary. */
