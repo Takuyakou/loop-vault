@@ -34,6 +34,8 @@ Only layers that actually exist are listed below.
 
 ## Running
 
+The current FAST / FEATURE / UI / FULL entry points and product-contract ownership are in [`docs/test-rationalization/README.md`](../test-rationalization/README.md). FAST and FEATURE are feedback loops; the FULL gate is required before a merge.
+
 ```text
 npm test                       # Vitest (incl. validator tests)
 npm run validate:phase-docs    # phase-doc consistency + privacy
