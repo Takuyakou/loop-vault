@@ -1,0 +1,3914 @@
+[
+  {
+    "file": "e2e/accessibility.spec.ts",
+    "tier": "T4",
+    "phase": "cross-phase",
+    "area": "accessibility.spec.ts",
+    "tests": 3,
+    "loc": 54
+  },
+  {
+    "file": "e2e/capture-flow.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "capture-flow.spec.ts",
+    "tests": 6,
+    "loc": 151
+  },
+  {
+    "file": "e2e/keyboard.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "keyboard.spec.ts",
+    "tests": 4,
+    "loc": 126
+  },
+  {
+    "file": "e2e/phase5.13-3.spec.ts",
+    "tier": "T3",
+    "phase": "5.13-3",
+    "area": "phase5.13-3.spec.ts",
+    "tests": 2,
+    "loc": 207
+  },
+  {
+    "file": "e2e/phase5.14-midi-export.spec.ts",
+    "tier": "T3",
+    "phase": "5.14",
+    "area": "phase5.14-midi-export.spec.ts",
+    "tests": 1,
+    "loc": 120
+  },
+  {
+    "file": "e2e/phase5.16-production-activation.spec.ts",
+    "tier": "T3",
+    "phase": "5.16",
+    "area": "phase5.16-production-activation.spec.ts",
+    "tests": 2,
+    "loc": 72
+  },
+  {
+    "file": "e2e/phase5.16.1-degree-echo.spec.ts",
+    "tier": "T3",
+    "phase": "5.16.1",
+    "area": "phase5.16.1-degree-echo.spec.ts",
+    "tests": 7,
+    "loc": 139
+  },
+  {
+    "file": "e2e/phase5.17-record-compare.spec.ts",
+    "tier": "T3",
+    "phase": "5.17",
+    "area": "phase5.17-record-compare.spec.ts",
+    "tests": 4,
+    "loc": 93
+  },
+  {
+    "file": "e2e/phase5.18-chord-context.spec.ts",
+    "tier": "T3",
+    "phase": "5.18",
+    "area": "phase5.18-chord-context.spec.ts",
+    "tests": 4,
+    "loc": 188
+  },
+  {
+    "file": "e2e/phase5.19-root-motion.spec.ts",
+    "tier": "T3",
+    "phase": "5.19",
+    "area": "phase5.19-root-motion.spec.ts",
+    "tests": 4,
+    "loc": 89
+  },
+  {
+    "file": "e2e/phase5.20-text-progression.spec.ts",
+    "tier": "T3",
+    "phase": "5.20",
+    "area": "phase5.20-text-progression.spec.ts",
+    "tests": 2,
+    "loc": 241
+  },
+  {
+    "file": "e2e/phase5.22-source-bassline-practice.spec.ts",
+    "tier": "T3",
+    "phase": "5.22",
+    "area": "phase5.22-source-bassline-practice.spec.ts",
+    "tests": 2,
+    "loc": 167
+  },
+  {
+    "file": "e2e/phase5.23-timeline-legibility.spec.ts",
+    "tier": "T3",
+    "phase": "5.23",
+    "area": "phase5.23-timeline-legibility.spec.ts",
+    "tests": 2,
+    "loc": 156
+  },
+  {
+    "file": "e2e/phase5.27-voicing-loop-ui.spec.ts",
+    "tier": "T3",
+    "phase": "5.27",
+    "area": "phase5.27-voicing-loop-ui.spec.ts",
+    "tests": 4,
+    "loc": 135
+  },
+  {
+    "file": "e2e/phase5.28-voicing-loop-navigation.spec.ts",
+    "tier": "T3",
+    "phase": "5.28",
+    "area": "phase5.28-voicing-loop-navigation.spec.ts",
+    "tests": 3,
+    "loc": 135
+  },
+  {
+    "file": "e2e/phase5.30-voicing-loop-polish.spec.ts",
+    "tier": "T3",
+    "phase": "5.30",
+    "area": "phase5.30-voicing-loop-polish.spec.ts",
+    "tests": 3,
+    "loc": 180
+  },
+  {
+    "file": "e2e/phase5.31-control-timing.spec.ts",
+    "tier": "T3",
+    "phase": "5.31",
+    "area": "phase5.31-control-timing.spec.ts",
+    "tests": 5,
+    "loc": 171
+  },
+  {
+    "file": "e2e/phase5.32-suggested-fingering.spec.ts",
+    "tier": "T3",
+    "phase": "5.32",
+    "area": "phase5.32-suggested-fingering.spec.ts",
+    "tests": 3,
+    "loc": 170
+  },
+  {
+    "file": "e2e/phase5.33-voicing-rule-ui.spec.ts",
+    "tier": "T3",
+    "phase": "5.33",
+    "area": "phase5.33-voicing-rule-ui.spec.ts",
+    "tests": 9,
+    "loc": 302
+  },
+  {
+    "file": "e2e/phase8.8-extended-text.spec.ts",
+    "tier": "T3",
+    "phase": "8.8",
+    "area": "phase8.8-extended-text.spec.ts",
+    "tests": 3,
+    "loc": 89
+  },
+  {
+    "file": "e2e/phase8.8.4-text-transport.spec.ts",
+    "tier": "T3",
+    "phase": "8.8.4",
+    "area": "phase8.8.4-text-transport.spec.ts",
+    "tests": 4,
+    "loc": 84
+  },
+  {
+    "file": "e2e/phase8.8.5-capture-geometry.spec.ts",
+    "tier": "T4",
+    "phase": "8.8.5",
+    "area": "phase8.8.5-capture-geometry.spec.ts",
+    "tests": 2,
+    "loc": 60
+  },
+  {
+    "file": "e2e/phase8.8.5-final-ui.spec.ts",
+    "tier": "T3",
+    "phase": "8.8.5",
+    "area": "phase8.8.5-final-ui.spec.ts",
+    "tests": 2,
+    "loc": 87
+  },
+  {
+    "file": "e2e/phase8.8.5-text-workspace.spec.ts",
+    "tier": "T3",
+    "phase": "8.8.5",
+    "area": "phase8.8.5-text-workspace.spec.ts",
+    "tests": 5,
+    "loc": 126
+  },
+  {
+    "file": "e2e/phase8.8.6-capture-closure.spec.ts",
+    "tier": "T4",
+    "phase": "8.8.6",
+    "area": "phase8.8.6-capture-closure.spec.ts",
+    "tests": 5,
+    "loc": 146
+  },
+  {
+    "file": "e2e/reduced-motion.spec.ts",
+    "tier": "T4",
+    "phase": "cross-phase",
+    "area": "reduced-motion.spec.ts",
+    "tests": 1,
+    "loc": 25
+  },
+  {
+    "file": "e2e/responsive.spec.ts",
+    "tier": "T4",
+    "phase": "cross-phase",
+    "area": "responsive.spec.ts",
+    "tests": 3,
+    "loc": 37
+  },
+  {
+    "file": "e2e/vault-flow.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "vault-flow.spec.ts",
+    "tests": 3,
+    "loc": 68
+  },
+  {
+    "file": "e2e/visual.spec.ts",
+    "tier": "T4",
+    "phase": "cross-phase",
+    "area": "visual.spec.ts",
+    "tests": 6,
+    "loc": 169
+  },
+  {
+    "file": "e2e/voicing-loop-v2.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "voicing-loop-v2.spec.ts",
+    "tests": 11,
+    "loc": 272
+  },
+  {
+    "file": "e2e/voicing-loop-vl09.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "voicing-loop-vl09.spec.ts",
+    "tests": 3,
+    "loc": 108
+  },
+  {
+    "file": "e2e/voicing-loop-vl10.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "voicing-loop-vl10.spec.ts",
+    "tests": 4,
+    "loc": 138
+  },
+  {
+    "file": "e2e/voicing-loop-vl11.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "voicing-loop-vl11.spec.ts",
+    "tests": 3,
+    "loc": 111
+  },
+  {
+    "file": "e2e/voicing-loop-vl12.spec.ts",
+    "tier": "T3",
+    "phase": "cross-phase",
+    "area": "voicing-loop-vl12.spec.ts",
+    "tests": 4,
+    "loc": 159
+  },
+  {
+    "file": "scripts/ai-handoff/validate.test.mjs",
+    "tier": "T0",
+    "phase": "cross-phase",
+    "area": "ai-handoff",
+    "tests": 18,
+    "loc": 154
+  },
+  {
+    "file": "scripts/evaluate-voice-aware-reranker.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "evaluate-voice-aware-reranker.test.ts",
+    "tests": 10,
+    "loc": 236
+  },
+  {
+    "file": "scripts/generate-degraded-midi.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "generate-degraded-midi.test.ts",
+    "tests": 9,
+    "loc": 101
+  },
+  {
+    "file": "scripts/p521/buildRoleGroundTruthReview.test.ts",
+    "tier": "T1",
+    "phase": "521",
+    "area": "p521",
+    "tests": 2,
+    "loc": 73
+  },
+  {
+    "file": "scripts/p521/evaluateRoleV2Shadow.test.ts",
+    "tier": "T1",
+    "phase": "521",
+    "area": "p521",
+    "tests": 7,
+    "loc": 325
+  },
+  {
+    "file": "scripts/p521/importSuppliedRoleFixturePack.test.ts",
+    "tier": "T1",
+    "phase": "521",
+    "area": "p521",
+    "tests": 4,
+    "loc": 106
+  },
+  {
+    "file": "scripts/p521/measureRoleV2OfficialChordSafety.test.ts",
+    "tier": "T1",
+    "phase": "521",
+    "area": "p521",
+    "tests": 2,
+    "loc": 38
+  },
+  {
+    "file": "scripts/p521/roleGroundTruthTemplate.test.ts",
+    "tier": "T1",
+    "phase": "521",
+    "area": "p521",
+    "tests": 5,
+    "loc": 128
+  },
+  {
+    "file": "scripts/p5211/auditMixedVoiceBaseline.test.ts",
+    "tier": "T1",
+    "phase": "5211",
+    "area": "p5211",
+    "tests": 4,
+    "loc": 111
+  },
+  {
+    "file": "scripts/p5211/evaluateHarmonicCoreIntegration.test.ts",
+    "tier": "T1",
+    "phase": "5211",
+    "area": "p5211",
+    "tests": 2,
+    "loc": 69
+  },
+  {
+    "file": "scripts/p5211/noteRoleFixtures.test.ts",
+    "tier": "T1",
+    "phase": "5211",
+    "area": "p5211",
+    "tests": 8,
+    "loc": 138
+  },
+  {
+    "file": "scripts/p524/fragmentConsolidator.test.ts",
+    "tier": "T1",
+    "phase": "524",
+    "area": "p524",
+    "tests": 6,
+    "loc": 212
+  },
+  {
+    "file": "scripts/p524/fragmentConsolidatorSafety.test.ts",
+    "tier": "T1",
+    "phase": "524",
+    "area": "p524",
+    "tests": 14,
+    "loc": 150
+  },
+  {
+    "file": "scripts/p524/fragmentConsolidatorScale.test.ts",
+    "tier": "T1",
+    "phase": "524",
+    "area": "p524",
+    "tests": 1,
+    "loc": 35
+  },
+  {
+    "file": "scripts/p524/shadowEvidence.test.ts",
+    "tier": "T1",
+    "phase": "524",
+    "area": "p524",
+    "tests": 16,
+    "loc": 439
+  },
+  {
+    "file": "scripts/p526/stage01KeyAwareSpelling.test.ts",
+    "tier": "T1",
+    "phase": "526",
+    "area": "p526",
+    "tests": 10,
+    "loc": 304
+  },
+  {
+    "file": "scripts/p526/stage02LocalHarmonicStateShadow.edgeCases.test.ts",
+    "tier": "T1",
+    "phase": "526",
+    "area": "p526",
+    "tests": 18,
+    "loc": 454
+  },
+  {
+    "file": "scripts/p526/stage02LocalHarmonicStateShadow.test.ts",
+    "tier": "T1",
+    "phase": "526",
+    "area": "p526",
+    "tests": 6,
+    "loc": 338
+  },
+  {
+    "file": "scripts/p534/isolationCore.test.ts",
+    "tier": "T1",
+    "phase": "534",
+    "area": "p534",
+    "tests": 12,
+    "loc": 145
+  },
+  {
+    "file": "scripts/p534/semanticOracle.test.ts",
+    "tier": "T1",
+    "phase": "534",
+    "area": "p534",
+    "tests": 12,
+    "loc": 100
+  },
+  {
+    "file": "scripts/p535/promotionGates.test.ts",
+    "tier": "T1",
+    "phase": "535",
+    "area": "p535",
+    "tests": 9,
+    "loc": 62
+  },
+  {
+    "file": "scripts/p535/shadowRanking.test.ts",
+    "tier": "T1",
+    "phase": "535",
+    "area": "p535",
+    "tests": 12,
+    "loc": 105
+  },
+  {
+    "file": "scripts/p535/temporalEvidence.test.ts",
+    "tier": "T1",
+    "phase": "535",
+    "area": "p535",
+    "tests": 18,
+    "loc": 224
+  },
+  {
+    "file": "scripts/p536/attackProvenance.test.ts",
+    "tier": "T1",
+    "phase": "536",
+    "area": "p536",
+    "tests": 10,
+    "loc": 111
+  },
+  {
+    "file": "scripts/p536/meterIdentityAB.test.ts",
+    "tier": "T1",
+    "phase": "536",
+    "area": "p536",
+    "tests": 8,
+    "loc": 74
+  },
+  {
+    "file": "scripts/p536/subwindow.test.ts",
+    "tier": "T1",
+    "phase": "536",
+    "area": "p536",
+    "tests": 10,
+    "loc": 117
+  },
+  {
+    "file": "scripts/p537/e2eProjection.test.ts",
+    "tier": "T1",
+    "phase": "537",
+    "area": "p537",
+    "tests": 8,
+    "loc": 106
+  },
+  {
+    "file": "scripts/p537/productionIntegration.test.ts",
+    "tier": "T1",
+    "phase": "537",
+    "area": "p537",
+    "tests": 11,
+    "loc": 88
+  },
+  {
+    "file": "scripts/p537/unionChimera.test.ts",
+    "tier": "T1",
+    "phase": "537",
+    "area": "p537",
+    "tests": 22,
+    "loc": 108
+  },
+  {
+    "file": "scripts/p538/presentationGroupingShadow.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 8,
+    "loc": 218
+  },
+  {
+    "file": "scripts/p538/presentationGroupingShadowV2.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 5,
+    "loc": 182
+  },
+  {
+    "file": "scripts/p538/stage00Baseline.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 2,
+    "loc": 74
+  },
+  {
+    "file": "scripts/p538/stage01ShadowAudit.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 1,
+    "loc": 55
+  },
+  {
+    "file": "scripts/p538/stage01bShadowV2Audit.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 1,
+    "loc": 55
+  },
+  {
+    "file": "scripts/p538/stage03ProductionAudit.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 1,
+    "loc": 63
+  },
+  {
+    "file": "scripts/p538/stage04HardeningAudit.test.ts",
+    "tier": "T1",
+    "phase": "538",
+    "area": "p538",
+    "tests": 1,
+    "loc": 28
+  },
+  {
+    "file": "scripts/p539/groundTruthPacket.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 3,
+    "loc": 82
+  },
+  {
+    "file": "scripts/p539/privatePromotionEvaluation.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 16,
+    "loc": 147
+  },
+  {
+    "file": "scripts/p539/shadowCandidateRanking.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 13,
+    "loc": 342
+  },
+  {
+    "file": "scripts/p539/shadowRootRelativeIdentity.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 14,
+    "loc": 469
+  },
+  {
+    "file": "scripts/p539/stage00VocabularyBaseline.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 4,
+    "loc": 70
+  },
+  {
+    "file": "scripts/p539/stage03bInteraction.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 5,
+    "loc": 78
+  },
+  {
+    "file": "scripts/p539/stage03cSafetyPacket.test.ts",
+    "tier": "T1",
+    "phase": "539",
+    "area": "p539",
+    "tests": 3,
+    "loc": 66
+  },
+  {
+    "file": "scripts/p540/candidateScoreBreakdown.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 4,
+    "loc": 79
+  },
+  {
+    "file": "scripts/p540/groundTruthCoverage.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 2,
+    "loc": 46
+  },
+  {
+    "file": "scripts/p540/localGroundTruthPacket.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 3,
+    "loc": 55
+  },
+  {
+    "file": "scripts/p540/shadowCandidateGenerationCorrection.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 8,
+    "loc": 164
+  },
+  {
+    "file": "scripts/p540/stage02ShadowSafety.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 6,
+    "loc": 61
+  },
+  {
+    "file": "scripts/p540/stage02aFailureIsolation.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 4,
+    "loc": 86
+  },
+  {
+    "file": "scripts/p540/stage02bFinalShadow.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 3,
+    "loc": 74
+  },
+  {
+    "file": "scripts/p540/stage02bShadowRanking.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 4,
+    "loc": 100
+  },
+  {
+    "file": "scripts/p540/stage02cSafeActivation.test.ts",
+    "tier": "T1",
+    "phase": "540",
+    "area": "p540",
+    "tests": 6,
+    "loc": 140
+  },
+  {
+    "file": "scripts/p7/boundaryRoleScorer.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 1,
+    "loc": 12
+  },
+  {
+    "file": "scripts/p7/harmonicTruth.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 3,
+    "loc": 23
+  },
+  {
+    "file": "scripts/p7/localAnnotation.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 3,
+    "loc": 91
+  },
+  {
+    "file": "scripts/p7/modularTournament.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 2,
+    "loc": 16
+  },
+  {
+    "file": "scripts/p7/sealedFinal.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 1,
+    "loc": 8
+  },
+  {
+    "file": "scripts/p7/temporalGold.test.ts",
+    "tier": "T1",
+    "phase": "7",
+    "area": "p7",
+    "tests": 4,
+    "loc": 65
+  },
+  {
+    "file": "scripts/phase-docs/validate.test.mjs",
+    "tier": "T0",
+    "phase": "cross-phase",
+    "area": "phase-docs",
+    "tests": 25,
+    "loc": 241
+  },
+  {
+    "file": "scripts/phase441/validationPipelineTrace.test.ts",
+    "tier": "T1",
+    "phase": "441",
+    "area": "phase441",
+    "tests": 3,
+    "loc": 63
+  },
+  {
+    "file": "scripts/phase443/applicability.test.ts",
+    "tier": "T1",
+    "phase": "443",
+    "area": "phase443",
+    "tests": 3,
+    "loc": 48
+  },
+  {
+    "file": "scripts/phase45/candidateFunnel.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 2,
+    "loc": 84
+  },
+  {
+    "file": "scripts/phase45/decisionLock.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 3,
+    "loc": 46
+  },
+  {
+    "file": "scripts/phase45/missTaxonomy.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 3,
+    "loc": 91
+  },
+  {
+    "file": "scripts/phase45/rankDistribution.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 1,
+    "loc": 26
+  },
+  {
+    "file": "scripts/phase45/rootConfidence.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 4,
+    "loc": 77
+  },
+  {
+    "file": "scripts/phase45/sameRootOracle.test.ts",
+    "tier": "T1",
+    "phase": "45",
+    "area": "phase45",
+    "tests": 2,
+    "loc": 60
+  },
+  {
+    "file": "scripts/phase46/basicM7Trace.test.ts",
+    "tier": "T1",
+    "phase": "46",
+    "area": "phase46",
+    "tests": 2,
+    "loc": 35
+  },
+  {
+    "file": "scripts/phase46/counterfactualRisk.test.ts",
+    "tier": "T1",
+    "phase": "46",
+    "area": "phase46",
+    "tests": 2,
+    "loc": 49
+  },
+  {
+    "file": "scripts/phase46/missingCandidateTaxonomy.test.ts",
+    "tier": "T1",
+    "phase": "46",
+    "area": "phase46",
+    "tests": 4,
+    "loc": 60
+  },
+  {
+    "file": "scripts/phase46/shadowCandidateGenerator.test.ts",
+    "tier": "T1",
+    "phase": "46",
+    "area": "phase46",
+    "tests": 5,
+    "loc": 103
+  },
+  {
+    "file": "scripts/phase47/bassCompanionCorpus.test.ts",
+    "tier": "T1",
+    "phase": "47",
+    "area": "phase47",
+    "tests": 2,
+    "loc": 87
+  },
+  {
+    "file": "scripts/phase47/partAShadow.test.ts",
+    "tier": "T1",
+    "phase": "47",
+    "area": "phase47",
+    "tests": 4,
+    "loc": 112
+  },
+  {
+    "file": "scripts/phase48/canonicalFlatNine.test.ts",
+    "tier": "T1",
+    "phase": "48",
+    "area": "phase48",
+    "tests": 2,
+    "loc": 46
+  },
+  {
+    "file": "scripts/phase48/eventEvidence.test.ts",
+    "tier": "T1",
+    "phase": "48",
+    "area": "phase48",
+    "tests": 3,
+    "loc": 108
+  },
+  {
+    "file": "scripts/phase48/observedFlatNineShadow.test.ts",
+    "tier": "T1",
+    "phase": "48",
+    "area": "phase48",
+    "tests": 9,
+    "loc": 201
+  },
+  {
+    "file": "scripts/promotionFeedback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "promotionFeedback.test.ts",
+    "tests": 1,
+    "loc": 45
+  },
+  {
+    "file": "src/App.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "App.test.ts",
+    "tests": 9,
+    "loc": 299
+  },
+  {
+    "file": "src/audio/chordPreview.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 11,
+    "loc": 390
+  },
+  {
+    "file": "src/audio/masterVolume.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 3,
+    "loc": 46
+  },
+  {
+    "file": "src/audio/midiInputPianoMonitor.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 3,
+    "loc": 91
+  },
+  {
+    "file": "src/audio/playbackController.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 9,
+    "loc": 242
+  },
+  {
+    "file": "src/audio/previewSoundPreference.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 2,
+    "loc": 31
+  },
+  {
+    "file": "src/audio/salamanderPianoAssets.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 2,
+    "loc": 35
+  },
+  {
+    "file": "src/audio/textTransport.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "audio",
+    "tests": 8,
+    "loc": 157
+  },
+  {
+    "file": "src/components/AppShell.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 11,
+    "loc": 264
+  },
+  {
+    "file": "src/components/CaptureDraftSessionBar.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 75
+  },
+  {
+    "file": "src/components/CaptureRenderBoundary.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 71
+  },
+  {
+    "file": "src/components/DraftBoundaryHandles.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 129
+  },
+  {
+    "file": "src/components/DraftRangeOverlay.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 9,
+    "loc": 359
+  },
+  {
+    "file": "src/components/LiveMidiMiniMode.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 113
+  },
+  {
+    "file": "src/components/ManualCandidateEditor.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 21,
+    "loc": 392
+  },
+  {
+    "file": "src/components/MetronomeProvider.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 42
+  },
+  {
+    "file": "src/components/Modal.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 5,
+    "loc": 194
+  },
+  {
+    "file": "src/components/OccurrenceList.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 10,
+    "loc": 279
+  },
+  {
+    "file": "src/components/PlayToggle.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 59
+  },
+  {
+    "file": "src/components/PreviewSoundProvider.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 64
+  },
+  {
+    "file": "src/components/ProgressionLibraryRail.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 75
+  },
+  {
+    "file": "src/components/ProgressionMidiControl.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 3,
+    "loc": 195
+  },
+  {
+    "file": "src/components/ProgressionTagsEditor.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 76
+  },
+  {
+    "file": "src/components/SaveProgressionPopover.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 97
+  },
+  {
+    "file": "src/components/SizeRecoveryNotice.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 55
+  },
+  {
+    "file": "src/components/SongMiniMap.stage03.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 112
+  },
+  {
+    "file": "src/components/SongMiniMap.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 20,
+    "loc": 954
+  },
+  {
+    "file": "src/components/StatusActionMenu.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 5,
+    "loc": 149
+  },
+  {
+    "file": "src/components/StatusPipeline.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 12,
+    "loc": 145
+  },
+  {
+    "file": "src/components/TimelineRangeSelector.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 14,
+    "loc": 267
+  },
+  {
+    "file": "src/components/Toast.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 48
+  },
+  {
+    "file": "src/components/capture/ExtendedTextIntakePanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 8,
+    "loc": 247
+  },
+  {
+    "file": "src/components/capture/SourceBasslineCapturePanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 6,
+    "loc": 126
+  },
+  {
+    "file": "src/components/capture/TextCaptureTransport.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 78
+  },
+  {
+    "file": "src/components/capture/TextGlobalPlayback.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 76
+  },
+  {
+    "file": "src/components/capture/TextProgressionCapturePanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 15,
+    "loc": 586
+  },
+  {
+    "file": "src/components/capture/textCaptureStatus.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 4,
+    "loc": 41
+  },
+  {
+    "file": "src/components/music-keyboard/PianoKeyboardVisualizer.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 11,
+    "loc": 207
+  },
+  {
+    "file": "src/components/music-keyboard/musicKeyboard.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 11,
+    "loc": 130
+  },
+  {
+    "file": "src/components/practice/MixPracticeWorkspace.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 11,
+    "loc": 418
+  },
+  {
+    "file": "src/components/practice/PracticeKeyboard.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 5,
+    "loc": 155
+  },
+  {
+    "file": "src/components/practice/TranspositionPracticeControls.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 4,
+    "loc": 170
+  },
+  {
+    "file": "src/components/pre-analysis/PreAnalysisPianoRoll.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 3,
+    "loc": 153
+  },
+  {
+    "file": "src/components/pre-analysis/PreAnalysisTimeScrollbar.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 131
+  },
+  {
+    "file": "src/components/pre-analysis/PreAnalysisWorkspace.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 16,
+    "loc": 756
+  },
+  {
+    "file": "src/components/progression-advisor/LlmSettingsSection.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 77
+  },
+  {
+    "file": "src/components/progression-advisor/ProgressionAdvisorDrawer.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 54
+  },
+  {
+    "file": "src/components/progression-advisor/ProgressionAdvisorLocalError.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 80
+  },
+  {
+    "file": "src/components/progression-editing/ChordAlternativeList.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 25
+  },
+  {
+    "file": "src/components/progression-editing/ChordContextMenu.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 3,
+    "loc": 116
+  },
+  {
+    "file": "src/components/progression-editing/ChordInspector.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 3,
+    "loc": 176
+  },
+  {
+    "file": "src/components/progression-editing/ChordStructureEditor.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 1,
+    "loc": 51
+  },
+  {
+    "file": "src/components/progression-editing/CorrectionPropagationPanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 2,
+    "loc": 104
+  },
+  {
+    "file": "src/components/progression-editing/EditableChordCard.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 5,
+    "loc": 145
+  },
+  {
+    "file": "src/components/progression-editing/QuickChordEditor.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 5,
+    "loc": 278
+  },
+  {
+    "file": "src/components/ui/primitives.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 7,
+    "loc": 88
+  },
+  {
+    "file": "src/components/voicing/VoicingSourceChip.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "components",
+    "tests": 3,
+    "loc": 46
+  },
+  {
+    "file": "src/domain/alteredFifthConsumers.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 45
+  },
+  {
+    "file": "src/domain/assetSecurity.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 19
+  },
+  {
+    "file": "src/domain/chordAlternatives.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 64
+  },
+  {
+    "file": "src/domain/chordFactorization.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 38,
+    "loc": 208
+  },
+  {
+    "file": "src/domain/chordLabelContract.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 24,
+    "loc": 172
+  },
+  {
+    "file": "src/domain/chordVoicing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 21
+  },
+  {
+    "file": "src/domain/chords.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 42
+  },
+  {
+    "file": "src/domain/displayLabels.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 21
+  },
+  {
+    "file": "src/domain/extendedTextAliases.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 42
+  },
+  {
+    "file": "src/domain/extendedTextDiagnostics.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 37
+  },
+  {
+    "file": "src/domain/extendedTextExactTiming.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 46
+  },
+  {
+    "file": "src/domain/extendedTextFullChartAcceptance.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 58
+  },
+  {
+    "file": "src/domain/extendedTextHardening.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 96
+  },
+  {
+    "file": "src/domain/extendedTextPlayback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 30
+  },
+  {
+    "file": "src/domain/extendedTextProgression.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 99,
+    "loc": 56
+  },
+  {
+    "file": "src/domain/focus.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 134
+  },
+  {
+    "file": "src/domain/harmony/degrees.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 39
+  },
+  {
+    "file": "src/domain/harmony/romanNumerals.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 23
+  },
+  {
+    "file": "src/domain/libraryFilters.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 179
+  },
+  {
+    "file": "src/domain/liveMidi/chordStabilizer.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 131
+  },
+  {
+    "file": "src/domain/liveMidi/historyImport.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 38
+  },
+  {
+    "file": "src/domain/liveMidi/liveChordDetector.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 39
+  },
+  {
+    "file": "src/domain/liveMidi/noteState.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 54
+  },
+  {
+    "file": "src/domain/liveMidi/provisionalChord.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 51
+  },
+  {
+    "file": "src/domain/midi/accuracyCandidateUnion.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 133
+  },
+  {
+    "file": "src/domain/midi/accuracyFirstCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 37
+  },
+  {
+    "file": "src/domain/midi/analysis.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 94
+  },
+  {
+    "file": "src/domain/midi/automaticCandidateDraft.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 150
+  },
+  {
+    "file": "src/domain/midi/blockSelection.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 21,
+    "loc": 149
+  },
+  {
+    "file": "src/domain/midi/blocks.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 58
+  },
+  {
+    "file": "src/domain/midi/candidateBlock.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 22,
+    "loc": 182
+  },
+  {
+    "file": "src/domain/midi/candidateCatalog.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 233
+  },
+  {
+    "file": "src/domain/midi/candidateDiversity.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 88
+  },
+  {
+    "file": "src/domain/midi/candidatePool.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 109
+  },
+  {
+    "file": "src/domain/midi/candidateRecommendation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 194
+  },
+  {
+    "file": "src/domain/midi/candidateSelection.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 136
+  },
+  {
+    "file": "src/domain/midi/candidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 24
+  },
+  {
+    "file": "src/domain/midi/captureEditHistory.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 143
+  },
+  {
+    "file": "src/domain/midi/catalogView.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 257
+  },
+  {
+    "file": "src/domain/midi/confidence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 33
+  },
+  {
+    "file": "src/domain/midi/correctionCost.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 79
+  },
+  {
+    "file": "src/domain/midi/coverageSelector.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 208
+  },
+  {
+    "file": "src/domain/midi/decoder.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 27
+  },
+  {
+    "file": "src/domain/midi/draftRangeEditing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 169
+  },
+  {
+    "file": "src/domain/midi/evaluation/degrade.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 14,
+    "loc": 182
+  },
+  {
+    "file": "src/domain/midi/evaluation/evaluate.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 85
+  },
+  {
+    "file": "src/domain/midi/evaluation/metricsV2.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 22,
+    "loc": 234
+  },
+  {
+    "file": "src/domain/midi/extractionProfile.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 15,
+    "loc": 185
+  },
+  {
+    "file": "src/domain/midi/feedback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 66
+  },
+  {
+    "file": "src/domain/midi/fingerprint.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 16
+  },
+  {
+    "file": "src/domain/midi/gmRoles.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 23
+  },
+  {
+    "file": "src/domain/midi/harmonicCoreNoteWeights.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 86
+  },
+  {
+    "file": "src/domain/midi/harmonicStateConsolidation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 13,
+    "loc": 392
+  },
+  {
+    "file": "src/domain/midi/hybrid.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 43
+  },
+  {
+    "file": "src/domain/midi/labelCorrectionLog.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 136
+  },
+  {
+    "file": "src/domain/midi/legacyBoundaryReranker.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 77
+  },
+  {
+    "file": "src/domain/midi/longMidiCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 73
+  },
+  {
+    "file": "src/domain/midi/manualDraftEditing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 26,
+    "loc": 351
+  },
+  {
+    "file": "src/domain/midi/manualDraftSave.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 302
+  },
+  {
+    "file": "src/domain/midi/manualRange.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 21,
+    "loc": 204
+  },
+  {
+    "file": "src/domain/midi/manualRangeProperty.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 130
+  },
+  {
+    "file": "src/domain/midi/normalize.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 47
+  },
+  {
+    "file": "src/domain/midi/noteTextureClassifier.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 103
+  },
+  {
+    "file": "src/domain/midi/noteTextureFeatures.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 123
+  },
+  {
+    "file": "src/domain/midi/observedFlatNineCandidate.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 104
+  },
+  {
+    "file": "src/domain/midi/occurrence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 156
+  },
+  {
+    "file": "src/domain/midi/ornaments.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 15
+  },
+  {
+    "file": "src/domain/midi/patternCandidate.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 13,
+    "loc": 253
+  },
+  {
+    "file": "src/domain/midi/percussionEvidence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 101
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/analysisSession.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 320
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/analyzerInput.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 440
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/exactTickSeam.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 50
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/roleCorrectionLog.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 134
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/sessionPlayback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 135
+  },
+  {
+    "file": "src/domain/midi/preAnalysis/voiceExtraction.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 9,
+    "loc": 238
+  },
+  {
+    "file": "src/domain/midi/presentationGroupingIntegration.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 138
+  },
+  {
+    "file": "src/domain/midi/profiles.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 23
+  },
+  {
+    "file": "src/domain/midi/qualityEvidence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 15,
+    "loc": 144
+  },
+  {
+    "file": "src/domain/midi/rankingScore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 148
+  },
+  {
+    "file": "src/domain/midi/rawSmfBudget.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 55
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/acceptableAlternatives.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 32
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/correctionPromotion.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 49
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/differenceReview.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 53
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/guards.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 53
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/jsonl.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 14
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/privacy.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 58
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/realMetrics.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 83
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/reviewQueue.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 39
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/schema.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 16,
+    "loc": 234
+  },
+  {
+    "file": "src/domain/midi/realEvaluation/storedProgressions.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 78
+  },
+  {
+    "file": "src/domain/midi/sections.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 9,
+    "loc": 168
+  },
+  {
+    "file": "src/domain/midi/segmentation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 25
+  },
+  {
+    "file": "src/domain/midi/selectiveRootCorrection.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 14,
+    "loc": 184
+  },
+  {
+    "file": "src/domain/midi/shadowEvidence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 29,
+    "loc": 228
+  },
+  {
+    "file": "src/domain/midi/shadowFactorizedRoot.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 13,
+    "loc": 124
+  },
+  {
+    "file": "src/domain/midi/shadowQuality.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 19,
+    "loc": 197
+  },
+  {
+    "file": "src/domain/midi/shadowTension.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 25,
+    "loc": 243
+  },
+  {
+    "file": "src/domain/midi/structuralWindows.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 92
+  },
+  {
+    "file": "src/domain/midi/tempoAnalysis.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 125
+  },
+  {
+    "file": "src/domain/midi/timelineRangeSelection.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 22,
+    "loc": 241
+  },
+  {
+    "file": "src/domain/midi/trackRoles.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 22
+  },
+  {
+    "file": "src/domain/midi/voiceAwareReranker.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 233
+  },
+  {
+    "file": "src/domain/midi/voiceModel.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 21,
+    "loc": 434
+  },
+  {
+    "file": "src/domain/midi/voiceProfiles.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 247
+  },
+  {
+    "file": "src/domain/midi/voiceRoleV2.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 108
+  },
+  {
+    "file": "src/domain/midi/voiceRoleV2ShadowClassifier.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 142
+  },
+  {
+    "file": "src/domain/midi/voiceRoleV2ShadowFeatures.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 210
+  },
+  {
+    "file": "src/domain/midi/voiceRoles.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 8,
+    "loc": 182
+  },
+  {
+    "file": "src/domain/midi/walkingBassShadow.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 20,
+    "loc": 198
+  },
+  {
+    "file": "src/domain/midi/weights.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 19
+  },
+  {
+    "file": "src/domain/midiExport/midiExport.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 13,
+    "loc": 358
+  },
+  {
+    "file": "src/domain/midiExport/roundTrip.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 54
+  },
+  {
+    "file": "src/domain/monthlyStats.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 116
+  },
+  {
+    "file": "src/domain/phase531Baseline.test.ts",
+    "tier": "T1",
+    "phase": "531",
+    "area": "domain",
+    "tests": 6,
+    "loc": 108
+  },
+  {
+    "file": "src/domain/phase532Baseline.test.ts",
+    "tier": "T1",
+    "phase": "532",
+    "area": "domain",
+    "tests": 4,
+    "loc": 100
+  },
+  {
+    "file": "src/domain/phase533Baseline.test.ts",
+    "tier": "T1",
+    "phase": "533",
+    "area": "domain",
+    "tests": 20,
+    "loc": 102
+  },
+  {
+    "file": "src/domain/phase883Audition.test.ts",
+    "tier": "T1",
+    "phase": "883",
+    "area": "domain",
+    "tests": 2,
+    "loc": 54
+  },
+  {
+    "file": "src/domain/phase883Matrix.test.ts",
+    "tier": "T1",
+    "phase": "883",
+    "area": "domain",
+    "tests": 18,
+    "loc": 74
+  },
+  {
+    "file": "src/domain/phase883Practice.test.ts",
+    "tier": "T1",
+    "phase": "883",
+    "area": "domain",
+    "tests": 2,
+    "loc": 59
+  },
+  {
+    "file": "src/domain/phase883Semantic.test.ts",
+    "tier": "T1",
+    "phase": "883",
+    "area": "domain",
+    "tests": 2,
+    "loc": 39
+  },
+  {
+    "file": "src/domain/practice/practice.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 27,
+    "loc": 560
+  },
+  {
+    "file": "src/domain/practiceMix/practiceMix.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 25,
+    "loc": 745
+  },
+  {
+    "file": "src/domain/practiceTransposition/circleOfFifths.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 14,
+    "loc": 70
+  },
+  {
+    "file": "src/domain/practiceTransposition/keyBag.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 9,
+    "loc": 105
+  },
+  {
+    "file": "src/domain/practiceTransposition/keyCatalog.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 33,
+    "loc": 152
+  },
+  {
+    "file": "src/domain/practiceTransposition/practiceProgress.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 275
+  },
+  {
+    "file": "src/domain/practiceTransposition/targetPlan.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 459
+  },
+  {
+    "file": "src/domain/practiceTransposition/transposeProgression.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 59,
+    "loc": 543
+  },
+  {
+    "file": "src/domain/practiceTransposition/transposeResolvedVoicing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 271
+  },
+  {
+    "file": "src/domain/practiceTransposition/transpositionSession.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 13,
+    "loc": 349
+  },
+  {
+    "file": "src/domain/progressionAdvisor/evaluationFixtures.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 12
+  },
+  {
+    "file": "src/domain/progressionAdvisor/referenceContext.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 68
+  },
+  {
+    "file": "src/domain/progressionAdvisor/validateAdvisorResponse.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 159
+  },
+  {
+    "file": "src/domain/progressionClassification/classification.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 100
+  },
+  {
+    "file": "src/domain/progressionClassification/deriveMoodTags.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 74
+  },
+  {
+    "file": "src/domain/progressionClassification/progressionIndex.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 148
+  },
+  {
+    "file": "src/domain/progressionEditing/chordSuggestions.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 50
+  },
+  {
+    "file": "src/domain/progressionEditing/contextActions.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 120
+  },
+  {
+    "file": "src/domain/progressionEditing/contextCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 18
+  },
+  {
+    "file": "src/domain/progressionEditing/editHistory.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 43
+  },
+  {
+    "file": "src/domain/progressionEditing/editableProgression.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 197
+  },
+  {
+    "file": "src/domain/progressionEditing/fastLabelEntry.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 33
+  },
+  {
+    "file": "src/domain/progressionEditing/quickCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 121
+  },
+  {
+    "file": "src/domain/progressionEditing/similarSegments.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 287
+  },
+  {
+    "file": "src/domain/progressionEditing/smoothCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 74
+  },
+  {
+    "file": "src/domain/progressionEditing/splitMerge.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 140
+  },
+  {
+    "file": "src/domain/progressionEditing/styleCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 93
+  },
+  {
+    "file": "src/domain/progressionEditing/voicingIdentity.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 74
+  },
+  {
+    "file": "src/domain/progressionFilters.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 26
+  },
+  {
+    "file": "src/domain/progressionFingering.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 9,
+    "loc": 86
+  },
+  {
+    "file": "src/domain/progressionText.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 49
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/handoff.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 12,
+    "loc": 337
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/library.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 108
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/meterNeutral.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 19,
+    "loc": 100
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/progressionVoicingPractice.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 24,
+    "loc": 644
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/timelineLayout.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 32
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/timelineNavigation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 19
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/transposition.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 81
+  },
+  {
+    "file": "src/domain/progressionVoicingPractice/voicingResolution.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 107,
+    "loc": 644
+  },
+  {
+    "file": "src/domain/repository.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 17,
+    "loc": 497
+  },
+  {
+    "file": "src/domain/repositoryAggregateBudget.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 134
+  },
+  {
+    "file": "src/domain/repositoryBudget.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 1,
+    "loc": 23
+  },
+  {
+    "file": "src/domain/schema.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 25,
+    "loc": 535
+  },
+  {
+    "file": "src/domain/sourceBassline/captureSnapshot.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 317
+  },
+  {
+    "file": "src/domain/sourceBassline/compatibility.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 124
+  },
+  {
+    "file": "src/domain/sourceBassline/snapshot.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 15,
+    "loc": 449
+  },
+  {
+    "file": "src/domain/standardTextPreviewScore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 41
+  },
+  {
+    "file": "src/domain/textControlRoundtrip.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 10,
+    "loc": 207
+  },
+  {
+    "file": "src/domain/textControlTiming.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 118
+  },
+  {
+    "file": "src/domain/textPreviewScore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 37
+  },
+  {
+    "file": "src/domain/textProgression.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 17,
+    "loc": 267
+  },
+  {
+    "file": "src/domain/textProgressionDownstream.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 339
+  },
+  {
+    "file": "src/domain/textProgressionDraft.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 176
+  },
+  {
+    "file": "src/domain/textProgressionVoicing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 56
+  },
+  {
+    "file": "src/domain/textScoreTokenizer.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 119
+  },
+  {
+    "file": "src/domain/textSemanticCore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 40
+  },
+  {
+    "file": "src/domain/timelineCandidateGrouping.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 168
+  },
+  {
+    "file": "src/domain/timelineHarmonicActivity.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 90
+  },
+  {
+    "file": "src/domain/transition.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 80,
+    "loc": 243
+  },
+  {
+    "file": "src/domain/undoDeletion.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 79
+  },
+  {
+    "file": "src/domain/voicing/countDurationMelodyFilter.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 2,
+    "loc": 110
+  },
+  {
+    "file": "src/domain/voicing/evaluation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 61
+  },
+  {
+    "file": "src/domain/voicing/melodyContaminationFilter.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 149
+  },
+  {
+    "file": "src/domain/voicing/playbackChoice.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 6,
+    "loc": 116
+  },
+  {
+    "file": "src/domain/voicing/relativeSupportMelodyFilter.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 141
+  },
+  {
+    "file": "src/domain/voicing/resolveVoicing.playback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 209
+  },
+  {
+    "file": "src/domain/voicing/savePreviewParity.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 102
+  },
+  {
+    "file": "src/domain/voicing/sourceVoicing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 204
+  },
+  {
+    "file": "src/domain/voicing/voicing.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 96
+  },
+  {
+    "file": "src/domain/voicing/voicingSourceStatus.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 3,
+    "loc": 64
+  },
+  {
+    "file": "src/domain/voicingPractice/cyclicOptimization.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 5,
+    "loc": 117
+  },
+  {
+    "file": "src/domain/voicingPractice/styleGenerator.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 11,
+    "loc": 182
+  },
+  {
+    "file": "src/domain/voicingPractice/voicingPractice.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 7,
+    "loc": 111
+  },
+  {
+    "file": "src/domain/voicingRules/firstWaveRules.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 15,
+    "loc": 169
+  },
+  {
+    "file": "src/domain/voicingRules/goldenCorpus.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 4,
+    "loc": 99
+  },
+  {
+    "file": "src/domain/voicingRules/studyGenerator.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "domain",
+    "tests": 70,
+    "loc": 440
+  },
+  {
+    "file": "src/features/bass-practice/application/chordContextPlayback.longSection.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 144
+  },
+  {
+    "file": "src/features/bass-practice/application/chordContextPlayback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 23,
+    "loc": 332
+  },
+  {
+    "file": "src/features/bass-practice/application/chordContextToneDriver.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 135
+  },
+  {
+    "file": "src/features/bass-practice/application/degreeHints.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 28
+  },
+  {
+    "file": "src/features/bass-practice/application/degreePlayback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 49
+  },
+  {
+    "file": "src/features/bass-practice/application/degreePracticeSession.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 18,
+    "loc": 436
+  },
+  {
+    "file": "src/features/bass-practice/application/featureFlag.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 72
+  },
+  {
+    "file": "src/features/bass-practice/application/freepatsBass.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 32
+  },
+  {
+    "file": "src/features/bass-practice/application/freepatsBassAssets.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 5,
+    "loc": 99
+  },
+  {
+    "file": "src/features/bass-practice/application/freepatsBassSettings.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 14
+  },
+  {
+    "file": "src/features/bass-practice/application/practiceData.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 22,
+    "loc": 387
+  },
+  {
+    "file": "src/features/bass-practice/application/rhythmPlayback.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 26
+  },
+  {
+    "file": "src/features/bass-practice/application/rootMotionSession.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 57
+  },
+  {
+    "file": "src/features/bass-practice/application/vaultPickerCandidates.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 7,
+    "loc": 186
+  },
+  {
+    "file": "src/features/bass-practice/application/vaultSourceHarmonyComparison.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 46
+  },
+  {
+    "file": "src/features/bass-practice/domain/bassline.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 20
+  },
+  {
+    "file": "src/features/bass-practice/domain/chordContextHistory.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 61
+  },
+  {
+    "file": "src/features/bass-practice/domain/chordContextSnapshot.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 10,
+    "loc": 252
+  },
+  {
+    "file": "src/features/bass-practice/domain/generator.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 26,
+    "loc": 423
+  },
+  {
+    "file": "src/features/bass-practice/domain/progressionPresets.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 6,
+    "loc": 128
+  },
+  {
+    "file": "src/features/bass-practice/domain/progressionPresets.transposition.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 59
+  },
+  {
+    "file": "src/features/bass-practice/domain/review.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 14,
+    "loc": 151
+  },
+  {
+    "file": "src/features/bass-practice/domain/rhythm.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 7,
+    "loc": 58
+  },
+  {
+    "file": "src/features/bass-practice/domain/rootMotion.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 32,
+    "loc": 159
+  },
+  {
+    "file": "src/features/bass-practice/domain/rootMotionHistory.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 13
+  },
+  {
+    "file": "src/features/bass-practice/domain/rootMotionVault.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 64
+  },
+  {
+    "file": "src/features/bass-practice/domain/sourceBasslineHistory.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 124
+  },
+  {
+    "file": "src/features/bass-practice/domain/sourceBasslinePractice.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 7,
+    "loc": 161
+  },
+  {
+    "file": "src/features/bass-practice/domain/sourceBasslineSimplification.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 8,
+    "loc": 228
+  },
+  {
+    "file": "src/features/bass-practice/domain/sourceBasslineWindowExpansion.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 7,
+    "loc": 204
+  },
+  {
+    "file": "src/features/bass-practice/domain/stateMachine.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 18,
+    "loc": 272
+  },
+  {
+    "file": "src/features/bass-practice/domain/transfer.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 3,
+    "loc": 120
+  },
+  {
+    "file": "src/features/bass-practice/domain/vaultBassline.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 7
+  },
+  {
+    "file": "src/features/bass-practice/infra/repository/practiceRepository.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 22,
+    "loc": 347
+  },
+  {
+    "file": "src/features/bass-practice/infra/repository/practiceStorage.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 15,
+    "loc": 174
+  },
+  {
+    "file": "src/features/bass-practice/infra/repository/sourceBasslinePreference.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 5,
+    "loc": 101
+  },
+  {
+    "file": "src/features/bass-practice/recording/application/browserAdapters.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 37
+  },
+  {
+    "file": "src/features/bass-practice/recording/application/recordingSessionController.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 12,
+    "loc": 187
+  },
+  {
+    "file": "src/features/bass-practice/recording/application/recordingStore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 8,
+    "loc": 110
+  },
+  {
+    "file": "src/features/bass-practice/recording/domain/channelRouting.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 6,
+    "loc": 35
+  },
+  {
+    "file": "src/features/bass-practice/recording/domain/codecNegotiation.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 5,
+    "loc": 31
+  },
+  {
+    "file": "src/features/bass-practice/recording/domain/levelMeter.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 6,
+    "loc": 41
+  },
+  {
+    "file": "src/features/bass-practice/recording/domain/persistence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 8,
+    "loc": 71
+  },
+  {
+    "file": "src/features/bass-practice/recording/domain/recorderStateMachine.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 14,
+    "loc": 165
+  },
+  {
+    "file": "src/features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 67
+  },
+  {
+    "file": "src/features/bass-practice/recording/ui/RecordCompareSection.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 16,
+    "loc": 491
+  },
+  {
+    "file": "src/features/bass-practice/recording/ui/RecordingDiagnosticsPanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 81
+  },
+  {
+    "file": "src/features/bass-practice/recording/ui/RetainedTakesPanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 3,
+    "loc": 100
+  },
+  {
+    "file": "src/features/bass-practice/ui/BassPracticeHomeCard.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 28
+  },
+  {
+    "file": "src/features/bass-practice/ui/BassPracticeModeView.chordContext.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 1,
+    "loc": 53
+  },
+  {
+    "file": "src/features/bass-practice/ui/BassPracticeModeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 82
+  },
+  {
+    "file": "src/features/bass-practice/ui/BassPracticeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 9,
+    "loc": 266
+  },
+  {
+    "file": "src/features/bass-practice/ui/BasslinePracticeView.chordContext.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 48,
+    "loc": 1512
+  },
+  {
+    "file": "src/features/bass-practice/ui/DegreeFretboard.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 3,
+    "loc": 81
+  },
+  {
+    "file": "src/features/bass-practice/ui/PracticeRecoveryPanel.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 43
+  },
+  {
+    "file": "src/features/bass-practice/ui/PracticeWorkspace.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 132
+  },
+  {
+    "file": "src/features/bass-practice/ui/RhythmPracticeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 87
+  },
+  {
+    "file": "src/features/bass-practice/ui/RootMotionFretboard.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 2,
+    "loc": 51
+  },
+  {
+    "file": "src/features/bass-practice/ui/RootMotionPracticeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 3,
+    "loc": 77
+  },
+  {
+    "file": "src/features/bass-practice/ui/RootMotionPracticeView.vault.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 5,
+    "loc": 104
+  },
+  {
+    "file": "src/features/bass-practice/ui/VaultProgressionPicker.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "features",
+    "tests": 4,
+    "loc": 240
+  },
+  {
+    "file": "src/hooks/useDraftSave.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "hooks",
+    "tests": 2,
+    "loc": 54
+  },
+  {
+    "file": "src/hooks/useUndoQueue.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "hooks",
+    "tests": 8,
+    "loc": 270
+  },
+  {
+    "file": "src/i18n.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "i18n.test.ts",
+    "tests": 5,
+    "loc": 65
+  },
+  {
+    "file": "src/liveMidi/activationLease.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 10,
+    "loc": 216
+  },
+  {
+    "file": "src/liveMidi/latencyBenchmark.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 1,
+    "loc": 15
+  },
+  {
+    "file": "src/liveMidi/latencyMetrics.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 3,
+    "loc": 34
+  },
+  {
+    "file": "src/liveMidi/liveMidiService.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 4,
+    "loc": 62
+  },
+  {
+    "file": "src/liveMidi/liveMidiStore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 5,
+    "loc": 175
+  },
+  {
+    "file": "src/liveMidi/miniWindowCapability.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 2,
+    "loc": 43
+  },
+  {
+    "file": "src/liveMidi/miniWindowController.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 5,
+    "loc": 83
+  },
+  {
+    "file": "src/liveMidi/preferences.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 2,
+    "loc": 34
+  },
+  {
+    "file": "src/liveMidi/windowProtocol.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "liveMidi",
+    "tests": 1,
+    "loc": 17
+  },
+  {
+    "file": "src/llm/advisorMetrics.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "llm",
+    "tests": 1,
+    "loc": 21
+  },
+  {
+    "file": "src/llm/advisorService.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "llm",
+    "tests": 1,
+    "loc": 10
+  },
+  {
+    "file": "src/llm/preferences.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "llm",
+    "tests": 3,
+    "loc": 29
+  },
+  {
+    "file": "src/midiExport/featureFlag.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "midiExport",
+    "tests": 2,
+    "loc": 26
+  },
+  {
+    "file": "src/midiExport/fileService.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "midiExport",
+    "tests": 7,
+    "loc": 115
+  },
+  {
+    "file": "src/midiExport/nativeDrag.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "midiExport",
+    "tests": 4,
+    "loc": 80
+  },
+  {
+    "file": "src/practice/PracticeClock.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "practice",
+    "tests": 9,
+    "loc": 245
+  },
+  {
+    "file": "src/practice/ProgressionVoicingTransport.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "practice",
+    "tests": 38,
+    "loc": 1097
+  },
+  {
+    "file": "src/security/intakeBudgets.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "security",
+    "tests": 2,
+    "loc": 33
+  },
+  {
+    "file": "src/security/tauriSecurityConfig.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "security",
+    "tests": 2,
+    "loc": 44
+  },
+  {
+    "file": "src/storage/accuracyFirstSettings.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 5,
+    "loc": 93
+  },
+  {
+    "file": "src/storage/analysisFeedbackStorage.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 3,
+    "loc": 158
+  },
+  {
+    "file": "src/storage/boundedMidiReader.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 4,
+    "loc": 59
+  },
+  {
+    "file": "src/storage/labelCorrectionLogStorage.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 2,
+    "loc": 44
+  },
+  {
+    "file": "src/storage/preAnalysisSettings.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 9,
+    "loc": 128
+  },
+  {
+    "file": "src/storage/tauriVaultStorage.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "storage",
+    "tests": 3,
+    "loc": 56
+  },
+  {
+    "file": "src/store/closeGuard.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "store",
+    "tests": 13,
+    "loc": 316
+  },
+  {
+    "file": "src/store/sourceBasslinePersistence.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "store",
+    "tests": 6,
+    "loc": 407
+  },
+  {
+    "file": "src/store/vaultStore.keyAwareSpelling.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "store",
+    "tests": 1,
+    "loc": 85
+  },
+  {
+    "file": "src/store/vaultStore.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "store",
+    "tests": 41,
+    "loc": 1576
+  },
+  {
+    "file": "src/ui/ProgressionGrid.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "ui",
+    "tests": 2,
+    "loc": 57
+  },
+  {
+    "file": "src/ui/motion.test.ts",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "ui",
+    "tests": 2,
+    "loc": 14
+  },
+  {
+    "file": "src/ui/playbackProgress.test.ts",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "ui",
+    "tests": 2,
+    "loc": 16
+  },
+  {
+    "file": "src/views/CaptureDraftWorkflow.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 3,
+    "loc": 216
+  },
+  {
+    "file": "src/views/CaptureView.lanes.test.ts",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 6,
+    "loc": 80
+  },
+  {
+    "file": "src/views/CaptureView.preAnalysis.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 13,
+    "loc": 672
+  },
+  {
+    "file": "src/views/CaptureView.sourceBassline.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 1,
+    "loc": 156
+  },
+  {
+    "file": "src/views/CaptureView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 52,
+    "loc": 2973
+  },
+  {
+    "file": "src/views/CaptureView.textProgression.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 5,
+    "loc": 355
+  },
+  {
+    "file": "src/views/DetailView.save-policy.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 8,
+    "loc": 326
+  },
+  {
+    "file": "src/views/DetailView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 19,
+    "loc": 674
+  },
+  {
+    "file": "src/views/HistoryView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 5,
+    "loc": 163
+  },
+  {
+    "file": "src/views/HomeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 7,
+    "loc": 218
+  },
+  {
+    "file": "src/views/NextMovePreview.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 1,
+    "loc": 44
+  },
+  {
+    "file": "src/views/PracticeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 54,
+    "loc": 2971
+  },
+  {
+    "file": "src/views/ProgressionDetailView.chordContext.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 3,
+    "loc": 157
+  },
+  {
+    "file": "src/views/ProgressionDetailView.sourceBassline.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 4,
+    "loc": 158
+  },
+  {
+    "file": "src/views/ProgressionDetailView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 11,
+    "loc": 707
+  },
+  {
+    "file": "src/views/ProgressionVoicingPracticeView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 54,
+    "loc": 1497
+  },
+  {
+    "file": "src/views/SettingsDialog.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 12,
+    "loc": 418
+  },
+  {
+    "file": "src/views/VaultView.test.tsx",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 13,
+    "loc": 751
+  },
+  {
+    "file": "src/views/captureChordVoicing.test.ts",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 4,
+    "loc": 96
+  },
+  {
+    "file": "src/views/captureLabels.test.ts",
+    "tier": "T2",
+    "phase": "cross-phase",
+    "area": "views",
+    "tests": 4,
+    "loc": 34
+  },
+  {
+    "file": "src/voicingPractice/cardAudition.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 3,
+    "loc": 51
+  },
+  {
+    "file": "src/voicingPractice/fingeringDisplay.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 18,
+    "loc": 125
+  },
+  {
+    "file": "src/voicingPractice/fingeringPreferences.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 3,
+    "loc": 65
+  },
+  {
+    "file": "src/voicingPractice/mainWindowWorkArea.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 3,
+    "loc": 23
+  },
+  {
+    "file": "src/voicingPractice/nextMove.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 13,
+    "loc": 105
+  },
+  {
+    "file": "src/voicingPractice/nextShape.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 7,
+    "loc": 40
+  },
+  {
+    "file": "src/voicingPractice/preferences.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 2,
+    "loc": 55
+  },
+  {
+    "file": "src/voicingPractice/recentProgressions.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 3,
+    "loc": 57
+  },
+  {
+    "file": "src/voicingPractice/timelineFollow.test.ts",
+    "tier": "T1",
+    "phase": "cross-phase",
+    "area": "voicingPractice",
+    "tests": 13,
+    "loc": 70
+  }
+]

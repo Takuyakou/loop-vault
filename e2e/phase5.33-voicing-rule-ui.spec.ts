@@ -203,7 +203,8 @@ test("P5.33 fits desktop without page scroll and keeps Transport keyboard-operab
   await expect(page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
   await expect(start).toBeEnabled();
   const startBox = await start.boundingBox();
-  expect(startBox?.height).toBeGreaterThanOrEqual(38);
+  // Shared TransportButton CSS specifies a 2.25rem (36px) minimum.
+  expect(startBox?.height).toBeGreaterThanOrEqual(36);
   await start.focus();
   await page.keyboard.press("Enter");
   await expect(transport.getByRole("button", { name: "一時停止", exact: true })).toBeVisible();

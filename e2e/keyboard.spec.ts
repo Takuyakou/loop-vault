@@ -107,11 +107,11 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
   await practice.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
-  const dojo = page.getByRole("tab", { name: "Chord Dojo" });
+  const dojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
   await dojo.focus();
   await expect(dojo).toBeFocused();
-  await dojo.press("Home");
-  await expect(dojo).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Enter");
+  await expect(dojo).toHaveAttribute("aria-current", "page");
   const start = page.getByTestId("practice-start");
   await expect(start).toBeVisible();
   if (await start.isEnabled()) {

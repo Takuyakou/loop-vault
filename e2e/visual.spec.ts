@@ -14,7 +14,11 @@ import { createMidiFixture } from "./helpers/midiFixture";
 
 const HISTORY_VISUAL_NOW = new Date("2026-07-30T09:40:00.000Z");
 
-test.describe.serial("Phase 5.13 visual evidence", () => {
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(HISTORY_VISUAL_NOW);
+});
+
+test.describe("Phase 5.13 visual evidence", () => {
   test("Home", async ({ page }, testInfo) => {
     await openApp(page);
     await evidence(page, testInfo, "home");
@@ -47,7 +51,11 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
     await chooseFirstCandidate(page);
     await evidence(page, testInfo, "correction-editor");
-    await expect(page).toHaveScreenshot("correction-editor.png", { fullPage: true });
+    // The retired full-page image masks the current candidate-header width regression.
+    // Keep an explicit browser geometry contract until the product layout is fixed.
+    const selectedCandidate = page.locator('[data-candidate-state="selected"] [data-candidate-toggle]').first();
+    const candidateBounds = await selectedCandidate.boundingBox();
+    expect(candidateBounds?.width, "selected candidate header must remain readable").toBeGreaterThanOrEqual(160);
   });
 
   test("all-instruments pre-analysis state", async ({ page }, testInfo) => {
@@ -89,7 +97,7 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
     await page.locator("[data-progression-detail-view]")
       .getByRole("button", { name: /練習する|Practice/ }).click();
-    await page.getByRole("tab", { name: "Chord Dojo" }).click();
+    await page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true }).click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, testInfo, "practice");
     await expect(page).toHaveScreenshot("practice.png", { fullPage: true });
@@ -98,7 +106,6 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
   test("global Live MIDI, dialog and toast states", async ({ page }, testInfo) => {
     test.setTimeout(60_000);
-    await page.clock.setFixedTime(HISTORY_VISUAL_NOW);
     await openApp(page);
     await createSavedProgression(page, "History visual fixture", {
       fileName: "history-visual-fixture.mid",

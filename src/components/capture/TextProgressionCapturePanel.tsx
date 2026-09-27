@@ -9,6 +9,7 @@ import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
 import { TextCaptureShell } from "./TextCaptureShell";
 import { StandardTextScoreWorkspace } from "./StandardTextScoreWorkspace";
+import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
 import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
@@ -302,13 +303,12 @@ export function TextProgressionCapturePanel({
   }
 
   const visibleDiagnostics = input.trim() ? result.diagnostics : [];
-  const saveReason = !input.trim()
-    ? text(language, "Enter a progression to save it", "コード進行を入れると保存できます")
-    : visibleDiagnostics.length
-      ? text(language, `Fix ${visibleDiagnostics.length} errors before saving`, `エラー${visibleDiagnostics.length}件を修正すると保存できます`)
-      : !confirmedKey
-        ? text(language, "Set a key after saving to use Bass Practice and Chord Context", "Bass Practice・Chord Context は保存後にキーを決めると使えます")
-        : text(language, "Ready to save", "保存できます");
+  const statusModel = textCaptureStatus({
+    bars: result.bars, annotations: 0, meterLabel: "4/4", bpm: explicitBpm ?? null,
+    keyLabel: confirmedKey ?? null, errors: visibleDiagnostics.length, warnings: 0,
+    practiceLimits: 0, hasSource: Boolean(input.trim()),
+  });
+  const saveReason = textCaptureSaveReason(statusModel, language);
   const confirmed = result.keyState.kind === "confirmed";
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
@@ -348,6 +348,7 @@ export function TextProgressionCapturePanel({
           </button>
         </div>
       ) : null}
+      <div className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]" data-testid="standard-text-intake">
       <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
         {modeSelector}
         <label className="lv-text-toolbar-meter text-xs" title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")}>
@@ -411,7 +412,7 @@ export function TextProgressionCapturePanel({
             className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
         </div> : null}
       </div>
-      <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}
+      <StandardTextScoreWorkspace language={language} input={input} result={result} statusModel={statusModel} disabled={disabled}
         editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
         transport={transport} transportState={transportState}
@@ -435,8 +436,8 @@ export function TextProgressionCapturePanel({
       <TextDiagnostics diagnostics={visibleDiagnostics} language={language} />
 
       <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
-        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
-          {result.bars} {text(language, "bars", "小節")} · 4/4 · BPM {explicitBpm ?? "—"} · {confirmedKey ?? text(language, "Key unset", "キー未確定")}
+        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
+          {textCaptureSummary(statusModel, language)}
         </span>
         {result.tokens.length ? <details name="capture-details" className="lv-text-detail-popover" data-testid="standard-text-card-details">
           <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
@@ -530,6 +531,7 @@ export function TextProgressionCapturePanel({
           {text(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}</span> : null}
         <span id="text-progression-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">{saveReason}</span>
       </footer>
+      </div>
     </TextCaptureShell>
   );
 }
