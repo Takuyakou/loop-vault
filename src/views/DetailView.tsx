@@ -283,9 +283,7 @@ export function DetailView({
           )}
         </Panel>
       </section>
-
       </div>
     </>
   );
 }
-
