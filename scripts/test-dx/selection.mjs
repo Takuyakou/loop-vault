@@ -22,7 +22,7 @@ const ownerContracts = Object.freeze({
   },
   vault: {
     smoke: ["src/store/vaultStore.test.ts"],
-    vitest: ["src/store/vaultStore.test.ts", "src/views/VaultView.test.tsx"],
+    vitest: ["src/store/vaultStore.test.ts", "src/views/VaultView.test.tsx", "src/domain/p89DataRetention.test.ts"],
     browser: ["e2e/vault-flow.spec.ts"],
   },
   "voicing-loop": {
@@ -52,7 +52,7 @@ const ownerContracts = Object.freeze({
   },
   persistence: {
     smoke: ["src/storage/tauriVaultStorage.test.ts"],
-    vitest: ["src/storage/tauriVaultStorage.test.ts", "src/store/vaultStore.test.ts"],
+    vitest: ["src/storage/tauriVaultStorage.test.ts", "src/store/vaultStore.test.ts", "src/domain/p89DataRetention.test.ts"],
     browser: ["e2e/vault-flow.spec.ts"],
   },
   "privacy/security": {
@@ -79,6 +79,7 @@ export function ownerForFile(input) {
   if (/^scripts\/test-dx\//.test(file) || /^scripts\/run-playwright-visual-tests\./.test(file)) {
     return { areas: ["test-infrastructure"], reason: "test runner contract" };
   }
+  if (/^scripts\/p89\//.test(file)) return { areas: [], reason: "P8.9 evidence tool (screenshots), not a product contract" };
   if (/^(package(-lock)?\.json|tsconfig.*\.json|vite\.config\.|vitest\.config\.|playwright\.config\.)/.test(file)) {
     return { areas: ["shared-ui"], reason: "test/build infrastructure", broad: true };
   }
