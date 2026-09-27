@@ -94,7 +94,8 @@ for (const [width, height] of SIZES) {
         await form.locator('input[name="progression-title"]').fill("P89 合成進行");
         await form.getByRole("button", { name: /保存|Save/, exact: true }).click();
         await expect(form).toBeHidden();
-        // The save toast has no timeout and would cover the header on every later screen.
+        // The save toast lasts 3.2 s (App.tsx), longer than the walk to the next screens,
+        // and would cover the header on them.
         const toast = page.locator("[data-toast-tone]");
         if (await toast.isVisible()) await toast.getByRole("button").last().click();
       } catch (error) {
