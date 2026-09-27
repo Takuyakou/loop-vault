@@ -18,11 +18,12 @@ import { ProgressionGrid } from "../ui/ProgressionGrid";
 import { Copy, Trash2 } from "lucide-react";
 
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
 function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
 function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
 function optionalTextDraft(value: string): DraftParseResult<string | undefined> { const trimmed = value.trim(); return validDraft(trimmed || undefined, trimmed); }
-function equalStringLists(left: string[], right: string[]): boolean { return left.length === right.length && left.every((value, index) => value === right[index]); }
+// P8.9-03: genre, moods and the chord memo are no longer edited; saved values stay readable here.
+function LegacyField({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold text-[var(--lv-text-muted)]">{label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-[var(--lv-text-secondary)]">{value}</dd></div>; }
 
 function SaveFlash({ visible, label }: { visible: boolean; label: string }) {
   return (
@@ -161,35 +162,8 @@ export function DetailView({
     onCommit: (id, key) => updateIdea(id, { key }),
     commitOnEnter: true,
   });
-  const genreField = useDraftSave<string | undefined>({
-    scopeKey: idea.id,
-    value: idea.genre,
-    format: (fieldValue) => fieldValue ?? "",
-    parse: optionalTextDraft,
-    onCommit: (id, genre) => updateIdea(id, { genre }),
-    commitOnEnter: true,
-  });
-  const moodField = useDraftSave<string[]>({
-    scopeKey: idea.id,
-    value: idea.moods,
-    format: (fieldValue) => fieldValue.join(", "),
-    parse: (fieldValue) => {
-      const moods = splitList(fieldValue);
-      return validDraft(moods, moods.join(", "));
-    },
-    onCommit: (id, moods) => updateIdea(id, { moods }),
-    equals: equalStringLists,
-    commitOnEnter: true,
-  });
-  const memoField = useDraftSave<string>({
-    scopeKey: idea.id,
-    value: idea.chordMemo,
-    format: (fieldValue) => fieldValue,
-    parse: (fieldValue) => validDraft(fieldValue),
-    onCommit: (id, chordMemo) => updateIdea(id, { chordMemo }),
-    debounceMs: 500,
-    flushOnUnmount: true,
-  });
+  const hasLegacyFields = Boolean(idea.genre) || idea.moods.length > 0 || idea.chordMemo.trim().length > 0;
+
   function stopPlaybackForIdea() {
     if (playbackController.getState().source?.id.startsWith(`idea:${idea.id}:`)) {
       playbackController.stop();
@@ -250,20 +224,20 @@ export function DetailView({
               <SaveFlash visible={keyField.saved} label={copy.detail.saveAccepted} />
             </div>
             <datalist id="key-options">{keySuggestions.map((key) => <option key={key} value={key} />)}</datalist>
-            <div className="relative">
-              <input className={`${inputClass} pr-9`} value={genreField.draft} aria-label={copy.detail.fields.genre} title={copy.detail.fields.genre} onChange={(event) => genreField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.genre} {...genreField.inputProps} />
-              <SaveFlash visible={genreField.saved} label={copy.detail.saveAccepted} />
-            </div>
-            <div className="relative">
-              <input className={`${inputClass} pr-9`} value={moodField.draft} aria-label={copy.detail.fields.mood} title={copy.detail.fields.mood} onChange={(event) => moodField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.mood} {...moodField.inputProps} />
-              <SaveFlash visible={moodField.saved} label={copy.detail.saveAccepted} />
-            </div>
-          </div>
-          <div className="relative mt-3">
-            <textarea className={`${inputClass} min-h-28 pr-9`} value={memoField.draft} aria-label={copy.detail.fields.memo} title={copy.detail.fields.memo} onChange={(event) => memoField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.chordMemo} {...memoField.inputProps} />
-            <SaveFlash visible={memoField.saved} label={copy.detail.saveAccepted} />
           </div>
         </Panel>
+
+        {hasLegacyFields ? (
+          <Panel>
+            <h2 className="text-xl font-semibold">{copy.detail.legacy.title}</h2>
+            <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{copy.detail.legacy.help}</p>
+            <dl className="mt-3 grid gap-3 text-sm">
+              {idea.genre ? <LegacyField label={copy.detail.legacy.genre} value={idea.genre} /> : null}
+              {idea.moods.length > 0 ? <LegacyField label={copy.detail.legacy.mood} value={idea.moods.join(", ")} /> : null}
+              {idea.chordMemo.trim() ? <LegacyField label={copy.detail.legacy.memo} value={idea.chordMemo} /> : null}
+            </dl>
+          </Panel>
+        ) : null}
 
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.progressionBlocks}</h2>

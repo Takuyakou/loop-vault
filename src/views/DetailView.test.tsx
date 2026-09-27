@@ -75,19 +75,26 @@ describe("DetailView status reasons", () => {
     stop.mockRestore();
   });
 
-  it("switches field placeholders and section labels with the selected language", async () => {
-    const japanese = await renderDetail(makeIdea());
-    expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.genre}"]`)).not.toBeNull();
-    expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.mood}"]`)).not.toBeNull();
-    expect(japanese.container.textContent).not.toContain(appCopy.ja.detail.assets);
-    expect(japanese.container.textContent).not.toContain(appCopy.ja.detail.references);
-    expect(japanese.container.querySelector(`textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`)).toBeNull();
-    await japanese.unmount();
+  it("shows genre, moods and the chord memo read-only under earlier fields only when set", async () => {
+    const legacy = await renderDetail(makeIdea({ genre: "future garage", moods: ["late night", "warm"], chordMemo: "Fmaj7 - Am7" }));
+    const text = legacy.container.textContent ?? "";
+    expect(text).toContain(appCopy.ja.detail.legacy.title);
+    expect(text).toContain("future garage");
+    expect(text).toContain("late night, warm");
+    expect(text).toContain("Fmaj7 - Am7");
+    expect(legacy.container.querySelector(`input[placeholder="${appCopy.ja.detail.placeholders.genre}"]`)).toBeNull();
+    expect(legacy.container.querySelector(`input[placeholder="${appCopy.ja.detail.placeholders.mood}"]`)).toBeNull();
+    expect(legacy.container.querySelector(`textarea[aria-label="${appCopy.ja.detail.fields.memo}"]`)).toBeNull();
+    expect(legacy.container.querySelector(`input[aria-label="${appCopy.ja.detail.fields.bpm}"]`)).not.toBeNull();
+    expect(legacy.container.querySelector(`input[aria-label="${appCopy.ja.detail.fields.key}"]`)).not.toBeNull();
+    expect(text).not.toContain(appCopy.ja.detail.assets);
+    expect(text).not.toContain(appCopy.ja.detail.references);
+    expect(legacy.container.querySelector(`textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`)).toBeNull();
+    await legacy.unmount();
 
-    const english = await renderDetail(makeIdea(), { copy: appCopy.en, language: "en" });
-    expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.genre}"]`)).not.toBeNull();
-    expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.mood}"]`)).not.toBeNull();
-    await english.unmount();
+    const empty = await renderDetail(makeIdea({ genre: undefined, moods: [], chordMemo: "  " }));
+    expect(empty.container.textContent).not.toContain(appCopy.ja.detail.legacy.title);
+    await empty.unmount();
   });
 
   it("localizes the saved MIDI fallback and clipboard-unavailable toast", async () => {
