@@ -211,35 +211,6 @@ describe("DetailView save policy", () => {
     });
   });
 
-  it("saves Next Action on Enter and completes it only with the explicit button", async () => {
-    const idea = makeIdea({
-      nextAction: { text: "Existing step", updatedAt: "2026-07-15T00:00:00.000Z" },
-    });
-    const updateNextAction = vi.fn();
-    const mounted = await mountDetail(idea, { updateNextAction });
-    const nextAction = field<HTMLTextAreaElement>(mounted.container, "Edit Next Action");
-
-    await focus(nextAction);
-    await blur(nextAction);
-    expect(updateNextAction).not.toHaveBeenCalled();
-
-    await focus(nextAction);
-    await changeValue(nextAction, "New step");
-    await keyDown(nextAction, "Enter");
-    expect(updateNextAction).toHaveBeenCalledWith(idea.id, "New step", expect.any(Date));
-    expect(document.activeElement).not.toBe(nextAction);
-
-    updateNextAction.mockClear();
-    await focus(nextAction);
-    await changeValue(nextAction, "Dirty step to complete");
-    const doneButton = getButton(mounted.container, appCopy.en.common.done);
-    await focus(doneButton);
-    expect(updateNextAction).not.toHaveBeenCalled();
-    await act(async () => doneButton.click());
-    expect(updateNextAction).toHaveBeenCalledTimes(1);
-    expect(updateNextAction).toHaveBeenCalledWith(idea.id, "", expect.any(Date));
-    await mounted.unmount();
-  });
 });
 
 async function mountDetail(
@@ -254,7 +225,6 @@ async function mountDetail(
       <DetailView
         idea={idea}
         updateIdea={vi.fn()}
-        updateNextAction={vi.fn()}
         removeProgressionBlock={vi.fn()}
         analyzeMidiPath={vi.fn(async () => undefined)}
         requestDelete={vi.fn()}
@@ -315,11 +285,4 @@ async function keyDown(
     Object.defineProperty(event, "keyCode", { value: options.keyCode });
   }
   await act(async () => element.dispatchEvent(event));
-}
-
-function getButton(container: HTMLElement, label: string) {
-  const button = [...container.querySelectorAll("button")]
-    .find((candidate) => candidate.textContent === label);
-  expect(button).toBeDefined();
-  return button!;
 }

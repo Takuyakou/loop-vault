@@ -1,6 +1,6 @@
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
@@ -26,7 +26,7 @@ import { Copy, ExternalLink, FolderOpen, Trash2, TriangleAlert } from "lucide-re
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
 function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
 function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
 function optionalTextDraft(value: string): DraftParseResult<string | undefined> { const trimmed = value.trim(); return validDraft(trimmed || undefined, trimmed); }
@@ -112,7 +112,6 @@ export function DetailView({
   idea,
   storedIdea = idea,
   updateIdea,
-  updateNextAction,
   removeProgressionBlock,
   openProgression = () => undefined,
   removeReference = () => false,
@@ -129,7 +128,6 @@ export function DetailView({
   idea: SongIdea;
   storedIdea?: SongIdea;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
-  updateNextAction: (id: string, text: string, now?: Date) => boolean | "pending";
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
   ) => boolean | "pending";
@@ -147,8 +145,6 @@ export function DetailView({
 }) {
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
-  const completeNextRef = useRef<HTMLButtonElement>(null);
-  const placeholder = copy.detail.nextActionPlaceholders[Math.abs(hashString(idea.id)) % copy.detail.nextActionPlaceholders.length];
 
   const titleField = useDraftSave<string>({
     scopeKey: idea.id,
@@ -212,25 +208,6 @@ export function DetailView({
     debounceMs: 500,
     flushOnUnmount: true,
   });
-  const nextField = useDraftSave<string>({
-    scopeKey: idea.id,
-    value: idea.nextAction.text,
-    format: (fieldValue) => fieldValue,
-    parse: (fieldValue) => validDraft(fieldValue.trim(), fieldValue.trim()),
-    onCommit: (id, text) => updateNextAction(id, text, new Date()),
-    commitOnEnter: true,
-    shouldCommitOnBlur: (event) => event.relatedTarget !== completeNextRef.current,
-  });
-
-  function completeNext() {
-    if (!(idea.nextAction.text || nextField.draft.trim())) return false;
-    const updated = updateNextAction(idea.id, "", new Date());
-    if (updated !== true) return false;
-    nextField.setDraft("");
-    setToast(copy.toast.nextCompleted);
-    return true;
-  }
-
   function updateMeta(changes: Partial<SongIdea>) {
     return updateIdea(idea.id, changes);
   }
@@ -416,26 +393,6 @@ export function DetailView({
             <Trash2 aria-hidden="true" size={16} />
             {copy.common.delete}
           </button>
-        </Panel>
-
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.detail.nextAction}</h2>
-          <div className="relative mt-3">
-            <textarea
-              className={`${inputClass} min-h-28 pr-9`}
-              value={nextField.draft}
-              aria-label={copy.detail.fields.nextAction}
-              title={copy.detail.fields.nextAction}
-              onChange={(event) => nextField.setDraft(event.target.value)}
-              placeholder={placeholder}
-              {...nextField.inputProps}
-            />
-            <SaveFlash visible={nextField.saved} label={copy.detail.saveAccepted} />
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button ref={completeNextRef} className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
-          </div>
-          {!idea.nextAction.text.trim() ? <p className="mt-3 text-sm text-amber-200">{copy.detail.nextActionHint}</p> : null}
         </Panel>
 
         <Panel>

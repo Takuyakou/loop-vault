@@ -237,7 +237,6 @@ function App() {
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
   const removeReference = useStore(defaultVaultStore, (state) => state.removeReference);
   const unlinkAsset = useStore(defaultVaultStore, (state) => state.unlinkAsset);
-  const updateNextAction = useStore(defaultVaultStore, (state) => state.updateNextAction);
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
@@ -854,7 +853,6 @@ async function analyzeMidiPath(path: string) {
                 openCapture={() => navigateTo("capture")}
                 openCreate={() => setCreateOpen(true)}
                 openVault={() => setView("library")}
-                updateNextAction={updateNextAction}
                 setToast={setToast}
               />
             ) : null}
@@ -941,7 +939,6 @@ async function analyzeMidiPath(path: string) {
                 idea={selectedIdea}
                 storedIdea={storedSelectedIdea}
                 updateIdea={updateIdea}
-                updateNextAction={updateNextAction}
                 removeProgressionBlock={removeProgressionBlock}
                 openProgression={openProgression}
                 removeReference={removeReference}

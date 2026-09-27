@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import {
   playbackController,
   samePlaybackSource,
@@ -34,7 +34,6 @@ export function HomeView({
   openCapture,
   openCreate,
   openVault,
-  updateNextAction,
   setToast,
 }: {
   bassPracticeCard?: ReactNode;
@@ -46,7 +45,6 @@ export function HomeView({
   openCapture: () => void;
   openCreate: () => void;
   openVault: () => void;
-  updateNextAction: (id: string, text: string, now?: Date) => boolean | "pending";
   setToast: (toast: string) => void;
 }) {
   const { sound: previewSound } = usePreviewSound();
@@ -66,11 +64,6 @@ export function HomeView({
     const timer = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(timer);
   }, []);
-
-  function completeNext(idea: SongIdea) {
-    if (updateNextAction(idea.id, "", new Date()) !== true) return;
-    setToast(copy.toast.nextCompleted);
-  }
 
   return (
     <div className="space-y-4">
@@ -117,15 +110,7 @@ export function HomeView({
               </p>
             ) : null}
 
-            <div className="mt-5 flex flex-col gap-4 border-t border-[var(--lv-border)] pt-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-[var(--lv-text-muted)]">
-                  {copy.home.nextAction}
-                </p>
-                <p className="mt-1 break-words text-sm font-medium text-[var(--lv-text)]">
-                  {focus.focus.nextAction.text}
-                </p>
-              </div>
+            <div className="mt-5 flex flex-col gap-4 border-t border-[var(--lv-border)] pt-4 sm:flex-row sm:items-end sm:justify-end">
               <div className="flex shrink-0 flex-wrap gap-2">
                 {focusBlock ? (
                   <PlayToggle
@@ -147,10 +132,6 @@ export function HomeView({
                 ) : null}
                 <Button variant="secondary" onClick={() => openDetail(focus.focus!.id)}>
                   {copy.home.openDetails}
-                </Button>
-                <Button variant="primary" onClick={() => completeNext(focus.focus!)}>
-                  <Check aria-hidden="true" size={16} />
-                  {copy.home.completeNextAction}
                 </Button>
               </div>
             </div>

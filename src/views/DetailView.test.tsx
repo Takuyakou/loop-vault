@@ -183,18 +183,13 @@ describe("DetailView status reasons", () => {
     expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.genre}"]`)).not.toBeNull();
     expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.mood}"]`)).not.toBeNull();
     expect(japanese.container.textContent).toContain(appCopy.ja.detail.assets);
-    expect(appCopy.ja.detail.nextActionPlaceholders).toContain(
-      japanese.container.querySelector<HTMLTextAreaElement>(`textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`)?.placeholder,
-    );
+    expect(japanese.container.querySelector(`textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`)).toBeNull();
     await japanese.unmount();
 
     const english = await renderDetail(makeIdea(), { copy: appCopy.en, language: "en" });
     expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.genre}"]`)).not.toBeNull();
     expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.mood}"]`)).not.toBeNull();
     expect(english.container.textContent).toContain(appCopy.en.detail.assets);
-    expect(appCopy.en.detail.nextActionPlaceholders).toContain(
-      english.container.querySelector<HTMLTextAreaElement>(`textarea[aria-label="${appCopy.en.detail.fields.nextAction}"]`)?.placeholder,
-    );
     await english.unmount();
   });
 
@@ -256,21 +251,10 @@ describe("DetailView status reasons", () => {
     await mounted.unmount();
   });
   it.each([false, "pending"] as const)(
-    "keeps Next Action and add-form input intact for %s persistence",
+    "keeps add-form input intact for %s persistence",
     async (outcome) => {
-      const idea = makeIdea({
-        nextAction: { text: "Write the bass", updatedAt: "2026-07-15T00:00:00.000Z" },
-      });
       const updateIdea = vi.fn(() => outcome);
-      const updateNextAction = vi.fn(() => outcome);
-      const setToast = vi.fn();
-      const mounted = await renderDetail(idea, { updateIdea, updateNextAction, setToast });
-      const nextAction = mounted.container.querySelector<HTMLTextAreaElement>(
-        `textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`,
-      )!;
-      await clickButton(mounted.container, appCopy.ja.common.done);
-      expect(nextAction.value).toBe("Write the bass");
-      expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.nextCompleted);
+      const mounted = await renderDetail(makeIdea(), { updateIdea });
 
       const referenceTitle = mounted.container.querySelector<HTMLInputElement>(
         `input[placeholder="${appCopy.ja.detail.placeholders.title}"]`,
@@ -302,7 +286,6 @@ async function renderDetail(
       <DetailView
         idea={idea}
         updateIdea={vi.fn()}
-        updateNextAction={vi.fn()}
         removeProgressionBlock={vi.fn()}
         analyzeMidiPath={vi.fn(async () => undefined)}
         requestDelete={vi.fn()}

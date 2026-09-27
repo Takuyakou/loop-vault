@@ -376,7 +376,7 @@ export function VaultView({
           </div>
         ) : null}
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.library.shortcuts}</p>
-      </> : <IdeaList ideas={ideas} openDetail={openDetail} copy={copy} />}
+      </> : <IdeaList ideas={ideas} openDetail={openDetail} />}
     </div>
   );
 }
@@ -577,8 +577,8 @@ function formatProgressionPreview(chordLabels: readonly string[]): string {
   return chordLabels.length > progressionPreviewChordLimit ? `${preview} · …` : preview;
 }
 
-function IdeaList({ ideas, openDetail, copy }: { ideas: SongIdea[]; openDetail: (id: string) => void; copy: AppCopy }) {
-  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || copy.library.noNextAction}</p></button>)}</div>;
+function IdeaList({ ideas, openDetail }: { ideas: SongIdea[]; openDetail: (id: string) => void }) {
+  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p></button>)}</div>;
 }
 
 function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) {

@@ -38,6 +38,8 @@ describe("HomeView hierarchy", () => {
     expect(container.textContent).not.toContain(appCopy.ja.home.headline);
     expect(container.querySelector("[role='progressbar']")).toBeNull();
     expect(container.textContent).not.toContain("今月");
+    expect(buttonTexts(container)).not.toContain(appCopy.ja.home.completeNextAction);
+    expect(container.textContent).not.toContain(appCopy.ja.home.nextAction);
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();
 
   });
@@ -98,19 +100,6 @@ describe("HomeView hierarchy", () => {
       appCopy.en.home.openVault,
     ]));
   });
-  it.each([false, "pending"] as const)(
-    "does not announce Next Action completion for %s persistence",
-    async (outcome) => {
-      const updateNextAction = vi.fn(() => outcome);
-      const setToast = vi.fn();
-      const container = await renderHome(dashboardIdeas(), "ja", { updateNextAction, setToast });
-      const complete = [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.includes(appCopy.ja.home.completeNextAction));
-      await act(async () => complete?.click());
-      expect(updateNextAction).toHaveBeenCalledWith("focus", "", expect.any(Date));
-      expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.nextCompleted);
-    },
-  );
 });
 
 function dashboardIdeas(): SongIdea[] {
@@ -169,7 +158,6 @@ async function renderHome(
   ideas: SongIdea[],
   language: AppLanguage = "ja",
   overrides: {
-    updateNextAction?: (id: string, text: string, now?: Date) => boolean | "pending";
     setToast?: (message: string) => void;
   } = {},
 ) {
@@ -189,7 +177,6 @@ async function renderHome(
         openCapture={vi.fn()}
         openCreate={vi.fn()}
         openVault={vi.fn()}
-        updateNextAction={overrides.updateNextAction ?? vi.fn(() => true)}
         setToast={overrides.setToast ?? vi.fn()}
       />,
     );
