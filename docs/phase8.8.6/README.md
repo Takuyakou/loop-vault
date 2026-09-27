@@ -4,9 +4,9 @@
 
 ## Status
 
-- Status: P8.8.6-06 blocked by inherited repository-wide Playwright failures on `feat/phase8.8.6-final-capture-closure`.
+- Status: **P8.8.6 = READY FOR MERGE REVIEW** on `feat/phase8.8.6-final-capture-closure`; no local master merge yet.
 - Base: local `master` at `feb2b51`.
-- [Gate and implementation report](reports/P8.8.6-06-gate-and-closeout.md).
+- [Original implementation report](reports/P8.8.6-06-gate-and-closeout.md) and [final merge-readiness report](reports/P8.8.6-07-merge-readiness.md).
 - Merge remains a separate human-authorized action after required gates pass.
 
 ## Required Reading Order
