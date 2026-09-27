@@ -7,10 +7,10 @@ import {
 import type { PreviewSound } from "../audio/chordPreview";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
-import { Badge, Button, Surface } from "../components/ui";
+import { Button, Surface } from "../components/ui";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
-import { displayKey, statusLabel } from "../domain/displayLabels";
+import { displayKey } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
@@ -21,11 +21,9 @@ import {
 import { monthlyStats } from "../domain/monthlyStats";
 import { formatProgressionText } from "../domain/progressionText";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import type { TransitionResult } from "../domain/transition";
-import type { SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 
-const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 
 export function HomeView({
   bassPracticeCard,
@@ -39,7 +37,6 @@ export function HomeView({
   openCreate,
   openVault,
   updateNextAction,
-  transitionIdea,
   setToast,
 }: {
   bassPracticeCard?: ReactNode;
@@ -53,7 +50,6 @@ export function HomeView({
   openCreate: () => void;
   openVault: () => void;
   updateNextAction: (id: string, text: string, now?: Date) => boolean | "pending";
-  transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   setToast: (toast: string) => void;
 }) {
   const { sound: previewSound } = usePreviewSound();
@@ -95,7 +91,6 @@ export function HomeView({
                 <p className="mt-1.5 text-xs text-[var(--lv-text-muted)]">
                   {focus.focus.bpm ? `${focus.focus.bpm} BPM` : copy.home.bpmUnset}
                   {focus.focus.key ? ` · ${displayKey(focus.focus.key, language)}` : ""}
-                  {` · ${statusLabel(focus.focus.status, language)}`}
                 </p>
               </>
             ) : (
@@ -104,9 +99,6 @@ export function HomeView({
               </h2>
             )}
           </div>
-          {focus.focus ? (
-            <Badge tone="teal">{statusLabel(focus.focus.status, language)}</Badge>
-          ) : null}
         </div>
 
         {focus.focus ? (
@@ -201,7 +193,7 @@ export function HomeView({
         </div>
       </section>
 
-      <div className="grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid min-h-0 gap-4">
         <Surface className="min-w-0 p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="lv-section-title">{copy.home.recentProgressions}</h2>
@@ -254,61 +246,6 @@ export function HomeView({
           )}
         </Surface>
 
-        <aside className="space-y-3 text-sm">
-          <Surface variant="raised" className="p-4">
-            <h2 className="lv-section-title">{copy.home.pipeline}</h2>
-            <div className="mt-4 space-y-3">
-              {pipeline.map((status) => (
-                <div key={status}>
-                  <div className="flex justify-between text-xs">
-                    <span>{statusLabel(status, language)}</span>
-                    <span className="text-[var(--lv-text-muted)]">{stats.pipelineCounts[status]}</span>
-                  </div>
-                  <div className="mt-1.5 h-1 rounded bg-[var(--lv-bg-subtle)]">
-                    <div
-                      className="h-full rounded bg-[var(--lv-accent)]"
-                      style={{ width: `${Math.min(100, stats.pipelineCounts[status] * 18)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Surface>
-          {focus.stale.length ? (
-            <Surface className="border-[color-mix(in_srgb,var(--lv-warning)_42%,var(--lv-border))] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-[var(--lv-warning)]">{copy.home.stale}</h2>
-                <Badge tone="warning">{focus.stale.length}</Badge>
-              </div>
-              <div className="mt-2 space-y-2">
-                {focus.stale.map((entry) => (
-                  <div key={entry.idea.id} className="flex items-center justify-between gap-3 border-t border-[var(--lv-border)] pt-2">
-                    <button
-                      type="button"
-                      className="min-w-0 truncate text-left text-xs font-medium hover:text-[var(--lv-accent)]"
-                      onClick={() => openDetail(entry.idea.id)}
-                      title={entry.idea.title}
-                    >
-                      {entry.idea.title}
-                    </button>
-                    {entry.suggestHold ? (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          const result = transitionIdea(entry.idea.id, "hold", new Date());
-                          if (!result.ok) setToast(result.error.message);
-                        }}
-                      >
-                        {copy.home.suggestHold}
-                      </Button>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </Surface>
-          ) : null}
-        </aside>
       </div>
     </div>
   );

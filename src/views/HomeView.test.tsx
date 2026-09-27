@@ -5,8 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import { makeIdea } from "../domain/testFactory";
-import type { TransitionResult } from "../domain/transition";
-import type { SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { appCopy, type AppLanguage } from "../i18n";
 import { HomeView } from "./HomeView";
 
@@ -184,13 +183,6 @@ async function renderHome(
   const root = createRoot(container);
   roots.push(root);
   const copy = appCopy[language];
-  const transitionIdea = vi.fn((id: string, to: Status): TransitionResult => {
-    const idea = ideas.find((entry) => entry.id === id);
-    return idea
-      ? { ok: true, idea: { ...idea, status: to } }
-      : { ok: false, error: { code: "invalid-jump", message: "Idea not found" } };
-  });
-
   await act(async () => {
     root.render(
       <HomeView
@@ -204,7 +196,6 @@ async function renderHome(
         openCreate={vi.fn()}
         openVault={vi.fn()}
         updateNextAction={overrides.updateNextAction ?? vi.fn(() => true)}
-        transitionIdea={transitionIdea}
         setToast={overrides.setToast ?? vi.fn()}
       />,
     );

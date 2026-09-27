@@ -1,19 +1,15 @@
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
-import { Modal } from "../components/Modal";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
-import { pipelineStatuses, StatusPipeline } from "../components/StatusPipeline";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
-import { statusLabel } from "../domain/displayLabels";
 import { beatsPerBar } from "../domain/midi";
 import { resolveTimelineVoicings } from "../domain/voicing";
 import { formatProgressionText } from "../domain/progressionText";
-import type { TransitionOptions, TransitionResult } from "../domain/transition";
-import type { AssetType, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import type { AssetType, SavedProgressionBlock, SongIdea } from "../domain/types";
 import {
   assetAnchor,
   createUndoSnapshot,
@@ -30,8 +26,7 @@ import { Copy, ExternalLink, FolderOpen, Trash2, TriangleAlert } from "lucide-re
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
-function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
 function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
 function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
 function optionalTextDraft(value: string): DraftParseResult<string | undefined> { const trimmed = value.trim(); return validDraft(trimmed || undefined, trimmed); }
@@ -125,7 +120,6 @@ export function DetailView({
   enqueueUndo = () => "",
   vaultEpoch = 0,
   analyzeMidiPath,
-  transitionIdea,
   requestDelete,
   setToast,
   copy,
@@ -145,12 +139,6 @@ export function DetailView({
   enqueueUndo?: <T>(request: UndoRequest<T>) => string;
   vaultEpoch?: number;
   analyzeMidiPath: (path: string) => Promise<void>;
-  transitionIdea: (
-    id: string,
-    to: Status,
-    now?: Date,
-    options?: TransitionOptions,
-  ) => TransitionResult;
   requestDelete: (idea: SongIdea) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
@@ -159,11 +147,6 @@ export function DetailView({
 }) {
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
-  const [pendingInactiveStatus, setPendingInactiveStatus] = useState<"hold" | "abandoned" | null>(null);
-  const [statusReason, setStatusReason] = useState("");
-  const [pendingPipelineTransition, setPendingPipelineTransition] = useState<{ to: Status; options: TransitionOptions }>();
-  const statusReasonRef = useRef<HTMLTextAreaElement>(null);
-  const pipelineCancelRef = useRef<HTMLButtonElement>(null);
   const completeNextRef = useRef<HTMLButtonElement>(null);
   const placeholder = copy.detail.nextActionPlaceholders[Math.abs(hashString(idea.id)) % copy.detail.nextActionPlaceholders.length];
 
@@ -239,11 +222,6 @@ export function DetailView({
     shouldCommitOnBlur: (event) => event.relatedTarget !== completeNextRef.current,
   });
 
-  useEffect(() => {
-    setPendingInactiveStatus(null);
-    setStatusReason("");
-  }, [idea.id]);
-
   function completeNext() {
     if (!(idea.nextAction.text || nextField.draft.trim())) return false;
     const updated = updateNextAction(idea.id, "", new Date());
@@ -255,64 +233,6 @@ export function DetailView({
 
   function updateMeta(changes: Partial<SongIdea>) {
     return updateIdea(idea.id, changes);
-  }
-
-  function moveStatus(to: Status) {
-    if (to === idea.status) {
-      return;
-    }
-
-    if (to === "hold" || to === "abandoned") {
-      setPendingInactiveStatus(to);
-      setStatusReason("");
-      return;
-    }
-
-    commitStatus(to);
-  }
-
-  function commitStatus(to: Status, options: TransitionOptions = {}) {
-    if (isPipelineStatus(to) && idea.nextAction.text.trim() && to !== idea.status) {
-      setPendingPipelineTransition({ to, options });
-      return false;
-    }
-    return performStatusTransition(to, options);
-  }
-
-  function performStatusTransition(to: Status, options: TransitionOptions = {}) {
-    const result = transitionIdea(idea.id, to, new Date(), options);
-    if (!result.ok) setToast(result.error.message);
-    if (result.ok && to === "done") setToast(copy.toast.statusDone);
-    return result.ok;
-  }
-
-  function resolvePipelineTransition(keepNextAction: boolean) {
-    if (!pendingPipelineTransition) return;
-    const moved = performStatusTransition(
-      pendingPipelineTransition.to,
-      pendingPipelineTransition.options,
-    );
-    if (moved && !keepNextAction) {
-      const cleared = updateNextAction(idea.id, "", new Date());
-      if (cleared !== true) return;
-    }
-    setPendingPipelineTransition(undefined);
-  }
-
-  function closeInactiveStatusDialog() {
-    setPendingInactiveStatus(null);
-    setStatusReason("");
-  }
-
-  function submitInactiveStatus(event: FormEvent) {
-    event.preventDefault();
-    if (!pendingInactiveStatus) return;
-
-    const moved = commitStatus(pendingInactiveStatus, { reason: statusReason });
-    if (moved) {
-      setPendingInactiveStatus(null);
-      setStatusReason("");
-    }
   }
 
   function addReference(event: FormEvent) {
@@ -491,15 +411,7 @@ export function DetailView({
               <SaveFlash visible={titleField.saved} label={copy.detail.saveAccepted} />
               <span id="detail-title-error" className="sr-only">{copy.detail.validation.title}</span>
             </div>
-            <StatusBadge status={idea.status} language={language} />
           </div>
-          <StatusPipeline
-            status={idea.status}
-            prevStatus={idea.prevStatus}
-            labels={copy.status}
-            copy={copy.detail.statusControl}
-            onMoveStatus={moveStatus}
-          />
           <button className="mt-5 inline-flex items-center gap-2 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>
             <Trash2 aria-hidden="true" size={16} />
             {copy.common.delete}
@@ -697,104 +609,9 @@ export function DetailView({
           </div>
         </Panel>
 
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.detail.history}</h2>
-          <div className="mt-3 space-y-2">
-            {idea.statusHistory.map((entry, index) => (
-              <div key={`${entry.status}-${entry.at}-${index}`} className="border-b border-[var(--lv-border)] pb-2 text-sm">
-                <div className="flex justify-between gap-3">
-                  <span>{labelStatus(entry.status, language)}</span>
-                  <span className="text-[var(--lv-text-muted)]">{formatDate(entry.at)}</span>
-                </div>
-                {entry.reason ? <p className="mt-1 whitespace-pre-wrap break-words text-[var(--lv-text-secondary)]">{entry.reason}</p> : null}
-              </div>
-            ))}
-          </div>
-        </Panel>
       </section>
       </div>
-      {pendingInactiveStatus ? (
-        <Modal
-          ariaLabelledBy="status-reason-title"
-          ariaDescribedBy="status-reason-help"
-          initialFocusRef={statusReasonRef}
-          onClose={closeInactiveStatusDialog}
-          closeOnBackdrop={!statusReason.trim()}
-          panelClassName="w-full max-w-md p-5"
-        >
-          <form onSubmit={submitInactiveStatus}>
-            <h2 id="status-reason-title" className="text-xl font-semibold">
-              {labelStatus(pendingInactiveStatus, language)}: {copy.detail.statusReason}
-            </h2>
-            <p id="status-reason-help" className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.detail.statusReasonHelp}</p>
-            <textarea
-              ref={statusReasonRef}
-              id="status-reason"
-              className={`${inputClass} mt-4 min-h-28`}
-              value={statusReason}
-              maxLength={500}
-              onChange={(event) => setStatusReason(event.target.value)}
-              placeholder={copy.detail.statusReasonPlaceholder}
-            />
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <span className="text-xs text-[var(--lv-text-muted)]">{statusReason.length}/500</span>
-              <div className="flex gap-2">
-                <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={closeInactiveStatusDialog}>
-                  {copy.common.cancel}
-                </button>
-                <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" type="submit">
-                  {copy.detail.confirmStatus(labelStatus(pendingInactiveStatus, language))}
-                </button>
-              </div>
-            </div>
-          </form>
-        </Modal>
-      ) : null}
-      {pendingPipelineTransition ? (
-        <Modal
-          ariaLabelledBy="pipeline-transition-title"
-          ariaDescribedBy="pipeline-transition-description"
-          initialFocusRef={pipelineCancelRef}
-          onClose={() => setPendingPipelineTransition(undefined)}
-          panelClassName="w-full max-w-md p-5"
-          layerClassName="z-[70]"
-        >
-          <h2 id="pipeline-transition-title" className="text-xl font-semibold">
-            {copy.detail.statusControl.carryTitle}
-          </h2>
-          <p id="pipeline-transition-description" className="mt-3 text-sm leading-6 text-[var(--lv-text-secondary)]">
-            {copy.detail.statusControl.carryDescription}
-          </p>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
-            <button
-              ref={pipelineCancelRef}
-              type="button"
-              className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
-              onClick={() => setPendingPipelineTransition(undefined)}
-            >
-              {copy.common.cancel}
-            </button>
-            <button
-              type="button"
-              className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
-              onClick={() => resolvePipelineTransition(true)}
-            >
-              {copy.detail.statusControl.keepAndContinue}
-            </button>
-            <button
-              type="button"
-              className="rounded border border-red-400/50 px-3 py-2 text-sm text-red-100"
-              onClick={() => resolvePipelineTransition(false)}
-            >
-              {copy.detail.statusControl.clearAndContinue}
-            </button>
-          </div>
-        </Modal>
-      ) : null}
     </>
   );
 }
 
-function isPipelineStatus(status: Status): boolean {
-  return pipelineStatuses.includes(status as (typeof pipelineStatuses)[number]);
-}

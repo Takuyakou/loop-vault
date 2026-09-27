@@ -257,7 +257,6 @@ async function mountDetail(
         updateNextAction={vi.fn()}
         removeProgressionBlock={vi.fn()}
         analyzeMidiPath={vi.fn(async () => undefined)}
-        transitionIdea={vi.fn(() => ({ ok: true as const, idea }))}
         requestDelete={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.en}
