@@ -10,7 +10,6 @@ import {
   BassPracticeIcon,
   ChordDojoIcon,
   ErrorIcon,
-  HistoryIcon,
   HomeIcon,
   ImportIcon,
   LiveMidiIcon,
@@ -34,8 +33,7 @@ export type AppView =
   | "library"
   | "detail"
   | "progression-detail"
-  | "practice"
-  | "history";
+  | "practice";
 export type SaveStatus = "saved" | "saving" | "unsaved" | "error";
 
 /** Below this window width the sidebar starts as icons only. */
@@ -151,7 +149,6 @@ export function AppShell({
             <div className="lv-sidebar-rule" role="separator" />
             <NavItem nav="live-midi" label="Live MIDI" icon={LiveMidiIcon} collapsed={collapsed} active={false} onClick={openLiveMidi} />
             <div className="lv-sidebar-spacer" />
-            <NavItem nav="history" label="履歴" icon={HistoryIcon} collapsed={collapsed} active={!settingsOpen && view === "history"} onClick={() => setView("history")} />
             <NavItem nav="settings" label="設定" icon={SettingsIcon} collapsed={collapsed} active={settingsOpen} onClick={openSettings} />
           </nav>
           <div className="lv-sidebar-footer">

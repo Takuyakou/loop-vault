@@ -110,9 +110,9 @@ describe("AppShell (P8.9-02)", () => {
   it("lists the Japanese sidebar in the mock order with stable data-nav hooks", async () => {
     const openSettings = vi.fn();
     const { container, root } = await renderShell({ view: "detail", openSettings });
-    expect(navKeys(container)).toEqual(["home", "capture", "vault", "voicing-loop", "chord-dojo", "bass-practice", "live-midi", "history", "settings"]);
+    expect(navKeys(container)).toEqual(["home", "capture", "vault", "voicing-loop", "chord-dojo", "bass-practice", "live-midi", "settings"]);
     expect([...container.querySelectorAll("[data-nav]")].map((item) => item.textContent)).toEqual([
-      "ホーム", "取り込む", "Vault", "Voicing Loop", "Chord Dojo", "Bass Practice", "Live MIDI", "履歴", "設定",
+      "ホーム", "取り込む", "Vault", "Voicing Loop", "Chord Dojo", "Bass Practice", "Live MIDI", "設定",
     ]);
     expect(container.textContent).not.toMatch(/WORKSPACE|SYSTEM/);
     expect(container.querySelector('[aria-current="page"]')?.getAttribute("data-nav")).toBe("vault");

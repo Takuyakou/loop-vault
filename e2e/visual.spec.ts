@@ -115,10 +115,8 @@ test.describe("Phase 5.13 visual evidence", () => {
     await evidence(page, testInfo, "live-midi");
     await page.getByRole("button", { name: /メイン画面を表示|Show main window/ }).click();
 
-    await page.locator('[data-nav="history"]').click();
-    await evidence(page, testInfo, "history");
-    await expect(page).toHaveScreenshot("history.png", { fullPage: true });
-
+    // P8.9-03: the History screen is gone; the dialog and toast checks continue on Home.
+    await page.locator('[data-nav="home"]').click();
 
     await page.getByRole("button", { name: /設定|Settings/ }).first().click();
     await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
@@ -126,7 +124,7 @@ test.describe("Phase 5.13 visual evidence", () => {
     await page.keyboard.press("Escape");
 
     // Reload to clear the transient analysis slice while retaining the saved
-    // History fixture in the repository-backed vault.
+    // fixture in the repository-backed vault.
     await openApp(page);
     await openCapture(page);
     await page.getByTestId("capture-choose-midi").click();
@@ -139,7 +137,7 @@ test("Settings visual baseline", async ({ page }, testInfo) => {
   await createSavedProgression(page, "History visual fixture", {
     fileName: "history-visual-fixture.mid",
   });
-  await page.locator('[data-nav="history"]').click();
+  await page.locator('[data-nav="home"]').click();
   await page.getByRole("button", { name: /設定|Settings/ }).first().click();
   await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
   await evidence(page, testInfo, "settings");

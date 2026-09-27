@@ -150,9 +150,6 @@ for (const [width, height] of SIZES) {
         });
         await page.keyboard.press("Escape");
       }
-      await shot("history", async () => {
-        await nav(page, "history");
-      });
       await shot("home", async () => {
         await nav(page, "home");
       });

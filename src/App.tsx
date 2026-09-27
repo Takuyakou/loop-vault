@@ -23,7 +23,6 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
-import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
@@ -33,7 +32,6 @@ import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isB
 import { buildVaultPickerCandidateViews, buildVaultSourceBasslineCandidateViews, type VaultPickerCandidateView, type VaultSourceBasslineCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
-  derivePracticeHistory,
   derivePracticeHomeSummary,
   createPracticeControllerIfEnabled,
   PracticeDataController,
@@ -318,7 +316,6 @@ function App() {
     return () => { unsubscribe(); if (practiceControllerRef.current === controller) practiceControllerRef.current = undefined; };
   }, [bassPracticeEnabled]);
   const practiceHomeSummary = useMemo(() => practiceData.file ? derivePracticeHomeSummary(practiceData.file, new Date()) : undefined, [practiceData]);
-  const practiceHistory = useMemo(() => practiceData.file ? derivePracticeHistory(practiceData.file) : [], [practiceData]);
   const practiceSession = useMemo(() => {
     const file = practiceData.file;
     const active = file?.sessions.find((session) => !session.completedAt && !session.abandoned && session.completedCount < session.targetCount);
@@ -1063,18 +1060,6 @@ function App() {
                   )}
               />
             ) : null}
-            {view === "history" ? (
-              <HistoryView
-                ideas={visibleIdeas}
-                language={language}
-                practiceHistory={practiceHistory}
-                chordContextHistory={practiceData.file?.chordContextHistory}
-                rootMotionHistory={practiceData.file?.rootMotionHistory}
-                practiceHistoryTotal={practiceData.file ? practiceData.file.sessions.filter(({ completedCount }) => completedCount > 0).length + practiceData.file.rhythmSessions.filter(({ completedCount }) => completedCount > 0).length : 0}
-                openIdea={openDetail}
-                openProgression={openProgression}
-              />
-            ) : null}
             {view === "detail" && !selectedIdea ? (
               <EmptyState openCapture={() => navigateTo("capture")} copy={copy} />
             ) : null}
@@ -1309,7 +1294,6 @@ function viewLabel(view: View, copy: AppCopy): string {
   if (view === "library" || view === "detail" || view === "progression-detail") {
     return copy.nav.library;
   }
-  if (view === "history") return "History";
   return copy.nav.home;
 }
 
@@ -1320,7 +1304,6 @@ function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   if (view === "practice") {
     return practiceMode === "voicing-loop" ? "Voicing Loop" : practiceMode === "bass-practice" ? "Bass Practice" : "Chord Dojo";
   }
-  if (view === "history") return "履歴";
   return "ホーム";
 }
 

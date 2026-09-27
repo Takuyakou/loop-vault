@@ -50,11 +50,13 @@ test("production defaults expose and start every shipped Bass Practice mode with
   await page.getByRole("tab", { name: "Degree Echo" }).click();
   await saveOneDegreeReview(page);
 
-  await page.locator('[data-nav="history"]').click();
-  await expect(page.getByTestId("bass-practice-history")).toBeVisible();
+  // P8.9-03: the History screen is gone; the saved review shows on the Home practice card.
+  const homeCard = page.getByTestId("bass-practice-home-card");
+  await page.locator('[data-nav="home"]').click();
+  await expect(homeCard).not.toContainText("最初のDegree Echoセッションを始める");
   await page.reload();
-  await page.locator('[data-nav="history"]').click();
-  await expect(page.getByTestId("bass-practice-history")).toBeVisible();
+  await expect(homeCard).not.toContainText("最初のDegree Echoセッションを始める");
+  await expect(homeCard).toContainText(/今日 [1-9]\d*問完了/);
 });
 
 test("Vault Detail opens Bass Practice in the production default", async ({ page }) => {
