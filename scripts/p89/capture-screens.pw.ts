@@ -17,25 +17,19 @@ const SIZES = [
   [768, 640],
 ] as const;
 
-interface SizeResult { size: string; captured: string[]; unreachable: { screen: string; reason: string }[] }
+interface SizeResult { size: string; captured: string[]; unreachable: { screen: string; reason: string }[]; toastOverDialogButtons?: string[] }
 const results: SizeResult[] = [];
 
+/** Fonts loaded and the autosave settled (the header save mark is back to "saved"). */
 async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
+  await page.locator('[data-save-status="saved"]').waitFor({ state: "attached", timeout: 5_000 }).catch(() => undefined);
   await page.waitForTimeout(250);
 }
 
-/** Clicks a sidebar entry; practice sub-entries are hidden while collapsed, so expand, click, re-collapse. */
-async function nav(page: Page, name: string) {
-  const button = page.locator("nav").getByRole("button", { name, exact: true });
-  if (await button.isVisible()) {
-    await button.click();
-    return;
-  }
-  const toggle = page.locator("[data-sidebar-toggle]");
-  await toggle.click();
-  await button.click();
-  if (await toggle.getAttribute("aria-expanded") === "true") await toggle.click();
+/** Clicks a sidebar entry by its stable data-nav hook (icon-only items stay clickable). */
+async function nav(page: Page, key: string) {
+  await page.locator(`[data-nav="${key}"]`).click();
 }
 
 for (const [width, height] of SIZES) {
@@ -62,11 +56,11 @@ for (const [width, height] of SIZES) {
       await openApp(page);
       await shot("home-empty", async () => {});
       await shot("capture-empty", async () => {
-        await nav(page, "Chord Capture");
+        await nav(page, "capture");
         await expect(page.locator("[data-capture-midi-drop-zone]").first()).toBeVisible();
       });
       await shot("capture-text-standard", async () => {
-        await nav(page, "Chord Capture");
+        await nav(page, "capture");
         await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
         const capture = page.getByTestId("text-progression-capture");
         await expect(capture).toBeVisible();
@@ -80,7 +74,7 @@ for (const [width, height] of SIZES) {
         await expect(capture.getByTestId("extended-text-bar")).toHaveCount(2);
       });
       await shot("capture-midi-result", async () => {
-        await nav(page, "Chord Capture");
+        await nav(page, "capture");
         const midiMode = page.getByTestId("capture-input-mode").getByRole("button", { name: /MIDI/ });
         if (await midiMode.isVisible()) await midiMode.click();
         await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 3 }), "p89-synthetic.mid");
@@ -102,11 +96,11 @@ for (const [width, height] of SIZES) {
         result.unreachable.push({ screen: "(save synthetic progression)", reason: String(error).split("\n")[0].slice(0, 160) });
       }
       await shot("vault", async () => {
-        await nav(page, "Vault");
+        await nav(page, "vault");
         await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "Vault");
       });
       await shot("progression", async () => {
-        await nav(page, "Vault");
+        await nav(page, "vault");
         await page.getByRole("button", { name: /進行を開く|Open progression/ }).first().click();
         await expect(page.getByRole("button", { name: /親Ideaを開く|Open parent Idea/ })).toBeVisible();
       });
@@ -115,15 +109,15 @@ for (const [width, height] of SIZES) {
         await expect(page.locator("#main-content")).toBeVisible();
       });
       await shot("chord-dojo", async () => {
-        await nav(page, "Chord Dojo");
+        await nav(page, "chord-dojo");
         await expect(page.getByTestId("practice-layout")).toBeVisible();
       });
       await shot("voicing-loop", async () => {
-        await nav(page, "Voicing Loop");
+        await nav(page, "voicing-loop");
       });
       let bassTabs: string[] = [];
       await shot("bass-practice", async () => {
-        await nav(page, "Bass Practice");
+        await nav(page, "bass-practice");
         const tablist = page.getByRole("tablist", { name: "Bass Practice mode" });
         await expect(tablist).toBeVisible();
         bassTabs = await tablist.getByRole("tab").allInnerTexts();
@@ -135,15 +129,32 @@ for (const [width, height] of SIZES) {
         });
       }
       await shot("settings", async () => {
-        await nav(page, "Settings");
+        await nav(page, "settings");
         await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
       });
       await page.keyboard.press("Escape");
+      if (width === 768) {
+        // A toast raised while a dialog is open must not cover the dialog's buttons.
+        await shot("settings-toast", async () => {
+          await nav(page, "settings");
+          const dialog = page.getByRole("dialog", { name: /設定|Settings/ });
+          await dialog.getByRole("button", { name: /書き出す|書き出し|Export/ }).first().click();
+          await expect(page.locator("[data-toast-tone]").first()).toBeVisible();
+          result.toastOverDialogButtons = await page.evaluate(() => {
+            const toasts = [...document.querySelectorAll("[data-toast-tone]")].map((toast) => toast.getBoundingClientRect());
+            const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+            return [...document.querySelectorAll('[role="dialog"] button')]
+              .filter((button) => { const box = button.getBoundingClientRect(); return box.width > 0 && box.bottom > 0 && box.top < innerHeight && toasts.some((toast) => hit(box, toast)); })
+              .map((button) => (button.textContent || button.getAttribute("aria-label") || "?").trim().slice(0, 40));
+          });
+        });
+        await page.keyboard.press("Escape");
+      }
       await shot("history", async () => {
-        await nav(page, "History");
+        await nav(page, "history");
       });
       await shot("home", async () => {
-        await nav(page, "Home");
+        await nav(page, "home");
       });
       // Component gallery: full page (the app root normally clips scrolling).
       try {

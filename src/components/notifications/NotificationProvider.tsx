@@ -12,6 +12,7 @@ import {
 } from "react";
 import type { UndoableAction } from "../../hooks/useUndoQueue";
 import { useReservedBottomSpace } from "./bottomReservations";
+import { useAnyModalOpen } from "../Modal";
 import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, UndoIcon, WarningIcon, type IconComponent } from "../icons";
 import type { NotificationItem, NotificationStore, NotificationTone, NotifyInput } from "./notificationStore";
 
@@ -60,6 +61,8 @@ function NotificationViewport({ closeLabel, store, undo }: { store: Notification
   const announcement = useUndoFocusAndAnnouncement(undoActions, undo?.fallbackFocusRef);
   const buttonRefs = announcement.buttonRefs;
   const reservedBottom = useReservedBottomSpace();
+  // While a dialog is open the stack moves to the top center, clear of the dialog's buttons.
+  const dialogOpen = useAnyModalOpen();
 
   return (
     <>
@@ -73,7 +76,7 @@ function NotificationViewport({ closeLabel, store, undo }: { store: Notification
       <div
         data-undo-toast-stack
         data-notification-stack
-        className="lv-toast-stack overflow-y-auto overscroll-contain"
+        className={`lv-toast-stack overflow-y-auto overscroll-contain${dialogOpen ? " lv-toast-stack-dialog" : ""}`}
         style={{
           bottom: `calc(var(--lv-toast-offset-bottom) + ${reservedBottom}px + var(--lv-sticky-inspector-height, 0px) + env(safe-area-inset-bottom, 0px))`,
           maxHeight: "calc(100vh - var(--lv-sticky-inspector-height, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)",

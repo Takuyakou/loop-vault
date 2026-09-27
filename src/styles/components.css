@@ -251,6 +251,15 @@
     pointer-events: none;
   }
 
+  /* Dialog open: top center, above the dialog's top padding instead of over its buttons. */
+  .lv-toast-stack.lv-toast-stack-dialog {
+    top: 8px;
+    right: auto;
+    bottom: auto !important;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .lv-toast-list {
     display: flex;
     flex-direction: column;
