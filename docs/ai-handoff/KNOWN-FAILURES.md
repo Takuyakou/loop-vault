@@ -24,18 +24,7 @@ note dumps. Synthetic pitch examples are allowed.
   - instances where the actual pitch collection does not match the reported label.
 - Bad outcome: a clean, structured chord progression is reported as a different, more complex chord family.
 - Expected semantic behavior: the reported chord family should match the sounding pitches.
-- Current hypotheses (HISTORICAL — superseded by the P5.36 confirmed cause below; do not reopen without new evidence):
-  - meter-driven segmentation;
-  - onset clustering window;
-  - bass / upper temporal association;
-  - note-on-centric analysis;
-  - re-strike handling;
-  - chord candidate ranking / pitch explanation.
-- Required next experiment (HISTORICAL — run in P5.36-02/03): compare the same input under:
-  - A. original meter metadata;
-  - B. meter metadata only rewritten to 4/4;
-  - C. meter-independent harmonic segmentation;
-  - D. C + onset clustering tolerance.
+- Earlier hypotheses (onset clustering window, note-on-centric analysis, re-strike handling) are superseded by the confirmed causes below; do not reopen them without new evidence.
 - Evidence: an approved ignored-local fixture is available (git-ignored; only anonymous aggregates are ever tracked).
 - Privacy note: no real MIDI names, paths, or full note dumps are recorded here.
 

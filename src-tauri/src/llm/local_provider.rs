@@ -220,7 +220,7 @@ fn parse_advisor_content(content: &str) -> Result<AdvisorResponse, LlmError> {
     serde_json::from_str(&trimmed[start..=end]).map_err(|_| LlmError::InvalidStructuredOutput)
 }
 
-fn advisor_system_prompt() -> &'static str {
+pub(crate) fn advisor_system_prompt() -> &'static str {
     "You are Loop Vault Progression Advisor. Return exactly three distinct 8-bar 4/4 chord progressions. Use the strategies close_development, contrast, and experimental exactly once each. Cover every beat without overlaps. Use only taxonomy IDs present in the request. Chord labels must use A-G roots with optional # or b, optional slash bass, and only these suffixes: m, dim, aug, maj7, m7, 7, m7b5, dim7, maj9, m9, 9, m11, 13, sus2, sus4, 7sus4, add9, 6, m6, 6/9. Optional tensions are b9, #9, 11, #11, b13, and 13. Do not use parentheses, alt, omit, or no3 notation. Return JSON only."
 }
 

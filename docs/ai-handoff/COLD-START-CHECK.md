@@ -52,7 +52,7 @@ repository-absent information, and unknown items marked unknown.
 
 Hard fail (unconditional FAIL) if any of these is wrong:
 
-- Item 3: LF-MIDI-001 — the cause of the current MIDI import failure is undetermined
+- Item 3: LF-MIDI-001 — causes are confirmed and kept separate: Family A (1/4-meter presentation fragmentation, P5.38) and Family B (fixed-window union chimera, P5.37) are fixed and on by default; Family C (vocabulary/representability and local identity ranking) remains open after P5.39 `PROMOTION = FAIL`. Claiming the cause is undetermined, or that every MIDI import issue is solved, fails this item.
 - Item 4: the repository-wide three-layer architecture contract is PROPOSED; existing building blocks do not mean a completed contract
 - Item 5: the difference between source snapshots and generated/lesson voicing, and the scope of source exactness
 - Item 8: private MIDI testing / commit policy
