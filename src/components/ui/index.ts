@@ -22,3 +22,12 @@ export type {
   StatusTone,
   SurfaceProps,
 } from "./primitives";
+export { Chip, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./controls";
+export type {
+  ChipProps,
+  PopoverProps,
+  ProgressBarProps,
+  SegmentOption,
+  SegmentedControlProps,
+  SelectProps,
+} from "./controls";

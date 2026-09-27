@@ -160,7 +160,7 @@ export function Modal({
         aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : "Dialog")}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
-        className={`overscroll-contain border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] shadow-2xl ${panelClassName}`}
+        className={`overscroll-contain rounded-[var(--lv-radius-lg)] border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] shadow-[var(--lv-shadow-overlay)] ${panelClassName}`}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
       >

@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useId,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type ReactNode,
@@ -12,12 +13,20 @@ import {
   TriangleAlert,
 } from "lucide-react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+/**
+ * P8.9 button levels: `primary` (teal fill, one per screen), `neutral` (outline,
+ * everything else), `ghost` (no fill), `state` (purple only while
+ * `aria-pressed` is true). `secondary` is the legacy name of `neutral`.
+ * `danger` is for the confirm dialog's destructive action only.
+ */
+type ButtonVariant = "primary" | "neutral" | "secondary" | "ghost" | "state" | "danger";
 type ButtonSize = "sm" | "md";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** Shown as a tooltip while the button is disabled. */
+  disabledReason?: string;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
@@ -25,43 +34,63 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   type = "button",
   variant = "secondary",
   size = "md",
+  disabledReason,
   ...props
 }, ref) {
+  const reasonId = useId();
   const sizeClass = size === "sm"
     ? "min-h-9 px-3 text-xs"
     : "min-h-10 px-4 text-sm";
+  const showReason = Boolean(props.disabled && disabledReason);
 
-  return (
+  const button = (
     <button
       {...props}
       ref={ref}
       type={type}
+      aria-describedby={showReason ? reasonId : props["aria-describedby"]}
       className={`inline-flex items-center justify-center gap-2 font-medium ${sizeClass} lv-button-${variant} ${className}`}
     />
+  );
+  if (!showReason) return button;
+  // A disabled button receives no hover or focus, so the wrapper carries the tooltip.
+  return (
+    <span className="lv-tooltip-anchor" tabIndex={0} data-disabled-reason>
+      {button}
+      <span id={reasonId} role="tooltip" className="lv-tooltip">{disabledReason}</span>
+    </span>
   );
 });
 
 export interface IconButtonProps extends Omit<ButtonProps, "children"> {
   label: string;
   children: ReactNode;
+  /**
+   * `native` (default) keeps the browser `title` tooltip that existing screens
+   * and tests rely on; `styled` shows the P8.9 tooltip (0.12 s) instead.
+   */
+  tooltip?: "native" | "styled";
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton({
   children,
   className = "",
   label,
-  title = label,
+  title,
+  tooltip = "native",
   ...props
 }, ref) {
+  const styled = tooltip === "styled";
   return (
     <Button
       {...props}
       ref={ref}
       aria-label={label}
-      title={title}
-      className={`h-10 min-h-10 w-10 shrink-0 !px-0 ${className}`}
+      title={styled ? title : (title ?? label)}
+      className={`h-10 min-h-10 w-10 shrink-0 !px-0 ${styled ? "lv-tooltip-host" : ""} ${className}`}
     >
       {children}
+      {styled ? <span aria-hidden="true" className="lv-tooltip">{label}</span> : null}
     </Button>
   );
 });
@@ -204,7 +233,7 @@ export function LoadingState({
     >
       <LoaderCircle
         aria-hidden="true"
-        className="shrink-0 animate-spin text-[var(--lv-accent)]"
+        className="shrink-0 text-[var(--lv-accent)] motion-safe:animate-spin"
         size={20}
       />
       <div className="min-w-0">
@@ -273,8 +302,8 @@ export function EmptyState({
   title,
 }: EmptyStateProps) {
   return (
-    <div className={`border border-dashed border-[var(--lv-border-strong)] px-5 py-8 text-center ${className}`}>
-      {icon ? <div className="mx-auto mb-3 flex w-fit text-[var(--lv-text-muted)]">{icon}</div> : null}
+    <div className={`lv-empty-state px-5 py-8 text-center ${className}`}>
+      {icon ? <div className="mx-auto mb-3 flex w-fit rounded-full bg-[var(--lv-surface-raised)] p-3 text-[var(--lv-accent)]">{icon}</div> : null}
       <h3 className="text-base font-semibold text-[var(--lv-text)]">{title}</h3>
       <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--lv-text-secondary)]">{description}</p>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}

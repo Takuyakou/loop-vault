@@ -1,0 +1,255 @@
+/* P8.9 shared component styles (buttons, tooltip, segmented, select, chip,
+   progress, popover). Tokens live in tokens.css; keyboard focus uses the global
+   :focus-visible ring in styles.css. */
+@layer components {
+  .lv-button-neutral {
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-button-neutral:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    color: var(--lv-text);
+  }
+
+  .lv-button-state {
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-button-state:hover {
+    color: var(--lv-text);
+  }
+
+  .lv-button-state[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--lv-accent-secondary) 70%, var(--lv-border));
+    background: var(--lv-accent-secondary-soft);
+    color: #c4c0ff;
+  }
+
+  .lv-button-neutral,
+  .lv-button-state {
+    transition:
+      background-color var(--lv-motion-fast) var(--lv-ease-standard),
+      border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard),
+      transform var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-button-neutral:disabled,
+  .lv-button-state:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  /* Pressed feedback: a 1px sink, only while the button can act. */
+  :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .lv-tooltip-anchor {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .lv-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    z-index: var(--lv-z-popover);
+    max-width: 280px;
+    width: max-content;
+    padding: 4px 8px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 6px;
+    background: var(--lv-surface-overlay);
+    box-shadow: var(--lv-shadow-raised);
+    color: var(--lv-text);
+    font-size: var(--lv-text-12);
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: normal;
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 2px);
+    transition:
+      opacity var(--lv-motion-fast) var(--lv-ease-standard),
+      transform var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-tooltip-anchor:hover > .lv-tooltip,
+  .lv-tooltip-anchor:focus-within > .lv-tooltip,
+  .lv-tooltip-host:hover > .lv-tooltip,
+  .lv-tooltip-host:focus-visible > .lv-tooltip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .lv-tooltip-host {
+    position: relative;
+  }
+
+  .lv-segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-bg-subtle);
+  }
+
+  .lv-segment {
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+    transition:
+      background-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-segment:hover {
+    color: var(--lv-text);
+  }
+
+  .lv-segment[aria-checked="true"] {
+    background: var(--lv-accent-soft);
+    color: #7fe8da;
+    font-weight: 600;
+  }
+
+  .lv-segment:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .lv-select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .lv-select select {
+    min-height: var(--lv-control-sm);
+    padding: 0 32px 0 10px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-bg-subtle);
+    color: var(--lv-text);
+    font-size: var(--lv-text-13);
+    appearance: none;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-select select:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+  }
+
+  .lv-select select:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .lv-select > svg {
+    position: absolute;
+    right: 10px;
+    color: var(--lv-text-muted);
+    pointer-events: none;
+  }
+
+  .lv-chip {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-pill);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+    white-space: nowrap;
+    transition:
+      background-color var(--lv-motion-fast) var(--lv-ease-standard),
+      border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  button.lv-chip:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    color: var(--lv-text);
+  }
+
+  .lv-chip[aria-pressed="true"],
+  .lv-chip[data-selected="true"] {
+    border-color: color-mix(in srgb, var(--lv-accent) 60%, var(--lv-border));
+    background: var(--lv-accent-soft);
+    color: #7fe8da;
+  }
+
+  .lv-chip:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .lv-progress {
+    height: 6px;
+    overflow: hidden;
+    border-radius: var(--lv-radius-pill);
+    background: rgb(150 170 195 / 14%);
+  }
+
+  .lv-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--lv-accent);
+    transition: width var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-progress[data-tone="record"] .lv-progress-fill {
+    background: var(--lv-record);
+  }
+
+  .lv-popover-anchor {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .lv-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: var(--lv-z-popover);
+    min-width: 200px;
+    padding: 12px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface-raised);
+    box-shadow: var(--lv-shadow-overlay);
+  }
+
+  .lv-empty-state {
+    border: 1px dashed var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    background: color-mix(in srgb, var(--lv-surface) 60%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-button-neutral,
+  .lv-button-state,
+  .lv-tooltip,
+  .lv-segment,
+  .lv-select select,
+  .lv-chip,
+  .lv-progress-fill {
+    transition: none;
+  }
+
+  :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
+    transform: none;
+  }
+}
