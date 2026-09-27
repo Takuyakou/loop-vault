@@ -44,3 +44,21 @@ Loop Vault is a Tauri v2 + React + TypeScript + Vite desktop app. Rust lives in
 For a cross-phase orientation, start at `docs/ai-handoff/README.md` (then
 `docs/ai-handoff/HANDOFF.md`); the phase process itself lives in
 `docs/phase-workflow/README.md`.
+
+## Phase 8.9 autonomous stage runs
+
+Phase 8.9 stages are delivered as one zip per stage and run end to end without
+asking the human for approval. The rules live in
+[`docs/phase8.9/contracts/P8.9-autonomous-run.md`](docs/phase8.9/contracts/P8.9-autonomous-run.md);
+`AGENTS.md` still wins on any conflict.
+
+- Permissions: `.claude/settings.json` (shared, committed) and
+  `.claude/settings.local.json` (machine-local denies, never committed).
+- `.local-evaluation/`: only `test-logs/` and `gate-cache/` may be read — with
+  the Read tool or with shell commands such as `cat`, `grep`, `find`. Never
+  open anything else under it.
+- Tests: follow `docs/test-dx/README.md` — `npm run test:fast|feature|ui` while
+  working, one fresh `npm run test:full` for the merge candidate.
+- Generated screenshots go to `p89-generated/` (ignored, never committed).
+- Stage reports are written in Japanese under `docs/phase8.9/reports/`.
+- Stop at the merge candidate. Never push, tag, or release.

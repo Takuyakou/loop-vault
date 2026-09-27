@@ -20,6 +20,7 @@
     "test:feature": "node scripts/test-dx/run.mjs feature",
     "test:ui": "node scripts/test-dx/run.mjs ui",
     "test:full": "node scripts/test-dx/run.mjs full",
+    "p89:screens": "node scripts/p89/screens.mjs",
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-playwright-visual-tests.mjs",
     "test:e2e:update-baselines": "node scripts/run-playwright-visual-tests.mjs --update-snapshots",

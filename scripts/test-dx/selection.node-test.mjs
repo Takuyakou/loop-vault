@@ -41,6 +41,18 @@ test("selection explains owner and normalizes Windows separators", () => {
   assert.match(result.reasons[0], /Vault owner/);
 });
 
+test("P8.9 data-retention round trip is a permanent persistence and Vault contract", () => {
+  for (const file of ["src/storage/tauriVaultStorage.ts", "src/store/vaultStore.ts"]) {
+    assert.ok(select([file], "feature").vitest.includes("src/domain/p89DataRetention.test.ts"), file);
+  }
+});
+
+test("P8.9 screenshot tool is evidence, not a product contract", () => {
+  const owner = ownerForFile("scripts/p89/screens.mjs");
+  assert.deepEqual(owner.areas, []);
+  assert.equal(Boolean(owner.broad), false);
+});
+
 test("missing permanent contracts fail closed", () => {
   assert.throws(() => selectForFiles(["src/styles/text-intake.css"], "fast", () => false), /missing/);
 });
