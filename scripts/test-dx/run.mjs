@@ -134,10 +134,12 @@ function runFull() {
   nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
   nodeStep("App TypeScript", "node_modules/typescript/bin/tsc");
   nodeStep("Production build", "node_modules/vite/bin/vite.js", ["build"]);
+  nodeStep("Gallery excluded", "scripts/test-dx/check-gallery-excluded.mjs");
   nodeStep("Runner contracts", "--test", [
     "scripts/test-dx/selection.node-test.mjs",
     "scripts/test-dx/cache.node-test.mjs",
     "scripts/test-dx/reporting.node-test.mjs",
+    "scripts/test-dx/check-gallery-excluded.node-test.mjs",
     "scripts/run-playwright-visual-tests.node-test.mjs",
   ], "node");
   nodeStep("Vitest full", "node_modules/vitest/vitest.mjs", [

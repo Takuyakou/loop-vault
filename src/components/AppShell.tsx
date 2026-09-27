@@ -1,28 +1,33 @@
-import { useState, type ReactNode } from "react";
+// P8.9-02 app shell: integrated title bar (36px), sidebar (232px / 64px) and
+// header (56px). Only the content area scrolls. Mock: RHome.dc.html / RHomeCompact.dc.html.
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useStore } from "zustand";
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import {
-  AudioWaveform,
-  Check,
-  CircleAlert,
-  Dumbbell,
-  History,
-  Home,
-  Layers3,
-  LoaderCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Piano,
-  Plus,
-  Repeat2,
-  Settings,
-} from "lucide-react";
+  BassPracticeIcon,
+  ChordDojoIcon,
+  ErrorIcon,
+  HistoryIcon,
+  HomeIcon,
+  ImportIcon,
+  LiveMidiIcon,
+  PlusIcon,
+  SettingsIcon,
+  VaultIcon,
+  VoicingLoopIcon,
+  VolumeIcon,
+  type IconComponent,
+} from "./icons";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
 import { GlobalPreviewSoundSelector } from "./GlobalPreviewSoundSelector";
 import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
-import { Button, IconButton } from "./ui";
+import { TitleBar } from "./shell/TitleBar";
+import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
+import { Button, Popover } from "./ui";
 
 export type AppView =
   | "home"
@@ -32,7 +37,10 @@ export type AppView =
   | "progression-detail"
   | "practice"
   | "history";
-export type SaveStatus = "saved" | "saving" | "unsaved";
+export type SaveStatus = "saved" | "saving" | "unsaved" | "error";
+
+/** Below this window width the sidebar starts as icons only. */
+export const SIDEBAR_NARROW_BELOW_PX = 1200;
 
 interface AppShellProps {
   view: AppView;
@@ -43,27 +51,28 @@ interface AppShellProps {
   openVoicingLoop: () => void;
   openChordDojo?: () => void;
   openBassPractice?: () => void;
+  onSearch?: () => void;
   voicingLoopActive?: boolean;
   bassPracticeActive?: boolean;
   bassPracticeAvailable?: boolean;
   settingsOpen?: boolean;
+  /** 「標準のタイトルバーを使う」: the OS draws the title bar, so the shell does not. */
+  standardTitleBar?: boolean;
   copy: AppCopy;
   saveStatus: SaveStatus;
   masterVolume: number;
   onMasterVolumeChange: (value: number) => void;
   pageTitle: string;
-  pageContext?: string;
   pageNavigation?: ReactNode;
   children?: ReactNode;
   controller?: PlaybackController;
 }
 
-const workspaceItems = [
-  { view: "home", label: "Home", icon: Home },
-  { view: "capture", label: "Chord Capture", icon: AudioWaveform },
-  { view: "library", label: "Vault", icon: Layers3 },
-  { view: "practice", label: "Practice", icon: Dumbbell },
-] as const;
+function narrowMedia(): MediaQueryList | undefined {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia(`(max-width: ${SIDEBAR_NARROW_BELOW_PX - 1}px)`)
+    : undefined;
+}
 
 export function AppShell({
   children,
@@ -71,17 +80,18 @@ export function AppShell({
   copy,
   masterVolume,
   onMasterVolumeChange,
+  onSearch = () => undefined,
   openCreate,
   openLiveMidi,
   openSettings,
   openVoicingLoop,
   openChordDojo,
   openBassPractice,
-  pageContext,
   pageNavigation,
   pageTitle,
   saveStatus,
   settingsOpen = false,
+  standardTitleBar = false,
   setView,
   view,
   voicingLoopActive = false,
@@ -89,241 +99,202 @@ export function AppShell({
   bassPracticeAvailable = true,
 }: AppShellProps) {
   const playback = usePlaybackState(controller);
-  const saveLabel = copy.save[saveStatus];
-  const [collapsed, setCollapsed] = useState(
-    () => typeof window !== "undefined"
-      && typeof window.matchMedia === "function"
-      && window.matchMedia("(max-width: 1100px)").matches,
-  );
+  const [manualCollapsed, setManualCollapsed] = useState(() => loadSidebarCollapsed());
+  const [narrow, setNarrow] = useState(() => narrowMedia()?.matches ?? false);
+  const collapsed = manualCollapsed ?? narrow;
+
+  useEffect(() => {
+    const media = narrowMedia();
+    if (!media) return undefined;
+    const update = () => setNarrow(media.matches);
+    media.addEventListener?.("change", update);
+    return () => media.removeEventListener?.("change", update);
+  }, []);
+
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "k" && !event.isComposing) {
+        event.preventDefault();
+        onSearchRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setManualCollapsed(next);
+    saveSidebarCollapsed(next);
+  };
+  const practiceView = view === "practice";
+  const chordDojoActive = practiceView && !voicingLoopActive && !bassPracticeActive;
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 overflow-hidden bg-[var(--lv-bg)] text-[var(--lv-text)]" data-sidebar-collapsed={collapsed}>
-      <aside
-        className={`flex shrink-0 flex-col border-r border-[var(--lv-border)] bg-[var(--lv-sidebar)] transition-[width] duration-150 ${
-          collapsed ? "w-[var(--lv-sidebar-collapsed)]" : "w-[var(--lv-sidebar-expanded)]"
-        }`}
-        aria-label="Application sidebar"
-        data-sidebar={collapsed ? "collapsed" : "expanded"}
-      >
-        <div className={`flex h-[var(--lv-topbar-height)] items-center border-b border-[var(--lv-border)] ${
-          collapsed ? "justify-center px-2" : "gap-3 px-4"
-        }`}>
-          <img src="/loop-vault-icon.svg" alt="" width="34" height="34" className="h-[34px] w-[34px] shrink-0" />
-          {!collapsed ? (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold uppercase text-[var(--lv-text)]">Loop Vault</p>
-              <p className="truncate text-[11px] uppercase text-[var(--lv-text-muted)]">Music Workspace</p>
-            </div>
-          ) : null}
-        </div>
-
-        <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-4" aria-label={copy.nav.mainNavigation}>
-          <SidebarGroup label="Workspace" collapsed={collapsed}>
-            {workspaceItems.map((item) => (
-              <SidebarItem
-                key={item.view}
-                active={!settingsOpen && isRouteActive(view, item.view)}
-                collapsed={collapsed}
-                icon={item.icon}
-                label={item.label}
-                onClick={() => setView(item.view)}
-              />
-            ))}
-            <div className={`ml-5 border-l border-[var(--lv-border)] pl-2 ${collapsed ? "hidden" : ""}`} data-testid="practice-sidebar-children">
-              <SidebarItem
-                active={!settingsOpen && view === "practice" && !voicingLoopActive && !bassPracticeActive}
-                collapsed={false}
-                icon={Piano}
-                label="Chord Dojo"
-                onClick={openChordDojo ?? (() => setView("practice"))}
-              />
-              <SidebarItem
-                active={!settingsOpen && voicingLoopActive}
-                collapsed={false}
-                icon={Repeat2}
-                label="Voicing Loop"
-                onClick={openVoicingLoop}
-              />
-              {bassPracticeAvailable ? <SidebarItem
-                active={!settingsOpen && bassPracticeActive}
-                collapsed={false}
-                icon={Dumbbell}
-                label="Bass Practice"
-                onClick={openBassPractice ?? (() => setView("practice"))}
-              /> : null}
-            </div>
-            <SidebarItem
-              active={false}
-              collapsed={collapsed}
-              icon={Piano}
-              label="Live MIDI"
-              onClick={openLiveMidi}
-            />
-          </SidebarGroup>
-
-          <SidebarGroup label="System" collapsed={collapsed} className="mt-5">
-            <SidebarItem
-              active={!settingsOpen && view === "history"}
-              collapsed={collapsed}
-              icon={History}
-              label="History"
-              onClick={() => setView("history")}
-            />
-            <SidebarItem
-              active={settingsOpen}
-              collapsed={collapsed}
-              icon={Settings}
-              label="Settings"
-              onClick={openSettings}
-            />
-          </SidebarGroup>
-        </nav>
-
-        <div className="border-t border-[var(--lv-border)] p-2">
-          <IconButton
-            variant="ghost"
-            className={collapsed ? "mx-auto" : "ml-auto"}
-            onClick={() => setCollapsed((current) => !current)}
-            label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={!collapsed}
-            data-sidebar-toggle
-          >
-            {collapsed ? (
-              <PanelLeftOpen aria-hidden="true" size={20} />
-            ) : (
-              <PanelLeftClose aria-hidden="true" size={20} />
-            )}
-          </IconButton>
-        </div>
-      </aside>
-
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="lv-app-topbar flex min-h-[var(--lv-topbar-height)] shrink-0 items-center gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-topbar)] px-4 lg:px-6">
-          <div className="lv-app-topbar-leading flex min-w-0 flex-1 items-center gap-2">
-            <div className="min-w-0 shrink-0">
-              <p className="truncate text-lg font-bold text-[var(--lv-text)]">{pageTitle}</p>
-              {pageContext ? (
-                <p className="truncate text-xs text-[var(--lv-text-muted)]">{pageContext}</p>
-              ) : null}
-            </div>
-            {view === "capture" ? <div id="capture-mode-tabs-host" data-testid="capture-mode-tabs-frame" className="ml-1 shrink-0" /> : null}
-            {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
-          </div>
-          <div className="lv-app-topbar-actions flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
-            <PlaybackLevelMeter
-              label={copy.nav.previewLevel}
-              masterVolume={masterVolume}
-              status={playback.status}
-              stopLabel={copy.nav.stopPlaying}
-              onStop={() => controller.stop()}
-            />
-            <MasterVolumeKnob
-              value={masterVolume}
-              onChange={onMasterVolumeChange}
-              label={copy.nav.masterVolume}
-            />
-            <GlobalPreviewSoundSelector copy={copy} />
-            <GlobalMetronomeButton />
-            <Button
-              variant="primary"
-              className="h-10 whitespace-nowrap px-3"
-              onClick={openCreate}
-              title={`+ ${copy.nav.new}`}
+    <div className="lv-app-frame" data-standard-title-bar={standardTitleBar || undefined} data-sidebar-collapsed={collapsed}>
+      {standardTitleBar ? null : <TitleBar onSearch={onSearch} />}
+      <div className="lv-app-body">
+        <aside
+          className="lv-sidebar"
+          aria-label="サイドバー"
+          data-sidebar={collapsed ? "collapsed" : "expanded"}
+        >
+          <nav className="lv-sidebar-nav" aria-label="メインメニュー">
+            <NavItem nav="home" label="ホーム" icon={HomeIcon} collapsed={collapsed} active={!settingsOpen && view === "home"} onClick={() => setView("home")} />
+            <NavItem nav="capture" label="取り込む" icon={ImportIcon} collapsed={collapsed} active={!settingsOpen && view === "capture"} onClick={() => setView("capture")} />
+            <NavItem nav="vault" label="Vault" icon={VaultIcon} collapsed={collapsed} active={!settingsOpen && (view === "library" || view === "detail" || view === "progression-detail")} onClick={() => setView("library")} />
+            {collapsed ? <div className="lv-sidebar-rule" role="separator" /> : <p className="lv-sidebar-heading">練習</p>}
+            <NavItem nav="voicing-loop" label="Voicing Loop" icon={VoicingLoopIcon} collapsed={collapsed} active={!settingsOpen && voicingLoopActive} onClick={openVoicingLoop} />
+            <NavItem nav="chord-dojo" label="Chord Dojo" icon={ChordDojoIcon} collapsed={collapsed} active={!settingsOpen && chordDojoActive} onClick={openChordDojo ?? (() => setView("practice"))} />
+            {bassPracticeAvailable ? (
+              <NavItem nav="bass-practice" label="Bass Practice" icon={BassPracticeIcon} collapsed={collapsed} active={!settingsOpen && bassPracticeActive} onClick={openBassPractice ?? (() => setView("practice"))} />
+            ) : null}
+            <div className="lv-sidebar-rule" role="separator" />
+            <NavItem nav="live-midi" label="Live MIDI" icon={LiveMidiIcon} collapsed={collapsed} active={false} onClick={openLiveMidi} />
+            <div className="lv-sidebar-spacer" />
+            <NavItem nav="history" label="履歴" icon={HistoryIcon} collapsed={collapsed} active={!settingsOpen && view === "history"} onClick={() => setView("history")} />
+            <NavItem nav="settings" label="設定" icon={SettingsIcon} collapsed={collapsed} active={settingsOpen} onClick={openSettings} />
+          </nav>
+          <div className="lv-sidebar-footer">
+            <button
+              type="button"
+              className="lv-sidebar-toggle"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? "サイドバーを広げる" : "サイドバーを狭める"}
+              title={collapsed ? "サイドバーを広げる" : "サイドバーを狭める"}
+              aria-expanded={!collapsed}
+              data-sidebar-toggle
             >
-              <Plus aria-hidden="true" size={16} />
-              <span className="hidden sm:inline">{copy.nav.new}</span>
-            </Button>
-            <span
-              className="ml-1 inline-flex h-10 min-w-10 items-center justify-center gap-1.5 border-l border-[var(--lv-border)] pl-3 text-xs text-[var(--lv-text-muted)]"
-              role="status"
-              aria-live="polite"
-              aria-label={saveLabel}
-              title={saveLabel}
-              data-save-status={saveStatus}
-            >
-              <SaveStatusIcon status={saveStatus} />
-              <span className="hidden whitespace-nowrap xl:inline">{saveLabel}</span>
-            </span>
+              <SidebarToggleGlyph collapsed={collapsed} />
+            </button>
           </div>
-        </header>
-        {children}
+        </aside>
+
+        <div className="lv-app-column">
+          <header className="lv-app-header">
+            <div className="lv-app-header-leading">
+              <p className="lv-app-header-title">{pageTitle}</p>
+              {view === "capture" ? <div id="capture-mode-tabs-host" data-testid="capture-mode-tabs-frame" className="shrink-0" /> : null}
+              {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
+            </div>
+            <div className="lv-app-header-actions" data-global-actions>
+              <MidiStatusChip onOpen={openLiveMidi} />
+              <GlobalPreviewSoundSelector copy={copy} />
+              <GlobalMetronomeButton />
+              <div className="lv-volume-group" role="group" aria-label={copy.nav.masterVolume}>
+                <Popover
+                  label={copy.nav.masterVolume}
+                  trigger={(props) => (
+                    <button
+                      type="button"
+                      className="lv-volume-trigger"
+                      aria-label={`${copy.nav.masterVolume} ${masterVolume}%`}
+                      title={`${copy.nav.masterVolume} ${masterVolume}%`}
+                      data-volume-trigger
+                      {...props}
+                    >
+                      <VolumeIcon size={16} />
+                    </button>
+                  )}
+                >
+                  <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
+                </Popover>
+                <PlaybackLevelMeter
+                  label={copy.nav.previewLevel}
+                  masterVolume={masterVolume}
+                  status={playback.status}
+                  stopLabel={copy.nav.stopPlaying}
+                  onStop={() => controller.stop()}
+                />
+              </div>
+              <Button variant="neutral" size="sm" className="whitespace-nowrap" onClick={openCreate} title={`+ ${copy.nav.new}`}>
+                <PlusIcon size={16} />
+                <span className="hidden sm:inline">{copy.nav.new}</span>
+              </Button>
+              <SaveStatusMark status={saveStatus} copy={copy} />
+            </div>
+          </header>
+          {children}
+        </div>
       </div>
     </div>
   );
 }
 
-function SidebarGroup({
-  children,
-  className = "",
-  collapsed,
-  label,
-}: {
-  children: ReactNode;
-  className?: string;
-  collapsed: boolean;
-  label: string;
-}) {
-  return (
-    <div className={className}>
-      {!collapsed ? (
-        <p className="mb-2 px-3 text-[11px] font-bold uppercase text-[var(--lv-text-muted)]">
-          {label}
-        </p>
-      ) : (
-        <span className="sr-only">{label}</span>
-      )}
-      <div className="space-y-1">{children}</div>
-    </div>
-  );
-}
-
-function SidebarItem({
+function NavItem({
   active,
   collapsed,
   icon: Icon,
   label,
+  nav,
   onClick,
 }: {
   active: boolean;
   collapsed: boolean;
-  icon: typeof Home;
+  icon: IconComponent;
   label: string;
+  nav: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      className={`relative flex min-h-10 w-full items-center rounded-[var(--lv-radius-sm)] text-sm font-medium transition-colors ${
-        collapsed ? "justify-center px-2" : "gap-3 px-3"
-      } ${
-        active
-          ? "bg-[var(--lv-accent-soft)] text-[var(--lv-text)] before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--lv-accent)]"
-          : "text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface)] hover:text-[var(--lv-text)]"
-      }`}
+      className={`lv-nav-item${collapsed ? " lv-tooltip-host" : ""}`}
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? label : undefined}
-      title={collapsed ? label : undefined}
+      data-nav={nav}
       onClick={onClick}
     >
-      <Icon aria-hidden="true" className="shrink-0" size={20} />
-      {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
+      <Icon size={19} />
+      {collapsed ? <span aria-hidden="true" className="lv-tooltip lv-tooltip-right">{label}</span> : <span className="lv-nav-label">{label}</span>}
     </button>
   );
 }
 
-function SaveStatusIcon({ status }: { status: SaveStatus }) {
-  if (status === "saving") {
-    return <LoaderCircle aria-hidden="true" className="animate-spin" size={16} />;
-  }
-  if (status === "unsaved") {
-    return <CircleAlert aria-hidden="true" size={16} />;
-  }
-  return <Check aria-hidden="true" size={16} />;
+function SidebarToggleGlyph({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4.5 5.5h15v13h-15zM9.5 5.5v13" />
+      <path d={collapsed ? "M13 10l2 2-2 2" : "M15 10l-2 2 2 2"} />
+    </svg>
+  );
 }
 
-function isRouteActive(view: AppView, target: typeof workspaceItems[number]["view"]): boolean {
-  if (target === "library") {
-    return view === "library" || view === "detail" || view === "progression-detail";
-  }
-  return view === target;
+/** Reads the existing Live MIDI state only; never asks for MIDI access. Opens Live MIDI on click. */
+function MidiStatusChip({ onOpen }: { onOpen: () => void }) {
+  const status = useStore(defaultLiveMidiStore, (state) => state.status);
+  const device = useStore(defaultLiveMidiStore, (state) => state.selected?.name);
+  const label = status === "connected" ? device ?? "MIDI 接続中"
+    : status === "connecting" ? "MIDI 接続しています"
+      : status === "error" ? "MIDI エラー"
+        : "MIDI 未接続";
+  return (
+    <button type="button" className="lv-midi-chip" data-midi-status={status} onClick={onOpen} title={`MIDI 入力：${label}（Live MIDI を開く）`}>
+      <span className="lv-midi-dot" aria-hidden="true" />
+      <span className="lv-midi-label">{label}</span>
+    </button>
+  );
+}
+
+/** Saved = nothing shown. Saving / unsaved / error show a small mark at the header end. */
+function SaveStatusMark({ copy, status }: { status: SaveStatus; copy: AppCopy }) {
+  const label = copy.save[status];
+  return (
+    <span
+      className="lv-save-status"
+      role="status"
+      aria-live="polite"
+      aria-label={status === "saved" ? undefined : label}
+      data-save-status={status}
+    >
+      {status === "saved" ? null : (
+        <>
+          {status === "error" ? <ErrorIcon size={14} /> : <span className="lv-save-dot" aria-hidden="true" />}
+          <span className="hidden whitespace-nowrap xl:inline">{label}</span>
+        </>
+      )}
+    </span>
+  );
 }

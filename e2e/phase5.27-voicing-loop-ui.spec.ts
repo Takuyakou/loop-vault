@@ -22,9 +22,9 @@ async function applyTauriDocumentCsp(page: import("@playwright/test").Page) {
 }
 
 async function chooseVoicingLoop(page: Page) {
-  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const sidebar = page.locator('[data-nav="voicing-loop"]');
   if (await sidebar.isVisible()) { await sidebar.click(); return; }
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 }
 
@@ -32,7 +32,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await applyTauriDocumentCsp(page);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
 
   const dojo = page.getByRole("tab", { name: "Chord Dojo" });
   await dojo.focus();

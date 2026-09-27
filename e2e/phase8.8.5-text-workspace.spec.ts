@@ -3,7 +3,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 test("Standard and Extended preserve source and UTF-16 selection", async ({ page }) => {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const source = "# heading\n| C Dm |\n| BbM7 Db7(#9) |\n😀 end";
   const standard = page.getByTestId("text-progression-input");
@@ -24,7 +24,7 @@ test("Standard and Extended preserve source and UTF-16 selection", async ({ page
 
 test("key remains unconfirmed until explicit confirmation and all 24 keys are offered", async ({ page }) => {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的|explicitly/);
@@ -42,7 +42,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024]) {
     await page.setViewportSize({ width, height: 900 });
     await openApp(page);
-    await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+    await page.locator('[data-nav="capture"]').click();
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
     const capture = page.getByTestId("text-progression-capture");
     await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
@@ -83,7 +83,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
 
 test("interactive chord bands show teal hover/focus and blocked save explains itself", async ({ page }) => {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
@@ -109,7 +109,7 @@ test("Extended toolbar retains meter/key controls and Save cluster without page 
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
     await page.setViewportSize({ width, height: 900 });
     await openApp(page);
-    await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+    await page.locator('[data-nav="capture"]').click();
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
     await page.getByTestId("text-mode-extended").click();
     const intake = page.getByTestId("extended-text-intake");

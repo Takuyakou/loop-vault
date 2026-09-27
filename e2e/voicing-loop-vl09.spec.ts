@@ -3,10 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 async function openVl09(page: Page) {
   await page.goto("/?p527Status=vl09-layout");
   await page.evaluate(() => document.fonts.ready);
-  const navLoop = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const navLoop = page.locator('[data-nav="voicing-loop"]');
   if (await navLoop.isVisible()) await navLoop.click();
   else {
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
   return page.getByTestId("voicing-loop-workspace");

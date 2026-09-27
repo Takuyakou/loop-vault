@@ -140,19 +140,19 @@ export interface SurfaceProps extends HTMLAttributes<HTMLElement> {
   variant?: "standard" | "raised" | "primary";
 }
 
-export function Surface({
+export const Surface = forwardRef<HTMLElement, SurfaceProps>(function Surface({
   children,
   className = "",
   variant = "standard",
   ...props
-}: SurfaceProps) {
+}, ref) {
   const variantClass = variant === "standard" ? "" : ` lv-surface-${variant}`;
   return (
-    <section {...props} className={`lv-surface${variantClass} ${className}`}>
+    <section {...props} ref={ref} className={`lv-surface${variantClass} ${className}`}>
       {children}
     </section>
   );
-}
+});
 
 export type BadgeTone =
   | "neutral"

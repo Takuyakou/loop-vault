@@ -1,4 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useReserveBottomSpace } from "../components/notifications";
 import { ChevronLeft, ChevronRight, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -524,6 +525,8 @@ export function ProgressionVoicingPracticeView({
   const [runtimeError, setRuntimeError] = useState<string>();
   const [midiReconnectError, setMidiReconnectError] = useState<string>();
   const transportRef = useRef<ProgressionVoicingTransportPort>();
+  const transportBarRef = useRef<HTMLElement>(null);
+  useReserveBottomSpace(transportBarRef);
   const runtimeRequestRef = useRef(0);
   const auditionRequestRef = useRef(0);
   const boundarySessionUpdateRef = useRef(false);
@@ -1717,7 +1720,7 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="lv-voicing-loop-transport h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
+          <Surface ref={transportBarRef} className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
             <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
               <BpmScrubField

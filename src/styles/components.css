@@ -251,6 +251,15 @@
     pointer-events: none;
   }
 
+  /* Dialog open: top center, above the dialog's top padding instead of over its buttons. */
+  .lv-toast-stack.lv-toast-stack-dialog {
+    top: 8px;
+    right: auto;
+    bottom: auto !important;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .lv-toast-list {
     display: flex;
     flex-direction: column;
@@ -354,12 +363,6 @@
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
 }
-
-/* Keep toasts clear of bottom bars (the Capture inspector adds its own height via
-   --lv-sticky-inspector-height). */
-:root:has(.lv-text-status-bar) { --lv-toast-offset-bottom: 64px; }
-:root:has(.lv-voicing-loop-transport) { --lv-toast-offset-bottom: 112px; }
-:root:has(.lv-web-live-midi-preview) { --lv-toast-offset-bottom: 288px; }
 
 @media (prefers-reduced-motion: reduce) {
   .lv-toast {

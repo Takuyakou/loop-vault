@@ -50,10 +50,10 @@ test("production defaults expose and start every shipped Bass Practice mode with
   await page.getByRole("tab", { name: "Degree Echo" }).click();
   await saveOneDegreeReview(page);
 
-  await page.locator("nav").getByRole("button", { name: "History", exact: true }).click();
+  await page.locator('[data-nav="history"]').click();
   await expect(page.getByTestId("bass-practice-history")).toBeVisible();
   await page.reload();
-  await page.locator("nav").getByRole("button", { name: "History", exact: true }).click();
+  await page.locator('[data-nav="history"]').click();
   await expect(page.getByTestId("bass-practice-history")).toBeVisible();
 });
 

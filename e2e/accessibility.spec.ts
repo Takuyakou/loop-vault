@@ -29,7 +29,7 @@ async function expectNoSeriousViolations(page: Page, label: string) {
 test("HomeとCapture空状態", async ({ page }) => {
   await openApp(page);
   await expectNoSeriousViolations(page, "home");
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await expectNoSeriousViolations(page, "capture-empty");
 });
 

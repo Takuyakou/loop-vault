@@ -43,6 +43,7 @@ export const ChordDojoIcon = createIcon("ChordDojoIcon", p("M12 3.5a8.5 8.5 0 10
 export const VoicingLoopIcon = createIcon("VoicingLoopIcon", p("M7 7.5h9.5a3.5 3.5 0 010 7H15M17 16.5H7.5a3.5 3.5 0 010-7H9M9 5l-2.5 2.5L9 10M15 19l2.5-2.5L15 14"));
 export const BassPracticeIcon = createIcon("BassPracticeIcon", p("M5 18.5l9-9M14 9.5l2.5-2.5a1.8 1.8 0 012.5 2.5L16.5 12M6.5 20L4 17.5M9.5 5v4M12.5 3.5v4M19 13.5h-4"));
 export const LiveMidiIcon = createIcon("LiveMidiIcon", p("M3 6.5h18v11H3zM7.5 6.5v6.5M12 6.5v6.5M16.5 6.5v6.5"));
+export const HistoryIcon = createIcon("HistoryIcon", p("M4.5 12a7.5 7.5 0 102.2-5.3L4.5 9M4.5 4.5V9H9M12 8v4.2l2.8 1.8"));
 export const SettingsIcon = createIcon("SettingsIcon", <>{p("M4 7h10M18 7h2M4 17h4M12 17h8")}<circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></>);
 
 // Header
@@ -71,16 +72,17 @@ export const LoopIcon = createIcon("LoopIcon", p("M17 7.5H8.5a4 4 0 00-4 4M7 16.
 export const SwapIcon = createIcon("SwapIcon", p("M4 12a8 8 0 0113.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 01-13.7 5.6L4 15.5M4 20v-4.5h4.5"));
 export const FavoriteIcon = createIcon("FavoriteIcon", p("M12 19.5s-7.5-4.4-7.5-9.7A4.3 4.3 0 0112 7.4a4.3 4.3 0 017.5 2.4c0 5.3-7.5 9.7-7.5 9.7z"));
 export const UndoIcon = createIcon("UndoIcon", p("M9 14.5L4.5 10 9 5.5M4.5 10H14a5.5 5.5 0 010 11h-3"));
+export const PlusIcon = createIcon("PlusIcon", p("M12 5v14M5 12h14"));
 export const ChevronDownIcon = createIcon("ChevronDownIcon", p("M6 9.5l6 6 6-6"));
 
 /** Catalog for the component gallery (Japanese names used in the P8.9 spec). */
 export const iconCatalog: ReadonlyArray<readonly [string, IconComponent]> = [
   ["ホーム", HomeIcon], ["取り込む", ImportIcon], ["Vault", VaultIcon], ["練習", PracticeIcon],
   ["Chord Dojo", ChordDojoIcon], ["Voicing Loop", VoicingLoopIcon], ["Bass Practice", BassPracticeIcon],
-  ["Live MIDI", LiveMidiIcon], ["設定", SettingsIcon], ["検索", SearchIcon], ["MIDI", MidiIcon],
+  ["Live MIDI", LiveMidiIcon], ["履歴", HistoryIcon], ["設定", SettingsIcon], ["検索", SearchIcon], ["MIDI", MidiIcon],
   ["試聴音色", ToneIcon], ["メトロノーム", MetronomeIcon], ["音量", VolumeIcon], ["最小化", MinimizeIcon],
   ["最大化", MaximizeIcon], ["元に戻す（ウィンドウ）", RestoreIcon], ["閉じる", CloseIcon],
   ["成功", SuccessIcon], ["お知らせ", InfoIcon], ["注意", WarningIcon], ["エラー", ErrorIcon],
   ["再生", PlayIcon], ["停止", StopIcon], ["ループ", LoopIcon], ["入れ替え", SwapIcon],
-  ["お気に入り", FavoriteIcon], ["元に戻す（操作）", UndoIcon], ["開く（下向き）", ChevronDownIcon],
+  ["お気に入り", FavoriteIcon], ["元に戻す（操作）", UndoIcon], ["追加", PlusIcon], ["開く（下向き）", ChevronDownIcon],
 ];

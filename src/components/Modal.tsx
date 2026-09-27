@@ -6,6 +6,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -26,12 +27,26 @@ interface ModalStackEntry {
 }
 
 const modalStack: ModalStackEntry[] = [];
+const openCountListeners = new Set<() => void>();
 
 function updateModalStack() {
   const top = modalStack[modalStack.length - 1];
   for (const entry of modalStack) {
     entry.setIsTop(entry === top);
   }
+  for (const listener of openCountListeners) listener();
+}
+
+/** True while any Modal is open (used to move toasts away from dialog buttons). */
+export function useAnyModalOpen(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      openCountListeners.add(listener);
+      return () => openCountListeners.delete(listener);
+    },
+    () => modalStack.length > 0,
+    () => false,
+  );
 }
 
 export interface ModalProps {

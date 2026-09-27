@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-02",
+  "activeStage": "P8.9-03",
   "completedStages": [
     "P8.9-00",
-    "P8.9-01"
+    "P8.9-01",
+    "P8.9-02"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "232d21f",
-  "lastVerifiedCommit": "7b9de50",
-  "currentBranch": "feat/p8.9-01-foundation",
+  "baseCommit": "12baad7",
+  "lastVerifiedCommit": "883ef33",
+  "currentBranch": "feat/p8.9-02-shell",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -80,8 +81,12 @@
     "p89-01-full-fresh": "pass",
     "p89-01-screens": "pass",
     "p89-01-exe": "pass",
-    "p89-01-report": "pass"
+    "p89-01-report": "pass",
+    "p89-02-full-fresh": "pass",
+    "p89-02-screens": "pass",
+    "p89-02-exe": "pass",
+    "p89-02-report": "pass"
   },
-  "nextAction": "P8.9-01 complete; stopped at merge candidate feat/p8.9-01-foundation (fresh FULL PASS @ 7b9de50: Vitest 3766/3766, Playwright 129/129; p89:screens P8.9-01 19 screens x 4 sizes; EXE built with tauri build --no-bundle; later commit is docs only). Stage 0 merged into local master at 232d21f. P8.9-02 not started: the stage-2 zip merges this candidate first. No push/tag/release.",
+  "nextAction": "P8.9-02 complete; stopped at merge candidate feat/p8.9-02-shell (fresh FULL PASS @ 883ef33: Vitest 3776/3776, Playwright 129/129, gallery excluded; p89:screens P8.9-02 19 screens x 4 sizes + settings-toast; EXE built with tauri build --no-bundle; later commit is docs only). Stage 1 merged into local master at 12baad7. Human EXE checks are listed at the end of the report. P8.9-03 not started: the stage-3 zip merges this candidate first. No push/tag/release.",
   "updatedAt": "2026-09-27"
 }

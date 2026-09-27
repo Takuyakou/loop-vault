@@ -11,7 +11,7 @@ const textTitle = "P5.20 Text Entry E2E";
 
 async function openTextCapture(page: Page) {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /\u30b3\u30fc\u30c9\u63a1\u96c6|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
 
   const modeSelector = page.getByTestId("capture-input-mode");
   const textMode = modeSelector.getByRole("button", { name: /\u30c6\u30ad\u30b9\u30c8|Text/ });
@@ -187,12 +187,12 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(bassline.getByTestId("bassline-source-summary")).toContainText("120 BPM");
   await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
 
-  const chordDojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
+  const chordDojo = page.locator('[data-nav="chord-dojo"]');
   await chordDojo.click();
   await expect(chordDojo).toHaveAttribute("aria-current", "page");
   await expect(page.getByTestId("practice-start")).toBeVisible();
 
-  await page.locator("nav").getByRole("button", { name: "Bass Practice", exact: true }).click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await expect(bassline).toBeVisible();
   await page.getByRole("tab", { name: "Root Motion Echo" }).click();

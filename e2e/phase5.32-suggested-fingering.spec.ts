@@ -11,15 +11,15 @@ async function openPopulatedVoicingLoop(page: Page, status = "both-hands") {
 }
 
 async function chooseVoicingLoop(page: Page) {
-  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const sidebar = page.locator('[data-nav="voicing-loop"]');
   if (await sidebar.isVisible()) { await sidebar.click(); return; }
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 }
 
 test("P5.32 shows the resolved two-hand plan, edits personal fingering, and preserves playback", async ({ page }) => {
   const workspace = await openPopulatedVoicingLoop(page);
-  await expect(page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
+  await expect(page.locator('[data-nav="voicing-loop"]')).toBeVisible();
   await expect(workspace.getByTestId("voicing-loop-current-degree")).toHaveText("Ⅰ");
   await expect(workspace.getByTestId("voicing-loop-next-degree")).toHaveText("Ⅱ");
   await expect(workspace.getByTestId("voicing-loop-event-degree")).toHaveText(["Ⅰ", "Ⅱ"]);

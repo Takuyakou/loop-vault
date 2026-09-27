@@ -7,6 +7,7 @@ import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { LlmSettingsSection } from "../components/progression-advisor/LlmSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { Modal } from "../components/Modal";
+import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
@@ -117,6 +118,7 @@ export function SettingsDialog({
   const [showAllBackups, setShowAllBackups] = useState(false);
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
+  const [standardTitleBar, setStandardTitleBar] = useState(loadUseStandardTitleBar);
   const [analysisProfile, setAnalysisProfileState] = useState(
     () => getAnalysisProfileSettings().profile,
   );
@@ -452,6 +454,22 @@ export function SettingsDialog({
             <span>
               <strong className="block text-[var(--lv-text-secondary)]">{ui.showDegrees}</strong>
               <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.showDegreesHelp}</span>
+            </span>
+          </label>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 border-t border-[var(--lv-border)] pt-4 text-sm">
+            <input
+              className="mt-1"
+              type="checkbox"
+              checked={standardTitleBar}
+              onChange={(event) => {
+                setStandardTitleBar(event.target.checked);
+                saveUseStandardTitleBar(event.target.checked);
+              }}
+              data-testid="settings-standard-title-bar"
+            />
+            <span>
+              <strong className="block text-[var(--lv-text-secondary)]">標準のタイトルバーを使う</strong>
+              <span className="mt-1 block text-[var(--lv-text-muted)]">アプリのタイトルバーの代わりに Windows の標準のバーを使います。次の起動から変わります。この端末だけに保存します。</span>
             </span>
           </label>
           <div

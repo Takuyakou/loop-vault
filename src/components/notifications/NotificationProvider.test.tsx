@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createNotificationStore, NotificationProvider, useNotify, type NotificationStore } from "./index";
+import { Modal } from "../Modal";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -76,6 +77,14 @@ describe("P8.9 notifications", () => {
     expect(toasts()).toHaveLength(1);
     act(() => vi.advanceTimersByTime(2));
     expect(toasts()).toHaveLength(0);
+  });
+
+  it("moves the stack to the top center while a dialog is open", () => {
+    const stack = () => container.querySelector("[data-notification-stack]")!;
+    act(() => root.render(<NotificationProvider store={store}><Modal ariaLabel="設定" onClose={() => undefined}><button type="button">ok</button></Modal></NotificationProvider>));
+    expect(stack().className).toContain("lv-toast-stack-dialog");
+    act(() => root.render(<NotificationProvider store={store} />));
+    expect(stack().className).not.toContain("lv-toast-stack-dialog");
   });
 
   it("lets any component under the provider notify", () => {

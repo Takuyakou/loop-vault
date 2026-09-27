@@ -10,6 +10,9 @@ import { useUndoQueue } from "../../hooks/useUndoQueue";
 import { Button, Chip, EmptyState, IconButton, LoadingState, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./index";
 import "./gallery.css";
 
+/** The single marker the FULL gate searches for in dist/ (scripts/test-dx/check-gallery-excluded.mjs). */
+export const P89_GALLERY_MARKER = "lv-p89-component-gallery-marker";
+
 const STATES = ["通常", "ホバー", "フォーカス", "押せない", "オン"] as const;
 type GalleryState = (typeof STATES)[number];
 const force = (state: GalleryState) =>
@@ -81,7 +84,7 @@ export function ComponentGallery() {
 
   return (
     <NotificationProvider store={store} undo={{ actions: undoQueue.actions, onUndo: undoQueue.undo, label: "元に戻す", fallbackFocusRef: fallbackRef }}>
-      <div className="lv-gallery h-full overflow-y-auto bg-[var(--lv-bg)] px-8 pb-32 pt-6 text-[var(--lv-text)]" data-testid="p89-component-gallery">
+      <div className="lv-gallery h-full overflow-y-auto bg-[var(--lv-bg)] px-8 pb-32 pt-6 text-[var(--lv-text)]" data-testid="p89-component-gallery" data-p89-gallery-marker={P89_GALLERY_MARKER}>
         <h1 ref={fallbackRef} tabIndex={-1} className="text-[length:var(--lv-text-20)] font-semibold">部品の見本（P8.9）</h1>
         <p className="mt-1 text-[length:var(--lv-text-12)] text-[var(--lv-text-muted)]">開発のビルドだけで開く画面。ホバーとフォーカスは見本用に固定表示している。</p>
 

@@ -30,7 +30,7 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await openApp(page);
     await assertNoHorizontalOverflow(page);
-    await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+    await page.locator('[data-nav="capture"]').click();
     await assertNoHorizontalOverflow(page);
     await expect(page.locator("[data-global-actions]")).toBeVisible();
   });

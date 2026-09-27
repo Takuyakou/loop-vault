@@ -5,7 +5,7 @@ import { assertNoHorizontalOverflow, capturePageErrors, openApp } from "./helper
 test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop", async ({ page }) => {
   const errors = await capturePageErrors(page);
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-mode-extended").click();
@@ -33,7 +33,7 @@ test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow
   await page.setViewportSize({ width: 320, height: 720 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-mode-extended").focus();
@@ -53,7 +53,7 @@ test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow
 
 test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across breakpoints", async ({ page }) => {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   await page.getByTestId("text-mode-extended").click();
   const intake = page.getByTestId("extended-text-intake");

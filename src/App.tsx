@@ -17,12 +17,6 @@ import {
   playbackController,
   type PlaybackController,
 } from "./audio/playbackController";
-import {
-  applyMasterVolume,
-  loadMasterVolume,
-  normalizeMasterVolume,
-  saveMasterVolume,
-} from "./audio/masterVolume";
 import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
@@ -60,7 +54,11 @@ import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
-import { createNotificationStore, NotificationProvider } from "./components/notifications";
+import { createNotificationStore, NotificationProvider, useReserveBottomSpace } from "./components/notifications";
+import { useAppNavigation } from "./hooks/useAppNavigation";
+import { useMasterVolume } from "./hooks/useMasterVolume";
+import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
+import { prepareMainWindowFrame } from "./components/shell/windowControls";
 import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
@@ -245,7 +243,26 @@ function App() {
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
-  const [view, setView] = useState<View>("home");
+  const {
+    view,
+    setView,
+    selectedId,
+    setSelectedId,
+    selectedProgression,
+    setSelectedProgression,
+    setProgressionDetailDirty,
+    pendingProgressionLeave,
+    setPendingProgressionLeave,
+    requestProgressionLeave,
+    navigateTo,
+    openDetail,
+    openProgression,
+  } = useAppNavigation({
+    onNavigate: (nextView, previousView) => {
+      setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, previousView, nextView));
+      if (nextView === "capture") setCaptureInitialInputMode("midi");
+    },
+  });
   const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled() || isBassPracticeRootMotionEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
@@ -253,8 +270,6 @@ function App() {
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
-  const [selectedId, setSelectedId] = useState<string>();
-  const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
@@ -267,16 +282,21 @@ function App() {
     if (message) notifications.notify({ message });
   }, [notifications]);
   const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
-  const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
+  const { masterVolume, changeMasterVolume } = useMasterVolume();
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
-  const [progressionDetailDirty, setProgressionDetailDirty] = useState(false);
-  const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
+  const webLiveMidiPreviewRef = useRef<HTMLDivElement>(null);
+  useReserveBottomSpace(webLiveMidiPreviewRef, webLiveMidiPreviewOpen);
   const mainContentRef = useRef<HTMLElement>(null);
   const previousViewRef = useRef(view);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
-  useEffect(() => { void recoverMainWindowIfOffscreen().catch(() => undefined); }, []);
+  const [standardTitleBar] = useState(() => loadUseStandardTitleBar());
+  useEffect(() => {
+    void prepareMainWindowFrame(standardTitleBar)
+      .then(() => recoverMainWindowIfOffscreen())
+      .catch(() => undefined);
+  }, [standardTitleBar]);
   const liveMidiClosingRef = useRef(false);
   const liveMidiLeaseRef = useRef<LiveMidiActivationLease>();
   const liveMidiOpenGateRef = useRef<LiveMidiOpenGate>();
@@ -399,6 +419,11 @@ function App() {
   const language = settings.language;
   const copy = appCopy[language];
 
+  // P8.9-02: a failed save is announced once as a sticky error toast (the header also marks it).
+  useEffect(() => {
+    if (error && loadStatus === "ready") notifications.notify({ tone: "error", message: error });
+  }, [error, loadStatus, notifications]);
+
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
@@ -418,10 +443,6 @@ function App() {
       unlistenTauri?.();
     };
   }, [initialize]);
-
-  useEffect(() => {
-    applyMasterVolume(masterVolume);
-  }, [masterVolume]);
 
   useEffect(() => {
     if (undoEpochRef.current !== vaultEpoch) undoQueue.clearAll();
@@ -511,28 +532,6 @@ function App() {
     };
   }, [language]);
 
-  function openDetail(id: string) {
-    setSelectedProgression(undefined);
-    setSelectedId(id);
-    setView("detail");
-  }
-
-  function requestProgressionLeave(action: () => void) {
-    if (view === "progression-detail" && progressionDetailDirty) {
-      setPendingProgressionLeave(() => action);
-      return;
-    }
-    action();
-  }
-
-  function navigateTo(nextView: View) {
-    requestProgressionLeave(() => {
-      setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, view, nextView));
-      if (nextView === "capture") setCaptureInitialInputMode("midi");
-      setView(nextView);
-    });
-  }
-
   function openDirectVoicingLoop() {
     requestProgressionLeave(() => {
       setVoicingPracticeHandoff(undefined);
@@ -548,18 +547,6 @@ function App() {
       setCaptureInitialInputMode("text");
       setView("capture");
     });
-  }
-
-  function changeMasterVolume(value: number) {
-    const normalized = normalizeMasterVolume(value);
-    setMasterVolume(normalized);
-    saveMasterVolume(normalized);
-  }
-
-  function openProgression(ideaId: string, blockId: string) {
-    setSelectedId(ideaId);
-    setSelectedProgression({ ideaId, blockId });
-    setView("progression-detail");
   }
 
   /** Receives a detached P5.18 snapshot only; raw Vault data never crosses this boundary. */
@@ -806,11 +793,20 @@ async function analyzeMidiPath(path: string) {
         settingsOpen={isSettingsOpen}
         voicingLoopActive={view === "practice" && practiceMode === "voicing-loop"}
         copy={copy}
-        saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
+        saveStatus={error && unsaved ? "error" : saving ? "saving" : unsaved ? "unsaved" : "saved"}
+        standardTitleBar={standardTitleBar}
+        onSearch={() => {
+          const focusSearch = () => document.getElementById("vault-search")?.focus();
+          if (view === "library") {
+            focusSearch();
+            return;
+          }
+          navigateTo("library");
+          window.requestAnimationFrame(() => window.requestAnimationFrame(focusSearch));
+        }}
         masterVolume={masterVolume}
         onMasterVolumeChange={changeMasterVolume}
-        pageTitle={view === "practice" && practiceMode === "voicing-loop" ? "Voicing Loop" : viewLabel(view, copy)}
-        pageContext={viewContext(view, language)}
+        pageTitle={shellTitle(view, practiceMode)}
         pageNavigation={view === "practice" ? (
           <PracticeModeTabs
             bassPracticeAvailable={bassPracticeEnabled}
@@ -1223,7 +1219,7 @@ async function analyzeMidiPath(path: string) {
         tone="danger"
       />
       {webLiveMidiPreviewOpen ? (
-        <div className="lv-web-live-midi-preview fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
+        <div ref={webLiveMidiPreviewRef} className="fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
           <LiveMidiMiniMode
             copy={copy.liveMidi}
             onShowMain={() => { void leaveLiveMidiMode(); }}
@@ -1451,15 +1447,15 @@ function viewLabel(view: View, copy: AppCopy): string {
   return copy.nav.home;
 }
 
-function viewContext(view: View, language: AppLanguage): string {
-  const ja = language === "ja";
-  if (view === "capture") return ja ? "MIDIやテキストからコード進行を採集" : "Capture progressions from MIDI or text";
-  if (view === "library") return ja ? "保存進行をすばやく取り出す" : "Find saved progressions";
-  if (view === "detail") return ja ? "Ideaの情報と次の一手" : "Idea details and next action";
-  if (view === "progression-detail") return ja ? "コード進行を試聴・修正" : "Preview and edit progression";
-  if (view === "practice") return ja ? "保存進行を自分の手で覚える" : "Practice saved progressions";
-  if (view === "history") return ja ? "採集・編集・練習の履歴" : "Capture, edit, and practice history";
-  return ja ? "今日のLoopと最近の進行" : "Today’s loop and recent progressions";
+/** P8.9-02: header screen names follow the Japanese sidebar (proper names stay as they are). */
+function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
+  if (view === "capture") return "取り込む";
+  if (view === "library" || view === "detail" || view === "progression-detail") return "Vault";
+  if (view === "practice") {
+    return practiceMode === "voicing-loop" ? "Voicing Loop" : practiceMode === "bass-practice" ? "Bass Practice" : "Chord Dojo";
+  }
+  if (view === "history") return "履歴";
+  return "ホーム";
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";

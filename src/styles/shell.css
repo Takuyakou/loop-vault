@@ -1,0 +1,453 @@
+/* P8.9-02 app shell: title bar 36px, sidebar 232px / 64px, header 56px.
+   html / body / #root stay fixed; only .lv-app-column > main scrolls. */
+@layer components {
+  .lv-app-frame {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--lv-bg);
+    color: var(--lv-text);
+  }
+
+  .lv-app-body {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .lv-app-column {
+    display: flex;
+    min-height: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ---- title bar ---- */
+  .lv-titlebar {
+    display: flex;
+    height: var(--lv-titlebar-height);
+    flex-shrink: 0;
+    align-items: center;
+    border-bottom: 1px solid rgb(150 170 195 / 10%);
+    background: #070c13;
+    user-select: none;
+  }
+
+  .lv-titlebar-brand {
+    display: flex;
+    width: var(--lv-sidebar-wide);
+    flex-shrink: 0;
+    align-items: center;
+    gap: 9px;
+    padding-left: 18px;
+    color: #cfd8e6;
+    font-size: var(--lv-text-12);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .lv-titlebar-brand > * {
+    pointer-events: none;
+  }
+
+  /* Compact (RHomeCompact): the brand area follows the icon-only sidebar. */
+  .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand {
+    width: var(--lv-sidebar-narrow);
+    padding-left: 22px;
+  }
+
+  .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand > span {
+    display: none;
+  }
+
+  .lv-titlebar-center {
+    display: flex;
+    min-width: 0;
+    height: 100%;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lv-titlebar-search {
+    display: inline-flex;
+    width: min(360px, 100%);
+    height: 24px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 0 10px;
+    border: 1px solid rgb(150 170 195 / 14%);
+    border-radius: 6px;
+    background: rgb(17 27 42 / 70%);
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard), color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-titlebar-search:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 50%, var(--lv-border-strong));
+    color: var(--lv-text);
+  }
+
+  .lv-titlebar-search-label {
+    flex: 1 1 auto;
+    text-align: left;
+  }
+
+  .lv-titlebar-search kbd {
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-11);
+  }
+
+  .lv-titlebar-controls {
+    display: flex;
+    height: 100%;
+    flex-shrink: 0;
+  }
+
+  .lv-titlebar-button {
+    display: flex;
+    width: 46px;
+    height: var(--lv-titlebar-height);
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    color: #a5b2c6;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard), color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-titlebar-button:hover:not(:disabled) {
+    background: rgb(150 170 195 / 12%);
+    color: var(--lv-text);
+  }
+
+  .lv-titlebar-close:hover:not(:disabled) {
+    background: var(--lv-danger);
+    color: #fff;
+  }
+
+  .lv-titlebar-button:disabled {
+    cursor: default;
+  }
+
+  /* ---- sidebar ---- */
+  .lv-sidebar {
+    display: flex;
+    width: var(--lv-sidebar-wide);
+    flex-shrink: 0;
+    flex-direction: column;
+    border-right: 1px solid rgb(150 170 195 / 10%);
+    background: var(--lv-topbar);
+    /* No width animation: the content column would reflow for 0.18 s on every toggle. */
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] {
+    width: var(--lv-sidebar-narrow);
+  }
+
+  .lv-sidebar-nav {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-nav {
+    padding: 12px 10px;
+  }
+
+  .lv-sidebar-heading {
+    padding: 14px 12px 6px;
+    color: var(--lv-text-muted); /* mock #5f7089 fails WCAG AA (3.72:1) */
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  .lv-sidebar-rule {
+    height: 1px;
+    margin: 10px 4px;
+    background: rgb(150 170 195 / 10%);
+  }
+
+  .lv-sidebar-spacer {
+    flex: 1 1 auto;
+  }
+
+  .lv-nav-item {
+    position: relative;
+    display: flex;
+    height: 38px;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 11px;
+    padding: 0 12px;
+    border-radius: 10px;
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-13);
+    font-weight: 500;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard), color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-nav-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .lv-nav-item:hover {
+    background: var(--lv-surface);
+    color: var(--lv-text);
+  }
+
+  .lv-nav-item[aria-current="page"] {
+    background: var(--lv-accent-soft);
+    box-shadow: inset 0 0 0 1px rgb(66 216 198 / 22%);
+    color: var(--lv-text);
+    font-weight: 600;
+  }
+
+  .lv-nav-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-tooltip.lv-tooltip-right {
+    top: 50%;
+    bottom: auto;
+    left: calc(100% + 10px);
+    transform: translate(-2px, -50%);
+  }
+
+  .lv-tooltip-host:hover > .lv-tooltip.lv-tooltip-right,
+  .lv-tooltip-host:focus-visible > .lv-tooltip.lv-tooltip-right {
+    transform: translate(0, -50%);
+  }
+
+  .lv-sidebar-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 12px 12px;
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-footer {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .lv-sidebar-toggle {
+    display: flex;
+    width: 34px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: var(--lv-text-muted);
+  }
+
+  .lv-sidebar-toggle:hover {
+    background: var(--lv-surface);
+    color: var(--lv-text);
+  }
+
+  /* ---- header ---- */
+  .lv-app-header {
+    display: flex;
+    height: var(--lv-header-height);
+    flex-shrink: 0;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    border-bottom: 1px solid rgb(150 170 195 / 10%);
+  }
+
+  .lv-app-header-leading {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lv-app-header-title {
+    min-width: 4.5em;
+    overflow: hidden;
+    color: var(--lv-text);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-app-header-actions {
+    display: flex;
+    min-width: 0;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .lv-midi-chip {
+    display: inline-flex;
+    height: 30px;
+    max-width: 180px;
+    align-items: center;
+    gap: 7px;
+    padding: 0 11px;
+    border: 1px solid rgb(150 170 195 / 14%);
+    border-radius: var(--lv-radius-pill);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-11);
+  }
+
+  .lv-midi-chip:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 50%, var(--lv-border-strong));
+    color: var(--lv-text);
+  }
+
+  .lv-midi-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-midi-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--lv-text-muted);
+  }
+
+  .lv-midi-chip[data-midi-status="connected"] .lv-midi-dot {
+    background: var(--lv-success);
+    box-shadow: 0 0 0 3px rgb(54 201 144 / 18%);
+  }
+
+  .lv-midi-chip[data-midi-status="connecting"] .lv-midi-dot {
+    background: var(--lv-warning);
+  }
+
+  .lv-midi-chip[data-midi-status="error"] .lv-midi-dot {
+    background: var(--lv-danger);
+  }
+
+  .lv-volume-group {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 2px;
+    padding: 0 4px 0 2px;
+    border: 1px solid rgb(150 170 195 / 14%);
+    border-radius: 8px;
+  }
+
+  .lv-volume-trigger {
+    display: flex;
+    width: 28px;
+    height: 26px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-volume-trigger:hover,
+  .lv-volume-trigger[aria-expanded="true"] {
+    background: var(--lv-surface);
+    color: var(--lv-text);
+  }
+
+  .lv-save-status {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-save-status:empty {
+    display: none;
+  }
+
+  .lv-save-status[data-save-status="error"] {
+    color: var(--lv-danger);
+  }
+
+  .lv-save-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--lv-warning);
+  }
+
+  .lv-save-status[data-save-status="saving"] .lv-save-dot {
+    background: var(--lv-info);
+  }
+}
+
+/* Keep the header one 56px row at compact widths: icon-only labels. */
+@media (max-width: 1299px) {
+  .lv-app-header {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .lv-app-header .lv-midi-label,
+  .lv-app-header .lv-global-metronome span:not(.lv-metronome-icon) {
+    display: none;
+  }
+
+  .lv-app-header .lv-midi-chip {
+    padding: 0 10px;
+  }
+}
+
+/* Very narrow (browser-only reflow; the desktop window is at least 768px): keep
+   the screen name and the essential actions. */
+@media (max-width: 639px) {
+  .lv-app-header .lv-midi-chip,
+  .lv-app-header [data-global-actions] > [role="group"]:not(.lv-volume-group) {
+    display: none;
+  }
+
+  .lv-titlebar-search-label,
+  .lv-titlebar-search kbd {
+    display: none;
+  }
+
+  .lv-titlebar-search {
+    width: auto;
+  }
+}
+
+/* One scrollbar look across the app: thin, blends into the dark ground. */
+* {
+  scrollbar-color: rgb(150 170 195 / 28%) transparent;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-nav-item,
+  .lv-titlebar-button,
+  .lv-titlebar-search {
+    transition: none;
+  }
+}

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 const ownerContracts = Object.freeze({
   "test-infrastructure": {
     smoke: [], vitest: [], browser: [],
-    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
+    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/test-dx/check-gallery-excluded.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
   },
   "text-capture": {
     smoke: ["src/components/capture/textCaptureStatus.test.ts"],
@@ -106,7 +106,7 @@ export function ownerForFile(input) {
   if (/^src\/views\/SettingsDialog/.test(file)) return { areas: ["settings"], reason: "Settings owner" };
   if (/^src\/views\/HomeView/.test(file)) return { areas: ["home"], reason: "Home owner" };
   if (/^src\/views\/CaptureView/.test(file)) return { areas: ["text-capture", "harmony/parser"], reason: "Capture shared seam" };
-  if (/^src\/(styles\/|components\/(ui|icons|notifications)\/|App\.)/.test(file)) return { areas: ["shared-ui"], reason: "shared UI", broad: true };
+  if (/^src\/(styles\/|components\/(ui|icons|notifications|shell)\/|App\.)/.test(file)) return { areas: ["shared-ui"], reason: "shared UI", broad: true };
   if (/^src\//.test(file) || /^scripts\//.test(file)) return { areas: ["shared-ui"], reason: "unknown source owner; expand safely", broad: true };
   return { areas: [], reason: "outside test selection" };
 }

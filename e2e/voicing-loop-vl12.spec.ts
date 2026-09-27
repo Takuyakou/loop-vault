@@ -2,10 +2,10 @@ import { expect, test } from "@playwright/test";
 
 test("VL-12 Space shortcut respects native controls and keeps keyboard focus visible", async ({ page }) => {
   await page.goto("/?p527Status=vl09-layout");
-  const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const nav = page.locator('[data-nav="voicing-loop"]');
   if (await nav.isVisible()) await nav.click();
   else {
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
   const workspace = page.getByTestId("voicing-loop-workspace");
@@ -31,10 +31,10 @@ test("VL-12 Space shortcut respects native controls and keeps keyboard focus vis
 
 test("VL-12 BPM scrub works from the full field and keeps direct input, wheel, and keys", async ({ page }) => {
   await page.goto("/?p527Status=vl09-layout");
-  const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const nav = page.locator('[data-nav="voicing-loop"]');
   if (await nav.isVisible()) await nav.click();
   else {
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
   const bpm = page.locator("#voicing-loop-bpm");
@@ -99,10 +99,10 @@ test("VL-12 transport rows fit vertically at desktop viewports and scaling", asy
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto("/?p527Status=vl09-layout");
-    const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+    const nav = page.locator('[data-nav="voicing-loop"]');
     if (await nav.isVisible()) await nav.click();
     else {
-      await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+      await page.locator('[data-nav="chord-dojo"]').click();
       await page.getByRole("tab", { name: "Voicing Loop" }).click();
     }
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
@@ -127,10 +127,10 @@ test("VL-12 Next Move groups each hand above five slots and distinguishes KEEP f
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto("/?p527Status=vl09-layout");
-    const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+    const nav = page.locator('[data-nav="voicing-loop"]');
     if (await nav.isVisible()) await nav.click();
     else {
-      await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+      await page.locator('[data-nav="chord-dojo"]').click();
       await page.getByRole("tab", { name: "Voicing Loop" }).click();
     }
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);

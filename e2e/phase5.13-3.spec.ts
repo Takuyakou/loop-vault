@@ -56,7 +56,7 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     await page.locator("[data-progression-detail-view]")
       .getByRole("button", { name: /練習する|Practice/ })
       .click();
-    const dojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
+    const dojo = page.locator('[data-nav="chord-dojo"]');
     await dojo.click();
     await expect(dojo).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("practice-layout")).toBeVisible();
@@ -117,7 +117,7 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     await expect(meter).toBeVisible();
     await expect(meter).toHaveAttribute("data-playback-status", "idle");
     await expect(meter).toBeDisabled();
-    await page.getByRole("button", { name: "Live MIDI" }).click();
+    await page.locator('[data-nav="live-midi"]').click();
     await expect(page.getByText(/現在のコード|Current chord/)).toBeVisible();
     await expect(page.locator("#main-content")).toBeVisible();
     await captureEvidence(page, testInfo, "live-midi-and-main.png");
