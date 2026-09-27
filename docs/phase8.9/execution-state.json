@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "8.9",
+  "status": "in-progress",
+  "activeStage": "P8.9-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "1710c84",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p8.9-00-setup",
+  "requiredGates": {
+    "P8.9-00": [
+      "p89-00-phase-docs",
+      "p89-00-data-retention",
+      "p89-00-screens-baseline",
+      "p89-00-audit",
+      "p89-00-full-fresh",
+      "p89-00-report"
+    ],
+    "P8.9-01": [
+      "p89-01-full-fresh",
+      "p89-01-screens",
+      "p89-01-exe",
+      "p89-01-report"
+    ],
+    "P8.9-02": [
+      "p89-02-full-fresh",
+      "p89-02-screens",
+      "p89-02-exe",
+      "p89-02-report"
+    ],
+    "P8.9-03": [
+      "p89-03-full-fresh",
+      "p89-03-screens",
+      "p89-03-exe",
+      "p89-03-report"
+    ],
+    "P8.9-04": [
+      "p89-04-full-fresh",
+      "p89-04-screens",
+      "p89-04-exe",
+      "p89-04-report"
+    ],
+    "P8.9-05": [
+      "p89-05-full-fresh",
+      "p89-05-screens",
+      "p89-05-exe",
+      "p89-05-report"
+    ],
+    "P8.9-06": [
+      "p89-06-full-fresh",
+      "p89-06-screens",
+      "p89-06-exe",
+      "p89-06-report"
+    ],
+    "P8.9-07": [
+      "p89-07-full-fresh",
+      "p89-07-screens",
+      "p89-07-exe",
+      "p89-07-report"
+    ],
+    "P8.9-08": [
+      "p89-08-full-fresh",
+      "p89-08-screens",
+      "p89-08-exe",
+      "p89-08-report"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Run stages/P8.9-00.md end to end, then stop at the merge candidate.",
+  "updatedAt": "2026-09-27"
+}
