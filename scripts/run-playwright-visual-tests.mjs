@@ -22,9 +22,10 @@ export function playwrightArguments(argumentsToForward = []) {
   return ["test", ...argumentsToForward];
 }
 
-export function visualTestCommandPlan(argumentsToForward = []) {
+export function visualTestCommandPlan(argumentsToForward = [], environment = process.env) {
+  const alreadyTypechecked = environment.LV_DX_PRECHECKED_TSC === "1";
   return [
-    ["node_modules/typescript/bin/tsc"],
+    ...alreadyTypechecked ? [] : [["node_modules/typescript/bin/tsc"]],
     ["node_modules/vite/bin/vite.js", "build"],
     ["node_modules/@playwright/test/cli.js", ...playwrightArguments(argumentsToForward)],
   ];
@@ -42,7 +43,7 @@ function run(args, environment) {
 
 export function runPlaywrightVisualTests(argumentsToForward = process.argv.slice(2)) {
   const environment = visualTestEnvironment();
-  return visualTestCommandPlan(argumentsToForward).every((args) => run(args, environment));
+  return visualTestCommandPlan(argumentsToForward, environment).every((args) => run(args, environment));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
