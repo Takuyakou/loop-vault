@@ -1,3 +1,4 @@
+import { displayKey } from "../domain/displayLabels";
 import type { ToastFn } from "../components/notifications";
 import { useEffect, useMemo, useState } from "react";
 import { voiceChordForPreview } from "../domain/chordVoicing";
@@ -605,7 +606,7 @@ export function ProgressionDetailView({
             actions={midiExportActions}
           />
         ) : null}
-        <MetadataBadge label="Key" value={block.detectedKey ?? idea.key ?? "-"} />
+        <MetadataBadge label="キー" value={displayKey(block.detectedKey ?? idea.key) ?? "-"} />
         <MetadataBadge label="BPM" value={String(block.bpm ?? idea.bpm ?? "-")} />
         <MetadataBadge label={text.barCount(bars)} value={block.startBar && block.endBar ? text.barRange(block.startBar, block.endBar) : block.timeSignature ?? "-"} />
         <span

@@ -8,7 +8,7 @@ import { Button } from "./ui";
 
 /**
  * P8.9-09: the practice screens' 「設定」 next to MIDI opens only the Live MIDI settings in a dialog,
- * so the practice screen stays mounted and keeps its state. Settings › Live MIDI is unchanged.
+ * so the practice screen stays mounted and keeps its state. The Live MIDI section of Settings is unchanged.
  */
 export function LiveMidiSettingsDialog({ copy, onClose, store }: {
   copy: AppCopy["settingsUi"];
