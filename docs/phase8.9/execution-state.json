@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-05",
+  "activeStage": "P8.9-08",
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
@@ -12,9 +12,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "e2cbd35",
+  "baseCommit": "9ddf367",
   "lastVerifiedCommit": "c8e2d5b",
-  "currentBranch": "feat/p8.9-04-home-vault",
+  "currentBranch": "feat/p8.9-08-settings",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -48,17 +48,17 @@
       "p89-04-exe",
       "p89-04-report"
     ],
-    "P8.9-05": [
-      "p89-05-full-fresh",
-      "p89-05-screens",
-      "p89-05-exe",
-      "p89-05-report"
-    ],
     "P8.9-08": [
       "p89-08-full-fresh",
       "p89-08-screens",
       "p89-08-exe",
       "p89-08-report"
+    ],
+    "P8.9-09": [
+      "p89-09-full-fresh",
+      "p89-09-screens",
+      "p89-09-exe",
+      "p89-09-report"
     ]
   },
   "gateResults": {
@@ -85,6 +85,6 @@
     "p89-04-exe": "pass",
     "p89-04-report": "pass"
   },
-  "nextAction": "P8.9-04 complete; stopped at merge candidate feat/p8.9-04-home-vault (fresh FULL PASS @ c8e2d5b: Vitest 3757/3757, Playwright 129/129; p89:screens P8.9-04 20 screens x 3 sizes + 21 at 768x640 incl. home-empty/home and vault-filtered/vault-search-degree; EXE built with tauri build --no-bundle; later commit is docs only). Home rebuilt from the approved mock (today's loop device-local in loop-vault:today-loop:v1; practice records read-only), Vault is progressions-only with filters/search/sort, capture save form has no next-action field (default unchanged). Stage 3 merged into local master at e2cbd35. Human EXE checks are listed at the end of the report. P8.9-05 not started: the stage-5 zip merges this candidate first. No push/tag/release.",
+  "nextAction": "P8.9-08 in progress on feat/p8.9-08-settings (base local master 9ddf367, stage 4 merged). Steps 0-8 of stages/P8.9-08.md: phase plan update (P8.9-05 dropped, P8.9-09 added, AI back end kept), Vault sort resets to newest on launch, Settings as a screen, startup/empty/quarantine states, Live MIDI mini window, header parts, baselines/screens, fresh FULL, EXE, report. Stop at the merge candidate; no push/tag/release.",
   "updatedAt": "2026-09-28"
 }
