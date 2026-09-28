@@ -148,6 +148,7 @@ test("P8.9-09b 通常 and 拡張 share the name, fields, save reason, footer and
       key: await capture.getByTestId(ids.key).evaluate((element) => [element.className, getComputedStyle(element).height]),
       panes: visiblePanes,
       footer: (await footer.boundingBox())!,
+      tools: (await footer.getByRole("button", { name: "詳細編集" }).boundingBox())!,
     };
   };
   for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640]] as const) {
@@ -164,6 +165,7 @@ test("P8.9-09b 通常 and 拡張 share the name, fields, save reason, footer and
       expect(Math.abs(extended.toolbar[side] - standard.toolbar[side]), `${width} toolbar ${side}`).toBeLessThanOrEqual(1);
       expect(Math.abs(extended.footer[side] - standard.footer[side]), `${width} footer ${side}`).toBeLessThanOrEqual(1);
     }
+    expect(Math.abs(extended.tools.x - standard.tools.x), `${width} 詳細編集 x`).toBeLessThanOrEqual(1);
     expect(extended.panes.length, `${width} panes`).toBe(standard.panes.length);
     standard.panes.forEach((pane, index) => {
       for (const side of ["x", "y", "width", "height"] as const) {

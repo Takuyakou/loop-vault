@@ -134,7 +134,7 @@
 .lv-text-intake-grid { border-top: 1px solid var(--lv-border); }
 .lv-text-intake-pane { background: var(--lv-surface); }
 .lv-text-status-bar { min-height: 34px; flex-wrap: nowrap; background: var(--lv-bg-subtle); }
-.lv-text-save-reason { margin-left: auto; text-align: right; }
+.lv-text-save-reason { text-align: right; } /* P8.9-09b: the tools before it carry the auto margin, so both readers line up */
 .lv-text-control-row { padding-inline: 8px; }
 .lv-text-control-row .lv-text-toolbar-save { margin-left: auto; white-space: nowrap; }
 .lv-text-control-row .lv-text-toolbar-save label { white-space: nowrap; }
