@@ -1585,7 +1585,7 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface ref={transportBarRef} className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
+          <Surface ref={transportBarRef} className="lv-vl-transport h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
             <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
               <BpmScrubField
@@ -1602,10 +1602,10 @@ export function ProgressionVoicingPracticeView({
               ) : null}
               {sourceKey && targetTonicPitchClass !== undefined ? (
                 <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-key">
-                  {text.key}
+                  <span className="lv-vl-label-text">{text.key}</span>
                   <select
                     id="voicing-loop-key"
-                    className="lv-field-control min-h-8 w-32 px-2 text-xs"
+                    className="lv-vl-key-select lv-field-control min-h-8 w-32 px-2 text-xs"
                     value={targetTonicPitchClass}
                     onChange={(event) => changeTargetKey(Number(event.currentTarget.value))}
                   >
@@ -1618,7 +1618,7 @@ export function ProgressionVoicingPracticeView({
                 </label>
               ) : null}
               <div className="inline-flex min-h-8 items-center gap-1 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" role="group" aria-label={text.octave}>
-                <span className="mr-1">{text.octave}</span>
+                <span className="lv-vl-label-text mr-1">{text.octave}</span>
                 <Button
                   size="sm"
                   variant="secondary"
@@ -1642,7 +1642,7 @@ export function ProgressionVoicingPracticeView({
                 </Button>
               </div>
               <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-count-in">
-                {text.countInBars}
+                <span className="lv-vl-label-text">{text.countInBars}</span>
                 <select
                   id="voicing-loop-count-in"
                   className="lv-field-control min-h-8 w-24 px-2 text-xs"
@@ -1662,15 +1662,15 @@ export function ProgressionVoicingPracticeView({
               ) : (
                 <TransportButton variant="primary" fixedPrimary onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
               )}
-              <TransportButton variant="neutral" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</TransportButton>
-              <TransportButton variant="neutral" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</TransportButton>
-              <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
+              <TransportButton variant="neutral" title={text.restart} disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.restart}</span></TransportButton>
+              <TransportButton variant="neutral" title={text.stop} disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.stop}</span></TransportButton>
+              <label title={text.referenceSound} className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
                 <input
                   type="checkbox"
                   checked={referenceSoundEnabled}
                   onChange={(event) => changeReferenceSound(event.currentTarget.checked)}
                 />
-                {text.referenceSound}
+                <span className="lv-vl-button-text">{text.referenceSound}</span>
               </label>
               </div>
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">

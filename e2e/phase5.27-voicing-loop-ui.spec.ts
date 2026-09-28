@@ -144,3 +144,20 @@ test("P5.27 populated harness exposes every resolver status without fallback", a
     if (status) await expect(page.getByRole("button", { name: /開始/ })).toBeDisabled();
   }
 });
+
+test("P8.9-09 Voicing Loop bottom bar keeps every control visible at 960 and 768", async ({ page }) => {
+  for (const [width, height] of [[960, 1032], [768, 640]] as const) {
+    await page.setViewportSize({ width, height });
+    await openApp(page);
+    await chooseVoicingLoop(page);
+    const row = page.getByTestId("voicing-loop-transport-primary");
+    await expect(row).toBeVisible();
+    const fit = await row.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+    expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
+    const rowBox = (await row.boundingBox())!;
+    for (const name of [/開始/, /最初から/, /停止/]) {
+      const box = (await row.getByRole("button", { name }).boundingBox())!;
+      expect(box.x + box.width, `${width}px ${name}`).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
+    }
+  }
+});

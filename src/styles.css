@@ -8,6 +8,7 @@
 @import "./styles/vault.css";
 @import "./styles/settings.css";
 @import "./styles/live-midi.css";
+@import "./styles/voicing-loop.css";
 
 @tailwind base;
 @tailwind components;
