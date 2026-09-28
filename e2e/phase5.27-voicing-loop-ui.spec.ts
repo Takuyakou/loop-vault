@@ -96,12 +96,21 @@ test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings bes
   expect(keyboardBox).not.toBeNull();
   expect(keyboardBox!.width).toBeGreaterThan(regionBox!.width * 0.9);
 
+  // P8.9-09: the MIDI link opens only the Live MIDI settings in a dialog; practice state survives.
+  const recall = page.getByRole("button", { name: "思い出す（コード名のみ）" });
+  await recall.click();
+  await expect(recall).toHaveAttribute("aria-pressed", "true");
   const transport = page.getByTestId("voicing-loop-transport");
   await expect(transport.getByRole("button", { name: "設定", exact: true })).toBeVisible();
   await transport.getByRole("button", { name: "設定", exact: true }).click();
-  // P8.9-08: Settings is a screen; the MIDI link opens it at the Live MIDI section.
-  await expect(page.getByTestId("settings-view")).toBeVisible();
-  await expect(page.locator("#settings-live-midi")).toBeInViewport();
+  const dialog = page.getByRole("dialog", { name: "Live MIDI の設定" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator("#settings-live-midi-device")).toBeVisible();
+  await expect(page.getByTestId("settings-view")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
+  await expect(recall).toHaveAttribute("aria-pressed", "true");
 });
 
 test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and axe-clean", async ({ page }) => {

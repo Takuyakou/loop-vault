@@ -20,6 +20,7 @@ import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { FirstCaptureGuide } from "./components/FirstCaptureGuide";
+import { LiveMidiSettingsDialog } from "./components/LiveMidiSettingsDialog";
 import { QuarantineNotice, StartupState } from "./components/StartupStates";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
@@ -255,7 +256,7 @@ function App() {
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
-  const [settingsSection, setSettingsSection] = useState<"settings-live-midi">();
+  const [liveMidiSettingsOpen, setLiveMidiSettingsOpen] = useState(false);
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
@@ -537,8 +538,7 @@ function App() {
     setView("practice");
   }
 
-  function openSettings(section?: "settings-live-midi") {
-    setSettingsSection(section);
+  function openSettings() {
     navigateTo("settings");
     void refreshBackups();
   }
@@ -746,7 +746,7 @@ function App() {
         openBassPractice={() => { navigateTo("practice"); openBassPractice(); }}
         bassPracticeAvailable={bassPracticeEnabled}
         bassPracticeActive={view === "practice" && practiceMode === "bass-practice"}
-        openSettings={() => openSettings()}
+        openSettings={openSettings}
         settingsOpen={view === "settings"}
         voicingLoopActive={view === "practice" && practiceMode === "voicing-loop"}
         copy={copy}
@@ -792,7 +792,6 @@ function App() {
         }`}>
         {view === "settings" ? (
           <SettingsView
-            initialSection={settingsSection}
             ideas={visibleIdeas}
             backups={backups}
             error={error}
@@ -1048,7 +1047,7 @@ function App() {
                       initialTarget={practiceTarget}
                       updateProgressionBlock={updateProgressionBlock}
                       openProgression={openProgression}
-                      openSettings={() => openSettings("settings-live-midi")}
+                      openSettings={() => setLiveMidiSettingsOpen(true)}
                       setToast={setToast}
                     />
                   )}
@@ -1065,7 +1064,7 @@ function App() {
                       onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
-                      openMidiSettings={() => openSettings("settings-live-midi")}
+                      openMidiSettings={() => setLiveMidiSettingsOpen(true)}
                     />
                   )}
               />
@@ -1086,6 +1085,9 @@ function App() {
         )}
         </div>
         </main>
+      {liveMidiSettingsOpen ? (
+        <LiveMidiSettingsDialog copy={copy.settingsUi} onClose={() => setLiveMidiSettingsOpen(false)} />
+      ) : null}
       {pendingLiveMidiHistory ? (
         <LiveMidiImportDialog
           history={pendingLiveMidiHistory}
