@@ -65,7 +65,6 @@ async function renderVault(overrides: Partial<Props> = {}) {
     updateProgressionBlock: vi.fn(),
     setToast: vi.fn(),
     copy: appCopy.ja,
-    showRomanNumerals: false,
     ...overrides,
   };
   await act(async () => root.render(<VaultView {...props} />));
@@ -240,7 +239,7 @@ describe("VaultView", () => {
       document.body.append(container);
       const root = createRoot(container);
       await act(async () => root.render(
-        <Fresh ideas={ideas} openDetail={vi.fn()} openCapture={vi.fn()} updateIdea={vi.fn()} updateProgressionBlock={vi.fn()} setToast={vi.fn()} copy={appCopy.ja} showRomanNumerals={false} />,
+        <Fresh ideas={ideas} openDetail={vi.fn()} openCapture={vi.fn()} updateIdea={vi.fn()} updateProgressionBlock={vi.fn()} setToast={vi.fn()} copy={appCopy.ja} />,
       ));
       return { container, root };
     };
@@ -374,7 +373,7 @@ describe("VaultView", () => {
       bpm: 108,
       progressionBlocks: [{ ...progressionBlock, id: "block-metadata", detectedKey: "D minor", bpm: 124, lengthBars: 4, tags: ["bridge", "bright"] }],
     });
-    const view = await renderVault({ ideas: [idea], showRomanNumerals: true });
+    const view = await renderVault({ ideas: [idea] });
     const row = view.container.querySelector<HTMLElement>(".lv-vault-row")!;
     expect(row.getAttribute("data-compact")).toBe("false");
     expect(row.classList.contains("min-h-24")).toBe(true);
@@ -383,28 +382,32 @@ describe("VaultView", () => {
     expect(row.querySelector(".lv-vault-progression-secondary")?.textContent).toBe("Dマイナー · BPM 124 · 4小節 · 7月15日 · MIDI");
     expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bridge");
     expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bright");
-    expect(row.querySelector(".lv-vault-chip")?.textContent).toBe("Cmaj7♭VIImaj7");
+    const chip = row.querySelector(".lv-vault-chip");
+    expect(chip?.textContent).toBe("Cmaj7");
+    expect(chip?.getAttribute("title")).toBe("Cmaj7（♭VIImaj7）");
     await view.unmount();
   });
 
-  it("shows only the first eight chords while keeping later chords searchable", async () => {
+  it("shows only the first twelve chords while keeping later chords searchable", async () => {
     const longProgression = {
       ...progressionBlock,
       id: "block-long-preview",
-      chords: Array.from({ length: 10 }, (_, index) => ({
+      chords: Array.from({ length: 14 }, (_, index) => ({
         ...progressionBlock.chords[0],
         bar: index + 1,
-        chord: { ...progressionBlock.chords[0].chord, label: index === 9 ? "HiddenChord10" : `Chord${index + 1}` },
+        chord: { ...progressionBlock.chords[0].chord, label: index === 13 ? "HiddenChord14" : `Chord${index + 1}` },
       })),
     };
     const view = await renderVault({ ideas: [makeIdea({ id: "idea-long-preview", progressionBlocks: [longProgression] })] });
     const chips = () => [...view.container.querySelectorAll(".lv-vault-chip")].map((chip) => chip.textContent);
-    expect(chips()).toEqual(["Chord1", "Chord2", "Chord3", "Chord4", "Chord5", "Chord6", "Chord7", "Chord8"]);
-    expect(view.container.querySelector(".lv-vault-chip-more")).not.toBeNull();
+    expect(chips()).toEqual(Array.from({ length: 12 }, (_, index) => `Chord${index + 1}`));
+    const more = view.container.querySelector(".lv-vault-chip-more");
+    expect(more).not.toBeNull();
+    expect(more?.hasAttribute("data-narrow-only")).toBe(false);
 
-    await setInputValue(view.container.querySelector<HTMLInputElement>("#vault-search")!, "HiddenChord10");
+    await setInputValue(view.container.querySelector<HTMLInputElement>("#vault-search")!, "HiddenChord14");
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
-    expect(chips()).toHaveLength(8);
+    expect(chips()).toHaveLength(12);
     await view.unmount();
   });
 
@@ -425,7 +428,6 @@ describe("VaultView", () => {
             updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
             copy={appCopy.ja}
-            showRomanNumerals={false}
           />
         </PreviewSoundProvider>,
       );

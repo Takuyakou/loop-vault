@@ -180,10 +180,6 @@
     background: rgb(150 170 195 / 10%);
   }
 
-  .lv-sidebar-spacer {
-    flex: 1 1 auto;
-  }
-
   .lv-nav-item {
     position: relative;
     display: flex;

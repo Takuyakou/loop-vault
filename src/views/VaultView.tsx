@@ -33,10 +33,12 @@ import {
 type Entry = { row: VaultRow; match?: VaultMatch };
 
 const progressionVirtualizationThreshold = 50;
-const progressionPreviewChordLimit = 8;
+/** Chord cards in a row: 6 × 2. A narrow chord area shows 5 × 2 (see vault.css). */
+const progressionPreviewChordLimit = 12;
+const narrowPreviewChordLimit = 10;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
@@ -48,7 +50,6 @@ export function VaultView({
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
-  showRomanNumerals: boolean;
 }) {
   const { sound: previewSound } = usePreviewSound();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -201,7 +202,6 @@ export function VaultView({
             <ProgressionRows
               entries={visible}
               selectedIndex={selectedIndex}
-              showDegrees={showRomanNumerals}
               copy={copy}
               onSelect={setSelectedIndex}
               onOpen={openEntry}
@@ -281,7 +281,6 @@ function OrphanIdeas({ ideas, openDetail }: { ideas: SongIdea[]; openDetail: (id
 interface RowsProps {
   entries: Entry[];
   selectedIndex: number;
-  showDegrees: boolean;
   copy: AppCopy;
   onSelect: (index: number) => void;
   onOpen: (entry: Entry) => void;
@@ -341,10 +340,9 @@ function VirtualizedProgressionRows({ entries, selectedIndex, renderRow }: {
   );
 }
 
-function ProgressionRow({ entry, selected, showDegrees, copy, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: {
+function ProgressionRow({ entry, selected, copy, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: {
   entry: Entry;
   selected: boolean;
-  showDegrees: boolean;
   copy: AppCopy;
   compact: boolean;
   onSelect: () => void;
@@ -422,19 +420,22 @@ function ProgressionRow({ entry, selected, showDegrees, copy, compact, onSelect,
         <PracticeProgressBadge block={row.block} compact effectiveKeySignature={row.key} />
       </div>
       <div className="lv-vault-chips" aria-label={`コード: ${allChords}`}>
-        {chords.slice(0, progressionPreviewChordLimit).map((item, index) => (
-          <span
-            key={item.eventId ?? index}
-            className="lv-vault-chip"
-            data-current={playing && current === index}
-            data-match={Boolean(match && index >= match.start && index <= match.end)}
-            title={degrees[index] ? `${item.chord.label}（${degrees[index]}）` : item.chord.label}
-          >
-            {item.chord.label}
-            {showDegrees && degrees[index] ? <small>{degrees[index]}</small> : null}
-          </span>
-        ))}
-        {chords.length > progressionPreviewChordLimit ? <span className="lv-vault-chip-more">…</span> : null}
+        <div className="lv-vault-chip-grid">
+          {chords.slice(0, progressionPreviewChordLimit).map((item, index) => (
+            <span
+              key={item.eventId ?? index}
+              className="lv-vault-chip"
+              data-current={playing && current === index}
+              data-match={Boolean(match && index >= match.start && index <= match.end)}
+              title={degrees[index] ? `${item.chord.label}（${degrees[index]}）` : item.chord.label}
+            >
+              {item.chord.label}
+            </span>
+          ))}
+        </div>
+        {chords.length > narrowPreviewChordLimit ? (
+          <span className="lv-vault-chip-more" data-narrow-only={chords.length <= progressionPreviewChordLimit || undefined}>…</span>
+        ) : null}
       </div>
       <div className="lv-vault-actions" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
         <IconButton

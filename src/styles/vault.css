@@ -257,7 +257,7 @@
 
   .lv-vault-row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 300px) minmax(0, 1fr) auto;
+    grid-template-columns: 36px minmax(0, 260px) minmax(0, 1fr) auto;
     grid-template-areas: "play main chips actions";
     box-sizing: border-box;
     align-items: center;
@@ -353,32 +353,45 @@
     white-space: nowrap;
   }
 
+  /* Chord cards: up to 6 × 2 (12). Under 460px of chord area, 5 × 2 (10) so a name like
+     Ebadd9/G still fits; the "…" then also marks 11–12 chords. Degrees stay in the tooltip. */
   .lv-vault-chips {
     display: flex;
     min-width: 0;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
     overflow: hidden;
+    container-type: inline-size;
+  }
+
+  .lv-vault-chip-grid {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(6, minmax(0, 88px));
+    gap: 4px;
   }
 
   .lv-vault-chip {
-    display: inline-flex;
-    flex-shrink: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 4px 8px;
+    overflow: hidden;
+    padding: 4px 6px;
     border-radius: 5px;
     background: var(--lv-bg-subtle);
     color: var(--lv-text);
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: var(--lv-text-12);
     font-weight: 600;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .lv-vault-chip small {
-    color: var(--lv-text-muted);
-    font-size: 10px;
-    font-weight: 500;
+  .lv-vault-chip-more[data-narrow-only] {
+    display: none;
+  }
+
+  @container (max-width: 459px) {
+    .lv-vault-chip-grid { grid-template-columns: repeat(5, minmax(0, 88px)); }
+    .lv-vault-chip:nth-child(n + 11) { display: none; }
+    .lv-vault-chip-more[data-narrow-only] { display: inline; }
   }
 
   .lv-vault-chip[data-match="true"] {
@@ -388,10 +401,6 @@
 
   .lv-vault-chip[data-current="true"] {
     background: var(--lv-accent);
-    color: var(--lv-text-on-accent);
-  }
-
-  .lv-vault-chip[data-current="true"] small {
     color: var(--lv-text-on-accent);
   }
 
