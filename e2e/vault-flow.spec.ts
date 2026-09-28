@@ -79,36 +79,51 @@ test("検索・絞り込み・並び替えを組み合わせられる", async ({
   await expect(page.locator(".lv-vault-row")).toHaveCount(0);
 });
 
-test("P8.9 Vault shows chord cards without degrees in two rows (12, or 10 when narrow)", async ({ page }) => {
+test("P8.9-09b Vault row chords are one band: length-wide frames, merged repeats, +N小節, click to audition", async ({ page }) => {
   const capture = await openTextCapture(page);
-  await capture.getByTestId("text-progression-input")
-    .fill("| Abmaj9 | Ebadd9/G | Cm9 | Cm7 | Bm7 | Bbm9 | Dm11/G | Ab7 | C#m9 | Cmaj7 | Bm9 | E13 | Amaj7 | Dsus4 |");
-  await capture.getByTestId("text-progression-name").fill("Chord grid");
+  const bars = ["Abmaj9", "Ebadd9/G", "Ebadd9/G", "Ebadd9/G", "Cm9", "Cm7", "Bm7", "Bbm9", "Dm11/G", "Ab7", "C#m9", "Cmaj7",
+    "Bm9", "E13", "Amaj7", "Dsus4", "G7", "C", "Am", "F", "G", "C", "Am", "F"];
+  await capture.getByTestId("text-progression-input").fill(`| ${bars.join(" | ")} |`);
+  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await capture.getByTestId("text-progression-name").fill("Chord band");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
-  for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640]] as const) {
+  for (const [width, height] of [[1920, 1080], [1440, 900], [1280, 800], [960, 1032], [768, 640]] as const) {
     await page.setViewportSize({ width, height });
     await openVault(page);
     const row = page.locator(".lv-vault-row").first();
     await expect(row).toBeVisible();
-    const grid = await row.evaluate((element) => {
-      const chips = [...element.querySelectorAll<HTMLElement>(".lv-vault-chip")].filter((chip) => chip.offsetParent !== null);
+    const band = await row.evaluate((element) => {
       const rowBox = element.getBoundingClientRect();
+      const bandBox = element.querySelector(".lv-vault-chips")!.getBoundingClientRect();
+      const chips = [...element.querySelectorAll<HTMLElement>(".lv-vault-chip")];
+      const label = (chip: HTMLElement) => chip.querySelector(".lv-vault-chip-label") as HTMLElement;
       return {
         count: chips.length,
         tops: new Set(chips.map((chip) => Math.round(chip.getBoundingClientRect().top))).size,
-        clipped: chips.filter((chip) => chip.scrollWidth > chip.clientWidth + 1).map((chip) => chip.textContent),
-        outside: chips.filter((chip) => chip.getBoundingClientRect().bottom > rowBox.bottom + 1).length,
-        degrees: element.querySelectorAll(".lv-vault-chip small").length,
-        more: element.querySelector<HTMLElement>(".lv-vault-chip-more")?.offsetParent !== null,
+        clipped: chips.filter((chip) => (label(chip).textContent ?? "").length <= 9 && label(chip).scrollWidth > label(chip).clientWidth)
+          .map((chip) => chip.textContent),
+        outside: chips.filter((chip) => chip.getBoundingClientRect().right > bandBox.right + 1 || chip.getBoundingClientRect().bottom > rowBox.bottom).length,
+        first: chips.slice(0, 2).map((chip) => chip.textContent),
+        degrees: element.querySelectorAll(".lv-vault-chip-degree").length,
+        more: element.querySelector(".lv-vault-chip-more")?.textContent ?? "",
+        nameWidth: element.querySelector(".lv-vault-main-cell")!.getBoundingClientRect().width,
+        bandWidth: bandBox.width,
       };
     });
-    expect(grid.count === 12 || grid.count === 10, `${width}px count ${grid.count}`).toBe(true);
-    expect(grid.tops, `${width}px rows`).toBe(2);
-    expect(grid.clipped, `${width}px clipped`).toEqual([]);
-    expect(grid.outside, `${width}px outside`).toBe(0);
-    expect(grid.degrees).toBe(0);
-    expect(grid.more).toBe(true);
-    console.log(`${width}: ${grid.count} chips`);
+    console.log(`${width}: ${band.count} frames, ${band.more}, name ${Math.round(band.nameWidth)}px, band ${Math.round(band.bandWidth)}px`);
+    expect(band.count, `${width} count`).toBeGreaterThanOrEqual(2);
+    expect(band.tops, `${width} one line`).toBe(1);
+    expect(band.clipped, `${width} clipped`).toEqual([]);
+    expect(band.outside, `${width} outside`).toBe(0);
+    expect(band.first[1], `${width} merged`).toMatch(/^Ebadd9\/G×3/);
+    expect(band.degrees, `${width} degrees`).toBe(band.count);
+    expect(band.more, `${width} more`).toMatch(/^\+\d+小節$/);
   }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const chip = page.locator(".lv-vault-row").first().getByRole("button", { name: "Cm9 を試聴" });
+  await chip.click();
+  await expect(chip).toHaveAttribute("data-current", "true");
+  await chip.click();
+  await expect(chip).toHaveAttribute("data-current", "false");
 });

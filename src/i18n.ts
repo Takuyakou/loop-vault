@@ -13,7 +13,7 @@ export const appCopy = {
       analysisHelp: "解析精度の確認とローカル評価データを管理します。通常の利用では変更不要です。",
       monthlyGoal: "月間ゴール",
       showDegrees: "コードカードに度数を表示",
-      showDegreesHelp: "ホームの今日のループで、キーが分かる場合にコード名の下に I / ii / V などの相対度数を表示します。Vault では度数はコードにマウスを乗せると出ます。",
+      showDegreesHelp: "キーが分かる場合、コード名の下に I / ii / V などの相対度数を表示します。",
       formatInfo: "形式情報",
       appFormat: "アプリ形式: 1",
       dataFormat: "データ形式: 1",

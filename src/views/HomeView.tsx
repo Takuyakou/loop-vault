@@ -18,17 +18,16 @@ import { useNotify } from "../components/notifications";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { FirstCaptureGuide } from "../components/FirstCaptureGuide";
 import { Button, IconButton } from "../components/ui";
-import { voiceChordForPreview } from "../domain/chordVoicing";
 import { displayKey } from "../domain/displayLabels";
 import { degreeOf } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
-import { voiceTextChordForAudition } from "../domain/textChordTones";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import { resolveTimelineVoicings, resolveVoicingForUse } from "../domain/voicing";
+import { resolveTimelineVoicings } from "../domain/voicing";
 import type { PracticeFileV2 } from "../features/bass-practice/infra/repository/practiceRepository";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { PracticeKind } from "./home/practiceActivity";
 import { useTimelinePlayhead } from "./home/timelinePlayhead";
+import { auditionSavedChord } from "./chordAudition";
 import {
   loadTodayLoopState,
   localDateKey,
@@ -446,15 +445,8 @@ function StripChord({ entry, index, sound, onPlaybackError }: {
   );
 }
 
-/** The same chord audition for 今日のループ chips and the 続きから strip (saved voicing first). */
 function previewChord(entry: HomeProgression, index: number, source: PlayingSource, sound: PreviewSound, onError: (error: unknown) => void) {
-  const event = entry.block.chords[index];
-  const notes = resolveVoicingForUse(
-    event.chord,
-    event.voicingMemory,
-    entry.block.textSource ? [...voiceTextChordForAudition(event.chord)] : voiceChordForPreview(event.chord).notes,
-  ).midiNotes;
-  void playbackController.toggle(source, { type: "chord", chord: event.chord, sound, explicitMidiNotes: notes }).catch(onError);
+  void auditionSavedChord(entry.block, index, source, sound).catch(onError);
 }
 
 function PracticeRow({ kind, title, count, unit, onOpen }: {

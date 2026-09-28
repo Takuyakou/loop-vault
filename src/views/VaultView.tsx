@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
 import type { PreviewSound } from "../audio/chordPreview";
 import { CloseIcon, FavoriteIcon, PlayIcon, SearchIcon, StopIcon } from "../components/icons";
@@ -17,6 +17,8 @@ import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { AppCopy } from "../i18n";
 import { ChevronRight, Copy, SlidersHorizontal, X } from "lucide-react";
 import { useTimelinePlayhead } from "./home/timelinePlayhead";
+import { auditionSavedChord } from "./chordAudition";
+import { FULL_NAME_CHARS, groupChords, groupWidth, layoutChordBand, type ChordBandGroup } from "./vault/chordBand";
 import { progressionSourceLabels } from "./vault/progressionFacts";
 import { useVaultKeyboardSelection, useVirtualRowWindow } from "./vault/useVaultKeyboardSelection";
 import { useVaultLibraryFilters } from "./vault/useVaultLibraryFilters";
@@ -33,12 +35,9 @@ import {
 type Entry = { row: VaultRow; match?: VaultMatch };
 
 const progressionVirtualizationThreshold = 50;
-/** Chord cards in a row: 6 × 2. A narrow chord area shows 5 × 2 (see vault.css). */
-const progressionPreviewChordLimit = 12;
-const narrowPreviewChordLimit = 10;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
@@ -50,6 +49,7 @@ export function VaultView({
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
+  showRomanNumerals: boolean;
 }) {
   const { sound: previewSound } = usePreviewSound();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -202,6 +202,7 @@ export function VaultView({
             <ProgressionRows
               entries={visible}
               selectedIndex={selectedIndex}
+              showDegrees={showRomanNumerals}
               copy={copy}
               onSelect={setSelectedIndex}
               onOpen={openEntry}
@@ -281,6 +282,7 @@ function OrphanIdeas({ ideas, openDetail }: { ideas: SongIdea[]; openDetail: (id
 interface RowsProps {
   entries: Entry[];
   selectedIndex: number;
+  showDegrees: boolean;
   copy: AppCopy;
   onSelect: (index: number) => void;
   onOpen: (entry: Entry) => void;
@@ -340,9 +342,10 @@ function VirtualizedProgressionRows({ entries, selectedIndex, renderRow }: {
   );
 }
 
-function ProgressionRow({ entry, selected, copy, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: {
+function ProgressionRow({ entry, selected, showDegrees, copy, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: {
   entry: Entry;
   selected: boolean;
+  showDegrees: boolean;
   copy: AppCopy;
   compact: boolean;
   onSelect: () => void;
@@ -419,24 +422,15 @@ function ProgressionRow({ entry, selected, copy, compact, onSelect, onOpen, onPi
         ) : null}
         <PracticeProgressBadge block={row.block} compact effectiveKeySignature={row.key} />
       </div>
-      <div className="lv-vault-chips" aria-label={`コード: ${allChords}`}>
-        <div className="lv-vault-chip-grid">
-          {chords.slice(0, progressionPreviewChordLimit).map((item, index) => (
-            <span
-              key={item.eventId ?? index}
-              className="lv-vault-chip"
-              data-current={playing && current === index}
-              data-match={Boolean(match && index >= match.start && index <= match.end)}
-              title={degrees[index] ? `${item.chord.label}（${degrees[index]}）` : item.chord.label}
-            >
-              {item.chord.label}
-            </span>
-          ))}
-        </div>
-        {chords.length > narrowPreviewChordLimit ? (
-          <span className="lv-vault-chip-more" data-narrow-only={chords.length <= progressionPreviewChordLimit || undefined}>…</span>
-        ) : null}
-      </div>
+      <ChordBand
+        row={row}
+        match={match}
+        current={playing ? current : -1}
+        degrees={showDegrees ? degrees : undefined}
+        label={`コード: ${allChords}`}
+        sound={previewSound}
+        onPreviewError={onPreviewError}
+      />
       <div className="lv-vault-actions" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
         <IconButton
           variant="ghost"
@@ -464,6 +458,70 @@ function ProgressionRow({ entry, selected, copy, compact, onSelect, onOpen, onPi
       </div>
     </div>
   );
+}
+
+/** One line of chord frames: width follows the chord's length, repeats merge, a click auditions. */
+function ChordBand({ row, match, current, degrees, label, sound, onPreviewError }: {
+  row: VaultRow;
+  match?: VaultMatch;
+  /** Index of the chord the row's timeline is on, -1 when it is not playing. */
+  current: number;
+  degrees?: (string | undefined)[];
+  label: string;
+  sound: PreviewSound;
+  onPreviewError: (error: unknown) => void;
+}) {
+  const groups = useMemo(() => groupChords(row.block.chords), [row.block.chords]);
+  const ref = useRef<HTMLDivElement>(null);
+  const width = useElementWidth(ref);
+  const degreeOfGroup = (group: ChordBandGroup) => degrees?.[group.first];
+  const { shown, restBars } = layoutChordBand(groups, width ?? Number.POSITIVE_INFINITY, row.bars, degreeOfGroup);
+  const playback = usePlaybackState();
+  return (
+    <div ref={ref} className="lv-vault-chips" aria-label={label} data-degrees={Boolean(degrees) || undefined}>
+      {groups.slice(0, shown).map((group) => {
+        const source: PlayingSource = { kind: "vault", id: `vault-chord:${row.id}:${group.first}` };
+        const auditioning = playback.status !== "idle" && samePlaybackSource(playback.source, source);
+        const degree = degreeOfGroup(group);
+        return (
+          <button
+            key={group.first}
+            type="button"
+            className="lv-vault-chip"
+            style={{ width: groupWidth(group, degree) }}
+            data-current={group.indices.includes(current) || auditioning}
+            data-match={Boolean(match && group.indices.some((index) => index >= match.start && index <= match.end))}
+            aria-label={`${group.label} を試聴`}
+            title={group.label.length > FULL_NAME_CHARS ? group.label : undefined}
+            onClick={() => void auditionSavedChord(row.block, group.first, source, sound).catch(onPreviewError)}
+            onDoubleClick={(event) => event.stopPropagation()}
+          >
+            <span className="lv-vault-chip-name">
+              <span className="lv-vault-chip-label">{group.label}</span>
+              {group.indices.length > 1 ? <span className="lv-vault-chip-count">×{group.indices.length}</span> : null}
+            </span>
+            {degree ? <small className="lv-vault-chip-degree">{degree}</small> : null}
+          </button>
+        );
+      })}
+      {restBars ? <span className="lv-vault-chip-more">+{restBars}小節</span> : null}
+    </div>
+  );
+}
+
+/** The element's content width, kept current; undefined until measured (and without ResizeObserver). */
+function useElementWidth(ref: RefObject<HTMLElement | null>): number | undefined {
+  const [width, setWidth] = useState<number>();
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const update = () => setWidth(element.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
 }
 
 function formatDate(value: string): string {

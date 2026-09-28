@@ -65,6 +65,7 @@ async function renderVault(overrides: Partial<Props> = {}) {
     updateProgressionBlock: vi.fn(),
     setToast: vi.fn(),
     copy: appCopy.ja,
+    showRomanNumerals: false,
     ...overrides,
   };
   await act(async () => root.render(<VaultView {...props} />));
@@ -239,7 +240,7 @@ describe("VaultView", () => {
       document.body.append(container);
       const root = createRoot(container);
       await act(async () => root.render(
-        <Fresh ideas={ideas} openDetail={vi.fn()} openCapture={vi.fn()} updateIdea={vi.fn()} updateProgressionBlock={vi.fn()} setToast={vi.fn()} copy={appCopy.ja} />,
+        <Fresh ideas={ideas} openDetail={vi.fn()} openCapture={vi.fn()} updateIdea={vi.fn()} updateProgressionBlock={vi.fn()} setToast={vi.fn()} copy={appCopy.ja} showRomanNumerals={false} />,
       ));
       return { container, root };
     };
@@ -373,7 +374,7 @@ describe("VaultView", () => {
       bpm: 108,
       progressionBlocks: [{ ...progressionBlock, id: "block-metadata", detectedKey: "D minor", bpm: 124, lengthBars: 4, tags: ["bridge", "bright"] }],
     });
-    const view = await renderVault({ ideas: [idea] });
+    const view = await renderVault({ ideas: [idea], showRomanNumerals: true });
     const row = view.container.querySelector<HTMLElement>(".lv-vault-row")!;
     expect(row.getAttribute("data-compact")).toBe("false");
     expect(row.classList.contains("min-h-24")).toBe(true);
@@ -382,32 +383,38 @@ describe("VaultView", () => {
     expect(row.querySelector(".lv-vault-progression-secondary")?.textContent).toBe("Dマイナー · BPM 124 · 4小節 · 7月15日 · MIDI");
     expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bridge");
     expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bright");
-    const chip = row.querySelector(".lv-vault-chip");
-    expect(chip?.textContent).toBe("Cmaj7");
-    expect(chip?.getAttribute("title")).toBe("Cmaj7（♭VIImaj7）");
+    expect(row.querySelector(".lv-vault-chip")?.textContent).toBe("Cmaj7♭VIImaj7");
     await view.unmount();
   });
 
-  it("shows only the first twelve chords while keeping later chords searchable", async () => {
+  it("merges repeated chords into one frame and auditions a frame on click", async () => {
+    const labels = ["Dm7", "Dm7", "Dm7", "G7", "Cmaj7", "HiddenChord6"];
     const longProgression = {
       ...progressionBlock,
       id: "block-long-preview",
-      chords: Array.from({ length: 14 }, (_, index) => ({
+      chords: labels.map((label, index) => ({
         ...progressionBlock.chords[0],
         bar: index + 1,
-        chord: { ...progressionBlock.chords[0].chord, label: index === 13 ? "HiddenChord14" : `Chord${index + 1}` },
+        chord: { ...progressionBlock.chords[0].chord, label },
       })),
     };
     const view = await renderVault({ ideas: [makeIdea({ id: "idea-long-preview", progressionBlocks: [longProgression] })] });
-    const chips = () => [...view.container.querySelectorAll(".lv-vault-chip")].map((chip) => chip.textContent);
-    expect(chips()).toEqual(Array.from({ length: 12 }, (_, index) => `Chord${index + 1}`));
-    const more = view.container.querySelector(".lv-vault-chip-more");
-    expect(more).not.toBeNull();
-    expect(more?.hasAttribute("data-narrow-only")).toBe(false);
+    const chips = () => [...view.container.querySelectorAll<HTMLButtonElement>(".lv-vault-chip")];
+    expect(chips().map((chip) => chip.textContent)).toEqual(["Dm7×3", "G7", "Cmaj7", "HiddenChord6"]);
+    expect(chips()[0]?.getAttribute("aria-label")).toBe("Dm7 を試聴");
+    expect(chips()[3]?.getAttribute("title")).toBe("HiddenChord6");
+    expect(chips()[0]?.getAttribute("title")).toBeNull();
 
-    await setInputValue(view.container.querySelector<HTMLInputElement>("#vault-search")!, "HiddenChord14");
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue(undefined);
+    await act(async () => chips()[1]?.click());
+    expect(toggle).toHaveBeenCalledWith(
+      { kind: "vault", id: expect.stringContaining("vault-chord:") },
+      expect.objectContaining({ type: "chord", chord: expect.objectContaining({ label: "G7" }) }),
+    );
+    toggle.mockRestore();
+
+    await setInputValue(view.container.querySelector<HTMLInputElement>("#vault-search")!, "HiddenChord6");
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
-    expect(chips()).toHaveLength(12);
     await view.unmount();
   });
 
@@ -428,6 +435,7 @@ describe("VaultView", () => {
             updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
             copy={appCopy.ja}
+            showRomanNumerals={false}
           />
         </PreviewSoundProvider>,
       );
