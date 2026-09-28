@@ -144,18 +144,25 @@ for (const [width, height] of SIZES) {
           await page.getByRole("tablist", { name: "Bass Practice のモード" }).getByRole("tab", { name: tab, exact: true }).click();
         });
       }
+      // P8.9-08: Settings is a screen; one shot per section (the list on the left scrolls to it).
       await shot("settings", async () => {
         await nav(page, "settings");
-        await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
+        await expect(page.getByTestId("settings-view")).toBeVisible();
       });
-      await page.keyboard.press("Escape");
+      for (const [id, label] of [["audio-midi", "音と MIDI"], ["live-midi", "Live MIDI"], ["data", "データ"], ["developer", "開発者向け"]] as const) {
+        await shot(`settings-${id}`, async () => {
+          await page.getByRole("navigation", { name: "設定の欄" }).getByRole("button", { name: label, exact: true }).click();
+          await expect(page.locator(`#settings-${id}`)).toBeInViewport();
+        });
+      }
       if (width === 768) {
-        // A toast raised while a dialog is open must not cover the dialog's buttons.
+        // A toast raised while the confirmation dialog is open must not cover the dialog's buttons.
         await shot("settings-toast", async () => {
-          await nav(page, "settings");
-          const dialog = page.getByRole("dialog", { name: /設定/ });
-          await dialog.getByRole("button", { name: /書き出す|書き出し/ }).first().click();
+          const view = page.getByTestId("settings-view");
+          await view.getByRole("button", { name: /JSONを書き出す/ }).click();
           await expect(page.locator("[data-toast-tone]").first()).toBeVisible();
+          await view.getByRole("button", { name: "修正ログを削除" }).click();
+          await expect(page.getByRole("dialog", { name: /修正ログを削除/ })).toBeVisible();
           result.toastOverDialogButtons = await page.evaluate(() => {
             const toasts = [...document.querySelectorAll("[data-toast-tone]")].map((toast) => toast.getBoundingClientRect());
             const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;

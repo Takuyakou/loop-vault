@@ -118,10 +118,10 @@ test.describe("Phase 5.13 visual evidence", () => {
     // P8.9-03: the History screen is gone; the dialog and toast checks continue on Home.
     await page.locator('[data-nav="home"]').click();
 
+    // P8.9-08: Settings is a screen now.
     await page.getByRole("button", { name: /設定/ }).first().click();
-    await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
+    await expect(page.getByTestId("settings-view")).toBeVisible();
     await evidence(page, testInfo, "dialog");
-    await page.keyboard.press("Escape");
 
     // Reload to clear the transient analysis slice while retaining the saved
     // fixture in the repository-backed vault.
@@ -139,7 +139,7 @@ test("Settings visual baseline", async ({ page }, testInfo) => {
   });
   await page.locator('[data-nav="home"]').click();
   await page.getByRole("button", { name: /設定/ }).first().click();
-  await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
+  await expect(page.getByTestId("settings-view")).toBeVisible();
   await evidence(page, testInfo, "settings");
   await expect(page).toHaveScreenshot("settings.png", { fullPage: true });
 });

@@ -8,7 +8,7 @@ import { resolvePreferredInput } from "../liveMidi/deviceSelection";
 import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
 import { Button, StatusMessage } from "./ui";
 
-const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+const inputClass = "lv-input w-full px-3 text-sm";
 
 export function LiveMidiSettingsSection({
   copy,
@@ -46,8 +46,8 @@ export function LiveMidiSettingsSection({
   }
 
   return (
-    <section aria-labelledby="settings-live-midi-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
-      <h3 id="settings-live-midi-title" className="text-sm font-semibold text-[var(--lv-accent)]">{copy.liveMidiTitle}</h3>
+    <section id="settings-live-midi" aria-labelledby="settings-live-midi-title" className="lv-settings-card">
+      <h2 id="settings-live-midi-title" className="lv-settings-card-title">{copy.liveMidiTitle}</h2>
       <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.liveMidiHelp}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
         <label>
@@ -67,6 +67,7 @@ export function LiveMidiSettingsSection({
         </label>
         <Button
           type="button"
+          variant="neutral"
           onClick={() => {
             setTestResult(undefined);
             void refreshDevices();
@@ -77,7 +78,7 @@ export function LiveMidiSettingsSection({
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant="neutral"
           disabled={!selectedBackendId || testing}
           aria-busy={testing}
           onClick={() => void runConnectionTest()}

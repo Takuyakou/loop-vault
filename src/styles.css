@@ -6,6 +6,7 @@
 @import "./styles/text-intake.css";
 @import "./styles/home.css";
 @import "./styles/vault.css";
+@import "./styles/settings.css";
 
 @tailwind base;
 @tailwind components;

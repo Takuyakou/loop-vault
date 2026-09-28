@@ -23,7 +23,7 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { formatHomeDate } from "./views/home/useHomeSummary";
-import { SettingsDialog } from "./views/SettingsDialog";
+import { SettingsView } from "./views/SettingsView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
@@ -255,10 +255,10 @@ function App() {
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
+  const [settingsSection, setSettingsSection] = useState<"settings-live-midi">();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
-  const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
   // the unified bottom-right stack (4 s, pauses on hover/focus).
@@ -537,6 +537,12 @@ function App() {
     setView("practice");
   }
 
+  function openSettings(section?: "settings-live-midi") {
+    setSettingsSection(section);
+    navigateTo("settings");
+    void refreshBackups();
+  }
+
   function openChordDojo(target?: { ideaId: string; blockId: string }) {
     requestProgressionLeave(() => {
       setPracticeTarget(target);
@@ -740,11 +746,8 @@ function App() {
         openBassPractice={() => { navigateTo("practice"); openBassPractice(); }}
         bassPracticeAvailable={bassPracticeEnabled}
         bassPracticeActive={view === "practice" && practiceMode === "bass-practice"}
-        openSettings={() => {
-          setSettingsOpen(true);
-          void refreshBackups();
-        }}
-        settingsOpen={isSettingsOpen}
+        openSettings={() => openSettings()}
+        settingsOpen={view === "settings"}
         voicingLoopActive={view === "practice" && practiceMode === "voicing-loop"}
         copy={copy}
         saveStatus={error && unsaved ? "error" : saving ? "saving" : unsaved ? "unsaved" : "saved"}
@@ -787,7 +790,28 @@ function App() {
         <div className={`mx-auto flex w-full max-w-[1680px] min-w-0 flex-col ${
           view === "practice" && practiceMode === "voicing-loop" ? "h-full min-h-0" : "min-h-full"
         }`}>
-        {loadStatus === "ready" ? (
+        {view === "settings" ? (
+          <SettingsView
+            initialSection={settingsSection}
+            ideas={visibleIdeas}
+            backups={backups}
+            error={error}
+            showRomanNumerals={settings.showRomanNumerals ?? true}
+            setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
+            refreshBackups={refreshBackups}
+            restoreBackup={async (name) => {
+              undoQueue.clearAll();
+              await restoreBackup(name);
+            }}
+            exportVault={exportVault}
+            importVault={async (path, mode) => {
+              undoQueue.clearAll();
+              return importVault(path, mode);
+            }}
+            setToast={setToast}
+            copy={copy}
+          />
+        ) : loadStatus === "ready" ? (
           <>
             <QuarantineNotice count={quarantine.length} copy={copy} />
             {sizeRecovery ? (
@@ -1023,10 +1047,7 @@ function App() {
                       initialTarget={practiceTarget}
                       updateProgressionBlock={updateProgressionBlock}
                       openProgression={openProgression}
-                      openSettings={() => {
-                        setSettingsOpen(true);
-                        void refreshBackups();
-                      }}
+                      openSettings={() => openSettings("settings-live-midi")}
                       setToast={setToast}
                     />
                   )}
@@ -1043,10 +1064,7 @@ function App() {
                       onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
-                      openMidiSettings={() => {
-                        setSettingsOpen(true);
-                        void refreshBackups();
-                      }}
+                      openMidiSettings={() => openSettings("settings-live-midi")}
                     />
                   )}
               />
@@ -1067,28 +1085,6 @@ function App() {
         )}
         </div>
         </main>
-      {isSettingsOpen ? (
-        <SettingsDialog
-          ideas={visibleIdeas}
-          backups={backups}
-          error={error}
-          showRomanNumerals={settings.showRomanNumerals ?? true}
-          setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
-          refreshBackups={refreshBackups}
-          restoreBackup={async (name) => {
-            undoQueue.clearAll();
-            await restoreBackup(name);
-          }}
-          exportVault={exportVault}
-          importVault={async (path, mode) => {
-            undoQueue.clearAll();
-            return importVault(path, mode);
-          }}
-          setToast={setToast}
-          copy={copy}
-          onClose={() => setSettingsOpen(false)}
-        />
-      ) : null}
       {pendingLiveMidiHistory ? (
         <LiveMidiImportDialog
           history={pendingLiveMidiHistory}
@@ -1278,6 +1274,7 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
 /** P8.9-02: header screen names follow the Japanese sidebar (proper names stay as they are). */
 function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   if (view === "capture") return "取り込む";
+  if (view === "settings") return "設定";
   if (view === "library" || view === "detail" || view === "progression-detail") return "Vault";
   if (view === "practice") {
     return practiceMode === "voicing-loop" ? "Voicing Loop" : practiceMode === "bass-practice" ? "Bass Practice" : "Chord Dojo";

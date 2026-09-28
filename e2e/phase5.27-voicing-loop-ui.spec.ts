@@ -99,7 +99,9 @@ test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings bes
   const transport = page.getByTestId("voicing-loop-transport");
   await expect(transport.getByRole("button", { name: "設定", exact: true })).toBeVisible();
   await transport.getByRole("button", { name: "設定", exact: true }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  // P8.9-08: Settings is a screen; the MIDI link opens it at the Live MIDI section.
+  await expect(page.getByTestId("settings-view")).toBeVisible();
+  await expect(page.locator("#settings-live-midi")).toBeInViewport();
 });
 
 test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and axe-clean", async ({ page }) => {

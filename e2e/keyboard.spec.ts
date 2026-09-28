@@ -20,35 +20,36 @@ test("スキップリンク、主ナビゲーション、設定をキーボー�
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-capture-stage="empty"]')).toBeVisible();
 
+  // P8.9-08: Settings is a screen, not a dialog.
   const settings = page.getByRole("button", { name: /設定/ }).first();
   await settings.focus();
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: /設定/ });
-  await expect(dialog).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  await expect(settings).toBeFocused();
+  await expect(page.getByTestId("settings-view")).toBeVisible();
+  await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "設定");
 });
 
 test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ戻す", async ({ page }) => {
   await openApp(page);
-  // P8.9-03: the empty-Idea dialog is gone; the Settings dialog carries the focus-trap check.
-  const settings = page.getByRole("button", { name: /設定/ }).first();
-  await settings.focus();
+  // P8.9-08: Settings became a screen; its confirmation dialog carries the focus-trap check.
+  await page.locator('[data-nav="settings"]').click();
+  const settingsView = page.getByTestId("settings-view");
+  await settingsView.locator("#settings-developer button[aria-expanded]").click();
+  const opener = settingsView.getByRole("button", { name: "修正ログを削除" });
+  await opener.focus();
   await page.keyboard.press("Enter");
 
-  const dialog = page.getByRole("dialog", { name: /設定/ });
+  const dialog = page.getByRole("dialog", { name: /修正ログを削除/ });
   await expect(dialog).toBeVisible();
-  const close = dialog.getByRole("button", { name: /閉じる/ });
-  await expect(close).toBeFocused();
+  const cancel = dialog.getByRole("button", { name: /キャンセル/ });
+  await expect(cancel).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(dialog.locator(":focus")).toHaveCount(1);
-  await expect(close).not.toBeFocused();
+  await expect(cancel).not.toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(close).toBeFocused();
+  await expect(cancel).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await expect(settings).toBeFocused();
+  await expect(opener).toBeFocused();
 });
 
 test("Voice選択、プリセット、Solo、解析、候補選択をキーボード操作できる", async ({ page }) => {

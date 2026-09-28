@@ -46,8 +46,8 @@ const ownerContracts = Object.freeze({
     browser: ["e2e/phase5.18-chord-context.spec.ts"],
   },
   settings: {
-    smoke: ["src/views/SettingsDialog.test.tsx"],
-    vitest: ["src/views/SettingsDialog.test.tsx"],
+    smoke: ["src/views/SettingsView.test.tsx"],
+    vitest: ["src/views/SettingsView.test.tsx"],
     browser: ["e2e/visual.spec.ts", "e2e/keyboard.spec.ts"],
   },
   home: {
@@ -116,7 +116,7 @@ export function ownerForFile(input) {
   }
   if (/^src\/storage\//.test(file) || /^src-tauri\//.test(file)) return { areas: ["persistence"], reason: "persistence owner" };
   if (/^src\/(practice\/|features\/bass-practice\/|views\/PracticeView)/.test(file)) return { areas: ["dojo/practice"], reason: "practice owner" };
-  if (/^src\/views\/SettingsDialog/.test(file)) return { areas: ["settings"], reason: "Settings owner" };
+  if (/^src\/views\/SettingsView/.test(file)) return { areas: ["settings"], reason: "Settings owner" };
   if (/^src\/views\/(HomeView|home\/)/.test(file)) return { areas: ["home"], reason: "Home owner" };
   if (/^src\/views\/CaptureView/.test(file)) return { areas: ["text-capture", "harmony/parser"], reason: "Capture shared seam" };
   if (/^src\/(styles\/|components\/(ui|icons|notifications|shell)\/|App\.)/.test(file)) return { areas: ["shared-ui"], reason: "shared UI", broad: true };
