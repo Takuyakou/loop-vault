@@ -13,9 +13,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "9ddf367",
+  "baseCommit": "d93c4b1",
   "lastVerifiedCommit": "62a81c3",
-  "currentBranch": "feat/p8.9-08-settings",
+  "currentBranch": "feat/p8.9-09-finish",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -90,6 +90,6 @@
     "p89-08-exe": "pass",
     "p89-08-report": "pass"
   },
-  "nextAction": "P8.9-08 complete; stopped at merge candidate feat/p8.9-08-settings (fresh FULL PASS @ 62a81c3: Vitest 3758/3758, Playwright 129/129; p89:screens P8.9-08 27 screens x 3 sizes + 28 at 768x640 incl. settings sections, startup-states, vault-empty, live-midi-mini; EXE built with tauri build --no-bundle; later commit is docs only). Settings is a screen with five sections (no new items), Vault sort resets to newest each launch, startup/quarantine/empty states and the Live MIDI mini window use the design system, header tone is a segment and the metronome an icon button. P8.9-05 dropped, P8.9-09 added. Stage 4 merged into local master at 9ddf367. Human EXE checks are listed at the end of the report. P8.9-09 not started: its zip merges this candidate first. No push/tag/release.",
+  "nextAction": "P8.9-09 in progress on feat/p8.9-09-finish (base local master d93c4b1, stage 8 merged). Steps 0-5 of stages/P8.9-09.md: small fixes (progression/Idea pages Japanese, toast tones, Live MIDI settings modal from practice, Voicing Loop bar check), dead-code cleanup, final screen check, final report and AI handoff, fresh FULL, EXE. Stop at the merge candidate; no push/tag/release.",
   "updatedAt": "2026-09-28"
 }
