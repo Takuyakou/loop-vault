@@ -8,10 +8,10 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** completed — 全段階が完了し、段階9を local `master` へ `c46bdda` で取り込んだ（push・tag・release はしていない）
+- **Status:** completed — 全段階が完了し、段階9を local `master` へ `c46bdda` で取り込んだ。EXE の確認のあとの直しを `f0aefab`（`fix/p8.9-exe-feedback`）と `0f43a9c`（`fix/p8.9-final-polish`、fresh FULL PASS @ `24441b8`）で取り込んだ（push・tag・release はしていない）
 - **Active stage:** なし（全段階が完了。05・06・07 は欠番）
 - **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み。local `master` へ `9ddf367` で取り込み済み）、P8.9-08（設定・起動と空の状態・Live MIDI・ヘッダーの部品 — [reports/P8.9-08-settings.md](reports/P8.9-08-settings.md)、fresh FULL PASS @ `62a81c3`、EXE 作成済み。local `master` へ `d93c4b1` で取り込み済み）、P8.9-09（微修正・整理・フェーズの締め — [reports/P8.9-09-finish.md](reports/P8.9-09-finish.md)、fresh FULL PASS @ `32a29ae`、人間の確認のあとの2件の修正で fresh FULL PASS @ `22569e1`、EXE 作成済み。local `master` へ `c46bdda` で取り込み済み）。フェーズの最終報告：[reports/P8.9-FINAL.md](reports/P8.9-FINAL.md)
-- **Base:** local `master` `c46bdda`（段階9を取り込み済み）
+- **Base:** local `master` `0f43a9c`（段階9と追加の直しを取り込み済み）
 - **Next action:** Phase 8.9 完了。後日のフェーズ：Chord Dojo・Bass Practice・進行ページの作り直し、練習の記録の保存先
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
