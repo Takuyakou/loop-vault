@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 0a536dbcdbc371e05cd506f14cfe5e154c95a082
-- date: 2026-09-24
+- commit: b97d9d2f7d5bd58cf7539fb27f548c85d68e9a17
+- date: 2026-09-28
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -31,7 +31,7 @@ progression vocabulary. It is **not** a chord detector.
 
 - Capture: import MIDI, choose which voices to analyze, and get a chord timeline plus candidate blocks.
 - Correct: edit candidates and chords (range select, replace, split/merge, move) with Undo/Redo.
-- Keep: save chosen progressions into the Vault with pipeline status.
+- Keep: save chosen progressions into the Vault (the old pipeline status is kept in data but no longer shown).
 - Practice: rehearse degrees, rhythm, bass, and voicings.
 - Reuse: search and re-open saved progressions.
 
@@ -57,7 +57,7 @@ progression vocabulary. It is **not** a chord detector.
 10. Practice (Chord Dojo + voicing + transposition + mix)
 11. Bass Practice (+ Record & Compare)
 12. Live MIDI
-13. Progression Advisor (LLM)
+13. Progression Advisor (LLM) — back end only; the UI was removed in Phase 8.9
 14. MIDI Export / native DAW drag
 15. Security (intake budgets / CSP)
 16. i18n
@@ -159,6 +159,15 @@ Phase 8.8 adds an explicit Extended Text dialect with source-text provenance,
 written attack/hold/rest timing, and Generated Voicing handoff in Vault v2.
 It remains separate from MIDI extraction and exact source-note playback. See
 [Phase 8.8 handoff](../phase8.8/P8.8-final-handoff.md).
+
+## Phase 8.9 (UI/UX renewal) result
+
+Phase 8.9 rebuilt the shell and design system, Home, Vault and Settings, removed
+approved features from the UI (status pipeline, monthly goal, next action, + Idea,
+references/assets, History, AI advisor UI), made the display Japanese only, and kept
+every stored field (round-trip test `src/domain/p89DataRetention.test.ts`). Chord Dojo,
+Bass Practice and the progression page (absorbing the Idea detail) are deferred to
+later phases. See the phase final report `docs/phase8.9/reports/P8.9-FINAL.md`.
 
 ## Protected contracts
 
