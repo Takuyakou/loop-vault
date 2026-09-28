@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCompletedAttempt, createRootMotionHistoryEntry, createSourceBasslineHistoryEntry, generateRhythmExercise, generateRootMotionExercise, RHYTHM_GENERATOR_VERSION, ROOT_MOTION_GENERATOR_VERSION, ROOT_MOTION_MAX_ATTEMPTS, STANDARD_BASS_TUNINGS, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import { addCompletedAttempt, createEmptyPracticeFile, JsonPracticeRepository, MemoryPracticeStorage, validatePracticeFile } from "../infra/repository";
-import { createPracticeControllerIfEnabled, derivePracticeHistory, derivePracticeHomeSummary, PracticeDataController, restoreClaimedExercise } from "./practiceData";
+import { createPracticeControllerIfEnabled, derivePracticeHistory, PracticeDataController, restoreClaimedExercise } from "./practiceData";
 
 const now = new Date("2026-08-02T10:00:00.000Z");
 function attempt(id: string, rating: "again" | "hard" | "good" | "easy", mainIssue?: "recall") {
@@ -24,12 +24,12 @@ describe("Practice derived views", () => {
     const storageFactory = () => { throw new Error("storage must not be created"); };
     expect(createPracticeControllerIfEnabled(false, storageFactory)).toBeUndefined();
   });
-  it("derives honest Home and History summaries from saved attempts", () => {
+  // P8.9-09: the Home summary (derivePracticeHomeSummary) went with the old Home card; Home reads records directly.
+  it("derives honest History summaries from saved attempts", () => {
     let file = createEmptyPracticeFile(now);
     file = addCompletedAttempt(file, attempt("good", "good", "recall"));
     file = addCompletedAttempt(file, attempt("hard", "hard", "recall"));
-    const home = derivePracticeHomeSummary(file, now);
-    expect(home).toEqual({ firstRun: false, dueCount: 1, completedToday: 2, nextFocus: "recall" });
+    expect(file.reviewQueue.filter((item) => !item.claim && item.dueAt <= now.toISOString())).toHaveLength(1);
     const history = derivePracticeHistory(file);
     expect(history[0]).toMatchObject({ completedCount: 2, goodOrEasyCount: 1, independentSuccessCount: 1, averageListenCount: 2, nextFocus: "recall" });
     expect(JSON.stringify(history)).not.toMatch(/accuracy|score|confidence/i);
@@ -279,7 +279,7 @@ describe("Practice derived views", () => {
       reviewQueueClaimId: queued!.claimId, exercise: queued!.exercise,
     }));
     expect(restarted.getSnapshot().file?.reviewQueue.some(({ sourceAttemptId }) => sourceAttemptId === "again-source")).toBe(false);
-    expect(derivePracticeHomeSummary(restarted.getSnapshot().file!, now).dueCount).toBe(0);
+    expect(restarted.getSnapshot().file!.reviewQueue.filter((item) => !item.claim && item.dueAt <= now.toISOString())).toHaveLength(0);
   });
 
   it("quarantines a corrupt claimed descendant and restores its source leaf as unclaimed pending", async () => {

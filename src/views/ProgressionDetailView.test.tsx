@@ -312,7 +312,7 @@ describe("ProgressionDetailView", () => {
 
     expect(container.textContent).toContain(block.summaryText);
     expect(container.textContent).toContain("Cmaj7");
-    expect(container.textContent).toContain("Key");
+    expect(container.textContent).toContain("キー");
     expect(container.textContent).toContain("92");
     expect(container.textContent).toContain("4小節");
     expect(container.textContent).toContain("Night Loop");
@@ -528,7 +528,7 @@ describe("ProgressionDetailView", () => {
         chords: [expect.objectContaining({ chord: expect.objectContaining({ label: "G7" }) })],
       }),
     );
-    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.ja.savedToast);
+    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.ja.savedToast, "success");
     expect(save.disabled).toBe(true);
 
     await act(async () => root.unmount());

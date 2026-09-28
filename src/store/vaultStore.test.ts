@@ -8,7 +8,6 @@ import {
   type VaultLoadResult,
   type VaultRepository,
 } from "../domain/repository";
-import { pickFocus } from "../domain/focus";
 import { parseChordLabel } from "../domain/chords";
 import { analyzeMidi } from "../domain/midi/analysis";
 import { createManualDraft } from "../domain/midi/manualDraft";
@@ -34,7 +33,6 @@ import type {
 } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import {
-  assetAnchor,
   createUndoSnapshot,
   ideaAnchor,
   progressionBlockAnchor,
@@ -210,18 +208,6 @@ describe("vault store", () => {
     });
     expect(JSON.stringify(loadedBlock)).not.toContain("presentationGrouping");
   });
-  it("updates the UI language setting through autosave", async () => {
-    const repository = new FakeRepository();
-    const store = createVaultStore({ repository });
-    await store.getState().initialize();
-
-    store.getState().setLanguage("en");
-    await store.getState().flush();
-
-    expect(store.getState().settings.language).toBe("en");
-    expect(repository.saved[0]?.settings.language).toBe("en");
-  });
-
   it("persists the chord degree display preference", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository });
@@ -243,7 +229,7 @@ describe("vault store", () => {
     });
     await store.getState().initialize();
 
-    store.getState().createIdea("  Night Drive  ");
+    store.getState().createIdeaFromDraft({ title: "  Night Drive  " });
 
     expect(store.getState().unsaved).toBe(true);
     expect(repository.saved).toHaveLength(0);
@@ -265,7 +251,7 @@ describe("vault store", () => {
       now: () => now,
     });
 
-    const createdId = store.getState().createIdea("Too early");
+    const createdId = store.getState().createIdeaFromDraft({ title: "Too early" });
 
     expect(createdId).toBeUndefined();
     expect(store.getState().ideas).toHaveLength(0);
@@ -281,56 +267,12 @@ describe("vault store", () => {
     });
     await store.getState().initialize();
 
-    store.getState().createIdea("Immediate");
+    store.getState().createIdeaFromDraft({ title: "Immediate" });
     await store.getState().flush();
     await vi.advanceTimersByTimeAsync(500);
 
     expect(repository.saved).toHaveLength(1);
     expect(store.getState().unsaved).toBe(false);
-  });
-
-  it("updates Next Action as a single slot and touches updatedAt", async () => {
-    const repository = new FakeRepository();
-    const idea = makeIdea({
-      id: generatedId,
-      nextAction: { text: "", updatedAt: "2026-07-01T00:00:00.000Z" },
-    });
-    repository.loadResult = {
-      vault: { ...createEmptyVault(), ideas: [idea] },
-      quarantine: [],
-      created: false,
-    };
-    const store = createVaultStore({ repository, now: () => now });
-    await store.getState().initialize();
-
-    expect(store.getState().updateNextAction(generatedId, "Replace the bass", now)).toBe(true);
-
-    expect(store.getState().ideas[0]?.nextAction).toEqual({
-      text: "Replace the bass",
-      updatedAt: now.toISOString(),
-    });
-    expect(store.getState().ideas[0]?.updatedAt).toBe(now.toISOString());
-  });
-
-  it("uses transition domain logic and does not save invalid jumps", async () => {
-    const repository = new FakeRepository();
-    repository.loadResult = {
-      vault: {
-        ...createEmptyVault(),
-        ideas: [makeIdea({ id: generatedId, status: "idea" })],
-      },
-      quarantine: [],
-      created: false,
-    };
-    const store = createVaultStore({ repository, now: () => now });
-    await store.getState().initialize();
-
-    const result = store.getState().transitionIdea(generatedId, "mix", now);
-
-    expect(result.ok).toBe(false);
-    expect(store.getState().unsaved).toBe(false);
-    await vi.advanceTimersByTimeAsync(500);
-    expect(repository.saved).toHaveLength(0);
   });
 
   it("commits every delayed deletion from its exact snapshot", async () => {
@@ -348,16 +290,6 @@ describe("vault store", () => {
     const target = makeIdea({
       id: "idea-2",
       progressionBlocks: blocks,
-      references: [
-        { title: "Reference 1" },
-        { title: "Reference 2" },
-        { title: "Reference 3" },
-      ],
-      assets: [
-        { id: "asset-1", type: "midi" },
-        { id: "asset-2", type: "audio" },
-        { id: "asset-3", type: "flp" },
-      ],
     });
     repository.loadResult = {
       vault: {
@@ -389,28 +321,6 @@ describe("vault store", () => {
     expect(store.getState().ideas[1]?.progressionBlocks?.map((block) => block.id)).toEqual([
       "block-1",
       "block-3",
-    ]);
-
-    const referenceSnapshot = createUndoSnapshot(target.references, 1, target.id)!;
-    expect(store.getState().removeReference({
-      kind: "reference",
-      vaultEpoch,
-      snapshot: referenceSnapshot,
-    })).toBe(true);
-    expect(store.getState().ideas[1]?.references.map((reference) => reference.title)).toEqual([
-      "Reference 1",
-      "Reference 3",
-    ]);
-
-    const assetSnapshot = createUndoSnapshot(target.assets, 1, target.id, assetAnchor)!;
-    expect(store.getState().unlinkAsset({
-      kind: "asset",
-      vaultEpoch,
-      snapshot: assetSnapshot,
-    })).toBe(true);
-    expect(store.getState().ideas[1]?.assets.map((asset) => asset.id)).toEqual([
-      "asset-1",
-      "asset-3",
     ]);
 
     const ideaSnapshot = createUndoSnapshot(
@@ -532,43 +442,6 @@ describe("vault store", () => {
     expect(store.getState().unsaved).toBe(false);
   });
 
-  it("autosaves Hold reasons only in status history", async () => {
-    const repository = new FakeRepository();
-    const originalMemo = "Fmaj7 - Am7 - Gm7 - C7";
-    repository.loadResult = {
-      vault: {
-        ...createEmptyVault(),
-        ideas: [makeIdea({ id: generatedId, chordMemo: originalMemo })],
-      },
-      quarantine: [],
-      created: false,
-    };
-    const store = createVaultStore({ repository, now: () => now });
-    await store.getState().initialize();
-
-    const result = store.getState().transitionIdea(generatedId, "hold", now, {
-      reason: "  Arrangement direction is undecided  ",
-    });
-
-    expect(result.ok).toBe(true);
-    expect(store.getState().unsaved).toBe(true);
-    expect(store.getState().ideas[0]?.chordMemo).toBe(originalMemo);
-    const currentHistory = store.getState().ideas[0]?.statusHistory ?? [];
-    expect(currentHistory[currentHistory.length - 1]).toEqual({
-      status: "hold",
-      at: now.toISOString(),
-      reason: "Arrangement direction is undecided",
-    });
-
-    await store.getState().flush();
-    expect(repository.saved[0]?.fileVersion).toBe(2);
-    expect(repository.saved[0]?.ideas[0]?.chordMemo).toBe(originalMemo);
-    const savedHistory = repository.saved[0]?.ideas[0]?.statusHistory ?? [];
-    expect(savedHistory[savedHistory.length - 1]?.reason).toBe(
-      "Arrangement direction is undecided",
-    );
-  });
-
   it("enters recovery mode for corrupt JSON and lists backups", async () => {
     const repository = new FakeRepository();
     repository.loadError = new VaultRepositoryError("invalid-json", "Bad JSON", {
@@ -637,7 +510,7 @@ describe("vault store", () => {
       now: () => now,
     });
     await store.getState().initialize();
-    store.getState().createIdea("Export me");
+    store.getState().createIdeaFromDraft({ title: "Export me" });
 
     await store.getState().exportVault("C:/loopvault-export.json");
 
@@ -740,7 +613,7 @@ describe("vault store", () => {
     });
     await store.getState().initialize();
 
-    store.getState().createIdea("Unsaved");
+    store.getState().createIdeaFromDraft({ title: "Unsaved" });
     await vi.advanceTimersByTimeAsync(500);
 
     expect(store.getState().unsaved).toBe(true);
@@ -870,74 +743,6 @@ describe("vault store", () => {
     expect(repository.saved[0]?.ideas[0]?.assets).toEqual([
       expect.objectContaining({ type: "midi", path: "D:/music/capture.mid" }),
     ]);
-  });
-
-  it("supports the weekly workflow from capture to done", async () => {
-    const repository = new FakeRepository();
-    const store = createVaultStore({
-      repository,
-      idFactory: () => generatedId,
-      now: () => now,
-    });
-    await store.getState().initialize();
-
-    const createdId = store.getState().createIdea("Night Drive");
-    expect(createdId).toBe(generatedId);
-
-    store.getState().updateNextAction(generatedId, "Print the bass stem", now);
-    const loopAt = new Date("2026-07-21T12:00:00.000Z");
-    expect(store.getState().transitionIdea(generatedId, "loop", loopAt).ok).toBe(
-      true,
-    );
-
-    const staleAt = new Date("2026-07-29T12:00:00.000Z");
-    const staleIdea = store.getState().ideas[0];
-    expect(staleIdea).toBeDefined();
-    const focusBeforeHold = pickFocus([staleIdea!], staleAt);
-    expect(focusBeforeHold.stale[0]).toMatchObject({
-      idleDays: 8,
-      suggestHold: false,
-    });
-
-    expect(
-      store.getState().transitionIdea(generatedId, "hold", staleAt).ok,
-    ).toBe(true);
-    expect(store.getState().ideas[0]?.prevStatus).toBe("loop");
-
-    const restoreAt = new Date("2026-07-30T12:00:00.000Z");
-    expect(
-      store.getState().transitionIdea(generatedId, "loop", restoreAt).ok,
-    ).toBe(true);
-    store.getState().updateNextAction(
-      generatedId,
-      "Balance the hook layers",
-      restoreAt,
-    );
-
-    expect(
-      store
-        .getState()
-        .transitionIdea(generatedId, "arrange", new Date("2026-07-31T12:00:00.000Z"))
-        .ok,
-    ).toBe(true);
-    expect(
-      store
-        .getState()
-        .transitionIdea(generatedId, "mix", new Date("2026-08-01T12:00:00.000Z"))
-        .ok,
-    ).toBe(true);
-    const doneAt = new Date("2026-08-02T12:00:00.000Z");
-    expect(store.getState().transitionIdea(generatedId, "done", doneAt).ok).toBe(
-      true,
-    );
-
-    expect(store.getState().ideas[0]).toMatchObject({
-      status: "done",
-      completedAt: doneAt.toISOString(),
-      nextAction: {
-        text: "Balance the hook layers",
-      },
-    });
   });
 
   it("updates one saved progression through the debounced vault save path", async () => {
@@ -1408,7 +1213,7 @@ describe("vault store", () => {
     repository.loadResult = { vault: parsed.vault, quarantine: parsed.quarantine, created: false };
     const store = createVaultStore({ repository, now: () => now });
     await store.getState().initialize();
-    expect(store.getState().createIdea("Unrelated public idea")).toBeUndefined();
+    expect(store.getState().createIdeaFromDraft({ title: "Unrelated public idea" })).toBeUndefined();
     await store.getState().flush();
     expect(repository.saved).toHaveLength(0);
   });
@@ -1482,7 +1287,7 @@ describe("vault store", () => {
       idFactory: () => "bbbb0000-0000-4000-8000-000000000005", now: () => now });
     await store.getState().initialize();
     expect(store.getState().updateIdea(sourceIdea.id, { progressionBlocks: [] })).toBe(false);
-    expect(store.getState().createIdea("Unrelated public record")).toBeDefined();
+    expect(store.getState().createIdeaFromDraft({ title: "Unrelated public record" })).toBeDefined();
     const unrelated = store.getState().ideas[store.getState().ideas.length - 1]!;
     expect(store.getState().updateIdea(unrelated.id, { chordMemo: "Unrelated edit" })).toBe(true);
     await store.getState().flush();

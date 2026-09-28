@@ -277,27 +277,6 @@ export class PracticeDataController {
   }
 }
 
-export interface PracticeHomeSummary {
-  readonly firstRun: boolean;
-  readonly dueCount: number;
-  readonly completedToday: number;
-  readonly nextFocus: PracticeIssue | "degree-recall";
-}
-
-export function derivePracticeHomeSummary(file: PracticeFileV2, now: Date): PracticeHomeSummary {
-  const day = now.toISOString().slice(0, 10);
-  const validAttempts = file.attempts.filter((attempt) => attempt.completedAt && attempt.rating);
-  const issueCounts = new Map<PracticeIssue, number>();
-  validAttempts.forEach((attempt) => { if (attempt.mainIssue) issueCounts.set(attempt.mainIssue, (issueCounts.get(attempt.mainIssue) ?? 0) + 1); });
-  const nextFocus = [...issueCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? "degree-recall";
-  return {
-    firstRun: validAttempts.length === 0,
-    dueCount: file.reviewQueue.filter((item) => !item.claim && item.dueAt <= now.toISOString()).length,
-    completedToday: validAttempts.filter((attempt) => attempt.completedAt?.slice(0, 10) === day).length,
-    nextFocus,
-  };
-}
-
 export interface PracticeHistorySummary {
   readonly id: string;
   readonly mode?: "degree" | "rhythm";

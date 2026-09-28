@@ -20,6 +20,7 @@ import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { FirstCaptureGuide } from "./components/FirstCaptureGuide";
+import { LiveMidiSettingsDialog } from "./components/LiveMidiSettingsDialog";
 import { QuarantineNotice, StartupState } from "./components/StartupStates";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
@@ -50,7 +51,7 @@ import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
-import { createNotificationStore, NotificationProvider, useReserveBottomSpace } from "./components/notifications";
+import { createNotificationStore, NotificationProvider, useReserveBottomSpace, type NotificationTone } from "./components/notifications";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
@@ -255,15 +256,15 @@ function App() {
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
-  const [settingsSection, setSettingsSection] = useState<"settings-live-midi">();
+  const [liveMidiSettingsOpen, setLiveMidiSettingsOpen] = useState(false);
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
   // the unified bottom-right stack (4 s, pauses on hover/focus).
-  const setToast = useCallback((message?: string) => {
-    if (message) notifications.notify({ message });
+  const setToast = useCallback((message?: string, tone?: NotificationTone) => {
+    if (message) notifications.notify({ message, tone });
   }, [notifications]);
   const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
   const { masterVolume, changeMasterVolume } = useMasterVolume();
@@ -537,8 +538,7 @@ function App() {
     setView("practice");
   }
 
-  function openSettings(section?: "settings-live-midi") {
-    setSettingsSection(section);
+  function openSettings() {
     navigateTo("settings");
     void refreshBackups();
   }
@@ -563,7 +563,7 @@ function App() {
   function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
     const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
     if (!result.ok) {
-      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。");
+      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。", "error");
       return false;
     }
     setPracticeTarget(undefined);
@@ -616,7 +616,7 @@ function App() {
         if (liveMidiLeaseRef.current === modeLease) liveMidiLeaseRef.current = undefined;
         if (!isCurrent()) return;
         await miniWindowControllerRef.current?.close().catch(() => undefined);
-        setToast(errorMessage(error, copy.liveMidi.miniModeFailed));
+        setToast(errorMessage(error, copy.liveMidi.miniModeFailed), "error");
         setWebLiveMidiPreviewOpen(false);
       }
     });
@@ -639,7 +639,7 @@ function App() {
         },
         hidePreview: () => setWebLiveMidiPreviewOpen(false),
         preserveHistory: (history) => setPendingLiveMidiHistory(history),
-        reportFailure: () => setToast(copy.liveMidi.miniModeCloseFailed),
+        reportFailure: () => setToast(copy.liveMidi.miniModeCloseFailed, "error"),
       });
     } finally {
       liveMidiClosingRef.current = false;
@@ -663,11 +663,11 @@ function App() {
       { id: crypto.randomUUID(), capturedAt: new Date().toISOString() },
     );
     if (!ideaId || !block || appendBlockToIdea(ideaId, block, undefined, { userVerified: false }) !== true) {
-      setToast(copy.liveMidi.importFailed);
+      setToast(copy.liveMidi.importFailed, "error");
       return;
     }
     discardLiveMidiHistory();
-    setToast(copy.liveMidi.imported);
+    setToast(copy.liveMidi.imported, "success");
     openDetail(ideaId);
   }
 
@@ -746,7 +746,7 @@ function App() {
         openBassPractice={() => { navigateTo("practice"); openBassPractice(); }}
         bassPracticeAvailable={bassPracticeEnabled}
         bassPracticeActive={view === "practice" && practiceMode === "bass-practice"}
-        openSettings={() => openSettings()}
+        openSettings={openSettings}
         settingsOpen={view === "settings"}
         voicingLoopActive={view === "practice" && practiceMode === "voicing-loop"}
         copy={copy}
@@ -792,7 +792,6 @@ function App() {
         }`}>
         {view === "settings" ? (
           <SettingsView
-            initialSection={settingsSection}
             ideas={visibleIdeas}
             backups={backups}
             error={error}
@@ -901,7 +900,7 @@ function App() {
                       && idea.progressionBlocks?.some((block) => block.id === blockId))) {
                       openProgression(ideaId, blockId);
                     } else {
-                      setToast("保存済み進行を確認できません。");
+                      setToast("保存済み進行を確認できません。", "error");
                     }
                   }}
                   openSavedTextProgressionPractice={openProgressionVoicingPractice}
@@ -1048,7 +1047,7 @@ function App() {
                       initialTarget={practiceTarget}
                       updateProgressionBlock={updateProgressionBlock}
                       openProgression={openProgression}
-                      openSettings={() => openSettings("settings-live-midi")}
+                      openSettings={() => setLiveMidiSettingsOpen(true)}
                       setToast={setToast}
                     />
                   )}
@@ -1065,7 +1064,7 @@ function App() {
                       onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
-                      openMidiSettings={() => openSettings("settings-live-midi")}
+                      openMidiSettings={() => setLiveMidiSettingsOpen(true)}
                     />
                   )}
               />
@@ -1086,6 +1085,9 @@ function App() {
         )}
         </div>
         </main>
+      {liveMidiSettingsOpen ? (
+        <LiveMidiSettingsDialog copy={copy.settingsUi} onClose={() => setLiveMidiSettingsOpen(false)} />
+      ) : null}
       {pendingLiveMidiHistory ? (
         <LiveMidiImportDialog
           history={pendingLiveMidiHistory}

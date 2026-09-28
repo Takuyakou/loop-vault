@@ -1,3 +1,4 @@
+import type { ToastFn } from "../components/notifications";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
@@ -128,7 +129,7 @@ interface PracticeViewProps {
   ) => boolean | "pending";
   openProgression: (ideaId: string, blockId: string) => void;
   openSettings: () => void;
-  setToast: (message: string) => void;
+  setToast: ToastFn;
   practiceClock?: Pick<PracticeClock, "start" | "stop" | "pause" | "resume">;
 }
 
@@ -1208,7 +1209,7 @@ export function PracticeView({
         latestSessionRef.current = pausedSession;
         return pausedSession;
       });
-      setToast(text.flowClockStartFailed);
+      setToast(text.flowClockStartFailed, "error");
       return false;
     } finally {
       if (flowClockPendingGenerationRef.current === generation) {
@@ -1365,7 +1366,7 @@ export function PracticeView({
       return;
     }
     if (stylePlanBlocked) {
-      setToast(text.styleStartBlocked);
+      setToast(text.styleStartBlocked, "error");
       return;
     }
     if (
@@ -1384,7 +1385,7 @@ export function PracticeView({
       const resetResult = updateProgressionBlock(selected.ideaId, block.id, { practice: reset });
       if (resetResult === "pending") return;
       if (!resetResult) {
-        setToast(text.saveFailed);
+        setToast(text.saveFailed, "error");
         return;
       }
       const resetBlock = { ...block, practice: reset };
@@ -1431,7 +1432,7 @@ export function PracticeView({
       try {
         await midiLeaseRef.current?.ensureActive();
       } catch {
-        setToast(text.midiActivationFailed);
+        setToast(text.midiActivationFailed, "error");
         return;
       }
     }
@@ -1548,8 +1549,8 @@ export function PracticeView({
       localDate: localDateString(new Date()),
     }, selected.effectiveKeySignature);
     const saveResult = updateProgressionBlock(selected.ideaId, targetBlock.id, { practice });
-    if (saveResult === true) setToast(text.saved);
-    else if (saveResult === false) setToast(text.saveFailed);
+    if (saveResult === true) setToast(text.saved, "success");
+    else if (saveResult === false) setToast(text.saveFailed, "error");
   }
 
   function persistTranspositionRound(
@@ -1601,9 +1602,9 @@ export function PracticeView({
     });
     if (saveResult === true) {
       latestPracticeProgressRef.current = result.progress;
-      setToast(text.saved);
+      setToast(text.saved, "success");
     } else if (saveResult === false) {
-      setToast(text.saveFailed);
+      setToast(text.saveFailed, "error");
     }
   }
 
@@ -1671,7 +1672,7 @@ export function PracticeView({
         },
       );
     } catch {
-      setToast(text.previewFailed);
+      setToast(text.previewFailed, "error");
     }
   }
 
@@ -1702,7 +1703,7 @@ export function PracticeView({
         },
       );
     } catch {
-      setToast(text.previewFailed);
+      setToast(text.previewFailed, "error");
     }
   }
 
@@ -1712,7 +1713,7 @@ export function PracticeView({
       try {
         await midiLeaseRef.current?.ensureActive();
       } catch {
-        setToast(text.midiActivationFailed);
+        setToast(text.midiActivationFailed, "error");
       }
       return;
     }
@@ -1949,7 +1950,7 @@ export function PracticeView({
               reloadSession={reloadMixSession}
               reconnectMidi={reconnectMidi}
               openSettings={openSettings}
-              onError={setToast}
+              onError={(message) => setToast(message, "error")}
               onExit={cancelMixSelection}
             />
           ) : mixSelecting ? (

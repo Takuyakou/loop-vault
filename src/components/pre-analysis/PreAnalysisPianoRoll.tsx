@@ -167,7 +167,7 @@ export function PreAnalysisPianoRoll({
   return (
     <canvas
       ref={canvasRef}
-      className="block w-full touch-none cursor-pointer border-y border-[var(--lv-border)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
+      className="block w-full touch-none cursor-pointer border-y border-[var(--lv-border)] bg-[#0a111b] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--lv-accent)]"
       role="img"
       tabIndex={0}
       aria-label={"Voiceを色分けした解析前ピアノロール。白いバーのドラッグまたは左右キーで時間を移動できます。"}

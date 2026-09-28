@@ -2143,7 +2143,7 @@ describe("CaptureView saving", () => {
       }),
     ]);
     await act(async () => Promise.resolve());
-    expect(setToast).toHaveBeenCalledWith("feedback write failed");
+    expect(setToast).toHaveBeenCalledWith("feedback write failed", "error");
     expect(createIdeaFromDraft).toHaveReturnedWith(
       "22222222-2222-4222-8222-222222222222",
     );

@@ -62,10 +62,10 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
     <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
       aria-label={"テキスト作業領域"}>
       <button type="button" role="tab" aria-selected={visiblePane === "input"}
-        className={visiblePane === "input" ? "lv-button-primary px-3 py-2" : "lv-button-secondary px-3 py-2"}
+        className="lv-button-secondary lv-choice px-3 py-2"
         onClick={() => setVisiblePane("input")}>{"入力"}</button>
       <button type="button" role="tab" aria-selected={visiblePane === "preview"}
-        className={visiblePane === "preview" ? "lv-button-primary px-3 py-2" : "lv-button-secondary px-3 py-2"}
+        className="lv-button-secondary lv-choice px-3 py-2"
         onClick={() => setVisiblePane("preview")}>{"プレビュー"}</button>
     </div>
     <div className="lv-text-intake-grid">

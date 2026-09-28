@@ -106,8 +106,6 @@ interface SettingsViewProps {
   setToast: (toast: string) => void;
   copy: AppCopy;
   liveMidiStore?: StoreApi<LiveMidiStoreState>;
-  /** Section to show first, e.g. Live MIDI when opened from a practice screen's MIDI link. */
-  initialSection?: "settings-live-midi";
 }
 
 /** P8.9-08: Settings is a screen (view "settings"), no longer a dialog. Same settings, same behavior. */
@@ -124,7 +122,6 @@ export function SettingsView({
   setToast,
   copy,
   liveMidiStore,
-  initialSection,
 }: SettingsViewProps) {
   const ui = copy.settingsUi;
   const [dataPath, setDataPath] = useState<string>(ui.dataPathFallback);
@@ -145,10 +142,6 @@ export function SettingsView({
   const [dataOperation, setDataOperation] = useState<"export" | "import">();
   const confirmationLockRef = useRef(false);
   const dataOperationLockRef = useRef(false);
-
-  useEffect(() => {
-    if (initialSection) scrollToSection(initialSection);
-  }, [initialSection]);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {

@@ -944,7 +944,7 @@ export function BasslinePracticeView({
 
     {chordContextEnabled ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-heading" data-testid="chord-context-controls">
       <h3 id="chord-context-heading" className="font-semibold">Chord Context</h3>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{sourceSelected ? sourceCandidate?.displayTitle ?? sourceUnavailableReason : activeSnapshot?.source.safeLabel ?? ("Chord Contextの進行を利用できません。")}</p>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{sourceSelected ? sourceCandidate?.displayTitle ?? sourceUnavailableReason : (activeSnapshot ? (activeSnapshot.source.kind === "generated" ? "既定の生成進行" : activeSnapshot.source.safeLabel) : "Chord Contextの進行を利用できません。")}</p>
       {sourceContextReason ? <p id="source-bassline-context-reason" role="status" className="mt-2 text-sm text-[var(--lv-warning)]">{sourceContextReason}</p> : null}
       <fieldset className="mt-3" data-testid="chord-context-tempo">
         <legend>{"セッションテンポ"}</legend>

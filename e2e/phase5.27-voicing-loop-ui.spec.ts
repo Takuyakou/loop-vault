@@ -96,12 +96,21 @@ test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings bes
   expect(keyboardBox).not.toBeNull();
   expect(keyboardBox!.width).toBeGreaterThan(regionBox!.width * 0.9);
 
+  // P8.9-09: the MIDI link opens only the Live MIDI settings in a dialog; practice state survives.
+  const recall = page.getByRole("button", { name: "思い出す（コード名のみ）" });
+  await recall.click();
+  await expect(recall).toHaveAttribute("aria-pressed", "true");
   const transport = page.getByTestId("voicing-loop-transport");
   await expect(transport.getByRole("button", { name: "設定", exact: true })).toBeVisible();
   await transport.getByRole("button", { name: "設定", exact: true }).click();
-  // P8.9-08: Settings is a screen; the MIDI link opens it at the Live MIDI section.
-  await expect(page.getByTestId("settings-view")).toBeVisible();
-  await expect(page.locator("#settings-live-midi")).toBeInViewport();
+  const dialog = page.getByRole("dialog", { name: "Live MIDI の設定" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator("#settings-live-midi-device")).toBeVisible();
+  await expect(page.getByTestId("settings-view")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
+  await expect(recall).toHaveAttribute("aria-pressed", "true");
 });
 
 test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and axe-clean", async ({ page }) => {
@@ -133,5 +142,43 @@ test("P5.27 populated harness exposes every resolver status without fallback", a
     await chooseVoicingLoop(page);
     await expect(page.getByTestId("voicing-loop-workspace")).toContainText(expected);
     if (status) await expect(page.getByRole("button", { name: /開始/ })).toBeDisabled();
+  }
+});
+
+test("P8.9-09 Voicing Loop bottom bar keeps every control visible at 960 and 768", async ({ page }) => {
+  for (const [width, height] of [[960, 1032], [768, 640]] as const) {
+    await page.setViewportSize({ width, height });
+    await openApp(page);
+    await chooseVoicingLoop(page);
+    const row = page.getByTestId("voicing-loop-transport-primary");
+    await expect(row).toBeVisible();
+    const fit = await row.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+    expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
+    const rowBox = (await row.boundingBox())!;
+    for (const name of [/開始/, /最初から/, /停止/]) {
+      const box = (await row.getByRole("button", { name }).boundingBox())!;
+      expect(box.x + box.width, `${width}px ${name}`).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
+    }
+  }
+});
+
+test("P8.9-09 Voicing Loop top row keeps every control inside the row at 1440, 960 and 768", async ({ page }) => {
+  for (const [width, height] of [[1440, 900], [960, 1032], [768, 640]] as const) {
+    await page.setViewportSize({ width, height });
+    await openApp(page);
+    await chooseVoicingLoop(page);
+    const row = page.getByTestId("voicing-loop-controls-row");
+    await expect(row).toBeVisible();
+    const fit = await row.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const outside = [...element.querySelectorAll("button, input")].filter((control) => {
+        const own = control.getBoundingClientRect();
+        return own.right > box.right + 1 || own.bottom > box.bottom + 1;
+      }).length;
+      return { client: element.clientWidth, scroll: element.scrollWidth, outside };
+    });
+    expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
+    expect(fit.outside, `${width}px`).toBe(0);
+    await expect(row.getByRole("button", { name: "覚える（Voicing表示）" })).toBeVisible();
   }
 });

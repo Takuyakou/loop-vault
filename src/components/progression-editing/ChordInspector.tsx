@@ -23,6 +23,7 @@ import { ChordAlternativeList } from "./ChordAlternativeList";
 import { ChordStructureEditor } from "./ChordStructureEditor";
 import { CorrectionPropagationPanel } from "./CorrectionPropagationPanel";
 import { Trash2, TriangleAlert } from "lucide-react";
+import { describeWarnings } from "../../views/captureLabels";
 
 interface ChordInspectorProps {
   slot?: EditableChordSlot;
@@ -291,7 +292,7 @@ export function ChordInspector({
       {slot.warnings.length > 0 ? (
         <div className="mt-4 flex items-start gap-2 border-l-2 border-amber-300 pl-3 text-xs text-amber-100">
           <TriangleAlert aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
-          {slot.warnings.join(" / ")}
+          {describeWarnings(slot.warnings).join(" / ")}
         </div>
       ) : null}
 

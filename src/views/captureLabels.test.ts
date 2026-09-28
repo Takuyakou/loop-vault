@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
+import { confidenceLabel, describeBlockMemo, shouldShowConfidence, warningLabel } from "./captureLabels";
 
 describe("capture labels", () => {
   it("rounds confidence into user-facing labels", () => {
@@ -16,7 +16,20 @@ describe("capture labels", () => {
     // exist. The key itself is unchanged for compatibility with saved memos.
     expect(warningLabel("ambiguous-bass")).toBe("候補が僅差");
     expect(warningLabel("sparse-notes")).toBe("音数が少ないため要確認");
-    expect(warningLabel("unknown-warning-key")).toBe("Unknown Warning Key");
+    // P8.9-09: unknown ids no longer leak as humanised English.
+    expect(warningLabel("unknown-warning-key")).toBe("要確認");
+    expect(warningLabel("入力内容を確認")).toBe("入力内容を確認");
+    // Saved block memos made of analyzer ids read as reasons; hand-written memos stay.
+    expect(describeBlockMemo("ambiguous-bass; sparse-evidence")).toBe("候補が僅差、音数が少ないため要確認");
+    expect(describeBlockMemo("サビ前; ambiguous-bass")).toBe("サビ前; ambiguous-bass");
+  });
+
+  it("keeps a memo unchanged unless every part is a known warning id", () => {
+    expect(describeBlockMemo("verse-2")).toBe("verse-2");
+    expect(describeBlockMemo("ambiguous-bass; verse-2")).toBe("ambiguous-bass; verse-2");
+    expect(describeBlockMemo("unknown-new-id")).toBe("unknown-new-id");
+    expect(describeBlockMemo("constructor")).toBe("constructor");
+    expect(describeBlockMemo("low-confidence")).toBe("コード候補が不安定");
   });
 
   it("labels the warning the analyzer actually emits for sparse windows", () => {

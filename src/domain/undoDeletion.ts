@@ -15,16 +15,6 @@ export type PendingDeletion =
       kind: "progressionBlock";
       vaultEpoch: number;
       snapshot: UndoSnapshot<SavedProgressionBlock>;
-    }
-  | {
-      kind: "reference";
-      vaultEpoch: number;
-      snapshot: UndoSnapshot<SongIdea["references"][number]>;
-    }
-  | {
-      kind: "asset";
-      vaultEpoch: number;
-      snapshot: UndoSnapshot<SongIdea["assets"][number]>;
     };
 
 export type PendingIdeaDeletion = Extract<PendingDeletion, { kind: "idea" }>;
@@ -32,11 +22,6 @@ export type PendingProgressionBlockDeletion = Extract<
   PendingDeletion,
   { kind: "progressionBlock" }
 >;
-export type PendingReferenceDeletion = Extract<
-  PendingDeletion,
-  { kind: "reference" }
->;
-export type PendingAssetDeletion = Extract<PendingDeletion, { kind: "asset" }>;
 
 export function createUndoSnapshot<T>(
   items: T[],
@@ -101,12 +86,7 @@ export function removeUndoSnapshot<T>(
 export function isPendingDeletion(value: unknown): value is PendingDeletion {
   if (!value || typeof value !== "object") return false;
   const kind = (value as { kind?: unknown }).kind;
-  return (
-    kind === "idea" ||
-    kind === "progressionBlock" ||
-    kind === "reference" ||
-    kind === "asset"
-  );
+  return kind === "idea" || kind === "progressionBlock";
 }
 
 export function applyPendingDeletions(
@@ -131,8 +111,6 @@ export function applyPendingDeletions(
 
   return visibleIdeas.map((idea) => {
     let progressionBlocks = idea.progressionBlocks ?? [];
-    let references = idea.references;
-    let assets = idea.assets;
     for (const deletion of currentDeletions) {
       if (deletion.snapshot.parentId !== idea.id) continue;
       if (deletion.kind === "progressionBlock") {
@@ -141,13 +119,9 @@ export function applyPendingDeletions(
           deletion.snapshot,
           progressionBlockAnchor,
         );
-      } else if (deletion.kind === "reference") {
-        references = removeUndoSnapshot(references, deletion.snapshot);
-      } else if (deletion.kind === "asset") {
-        assets = removeUndoSnapshot(assets, deletion.snapshot, assetAnchor);
       }
     }
-    return { ...idea, progressionBlocks, references, assets };
+    return { ...idea, progressionBlocks };
   });
 }
 
@@ -157,10 +131,6 @@ export function ideaAnchor(idea: SongIdea): string {
 
 export function progressionBlockAnchor(block: SavedProgressionBlock): string {
   return block.id;
-}
-
-export function assetAnchor(asset: SongIdea["assets"][number]): string {
-  return asset.id;
 }
 
 export function stableValueAnchor(value: unknown): string {

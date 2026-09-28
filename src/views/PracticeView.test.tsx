@@ -213,7 +213,7 @@ describe("PracticeView", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(setToast).toHaveBeenCalledWith("MIDI入力を開始できませんでした。接続を確認して再接続してください。");
+      expect(setToast).toHaveBeenCalledWith("MIDI入力を開始できませんでした。接続を確認して再接続してください。", "error");
       expect(start()?.disabled).toBe(true);
 
       await act(async () => reconnect()?.click());
@@ -1870,6 +1870,7 @@ describe("PracticeView", () => {
     expect(clock.stop).toHaveBeenCalled();
     expect(setToast).toHaveBeenCalledWith(
       "フロー練習を開始できませんでした。MIDI接続とオーディオ設定を確認してください。",
+      "error",
     );
     expect(findButton(container, "一時停止")).toBeUndefined();
     expect(findButton(container, "再開")).toBeDefined();

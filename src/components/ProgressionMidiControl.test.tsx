@@ -67,7 +67,7 @@ describe("ProgressionMidiControl", () => {
     expect(container.textContent).toContain("保存ボイシング");
     await act(async () => button.click());
     expect(save).toHaveBeenCalledWith(result);
-    expect(setToast).toHaveBeenCalledWith("MIDIファイルを保存しました。");
+    expect(setToast).toHaveBeenCalledWith("MIDIファイルを保存しました。", "success");
 
     await act(async () => {
       button.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));

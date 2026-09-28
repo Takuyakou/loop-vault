@@ -7,7 +7,7 @@ import {
 import { STANDARD_BASS_TUNINGS } from "../features/bass-practice/domain/constants";
 import { createVaultRootMotionExercise } from "../features/bass-practice/domain/rootMotionVault";
 import { createVaultStore } from "../store/vaultStore";
-import { filterAndSortProgressions } from "./progressionFilters";
+import { buildVaultRows, emptyVaultFilters, queryVault } from "../views/vault/vaultLibrary";
 import {
   buildProgressionVoicingPracticeHandoffFromVault,
   createProgressionPracticeClockState,
@@ -139,14 +139,9 @@ async function saveThenReload(payload: ReturnType<typeof savePayload>): Promise<
   return { idea, block };
 }
 
-const sortByCapture = { field: "capturedAt", direction: "desc" } as const;
-const noFilters = {
-  pinnedOnly: false,
-  keys: [],
-  lengths: [],
-  sources: [],
-  tags: [],
-};
+/** P8.9-09: the Vault search (vaultLibrary) replaced progressionFilters; saved text progressions must still be found. */
+const vaultSearch = (ideas: Parameters<typeof buildVaultRows>[0], query: string) =>
+  queryVault(buildVaultRows(ideas), emptyVaultFilters, query, "newest").rows;
 
 describe("Text Progression downstream persistence", () => {
   it("round-trips the 32-bar and 128-event envelope into every Voicing Loop mode", async () => {
@@ -283,8 +278,8 @@ describe("Text Progression downstream persistence", () => {
       expect(block).not.toHaveProperty(field);
     }
 
-    expect(filterAndSortProgressions([idea], { ...noFilters, query: "Cmaj7" }, sortByCapture)).toHaveLength(1);
-    expect(filterAndSortProgressions([idea], { ...noFilters, query: "I I I" }, sortByCapture)).toHaveLength(1);
+    expect(vaultSearch([idea], "Cmaj7")).toHaveLength(1);
+    expect(vaultSearch([idea], "I I I")).toHaveLength(1);
 
     const pickerCandidates = buildVaultPickerCandidateViews([idea], "Untitled progression");
     const pickerCandidate = pickerCandidates.find((candidate) => candidate.safeSnapshot.section.id === "bars:1-4");
@@ -329,7 +324,7 @@ describe("Text Progression downstream persistence", () => {
     const { idea, block } = await saveThenReload(savePayload(result, { title: "Saved without practice metadata" }));
     expect(block).not.toHaveProperty("detectedKey");
     expect(block).not.toHaveProperty("bpm");
-    expect(filterAndSortProgressions([idea], { ...noFilters, query: "Cmaj7" }, sortByCapture)).toHaveLength(1);
+    expect(vaultSearch([idea], "Cmaj7")).toHaveLength(1);
     expect(selectVaultChordContextSections(block)).toMatchObject({
       ok: false,
       error: { code: "unsupported-source" },
