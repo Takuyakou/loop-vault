@@ -1,22 +1,20 @@
 import type { QuickChordCandidate } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import { quickChordEditorCopy, progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { quickChordEditorCopy, progressionEditorCopy } from "../../i18n";
 
 interface ChordAlternativeListProps {
   candidates: readonly QuickChordCandidate[];
   selected?: ChordSymbol;
   onSelect: (candidate: QuickChordCandidate, index: number) => void;
-  language: AppLanguage;
 }
 
 export function ChordAlternativeList({
   candidates,
   selected,
   onSelect,
-  language,
 }: ChordAlternativeListProps) {
-  const text = progressionEditorCopy[language];
-  const candidateText = quickChordEditorCopy[language];
+  const text = progressionEditorCopy.ja;
+  const candidateText = quickChordEditorCopy.ja;
   if (candidates.length === 0) {
     return null;
   }

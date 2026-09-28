@@ -4,13 +4,13 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
-import { LlmSettingsSection } from "../components/progression-advisor/LlmSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { Modal } from "../components/Modal";
+import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
-import type { AppCopy, AppLanguage } from "../i18n";
+import type { AppCopy } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
 import {
   deleteAnalysisFeedback,
@@ -74,14 +74,10 @@ interface PendingConfirmation {
 }
 
 interface SettingsDialogProps {
-  monthlyGoal: number;
-  language: AppLanguage;
   showRomanNumerals: boolean;
   ideas: SongIdea[];
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
   error?: string;
-  setMonthlyGoal: (goal: number) => void;
-  setLanguage: (language: AppLanguage) => void;
   setShowRomanNumerals: (show: boolean) => void;
   refreshBackups: () => Promise<void>;
   restoreBackup: (backupName: string) => Promise<void>;
@@ -94,14 +90,10 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({
-  monthlyGoal,
-  language,
   showRomanNumerals,
   ideas,
   backups,
   error,
-  setMonthlyGoal,
-  setLanguage,
   setShowRomanNumerals,
   refreshBackups,
   restoreBackup,
@@ -335,13 +327,9 @@ export function SettingsDialog({
     if (!target) return;
     try {
       const count = await exportRoleCorrectionLog(target);
-      setToast(language === "ja"
-        ? `役割修正ログを${count}件書き出しました。`
-        : `Exported ${count} role correction records.`);
+      setToast(`役割修正ログを${count}件書き出しました。`);
     } catch {
-      setToast(language === "ja"
-        ? "役割修正ログを書き出せませんでした。"
-        : "The role correction log could not be exported.");
+      setToast("役割修正ログを書き出せませんでした。");
     }
   }
 
@@ -401,14 +389,13 @@ export function SettingsDialog({
         </div>
 
         <div className="mt-5 grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">
-        <nav className="h-fit border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2 md:sticky md:top-0" aria-label={language === "ja" ? "設定カテゴリ" : "Settings categories"}>
+        <nav className="h-fit border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2 md:sticky md:top-0" aria-label={"設定カテゴリ"}>
           {[
-            ["settings-general", language === "ja" ? "一般" : "General"],
+            ["settings-general", "一般"],
             ["settings-audio-midi", "Audio & MIDI"],
-            ["settings-ai", "AI"],
-            ["settings-data", language === "ja" ? "データ" : "Data"],
-            ["settings-analysis", language === "ja" ? "解析とログ" : "Analysis & Logs"],
-            ["settings-about", language === "ja" ? "このアプリについて" : "About"],
+            ["settings-data", "データ"],
+            ["settings-analysis", "解析とログ"],
+            ["settings-about", "このアプリについて"],
           ].map(([target, label]) => (
             <a
               key={target}
@@ -422,34 +409,7 @@ export function SettingsDialog({
         <div className="min-w-0">
         <section id="settings-general" aria-labelledby="settings-general-title" className="scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-general-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.general}</h3>
-          <div className="mt-4 grid gap-5 md:grid-cols-2">
-            <div>
-              <label className="font-semibold" htmlFor="settings-language">{ui.language}</label>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.languageHelp}</p>
-              <select
-                id="settings-language"
-                className={`${inputClass} mt-3`}
-                value={language}
-                onChange={(event) => setLanguage(event.target.value as AppLanguage)}
-              >
-                <option value="ja">{ui.japanese}</option>
-                <option value="en">{ui.english}</option>
-              </select>
-            </div>
-            <div>
-              <label className="font-semibold" htmlFor="settings-monthly-goal">{ui.monthlyGoal}</label>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.monthlyGoalHelp}</p>
-              <input
-                id="settings-monthly-goal"
-                className={`${inputClass} mt-3`}
-                min={1}
-                type="number"
-                value={monthlyGoal}
-                onChange={(event) => setMonthlyGoal(Number(event.target.value))}
-              />
-            </div>
-          </div>
-          <label className="mt-5 flex cursor-pointer items-start gap-3 border-t border-[var(--lv-border)] pt-4 text-sm">
+          <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
             <input className="mt-1" type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
             <span>
               <strong className="block text-[var(--lv-text-secondary)]">{ui.showDegrees}</strong>
@@ -497,10 +457,6 @@ export function SettingsDialog({
         </div>
 
         <BassPracticeRecordingSettingsSection />
-
-        <div id="settings-ai" className="scroll-mt-4">
-          <LlmSettingsSection language={language} setToast={setToast} />
-        </div>
 
         <section id="settings-data" aria-labelledby="settings-data-title" className="mt-5 scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-data-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.data}</h3>
@@ -633,7 +589,7 @@ export function SettingsDialog({
                 </label>
                 <div className="mt-5 border-t border-amber-400/20 pt-4">
                   <h4 className="font-semibold">
-                    {language === "ja" ? "MIDI解析前のパート選択" : "Pre-analysis part selection"}
+                    {"MIDI解析前のパート選択"}
                   </h4>
                   <label className="mt-3 flex cursor-pointer items-start gap-3">
                     <input
@@ -647,19 +603,15 @@ export function SettingsDialog({
                     />
                     <span>
                       <strong className="block text-[var(--lv-text-secondary)]">
-                        {language === "ja" ? "解析前のパート選択を有効にする" : "Enable pre-analysis part selection"}
+                        {"解析前のパート選択を有効にする"}
                       </strong>
                       <span className="mt-1 block text-[var(--lv-text-muted)]">
-                        {language === "ja"
-                          ? "オフにすると従来のPhase 5解析経路へすぐ戻ります。"
-                          : "Turn off to immediately restore the Phase 5 direct analysis path."}
+                        {"オフにすると従来のPhase 5解析経路へすぐ戻ります。"}
                       </span>
                     </span>
                   </label>
                   <p className="mt-3 text-xs text-[var(--lv-text-muted)]">
-                    {language === "ja"
-                      ? "Stable / Accuracy Firstの両方で有効です。単純MIDIはcompact、複雑MIDIは自動展開します。"
-                      : "Enabled for Stable and Accuracy First. Simple MIDI stays compact; complex MIDI expands automatically."}
+                    {"Stable / Accuracy Firstの両方で有効です。単純MIDIはcompact、複雑MIDIは自動展開します。"}
                   </p>
                 </div>
                 <label className="mt-3 flex cursor-pointer items-start gap-3">
@@ -717,7 +669,7 @@ export function SettingsDialog({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportProgressionFeedback()}><Download aria-hidden="true" size={16} />{ui.exportAnalysisFeedback}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportRoleCorrections()}><Download aria-hidden="true" size={16} />{language === "ja" ? "役割修正ログを書き出す" : "Export role corrections"}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportRoleCorrections()}><Download aria-hidden="true" size={16} />{"役割修正ログを書き出す"}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
                 </div>
               </div>
@@ -732,6 +684,7 @@ export function SettingsDialog({
                   <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, ui.deleteEvaluationTitle, ui.evaluationDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteEvaluation}</button>
                 </div>
               </div>
+              <StoredApiKeyRemoval setToast={setToast} />
             </div>
           ) : null}
         </section>
@@ -750,5 +703,47 @@ export function SettingsDialog({
         busy={confirmationBusy}
       />
     </>
+  );
+}
+
+/** P8.9-03: the AI settings are gone; removing an API key saved for them stays reachable here. */
+function StoredApiKeyRemoval({ setToast }: { setToast: (message: string) => void }) {
+  const [registered, setRegistered] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!isLlmDesktopAvailable()) return;
+    void getOpenAiApiKeyStatus().then((status) => setRegistered(status.registered)).catch(() => undefined);
+  }, []);
+
+  async function remove() {
+    setBusy(true);
+    try {
+      const status = await deleteOpenAiApiKey();
+      setRegistered(status.registered);
+      setToast(status.registered ? "API キーを削除できませんでした。" : "保存した API キーを削除しました。");
+    } catch {
+      setToast("API キーを削除できませんでした。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-5 border-t border-amber-400/20 pt-4" data-testid="stored-api-key-removal">
+      <h4 className="font-semibold">保存した API キー</h4>
+      <p className="mt-1 text-[var(--lv-text-muted)]">
+        {registered ? "以前の AI 展開案のために保存した OpenAI の API キーがあります。" : "保存されている API キーはありません。"}
+      </p>
+      <button
+        type="button"
+        disabled={busy || !registered}
+        className="mt-3 inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={() => void remove()}
+      >
+        <Trash2 aria-hidden="true" size={16} />
+        保存した API キーを削除
+      </button>
+    </div>
   );
 }

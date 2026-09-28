@@ -20,6 +20,16 @@ const ownerContracts = Object.freeze({
     vitest: ["src/domain/textProgression.test.ts", "src/domain/textProgressionDraft.test.ts", "src/domain/textProgressionVoicing.test.ts", "src/domain/textProgressionDownstream.test.ts"],
     browser: ["e2e/phase8.8-extended-text.spec.ts"],
   },
+  progression: {
+    smoke: ["src/views/ProgressionDetailView.test.tsx"],
+    vitest: [
+      "src/views/ProgressionDetailView.test.tsx", "src/views/ProgressionDetailView.chordContext.test.tsx",
+      "src/views/ProgressionDetailView.sourceBassline.test.tsx", "src/views/DetailView.test.tsx",
+      "src/views/DetailView.save-policy.test.tsx", "src/components/progression-editing/EditableChordCard.test.tsx",
+      "src/components/progression-editing/ChordInspector.test.tsx",
+    ],
+    browser: ["e2e/vault-flow.spec.ts"],
+  },
   vault: {
     smoke: ["src/store/vaultStore.test.ts"],
     vitest: ["src/store/vaultStore.test.ts", "src/views/VaultView.test.tsx", "src/domain/p89DataRetention.test.ts"],
@@ -97,6 +107,9 @@ export function ownerForFile(input) {
   if (/^src\/domain\/(textProgression|midi|harmony|chord)/i.test(file)) return { areas: ["harmony/parser"], reason: "parser/harmony owner" };
   if (/^src\/components\/capture\//.test(file) || /text-intake\.css/.test(file) || /CaptureView\.textProgression/.test(file)) return { areas: ["text-capture"], reason: "Text Capture owner" };
   if (/^src\/(voicingPractice\/|views\/ProgressionVoicingPracticeView)/.test(file)) return { areas: ["voicing-loop"], reason: "Voicing Loop owner" };
+  if (/^src\/(views\/(ProgressionDetailView|DetailView)|components\/progression-editing\/)/.test(file)) {
+    return { areas: ["progression"], reason: "progression page owner" };
+  }
   if (/^src\/(store\/vault|views\/VaultView)/.test(file)) return { areas: ["vault"], reason: "Vault owner" };
   if (/^src\/domain\/(repository|schema)[A-Za-z]*(\.test)?\.ts$/.test(file) || file === "src/domain/p89DataRetention.test.ts") {
     return { areas: ["persistence"], reason: "Vault parse/serialize owner" };
@@ -130,6 +143,7 @@ export function selectForFiles(files, level, exists = existsSync) {
     broad ||= Boolean(owner.broad);
     browserChanged ||= /^e2e\//.test(file) || /\.(tsx|css)$/.test(file);
     reasons.push(`${file}: ${owner.areas.join(" + ") || "no test owner"} (${owner.reason})`);
+    if (!exists(file)) continue; // deleted in this change: owner still counts, the file itself cannot run
     if (isVitestTest(file)) vitest.add(file);
     else if (file.endsWith(".node-test.mjs")) nodeTests.add(file);
     else if (/^src\//.test(file)) vitest.add(file);

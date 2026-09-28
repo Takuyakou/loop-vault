@@ -16,7 +16,6 @@ import {
   startPreparedProgressionMidiDrag,
   type NativeProgressionMidiDragResult,
 } from "../midiExport/nativeDrag";
-import type { AppLanguage } from "../i18n";
 import { Button } from "./ui";
 
 const DRAG_THRESHOLD_PX = 6;
@@ -34,7 +33,6 @@ export interface ProgressionMidiControlActions {
 interface ProgressionMidiControlProps {
   result?: ProgressionMidiExportResult;
   disabledReason?: string;
-  language: AppLanguage;
   setToast: (message: string) => void;
   actions?: ProgressionMidiControlActions;
 }
@@ -60,11 +58,9 @@ const defaultActions: ProgressionMidiControlActions = {
 export function ProgressionMidiControl({
   actions = defaultActions,
   disabledReason,
-  language,
   result,
   setToast,
 }: ProgressionMidiControlProps) {
-  const ja = language === "ja";
   const [state, setState] = useState<
     "idle" | "preparing" | "dragging" | "saving"
   >("idle");
@@ -73,18 +69,14 @@ export function ProgressionMidiControl({
   const gesture = useRef<PointerGesture>();
   const suppressClick = useRef(false);
   const disabled = !result || Boolean(disabledReason) || state !== "idle";
-  const accessibleName = ja
-    ? "このコード進行をMIDIとして保存。ドラッグするとDAWへ追加できます。"
-    : "Save this progression as MIDI. Drag it to add the file to a DAW.";
-  const tooltip = ja
-    ? "ドラッグしてDAWへ。クリックしてMIDIファイルとして保存"
-    : "Drag to a DAW. Click to save as a MIDI file";
+  const accessibleName = "このコード進行をMIDIとして保存。ドラッグするとDAWへ追加できます。";
+  const tooltip = "ドラッグしてDAWへ。クリックしてMIDIファイルとして保存";
   const statusText = state === "preparing"
-    ? (ja ? "MIDIを準備中" : "Preparing MIDI")
+    ? ("MIDIを準備中")
     : state === "dragging"
-      ? (ja ? "DAWへドラッグ中" : "Dragging to DAW")
+      ? ("DAWへドラッグ中")
       : state === "saving"
-        ? (ja ? "保存先を選択中" : "Choosing save location")
+        ? ("保存先を選択中")
         : undefined;
 
   async function save() {
@@ -94,12 +86,10 @@ export function ProgressionMidiControl({
     try {
       const saved = await actions.save(result);
       if (saved.status === "saved") {
-        setToast(ja ? "MIDIファイルを保存しました。" : "MIDI file saved.");
+        setToast("MIDIファイルを保存しました。");
       }
     } catch {
-      const message = ja
-        ? "MIDIを保存できませんでした。保存先と権限を確認してください。"
-        : "Could not save the MIDI file. Check the destination and permissions.";
+      const message = "MIDIを保存できませんでした。保存先と権限を確認してください。";
       setInlineError(message);
       setToast(message);
     } finally {
@@ -164,7 +154,7 @@ export function ProgressionMidiControl({
         return;
       }
       if (dragResult.status === "dropped") {
-        setToast(ja ? "MIDIをDAWへ渡しました。" : "MIDI was dropped into the DAW.");
+        setToast("MIDIをDAWへ渡しました。");
       }
     } catch {
       showDragError();
@@ -175,9 +165,7 @@ export function ProgressionMidiControl({
   }
 
   function showDragError() {
-    const message = ja
-      ? "DAWへのドラッグを開始できませんでした。クリックしてMIDI保存をお試しください。"
-      : "Could not start the DAW drag. Click MIDI to save the file instead.";
+    const message = "DAWへのドラッグを開始できませんでした。クリックしてMIDI保存をお試しください。";
     setInlineError(message);
     setToast(message);
     setState("idle");
@@ -226,7 +214,7 @@ export function ProgressionMidiControl({
       </Button>
       {result ? (
         <span className="whitespace-nowrap text-xs text-[var(--lv-text-muted)]">
-          {voicingLabel(result.voicingSummary, language)}
+          {voicingLabel(result.voicingSummary)}
         </span>
       ) : null}
       <span
@@ -243,21 +231,12 @@ export function ProgressionMidiControl({
 
 function voicingLabel(
   source: ProgressionMidiExportResult["voicingSummary"],
-  language: AppLanguage,
 ): string {
-  const ja = language === "ja";
-  const labels = ja
-    ? {
+  const labels = {
         saved: "保存ボイシング",
         edited: "編集ボイシング",
         generated: "自動ボイシング",
         mixed: "混在ボイシング",
-      }
-    : {
-        saved: "Saved voicing",
-        edited: "Edited voicing",
-        generated: "Generated voicing",
-        mixed: "Mixed voicing",
       };
   return labels[source];
 }

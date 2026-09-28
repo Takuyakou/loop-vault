@@ -95,17 +95,22 @@ describe("SettingsDialog sections", () => {
     expect(categoryNav?.querySelector('a[href="#settings-audio-midi"]')).not.toBeNull();
     expect(categoryNav?.querySelector('a[href="#settings-analysis"]')).not.toBeNull();
     expect(categoryNav?.querySelector('a[href="#settings-about"]')).not.toBeNull();
+    // P8.9-03: the AI settings are gone; only removing a stored API key stays, disabled without a key.
+    expect(categoryNav?.querySelector('a[href="#settings-ai"]')).toBeNull();
+    expect(dialogs()[0]?.querySelector("#settings-ai")).toBeNull();
+    const removeKey = findButton("保存した API キーを削除", dialogs()[0]);
+    expect(removeKey?.closest("#settings-analysis-content")).not.toBeNull();
+    expect(removeKey?.disabled).toBe(true);
     await mounted.unmount();
   });
 
   it("renders the same four-section hierarchy in English", async () => {
-    const mounted = await renderSettings({ language: "en", copy: appCopy.en });
+    const mounted = await renderSettings({ copy: appCopy.ja });
     const text = dialogs()[0]?.textContent;
-    expect(text).toContain(appCopy.en.settingsUi.general);
-    expect(text).toContain(appCopy.en.settingsUi.liveMidiTitle);
-    expect(text).toContain(appCopy.en.settingsUi.data);
-    expect(text).toContain(appCopy.en.settingsUi.analysis);
-    expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
+    expect(text).toContain(appCopy.ja.settingsUi.general);
+    expect(text).toContain(appCopy.ja.settingsUi.liveMidiTitle);
+    expect(text).toContain(appCopy.ja.settingsUi.data);
+    expect(text).toContain(appCopy.ja.settingsUi.analysis);
     expect(dialogs()[0]?.querySelector("[data-testid='piano-sample-attribution']")?.textContent)
       .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
@@ -155,18 +160,14 @@ describe("SettingsDialog sections", () => {
   });
 
   it("keeps general setting callbacks connected", async () => {
-    const setLanguage = vi.fn();
-    const setMonthlyGoal = vi.fn();
     const setShowRomanNumerals = vi.fn();
-    const mounted = await renderSettings({ setLanguage, setMonthlyGoal, setShowRomanNumerals });
+    const mounted = await renderSettings({ setShowRomanNumerals });
 
-    await changeSelect(document.querySelector<HTMLSelectElement>("#settings-language"), "en");
-    await changeInput(document.querySelector<HTMLInputElement>("#settings-monthly-goal"), "4");
+    expect(document.querySelector("#settings-language")).toBeNull();
     const degreeToggle = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
     await click(degreeToggle);
 
-    expect(setLanguage).toHaveBeenCalledWith("en");
-    expect(setMonthlyGoal).toHaveBeenCalledWith(4);
+    expect(document.querySelector("#settings-monthly-goal")).toBeNull();
     expect(setShowRomanNumerals).toHaveBeenCalledWith(false);
     await mounted.unmount();
   });
@@ -324,13 +325,9 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
   await act(async () => {
     root.render(
       <SettingsDialog
-        monthlyGoal={1}
-        language="ja"
         showRomanNumerals
         ideas={[]}
         backups={[{ name: "data-backup.json", path: "C:/LoopVault/data-backup.json", createdAt: "2026-07-15T00:00:00.000Z" }]}
-        setMonthlyGoal={vi.fn()}
-        setLanguage={vi.fn()}
         setShowRomanNumerals={vi.fn()}
         refreshBackups={vi.fn(async () => undefined)}
         restoreBackup={vi.fn(async () => undefined)}
@@ -405,14 +402,5 @@ async function changeSelect(select: HTMLSelectElement | undefined | null, value:
   await act(async () => {
     setter?.call(select, value);
     select?.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-}
-
-async function changeInput(input: HTMLInputElement | undefined | null, value: string) {
-  expect(input).toBeDefined();
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-  await act(async () => {
-    setter?.call(input, value);
-    input?.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }

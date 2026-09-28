@@ -24,7 +24,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "  Changed title  ");
@@ -32,12 +32,12 @@ describe("DetailView save policy", () => {
 
     await blur(title);
     expect(updateIdea).toHaveBeenCalledWith(idea.id, { title: "Changed title" });
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
 
     await act(async () => vi.advanceTimersByTime(599));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
     await act(async () => vi.advanceTimersByTime(1));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
 
     updateIdea.mockClear();
     await focus(title);
@@ -56,7 +56,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await act(async () => title.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
@@ -77,7 +77,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ bpm: 120 });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const bpm = field<HTMLInputElement>(mounted.container, "Edit BPM");
+    const bpm = field<HTMLInputElement>(mounted.container, "BPMを編集");
 
     await focus(bpm);
     await changeValue(bpm, "");
@@ -103,7 +103,7 @@ describe("DetailView save policy", () => {
     const idea = makeIdea({ title: "Original" });
     const updateIdea = vi.fn();
     const mounted = await mountDetail(idea, { updateIdea });
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "Local draft");
@@ -129,117 +129,23 @@ describe("DetailView save policy", () => {
   it("resets an active save flash and its timer when the idea changes", async () => {
     const idea = makeIdea({ title: "Original" });
     const mounted = await mountDetail(idea);
-    const title = field<HTMLInputElement>(mounted.container, "Edit title");
+    const title = field<HTMLInputElement>(mounted.container, "タイトルを編集");
 
     await focus(title);
     await changeValue(title, "Saved old title");
     await blur(title);
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).not.toBeNull();
 
     await mounted.render(makeIdea({
       id: "22222222-2222-4222-8222-222222222222",
       title: "Other idea",
     }));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
     await act(async () => vi.advanceTimersByTime(600));
-    expect(mounted.container.querySelector('[aria-label="Saved"]')).toBeNull();
+    expect(mounted.container.querySelector('[aria-label="保存しました"]')).toBeNull();
     await mounted.unmount();
   });
 
-  it("debounces memo saves and flushes on blur, idea switch, and unmount", async () => {
-    const idea = makeIdea({ chordMemo: "Original memo" });
-    const updateIdea = vi.fn();
-    const mounted = await mountDetail(idea, { updateIdea });
-    const memo = field<HTMLTextAreaElement>(mounted.container, "Edit chord progression memo");
-
-    await focus(memo);
-    await changeValue(memo, "Debounced memo");
-    await act(async () => vi.advanceTimersByTime(499));
-    expect(updateIdea).not.toHaveBeenCalled();
-    await act(async () => vi.advanceTimersByTime(1));
-    expect(updateIdea).toHaveBeenCalledWith(idea.id, { chordMemo: "Debounced memo" });
-
-    updateIdea.mockClear();
-    await changeValue(memo, "Blurred memo");
-    await blur(memo);
-    expect(updateIdea).toHaveBeenCalledWith(idea.id, { chordMemo: "Blurred memo" });
-
-    updateIdea.mockClear();
-    await focus(memo);
-    await changeValue(memo, "Flush old idea");
-    const otherIdea = makeIdea({
-      id: "22222222-2222-4222-8222-222222222222",
-      chordMemo: "Other memo",
-    });
-    await mounted.render(otherIdea);
-    expect(updateIdea).toHaveBeenCalledWith(idea.id, { chordMemo: "Flush old idea" });
-    expect(memo.value).toBe("Other memo");
-
-    updateIdea.mockClear();
-    await focus(memo);
-    await changeValue(memo, "Flush unmount");
-    await mounted.unmount();
-    expect(updateIdea).toHaveBeenCalledWith(otherIdea.id, { chordMemo: "Flush unmount" });
-  });
-
-  it("force-flushes a composing memo to the old idea on switch and on unmount", async () => {
-    const idea = makeIdea({ chordMemo: "Original memo" });
-    const updateIdea = vi.fn();
-    const mounted = await mountDetail(idea, { updateIdea });
-    const memo = field<HTMLTextAreaElement>(mounted.container, "Edit chord progression memo");
-
-    await focus(memo);
-    await act(async () => memo.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
-    await changeValue(memo, "Composing old idea");
-    const otherIdea = makeIdea({
-      id: "22222222-2222-4222-8222-222222222222",
-      chordMemo: "Other memo",
-    });
-    await mounted.render(otherIdea);
-    expect(updateIdea).toHaveBeenCalledTimes(1);
-    expect(updateIdea).toHaveBeenCalledWith(idea.id, { chordMemo: "Composing old idea" });
-    expect(memo.value).toBe("Other memo");
-
-    updateIdea.mockClear();
-    await focus(memo);
-    await act(async () => memo.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true })));
-    await changeValue(memo, "Composing before unmount");
-    await mounted.unmount();
-    expect(updateIdea).toHaveBeenCalledTimes(1);
-    expect(updateIdea).toHaveBeenCalledWith(otherIdea.id, {
-      chordMemo: "Composing before unmount",
-    });
-  });
-
-  it("saves Next Action on Enter and completes it only with the explicit button", async () => {
-    const idea = makeIdea({
-      nextAction: { text: "Existing step", updatedAt: "2026-07-15T00:00:00.000Z" },
-    });
-    const updateNextAction = vi.fn();
-    const mounted = await mountDetail(idea, { updateNextAction });
-    const nextAction = field<HTMLTextAreaElement>(mounted.container, "Edit Next Action");
-
-    await focus(nextAction);
-    await blur(nextAction);
-    expect(updateNextAction).not.toHaveBeenCalled();
-
-    await focus(nextAction);
-    await changeValue(nextAction, "New step");
-    await keyDown(nextAction, "Enter");
-    expect(updateNextAction).toHaveBeenCalledWith(idea.id, "New step", expect.any(Date));
-    expect(document.activeElement).not.toBe(nextAction);
-
-    updateNextAction.mockClear();
-    await focus(nextAction);
-    await changeValue(nextAction, "Dirty step to complete");
-    const doneButton = getButton(mounted.container, appCopy.en.common.done);
-    await focus(doneButton);
-    expect(updateNextAction).not.toHaveBeenCalled();
-    await act(async () => doneButton.click());
-    expect(updateNextAction).toHaveBeenCalledTimes(1);
-    expect(updateNextAction).toHaveBeenCalledWith(idea.id, "", expect.any(Date));
-    await mounted.unmount();
-  });
 });
 
 async function mountDetail(
@@ -254,14 +160,10 @@ async function mountDetail(
       <DetailView
         idea={idea}
         updateIdea={vi.fn()}
-        updateNextAction={vi.fn()}
         removeProgressionBlock={vi.fn()}
-        analyzeMidiPath={vi.fn(async () => undefined)}
-        transitionIdea={vi.fn(() => ({ ok: true as const, idea }))}
         requestDelete={vi.fn()}
         setToast={vi.fn()}
-        copy={appCopy.en}
-        language="en"
+        copy={appCopy.ja}
         {...overrides}
       />,
     ));
@@ -316,11 +218,4 @@ async function keyDown(
     Object.defineProperty(event, "keyCode", { value: options.keyCode });
   }
   await act(async () => element.dispatchEvent(event));
-}
-
-function getButton(container: HTMLElement, label: string) {
-  const button = [...container.querySelectorAll("button")]
-    .find((candidate) => candidate.textContent === label);
-  expect(button).toBeDefined();
-  return button!;
 }

@@ -11,6 +11,7 @@ import {
 } from "../domain/midi/manualDraft";
 import { retargetDraftByAbsoluteBeats } from "../domain/midi/draftRangeEditing";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
+import { appCopy } from "../i18n";
 import { layoutSongMiniMapCandidates, SongMiniMap, type SongMiniMapCopy } from "./SongMiniMap";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -22,18 +23,17 @@ function NeverCommit(): never {
   throw neverCommit;
 }
 
-const englishCopy: SongMiniMapCopy = {
-  title: "Whole song",
-  description: "Candidate positions",
-  empty: "No candidates",
-  candidateLabel: (index, startBar, endBar) => `Candidate ${index}: bars ${startBar}-${endBar}`,
+const miniMapCopy: SongMiniMapCopy = {
+  title: appCopy.ja.capture.songMiniMap,
+  description: appCopy.ja.capture.songMiniMapDescription,
+  empty: appCopy.ja.capture.songMiniMapEmpty,
+  candidateLabel: appCopy.ja.capture.songMiniMapCandidate,
 };
 
 const editorProps = {
   beatsPerBar: 4,
   timeline: [],
   candidateDatasetKey: "analysis-1",
-  language: "en" as const,
   onDraftChange: vi.fn(),
   onManualRangeCreate: vi.fn(),
 };
@@ -72,36 +72,22 @@ describe("SongMiniMap", () => {
     ]);
   });
 
-  it("renders active state and localized accessible range labels", () => {
+  it("renders active state and Japanese accessible range labels", () => {
     const candidates = [candidate("a", 1, 4), candidate("b", 5, 8)];
-    const english = renderToStaticMarkup(
+    const markup = renderToStaticMarkup(
       <SongMiniMap
         {...editorProps}
         totalBars={8}
         candidates={candidates}
         activeCandidateId="b"
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     );
-    const japanese = renderToStaticMarkup(
-      <SongMiniMap
-        {...editorProps}
-        totalBars={8}
-        candidates={candidates}
-        copy={{
-          ...englishCopy,
-          title: "全曲",
-          candidateLabel: (index, startBar, endBar) => `候補 ${index}: ${startBar}-${endBar}小節`,
-        }}
-        onCandidateSelect={vi.fn()}
-      />,
-    );
-
-    expect(english).toContain('aria-label="Candidate 2: bars 5-8. Capture range selection preset"');
-    expect(english).toContain('data-song-minimap-candidate="b"');
-    expect(english).toContain('aria-pressed="true"');
-    expect(japanese).toContain('aria-label="候補 1: 1-4小節. Capture range selection preset"');
+    expect(markup).toContain('aria-label="候補 2: 5-8小節。採集範囲の選択プリセット"');
+    expect(markup).toContain('data-song-minimap-candidate="b"');
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain('aria-label="候補 1: 1-4小節。採集範囲の選択プリセット"');
   });
 
   it("is safe for empty candidates and zero bars", () => {
@@ -110,12 +96,12 @@ describe("SongMiniMap", () => {
         {...editorProps}
         totalBars={0}
         candidates={[candidate("a", 1, 4)]}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     );
 
-    expect(markup).toContain("No candidates");
+    expect(markup).toContain(appCopy.ja.capture.songMiniMapEmpty);
     expect(markup).not.toContain("Infinity");
     expect(markup).not.toContain("NaN");
   });
@@ -133,7 +119,7 @@ describe("SongMiniMap", () => {
           {...editorProps}
           totalBars={24}
           candidates={candidates}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
         />,
       );
@@ -185,7 +171,7 @@ describe("SongMiniMap", () => {
         candidates={[candidate("overlap", 1, 4)]}
         draft={draft}
         activeCandidateId="overlap"
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={onCandidateSelect}
         onCandidateDoubleClick={onCandidateDoubleClick}
       />,
@@ -208,7 +194,7 @@ describe("SongMiniMap", () => {
       new MouseEvent("dblclick", { bubbles: true, detail: 2 }),
     ));
     expect(onCandidateDoubleClick).toHaveBeenCalledWith("overlap");
-    expect(candidateButton.title).toContain("Double-click");
+    expect(candidateButton.title).toContain("ダブルクリック");
 
     await act(async () => root.unmount());
   });
@@ -254,7 +240,7 @@ describe("SongMiniMap", () => {
         candidates={[sourceCandidate]}
         draft={editedDraft}
         activeCandidateId={sourceCandidate.id}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     ));
@@ -264,7 +250,7 @@ describe("SongMiniMap", () => {
     )!;
     expect(displayed.style.left).toBe("12.5%");
     expect(displayed.style.width).toBe("87.5%");
-    expect(displayed.getAttribute("aria-label")).toContain("bars 2-8");
+    expect(displayed.getAttribute("aria-label")).toContain("2-8小節");
     expect(sourceCandidate.startBar).toBe(1);
     expect(sourceCandidate.endBar).toBe(4);
 
@@ -285,7 +271,7 @@ describe("SongMiniMap", () => {
         {...editorProps}
         totalBars={64}
         candidates={candidates}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={onCandidateSelect}
       />,
     ));
@@ -315,14 +301,14 @@ describe("SongMiniMap", () => {
     ]);
     expect(new Set(variantButtons.map(({ dataset }) => dataset.songMinimapVariant)).size).toBe(3);
     expect(variantButtons.map(({ textContent }) => textContent)).toEqual([
-      "16 bars · Bars 37–52",
-      "8 bars · Bars 37–44",
-      "4 bars · Bars 37–40",
+      "16小節 · Bar 37–52",
+      "8小節 · Bar 37–44",
+      "4小節 · Bar 37–40",
     ]);
     expect(variantButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
-      "Candidate group 1, variant 1. 16 bars, Bars 37–52",
-      "Candidate group 1, variant 2. 8 bars, Bars 37–44",
-      "Candidate group 1, variant 3. 4 bars, Bars 37–40",
+      "候補グループ 1、バリアント 1。16小節、Bar 37–52",
+      "候補グループ 1、バリアント 2。8小節、Bar 37–44",
+      "候補グループ 1、バリアント 3。4小節、Bar 37–40",
     ]);
     expect(variantButtons[0]?.dataset.songMinimapVariantRepresentative).toBe("true");
     expect(variantButtons[1]?.dataset.songMinimapVariantSelected).toBe("true");
@@ -351,7 +337,7 @@ describe("SongMiniMap", () => {
         {...editorProps}
         totalBars={24}
         candidates={candidates}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={onCandidateSelect}
       />,
     ));
@@ -389,11 +375,10 @@ describe("SongMiniMap", () => {
     await act(async () => root.render(
       <SongMiniMap
         {...editorProps}
-        language="ja"
         totalBars={32}
         candidates={candidates}
         copy={{
-          ...englishCopy,
+          ...miniMapCopy,
           title: "全曲",
           candidateLabel: (index, startBar, endBar) => `候補 ${index}: ${startBar}-${endBar}小節`,
         }}
@@ -434,7 +419,7 @@ describe("SongMiniMap", () => {
           candidateDatasetKey={candidateDatasetKey}
           totalBars={24}
           candidates={candidates.map((entry) => ({ ...entry }))}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
         />,
       ));
@@ -480,7 +465,7 @@ describe("SongMiniMap", () => {
           candidateDatasetKey={candidateDatasetKey}
           totalBars={24}
           candidates={candidates}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
         />,
       ));
@@ -525,7 +510,7 @@ describe("SongMiniMap", () => {
           candidateDatasetKey={candidateDatasetKey}
           totalBars={24}
           candidates={candidates}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
         />
         {suspend ? <NeverCommit /> : null}
@@ -569,7 +554,7 @@ describe("SongMiniMap", () => {
           {...editorProps}
           totalBars={24}
           candidates={candidates}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
         />,
       ));
@@ -601,7 +586,7 @@ describe("SongMiniMap", () => {
         totalBars={24}
         candidates={candidates}
         activeCandidateId="active-4"
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     );
@@ -626,7 +611,7 @@ describe("SongMiniMap", () => {
         {...editorProps}
         totalBars={32}
         candidates={candidates}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={onCandidateSelect}
       />,
     ));
@@ -690,7 +675,7 @@ describe("SongMiniMap", () => {
           {...editorProps}
           totalBars={16}
           candidates={candidates}
-          copy={englishCopy}
+          copy={miniMapCopy}
           onCandidateSelect={onCandidateSelect}
           onCandidateDoubleClick={onCandidateDoubleClick}
         />,
@@ -759,7 +744,7 @@ describe("SongMiniMap", () => {
         totalBars={16}
         candidates={candidates}
         activeCandidateId="marked-8"
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     ));
@@ -769,7 +754,7 @@ describe("SongMiniMap", () => {
     const activeVariant = container.querySelector<HTMLButtonElement>(
       '[data-song-minimap-variant="marked-8"]',
     )!;
-    expect(activeVariant.textContent).toBe("8 bars · Bars 1–8");
+    expect(activeVariant.textContent).toBe("8小節 · Bar 1–8");
     expect(activeVariant.querySelector("svg")).not.toBeNull();
     expect(activeVariant.getAttribute("aria-pressed")).toBe("true");
 
@@ -793,51 +778,28 @@ function activityEvent(
 }
 
 describe("SongMiniMap harmonic activity", () => {
-  it("uses exact English and Japanese lane and segment names", () => {
+  it("uses exact Japanese lane and segment names", () => {
     const timeline = [
       activityEvent(2, 1),
       activityEvent(3, 3),
       activityEvent(4, 4),
     ];
-    const english = renderToStaticMarkup(
-      <SongMiniMap
-        {...editorProps}
-        totalBars={4}
-        timeline={timeline}
-        candidates={[]}
-        copy={englishCopy}
-        onCandidateSelect={vi.fn()}
-      />,
-    );
     const japanese = renderToStaticMarkup(
       <SongMiniMap
         {...editorProps}
         totalBars={4}
         timeline={timeline}
         candidates={[]}
-        language="ja"
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     );
 
-    expect(english).toContain('aria-label="Harmonic activity"');
-    expect(english).toContain('aria-label="Harmonic activity: Bar 1, intensity inactive"');
-    expect(english).toContain('aria-label="Harmonic activity: Bar 2, intensity low"');
-    expect(english).toContain('aria-label="Harmonic activity: Bar 3, intensity medium"');
-    expect(english).toContain('aria-label="Harmonic activity: Bar 4, intensity high"');
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5"');
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 1\u3001\u5f37\u5ea6 \u6d3b\u52d5\u306a\u3057"');
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 2\u3001\u5f37\u5ea6 \u4f4e"');
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 3\u3001\u5f37\u5ea6 \u4e2d"');
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 4\u3001\u5f37\u5ea6 \u9ad8"');
-    expect(english).toContain('data-harmonic-activity-legend="true"');
-    expect(english).toContain('aria-label="Harmonic activity legend"');
-    expect(english).toContain(">Harmonic activity</span>");
-    expect(english).toContain("\u2014</span><span>inactive</span>");
-    expect(english).toContain("\u2582</span><span>low</span>");
-    expect(english).toContain("\u2585</span><span>medium</span>");
-    expect(english).toContain("\u2588</span><span>high</span>");
     expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5\u306e\u51e1\u4f8b"');
     expect(japanese).toContain(">\u548c\u58f0\u6d3b\u52d5</span>");
     expect(japanese).toContain("\u2014</span><span>\u6d3b\u52d5\u306a\u3057</span>");
@@ -859,16 +821,16 @@ describe("SongMiniMap harmonic activity", () => {
           activityEvent(4, 4),
         ]}
         candidates={[]}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     ));
 
     const mappings = [
-      { level: "inactive", height: "h-px", symbolAndTerm: "\u2014inactive" },
-      { level: "low", height: "h-1", symbolAndTerm: "\u2582low" },
-      { level: "medium", height: "h-1.5", symbolAndTerm: "\u2585medium" },
-      { level: "high", height: "h-full", symbolAndTerm: "\u2588high" },
+      { level: "inactive", height: "h-px", symbolAndTerm: "\u2014\u6d3b\u52d5\u306a\u3057" },
+      { level: "low", height: "h-1", symbolAndTerm: "\u2582\u4f4e" },
+      { level: "medium", height: "h-1.5", symbolAndTerm: "\u2585\u4e2d" },
+      { level: "high", height: "h-full", symbolAndTerm: "\u2588\u9ad8" },
     ] as const;
     for (const mapping of mappings) {
       const segment = container.querySelector<HTMLElement>(
@@ -905,7 +867,7 @@ describe("SongMiniMap harmonic activity", () => {
         totalBars={145}
         timeline={[activityEvent(1, 145 * 4)]}
         candidates={[candidate("narrow-candidate", 1, 4)]}
-        copy={englishCopy}
+        copy={miniMapCopy}
         onCandidateSelect={vi.fn()}
       />,
     ));
@@ -924,7 +886,7 @@ describe("SongMiniMap harmonic activity", () => {
         "[data-harmonic-activity-legend-level]",
       ),
     ];
-    expect(legend?.textContent).toContain("Harmonic activity");
+    expect(legend?.textContent).toContain("和声活動");
     const candidateRange = container.querySelector<HTMLElement>(
       '[data-song-minimap-candidate="narrow-candidate"]',
     );
@@ -935,10 +897,10 @@ describe("SongMiniMap harmonic activity", () => {
 
     expect(legend?.querySelectorAll("button")).toHaveLength(0);
     expect(legendLevels.map((level) => level.textContent)).toEqual([
-      "\u2014inactive",
-      "\u2582low",
-      "\u2585medium",
-      "\u2588high",
+      "\u2014\u6d3b\u52d5\u306a\u3057",
+      "\u2582\u4f4e",
+      "\u2585\u4e2d",
+      "\u2588\u9ad8",
     ]);
 
     expect(segments).toHaveLength(145);

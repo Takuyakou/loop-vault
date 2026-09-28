@@ -83,7 +83,7 @@ test.describe("Phase 5.13 visual evidence", () => {
     await expect(page).toHaveScreenshot("vault.png", { fullPage: true });
 
     const row = page.locator(".lv-vault-row").first();
-    await row.getByRole("button", { name: /進行を開く|Open progression/ }).click();
+    await row.getByRole("button", { name: /進行を開く/ }).click();
     await evidence(page, testInfo, "progression-detail-default");
     await expect(page).toHaveScreenshot("progression-detail-default.png", { fullPage: true });
 
@@ -96,7 +96,7 @@ test.describe("Phase 5.13 visual evidence", () => {
     await page.keyboard.press("Escape");
 
     await page.locator("[data-progression-detail-view]")
-      .getByRole("button", { name: /練習する|Practice/ }).click();
+      .getByRole("button", { name: /練習する/ }).click();
     await page.locator('[data-nav="chord-dojo"]').click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, testInfo, "practice");
@@ -113,20 +113,18 @@ test.describe("Phase 5.13 visual evidence", () => {
 
     await page.locator('[data-nav="live-midi"]').click();
     await evidence(page, testInfo, "live-midi");
-    await page.getByRole("button", { name: /メイン画面を表示|Show main window/ }).click();
+    await page.getByRole("button", { name: /メイン画面を表示/ }).click();
 
-    await page.locator('[data-nav="history"]').click();
-    await evidence(page, testInfo, "history");
-    await expect(page).toHaveScreenshot("history.png", { fullPage: true });
+    // P8.9-03: the History screen is gone; the dialog and toast checks continue on Home.
+    await page.locator('[data-nav="home"]').click();
 
-
-    await page.getByRole("button", { name: "Idea", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: /新しいIdea|Create idea/i })).toBeVisible();
+    await page.getByRole("button", { name: /設定/ }).first().click();
+    await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
     await evidence(page, testInfo, "dialog");
     await page.keyboard.press("Escape");
 
     // Reload to clear the transient analysis slice while retaining the saved
-    // History fixture in the repository-backed vault.
+    // fixture in the repository-backed vault.
     await openApp(page);
     await openCapture(page);
     await page.getByTestId("capture-choose-midi").click();
@@ -139,9 +137,9 @@ test("Settings visual baseline", async ({ page }, testInfo) => {
   await createSavedProgression(page, "History visual fixture", {
     fileName: "history-visual-fixture.mid",
   });
-  await page.locator('[data-nav="history"]').click();
-  await page.getByRole("button", { name: /設定|Settings/ }).first().click();
-  await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
+  await page.locator('[data-nav="home"]').click();
+  await page.getByRole("button", { name: /設定/ }).first().click();
+  await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
   await evidence(page, testInfo, "settings");
   await expect(page).toHaveScreenshot("settings.png", { fullPage: true });
 });

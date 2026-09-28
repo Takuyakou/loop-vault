@@ -1,6 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TextTransport, TextTransportState } from "../../audio/textTransport";
-import type { AppLanguage } from "../../i18n";
 import type { TextProgressionEvent, TextProgressionParseResult } from "../../domain/textProgression";
 import type { TextSourceRange } from "../../domain/extendedTextProgression";
 import { buildStandardTextPreviewScore } from "../../domain/standardTextPreviewScore";
@@ -10,7 +9,6 @@ import { TextCapturePreviewStatus } from "./TextCapturePreviewStatus";
 import type { TextCaptureStatusModel } from "./textCaptureStatus";
 
 interface Props {
-  readonly language: AppLanguage;
   readonly input: string;
   readonly editorSelection: { readonly start: number; readonly end: number };
   readonly onEditorSelection: (start: number, end: number) => void;
@@ -25,7 +23,7 @@ interface Props {
 }
 
 /** Standard syntax retains its parser but shares the score workspace primitives. */
-export function StandardTextScoreWorkspace({ language, input, result, disabled, onInput, onSelectEvent,
+export function StandardTextScoreWorkspace({ input, result, disabled, onInput, onSelectEvent,
   onSeekBar, transport, transportState, editorSelection, onEditorSelection, statusModel }: Props) {
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const [selectedStart, setSelectedStart] = useState<number>();
@@ -34,9 +32,8 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
   const previewRef = useRef<HTMLElement>(null);
   const scoreItems = useMemo(() => buildStandardTextPreviewScore(result), [result]);
   const lines = input.split(/\r\n|\r|\n/);
-  const ja = language === "ja";
   useTextScorePlayhead(previewRef, transport, transportState, 4, result.bars,
-    transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input, language);
+    transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input);
 
   function selectSource(span: TextSourceRange, audition: boolean) {
     setSelectedStart(span.start);
@@ -63,20 +60,20 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
   return <div className="lv-text-intake-workspace"
     data-testid="standard-text-workspace">
     <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
-      aria-label={ja ? "テキスト作業領域" : "Text workspace"}>
+      aria-label={"テキスト作業領域"}>
       <button type="button" role="tab" aria-selected={visiblePane === "input"}
         className={visiblePane === "input" ? "lv-button-primary px-3 py-2" : "lv-button-secondary px-3 py-2"}
-        onClick={() => setVisiblePane("input")}>{ja ? "入力" : "Input"}</button>
+        onClick={() => setVisiblePane("input")}>{"入力"}</button>
       <button type="button" role="tab" aria-selected={visiblePane === "preview"}
         className={visiblePane === "preview" ? "lv-button-primary px-3 py-2" : "lv-button-secondary px-3 py-2"}
-        onClick={() => setVisiblePane("preview")}>{ja ? "プレビュー" : "Preview"}</button>
+        onClick={() => setVisiblePane("preview")}>{"プレビュー"}</button>
     </div>
     <div className="lv-text-intake-grid">
       <section className={"lv-text-intake-pane min-w-0 border-r border-[var(--lv-border)] p-3" +
         (visiblePane === "input" ? " lv-text-intake-pane-active" : "")}
-        aria-label={ja ? "元テキストの入力" : "Source editor"}>
+        aria-label={"元テキストの入力"}>
         <label className="mb-3 block text-sm font-semibold" htmlFor="text-progression-input">
-          {ja ? "進行テキスト" : "Score text"}
+          {"進行テキスト"}
         </label>
         <div className="lv-text-intake-editor relative flex overflow-hidden bg-[var(--lv-surface)]">
           <div aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
@@ -94,18 +91,18 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
             className="lv-text-intake-textarea min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
         </div>
       </section>
-      <section ref={previewRef} aria-label={ja ? "入力中のプレビュー" : "Live preview"}
+      <section ref={previewRef} aria-label={"入力中のプレビュー"}
         className={"lv-text-intake-pane min-w-0 p-3" + (visiblePane === "preview" ? " lv-text-intake-pane-active" : "")}
         data-testid="standard-text-preview">
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <h3 className="text-sm font-semibold">{ja ? "プレビュー" : "Preview"}</h3>
-          <span className="text-xs text-[var(--lv-text-muted)]">{result.bars} {ja ? "小節" : "bars"}</span>
-          <TextCapturePreviewStatus model={statusModel} language={language} />
+          <h3 className="text-sm font-semibold">{"プレビュー"}</h3>
+          <span className="text-xs text-[var(--lv-text-muted)]">{result.bars} {"小節"}</span>
+          <TextCapturePreviewStatus model={statusModel} />
         </div>
         <div className="lv-text-preview-scroll" data-testid="standard-text-preview-scroll">
         {scoreItems.map((item, row) => item.kind === "row" ?
           <div key={row} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
-            {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar} language={language}
+            {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar}
               selectedStart={selectedStart}
               onSelect={span => selectSource(span, true)}
               onBarSelect={span => { selectSource(span, false); if (transportState.status === "stopped"
@@ -113,7 +110,7 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
               errorLabel={result.diagnostics.find(issue => issue.bar === bar.number)?.message} />)}
           </div> : null)}
         {!scoreItems.length ? <p className="grid min-h-64 place-items-center text-center text-sm text-[var(--lv-text-muted)]">
-          {ja ? "コード進行を入力すると、ここに譜面が表示されます" : "Enter a progression to see the score here."}</p> : null}
+          {"コード進行を入力すると、ここに譜面が表示されます"}</p> : null}
         </div>
       </section>
     </div>

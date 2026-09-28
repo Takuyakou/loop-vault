@@ -5,9 +5,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import { makeIdea } from "../domain/testFactory";
-import type { TransitionResult } from "../domain/transition";
-import type { SavedProgressionBlock, SongIdea, Status } from "../domain/types";
-import { appCopy, type AppLanguage } from "../i18n";
+import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { appCopy } from "../i18n";
 import { HomeView } from "./HomeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -29,7 +28,7 @@ afterEach(async () => {
 });
 
 describe("HomeView hierarchy", () => {
-  it("makes Today's Loop primary and condenses the three metrics into one summary", async () => {
+  it("makes Today's Loop primary without a monthly goal summary", async () => {
     const ideas = dashboardIdeas();
     const container = await renderHome(ideas);
 
@@ -37,13 +36,12 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelector("[data-testid='home-focus-chords']")).not.toBeNull();
     expect(container.querySelectorAll("[data-testid='home-focus-chords'] > button")).toHaveLength(1);
     expect(container.textContent).not.toContain(appCopy.ja.home.headline);
+    expect(container.querySelector("[role='progressbar']")).toBeNull();
+    expect(container.textContent).not.toContain("今月");
+    expect(buttonTexts(container)).not.toContain(appCopy.ja.home.completeNextAction);
+    expect(container.textContent).not.toContain(appCopy.ja.home.nextAction);
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();
 
-    const summary = container.querySelector<HTMLElement>("[data-testid='home-overview-summary']");
-    expect(summary?.textContent).toBe("今月 1/4 · 次の一手なし 1件 · 停滞 1件");
-    expect(container.querySelectorAll("[data-testid='home-overview-summary']")).toHaveLength(1);
-    expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuenow")).toBe("1");
-    expect(container.textContent).toContain(appCopy.ja.home.daysLeft(15));
   });
 
   it("previews a focus chord card with the shared sound and resolved voicing", async () => {
@@ -87,36 +85,11 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelector("h2")?.textContent).toBe("今日のLoop");
     expect(buttonTexts(container)).toEqual(expect.arrayContaining([
       appCopy.ja.home.startCapture,
-      appCopy.ja.home.newIdea,
       appCopy.ja.home.openVault,
     ]));
+    expect(buttonTexts(container)).not.toContain(appCopy.ja.home.newIdea);
   });
 
-  it("renders the primary heading, summary, and empty actions in English", async () => {
-    const container = await renderHome([], "en");
-
-    expect(container.querySelector("h2")?.textContent).toBe("Today's Loop");
-    expect(container.querySelector("[data-testid='home-overview-summary']")?.textContent)
-      .toBe("This month 0/4 · No next step 0 · Stale 0");
-    expect(buttonTexts(container)).toEqual(expect.arrayContaining([
-      appCopy.en.home.startCapture,
-      appCopy.en.home.newIdea,
-      appCopy.en.home.openVault,
-    ]));
-  });
-  it.each([false, "pending"] as const)(
-    "does not announce Next Action completion for %s persistence",
-    async (outcome) => {
-      const updateNextAction = vi.fn(() => outcome);
-      const setToast = vi.fn();
-      const container = await renderHome(dashboardIdeas(), "ja", { updateNextAction, setToast });
-      const complete = [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.includes(appCopy.ja.home.completeNextAction));
-      await act(async () => complete?.click());
-      expect(updateNextAction).toHaveBeenCalledWith("focus", "", expect.any(Date));
-      expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.nextCompleted);
-    },
-  );
 });
 
 function dashboardIdeas(): SongIdea[] {
@@ -173,9 +146,7 @@ function progressionBlock(index: number): SavedProgressionBlock {
 
 async function renderHome(
   ideas: SongIdea[],
-  language: AppLanguage = "ja",
   overrides: {
-    updateNextAction?: (id: string, text: string, now?: Date) => boolean | "pending";
     setToast?: (message: string) => void;
   } = {},
 ) {
@@ -183,28 +154,16 @@ async function renderHome(
   document.body.append(container);
   const root = createRoot(container);
   roots.push(root);
-  const copy = appCopy[language];
-  const transitionIdea = vi.fn((id: string, to: Status): TransitionResult => {
-    const idea = ideas.find((entry) => entry.id === id);
-    return idea
-      ? { ok: true, idea: { ...idea, status: to } }
-      : { ok: false, error: { code: "invalid-jump", message: "Idea not found" } };
-  });
-
+  const copy = appCopy.ja;
   await act(async () => {
     root.render(
       <HomeView
         ideas={ideas}
-        monthlyGoal={4}
         copy={copy}
-        language={language}
         showRomanNumerals={false}
         openDetail={vi.fn()}
         openCapture={vi.fn()}
-        openCreate={vi.fn()}
         openVault={vi.fn()}
-        updateNextAction={overrides.updateNextAction ?? vi.fn(() => true)}
-        transitionIdea={transitionIdea}
         setToast={overrides.setToast ?? vi.fn()}
       />,
     );

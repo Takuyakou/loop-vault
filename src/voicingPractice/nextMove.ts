@@ -122,27 +122,26 @@ export function fixedFingerSlots(moves: readonly FingerMovement[]): readonly Fix
 }
 
 const JA_INTERVALS = ["", "半音", "全音", "短3", "長3", "4度", "増4", "5度", "短6", "長6", "短7", "長7"] as const;
-const EN_INTERVALS = ["", "semitone", "whole tone", "minor 3rd", "major 3rd", "4th", "tritone", "5th", "minor 6th", "major 6th", "minor 7th", "major 7th"] as const;
 
 /** Chromatic distance label; it makes no enharmonic or harmonic-identity claim. */
-export function movementInterval(delta: number, language: "ja" | "en" = "ja"): string {
+export function movementInterval(delta: number): string {
   if (!Number.isInteger(delta)) return "—";
-  if (delta === 0) return language === "ja" ? "そのまま" : "same";
+  if (delta === 0) return "そのまま";
   const distance = Math.abs(delta);
   const octaves = Math.floor(distance / 12);
   const remainder = distance % 12;
-  const intervals = language === "ja" ? JA_INTERVALS : EN_INTERVALS;
-  const octave = language === "ja" ? `${octaves}oct` : `${octaves} oct`;
+  const intervals = JA_INTERVALS;
+  const octave = `${octaves}oct`;
   const label = octaves
     ? `${octave}${remainder ? `+${intervals[remainder]}` : ""}`
     : intervals[remainder];
   return `${delta > 0 ? "↑" : "↓"} ${label}`;
 }
 
-export function handMoveSummary(moves: readonly FingerMovement[], language: "ja" | "en" = "ja"): string {
+export function handMoveSummary(moves: readonly FingerMovement[]): string {
   const moving = moves.filter((move) => move.semitones !== undefined && move.semitones !== 0);
   const additions = moves.some((move) => move.kind === "ADD" || move.kind === "RELEASE");
-  if (!moving.length && !additions) return language === "ja" ? "そのまま" : "Same";
+  if (!moving.length && !additions) return "そのまま";
   const directions = moving.map((move) => Math.sign(move.semitones!));
   const up = directions.filter((direction) => direction > 0).length;
   const down = directions.length - up;
@@ -151,10 +150,10 @@ export function handMoveSummary(moves: readonly FingerMovement[], language: "ja"
   const middle = Math.floor(distances.length / 2);
   const median = distances.length % 2 ? distances[middle]! : (distances[middle - 1]! + distances[middle]!) / 2;
   if (majority && median >= 6) {
-    const label = movementInterval(Math.round(median) * (up > down ? 1 : -1), language);
-    return language === "ja" ? `手ごと ${label.replace(" ", " 約")}` : `Whole hand ${label}`;
+    const label = movementInterval(Math.round(median) * (up > down ? 1 : -1));
+    return `手ごと ${label.replace(" ", " 約")}`;
   }
   if (moving.length <= 1 && !additions && moving.every((move) => Math.abs(move.semitones!) <= 2))
-    return language === "ja" ? "指だけ" : "One finger";
-  return language === "ja" ? "少し動く" : "Adjust shape";
+    return "指だけ";
+  return "少し動く";
 }

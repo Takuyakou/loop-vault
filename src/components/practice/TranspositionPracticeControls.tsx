@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import type { AppLanguage } from "../../domain/types";
 import {
   formatKeySignature,
   getCanonicalKey,
@@ -9,7 +8,6 @@ import {
 
 interface TranspositionPracticeControlsProps {
   state: TranspositionSessionState;
-  language: AppLanguage;
   manualSelectionDisabled: boolean;
   targetTempo: number;
   onSelectKey(pitchClass: number): void;
@@ -40,40 +38,15 @@ const copy = {
     select: (key: string) => `${key}を練習する`,
     runningHint: "キーを変更するには、いったん練習を停止してください。",
   },
-  en: {
-    targetKey: "Target key",
-    progress: "Key progress",
-    progressCount: (cleared: number, total: number) => `${cleared} / ${total}`,
-    l4Description: "Practice the same degrees in six nearby circle-of-fifths keys.",
-    l5Description: "Practice in all 12 keys while keeping the same major or minor mode.",
-    eligible: "Rank eligible",
-    ineligible: "Not rank eligible",
-    reasons: {
-      "flow-required": "Official progress requires Flow mode.",
-      "target-tempo-required": (tempo: number) => `Official progress requires at least ${tempo} BPM.`,
-      "resolved-voicing-required": "Official progress requires Saved voicing.",
-      "prerequisite-required": "Confirm the previous level first.",
-      "progression-stale": "The progression changed and its progress must be resynced.",
-    },
-    current: "Current",
-    cleared: "Cleared",
-    confirmation: "Confirmation",
-    confirmationProgress: (current: number, total: number) => `Confirmation ${current} / ${total}`,
-    confirmationTarget: "Confirmation key",
-    untried: "Not attempted",
-    select: (key: string) => `Practice in ${key}`,
-    runningHint: "Pause practice before changing the target key.",
-  },
 } as const;
 
 export function TranspositionPracticeControls({
   state,
-  language,
   manualSelectionDisabled,
   targetTempo,
   onSelectKey,
 }: TranspositionPracticeControlsProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const keyButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const targetKey = getCanonicalKey(
     state.currentTargetKeyPitchClass,
@@ -94,7 +67,7 @@ export function TranspositionPracticeControls({
             data-testid="transposition-target-key"
             aria-live="polite"
           >
-            {formatKeySignature(targetKey, language)}
+            {formatKeySignature(targetKey)}
           </h3>
         </div>
         <div className="text-right">
@@ -165,7 +138,7 @@ export function TranspositionPracticeControls({
         >
           {state.keyPool.map((pitchClass, index) => {
             const key = getCanonicalKey(pitchClass, state.sourceMode);
-            const label = formatKeySignature(key, language);
+            const label = formatKeySignature(key);
             const current = pitchClass === state.currentTargetKeyPitchClass;
             const cleared = state.sessionClearedPitchClasses.includes(pitchClass);
             const confirmation = Boolean(
@@ -230,7 +203,7 @@ export function TranspositionPracticeControls({
 function eligibilityReason(
   reason: TranspositionEligibilityReason,
   targetTempo: number,
-  text: typeof copy.ja | typeof copy.en,
+  text: typeof copy.ja,
 ): string {
   return reason === "target-tempo-required"
     ? text.reasons[reason](targetTempo)

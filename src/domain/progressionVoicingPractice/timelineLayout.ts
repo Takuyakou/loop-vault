@@ -26,10 +26,10 @@ export function compactTimelineCard(width: number): boolean {
 }
 
 /** Presentation only: transport math keeps fractional beats. */
-export function remainingBeatsLabel(remaining: number, language: "ja" | "en"): string {
-  if (remaining > 0 && remaining < 1) return language === "ja" ? "あと1拍未満" : "Less than 1 beat";
+export function remainingBeatsLabel(remaining: number): string {
+  if (remaining > 0 && remaining < 1) return "あと1拍未満";
   const beats = Math.max(0, Math.ceil(remaining));
-  return language === "ja" ? `あと${beats}拍` : `In ${beats} ${beats === 1 ? "beat" : "beats"}`;
+  return `あと${beats}拍`;
 }
 
 /** Between audio-clock callbacks, visual-only interpolation is bounded to one 64th-note tick. */

@@ -63,7 +63,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   const workspace = await openRuleFixture(page);
   const controls = workspace.getByTestId("voicing-loop-controls");
 
-  await expect(controls.locator("legend")).toHaveText(["SOURCE", "STUDY", "DISPLAY"]);
+  await expect(controls.locator("legend")).toHaveText(["ソース", "学び方", "表示"]);
   await expect(controls.getByRole("button", { name: "Lesson Rules", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(controls.getByRole("button", { name: "Teacher", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
@@ -72,14 +72,14 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
 
   const explanation = workspace.getByTestId("voicing-loop-current-explanation");
   await expect(explanation).toContainText("Teacher Style");
-  await expect(explanation).toContainText("Candidate");
-  await expect(explanation).not.toContainText("RULEP5.31-MIN11");
-  await expect(explanation).toContainText("RULEP5.33-GEN-TEACHER-MAJ7");
-  await expect(explanation).toContainText("TOPTop Candidate");
+  await expect(explanation).toContainText("候補");
+  await expect(explanation).not.toContainText("ルールP5.31-MIN11");
+  await expect(explanation).toContainText("ルールP5.33-GEN-TEACHER-MAJ7");
+  await expect(explanation).toContainText("トップトップ候補");
 
   await controls.getByRole("button", { name: "Core", exact: true }).click();
   await expect(explanation).toContainText("Family Core");
-  await expect(explanation).toContainText("RULEP5.33-GEN-CORE-MAJ7");
+  await expect(explanation).toContainText("ルールP5.33-GEN-CORE-MAJ7");
 
   await controls.getByRole("button", { name: "Source MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
@@ -135,9 +135,9 @@ test("P5.33 compares Literal, OMIT 5, and OMIT 5/9 extended-chord candidates", a
     await navigation.getByRole("button", { name: "次のVoicing候補", exact: true }).click();
   }
 
-  expect([...states].some((value) => value.includes("Literal") && value.includes("OMITなし"))).toBe(true);
-  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("OMIT5"))).toBe(true);
-  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("OMIT5 · 9"))).toBe(true);
+  expect([...states].some((value) => value.includes("Literal") && value.includes("省略なし"))).toBe(true);
+  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("省略5"))).toBe(true);
+  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("省略5 · 9"))).toBe(true);
   await expect(label).toHaveText(initial ?? "");
 });
 
@@ -239,7 +239,7 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   const octaveUp = transport.getByRole("button", { name: "1オクターブ上げる", exact: true });
   await expect(octaveUp).toBeEnabled();
   await octaveUp.click();
-  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
+  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("オクターブ+1");
   await expect(pause).toBeVisible();
   const key = transport.locator("#voicing-loop-key");
   await expect(key).toBeEnabled();
@@ -252,7 +252,7 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   const octaveDown = transport.getByRole("button", { name: "1オクターブ下げる", exact: true });
   await expect(octaveDown).toBeEnabled();
   await octaveDown.click();
-  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT元");
+  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("オクターブ元");
   await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
 });
 
@@ -293,7 +293,7 @@ test("P5.33 paused card seek persists through resume and keeps MIDI on the secon
 
   await transport.getByRole("button", { name: "停止", exact: true }).click();
   await transport.getByRole("button", { name: "1オクターブ上げる", exact: true }).click();
-  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
+  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("オクターブ+1");
   const primaryBox = await transport.getByTestId("voicing-loop-transport-primary").boundingBox();
   const midiBox = await transport.getByTestId("voicing-loop-transport-midi-row").boundingBox();
   expect(primaryBox && midiBox).toBeTruthy();

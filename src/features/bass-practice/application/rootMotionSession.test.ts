@@ -46,7 +46,7 @@ describe("Root Motion Practice session", () => {
     if (!generated.ok) throw new Error(generated.error.message);
     const session = new RootMotionPracticeSession(generated.exercise);
     session.startListen(); session.completeListen();
-    expect(session.submitIdentify({ direction: "up" })).toMatchObject({ ok: false, message: "Choose an interval category." });
+    expect(session.submitIdentify({ direction: "up" })).toMatchObject({ ok: false, message: "音程の種類を選んでください。" });
   });
 
   test("cancels initial playback back to ready without retaining a replay", () => {

@@ -45,7 +45,6 @@ async function mount(overrides: Partial<PanelProps> = {}): Promise<Harness> {
   const onPreview = vi.fn();
   const onStop = vi.fn();
   let props: PanelProps = {
-    language: "en",
     showRomanNumerals: true,
     onConvert,
     onPreview,
@@ -160,7 +159,7 @@ describe("TextProgressionCapturePanel", () => {
     await changeValue(input(harness), "| Cmaj7 _ | % = |");
     expect(harness.container.querySelectorAll('[data-testid="text-progression-control-card"]')).toHaveLength(2);
     expect(harness.container.querySelectorAll('[data-testid="text-progression-invalid-card"]')).toHaveLength(0);
-    expect(harness.container.textContent).toContain("Hold");
+    expect(harness.container.textContent).toContain("保持（再発音なし）");
     await changeValue(input(harness), "| _ |");
     expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
     const convert = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-convert"]')!;
@@ -176,7 +175,7 @@ describe("TextProgressionCapturePanel", () => {
   it("shows the extended bounded input contract", async () => {
     const harness = await mount();
 
-    expect(harness.container.textContent).toContain("maximum 32 bars / 128 cells");
+    expect(harness.container.textContent).toContain("最大32小節・128セル");
     await harness.unmount();
   });
 
@@ -198,7 +197,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(cards[0]?.getAttribute("type")).toBe("button");
     expect(cards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(cards[0]?.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
-      .toContain("Default / Generated");
+      .toContain("標準 / 自動生成");
     // These are native buttons: focus/activation are keyboard reachable without
     // introducing a custom keyboard model. Browser key activation is covered by
     // the stage's Playwright accessibility gate.
@@ -227,7 +226,7 @@ describe("TextProgressionCapturePanel", () => {
     const diagnostics = harness.container.querySelector<HTMLElement>(
       '#text-progression-diagnostics',
     );
-    expect(diagnostics?.textContent).toMatch(/bar 1, characters \d+-\d+/i);
+    expect(diagnostics?.textContent).toMatch(/1小節目・文字 \d+-\d+/);
     expect(harness.container.querySelectorAll('[data-testid="text-progression-invalid-card"]'))
       .toHaveLength(3);
     expect(button(harness, "text-progression-convert").disabled).toBe(true);
@@ -235,7 +234,7 @@ describe("TextProgressionCapturePanel", () => {
   });
 
   it("uses Japanese UI text for diagnostics and capability status/reasons", async () => {
-    const invalid = await mount({ language: "ja" });
+    const invalid = await mount({  });
     await changeValue(input(invalid), "| C ? |");
 
     const diagnostics = invalid.container.querySelector<HTMLElement>(
@@ -256,7 +255,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(invalidCapabilities).not.toContain("Root Motion depends on an eligible Chord Context snapshot:");
     await invalid.unmount();
 
-    const eligible = await mount({ language: "ja" });
+    const eligible = await mount({  });
     await changeValue(input(eligible), "| C |");
     await changeValue(keyInput(eligible), "C major");
     const confirmKey = keyInput(eligible).parentElement?.querySelector<HTMLButtonElement>("button");
@@ -281,10 +280,10 @@ describe("TextProgressionCapturePanel", () => {
     expect(button(harness, "text-progression-convert").disabled).toBe(true);
 
     await changeValue(keyInput(harness), "C major");
-    await click(buttonByText(harness, "Confirm key"));
+    await click(buttonByText(harness, "キーを確定"));
 
     expect(harness.container.querySelector('[data-testid="text-progression-key-state"]')?.textContent)
-      .toContain("Confirmed: C major");
+      .toContain("確定: C major");
     expect(button(harness, "text-progression-convert").disabled).toBe(false);
     const cards = harness.container.querySelectorAll<HTMLButtonElement>(
       '[data-testid="text-progression-card"]',
@@ -305,7 +304,7 @@ describe("TextProgressionCapturePanel", () => {
     );
     expect(suggestion).not.toBeNull();
     await click(suggestion!);
-    await click(buttonByText(harness, "Confirm key"));
+    await click(buttonByText(harness, "キーを確定"));
     await changeValue(bpmInput(harness), "124");
     await click(harness.container.querySelector<HTMLButtonElement>(
       '[data-testid="text-progression-card"]',
@@ -330,8 +329,8 @@ describe("TextProgressionCapturePanel", () => {
     expect(harness.container.textContent).not.toContain("Extract from source MIDI");
     expect(harness.container.textContent).not.toContain("The source MIDI file was not found.");
     const sourceChip = harness.container.querySelector<HTMLElement>('[data-testid="detail-voicing-source-chip"]');
-    expect(sourceChip?.textContent).toContain("Generated");
-    expect(sourceChip?.getAttribute("title")).toBe("Auto-generated from this text entry.");
+    expect(sourceChip?.textContent).toContain("自動");
+    expect(sourceChip?.getAttribute("title")).toBe("テキスト入力から自動生成したボイシングです。");
     expect(sourceChip?.getAttribute("title")).not.toContain("source MIDI");
     await harness.unmount();
   });
@@ -360,7 +359,7 @@ describe("TextProgressionCapturePanel", () => {
 
     try {
       await changeValue(input(harness), "| C | ");
-      await click(buttonByText(harness, "Capture from keyboard"));
+      await click(buttonByText(harness, "鍵盤で記録"));
       await act(async () => { await Promise.resolve(); });
       expect(activate).toHaveBeenCalledTimes(1);
       expect(harness.container.querySelector("[data-voicing-panel]")).not.toBeNull();
@@ -388,7 +387,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(input(harness).disabled).toBe(true);
     expect(keyInput(harness).disabled).toBe(true);
     expect(bpmInput(harness).disabled).toBe(true);
-    expect(buttonByText(harness, "Confirm key").disabled).toBe(true);
+    expect(buttonByText(harness, "キーを確定").disabled).toBe(true);
     expect(button(harness, "text-progression-convert").disabled).toBe(true);
     expect(harness.container.querySelector<HTMLButtonElement>(
       '[data-testid="text-progression-card"]',
@@ -405,20 +404,20 @@ describe("TextProgressionCapturePanel", () => {
     );
     expect(selector).not.toBeNull();
     expect([...selector!.options].map((option) => option.textContent)).toEqual([
-      "Default close",
-      "Shell 1–7",
-      "Open 1–7",
-      "Rootless A/B",
+      "標準クローズ",
+      "シェル 1–7",
+      "オープン 1–7",
+      "ルートレス A/B",
     ]);
 
     await changeSelect(selector!, "open-17");
     const savedNotes = harness.container.querySelector<HTMLElement>(
       '[data-testid="voicing-saved-notes"]',
     );
-    expect(savedNotes?.textContent).toContain("Notes to save for this chord");
-    expect(savedNotes?.textContent).toContain("MIDI notes:");
+    expect(savedNotes?.textContent).toContain("このコードの保存予定音");
+    expect(savedNotes?.textContent).toContain("MIDIノート:");
     expect(harness.container.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
-      .toContain("Open 1–7");
+      .toContain("オープン 1–7");
 
     const firstCard = harness.container.querySelector<HTMLButtonElement>(
       '[data-testid="text-progression-card"]',
@@ -458,7 +457,7 @@ describe("TextProgressionCapturePanel", () => {
 
     try {
       await changeValue(input(harness), "| Cmaj7 Cmaj7 |");
-      await click(buttonByText(harness, "Capture from keyboard"));
+      await click(buttonByText(harness, "鍵盤で記録"));
       expect(activate).toHaveBeenCalledTimes(1);
 
       const cards = harness.container.querySelectorAll<HTMLButtonElement>(
@@ -506,7 +505,7 @@ describe("TextProgressionCapturePanel", () => {
 
     try {
       await changeValue(input(harness), "| Cmaj7 |");
-      await click(buttonByText(harness, "Capture from keyboard"));
+      await click(buttonByText(harness, "鍵盤で記録"));
       await act(async () => { await Promise.resolve(); });
       expect(pianoMonitor.create).toHaveBeenCalledOnce();
       await act(async () => {
@@ -547,8 +546,8 @@ describe("TextProgressionCapturePanel", () => {
         await act(async () => vi.advanceTimersByTime(120));
       }
       expect(pianoMonitor.updateNotes).toHaveBeenLastCalledWith([]);
-      expect(harness.container.textContent).toContain("Captured candidate: C3  E3  G3  B3");
-      const confirmButton = buttonByText(harness, "Use these notes for saving");
+      expect(harness.container.textContent).toContain("確認する音: C3  E3  G3  B3");
+      const confirmButton = buttonByText(harness, "この音を保存予定にする");
       expect(confirmButton.disabled).toBe(false);
       await click(confirmButton);
       expect(pianoMonitor.dispose).toHaveBeenCalled();
@@ -556,7 +555,7 @@ describe("TextProgressionCapturePanel", () => {
       const confirmation = harness.container.querySelector<HTMLElement>(
         '[data-testid="voicing-capture-confirmation"]',
       );
-      expect(confirmation?.textContent).toContain("Keyboard input recorded.");
+      expect(confirmation?.textContent).toContain("鍵盤入力を記録しました。");
       expect(confirmation?.textContent).toContain("C3");
       expect(harness.container.querySelector('[data-testid="voicing-saved-notes"]')?.textContent)
         .toContain("48, 52, 55, 59");

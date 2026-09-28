@@ -233,7 +233,6 @@ describe("ProgressionCandidateCard", () => {
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
       />,
     );
 
@@ -266,7 +265,6 @@ describe("ProgressionCandidateCard", () => {
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
       />,
     );
 
@@ -284,7 +282,6 @@ describe("ProgressionCandidateCard", () => {
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         isExpanded
       />,
     );
@@ -294,27 +291,6 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("現在のコード");
     expect(markup).toContain("編集するコードを選択");
     expect(markup).not.toContain("xl:grid-cols-[minmax(0,1fr)_20rem]");
-  });
-
-  it("renders the progression editor controls in English", () => {
-    const markup = renderToStaticMarkup(
-      <ProgressionCandidateCard
-        candidate={candidate()}
-        candidateIndex={0}
-        bpm={96}
-        onCopyProgression={vi.fn()}
-        onPreview={vi.fn()}
-        onPreviewChord={vi.fn()}
-        copy={appCopy.en}
-        language="en"
-        isExpanded
-      />,
-    );
-
-    expect(markup).toContain("Selected chord");
-    expect(markup).toContain("Chord structure");
-    expect(markup).toContain("Split chord");
-    expect(markup).toContain("Save to Vault");
   });
 
   it("synchronizes external Draft undo and redo without echoing stale editor state", async () => {
@@ -354,8 +330,7 @@ describe("ProgressionCandidateCard", () => {
             onCopyProgression={vi.fn()}
             onPreview={vi.fn()}
             onPreviewChord={vi.fn()}
-            copy={appCopy.en}
-            language="en"
+            copy={appCopy.ja}
             isExpanded
             inspectorExpanded
             draft={draft}
@@ -466,8 +441,7 @@ describe("ProgressionCandidateCard", () => {
         onCopyProgression={vi.fn()}
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
-        copy={appCopy.en}
-        language="en"
+        copy={appCopy.ja}
         isExpanded
         inspectorExpanded
         draft={draft}
@@ -584,7 +558,6 @@ describe("ProgressionCandidateCard", () => {
             candidateDatasetKey="timeline-external-history-metadata"
             draft={draft}
             activeCandidateId={sourceCandidate.id}
-            language="en"
             copy={{
               title: "Timeline",
               description: "External Draft history",
@@ -609,8 +582,7 @@ describe("ProgressionCandidateCard", () => {
             onCopyProgression={vi.fn()}
             onPreview={vi.fn()}
             onPreviewChord={vi.fn()}
-            copy={appCopy.en}
-            language="en"
+            copy={appCopy.ja}
             isExpanded
             inspectorExpanded
             draft={draft}
@@ -636,7 +608,7 @@ describe("ProgressionCandidateCard", () => {
     expect(alternativeButton).toBeDefined();
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Apply");
+      .find((button) => button.textContent === "適用");
     await act(async () => applyButton?.click());
 
     const firstChord = () => container.querySelector<HTMLButtonElement>("[data-chord-card]");
@@ -679,7 +651,7 @@ describe("ProgressionCandidateCard", () => {
     expect(state()?.textContent).toBe("0:true");
 
     const saveToVault = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Save to Vault");
+      .find((button) => button.textContent?.trim() === "Vaultに保存");
     expect(saveToVault).toBeDefined();
     await act(async () => saveToVault?.click());
     const saveForm = container.querySelector<HTMLFormElement>('[role="dialog"]');
@@ -767,8 +739,7 @@ describe("ProgressionCandidateCard", () => {
           onCopyProgression={vi.fn()}
           onPreview={vi.fn()}
           onPreviewChord={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           isExpanded
           inspectorExpanded
           draft={draft}
@@ -802,7 +773,7 @@ describe("ProgressionCandidateCard", () => {
     )].find((button) => button.textContent?.includes("Dm7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Apply");
+      .find((button) => button.textContent === "適用");
     await act(async () => applyButton?.click());
 
     const chordInput = () => container.querySelector<HTMLInputElement>(
@@ -813,7 +784,7 @@ describe("ProgressionCandidateCard", () => {
     )];
     expect(chordInput()?.value).toBe("Dm7");
     expect(historyButtons().map((button) => button.textContent?.trim()))
-      .toEqual(["Initial state", "1. Edit progression"]);
+      .toEqual(["開始時点", "1. 進行を編集"]);
 
     await act(async () => historyButtons()[0]?.click());
     await act(async () => Promise.resolve());
@@ -824,7 +795,7 @@ describe("ProgressionCandidateCard", () => {
     expect(chordInput()?.value).toBe("Dm7");
 
     const saveToVault = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Save to Vault");
+      .find((button) => button.textContent?.trim() === "Vaultに保存");
     await act(async () => saveToVault?.click());
     const saveForm = container.querySelector<HTMLFormElement>('[role="dialog"]');
     expect(saveForm).not.toBeNull();
@@ -886,7 +857,6 @@ describe("ProgressionCandidateCard", () => {
           onPreview={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
         />,
       );
@@ -922,7 +892,6 @@ describe("ProgressionCandidateCard", () => {
           onPreview={vi.fn()}
           onPreviewChord={onPreviewChord}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
         />,
       );
@@ -959,7 +928,6 @@ describe("ProgressionCandidateCard", () => {
           onCopyProgression={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
         />,
       );
@@ -1038,8 +1006,7 @@ describe("ProgressionCandidateCard", () => {
           onPreviewChord={vi.fn()}
           playbackSource={source}
           controller={controller}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           isExpanded
         />,
       );
@@ -1049,7 +1016,7 @@ describe("ProgressionCandidateCard", () => {
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
-      .find((button) => button.textContent === "Apply");
+      .find((button) => button.textContent === "適用");
     await act(async () => applyButton?.click());
 
     await act(async () => {
@@ -1103,7 +1070,6 @@ describe("ProgressionCandidateCard", () => {
           onPreview={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
         />,
       );
@@ -1137,7 +1103,6 @@ describe("ProgressionCandidateCard", () => {
           onPreview={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
           onCollapse={onCollapse}
         />,
@@ -1155,13 +1120,13 @@ describe("ProgressionCandidateCard", () => {
   });
 
   it("builds the initial save title in the documented priority order", () => {
-    expect(captureSaveTitle(candidate(), "song.mid", "C major", appCopy.ja, "ja"))
+    expect(captureSaveTitle(candidate(), "song.mid", "C major", appCopy.ja))
       .toBe("song.mid · 1–4小節");
-    expect(captureSaveTitle(candidate(), undefined, "C major", appCopy.en, "en"))
-      .toBe("C major · Bars 1–4");
-    expect(captureSaveTitle(candidate(), undefined, undefined, appCopy.en, "en"))
+    expect(captureSaveTitle(candidate(), undefined, "C major", appCopy.ja))
+      .toBe("C major · 1–4小節");
+    expect(captureSaveTitle(candidate(), undefined, undefined, appCopy.ja))
       .toBe("main - intro-like");
-    expect(captureSaveTitle(candidate({ summaryText: "" }), undefined, undefined, appCopy.ja, "ja"))
+    expect(captureSaveTitle(candidate({ summaryText: "" }), undefined, undefined, appCopy.ja))
       .toBe("保存した進行");
   });
 
@@ -1210,7 +1175,6 @@ describe("ProgressionCandidateCard", () => {
           onCopyProgression={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
           onDirtyChange={onDirtyChange}
         />,
@@ -1284,7 +1248,6 @@ describe("ProgressionCandidateCard", () => {
           onCopyProgression={vi.fn()}
           onPreviewChord={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           isExpanded
           onDirtyChange={onDirtyChange}
         />,
@@ -1388,7 +1351,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -1425,7 +1387,6 @@ describe("CaptureView saving", () => {
         updateIdea={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         showRomanNumerals
       />,
     ));
@@ -1472,7 +1433,6 @@ describe("CaptureView saving", () => {
         updateIdea={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        language="ja"
         showRomanNumerals
       />,
     ));
@@ -1544,7 +1504,6 @@ describe("CaptureView saving", () => {
             updateIdea={vi.fn()}
             setToast={vi.fn()}
             copy={appCopy.ja}
-            language="ja"
             showRomanNumerals
           />,
         );
@@ -1658,7 +1617,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -1751,7 +1709,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -1830,7 +1787,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -1923,7 +1879,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -1990,7 +1945,6 @@ describe("CaptureView saving", () => {
           updateIdea={updateIdea}
           setToast={vi.fn()}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -2078,7 +2032,6 @@ describe("CaptureView saving", () => {
           updateIdea={vi.fn()}
           setToast={setToast}
           copy={appCopy.ja}
-          language="ja"
           showRomanNumerals
         />,
       );
@@ -2226,7 +2179,7 @@ describe("CaptureView song mini map", () => {
     };
   }
 
-  async function renderCapture(result: MidiProgressionAnalysis, language: "ja" | "en" = "en") {
+  async function renderCapture(result: MidiProgressionAnalysis) {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -2241,8 +2194,7 @@ describe("CaptureView song mini map", () => {
           appendBlockToIdea={vi.fn()}
           updateIdea={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy[language]}
-          language={language}
+          copy={appCopy.ja}
           showRomanNumerals
         />,
       );
@@ -2272,7 +2224,7 @@ describe("CaptureView song mini map", () => {
         '[data-song-minimap-candidate="candidate-2"]',
       );
       expect(secondRange?.getAttribute("aria-label")).toBe(
-        "Candidate 2: bars 5-8. Capture range selection preset",
+        "候補 2: 5-8小節。採集範囲の選択プリセット",
       );
       await act(async () => secondRange?.click());
 
@@ -2280,7 +2232,7 @@ describe("CaptureView song mini map", () => {
       expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
       expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
       expect(container.querySelector("[data-current-selection]")).not.toBeNull();
-      expect(container.textContent).toContain("Selection: 5.1–8.4");
+      expect(container.textContent).toContain("選択範囲: 5.1〜8.4");
       expect([...container.querySelectorAll<HTMLDetailsElement>("details")]
         .some((details) => details.open)).toBe(false);
       expect(scrollIntoView).not.toHaveBeenCalled();
@@ -2326,7 +2278,7 @@ describe("CaptureView song mini map", () => {
         .find((button) => button.textContent?.includes("G7"));
       await act(async () => alternativeButton?.click());
       const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === progressionEditorCopy.en.apply);
+        .find((button) => button.textContent === progressionEditorCopy.ja.apply);
       await act(async () => applyButton?.click());
       scrollIntoView.mockClear();
 
@@ -2348,7 +2300,7 @@ describe("CaptureView song mini map", () => {
       const confirmButton = dialog?.querySelectorAll<HTMLButtonElement>("button")[1];
       await act(async () => confirmButton?.click());
       expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
-      expect(container.textContent).toContain("Selection: 5.1–8.4");
+      expect(container.textContent).toContain("選択範囲: 5.1〜8.4");
       expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       await act(async () => root.unmount());
@@ -2376,7 +2328,7 @@ describe("CaptureView song mini map", () => {
         "[data-candidate-toggle]",
       );
       const firstCard = candidateHeaders[0]?.parentElement?.parentElement;
-      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-4");
+      expect(candidateHeaders[0]?.textContent).toContain("1-4小節");
       expect(firstCard?.querySelectorAll("[data-chord-card]")).toHaveLength(2);
 
       const moveHandle = container.querySelector<HTMLButtonElement>(
@@ -2392,8 +2344,8 @@ describe("CaptureView song mini map", () => {
 
       expect(firstRange?.style.left).toBe("0%");
       expect(firstRange?.style.width).toBe("62.5%");
-      expect(firstRange?.getAttribute("aria-label")).toContain("bars 1-5");
-      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-5");
+      expect(firstRange?.getAttribute("aria-label")).toContain("1-5小節");
+      expect(candidateHeaders[0]?.textContent).toContain("1-5小節");
       expect(firstCard?.querySelectorAll("[data-chord-card]")).toHaveLength(3);
       expect(firstCard?.textContent).toContain("Fmaj7");
       expect(result.blockCandidates[0]?.endBar).toBe(4);
@@ -2427,12 +2379,12 @@ describe("CaptureView song mini map", () => {
       const candidateHeaders = container.querySelectorAll<HTMLButtonElement>(
         "[data-candidate-toggle]",
       );
-      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-5");
+      expect(candidateHeaders[0]?.textContent).toContain("1-5小節");
       await act(async () => candidateHeaders[1]?.click());
 
       expect(document.querySelector('[role="dialog"]')).toBeNull();
       expect(candidateHeaders[1]?.getAttribute("aria-expanded")).toBe("true");
-      expect(container.textContent).toContain("Selection: 5.1–8.4");
+      expect(container.textContent).toContain("選択範囲: 5.1〜8.4");
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -2477,8 +2429,8 @@ describe("CaptureView song mini map", () => {
       });
 
       expect(document.querySelector('[role="dialog"]')).toBeNull();
-      expect(container.textContent).toContain("Selection: 6.1–6.4");
-      expect(container.textContent).toContain("Created from a manual range");
+      expect(container.textContent).toContain("選択範囲: 6.1〜6.4");
+      expect(container.textContent).toContain("手動範囲から作成");
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -2498,13 +2450,13 @@ describe("CaptureView song mini map", () => {
       '[data-song-minimap-candidate="candidate-2"]',
     );
     const snapButtons = [...container.querySelectorAll<HTMLButtonElement>("button")];
-    const barSnap = snapButtons.find((button) => button.textContent === "Bar");
-    const beatSnap = snapButtons.find((button) => button.textContent === "Beat");
+    const barSnap = snapButtons.find((button) => button.textContent === "小節");
+    const beatSnap = snapButtons.find((button) => button.textContent === "拍");
 
     expect(container.querySelectorAll("[data-song-minimap-candidate]")).toHaveLength(2);
     expect(firstRange?.getAttribute("aria-pressed")).toBe("false");
     expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
-    expect(container.textContent).toContain("Selection: 5.1");
+    expect(container.textContent).toContain("選択範囲: 5.1");
     expect(container.textContent).toContain("8.4");
     expect(barSnap?.getAttribute("aria-pressed")).toBe("true");
     expect(beatSnap?.getAttribute("aria-pressed")).toBe("false");
@@ -2573,14 +2525,13 @@ describe("CaptureView song mini map", () => {
           appendBlockToIdea={vi.fn()}
           updateIdea={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals
         />
       );
     }
 
-    const snapButton = (label: "Bar" | "Beat") => (
+    const snapButton = (label: "小節" | "拍") => (
       [...container.querySelectorAll<HTMLButtonElement>("button")]
         .find((button) => button.textContent === label)
     );
@@ -2592,20 +2543,20 @@ describe("CaptureView song mini map", () => {
         </StrictMode>,
       ));
       expect(toISOStringSpy).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain("Selection: 1.1\u20134.4");
-      expect(container.textContent).toContain("Chords: 2 events");
-      expect(snapButton("Bar")?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.textContent).toContain("選択範囲: 1.1〜4.4");
+      expect(container.textContent).toContain("コード: 2イベント");
+      expect(snapButton("小節")?.getAttribute("aria-pressed")).toBe("true");
 
       await act(async () => replaceAnalysis({ status: "done", result: resultB }));
       expect(toISOStringSpy).toHaveBeenCalledTimes(2);
       expect(container.querySelector('[data-song-minimap-candidate="candidate-1"]')).toBeNull();
       expect(container.querySelector('[data-song-minimap-candidate="candidate-b"]')
         ?.getAttribute("aria-pressed")).toBe("true");
-      expect(container.textContent).toContain("Selection: 5.1\u20138.4");
-      expect(container.textContent).toContain("Chords: 4 events");
-      expect(snapButton("Bar")?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.textContent).toContain("選択範囲: 5.1〜8.4");
+      expect(container.textContent).toContain("コード: 4イベント");
+      expect(snapButton("小節")?.getAttribute("aria-pressed")).toBe("true");
 
-      await act(async () => snapButton("Beat")?.click());
+      await act(async () => snapButton("拍")?.click());
       const moveHandle = container.querySelector<HTMLButtonElement>(
         "[data-selection-move-handle]",
       );
@@ -2616,8 +2567,8 @@ describe("CaptureView song mini map", () => {
           bubbles: true,
         }));
       });
-      expect(container.textContent).toContain("Selection: 5.1\u20139.1");
-      expect(snapButton("Beat")?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.textContent).toContain("選択範囲: 5.1〜9.1");
+      expect(snapButton("拍")?.getAttribute("aria-pressed")).toBe("true");
 
       await act(async () => replaceAnalysis({
         status: "done",
@@ -2628,8 +2579,8 @@ describe("CaptureView song mini map", () => {
         },
       }));
       expect(toISOStringSpy).toHaveBeenCalledTimes(2);
-      expect(container.textContent).toContain("Selection: 5.1\u20139.1");
-      expect(snapButton("Beat")?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.textContent).toContain("選択範囲: 5.1〜9.1");
+      expect(snapButton("拍")?.getAttribute("aria-pressed")).toBe("true");
 
       await act(async () => replaceAnalysis({
         status: "done",
@@ -2644,7 +2595,7 @@ describe("CaptureView song mini map", () => {
       }));
       expect(toISOStringSpy).toHaveBeenCalledTimes(2);
       expect(container.querySelector("[data-current-selection]")).toBeNull();
-      expect(container.textContent).toContain(appCopy.en.capture.songMiniMapEmpty);
+      expect(container.textContent).toContain(appCopy.ja.capture.songMiniMapEmpty);
 
       await act(async () => replaceAnalysis({
         status: "error",
@@ -2669,7 +2620,7 @@ describe("CaptureView song mini map", () => {
       analyzerVersion: "test",
     });
     expect(container.querySelector("[data-song-minimap-track]")).toBeNull();
-    expect(container.textContent).toContain(appCopy.en.capture.songMiniMapEmpty);
+    expect(container.textContent).toContain(appCopy.ja.capture.songMiniMapEmpty);
     await act(async () => root.unmount());
     container.remove();
   });
@@ -2702,8 +2653,7 @@ describe("Capture playback isolation", () => {
           appendBlockToIdea={vi.fn()}
           updateIdea={vi.fn()}
           setToast={vi.fn()}
-          copy={appCopy.en}
-          language="en"
+          copy={appCopy.ja}
           showRomanNumerals
           controller={controller}
         />,
@@ -2711,7 +2661,7 @@ describe("Capture playback isolation", () => {
     });
 
     const clickSound = async (groupIndex: number, label: string) => {
-      const groups = container.querySelectorAll<HTMLElement>('[role="group"][aria-label="Preview sound"]');
+      const groups = container.querySelectorAll<HTMLElement>('[role="group"][aria-label="試聴音色"]');
       const button = [...(groups[groupIndex]?.querySelectorAll("button") ?? [])]
         .find((item) => item.textContent?.trim() === label);
       await act(async () => button?.click());
@@ -2727,24 +2677,24 @@ describe("Capture playback isolation", () => {
     };
 
     await play("home", "today-focus");
-    await clickSound(0, "Electric piano");
+    await clickSound(0, "エレピ");
     expect(driver.stop).not.toHaveBeenCalled();
     expect(controller.getState().source).toEqual({ kind: "home", id: "today-focus" });
 
     await act(async () => controller.stop());
     await play("capture", "candidate-preview");
-    await clickSound(0, "Piano");
+    await clickSound(0, "ピアノ");
     expect(driver.stop).toHaveBeenCalledTimes(1);
     expect(controller.getState().status).toBe("idle");
 
     await play("home", "vault-focus");
-    await clickSound(1, "Electric piano");
+    await clickSound(1, "エレピ");
     expect(driver.stop).not.toHaveBeenCalled();
     expect(controller.getState().source).toEqual({ kind: "home", id: "vault-focus" });
 
     await act(async () => controller.stop());
     await play("capture", "full-timeline");
-    await clickSound(1, "Piano");
+    await clickSound(1, "ピアノ");
     expect(driver.stop).toHaveBeenCalledTimes(1);
     expect(controller.getState().status).toBe("idle");
 
@@ -2806,7 +2756,6 @@ describe("TimelineDetails", () => {
       <TimelineDetails
         result={result}
         copy={appCopy.ja}
-        language="ja"
         previewSound="piano"
         onPreviewSoundChange={vi.fn()}
         controller={controller}
@@ -2844,7 +2793,6 @@ describe("TimelineDetails", () => {
         <TimelineDetails
           result={result}
           copy={appCopy.ja}
-          language="ja"
           previewSound="piano"
           onPreviewSoundChange={vi.fn()}
           controller={controller}
@@ -2902,7 +2850,6 @@ describe("TimelineDetails", () => {
         <TimelineDetails
           result={result}
           copy={appCopy.ja}
-          language="ja"
           previewSound="piano"
           onPreviewSoundChange={vi.fn()}
           controller={controller}
@@ -2942,7 +2889,6 @@ describe("TimelineDetails", () => {
         <TimelineDetails
           result={result}
           copy={appCopy.ja}
-          language="ja"
           previewSound="piano"
           onPreviewSoundChange={onPreviewSoundChange}
           controller={controller}

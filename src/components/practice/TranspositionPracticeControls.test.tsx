@@ -31,7 +31,6 @@ describe("TranspositionPracticeControls", () => {
     await act(async () => root.render(
       <TranspositionPracticeControls
         state={state}
-        language="ja"
         manualSelectionDisabled={false}
         targetTempo={100}
         onSelectKey={onSelectKey}
@@ -71,7 +70,6 @@ describe("TranspositionPracticeControls", () => {
     await act(async () => root.render(
       <TranspositionPracticeControls
         state={state}
-        language="en"
         manualSelectionDisabled
         targetTempo={100}
         onSelectKey={vi.fn()}
@@ -83,7 +81,7 @@ describe("TranspositionPracticeControls", () => {
     );
     expect(keys).toHaveLength(12);
     expect([...keys].every((button) => button.disabled)).toBe(true);
-    expect(container.textContent).toContain("Rank eligible");
+    expect(container.textContent).toContain("段位対象");
     expect(container.textContent).toContain("0 / 12");
     await act(async () => root.unmount());
   });
@@ -102,7 +100,6 @@ describe("TranspositionPracticeControls", () => {
     await act(async () => root.render(
       <TranspositionPracticeControls
         state={state}
-        language="en"
         manualSelectionDisabled={false}
         targetTempo={100}
         onSelectKey={vi.fn()}
@@ -147,7 +144,6 @@ describe("TranspositionPracticeControls", () => {
     await act(async () => root.render(
       <TranspositionPracticeControls
         state={l4}
-        language="ja"
         manualSelectionDisabled={false}
         targetTempo={100}
         onSelectKey={vi.fn()}
@@ -158,7 +154,6 @@ describe("TranspositionPracticeControls", () => {
     await act(async () => root.render(
       <TranspositionPracticeControls
         state={l5}
-        language="en"
         manualSelectionDisabled={false}
         targetTempo={100}
         onSelectKey={vi.fn()}

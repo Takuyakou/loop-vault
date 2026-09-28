@@ -11,7 +11,7 @@ import type {
   SimilarSegmentCandidate,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 import { PlayToggle } from "../PlayToggle";
 
 interface CorrectionPropagationPanelProps {
@@ -19,7 +19,6 @@ interface CorrectionPropagationPanelProps {
   chord: ChordSymbol;
   candidates: readonly SimilarSegmentCandidate[];
   slots: readonly EditableChordSlot[];
-  language: AppLanguage;
   playbackSource: PlayingSource;
   previewSound?: PreviewSound;
   stopLabel?: string;
@@ -33,7 +32,6 @@ export function CorrectionPropagationPanel({
   chord,
   candidates,
   slots,
-  language,
   playbackSource,
   previewSound,
   stopLabel,
@@ -41,7 +39,7 @@ export function CorrectionPropagationPanel({
   controller = playbackController,
   onApply,
 }: CorrectionPropagationPanelProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {

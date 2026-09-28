@@ -2,7 +2,6 @@ import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { readBoundedMidiPath } from "./storage/boundedMidiReader";
 import {
-  FormEvent,
   lazy,
   ReactNode,
   Suspense,
@@ -21,11 +20,9 @@ import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
-import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
@@ -35,7 +32,6 @@ import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isB
 import { buildVaultPickerCandidateViews, buildVaultSourceBasslineCandidateViews, type VaultPickerCandidateView, type VaultSourceBasslineCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
-  derivePracticeHistory,
   derivePracticeHomeSummary,
   createPracticeControllerIfEnabled,
   PracticeDataController,
@@ -59,10 +55,9 @@ import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
 import { prepareMainWindowFrame } from "./components/shell/windowControls";
-import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
-import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
+import type { SavedProgressionBlock, SongIdea } from "./domain/types";
 import {
   buildVoicingLoopVaultCandidates,
   buildProgressionVoicingPracticeHandoffFromVault,
@@ -83,7 +78,6 @@ import {
   appCopy,
   progressionDetailCopy,
   type AppCopy,
-  type AppLanguage,
 } from "./i18n";
 import {
   registerBrowserCloseGuard,
@@ -112,7 +106,6 @@ import {
 } from "./liveMidi/windowProtocol";
 
 type View = AppView;
-const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
 const EMPTY_VAULT_SOURCE_BASSLINES: readonly VaultSourceBasslineCandidateView[] = Object.freeze([]);
@@ -220,13 +213,10 @@ function App() {
   const initialize = useStore(defaultVaultStore, (state) => state.initialize);
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
   const backups = useStore(defaultVaultStore, (state) => state.backups);
-  const setMonthlyGoal = useStore(defaultVaultStore, (state) => state.setMonthlyGoal);
-  const setLanguage = useStore(defaultVaultStore, (state) => state.setLanguage);
   const setShowRomanNumerals = useStore(defaultVaultStore, (state) => state.setShowRomanNumerals);
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
   const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
   const importVault = useStore(defaultVaultStore, (state) => state.importVault);
-  const createIdea = useStore(defaultVaultStore, (state) => state.createIdea);
   const createIdeaFromDraft = useStore(defaultVaultStore, (state) => state.createIdeaFromDraft);
   const createIdeaFromTextProgression = useStore(defaultVaultStore, (state) => state.createIdeaFromTextProgression);
   const updateIdea = useStore(defaultVaultStore, (state) => state.updateIdea);
@@ -236,10 +226,6 @@ function App() {
   const updateProgressionBlock = useStore(defaultVaultStore, (state) => state.updateProgressionBlock);
   const duplicateProgressionBlock = useStore(defaultVaultStore, (state) => state.duplicateProgressionBlock);
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
-  const removeReference = useStore(defaultVaultStore, (state) => state.removeReference);
-  const unlinkAsset = useStore(defaultVaultStore, (state) => state.unlinkAsset);
-  const transitionIdea = useStore(defaultVaultStore, (state) => state.transitionIdea);
-  const updateNextAction = useStore(defaultVaultStore, (state) => state.updateNextAction);
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
@@ -273,7 +259,6 @@ function App() {
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
-  const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
@@ -329,7 +314,6 @@ function App() {
     return () => { unsubscribe(); if (practiceControllerRef.current === controller) practiceControllerRef.current = undefined; };
   }, [bassPracticeEnabled]);
   const practiceHomeSummary = useMemo(() => practiceData.file ? derivePracticeHomeSummary(practiceData.file, new Date()) : undefined, [practiceData]);
-  const practiceHistory = useMemo(() => practiceData.file ? derivePracticeHistory(practiceData.file) : [], [practiceData]);
   const practiceSession = useMemo(() => {
     const file = practiceData.file;
     const active = file?.sessions.find((session) => !session.completedAt && !session.abandoned && session.completedCount < session.targetCount);
@@ -356,28 +340,28 @@ function App() {
     () => view === "practice" && practiceMode === "bass-practice"
       ? buildVaultPickerCandidateViews(
         visibleIdeas,
-        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+        "\u7121\u984c\u306e\u9032\u884c",
       )
       : EMPTY_VAULT_PICKER_CANDIDATES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const vaultSourceBasslines = useMemo(
     () => view === "practice" && practiceMode === "bass-practice"
       ? buildVaultSourceBasslineCandidateViews(
         visibleIdeas,
-        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+        "\u7121\u984c\u306e\u9032\u884c",
       )
       : EMPTY_VAULT_SOURCE_BASSLINES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const voicingLoopVaultCandidates = useMemo(
     () => view === "practice" && practiceMode === "voicing-loop"
       ? buildVoicingLoopVaultCandidates(
         visibleIdeas,
-        settings.language === "ja" ? "無題の進行" : "Untitled progression",
+        "無題の進行",
       )
       : EMPTY_VOICING_LOOP_VAULT_CANDIDATES,
-    [practiceMode, settings.language, view, visibleIdeas],
+    [practiceMode, view, visibleIdeas],
   );
   const chordContextSnapshots = useMemo(
     () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
@@ -409,25 +393,20 @@ function App() {
   }
 
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
-  const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const progressionIdea = selectedProgression
     ? visibleIdeas.find((idea) => idea.id === selectedProgression.ideaId)
     : undefined;
   const progressionBlock = progressionIdea?.progressionBlocks?.find(
     (block) => block.id === selectedProgression?.blockId,
   );
-  const language = settings.language;
-  const copy = appCopy[language];
+  const copy = appCopy.ja;
 
   // P8.9-02: a failed save is announced once as a sticky error toast (the header also marks it).
   useEffect(() => {
     if (error && loadStatus === "ready") notifications.notify({ tone: "error", message: error });
   }, [error, loadStatus, notifications]);
 
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
-  const progressionCopy = progressionDetailCopy[language];
+  const progressionCopy = progressionDetailCopy.ja;
 
   useEffect(() => {
     void initialize();
@@ -491,7 +470,7 @@ function App() {
     let unlistenCommand: (() => void) | undefined;
     const sendSnapshot = () => {
       void sendLiveMidiSnapshot(
-        createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+        createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState()),
       ).catch(() => undefined);
     };
     const unsubscribeStore = defaultLiveMidiStore.subscribe(sendSnapshot);
@@ -530,7 +509,7 @@ function App() {
       unsubscribeStore();
       unlistenCommand?.();
     };
-  }, [language]);
+  }, []);
 
   function openDirectVoicingLoop() {
     requestProgressionLeave(() => {
@@ -571,9 +550,7 @@ function App() {
   function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
     const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
     if (!result.ok) {
-      setToast(language === "ja"
-        ? "保存済み進行を確認できないため、Voicing Loopを開始できません。"
-        : "Voicing Loop could not start because the saved progression is unavailable or invalid.");
+      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。");
       return false;
     }
     setPracticeTarget(undefined);
@@ -586,35 +563,6 @@ function App() {
     setPracticeMode("voicing-loop");
     setView("practice");
     return true;
-  }
-
-  function handleCreate(title: string, status: Status) {
-    requestProgressionLeave(() => {
-      const id = createIdea(title, status);
-      if (!id) {
-        return;
-      }
-
-      setCreateOpen(false);
-      openDetail(id);
-    });
-  }
-
-async function analyzeMidiPath(path: string) {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.desktopMidiOnly);
-      return;
-    }
-
-    try {
-      const bytes = await readBoundedMidiPath(path);
-      const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
-      setCaptureInitialInputMode("midi");
-      setView("capture");
-      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
-    }
   }
 
   async function loadMidiSource(path: string) {
@@ -647,7 +595,7 @@ async function analyzeMidiPath(path: string) {
         }
         if (isTauri()) {
           await sendLiveMidiSnapshot(
-            createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+            createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState()),
           ).catch(() => undefined);
         }
       } catch (error) {
@@ -779,7 +727,6 @@ async function analyzeMidiPath(path: string) {
       <AppShell
         view={view}
         setView={navigateTo}
-        openCreate={() => setCreateOpen(true)}
         openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
         openVoicingLoop={openDirectVoicingLoop}
         openChordDojo={() => { navigateTo("practice"); setPracticeMode("chord-dojo"); }}
@@ -822,7 +769,7 @@ async function analyzeMidiPath(path: string) {
           id="main-content"
           ref={mainContentRef}
           tabIndex={-1}
-          aria-label={viewLabel(view, copy)}
+          aria-label={shellTitle(view, practiceMode)}
           className={`min-h-0 min-w-0 flex-1 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
             view === "practice" && practiceMode === "voicing-loop"
               ? "overflow-x-hidden overflow-y-auto py-2"
@@ -834,10 +781,9 @@ async function analyzeMidiPath(path: string) {
         }`}>
         {loadStatus === "ready" ? (
           <>
-            <QuarantineNotice count={quarantine.length} copy={copy} language={language} />
+            <QuarantineNotice count={quarantine.length} copy={copy} />
             {sizeRecovery ? (
               <SizeRecoveryNotice
-                language={language}
                 saving={saving}
                 error={error}
                 onOpenVault={() => navigateTo("library")}
@@ -849,16 +795,11 @@ async function analyzeMidiPath(path: string) {
                   <BassPracticeHomeCard onOpen={openBassPractice} summary={practiceHomeSummary} />
                 ) : undefined}
                 ideas={visibleIdeas}
-                monthlyGoal={settings.monthlyGoal}
                 copy={copy}
-                language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
                 openDetail={openDetail}
                 openCapture={() => navigateTo("capture")}
-                openCreate={() => setCreateOpen(true)}
                 openVault={() => setView("library")}
-                updateNextAction={updateNextAction}
-                transitionIdea={transitionIdea}
                 setToast={setToast}
               />
             ) : null}
@@ -868,19 +809,16 @@ async function analyzeMidiPath(path: string) {
                 storedIdeas={ideas}
                 openDetail={openDetail}
                 openProgression={openProgression}
-                openCreate={() => setCreateOpen(true)}
                 openCapture={() => navigateTo("capture")}
                 updateIdea={updateIdea}
                 updateProgressionBlock={updateProgressionBlock}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
               />
             ) : null}
             {view === "capture" ? (
               <CaptureRenderBoundary
-                language={language}
                 resetKey={[
                   analysis.status,
                   analysis.result?.sourceFingerprint,
@@ -928,14 +866,13 @@ async function analyzeMidiPath(path: string) {
                       && idea.progressionBlocks?.some((block) => block.id === blockId))) {
                       openProgression(ideaId, blockId);
                     } else {
-                      setToast(language === "ja" ? "保存済み進行を確認できません。" : "The saved progression is unavailable.");
+                      setToast("保存済み進行を確認できません。");
                     }
                   }}
                   openSavedTextProgressionPractice={openProgressionVoicingPractice}
                   updateIdea={updateIdea}
                   setToast={setToast}
                   copy={copy}
-                  language={language}
                   showRomanNumerals={settings.showRomanNumerals ?? true}
                 />
               </CaptureRenderBoundary>
@@ -943,21 +880,14 @@ async function analyzeMidiPath(path: string) {
             {view === "detail" && selectedIdea ? (
               <DetailView
                 idea={selectedIdea}
-                storedIdea={storedSelectedIdea}
                 updateIdea={updateIdea}
-                updateNextAction={updateNextAction}
                 removeProgressionBlock={removeProgressionBlock}
                 openProgression={openProgression}
-                removeReference={removeReference}
-                unlinkAsset={unlinkAsset}
                 enqueueUndo={undoQueue.enqueue}
                 vaultEpoch={vaultEpoch}
-                analyzeMidiPath={analyzeMidiPath}
-                transitionIdea={transitionIdea}
                 requestDelete={requestDelete}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 recoveryPending={Boolean(sizeRecovery)}
               />
             ) : null}
@@ -969,7 +899,6 @@ async function analyzeMidiPath(path: string) {
                 block={progressionBlock}
                 updateProgressionBlock={updateProgressionBlock}
                 duplicateProgressionBlock={duplicateProgressionBlock}
-                appendBlockToIdea={appendBlockToIdea}
                 openProgression={openProgression}
                 openIdea={openDetail}
                 openVault={() => setView("library")}
@@ -980,7 +909,6 @@ async function analyzeMidiPath(path: string) {
                 onDirtyChange={setProgressionDetailDirty}
                 setToast={setToast}
                 copy={copy}
-                language={language}
                 loadMidiSource={loadMidiSource}
               />
             ) : null}
@@ -993,7 +921,6 @@ async function analyzeMidiPath(path: string) {
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
                       {practiceData.status === "ready" ? <BassPracticeView
                         key={practiceSession.id}
-                        language={language}
                         chordContextSnapshot={chordContextSnapshot}
                         chordContextSnapshots={chordContextSnapshots}
                         vaultPickerCandidates={vaultPickerCandidates}
@@ -1084,7 +1011,6 @@ async function analyzeMidiPath(path: string) {
                     <PracticeView
                       ideas={visibleIdeas}
                       initialTarget={practiceTarget}
-                      language={language}
                       updateProgressionBlock={updateProgressionBlock}
                       openProgression={openProgression}
                       openSettings={() => {
@@ -1099,7 +1025,6 @@ async function analyzeMidiPath(path: string) {
                       key={voicingPracticeHandoff?.snapshots[voicingPracticeHandoff.initialSelection]?.fingerprint
                         ?? P527_E2E_FIXTURE?.snapshots[P527_E2E_FIXTURE.initialSelection]?.fingerprint
                         ?? "empty-voicing-loop"}
-                      language={language}
                       snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
@@ -1116,20 +1041,8 @@ async function analyzeMidiPath(path: string) {
                   )}
               />
             ) : null}
-            {view === "history" ? (
-              <HistoryView
-                ideas={visibleIdeas}
-                language={language}
-                practiceHistory={practiceHistory}
-                chordContextHistory={practiceData.file?.chordContextHistory}
-                rootMotionHistory={practiceData.file?.rootMotionHistory}
-                practiceHistoryTotal={practiceData.file ? practiceData.file.sessions.filter(({ completedCount }) => completedCount > 0).length + practiceData.file.rhythmSessions.filter(({ completedCount }) => completedCount > 0).length : 0}
-                openIdea={openDetail}
-                openProgression={openProgression}
-              />
-            ) : null}
             {view === "detail" && !selectedIdea ? (
-              <EmptyState openCreate={() => setCreateOpen(true)} copy={copy} />
+              <EmptyState openCapture={() => navigateTo("capture")} copy={copy} />
             ) : null}
           </>
         ) : (
@@ -1144,23 +1057,11 @@ async function analyzeMidiPath(path: string) {
         )}
         </div>
         </main>
-      {isCreateOpen ? (
-        <CreateDialog
-          onCreate={handleCreate}
-          onClose={() => setCreateOpen(false)}
-          copy={copy}
-          language={language}
-        />
-      ) : null}
       {isSettingsOpen ? (
         <SettingsDialog
           ideas={visibleIdeas}
-          monthlyGoal={settings.monthlyGoal}
-          language={language}
           backups={backups}
           error={error}
-          setMonthlyGoal={setMonthlyGoal}
-          setLanguage={setLanguage}
           showRomanNumerals={settings.showRomanNumerals ?? true}
           setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
           refreshBackups={refreshBackups}
@@ -1289,73 +1190,6 @@ export function deleteIdeaForUndo({
 
 
 
-export function CreateDialog({
-  onCreate,
-  onClose,
-  copy,
-  language,
-}: {
-  onCreate: (title: string, status: Status) => void;
-  onClose: () => void;
-  copy: AppCopy;
-  language: AppLanguage;
-}) {
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<Status>("idea");
-  const titleRef = useRef<HTMLInputElement>(null);
-  const dirty = title.length > 0 || status !== "idea";
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    onCreate(title, status);
-  }
-
-  return (
-    <Modal
-      ariaLabelledBy="create-idea-title"
-      initialFocusRef={titleRef}
-      onClose={onClose}
-      closeOnBackdrop={!dirty}
-      panelClassName="w-full max-w-md p-5"
-    >
-      <form
-        onSubmit={submit}
-        onKeyDown={(event) => {
-          if (
-            event.key === "Enter"
-            && (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
-          ) event.preventDefault();
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <h2 id="create-idea-title" className="text-xl font-semibold">{copy.create.title}</h2>
-          <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
-        </div>
-        <label htmlFor="create-idea-name" className="mt-4 block text-sm font-medium text-[var(--lv-text-secondary)]">
-          {copy.common.title}
-        </label>
-        <input
-          id="create-idea-name"
-          ref={titleRef}
-          name="idea-title"
-          autoComplete="off"
-          className={`${inputClass} mt-1`}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder={copy.common.title}
-        />
-        <label htmlFor="create-idea-status" className="mt-3 block text-sm font-medium text-[var(--lv-text-secondary)]">
-          {copy.library.status}
-        </label>
-        <select id="create-idea-status" name="idea-status" className={`${inputClass} mt-1`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
-          {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
-        </select>
-        <button className="mt-4 w-full rounded bg-[var(--lv-accent)] px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
-      </form>
-    </Modal>
-  );
-}
-
 function StartupState({
   loadStatus,
   recovery,
@@ -1395,26 +1229,24 @@ function StartupState({
   );
 }
 
-function QuarantineNotice({ count, copy, language }: { count: number; copy: AppCopy; language: AppLanguage }) {
+function QuarantineNotice({ count, copy }: { count: number; copy: AppCopy;}) {
   if (count === 0) return null;
   return (
     <div className="mt-4 border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
       <p>{copy.startup.quarantine(count)}</p>
       <p className="mt-1 text-xs">
-        {language === "ja"
-          ? "不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"
-          : "This Vault is non-writing to prevent an incomplete overwrite. Recover with replace import or a valid backup."}
+        {"不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"}
       </p>
     </div>
   );
 }
 
-function EmptyState({ openCreate, copy }: { openCreate: () => void; copy: AppCopy }) {
+function EmptyState({ openCapture, copy }: { openCapture: () => void; copy: AppCopy }) {
   return (
     <div className="grid min-h-96 place-items-center py-10">
       <div className="max-w-md text-center">
         <h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2>
-        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button>
+        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCapture}>{copy.library.capture}</button>
       </div>
     </div>
   );
@@ -1433,20 +1265,6 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
   return <section className={`border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 ${className}`}>{children}</section>;
 }
 
-function labelStatus(status: Status, language: AppLanguage): string {
-  return statusLabel(status, language);
-}
-
-function viewLabel(view: View, copy: AppCopy): string {
-  if (view === "capture") return copy.nav.capture;
-  if (view === "practice") return copy.nav.practice;
-  if (view === "library" || view === "detail" || view === "progression-detail") {
-    return copy.nav.library;
-  }
-  if (view === "history") return "History";
-  return copy.nav.home;
-}
-
 /** P8.9-02: header screen names follow the Japanese sidebar (proper names stay as they are). */
 function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   if (view === "capture") return "取り込む";
@@ -1454,15 +1272,7 @@ function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   if (view === "practice") {
     return practiceMode === "voicing-loop" ? "Voicing Loop" : practiceMode === "bass-practice" ? "Bass Practice" : "Chord Dojo";
   }
-  if (view === "history") return "履歴";
   return "ホーム";
-}
-
-const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-
-function fileNameFromPath(path: string): string {
-  const normalized = path.replace(/\\/g, "/");
-  return normalized.split("/").pop() || "midi.mid";
 }
 
 export default App;

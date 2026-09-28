@@ -26,7 +26,6 @@ describe("VoicingSourceChip", () => {
     act(() => root.render(
       <VoicingSourceChip
         status={status}
-        language="ja"
         reason={status === "review" ? "source-low-confidence" : undefined}
       />,
     ));

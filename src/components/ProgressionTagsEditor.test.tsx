@@ -44,7 +44,6 @@ describe("ProgressionTagsEditor", () => {
         <ProgressionTagsEditor
           block={block}
           keySignature="C"
-          language="en"
           onChange={onChange}
         />,
       );
@@ -60,12 +59,12 @@ describe("ProgressionTagsEditor", () => {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
     await act(async () => {
-      container.querySelector<HTMLButtonElement>("button[aria-label='Add tag']")?.click();
+      container.querySelector<HTMLButtonElement>("button[aria-label='タグを追加']")?.click();
     });
     expect(onChange).toHaveBeenCalledWith({ tags: ["use:chorus"], suppressedAutoTags: [] });
 
     const hideMaj7 = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.getAttribute("aria-label") === "Hide Maj7 / 9");
+      .find((button) => button.getAttribute("aria-label") === "Maj7 / 9を非表示");
     await act(async () => hideMaj7?.click());
     expect(onChange).toHaveBeenLastCalledWith({
       tags: [],

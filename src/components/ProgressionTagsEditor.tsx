@@ -6,23 +6,21 @@ import {
   suppressAutoTag,
 } from "../domain/progressionClassification/mod";
 import type { SavedProgressionBlock } from "../domain/types";
-import { progressionTagsCopy, type AppLanguage } from "../i18n";
+import { progressionTagsCopy } from "../i18n";
 import { Plus, RotateCcw, X } from "lucide-react";
 
 interface ProgressionTagsEditorProps {
   block: SavedProgressionBlock;
   keySignature?: string;
-  language: AppLanguage;
   onChange: (changes: Pick<SavedProgressionBlock, "tags" | "suppressedAutoTags">) => void;
 }
 
 export function ProgressionTagsEditor({
   block,
   keySignature,
-  language,
   onChange,
 }: ProgressionTagsEditorProps) {
-  const text = progressionTagsCopy[language];
+  const text = progressionTagsCopy.ja;
   const [input, setInput] = useState("");
   const classification = useMemo(
     () => classifyProgression({ block, key: keySignature }),
@@ -100,7 +98,7 @@ export function ProgressionTagsEditor({
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {derivedTags.length > 0 ? derivedTags.map((tag) => {
-            const label = progressionTagLabel(tag.tagId, language);
+            const label = progressionTagLabel(tag.tagId);
             return (
               <span
                 key={tag.tagId}
@@ -130,7 +128,7 @@ export function ProgressionTagsEditor({
             <p className="text-xs text-[var(--lv-text-muted)]">{text.suppressedTitle}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {block.suppressedAutoTags?.map((tag) => {
-                const label = progressionTagLabel(tag.tagId, language);
+                const label = progressionTagLabel(tag.tagId);
                 return (
                   <button
                     key={`${tag.tagId}:${tag.taxonomyVersion}`}

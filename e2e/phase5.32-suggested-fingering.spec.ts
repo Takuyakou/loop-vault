@@ -24,10 +24,10 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
   await expect(workspace.getByTestId("voicing-loop-next-degree")).toHaveText("Ⅱ");
   await expect(workspace.getByTestId("voicing-loop-event-degree")).toHaveText(["Ⅰ", "Ⅱ"]);
   await expect(workspace.getByRole("checkbox", { name: "おすすめ運指を表示" })).toBeChecked();
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("PITCH");
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("TONE");
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("FINGER");
-  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("FINGER");
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("音名");
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("構成音");
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("指");
+  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("指");
   await expect(workspace.getByTestId("voicing-loop-next-left-hand")).toBeVisible();
   await expect(workspace.getByTestId("voicing-loop-next-right-hand")).toBeVisible();
   await expect(workspace).not.toContainText("DEGREE");
@@ -62,8 +62,8 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
 
   await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "運指を編集" });
-  await expect(editor.getByText("LEFT HAND", { exact: true })).toBeVisible();
-  await expect(editor.getByText("RIGHT HAND", { exact: true })).toBeVisible();
+  await expect(editor.getByText("左手", { exact: true })).toBeVisible();
+  await expect(editor.getByText("右手", { exact: true })).toBeVisible();
   await editor.getByRole("combobox").nth(1).selectOption("2");
   await editor.getByRole("button", { name: "保存", exact: true }).click();
   await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("自分の運指");
@@ -76,9 +76,9 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
   await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("おすすめ");
 
   await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).uncheck();
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).not.toContainText("FINGER");
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("TONE");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).not.toContainText("指");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("音名");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("構成音");
   await expect(workspace.locator("[data-finger-label]")).toHaveCount(0);
   await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).check();
 

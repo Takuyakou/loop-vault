@@ -20,7 +20,7 @@ async function saveTextToLoop(page: Page, input: string) {
   await expect(capture.getByTestId("text-progression-invalid-card")).toHaveCount(0);
   await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
+  await capture.getByRole("button", { name: /キーを確定/ }).click();
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").focus();
   await page.keyboard.press("Enter");
@@ -142,7 +142,7 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await assertNoHorizontalOverflow(page);
   const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
   expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
-  await workspace.getByRole("button", { name: "Recall（コード名のみ）", exact: true }).click();
+  await workspace.getByRole("button", { name: "思い出す（コード名のみ）", exact: true }).click();
   await expect(workspace.locator("[data-guide-hand]")).toHaveCount(0);
   await page.setViewportSize({ width: 640, height: 900 });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });

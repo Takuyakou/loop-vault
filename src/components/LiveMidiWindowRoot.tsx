@@ -69,7 +69,7 @@ export function LiveMidiWindowRoot() {
 
   return (
     <LiveMidiMiniMode
-      copy={appCopy[snapshot.language].liveMidi}
+      copy={appCopy.ja.liveMidi}
       snapshot={snapshot}
       onShowMain={() => { void sendLiveMidiCommand({ type: "show-main" }); }}
       onRefreshDevices={() => { void sendLiveMidiCommand({ type: "refresh-devices" }); }}

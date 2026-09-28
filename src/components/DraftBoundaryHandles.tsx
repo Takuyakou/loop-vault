@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { resizeDraftBoundary } from "../domain/midi/draftRangeEditing";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
-import type { AppLanguage } from "../i18n";
 
 export interface DraftBoundaryHandlesProps {
   draft: ManualCandidateDraft;
-  language: AppLanguage;
   onChange(draft: ManualCandidateDraft): void;
 }
 
 export function DraftBoundaryHandles({
   draft,
-  language,
   onChange,
 }: DraftBoundaryHandlesProps) {
   const [pending, setPending] = useState<Record<string, number>>({});
@@ -26,22 +23,18 @@ export function DraftBoundaryHandles({
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
       className="mt-3 border-t border-[var(--lv-border)] pt-3"
-      aria-label={language === "ja" ? "コード境界" : "Chord boundaries"}
+      aria-label={"コード境界"}
       data-testid="draft-boundary-handles"
     >
       <summary className="min-h-10 cursor-pointer select-none py-2 text-sm font-semibold text-[var(--lv-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]">
-        {language === "ja"
-          ? `詳細：コード境界を調整（${draft.events.length - 1}箇所）`
-          : `Details: adjust chord boundaries (${draft.events.length - 1})`}
+        {`詳細：コード境界を調整（${draft.events.length - 1}箇所）`}
       </summary>
       <div
         className="mt-2 max-h-72 overflow-y-auto overscroll-contain border-t border-[var(--lv-border)] pt-3 pr-2"
         data-boundary-scroll-region
       >
         <p className="text-xs text-[var(--lv-text-muted)]">
-          {language === "ja"
-            ? "境界をドラッグすると左右の長さを同時に調整します。Altでスナップを一時解除。"
-            : "Drag a boundary to resize both neighbours. Hold Alt to bypass snap."}
+          {"境界をドラッグすると左右の長さを同時に調整します。Altでスナップを一時解除。"}
         </p>
         <div className="mt-2 grid gap-2">
           {draft.events.slice(0, -1).map((left, index) => {
@@ -51,9 +44,7 @@ export function DraftBoundaryHandles({
             const value = pending[leftId] ?? current;
             const minimum = left.relativeStartBeat + 0.25;
             const maximum = right.relativeStartBeat + right.durationBeats - 0.25;
-            const label = language === "ja"
-              ? `${left.chord.label} と ${right.chord.label} の境界`
-              : `Boundary between ${left.chord.label} and ${right.chord.label}`;
+            const label = `${left.chord.label} と ${right.chord.label} の境界`;
 
             return (
               <label

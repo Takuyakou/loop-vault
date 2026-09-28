@@ -11,7 +11,6 @@ import {
 } from "../../domain/midi/noteTextureClassifier";
 import { extractNoteTextureFeatures } from "../../domain/midi/noteTextureFeatures";
 import type { VoiceContributionPreset } from "../../domain/midi/types";
-import type { AppLanguage } from "../../i18n";
 
 const voiceColors = [
   "#2dd4bf",
@@ -42,7 +41,6 @@ interface NoteHitArea {
 
 interface PreAnalysisPianoRollProps {
   session: AnalysisSession;
-  language: AppLanguage;
   selectedVoiceId?: string;
   zoom: number;
   viewportStartBeat: number;
@@ -56,7 +54,6 @@ interface PreAnalysisPianoRollProps {
 
 export function PreAnalysisPianoRoll({
   session,
-  language,
   selectedVoiceId,
   zoom,
   viewportStartBeat,
@@ -173,12 +170,8 @@ export function PreAnalysisPianoRoll({
       className="block w-full touch-none cursor-pointer border-y border-[var(--lv-border)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
       role="img"
       tabIndex={0}
-      aria-label={language === "ja"
-        ? "Voiceを色分けした解析前ピアノロール。白いバーのドラッグまたは左右キーで時間を移動できます。"
-        : "Pre-analysis piano roll colored by Voice. Drag the white bar or use Left and Right to move in time."}
-      title={language === "ja"
-        ? "ドラッグして白い再生位置バーを移動"
-        : "Drag to move the white playback cursor"}
+      aria-label={"Voiceを色分けした解析前ピアノロール。白いバーのドラッグまたは左右キーで時間を移動できます。"}
+      title={"ドラッグして白い再生位置バーを移動"}
       data-testid="pre-analysis-piano-roll"
       aria-describedby={voiceContributionPreset === "harmonic-core"
         ? "pre-analysis-harmonic-core-piano-roll-preview"

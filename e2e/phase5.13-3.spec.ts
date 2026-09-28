@@ -51,10 +51,10 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     );
     await openVault(page);
     await page.locator(".lv-vault-row").first()
-      .getByRole("button", { name: /進行を開く|Open progression/ })
+      .getByRole("button", { name: /進行を開く/ })
       .click();
     await page.locator("[data-progression-detail-view]")
-      .getByRole("button", { name: /練習する|Practice/ })
+      .getByRole("button", { name: /練習する/ })
       .click();
     const dojo = page.locator('[data-nav="chord-dojo"]');
     await dojo.click();
@@ -118,7 +118,7 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     await expect(meter).toHaveAttribute("data-playback-status", "idle");
     await expect(meter).toBeDisabled();
     await page.locator('[data-nav="live-midi"]').click();
-    await expect(page.getByText(/現在のコード|Current chord/)).toBeVisible();
+    await expect(page.getByText(/現在のコード/)).toBeVisible();
     await expect(page.locator("#main-content")).toBeVisible();
     await captureEvidence(page, testInfo, "live-midi-and-main.png");
     await assertNoHorizontalOverflow(page);

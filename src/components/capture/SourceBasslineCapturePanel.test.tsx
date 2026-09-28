@@ -25,7 +25,7 @@ let host: HTMLDivElement;
 
 afterEach(() => host?.remove());
 
-function render(language: "ja" | "en", overrides: Partial<React.ComponentProps<typeof SourceBasslineCapturePanel>> = {}) {
+function render(overrides: Partial<React.ComponentProps<typeof SourceBasslineCapturePanel>> = {}) {
   host = document.createElement("div");
   host.style.width = "320px";
   document.body.append(host);
@@ -40,7 +40,6 @@ function render(language: "ja" | "en", overrides: Partial<React.ComponentProps<t
       assessment={{ ...available, snapshot: undefined, reason: "select-voice" }}
       rangeSelected={false}
       optedIn={false}
-      language={language}
       onVoiceChange={onVoiceChange}
       onRangeChange={onRangeChange}
       onOptInChange={onOptInChange}
@@ -52,7 +51,7 @@ function render(language: "ja" | "en", overrides: Partial<React.ComponentProps<t
 
 describe("SourceBasslineCapturePanel", () => {
   it("defaults OFF with no silent Voice or range selection and native keyboard controls", () => {
-    render("ja");
+    render();
     const selects = host.querySelectorAll("select");
     const toggle = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(selects[0]?.value).toBe("");
@@ -63,7 +62,7 @@ describe("SourceBasslineCapturePanel", () => {
   });
 
   it("emits explicit Voice, range, and opt-in choices through semantic controls", () => {
-    const events = render("en", {
+    const events = render({
       selectedVoiceId: voice.id,
       assessment: available,
       rangeSelected: true,
@@ -84,7 +83,7 @@ describe("SourceBasslineCapturePanel", () => {
   });
 
   it("keeps JA/EN disclosure, live facts, and narrow-width wrapping semantics", () => {
-    render("ja", {
+    render({
       selectedVoiceId: voice.id,
       assessment: available,
       rangeSelected: true,
@@ -99,20 +98,18 @@ describe("SourceBasslineCapturePanel", () => {
   });
 
   it("disables Voice selection with an explicit described reason when no Voice is eligible", () => {
-    render("en", { voices: [] });
+    render({ voices: [] });
     const voiceSelect = host.querySelector<HTMLSelectElement>("select");
     expect(voiceSelect?.disabled).toBe(true);
     const describedBy = voiceSelect?.getAttribute("aria-describedby")?.split(" ") ?? [];
     expect(describedBy.length).toBeGreaterThanOrEqual(2);
     expect(describedBy.some((id) => document.getElementById(id)?.textContent
-      ?.includes("No eligible Bass Voice is available."))).toBe(true);
+      ?.includes("保存可能なBass Voiceがありません。"))).toBe(true);
   });
 
-  it.each([
-    ["ja", "先にBass Voiceを選択してください。"],
-    ["en", "Select a Bass Voice first."],
-  ] as const) ("describes disabled range and opt-in controls in %s", (language, expectedReason) => {
-    render(language);
+  it("describes disabled range and opt-in controls", () => {
+    const expectedReason = "先にBass Voiceを選択してください。";
+    render();
     const rangeSelect = host.querySelectorAll<HTMLSelectElement>("select")[1]!;
     const toggle = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(rangeSelect.disabled).toBe(true);

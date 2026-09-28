@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../../components/ui";
-import type { AppLanguage } from "../../../../i18n";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import { TOTAL_QUOTA_BYTES, type StoredRecordingMetadata } from "../domain/persistence";
 import { createPersistentTakeRepository } from "../application/createController";
@@ -16,7 +15,6 @@ import { BrowserTakePlayer, type PlaybackHandle, type TakePlayer } from "../appl
  */
 
 export interface RetainedTakesPanelProps {
-  readonly language?: AppLanguage;
   readonly repository?: PersistentRecordingTakeRepository;
   readonly takePlayer?: TakePlayer;
   readonly showWhenEmpty?: boolean;
@@ -30,12 +28,6 @@ const RETAINED_TAKES_COPY = {
     playing: "再生中…", play: "再生", confirmDelete: "削除を確定", cancel: "やめる", remove: "削除",
     privacy: "ローカルのみ・クラウド送信なし・自動分析や採点はありません。機能をOFFにしても保存済みデータは自動削除されません。",
   },
-  en: {
-    sectionLabel: "Saved recordings", heading: "Saved Recordings (Local Only)", empty: "No recordings are saved. Only takes you explicitly keep remain here.",
-    playedBefore: " · heard before Review", notPlayedBefore: " · not heard before Review", unavailable: "Recording unavailable. You can still delete it.",
-    playing: "Playing…", play: "Play", confirmDelete: "Confirm Delete", cancel: "Cancel", remove: "Delete",
-    privacy: "Local only · no cloud upload · no automatic analysis or scoring. Turning the feature off does not automatically delete saved data.",
-  },
 } as const;
 
 const MODE_LABELS: Record<StoredRecordingMetadata["mode"], string> = {
@@ -46,14 +38,13 @@ const MODE_LABELS: Record<StoredRecordingMetadata["mode"], string> = {
 };
 
 export function RetainedTakesPanel({
-  language = "ja",
   repository,
   takePlayer,
   showWhenEmpty = false,
   enabledOverride,
 }: RetainedTakesPanelProps) {
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
-  const copy = RETAINED_TAKES_COPY[language];
+  const copy = RETAINED_TAKES_COPY.ja;
   const repoRef = useRef<PersistentRecordingTakeRepository>();
   if (!repoRef.current) repoRef.current = repository ?? createPersistentTakeRepository();
   const playerRef = useRef<TakePlayer>(takePlayer ?? new BrowserTakePlayer());
@@ -128,7 +119,7 @@ export function RetainedTakesPanel({
               className="rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-2 text-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-semibold text-[var(--lv-text)]">{MODE_LABELS[take.mode]}</span>
-                <span className="text-[var(--lv-text-muted)]">{formatDate(take.createdAt, language)}</span>
+                <span className="text-[var(--lv-text-muted)]">{formatDate(take.createdAt)}</span>
               </div>
               <p className="mt-1 text-[var(--lv-text-secondary)]">
                 {(take.durationMs / 1000).toFixed(1)}s · {formatKb(take.byteSize)} · {take.channelMode} ·
@@ -173,7 +164,7 @@ function formatMb(bytes: number): string {
 function formatKb(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
-function formatDate(iso: string, language: AppLanguage): string {
+function formatDate(iso: string): string {
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString(language === "ja" ? "ja-JP" : "en-US");
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString("ja-JP");
 }

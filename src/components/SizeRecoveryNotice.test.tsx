@@ -19,7 +19,6 @@ async function render(
   const root = createRoot(host);
   await act(async () => root.render(
     <SizeRecoveryNotice
-      language={language}
       saving={options.saving ?? false}
       error={options.error}
       onOpenVault={options.onOpenVault ?? vi.fn()}
@@ -48,7 +47,7 @@ describe("SizeRecoveryNotice", () => {
     const notice = host.querySelector<HTMLElement>("[data-testid=vault-size-recovery-notice]")!;
     const button = host.querySelector<HTMLButtonElement>("button")!;
     expect(notice.className).toContain("min-w-0");
-    expect(host.textContent).toContain("Saving the reduced Vault");
+    expect(host.textContent).toContain("縮小したVaultを保存しています");
     expect(button.disabled).toBe(true);
     await act(async () => root.unmount());
   });

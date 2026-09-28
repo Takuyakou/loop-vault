@@ -102,12 +102,12 @@ describe("PreAnalysisWorkspace", () => {
           }
         : entry),
     };
-    const { container, unmount } = await renderWorkspace(session, { language: "en" });
+    const { container, unmount } = await renderWorkspace(session);
 
-    expect(container.textContent).toContain("Confidence: Low");
-    expect(container.textContent).toContain("High register");
-    expect(container.textContent).toContain("Stepwise motion");
-    expect(container.textContent).toContain("Review");
+    expect(container.textContent).toContain("信頼度: 低");
+    expect(container.textContent).toContain("高い音域");
+    expect(container.textContent).toContain("順次進行");
+    expect(container.textContent).toContain("要確認");
     expect(container.textContent).not.toContain("90%");
 
     await unmount();
@@ -633,7 +633,6 @@ async function renderWorkspace(
   await act(async () => root.render(
     <PreAnalysisWorkspace
       session={session}
-      language="ja"
       onSessionChange={vi.fn()}
       onAddMidi={vi.fn()}
       onRemoveSource={vi.fn()}
@@ -658,7 +657,6 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
     return (
       <PreAnalysisWorkspace
         session={session}
-        language="ja"
         onSessionChange={setSession}
         onAddMidi={vi.fn()}
         onRemoveSource={vi.fn()}

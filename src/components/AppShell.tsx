@@ -10,11 +10,9 @@ import {
   BassPracticeIcon,
   ChordDojoIcon,
   ErrorIcon,
-  HistoryIcon,
   HomeIcon,
   ImportIcon,
   LiveMidiIcon,
-  PlusIcon,
   SettingsIcon,
   VaultIcon,
   VoicingLoopIcon,
@@ -27,7 +25,7 @@ import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { TitleBar } from "./shell/TitleBar";
 import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
-import { Button, Popover } from "./ui";
+import { Popover } from "./ui";
 
 export type AppView =
   | "home"
@@ -35,8 +33,7 @@ export type AppView =
   | "library"
   | "detail"
   | "progression-detail"
-  | "practice"
-  | "history";
+  | "practice";
 export type SaveStatus = "saved" | "saving" | "unsaved" | "error";
 
 /** Below this window width the sidebar starts as icons only. */
@@ -45,7 +42,6 @@ export const SIDEBAR_NARROW_BELOW_PX = 1200;
 interface AppShellProps {
   view: AppView;
   setView: (view: AppView) => void;
-  openCreate: () => void;
   openLiveMidi: () => void;
   openSettings: () => void;
   openVoicingLoop: () => void;
@@ -81,7 +77,6 @@ export function AppShell({
   masterVolume,
   onMasterVolumeChange,
   onSearch = () => undefined,
-  openCreate,
   openLiveMidi,
   openSettings,
   openVoicingLoop,
@@ -154,7 +149,6 @@ export function AppShell({
             <div className="lv-sidebar-rule" role="separator" />
             <NavItem nav="live-midi" label="Live MIDI" icon={LiveMidiIcon} collapsed={collapsed} active={false} onClick={openLiveMidi} />
             <div className="lv-sidebar-spacer" />
-            <NavItem nav="history" label="履歴" icon={HistoryIcon} collapsed={collapsed} active={!settingsOpen && view === "history"} onClick={() => setView("history")} />
             <NavItem nav="settings" label="設定" icon={SettingsIcon} collapsed={collapsed} active={settingsOpen} onClick={openSettings} />
           </nav>
           <div className="lv-sidebar-footer">
@@ -209,10 +203,6 @@ export function AppShell({
                   onStop={() => controller.stop()}
                 />
               </div>
-              <Button variant="neutral" size="sm" className="whitespace-nowrap" onClick={openCreate} title={`+ ${copy.nav.new}`}>
-                <PlusIcon size={16} />
-                <span className="hidden sm:inline">{copy.nav.new}</span>
-              </Button>
               <SaveStatusMark status={saveStatus} copy={copy} />
             </div>
           </header>

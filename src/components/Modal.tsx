@@ -172,7 +172,7 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal={isTop ? "true" : undefined}
-        aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : "Dialog")}
+        aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : "ダイアログ")}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
         className={`overscroll-contain rounded-[var(--lv-radius-lg)] border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] shadow-[var(--lv-shadow-overlay)] ${panelClassName}`}

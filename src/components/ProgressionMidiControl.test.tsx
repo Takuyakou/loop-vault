@@ -56,7 +56,6 @@ describe("ProgressionMidiControl", () => {
       root.render(
         <ProgressionMidiControl
           result={result}
-          language="ja"
           setToast={setToast}
           actions={actions}
         />,
@@ -90,7 +89,6 @@ describe("ProgressionMidiControl", () => {
       root.render(
         <ProgressionMidiControl
           result={result}
-          language="en"
           setToast={vi.fn()}
           actions={{ save, prepare, startDrag }}
         />,
@@ -151,7 +149,6 @@ describe("ProgressionMidiControl", () => {
       root.render(
         <ProgressionMidiControl
           result={result}
-          language="en"
           setToast={setToast}
           actions={{
             save: vi.fn(),
@@ -175,7 +172,7 @@ describe("ProgressionMidiControl", () => {
       }));
       await Promise.resolve();
     });
-    expect(container.textContent).toContain("Click MIDI to save");
+    expect(container.textContent).toContain("クリックしてMIDI保存をお試しください");
     expect(container.textContent).not.toContain("private detail");
     await act(async () => root.unmount());
   });

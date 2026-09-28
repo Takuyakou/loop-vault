@@ -12,14 +12,13 @@ describe("ChordAlternativeList", () => {
         confidence: 0.8 - index * 0.1,
       })))}
       onSelect={vi.fn()}
-      language="en"
     />);
 
     expect(markup).toContain("flex-wrap");
     expect(markup).toContain('data-alternative-count="5"');
     expect((markup.match(/<button/g) ?? [])).toHaveLength(6);
     expect(markup).toContain(">G<");
-    expect(markup).toContain("More analyzer candidates (1)");
+    expect(markup).toContain("その他の解析候補（1件）");
     expect(markup).toContain(">A<");
   });
 });

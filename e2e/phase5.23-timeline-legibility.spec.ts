@@ -70,7 +70,7 @@ test("P5.23 Full Timeline remains stable, keyboard-operable, responsive, and axe
   await expect(committedSelection).toHaveAttribute("aria-label", selectionBeforeOpen!);
   const variantLabels = await minimap.locator("[data-song-minimap-variant]").allTextContents();
   expect(variantLabels.length).toBeGreaterThan(1);
-  expect(variantLabels.every((label) => /(?:小節|bars).*(?:Bar|Bars)/.test(label))).toBe(true);
+  expect(variantLabels.every((label) => /(?:小節).*(?:Bar|Bars)/.test(label))).toBe(true);
   await page.keyboard.press("Escape");
   await expect(groupedTrigger).toBeFocused();
   await expect(groupedTrigger).toHaveAttribute("aria-expanded", "false");
@@ -129,7 +129,7 @@ test("Vault save form stays visible with the sidebar expanded at the reported na
 
   const selected = page.locator('[data-candidate-state="selected"]');
   await selected
-    .getByRole("button", { name: /Vaultに保存|Save to Vault/, exact: true })
+    .getByRole("button", { name: /Vaultに保存/, exact: true })
     .click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();

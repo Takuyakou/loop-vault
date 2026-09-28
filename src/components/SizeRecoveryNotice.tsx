@@ -1,17 +1,13 @@
-import type { AppLanguage } from "../i18n";
 
 export function SizeRecoveryNotice({
-  language,
   saving,
   error,
   onOpenVault,
 }: {
-  language: AppLanguage;
   saving: boolean;
   error?: string;
   onOpenVault: () => void;
 }) {
-  const ja = language === "ja";
   const descriptionId = "vault-size-recovery-description";
   const statusId = "vault-size-recovery-status";
   const errorId = "vault-size-recovery-error";
@@ -24,17 +20,15 @@ export function SizeRecoveryNotice({
       data-testid="vault-size-recovery-notice"
     >
       <h2 id="vault-size-recovery-title" className="font-semibold">
-        {ja ? "Vaultを縮小してください" : "Reduce this Vault"}
+        {"Vaultを縮小してください"}
       </h2>
       <p id={descriptionId} className="mt-1 break-words text-xs text-amber-100">
-        {ja
-          ? "旧形式から復元したVaultが16 MiB上限を超えています。新規追加・書き出し・読み込みは停止中です。既存内容を短くするか、アイデア／進行を削除してください。上限内の変更は原子的な保存が成功した後に反映されます。"
-          : "This Vault restored from a legacy format exceeds 16 MiB. New additions, export, and import are paused. Shorten existing content or delete ideas/progressions. A compliant change takes effect only after its atomic save succeeds."}
+        {"旧形式から復元したVaultが16 MiB上限を超えています。新規追加・書き出し・読み込みは停止中です。既存内容を短くするか、アイデア／進行を削除してください。上限内の変更は原子的な保存が成功した後に反映されます。"}
       </p>
       <p id={statusId} className="mt-2 break-words text-xs" role="status" aria-live="polite">
         {saving
-          ? (ja ? "縮小したVaultを保存しています…" : "Saving the reduced Vault…")
-          : (ja ? "現在は読み取り専用です。" : "The Vault is currently read-only.")}
+          ? ("縮小したVaultを保存しています…")
+          : ("現在は読み取り専用です。")}
       </p>
       {error && !saving ? (
         <p id={errorId} className="mt-2 break-words text-xs font-semibold" role="alert">
@@ -48,7 +42,7 @@ export function SizeRecoveryNotice({
         aria-describedby={describedBy}
         onClick={onOpenVault}
       >
-        {ja ? "Vaultを開いて縮小" : "Open Vault to reduce"}
+        {"Vaultを開いて縮小"}
       </button>
     </section>
   );

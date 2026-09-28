@@ -1,16 +1,14 @@
 import { AlertTriangle, Check } from "lucide-react";
 import { practiceProgressState } from "../../domain/practice";
 import { transpositionCoverageSummary } from "../../domain/practiceTransposition";
-import type { AppLanguage, SavedProgressionBlock } from "../../domain/types";
+import type { SavedProgressionBlock } from "../../domain/types";
 
 export function PracticeProgressBadge({
   block,
-  language,
   compact = false,
   effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
-  language: AppLanguage;
   compact?: boolean;
   effectiveKeySignature?: string;
 }) {
@@ -21,18 +19,18 @@ export function PracticeProgressBadge({
   );
   if (state === "unstarted") return null;
   const stateText = state === "stale"
-    ? language === "ja" ? "進行更新・要確認" : "Progression changed"
+    ? "進行更新・要確認"
     : state === "confirmation-due"
-      ? language === "ja" ? "別日確認" : "Confirm another day"
+      ? "別日確認"
       : state === "provisional"
-        ? language === "ja" ? "仮クリア" : "Provisional"
+        ? "仮クリア"
         : `L${block.practice?.confirmedLevel ?? 1}`;
   const coverage = state === "stale"
     ? undefined
-    : transpositionCoverageLabel(block, language);
+    : transpositionCoverageLabel(block);
   const label = coverage ? `${stateText} · ${coverage}` : stateText;
   const visibleLabel = compact && coverage
-    ? compactTranspositionLabel(block, state, language)
+    ? compactTranspositionLabel(block, state)
     : compact && state === "confirmed"
       ? `L${block.practice?.confirmedLevel ?? 1}`
       : label;
@@ -58,31 +56,27 @@ export function PracticeProgressBadge({
 function compactTranspositionLabel(
   block: SavedProgressionBlock,
   state: ReturnType<typeof practiceProgressState>,
-  language: AppLanguage,
 ): string {
   const summary = transpositionCoverageSummary(block.practice);
   if (!summary) return "";
   const progress = `L${summary.level} ${summary.cleared}/${summary.total}`;
   if (state === "provisional") {
-    return language === "ja" ? `${progress} · 仮` : `${progress} · Provisional`;
+    return `${progress} · 仮`;
   }
   if (state === "confirmation-due") {
-    return language === "ja" ? `${progress} · 別日確認` : `${progress} · Confirm`;
+    return `${progress} · 別日確認`;
   }
   return progress;
 }
 
 function transpositionCoverageLabel(
   block: SavedProgressionBlock,
-  language: AppLanguage,
 ): string | undefined {
   const count = block.practice?.transposition?.clearedKeyPitchClasses.length;
   if (count === undefined) return undefined;
   const summary = transpositionCoverageSummary(block.practice);
   if (!summary) return undefined;
-  return language === "ja"
-    ? `L${summary.level} キー ${summary.cleared}/${summary.total}`
-    : `L${summary.level} keys ${summary.cleared}/${summary.total}`;
+  return `L${summary.level} キー ${summary.cleared}/${summary.total}`;
 }
 
 function localDateString(date: Date): string {

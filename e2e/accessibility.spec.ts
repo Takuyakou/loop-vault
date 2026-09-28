@@ -47,8 +47,8 @@ test("Vault、進行詳細、Settings、Dialog", async ({ page }) => {
   await openVault(page);
   await expectNoSeriousViolations(page, "vault");
   await page.locator(".lv-vault-row").first()
-    .getByRole("button", { name: /進行を開く|Open progression/ }).click();
+    .getByRole("button", { name: /進行を開く/ }).click();
   await expectNoSeriousViolations(page, "progression-detail");
-  await page.getByRole("button", { name: /設定|Settings/ }).first().click();
+  await page.getByRole("button", { name: /設定/ }).first().click();
   await expectNoSeriousViolations(page, "settings-dialog");
 });

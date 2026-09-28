@@ -40,7 +40,7 @@ test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallba
   await textCta.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-capture-stage='text']")).toBeVisible();
-  await expect(page.getByTestId("capture-input-mode").getByRole("button", { name: /Text|テキスト/ }))
+  await expect(page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }))
     .toHaveAttribute("aria-pressed", "true");
 
   await page.locator('[data-nav="home"]').click();
@@ -61,7 +61,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
+  await capture.getByRole("button", { name: /キーを確定/ }).click();
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").click();
 

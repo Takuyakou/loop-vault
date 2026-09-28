@@ -95,8 +95,7 @@ async function mount(createIdeaFromDraft = vi.fn(() => "idea-1")) {
       appendBlockToIdea={vi.fn()}
       updateIdea={vi.fn()}
       setToast={vi.fn()}
-      copy={appCopy.en}
-      language="en"
+      copy={appCopy.ja}
       showRomanNumerals
       controller={controller}
     />,
@@ -116,7 +115,7 @@ async function openFirstDraftAndReplaceSecondWithNoChord(
     new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
   ));
   const noChord = [...document.body.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')]
-    .find((button) => button.textContent?.includes("Replace with N.C."))!;
+    .find((button) => button.textContent?.includes("N.C.に置き換える"))!;
   await act(async () => noChord.click());
 }
 
@@ -127,7 +126,7 @@ describe("Capture Draft keyboard, A/B preview, and retention", () => {
 
     expect(harness.container.querySelector(
       '[data-testid="capture-draft-session"]',
-    )?.textContent).toContain("Unsaved");
+    )?.textContent).toContain("未保存");
     expect(harness.container.querySelector(
       '[data-testid="candidate-voicing-source-chip"]',
     )?.getAttribute("data-voicing-source")).toBe("review");
@@ -173,12 +172,12 @@ describe("Capture Draft keyboard, A/B preview, and retention", () => {
 
     await act(async () => headers[1]?.click());
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
-    expect(dialog.textContent).toContain("Cancel");
-    expect(dialog.textContent).toContain("Close");
-    expect(dialog.textContent).toContain("Save to Vault and continue");
+    expect(dialog.textContent).toContain("キャンセル");
+    expect(dialog.textContent).toContain("閉じる");
+    expect(dialog.textContent).toContain("Vaultへ保存して続ける");
 
     const save = [...dialog.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "Save to Vault and continue")!;
+      .find((button) => button.textContent === "Vaultへ保存して続ける")!;
     await act(async () => save.click());
 
     expect(harness.createIdeaFromDraft).toHaveBeenCalledOnce();
@@ -199,11 +198,11 @@ describe("Capture Draft keyboard, A/B preview, and retention", () => {
     )).not.toBeNull();
 
     const openSave = [...harness.container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Save to Vault")!;
+      .find((button) => button.textContent?.trim() === "Vaultに保存")!;
     await act(async () => openSave.click());
     const form = harness.container.querySelector<HTMLFormElement>('form[role="dialog"]')!;
     const save = [...form.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Save")!;
+      .find((button) => button.textContent?.trim() === "保存")!;
     await act(async () => save.click());
 
     expect(harness.createIdeaFromDraft).toHaveBeenCalledOnce();

@@ -1,5 +1,4 @@
 import { emitTo } from "@tauri-apps/api/event";
-import type { AppLanguage } from "../domain/types";
 import type {
   LiveChordDetection,
   LiveChordHistoryEntry,
@@ -20,7 +19,6 @@ export type LiveMidiWindowCommand =
   | { type: "set-show-history"; show: boolean };
 
 export interface LiveMidiWindowSnapshot {
-  language: AppLanguage;
   devices: LiveMidiDevice[];
   selected?: LiveMidiDevice;
   status: LiveMidiConnectionStatus;
@@ -34,10 +32,8 @@ export interface LiveMidiWindowSnapshot {
 
 export function createLiveMidiWindowSnapshot(
   state: LiveMidiStoreState,
-  language: AppLanguage,
 ): LiveMidiWindowSnapshot {
   return {
-    language,
     devices: state.devices,
     selected: state.selected,
     status: state.status,

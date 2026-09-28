@@ -31,7 +31,7 @@ export function PracticeWorkspace({
       </div>
       <div
         id="practice-workspace-panel"
-        aria-label="Practice workspace"
+        aria-label="練習の作業領域"
         role="tabpanel"
         tabIndex={-1}
         className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : ""}`}
@@ -93,7 +93,7 @@ export function PracticeModeTabs({
 
   const tabClassName = "min-h-10 px-4 text-sm";
   return (
-      <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="Practice mode" role="tablist">
+      <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="練習モード" role="tablist">
         <button
           id={`${idPrefix}-chord-dojo`}
           ref={chordTabRef}

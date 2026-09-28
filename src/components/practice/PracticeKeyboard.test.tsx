@@ -35,7 +35,6 @@ function renderKeyboard(
       allowedPitchClasses={[0, 4, 7]}
       requiredPitchClasses={[0, 4, 7]}
       level={level}
-      language="ja"
       matchState="partial"
       interactionMode={interactionMode}
     />,

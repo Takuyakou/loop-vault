@@ -1,7 +1,7 @@
 /* global process, console */
 import { Buffer } from "node:buffer";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
@@ -104,7 +104,7 @@ function runSelected(selection, mode) {
     }
     if (selection.areas.includes("privacy/security")) nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
     if (selection.browserChanged) nodeStep("Class lint", "scripts/lint-tailwind-classes.mjs");
-    const lintable = selection.changed.filter((file) => /\.[cm]?[jt]sx?$/.test(file) && !file.endsWith(".json"));
+    const lintable = selection.changed.filter((file) => /\.[cm]?[jt]sx?$/.test(file) && !file.endsWith(".json") && existsSync(file));
     if (lintable.length) nodeStep("Changed ESLint", "node_modules/eslint/bin/eslint.js", lintable);
     if (selection.nodeTests.length) nodeStep("Changed Node tests", "--test", selection.nodeTests, "node");
     if (selection.vitest.length || selection.broad) {

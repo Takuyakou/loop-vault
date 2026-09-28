@@ -57,16 +57,16 @@ describe("LiveMidiMiniMode", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(LiveMidiMiniMode, {
-      copy: appCopy.en.liveMidi,
+      copy: appCopy.ja.liveMidi,
       onBack: vi.fn(),
     })));
 
     expect(container.textContent).toContain("C");
     expect(container.querySelector("[data-live-midi-current-chord]")).not.toBeNull();
     expect(container.querySelector("[data-detection-state]")?.textContent)
-      .toBe(appCopy.en.liveMidi.provisional);
-    expect(container.textContent).toContain("Notes: C · E · G");
-    expect(container.textContent).toContain("Bass: C");
+      .toBe(appCopy.ja.liveMidi.provisional);
+    expect(container.textContent).toContain("構成音: C · E · G");
+    expect(container.textContent).toContain("ベース: C");
 
     await act(async () => {
       defaultLiveMidiStore.setState({
@@ -80,8 +80,8 @@ describe("LiveMidiMiniMode", () => {
         },
       });
     });
-    expect(container.textContent).toContain("Notes: C · E");
-    expect(container.textContent).toContain("Bass: C");
+    expect(container.textContent).toContain("構成音: C · E");
+    expect(container.textContent).toContain("ベース: C");
 
     await act(async () => root.unmount());
   });
@@ -96,15 +96,15 @@ describe("LiveMidiMiniMode", () => {
     const root = createRoot(container);
 
     await act(async () => root.render(createElement(LiveMidiMiniMode, {
-      copy: appCopy.en.liveMidi,
+      copy: appCopy.ja.liveMidi,
       onBack: vi.fn(),
     })));
 
     const alert = container.querySelector('[role="alert"]');
-    expect(alert?.textContent).toContain(appCopy.en.liveMidi.openFailed);
+    expect(alert?.textContent).toContain(appCopy.ja.liveMidi.openFailed);
     expect(alert?.textContent).toContain("Device is busy.");
     const recovery = [...(alert?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find(
-      (button) => button.textContent?.includes(appCopy.en.liveMidi.refreshDevices),
+      (button) => button.textContent?.includes(appCopy.ja.liveMidi.refreshDevices),
     );
     expect(recovery).toBeTruthy();
 

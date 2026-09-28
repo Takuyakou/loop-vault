@@ -64,12 +64,12 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
       const onError = vi.fn();
       const view = await renderWorkspace({ clock, onError });
 
-      await click(view.container, "Start this progression");
-      await click(view.container, "Pause");
+      await click(view.container, "この進行を開始");
+      await click(view.container, "一時停止");
       expect(clock.stop).toHaveBeenCalled();
-      expect(findButton(view.container, "Resume")).toBeDefined();
+      expect(findButton(view.container, "再開")).toBeDefined();
 
-      await click(view.container, "Resume");
+      await click(view.container, "再開");
       expect(starts).toHaveLength(2);
       expect(clock.resume).not.toHaveBeenCalled();
       const stopCount = clock.stop.mock.calls.length;
@@ -80,7 +80,7 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
 
       expect(clock.stop).toHaveBeenCalledTimes(stopCount);
       expect(onError).not.toHaveBeenCalled();
-      expect(findButton(view.container, "Pause")).toBeDefined();
+      expect(findButton(view.container, "一時停止")).toBeDefined();
       await view.unmount();
     },
   );
@@ -96,15 +96,15 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     const onError = vi.fn();
     const view = await renderWorkspace({ clock, onError });
 
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
     await act(async () => Promise.resolve());
-    expect(onError).toHaveBeenCalledWith("Could not start Mix Flow practice.");
-    expect(findButton(view.container, "Resume")).toBeDefined();
+    expect(onError).toHaveBeenCalledWith("ミックスのフロー練習を開始できませんでした。");
+    expect(findButton(view.container, "再開")).toBeDefined();
 
-    await click(view.container, "Resume");
+    await click(view.container, "再開");
     expect(starts).toHaveLength(2);
     expect(clock.resume).not.toHaveBeenCalled();
-    expect(findButton(view.container, "Pause")).toBeDefined();
+    expect(findButton(view.container, "一時停止")).toBeDefined();
     await view.unmount();
   });
 
@@ -115,11 +115,11 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     });
     const view = await renderWorkspace({ clock });
 
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
     await act(async () => starts[0]?.callbacks.onTargetOpen(1));
     expect(view.container.textContent).toContain("2 / 2");
-    await click(view.container, "Pause");
-    await click(view.container, "Resume");
+    await click(view.container, "一時停止");
+    await click(view.container, "再開");
 
     expect(clock.start).toHaveBeenCalledTimes(1);
     expect(clock.pause).toHaveBeenCalledTimes(1);
@@ -132,16 +132,16 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     const clock = makeClock(async () => undefined);
     const openSettings = vi.fn();
     const view = await renderWorkspace({ clock, openSettings });
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
 
-    await click(view.container, "Settings");
+    await click(view.container, "設定");
     expect(openSettings).toHaveBeenCalledOnce();
     expect(clock.pause).toHaveBeenCalledOnce();
-    expect(findButton(view.container, "Resume")).toBeDefined();
+    expect(findButton(view.container, "再開")).toBeDefined();
     await view.rerender();
     expect(clock.resume).not.toHaveBeenCalled();
 
-    await click(view.container, "Resume");
+    await click(view.container, "再開");
     expect(clock.start).toHaveBeenCalledOnce();
     expect(clock.resume).toHaveBeenCalledOnce();
     await view.unmount();
@@ -157,19 +157,19 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     const openSettings = vi.fn();
     const onError = vi.fn();
     const view = await renderWorkspace({ clock, openSettings, onError });
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
 
-    await click(view.container, "Settings");
+    await click(view.container, "設定");
     expect(openSettings).toHaveBeenCalledOnce();
     expect(clock.stop).toHaveBeenCalled();
     expect(clock.pause).not.toHaveBeenCalled();
-    expect(findButton(view.container, "Resume")).toBeDefined();
+    expect(findButton(view.container, "再開")).toBeDefined();
     deferred.resolve();
     await act(async () => Promise.resolve());
     expect(onError).not.toHaveBeenCalled();
     expect(clock.resume).not.toHaveBeenCalled();
 
-    await click(view.container, "Resume");
+    await click(view.container, "再開");
     expect(starts).toHaveLength(2);
     expect(clock.resume).not.toHaveBeenCalled();
     await view.unmount();
@@ -183,20 +183,20 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     const reconnectMidi = vi.fn();
     const openSettings = vi.fn();
     const view = await renderWorkspace({ clock, reconnectMidi, openSettings });
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
 
     await view.rerender({ midiStatus: "disconnected", midiError: "Device lost" });
-    expect(view.container.textContent).toContain("Disconnected");
+    expect(view.container.textContent).toContain("未接続");
     expect(view.container.textContent).toContain("Device lost");
-    expect(findButton(view.container, "Resume")?.disabled).toBe(true);
+    expect(findButton(view.container, "再開")?.disabled).toBe(true);
     expect(clock.stop).toHaveBeenCalled();
-    await click(view.container, "Reconnect");
-    await click(view.container, "Settings");
+    await click(view.container, "再接続");
+    await click(view.container, "設定");
     expect(reconnectMidi).toHaveBeenCalledOnce();
     expect(openSettings).toHaveBeenCalledOnce();
 
     await view.rerender({ midiStatus: "connected", midiError: undefined });
-    await click(view.container, "Resume");
+    await click(view.container, "再開");
     expect(starts).toHaveLength(2);
     expect(clock.resume).not.toHaveBeenCalled();
     await view.unmount();
@@ -210,9 +210,9 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
       const onError = vi.fn();
       const onExit = vi.fn();
       const view = await renderWorkspace({ clock, onError, onExit });
-      await click(view.container, "Start this progression");
+      await click(view.container, "この進行を開始");
 
-      if (operation === "end") await click(view.container, "End");
+      if (operation === "end") await click(view.container, "終了");
       else await view.unmount();
       const stopCount = clock.stop.mock.calls.length;
       deferred.reject(new Error("late failure"));
@@ -241,17 +241,17 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
       reloadSession,
     });
 
-    expect(view.container.textContent).toContain("Target Source: Saved voicing");
-    await click(view.container, "Start this progression");
+    expect(view.container.textContent).toContain("練習する音: 保存ボイシング");
+    await click(view.container, "この進行を開始");
     await view.rerender({ candidates: changedCandidates });
 
     expect(view.container.querySelector('[data-testid="mix-snapshot-drift"]')).not.toBeNull();
-    expect(findButton(view.container, "Resume")).toBeUndefined();
+    expect(findButton(view.container, "再開")).toBeUndefined();
     expect(clock.stop).toHaveBeenCalled();
-    await click(view.container, "Reload current data");
+    await click(view.container, "最新データで再読込");
     expect(reloadSession).toHaveBeenCalledWith(config);
     expect(view.container.querySelector('[data-testid="mix-snapshot-drift"]')).toBeNull();
-    expect(findButton(view.container, "Start this progression")).toBeDefined();
+    expect(findButton(view.container, "この進行を開始")).toBeDefined();
     await view.unmount();
   });
 
@@ -271,9 +271,9 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
       clock,
     });
 
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
     await act(async () => starts[0]?.callbacks.onRoundCompleted());
-    await click(view.container, "Start this progression");
+    await click(view.container, "この進行を開始");
     await act(async () => starts[1]?.callbacks.onRoundCompleted());
     expect(view.container.querySelector('[data-testid="mix-summary"]')).not.toBeNull();
 
@@ -282,11 +282,11 @@ describe("MixPracticeWorkspace Flow lifecycle", () => {
     expect(view.container.querySelector('[data-testid="mix-snapshot-drift"]')).not.toBeNull();
     expect(findButton(
       view.container,
-      "Retry only progressions that were not clean",
+      "クリーンでなかった進行だけ、もう一巡",
     )).toBeUndefined();
-    expect(findButton(view.container, "Repeat the same selection")).toBeUndefined();
-    expect(findButton(view.container, "Reload current data")).toBeDefined();
-    expect(findButton(view.container, "End")).toBeDefined();
+    expect(findButton(view.container, "同じ選択でもう一度")).toBeUndefined();
+    expect(findButton(view.container, "最新データで再読込")).toBeDefined();
+    expect(findButton(view.container, "終了")).toBeDefined();
     await view.unmount();
   });
 });
@@ -372,7 +372,6 @@ async function renderWorkspace(overrides: {
     await act(async () => root.render(
       <MixPracticeWorkspace
         initialState={makeState()}
-        language="en"
         practiceClock={base.clock}
         candidates={base.candidates}
         midiStatus={base.midiStatus}

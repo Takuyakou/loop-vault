@@ -15,7 +15,6 @@ import {
   Square,
 } from "lucide-react";
 import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
-import type { AppLanguage } from "../../../i18n";
 import {
   degreeDifficultyPreset,
   createCompletedAttempt,
@@ -61,30 +60,28 @@ const DEFAULT_SETTINGS: DegreeUiSettings = {
 };
 
 const RATINGS: readonly { value: PracticeRating; label: string; key: string }[] = [
-  { value: "again", label: "Again", key: "1" },
-  { value: "hard", label: "Hard", key: "2" },
-  { value: "good", label: "Good", key: "3" },
-  { value: "easy", label: "Easy", key: "4" },
+  { value: "again", label: "もう一度", key: "1" },
+  { value: "hard", label: "難しい", key: "2" },
+  { value: "good", label: "良い", key: "3" },
+  { value: "easy", label: "簡単", key: "4" },
 ];
 
 const ISSUES: readonly { value: PracticeIssue; label: string }[] = [
-  { value: "pitch", label: "Pitch（自己申告）" },
-  { value: "rhythm", label: "Rhythm" },
-  { value: "duration", label: "Duration" },
-  { value: "recall", label: "Recall" },
-  { value: "fretboard", label: "Fretboard" },
+  { value: "pitch", label: "音程（自己申告）" },
+  { value: "rhythm", label: "リズム" },
+  { value: "duration", label: "音の長さ" },
+  { value: "recall", label: "思い出し" },
+  { value: "fretboard", label: "指板" },
 ];
 
-const FLOW_STEPS: Record<AppLanguage, readonly string[]> = {
-  en: ["Listen", "Sing", "Think", "Play", "Review", "Transfer"],
+const FLOW_STEPS: Record<"ja", readonly string[]> = {
   ja: ["聴く", "歌う", "考える", "演奏", "レビュー", "移調"],
 };
 
-export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, language = "en", notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
+export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
   initialClaim?: ClaimedPracticeExercise;
   initialRound?: number;
   initialSettings?: PracticeSettings;
-  language?: AppLanguage;
   notice?: string;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNextExercise?: () => Promise<ClaimedPracticeExercise | undefined>;
@@ -139,18 +136,17 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
           if (sessionCompletedCount >= sessionTargetCount) setSessionCompletedCount(0);
           setQueuedClaim(await onNextExercise?.()); setRound((current) => current + 1);
         } catch (caught) {
-          setSettingsError(caught instanceof Error ? caught.message : "The next Practice exercise could not be prepared.");
+          setSettingsError(caught instanceof Error ? caught.message : "次の練習問題を用意できませんでした。");
         } finally { advancingRef.current = false; }
       })(); }}
       externalError={settingsError ?? notice}
-      language={language}
       onSettingsChange={(next) => {
         const previous = settings;
         setSettings(next);
         setSettingsError(undefined);
         void onSettingsChange?.(next).catch((caught) => {
           setSettings(previous);
-          setSettingsError(caught instanceof Error ? caught.message : "Practice settings could not be saved.");
+          setSettingsError(caught instanceof Error ? caught.message : "練習の設定を保存できませんでした。");
         });
       }}
       settings={settings}
@@ -165,7 +161,6 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId,
   exercise,
   externalError,
-  language,
   onAttemptCompleted,
   onNext,
   onSettingsChange,
@@ -178,7 +173,6 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId?: string;
   exercise: PracticeExercise;
   externalError?: string;
-  language: AppLanguage;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNext: () => void;
   onSettingsChange: (settings: DegreeUiSettings) => void;
@@ -252,7 +246,7 @@ function DegreeSessionWorkspace({
       setSavedAttempt(attempt);
       applyResult(session.transitionAction({ type: "RATE", rating, mainIssue: draftIssue }));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Practice progress could not be saved. Your review is still available.");
+      setError(caught instanceof Error ? caught.message : "練習の記録を保存できませんでした。自己評価は残っています。");
     } finally {
       setSavingReview(false);
       savingReviewRef.current = false;
@@ -277,7 +271,7 @@ function DegreeSessionWorkspace({
       .map((targetKey) => deriveTransferExercise(sourceAttempt, { targetKey }))
       .find((candidate) => candidate.ok);
     if (!transfer?.ok) {
-      setError("設定中のフレット範囲で別KeyのTransferを生成できませんでした。");
+      setError("設定中のフレット範囲では、別のキーの移調問題を作れませんでした。");
       return;
     }
     setDraftRating(undefined);
@@ -315,10 +309,10 @@ function DegreeSessionWorkspace({
       case "transfer-offer":
         return sessionCompletedCount >= sessionTargetCount
           ? { label: "セッション結果を見る", disabled: false, action: () => applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" })) }
-          : { label: "別KeyへTransfer", disabled: false, action: beginTransfer };
+          : { label: "別のキーへ移調", disabled: false, action: beginTransfer };
       case "transfer":
         return {
-          label: "Transfer演奏を完了",
+          label: "移調した演奏を完了",
           disabled: sessionSnapshot.transferPlaybackActive,
           action: () => applyResult(session.completeTransferUserAttempt()),
         };
@@ -383,16 +377,16 @@ function DegreeSessionWorkspace({
       />
 
       <EchoPracticeProgress
-        ariaLabel={language === "ja" ? "Degree Echoの進行" : "Degree Echo progress"}
+        ariaLabel={"Degree Echoの進行"}
         currentIndex={stepIndex}
-        steps={FLOW_STEPS[language]}
+        steps={FLOW_STEPS.ja}
       />
 
       {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
         <Surface className="p-4" data-testid="degree-session-summary">
-          <p className="lv-section-kicker">Session summary · Self-rated</p>
-          <h3 className="mt-1 font-semibold">{sessionCompletedCount} / {sessionTargetCount} exercises completed</h3>
-          <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Saved locally. This is your manual review history, not an automatic score.</p>
+          <p className="lv-section-kicker">セッションのまとめ · 自己評価</p>
+          <h3 className="mt-1 font-semibold">{sessionCompletedCount} / {sessionTargetCount} 問完了</h3>
+          <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">この PC に保存しました。自動採点ではなく、自分で付けた評価の記録です。</p>
         </Surface>
       ) : null}
 
@@ -404,7 +398,7 @@ function DegreeSessionWorkspace({
         data-testid="degree-status-announcement"
       >
         {transferRelation && state.status === "transfer"
-          ? `Degree Echo: Transfer ${transferRelation.sourceKey} → ${transferRelation.targetKey}。移調先は${transferRelation.targetKey}です。`
+          ? `Degree Echo: 移調 ${transferRelation.sourceKey} → ${transferRelation.targetKey}。移調先は${transferRelation.targetKey}です。`
           : statusAnnouncement(state.status)}
       </p>
 
@@ -412,7 +406,7 @@ function DegreeSessionWorkspace({
         <Surface variant="primary" className="min-w-0 overflow-hidden p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--lv-border)] pb-4">
             <div>
-              <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">Current challenge</p>
+              <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">今回の課題</p>
               <h3 className="mt-1 text-lg font-semibold text-[var(--lv-text)]">未知のフレーズを耳から再現</h3>
             </div>
             <div className="flex flex-wrap gap-2 text-xs text-[var(--lv-text-secondary)]">
@@ -421,9 +415,9 @@ function DegreeSessionWorkspace({
               ) : null}
               <span>{activeExercise.tempo} BPM</span>
               {state.hintLevel >= 2 ? (
-                <span data-testid="degree-note-count">· {activeExercise.targetEvents.length} notes</span>
+                <span data-testid="degree-note-count">· {activeExercise.targetEvents.length}音</span>
               ) : null}
-              <span>· {activeExercise.difficulty.phraseLengthBeats} beats</span>
+              <span>· {activeExercise.difficulty.phraseLengthBeats}拍</span>
             </div>
           </div>
 
@@ -433,7 +427,7 @@ function DegreeSessionWorkspace({
               data-testid="degree-transfer-relation"
               data-source-attempt-id={transferRelation.sourceAttemptId}
             >
-              Transfer: <strong className="text-[var(--lv-text)]">{transferRelation.sourceKey}</strong>
+              移調: <strong className="text-[var(--lv-text)]">{transferRelation.sourceKey}</strong>
               {" → "}
               <strong className="text-[var(--lv-accent)]">{transferRelation.targetKey}</strong>
               <span className="ml-2 text-xs">同じ度数・同じリズム</span>
@@ -483,7 +477,7 @@ function DegreeSessionWorkspace({
           ) : null}
 
           {state.status === "thinking" || state.status === "playing" || state.status === "review" ? (
-            <RecordCompareSection language={language}
+            <RecordCompareSection
               mode="degree"
               resetKey={`degree:${activeExercise.id}`}
               countInMs={Math.round((4 * 60_000) / activeExercise.tempo)}
@@ -509,10 +503,10 @@ function DegreeSessionWorkspace({
           <div className="mt-5 flex flex-col-reverse gap-3 border-t border-[var(--lv-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               <Button variant="ghost" size="sm" disabled={!canReplay} onClick={replay}>
-                <RotateCcw aria-hidden="true" size={15} /> Replay <kbd>R</kbd>
+                <RotateCcw aria-hidden="true" size={15} /> もう一度聴く <kbd>R</kbd>
               </Button>
               <Button variant="ghost" size="sm" disabled={!canHint} onClick={nextHint}>
-                <Lightbulb aria-hidden="true" size={15} /> Hint {state.hintLevel}/{state.maximumHintLevel} <kbd>H</kbd>
+                <Lightbulb aria-hidden="true" size={15} /> ヒント {state.hintLevel}/{state.maximumHintLevel} <kbd>H</kbd>
               </Button>
               {state.status === "singing" ? (
                 <Button variant="ghost" size="sm" onClick={() => applyResult(session.skipSinging())}>
@@ -527,7 +521,7 @@ function DegreeSessionWorkspace({
                     session.playSingingReference(settings.singingReferenceMode)
                   ))}
                 >
-                  歌唱Referenceを聴く
+                  歌う参考音を聴く
                 </Button>
               ) : null}
               {state.status === "transfer-offer" ? (
@@ -565,20 +559,20 @@ function DegreeSessionWorkspace({
           </div>
         </Surface>
 
-        <aside className="space-y-4" aria-label="Session details">
+        <aside className="space-y-4" aria-label="セッションの詳細">
           <Surface className="p-4">
-            <h3 className="text-sm font-semibold text-[var(--lv-text)]">Session</h3>
+            <h3 className="text-sm font-semibold text-[var(--lv-text)]">セッション</h3>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div><dt className="text-[var(--lv-text-muted)]">State</dt><dd className="mt-1 font-semibold">{state.status}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">Listen</dt><dd className="mt-1 font-semibold">{state.listenCount} / {state.listenLimit}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">Hint</dt><dd className="mt-1 font-semibold">Level {state.hintLevel}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">Mode</dt><dd className="mt-1 font-semibold">Degree</dd></div>
+              <div><dt className="text-[var(--lv-text-muted)]">状態</dt><dd className="mt-1 font-semibold">{STATUS_LABELS[state.status]}</dd></div>
+              <div><dt className="text-[var(--lv-text-muted)]">聴いた回数</dt><dd className="mt-1 font-semibold">{state.listenCount} / {state.listenLimit}</dd></div>
+              <div><dt className="text-[var(--lv-text-muted)]">ヒント</dt><dd className="mt-1 font-semibold">レベル {state.hintLevel}</dd></div>
+              <div><dt className="text-[var(--lv-text-muted)]">モード</dt><dd className="mt-1 font-semibold">度数</dd></div>
             </dl>
           </Surface>
           <Surface className="p-4">
-            <h3 className="text-sm font-semibold text-[var(--lv-text)]">Keyboard</h3>
+            <h3 className="text-sm font-semibold text-[var(--lv-text)]">キーボード操作</h3>
             <p className="mt-2 text-xs leading-5 text-[var(--lv-text-muted)]">
-              Space primary · R replay · H hint · S sing · 1–4 review · N next · T transfer · Esc stop
+              Space 次へ · R もう一度聴く · H ヒント · S 歌う · 1–4 評価 · N 次の問題 · T 移調 · Esc 停止
             </p>
           </Surface>
         </aside>
@@ -604,20 +598,20 @@ function SetupControls({
 }) {
   return (
     <fieldset className="grid gap-4 border-t border-[var(--lv-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
-      <legend className="sr-only">Degree Echo setup</legend>
+      <legend className="sr-only">Degree Echo の設定</legend>
       <Field htmlFor="degree-string-count" label="弦数">
         <select id="degree-string-count" className="lv-input min-h-10 w-full" value={settings.stringCount} onChange={(event) => onChange({ ...settings, stringCount: Number(event.target.value) as StringCount })}>
-          <option value={4}>4-string</option>
-          <option value={5}>5-string</option>
+          <option value={4}>4弦</option>
+          <option value={5}>5弦</option>
         </select>
       </Field>
       <Field htmlFor="degree-handedness" label="表示">
         <select id="degree-handedness" className="lv-input min-h-10 w-full" value={settings.handedness} onChange={(event) => onChange({ ...settings, handedness: event.target.value as Handedness })}>
-          <option value="right">Right-handed</option>
-          <option value="left">Left-handed</option>
+          <option value="right">右利き</option>
+          <option value="left">左利き</option>
         </select>
       </Field>
-      <Field htmlFor="degree-fret-range" label="Fret range">
+      <Field htmlFor="degree-fret-range" label="フレットの範囲">
         <select id="degree-fret-range" className="lv-input min-h-10 w-full" value={`${settings.fretRange.min}-${settings.fretRange.max}`} onChange={(event) => {
           const [min, max] = event.target.value.split("-").map(Number);
           onChange({ ...settings, fretRange: { min, max } });
@@ -627,12 +621,12 @@ function SetupControls({
           <option value="5-17">5–17</option>
         </select>
       </Field>
-      <Field htmlFor="degree-singing-reference" label="歌唱Reference">
+      <Field htmlFor="degree-singing-reference" label="歌う参考音">
         <select id="degree-singing-reference" className="lv-input min-h-10 w-full" value={settings.singingReferenceMode} onChange={(event) => onChange({ ...settings, singingReferenceMode: event.target.value as SingingReferenceMode })}>
-          <option value="auto">Auto</option>
-          <option value="original">Original</option>
-          <option value="octave-1">+1 Octave</option>
-          <option value="octave-2">+2 Octaves</option>
+          <option value="auto">自動</option>
+          <option value="original">元の高さ</option>
+          <option value="octave-1">+1 オクターブ</option>
+          <option value="octave-2">+2 オクターブ</option>
         </select>
       </Field>
     </fieldset>
@@ -643,12 +637,12 @@ function HintDisclosure({ exercise, level }: { exercise: PracticeExercise; level
   const disclosure = degreeHintDisclosure(exercise, level);
   return (
     <div className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-4" role="status">
-      <p className="text-xs font-semibold text-[var(--lv-accent)]">Hint {level}</p>
+      <p className="text-xs font-semibold text-[var(--lv-accent)]">ヒント {level}</p>
       <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">
-        {level === 1 ? `Key: ${disclosure.tonalContext?.key} ${disclosure.tonalContext?.scale}` : null}
-        {level === 2 ? `${disclosure.noteCount} notes · contour: ${disclosure.contour}` : null}
-        {level === 3 ? `Degrees: ${disclosure.degrees?.join(" → ")}` : null}
-        {level === 4 ? `Notes: ${disclosure.noteNames?.join(" → ")} · fretboard markers revealed` : null}
+        {level === 1 ? `キー: ${disclosure.tonalContext?.key} ${disclosure.tonalContext?.scale}` : null}
+        {level === 2 ? `${disclosure.noteCount}音 · 音の動き: ${disclosure.contour}` : null}
+        {level === 3 ? `度数: ${disclosure.degrees?.join(" → ")}` : null}
+        {level === 4 ? `音名: ${disclosure.noteNames?.join(" → ")} · 指板の印を表示` : null}
       </p>
     </div>
   );
@@ -726,6 +720,21 @@ function currentStepIndex(status: ReturnType<DegreePracticeSession["getState"]>[
   return 5;
 }
 
+const STATUS_LABELS: Record<ReturnType<DegreePracticeSession["getState"]>["status"], string> = {
+  setup: "設定",
+  ready: "準備完了",
+  listening: "再生中",
+  recall: "思い出す",
+  singing: "歌う",
+  thinking: "考える",
+  playing: "演奏",
+  review: "レビュー",
+  "transfer-offer": "移調の確認",
+  transfer: "移調",
+  completed: "完了",
+  abandoned: "中断",
+};
+
 function promptForStatus(status: ReturnType<DegreePracticeSession["getState"]>["status"]): string {
   const prompts = {
     setup: "演奏条件を選びましょう",
@@ -752,7 +761,7 @@ function descriptionForStatus(
   if (status === "listening") return `Listen ${listenCount} / ${listenLimit}。再生終了まで次へ進みません。`;
   if (status === "singing") return "マイクや録音は使いません。最低時間を歌った後に「歌えた」が有効になります。";
   if (status === "review") return "Good / Easyは自己評価です。Pitchなどの項目も自動測定ではありません。";
-  if (status === "setup") return "4/5弦、利き手表示、フレット範囲、歌唱Referenceを設定できます。";
+  if (status === "setup") return "4/5弦、利き手表示、フレット範囲、歌う参考音を設定できます。";
   return "ヒントは必要なときだけ1段ずつ開けます。";
 }
 

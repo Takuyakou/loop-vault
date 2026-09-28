@@ -77,7 +77,7 @@ async function renderView(playbackController: Parameters<typeof RhythmPracticeVi
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  await act(async () => root?.render(<RhythmPracticeView language="ja" playbackController={playbackController} />));
+  await act(async () => root?.render(<RhythmPracticeView playbackController={playbackController} />));
   return container.querySelector<HTMLElement>("[data-testid='rhythm-echo-view']")!;
 }
 

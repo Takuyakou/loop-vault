@@ -5,7 +5,6 @@ import process from "node:process";
 const failures = [];
 
 await checkIconContracts();
-await checkAdvisorBoundary();
 await checkWindowsReleaseSubsystem();
 
 if (failures.length > 0) {
@@ -44,21 +43,6 @@ async function checkIconContracts() {
       failures.push(`${file} must set every Lucide icon size explicitly`);
     } else if (sizes.some((size) => size !== 16 && size !== 20)) {
       failures.push(`${file} uses a Lucide icon size other than 16px or 20px`);
-    }
-  }
-}
-
-async function checkAdvisorBoundary() {
-  const files = [
-    "src/components/progression-advisor/ProgressionAdvisorDrawer.tsx",
-    "src/components/progression-advisor/AdvisorSuggestionCard.tsx",
-  ];
-  const source = (await Promise.all(files.map((file) => readFile(file, "utf8"))))
-    .join("\n");
-
-  for (const forbidden of ["playbackController", "PlayToggle", "onPreview"]) {
-    if (source.includes(forbidden)) {
-      failures.push(`Progression Advisor UI imports or references ${forbidden}`);
     }
   }
 }

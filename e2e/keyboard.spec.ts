@@ -10,7 +10,7 @@ import { createMidiFixture } from "./helpers/midiFixture";
 test("スキップリンク、主ナビゲーション、設定をキーボードだけで操作できる", async ({ page }) => {
   await openApp(page);
   await page.keyboard.press("Tab");
-  const skip = page.getByRole("link", { name: /メインコンテンツ|main content/i });
+  const skip = page.getByRole("link", { name: /メインコンテンツ/i });
   await expect(skip).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
@@ -20,10 +20,10 @@ test("スキップリンク、主ナビゲーション、設定をキーボー�
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-capture-stage="empty"]')).toBeVisible();
 
-  const settings = page.getByRole("button", { name: /設定|Settings/ }).first();
+  const settings = page.getByRole("button", { name: /設定/ }).first();
   await settings.focus();
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: /設定|Settings/ });
+  const dialog = page.getByRole("dialog", { name: /設定/ });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -32,28 +32,30 @@ test("スキップリンク、主ナビゲーション、設定をキーボー�
 
 test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ戻す", async ({ page }) => {
   await openApp(page);
-  const ideaButton = page.getByRole("button", { name: "Idea", exact: true });
-  await ideaButton.focus();
+  // P8.9-03: the empty-Idea dialog is gone; the Settings dialog carries the focus-trap check.
+  const settings = page.getByRole("button", { name: /設定/ }).first();
+  await settings.focus();
   await page.keyboard.press("Enter");
 
-  const dialog = page.getByRole("dialog", { name: /新しいIdea|Create idea/i });
+  const dialog = page.getByRole("dialog", { name: /設定/ });
   await expect(dialog).toBeVisible();
-  const title = dialog.locator('input[name="idea-title"]');
-  await expect(title).toBeFocused();
+  const close = dialog.getByRole("button", { name: /閉じる/ });
+  await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(dialog.getByRole("button", { name: /閉じる|Close/ })).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(dialog.getByRole("button", { name: /作成|Create/ })).toBeFocused();
+  await expect(dialog.locator(":focus")).toHaveCount(1);
+  await expect(close).not.toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await expect(ideaButton).toBeFocused();
+  await expect(settings).toBeFocused();
 });
 
 test("Voice選択、プリセット、Solo、解析、候補選択をキーボード操作できる", async ({ page }) => {
   await openApp(page);
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 4 }), "keyboard-flow.mid");
 
-  const details = page.getByRole("button", { name: /パート詳細|Part details/ });
+  const details = page.getByRole("button", { name: /パート詳細/ });
   if (await details.getAttribute("aria-expanded") !== "true") {
     await details.focus();
     await page.keyboard.press("Enter");
@@ -92,18 +94,18 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
 
   await page.locator("#main-content").focus();
   await page.keyboard.press("/");
-  const search = page.getByRole("textbox", { name: /検索|Search/ });
+  const search = page.getByRole("textbox", { name: /検索/ });
   await expect(search).toBeFocused();
   await search.fill("Keyboard Saved");
   await page.keyboard.press("Escape");
   await expect(search).not.toBeFocused();
 
   const open = page.locator(".lv-vault-row").first()
-    .getByRole("button", { name: /進行を開く|Open progression/ });
+    .getByRole("button", { name: /進行を開く/ });
   await open.focus();
   await page.keyboard.press("Enter");
   const practice = page.locator("[data-progression-detail-view]")
-    .getByRole("button", { name: /練習する|Practice/ });
+    .getByRole("button", { name: /練習する/ });
   await practice.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();

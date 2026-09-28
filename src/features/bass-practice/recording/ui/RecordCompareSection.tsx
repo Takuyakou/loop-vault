@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../components/ui";
-import type { AppLanguage } from "../../../../i18n";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
@@ -22,7 +21,6 @@ import type { PersistentRecordingTakeRepository } from "../application/recording
  */
 
 export interface RecordCompareSectionProps {
-  readonly language?: AppLanguage;
   readonly mode: "degree" | "rhythm" | "bassline" | "root-motion";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
@@ -57,11 +55,11 @@ export interface RecordCompareSectionProps {
   readonly isTypeSupported?: (mimeType: string) => boolean;
 }
 
-const CHANNELS: readonly { readonly value: ChannelMode; readonly label: Record<AppLanguage, string> }[] = [
-  { value: "auto", label: { ja: "自動", en: "Auto" } },
-  { value: "left", label: { ja: "左 / 入力1", en: "Left / Input 1" } },
-  { value: "right", label: { ja: "右 / 入力2", en: "Right / Input 2" } },
-  { value: "mono-sum", label: { ja: "モノラル合成", en: "Mono Sum" } },
+const CHANNELS: readonly { readonly value: ChannelMode; readonly label: Record<"ja", string> }[] = [
+  { value: "auto", label: { ja: "自動" } },
+  { value: "left", label: { ja: "左 / 入力1" } },
+  { value: "right", label: { ja: "右 / 入力2" } },
+  { value: "mono-sum", label: { ja: "モノラル合成" } },
 ];
 
 const RECORD_COMPARE_COPY = {
@@ -75,20 +73,9 @@ const RECORD_COMPARE_COPY = {
     start: "演奏 / 録音", stop: "停止", hearTarget: "お手本を聴く", retake: "録り直す", discard: "破棄", keep: "テイクを保持", skipRecord: "録音せず続ける",
     privacy: "ローカル保存のみ・クラウド送信なし・自動分析や採点はありません。",
   },
-  en: {
-    description: "Record your playing and compare it with the target. Everything stays local, with no automatic scoring or analysis.",
-    headphones: "Use headphones when accompaniment plays during recording to reduce speaker bleed. App audio is never internally mixed into your captured take.",
-    enable: "Use Record & Compare", optional: "You can continue without recording",
-    permissionDenied: "Microphone access was denied. You can continue without recording.", recordingError: "Recording is unavailable. You can continue with self-review as usual.",
-    saveFailed: "The take could not be saved, but you can still play it.", inputChannel: "Input channel", countingIn: "Counting in…", cancel: "Cancel",
-    listenChoice: "Before Review, hear your take or explicitly skip listening back.", hearTake: "Hear My Take", skipListen: "Skip Listen Back",
-    start: "Play / Record", stop: "Stop", hearTarget: "Hear Target", retake: "Retake", discard: "Discard", keep: "Keep Take", skipRecord: "Continue Without Recording",
-    privacy: "Local storage only · no cloud upload · no automatic analysis or scoring.",
-  },
 } as const;
 
 export function RecordCompareSection({
-  language = "ja",
   mode,
   resetKey,
   practiceSessionId,
@@ -109,7 +96,7 @@ export function RecordCompareSection({
   isTypeSupported,
 }: RecordCompareSectionProps) {
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
-  const copy = RECORD_COMPARE_COPY[language];
+  const copy = RECORD_COMPARE_COPY.ja;
   const [optedIn, setOptedIn] = useState(false);
   const [listenBackSkipped, setListenBackSkipped] = useState(false);
   const [preparingRecording, setPreparingRecordingState] = useState(false);
@@ -235,7 +222,7 @@ export function RecordCompareSection({
             {copy.optional}
           </span>
         </div>
-        <RetainedTakesPanel language={language} repository={retainedTakeRepository} enabledOverride={enabled} />
+        <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
       </section>
     );
   }
@@ -392,7 +379,7 @@ export function RecordCompareSection({
       <div className="flex items-center justify-between">
         <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
         <p aria-live="polite" data-testid="record-compare-status" className="text-xs text-[var(--lv-text-muted)]">
-          {statusLabel(status, language)}
+          {statusLabel(status)}
         </p>
       </div>
 
@@ -420,7 +407,7 @@ export function RecordCompareSection({
           onChange={(event) => setChannel(event.target.value as ChannelMode)}
         >
           {CHANNELS.map((channel) => (
-            <option key={channel.value} value={channel.value}>{channel.label[language]}</option>
+            <option key={channel.value} value={channel.value}>{channel.label.ja}</option>
           ))}
         </select>
       </label>
@@ -469,7 +456,7 @@ export function RecordCompareSection({
         {copy.privacy}
       </p>
 
-      <RetainedTakesPanel language={language} repository={retainedTakeRepository} enabledOverride={enabled} />
+      <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
     </section>
   );
 }
@@ -484,8 +471,8 @@ export function runRecordStartGuard(reason: string | undefined, start: () => voi
   return true;
 }
 
-function statusLabel(status: string, language: AppLanguage): string {
-  const labels: Record<AppLanguage, Record<string, string>> = {
+function statusLabel(status: string): string {
+  const labels: Record<"ja", Record<string, string>> = {
     ja: {
       idle: "準備中", unavailable: "この環境では録音を利用できません", "requesting-permission": "マイクの許可を確認中…",
       "permission-denied": "許可されませんでした", "device-missing": "入力デバイスが見つかりません", ready: "録音できます",
@@ -493,13 +480,6 @@ function statusLabel(status: string, language: AppLanguage): string {
       recorded: "録音済み — 聴き比べできます", "playing-target": "お手本を再生中…", "playing-take": "自分のテイクを再生中…",
       saving: "保存中…", saved: "保存しました", discarded: "破棄しました", error: "録音エラー",
     },
-    en: {
-      idle: "Preparing", unavailable: "Recording is unavailable in this environment", "requesting-permission": "Checking microphone permission…",
-      "permission-denied": "Permission denied", "device-missing": "No input device found", ready: "Ready to record",
-      "counting-in": "Counting in…", starting: "Starting recording…", recording: "Recording…", stopping: "Stopping…",
-      recorded: "Recorded — ready to compare", "playing-target": "Playing Target…", "playing-take": "Playing My Take…",
-      saving: "Saving…", saved: "Saved", discarded: "Discarded", error: "Recording error",
-    },
   };
-  return labels[language][status] ?? status;
+  return labels.ja[status] ?? status;
 }

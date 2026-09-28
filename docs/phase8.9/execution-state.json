@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-03",
+  "activeStage": "P8.9-04",
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
-    "P8.9-02"
+    "P8.9-02",
+    "P8.9-03"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "12baad7",
-  "lastVerifiedCommit": "883ef33",
-  "currentBranch": "feat/p8.9-02-shell",
+  "baseCommit": "c8451d9",
+  "lastVerifiedCommit": "d23f25a",
+  "currentBranch": "feat/p8.9-03-cleanup",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -52,18 +53,6 @@
       "p89-05-exe",
       "p89-05-report"
     ],
-    "P8.9-06": [
-      "p89-06-full-fresh",
-      "p89-06-screens",
-      "p89-06-exe",
-      "p89-06-report"
-    ],
-    "P8.9-07": [
-      "p89-07-full-fresh",
-      "p89-07-screens",
-      "p89-07-exe",
-      "p89-07-report"
-    ],
     "P8.9-08": [
       "p89-08-full-fresh",
       "p89-08-screens",
@@ -85,8 +74,12 @@
     "p89-02-full-fresh": "pass",
     "p89-02-screens": "pass",
     "p89-02-exe": "pass",
-    "p89-02-report": "pass"
+    "p89-02-report": "pass",
+    "p89-03-full-fresh": "pass",
+    "p89-03-screens": "pass",
+    "p89-03-exe": "pass",
+    "p89-03-report": "pass"
   },
-  "nextAction": "P8.9-02 complete; stopped at merge candidate feat/p8.9-02-shell (fresh FULL PASS @ 883ef33: Vitest 3776/3776, Playwright 129/129, gallery excluded; p89:screens P8.9-02 19 screens x 4 sizes + settings-toast; EXE built with tauri build --no-bundle; later commit is docs only). Stage 1 merged into local master at 12baad7. Human EXE checks are listed at the end of the report. P8.9-03 not started: the stage-3 zip merges this candidate first. No push/tag/release.",
+  "nextAction": "P8.9-03 complete; stopped at merge candidate feat/p8.9-03-cleanup (fresh FULL PASS @ d23f25a: Vitest 3723/3723, Playwright 129/129, gallery excluded; p89:screens P8.9-03 18 screens x 3 sizes + 19 at 768x640, History removed; EXE built with tauri build --no-bundle; later commit is docs only). Items a-h removed from the UI and the display is Japanese-only; saved data (including settings.language) unchanged. Stage 2 merged into local master at c8451d9. Human EXE checks are listed at the end of the report. P8.9-04 not started: the stage-4 zip merges this candidate first. No push/tag/release.",
   "updatedAt": "2026-09-27"
 }

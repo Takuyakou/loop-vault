@@ -1,15 +1,14 @@
-import type { AppLanguage } from "../../../i18n";
 import type { Handedness, RootMotionExercise } from "../domain";
 
 /**
  * Read-only physical-shape disclosure for Root Motion. It uses the generator's
  * frozen fingering pairs only; it never infers a path from Vault source data.
  */
-export function RootMotionFretboard({ exercise, handedness, language = "en" }: { readonly exercise: RootMotionExercise; readonly handedness: Handedness; readonly language?: AppLanguage }) {
+export function RootMotionFretboard({ exercise, handedness }: { readonly exercise: RootMotionExercise; readonly handedness: Handedness;}) {
   const { tuning, fretRange } = exercise.generatorSnapshot;
   const frets = Array.from({ length: fretRange.max - fretRange.min + 1 }, (_, index) => fretRange.min + index);
   const visualFrets = handedness === "left" ? [...frets].reverse() : frets;
-  const labels = language === "ja" ? {
+  const labels = {
     title: "\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306e\u5f62",
     view: handedness === "left" ? "\u5de6\u5229\u304d\u8868\u793a" : "\u53f3\u5229\u304d\u8868\u793a",
     sequence: "\u30eb\u30fc\u30c8\u306e\u9806\u756a",
@@ -20,17 +19,6 @@ export function RootMotionFretboard({ exercise, handedness, language = "en" }: {
     source: "\u958b\u59cb",
     target: "\u79fb\u52d5\u5148",
     stringHeader: "\u5f26",
-  } : {
-    title: "Fretboard shape",
-    view: handedness === "left" ? "left-handed view" : "right-handed view",
-    sequence: "Root sequence",
-    note: "Numbers show root order. A number can appear at two positions when the next motion uses a different legal fingering for the same root. The displayed path is deterministic and does not score your performance.",
-    step: "Step",
-    string: "string",
-    fret: "fret",
-    source: "source",
-    target: "target",
-    stringHeader: "STRING",
   };
   const markerByPosition = new Map<string, number[]>();
   const addMarker = (stringIndex: number, fret: number, step: number) => {
@@ -49,7 +37,7 @@ export function RootMotionFretboard({ exercise, handedness, language = "en" }: {
     <div className="flex flex-wrap items-end justify-between gap-2">
       <div>
         <h3 id="root-motion-fretboard-title" className="text-sm font-semibold text-[var(--lv-text)]">{labels.title}</h3>
-        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{tuning.length}-string / {labels.view} / {labels.fret} {fretRange.min}-{fretRange.max}</p>
+        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{tuning.length}弦 / {labels.view} / {labels.fret} {fretRange.min}-{fretRange.max}</p>
       </div>
       <p className="text-xs text-[var(--lv-text-muted)]">{labels.sequence}</p>
     </div>

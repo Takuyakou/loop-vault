@@ -297,15 +297,15 @@ export function createVaultStore(
       const state = get();
       if (state.loadStatus !== "ready") return false;
       if (state.quarantine.length > 0) {
-        set({ error: quarantineReadonlyMessage(state.settings.language, "mutation") });
+        set({ error: quarantineReadonlyMessage("mutation") });
         return false;
       }
       if (state.sizeRecovery && activeRecoveryCommit) {
-        set({ error: sizeRecoveryMessage(state.settings.language, "saving") });
+        set({ error: sizeRecoveryMessage("saving") });
         return false;
       }
       if (state.sizeRecovery && !allowSizeRecoveryShrink) {
-        set({ error: sizeRecoveryMessage(state.settings.language, "readonly") });
+        set({ error: sizeRecoveryMessage("readonly") });
         return false;
       }
 
@@ -317,8 +317,8 @@ export function createVaultStore(
           || error.kind !== "vault-too-large"
           || !sourceBasslineFallback) {
           const message = error instanceof VaultRepositoryError && error.kind === "vault-too-large"
-            ? vaultBudgetMessage(state.settings.language)
-            : error instanceof Error ? error.message : vaultBudgetMessage(state.settings.language);
+            ? vaultBudgetMessage()
+            : error instanceof Error ? error.message : vaultBudgetMessage();
           set({ error: message });
           onPersistenceError?.(message);
           return false;
@@ -327,16 +327,14 @@ export function createVaultStore(
         try {
           assertVaultCandidateSerializedBudget(withoutSourceBassline);
         } catch {
-          const message = vaultBudgetMessage(state.settings.language);
+          const message = vaultBudgetMessage();
           set({ error: message });
           onPersistenceError?.(message);
           return false;
         }
         if (!sourceBasslineFallback.confirm()) {
           set({
-            error: state.settings.language === "ja"
-              ? "元ベースラインを外した保存はキャンセルされました。"
-              : "Saving without the source bassline was cancelled.",
+            error: "元ベースラインを外した保存はキャンセルされました。",
           });
           return false;
         }
@@ -366,7 +364,7 @@ export function createVaultStore(
             if (generation !== vaultGeneration) return;
             set({
               saving: false,
-              error: sizeRecoveryMessage(state.settings.language, "save-failed"),
+              error: sizeRecoveryMessage("save-failed"),
             });
           }
         })();
@@ -448,7 +446,7 @@ export function createVaultStore(
             error:
               error instanceof Error
                 ? error.message
-                : "Vault could not be loaded.",
+                : "Vaultを読み込めませんでした。",
           });
         }
       },
@@ -567,7 +565,7 @@ export function createVaultStore(
       },
       updateIdea(id, changes) {
         if (Object.prototype.hasOwnProperty.call(changes, "progressionBlocks")) {
-          set({ error: "Update a progression block by its ID; idea metadata cannot replace the block list." });
+          set({ error: "進行はIDを指定して更新してください。Ideaの情報で進行の一覧を置き換えることはできません。" });
           return false;
         }
         const updatedAt = now().toISOString();
@@ -642,7 +640,7 @@ export function createVaultStore(
 
       updateProgressionBlock(ideaId, blockId, changes) {
         if (Object.prototype.hasOwnProperty.call(changes, "sourceBassline")) {
-          set({ error: "Stored source bassline snapshots are immutable." });
+          set({ error: "保存済みの元ベースラインは変更できません。" });
           return false;
         }
         const idea = get().ideas.find((entry) => entry.id === ideaId);
@@ -820,7 +818,7 @@ export function createVaultStore(
         if (!idea) {
           return {
             ok: false,
-            error: { code: "invalid-jump", message: "Idea was not found." },
+            error: { code: "invalid-jump", message: "Ideaが見つかりません。" },
           };
         }
 
@@ -840,7 +838,7 @@ export function createVaultStore(
             ok: false,
             error: {
               code: "persistence-failed",
-              message: get().error ?? "The Vault update could not be saved.",
+              message: get().error ?? "Vaultの変更を保存できませんでした。",
             },
           };
         }
@@ -943,10 +941,10 @@ export function createVaultStore(
 
       async exportVault(path) {
         if (get().quarantine.length > 0) {
-          set({ error: quarantineReadonlyMessage(get().settings.language, "export") });
+          set({ error: quarantineReadonlyMessage("export") });
           return false;
         }        if (get().sizeRecovery) {
-          set({ error: sizeRecoveryMessage(get().settings.language, "export") });
+          set({ error: sizeRecoveryMessage("export") });
           return false;
         }
         await get().flush();
@@ -959,7 +957,7 @@ export function createVaultStore(
             error:
               error instanceof Error
                 ? error.message
-                : "Vault could not be exported.",
+                : "Vaultを書き出せませんでした。",
           });
           return false;
         }
@@ -967,10 +965,10 @@ export function createVaultStore(
 
       async importVault(path, mode) {
         if (get().quarantine.length > 0 && mode === "merge") {
-          set({ error: quarantineReadonlyMessage(get().settings.language, "merge") });
+          set({ error: quarantineReadonlyMessage("merge") });
           return false;
         }        if (get().sizeRecovery) {
-          set({ error: sizeRecoveryMessage(get().settings.language, "import") });
+          set({ error: sizeRecoveryMessage("import") });
           return false;
         }
         await get().flush();
@@ -986,7 +984,7 @@ export function createVaultStore(
             error:
               error instanceof Error
                 ? error.message
-                : "Vault could not be imported.",
+                : "Vaultを読み込めませんでした（バックアップファイル）。",
           });
           return false;
         }
@@ -1005,7 +1003,7 @@ export function createVaultStore(
             error:
               error instanceof Error
                 ? error.message
-                : "Backup could not be restored.",
+                : "バックアップを復元できませんでした。",
           });
         }
       },
@@ -1013,7 +1011,7 @@ export function createVaultStore(
       async flush() {
         if (get().quarantine.length > 0) {
           clearSaveTimer();
-          set({ error: quarantineReadonlyMessage(get().settings.language, "flush") });
+          set({ error: quarantineReadonlyMessage("flush") });
           return;
         }        clearSaveTimer();
         if (activeRecoveryCommit) await activeRecoveryCommit;
@@ -1047,7 +1045,7 @@ export function createVaultStore(
               saving: false,
               unsaved: true,
               error:
-                error instanceof Error ? error.message : "Vault could not be saved.",
+                error instanceof Error ? error.message : "Vaultを保存できませんでした。",
             });
           }
         })();
@@ -1112,46 +1110,24 @@ async function safeListBackups(
   }
 }
 
-function vaultBudgetMessage(language: "ja" | "en"): string {
-  return language === "ja"
-    ? "Vault全体が16 MiB上限を超えるため保存できません。既存内容を減らすか、元ベースラインを付けずにもう一度保存してください。"
-    : "The complete Vault exceeds the 16 MiB limit. Reduce existing content or retry without the source bassline.";
+function vaultBudgetMessage(): string {
+  return "Vault全体が16 MiB上限を超えるため保存できません。既存内容を減らすか、元ベースラインを付けずにもう一度保存してください。";
 }
 function quarantineReadonlyMessage(
-  language: "ja" | "en",
   kind: "mutation" | "flush" | "merge" | "export",
 ): string {
-  const ja = language === "ja";
-  if (kind === "merge") return ja
-    ? "無効レコードを隔離中のVaultへは結合できません。置換読み込みまたは正常なbackup復元を使用してください。"
-    : "A Vault with quarantined records cannot be merged. Use replace import or restore a valid backup.";
-  if (kind === "export") return ja
-    ? "無効レコードを隔離中のVaultは、不完全な書き出しを防ぐためexportできません。"
-    : "A Vault with quarantined records cannot be exported because the export would be incomplete.";
-  return ja
-    ? "無効レコードを隔離中のため、このVaultは非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"
-    : "This Vault is non-writing while invalid records are quarantined. Recover with replace import or a valid backup.";
+  if (kind === "merge") return "無効レコードを隔離中のVaultへは結合できません。置換読み込みまたは正常なbackup復元を使用してください。";
+  if (kind === "export") return "無効レコードを隔離中のVaultは、不完全な書き出しを防ぐためexportできません。";
+  return "無効レコードを隔離中のため、このVaultは非書込みです。置換読み込みまたは正常なbackup復元で回復してください。";
 }
 function sizeRecoveryMessage(
-  language: "ja" | "en",
   kind: "readonly" | "saving" | "save-failed" | "export" | "import",
 ): string {
-  const ja = language === "ja";
-  if (kind === "saving") return ja
-    ? "Vaultの縮小保存中です。完了後にもう一度お試しください。"
-    : "The reduced Vault is being saved. Try again after it completes.";
-  if (kind === "save-failed") return ja
-    ? "Vaultを縮小保存できませんでした。元の読み取り専用データは変更されていません。"
-    : "The reduced Vault could not be saved. The original read-only data is unchanged.";
-  if (kind === "export") return ja
-    ? "16 MiB未満へ縮小するまでVaultを書き出せません。"
-    : "Reduce the Vault below 16 MiB before exporting.";
-  if (kind === "import") return ja
-    ? "16 MiB未満へ縮小するまでVaultを読み込めません。"
-    : "Reduce the Vault below 16 MiB before importing.";
-  return ja
-    ? "このVaultは上限超過のため読み取り専用です。削除または内容の縮小で16 MiB未満にしてください。"
-    : "This Vault is read-only because it exceeds the limit. Delete or reduce content below 16 MiB.";
+  if (kind === "saving") return "Vaultの縮小保存中です。完了後にもう一度お試しください。";
+  if (kind === "save-failed") return "Vaultを縮小保存できませんでした。元の読み取り専用データは変更されていません。";
+  if (kind === "export") return "16 MiB未満へ縮小するまでVaultを書き出せません。";
+  if (kind === "import") return "16 MiB未満へ縮小するまでVaultを読み込めません。";
+  return "このVaultは上限超過のため読み取り専用です。削除または内容の縮小で16 MiB未満にしてください。";
 }
 
 function corruptPathFromDetails(details: unknown): string | undefined {

@@ -19,7 +19,6 @@ import {
 import type { ChordSymbol } from "../../domain/types";
 import {
   quickChordEditorCopy,
-  type AppLanguage,
 } from "../../i18n";
 import { ArrowLeft, ArrowRight, Play, X } from "lucide-react";
 import { Modal } from "../Modal";
@@ -33,7 +32,6 @@ type QuickApplySource = Extract<
 interface QuickChordEditorProps {
   slot: EditableChordSlot;
   anchorElement: HTMLElement;
-  language: AppLanguage;
   resetLabel?: string;
   candidates?: readonly QuickChordCandidate[];
   onPreview: (chord: ChordSymbol) => void;
@@ -50,7 +48,6 @@ interface QuickChordEditorProps {
 export function QuickChordEditor({
   slot,
   anchorElement,
-  language,
   resetLabel,
   candidates: providedCandidates,
   onPreview,
@@ -59,7 +56,7 @@ export function QuickChordEditor({
   onOpenInspector,
   onClose,
 }: QuickChordEditorProps) {
-  const text = quickChordEditorCopy[language];
+  const text = quickChordEditorCopy.ja;
   const panelRef = useRef<HTMLDivElement>(null);
   const [draftChord, setDraftChord] = useState(() => cloneChord(slot.currentChord));
   const [source, setSource] = useState<QuickApplySource>("structure-editor");
@@ -234,7 +231,6 @@ export function QuickChordEditor({
               candidate.primarySource === "analyzer" ? [index] : []
             ))}
             draftChord={draftChord}
-            language={language}
             onChoose={chooseCandidate}
           />
           <CandidateGroup
@@ -244,7 +240,6 @@ export function QuickChordEditor({
               candidate.primarySource !== "analyzer" ? [index] : []
             ))}
             draftChord={draftChord}
-            language={language}
             onChoose={chooseCandidate}
           />
           {!candidates.some((candidate) => candidate.sources.includes("authorReferenceFit")) ? (
@@ -279,7 +274,6 @@ export function QuickChordEditor({
 
       <ChordStructureEditor
         chord={draftChord}
-        language={language}
         onChange={(chord) => {
           setDraftChord(chord);
           setSource("structure-editor");
@@ -378,18 +372,16 @@ function CandidateGroup({
   candidates,
   indexes,
   draftChord,
-  language,
   onChoose,
 }: {
   title: string;
   candidates: readonly QuickChordCandidate[];
   indexes: readonly number[];
   draftChord: ChordSymbol;
-  language: AppLanguage;
   onChoose: (candidate: QuickChordCandidate) => void;
 }) {
   if (indexes.length === 0) return null;
-  const text = quickChordEditorCopy[language];
+  const text = quickChordEditorCopy.ja;
   return (
     <div className="mt-3">
       <p className="text-xs text-[var(--lv-text-muted)]">{title}</p>
@@ -423,7 +415,7 @@ function CandidateGroup({
 
 function sourceLabel(
   source: QuickChordCandidate["primarySource"],
-  text: typeof quickChordEditorCopy[AppLanguage],
+  text: typeof quickChordEditorCopy.ja,
 ): string {
   if (source === "smoothConnection") return text.smoothSource;
   if (source === "authorReferenceFit") return text.styleSource;
@@ -433,7 +425,7 @@ function sourceLabel(
 
 function sourceDescription(
   source: QuickChordCandidate["primarySource"],
-  text: typeof quickChordEditorCopy[AppLanguage],
+  text: typeof quickChordEditorCopy.ja,
 ): string {
   if (source === "smoothConnection") return text.smoothDescription;
   if (source === "authorReferenceFit") return text.styleDescription;

@@ -49,7 +49,6 @@ describe("CorrectionPropagationPanel", () => {
             { segmentId: "target-2", similarity: 0.89, reasons: ["duration-match"] },
           ]}
           slots={slots}
-          language="ja"
           playbackSource={{ kind: "capture", id: "candidate:test" }}
           controller={controller}
           onApply={onApply}
@@ -89,16 +88,15 @@ describe("CorrectionPropagationPanel", () => {
         <CorrectionPropagationPanel
           sourceSlotId="source"
           chord={correctedChord}
-          candidates={[{ segmentId: "target", similarity: 0.9, reasons: [] }]}
-          slots={[slot("source", 1), slot("target", 5)]}
-          language="en"
+          candidates={[{ segmentId: "移動先", similarity: 0.9, reasons: [] }]}
+          slots={[slot("source", 1), slot("移動先", 5)]}
           playbackSource={{ kind: "capture", id: "candidate:test" }}
           onApply={vi.fn()}
         />,
       );
     });
-    expect(container.textContent).toContain("1 similar sections may accept this correction");
-    expect(container.textContent).toContain("Apply to selected sections");
+    expect(container.textContent).toContain("同じ修正を適用できそうな区間が1件あります");
+    expect(container.textContent).toContain("選択した区間へ適用");
     act(() => root.unmount());
   });
 });

@@ -57,7 +57,6 @@ describe("SongMiniMap Stage03 hardening", () => {
         timeline={[]}
         candidates={candidates}
         candidateDatasetKey="stage03-long"
-        language="en"
         copy={longCopy}
         onCandidateSelect={vi.fn()}
         onDraftChange={vi.fn()}

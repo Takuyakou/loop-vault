@@ -98,9 +98,10 @@ export function keyCatalogForMode(
   return mode === "major" ? MAJOR_KEY_CATALOG : MINOR_KEY_CATALOG;
 }
 
+/** Display uses Japanese; "en" is the internal key name ("C major") that the harmony code parses. */
 export function formatKeySignature(
   key: KeySignature,
-  language: PracticeKeyLanguage,
+  language: PracticeKeyLanguage = "ja",
 ): string {
   return canonicalizeKeySignature(key).labels[language];
 }
@@ -167,6 +168,7 @@ function createCatalog(
       canonicalName: definition.name,
       accidentalPreference: definition.accidentalPreference,
       labels: Object.freeze({
+        // English names stay: parseKeySignature accepts them as input.
         en: `${definition.name} ${mode}`,
         ja: `${definition.name}${mode === "major" ? "メジャー" : "マイナー"}`,
       }),

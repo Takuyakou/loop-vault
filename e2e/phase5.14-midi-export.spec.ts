@@ -37,7 +37,7 @@ test("Progression Detail keeps cards first and exposes accessible click, keyboar
     await midiControl.elementHandle(),
   )).toBe(true);
   await expect(midiButton).toHaveAttribute("title", /DAW|MIDI file/);
-  await expect(midiControl).toContainText(/ボイシング|voicing/i);
+  await expect(midiControl).toContainText(/ボイシング/i);
 
   await installMidiBridgeMock(page);
   await midiButton.click();
@@ -65,7 +65,7 @@ test("Progression Detail keeps cards first and exposes accessible click, keyboar
 async function openFirstProgression(page: Page) {
   const row = page.locator(".lv-vault-row").first();
   await row.getByRole("button", {
-    name: /^(Open progression|進行を開く)$/,
+    name: /^(進行を開く)$/,
   }).click();
   await expect(page.locator("[data-progression-detail-view]")).toBeVisible();
 }

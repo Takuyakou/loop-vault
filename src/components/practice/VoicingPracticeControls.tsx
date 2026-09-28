@@ -4,7 +4,6 @@ import {
   Square,
 } from "lucide-react";
 import type { PreviewSound } from "../../audio/chordPreview";
-import type { AppLanguage } from "../../domain/types";
 import type {
   GeneratedStyleVoicingPlan,
   PracticeTargetSource,
@@ -15,7 +14,6 @@ import { appCopy } from "../../i18n";
 import { PreviewSoundSelector } from "../PreviewSoundSelector";
 
 interface VoicingPracticeControlsProps {
-  language: AppLanguage;
   targetSource: PracticeTargetSource;
   preferences: VoicingPracticePreferences;
   matchMode: StyleVoicingMatchMode;
@@ -66,40 +64,9 @@ const copy = {
     fallbackHint: "OFFではセッションを開始できません。",
     bar: (bar: number) => `${bar}小節目`,
   },
-  en: {
-    title: "Practice voicing",
-    resolved: "Saved voicing (default)",
-    close: "Automatic (close)",
-    shell: "Shell 1-7",
-    open: "Open 1-7",
-    rootless: "Rootless A/B",
-    resolvedDescription: "Prioritizes saved shapes, then safely falls back to source MIDI or generated voicing.",
-    closeDescription: "Practice the existing automatic voicing across the progression.",
-    shellDescription: "LH guide: Root + 7th. RH guide: 3rd + Tension. Learn function with fewer notes.",
-    openDescription: "Spreads Root / 7th and upper voices to practice an open register and hand roles.",
-    rootlessDescription: "Omits Root and centers 3rd, 7th, 9th, and 13th. A/B is selected across the progression.",
-    stylePractice: "Style practice",
-    unranked: "Excluded from level progress",
-    leftSpan: "Maximum left-hand span",
-    rightSpan: "Maximum right-hand span",
-    octave: "Octave",
-    ninth: "Ninth",
-    tenth: "Tenth",
-    judgement: "Judgement",
-    exact: "Specified pitches",
-    pitchClass: "Loose (pitch classes)",
-    octaveShift: "Allow one global octave shift",
-    preview: "Preview progression",
-    stop: "Stop",
-    unsupported: (count: number) => `${count} chord(s) in this progression are unsupported by the selected style.`,
-    fallback: "Use Automatic (close) only for unsupported chords",
-    fallbackHint: "The session cannot start while this is off.",
-    bar: (bar: number) => `Bar ${bar}`,
-  },
 } as const;
 
 export function VoicingPracticeControls({
-  language,
   targetSource,
   preferences,
   matchMode,
@@ -118,7 +85,7 @@ export function VoicingPracticeControls({
   onPreviewSoundChange,
   onPreview,
 }: VoicingPracticeControlsProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const sourceValue = practiceTargetSourceValue(targetSource);
   const styleMode = targetSource.type !== "resolved-voicing";
   const unsupported = plan?.unsupportedEvents ?? [];
@@ -164,7 +131,7 @@ export function VoicingPracticeControls({
           <PreviewSoundSelector
             value={previewSound}
             onChange={onPreviewSoundChange}
-            copy={appCopy[language]}
+            copy={appCopy.ja}
           />
           <button
             type="button"
@@ -251,7 +218,7 @@ export function VoicingPracticeControls({
               <li key={event.eventId}>
                 {text.bar(eventBars[event.eventId] ?? 1)}
                 {concealChordLabels ? "" : `: ${event.chordLabel}`} ·{" "}
-                {localizedUnsupportedReason(event.reason, language)}
+                {localizedUnsupportedReason(event.reason)}
               </li>
             ))}
           </ul>
@@ -284,7 +251,7 @@ function SpanSelect({
   label: string;
   value: 12 | 14 | 16;
   disabled: boolean;
-  text: typeof copy.ja | typeof copy.en;
+  text: typeof copy.ja;
   onChange(value: 12 | 14 | 16): void;
 }) {
   return (
@@ -306,7 +273,7 @@ function SpanSelect({
 
 function sourceDescription(
   value: string,
-  text: typeof copy.ja | typeof copy.en,
+  text: typeof copy.ja,
 ): string {
   if (value === "generated-close") return text.closeDescription;
   if (value === "shell-17") return text.shellDescription;
@@ -339,20 +306,6 @@ function segmentClass(active: boolean): string {
 
 function localizedUnsupportedReason(
   reason: string,
-  language: AppLanguage,
 ): string {
-  if (language === "ja") return reason;
-  if (reason === "コード構成音を解釈できません。") {
-    return "The chord tones could not be interpreted.";
-  }
-  if (reason === "スラッシュコードはルートレスA/BのMVP対象外です。") {
-    return "Slash chords are not supported by Rootless A/B in this version.";
-  }
-  if (reason === "このコード種はルートレスA/BのMVP対象外です。") {
-    return "This chord quality is not supported by Rootless A/B in this version.";
-  }
-  if (reason === "現在のspanでは候補を生成できません。") {
-    return "No playable candidate fits the current hand spans.";
-  }
-  return "No playable candidate is available for this chord.";
+  return reason;
 }

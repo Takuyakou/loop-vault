@@ -1,5 +1,4 @@
 import { AlertTriangle, FileMusic, Sparkles } from "lucide-react";
-import type { AppLanguage } from "../../i18n";
 import type {
   VoicingSourceReason,
   VoicingSourceStatus,
@@ -10,7 +9,6 @@ interface VoicingSourceChipProps {
   reason?: VoicingSourceReason;
   /** True when the input has no source MIDI by design, such as text entry. */
   sourceAbsentByDesign?: boolean;
-  language: AppLanguage;
   testId?: string;
 }
 
@@ -29,35 +27,18 @@ const copy = {
       "source-non-midi": "元MIDI以外から記録されたボイシングです。",
     },
   },
-  en: {
-    source: "Source MIDI",
-    generated: "Generated",
-    review: "Review",
-    descriptions: {
-      "source-ready": "A voicing extracted from the source MIDI is available.",
-      "source-missing": "Generated voicing is used because no source MIDI voicing is available.",
-      "source-stale": "Generated voicing is used because the chord was edited.",
-      "source-invalid": "Review the stored source voicing data.",
-      "source-aggregated": "This is an aggregated note set and may not be a simultaneous voicing.",
-      "source-low-confidence": "The source estimate does not meet the automatic-use confidence threshold.",
-      "source-non-midi": "This voicing was captured from a source other than the original MIDI.",
-    },
-  },
 } as const;
 
 export function VoicingSourceChip({
   status,
   reason,
   sourceAbsentByDesign = false,
-  language,
   testId = "voicing-source-chip",
 }: VoicingSourceChipProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const label = text[status];
   const description = sourceAbsentByDesign
-    ? language === "ja"
-      ? "\u30c6\u30ad\u30b9\u30c8\u5165\u529b\u304b\u3089\u81ea\u52d5\u751f\u6210\u3057\u305f\u30dc\u30a4\u30b7\u30f3\u30b0\u3067\u3059\u3002"
-      : "Auto-generated from this text entry."
+    ? "\u30c6\u30ad\u30b9\u30c8\u5165\u529b\u304b\u3089\u81ea\u52d5\u751f\u6210\u3057\u305f\u30dc\u30a4\u30b7\u30f3\u30b0\u3067\u3059\u3002"
     : reason
       ? text.descriptions[reason]
       : status === "source"
@@ -81,7 +62,7 @@ export function VoicingSourceChip({
       className={`inline-flex min-h-6 items-center gap-1.5 border px-2 py-1 text-xs font-semibold ${colors}`}
       data-testid={testId}
       data-voicing-source={status}
-      aria-label={`${language === "ja" ? "ボイシング" : "Voicing"}: ${label}`}
+      aria-label={`${"ボイシング"}: ${label}`}
       title={description}
     >
       <Icon aria-hidden="true" size={16} />

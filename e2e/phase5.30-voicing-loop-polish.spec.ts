@@ -103,7 +103,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await capture.getByTestId("text-progression-input").fill(maximumInput);
   await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
+  await capture.getByRole("button", { name: /キーを確定/ }).click();
   await capture.getByTestId("text-progression-bpm").fill("240");
   await capture.getByTestId("text-progression-convert").click();
   const editor = page.getByTestId("manual-candidate-editor");
@@ -134,10 +134,10 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   });
   expect(maximumScroll).toBeGreaterThan(0);
   await page.getByRole("button", { name: /開始/ }).click();
-  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/FOLLOW/);
+  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/追従/);
   await viewport.hover();
   await page.mouse.wheel(0, 200);
-  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/MANUAL/);
+  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/手動/);
   await page.keyboard.press("f");
   await expect.poll(() => viewport.evaluate((element) => element.scrollLeft), { timeout: 5_000 })
     .toBeLessThan(maximumScroll);

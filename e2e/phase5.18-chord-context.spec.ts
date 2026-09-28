@@ -120,39 +120,39 @@ test("P5.18.1 selects a preset and key before confirming a Vault source from Bas
   await openApp(page);
   await createSavedProgression(page, "P5.18.1 Bassline source picker");
   await openVault(page);
-  await page.locator(".lv-vault-row").first().getByRole("button", { name: /Open progression|進行を開く/ }).click();
+  await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
-  await detail.getByRole("button", { name: /Practice|練習する/ }).click();
+  await detail.getByRole("button", { name: /練習する/ }).click();
 
   const bassline = page.getByTestId("bassline-echo-view");
   const selector = bassline.getByTestId("bassline-progression-select");
   await expect(bassline).toBeVisible();
   await expect(selector).toHaveValue("vault");
-  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault source|Vault進行/);
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault進行/);
 
   await selector.selectOption("generated");
   await expect(selector).toHaveValue("generated");
-  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Dm7");
+  await expect(bassline.getByLabel(/ベースラインのコード進行/)).toContainText("Dm7");
 
   expect(await selector.locator("option").count()).toBeGreaterThanOrEqual(10);
   await selector.selectOption("pop-four-chords");
   await expect(selector).toHaveValue("pop-four-chords");
   await expect(bassline.getByTestId("bassline-source-summary")).toContainText("Pop Four Chords");
-  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Am");
+  await expect(bassline.getByLabel(/ベースラインのコード進行/)).toContainText("Am");
 
   const keySelector = bassline.getByTestId("bassline-preset-key-select");
   await expect(keySelector).toHaveValue("C major");
   await keySelector.selectOption("D major");
   await expect(keySelector).toHaveValue("D major");
   await expect(bassline.getByTestId("bassline-source-summary")).toContainText("D major");
-  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Bm");
+  await expect(bassline.getByLabel(/ベースラインのコード進行/)).toContainText("Bm");
 
   await bassline.getByTestId("vault-progression-picker-open").click();
   await expect(page.getByTestId("vault-progression-picker")).toBeVisible();
   await page.getByTestId("vault-progression-picker-candidate").first().click();
   await page.getByTestId("vault-progression-picker-confirm").click();
   await expect(selector).toHaveValue("vault");
-  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault source|Vault進行/);
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault進行/);
   await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
   await assertNoHorizontalOverflow(page);
 });

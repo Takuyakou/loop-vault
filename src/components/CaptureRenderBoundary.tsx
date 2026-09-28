@@ -1,10 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { TriangleAlert } from "lucide-react";
-import type { AppLanguage } from "../i18n";
 
 interface CaptureRenderBoundaryProps {
   children: ReactNode;
-  language: AppLanguage;
   resetKey: string;
   onReset: () => void;
 }
@@ -20,13 +18,6 @@ const text = {
       "このMIDIの解析結果を画面へ表示する途中で問題が発生しました。アプリはそのまま利用できます。",
     reset: "MIDI選択へ戻る",
     details: "技術情報",
-  },
-  en: {
-    title: "Could not display the MIDI analysis",
-    description:
-      "A problem occurred while displaying this MIDI analysis. The rest of the app is still available.",
-    reset: "Back to MIDI selection",
-    details: "Technical details",
   },
 } as const;
 
@@ -60,7 +51,7 @@ export class CaptureRenderBoundary extends Component<
     const { error } = this.state;
     if (error === null) return this.props.children;
 
-    const copy = text[this.props.language];
+    const copy = text.ja;
     return (
       <section
         className="my-5 border border-red-400/40 bg-red-950/20 p-5"

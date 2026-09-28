@@ -1,5 +1,5 @@
 import type { EditableChordSlot } from "../../domain/progressionEditing";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 import { Pencil, Plus, SquarePen, TriangleAlert } from "lucide-react";
 
 interface EditableChordCardProps {
@@ -16,7 +16,6 @@ interface EditableChordCardProps {
   buttonRef?: (element: HTMLButtonElement | null) => void;
   /** Text-entry drafts use confidence 0 as a no-analysis sentinel, not a review signal. */
   showConfidenceReview?: boolean;
-  language: AppLanguage;
 }
 
 export function EditableChordCard({
@@ -32,9 +31,8 @@ export function EditableChordCard({
   onInsertAfter,
   buttonRef,
   showConfidenceReview = true,
-  language,
 }: EditableChordCardProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   const needsReview = slot.warnings.length > 0
     || (showConfidenceReview && (slot.confidence ?? 1) < 0.7);
   return (

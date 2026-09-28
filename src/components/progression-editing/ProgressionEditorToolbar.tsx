@@ -1,4 +1,4 @@
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { progressionEditorCopy } from "../../i18n";
 import { Redo2, Undo2 } from "lucide-react";
 
 interface ProgressionEditorToolbarProps {
@@ -8,7 +8,6 @@ interface ProgressionEditorToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onResetAll: () => void;
-  language: AppLanguage;
 }
 
 export function ProgressionEditorToolbar({
@@ -18,9 +17,8 @@ export function ProgressionEditorToolbar({
   onUndo,
   onRedo,
   onResetAll,
-  language,
 }: ProgressionEditorToolbarProps) {
-  const text = progressionEditorCopy[language];
+  const text = progressionEditorCopy.ja;
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div className="flex gap-2">

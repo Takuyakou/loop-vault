@@ -33,7 +33,6 @@ import {
   type MixSessionConfig,
   type MixSessionState,
 } from "../../domain/practiceMix";
-import type { AppLanguage } from "../../domain/types";
 import type { GenerateStyleVoicingOptions } from "../../domain/voicingPractice";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import type { LiveMidiConnectionStatus } from "../../liveMidi/types";
@@ -42,7 +41,6 @@ import { PracticeKeyboard } from "./PracticeKeyboard";
 
 interface MixPracticeWorkspaceProps {
   initialState: MixSessionState;
-  language: AppLanguage;
   practiceClock: Pick<PracticeClock, "start" | "stop" | "pause" | "resume">;
   candidates: readonly MixProgressionCandidate[];
   styleOptions?: GenerateStyleVoicingOptions;
@@ -86,7 +84,7 @@ const copy = {
     disconnected: "未接続",
     reconnect: "再接続",
     settings: "設定",
-    targetSource: "Target Source",
+    targetSource: "練習する音",
     resolved: "保存ボイシング",
     generatedClose: "自動（クローズ）",
     shell: "シェル 1-7",
@@ -98,51 +96,10 @@ const copy = {
     exitAfterChange: "終了",
     confirmExit: "ミックス練習を終了しますか？結果は保存されません。",
   },
-  en: {
-    title: "Mix Session",
-    ready: "Ready",
-    start: "Start this progression",
-    countIn: "Count-in",
-    current: "Current",
-    progression: (current: number, total: number) => `${current} / ${total} progressions`,
-    cycle: (current: number, total: number) => `${current} / ${total} cycles`,
-    clean: "Clean",
-    dirty: "Retry",
-    next: "Next progression",
-    pause: "Pause",
-    resume: "Resume",
-    end: "End",
-    summary: "Mix practice complete",
-    summaryLine: (count: number, cycles: number) => `${count} progressions · ${cycles} cycles`,
-    retryDirty: "Retry only progressions that were not clean",
-    retrySame: "Repeat the same selection",
-    close: "Finish",
-    currentChord: "Current chord",
-    keyboard: "Practice keyboard",
-    flowStartFailed: "Could not start Mix Flow practice.",
-    midi: "MIDI input",
-    connected: "Connected",
-    connecting: "Connecting",
-    disconnected: "Disconnected",
-    reconnect: "Reconnect",
-    settings: "Settings",
-    targetSource: "Target Source",
-    resolved: "Saved voicing",
-    generatedClose: "Automatic (close)",
-    shell: "Shell 1-7",
-    open: "Open 1-7",
-    rootless: "Rootless A/B",
-    snapshotChanged: "A progression in this Mix was changed or deleted in the Vault. The frozen session cannot continue silently.",
-    reload: "Reload current data",
-    reloadFailed: "The Mix could not be rebuilt from the current Vault data.",
-    exitAfterChange: "End",
-    confirmExit: "End Mix practice? Results are not saved.",
-  },
 } as const;
 
 export function MixPracticeWorkspace({
   initialState,
-  language,
   practiceClock,
   candidates,
   styleOptions,
@@ -156,7 +113,7 @@ export function MixPracticeWorkspace({
   onExit,
   onError,
 }: MixPracticeWorkspaceProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const [state, setState] = useState(initialState);
   const [beat, setBeat] = useState(1);
   const [countingIn, setCountingIn] = useState(false);
@@ -688,7 +645,7 @@ export function MixPracticeWorkspace({
           <span>{text.progression(orderItem?.progressionIndex ?? 1, state.snapshots.length)}</span>
           <span>{text.cycle(orderItem?.cycle ?? 1, state.config.cycles)}</span>
           <span>L{state.config.level}</span>
-          <span>{state.config.mode === "flow" ? `BPM ${state.config.bpm}` : "Step"}</span>
+          <span>{state.config.mode === "flow" ? `BPM ${state.config.bpm}` : "ステップ"}</span>
           <span>{text.targetSource}: {targetSourceLabel(state.config.targetSource, text)}</span>
         </div>
       </div>
@@ -778,7 +735,6 @@ export function MixPracticeWorkspace({
                 allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
                 requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
                 level={state.config.level}
-                language={language}
                 matchState={practice?.lastMatch?.state}
               />
             </div>
@@ -825,7 +781,7 @@ export function MixPracticeWorkspace({
 
 function targetSourceLabel(
   source: MixSessionConfig["targetSource"],
-  text: typeof copy.ja | typeof copy.en,
+  text: typeof copy.ja,
 ): string {
   if (source.type === "resolved-voicing") return text.resolved;
   if (source.type === "generated-close") return text.generatedClose;

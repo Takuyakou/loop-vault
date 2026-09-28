@@ -4,7 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 test("Standard and Extended preserve source and UTF-16 selection", async ({ page }) => {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const source = "# heading\n| C Dm |\n| BbM7 Db7(#9) |\n😀 end";
   const standard = page.getByTestId("text-progression-input");
   await standard.fill(source);
@@ -25,15 +25,15 @@ test("Standard and Extended preserve source and UTF-16 selection", async ({ page
 test("key remains unconfirmed until explicit confirmation and all 24 keys are offered", async ({ page }) => {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
-  await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的|explicitly/);
+  await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的/);
   await expect(page.locator("#text-progression-key-options option")).toHaveCount(24);
   await expect(capture.getByTestId("text-progression-bpm")).toHaveValue("");
   await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("F# minor");
-  await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的|explicitly/);
-  await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
+  await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的/);
+  await capture.getByRole("button", { name: /キーを確定/ }).click();
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("F# minor");
 });
 
@@ -43,7 +43,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
     await page.setViewportSize({ width, height: 900 });
     await openApp(page);
     await page.locator('[data-nav="capture"]').click();
-    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
     const capture = page.getByTestId("text-progression-capture");
     await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
     const toolbar = capture.getByTestId("text-capture-toolbar");
@@ -64,7 +64,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
       expect(Math.abs(before.name!.y - before.primary!.y)).toBeLessThanOrEqual(1);
     }
     await primary.click();
-    await expect(primary).toContainText(/一時停止|Pause/);
+    await expect(primary).toContainText(/一時停止/);
     for (const element of ["group", "primary", "name", "save"] as const) {
       const locator = element === "group" ? toolbar : element === "primary" ? primary : element === "name" ? name : save;
       const after = (await locator.boundingBox())!;
@@ -72,7 +72,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
       for (const axis of ["x", "y", "width"] as const) expect(Math.abs(after[axis] - prior[axis])).toBeLessThanOrEqual(1);
     }
     await primary.click();
-    await expect(primary).toContainText(/再開|Resume/);
+    await expect(primary).toContainText(/再開/);
     const resumedSave = (await save.boundingBox())!;
     expect(Math.abs(resumedSave.x - before.save!.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(resumedSave.y - before.save!.y)).toBeLessThanOrEqual(1);
@@ -84,7 +84,7 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
 test("interactive chord bands show teal hover/focus and blocked save explains itself", async ({ page }) => {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
   const band = capture.getByTestId("standard-text-preview").getByTestId("text-preview-band").first();
@@ -110,7 +110,7 @@ test("Extended toolbar retains meter/key controls and Save cluster without page 
     await page.setViewportSize({ width, height: 900 });
     await openApp(page);
     await page.locator('[data-nav="capture"]').click();
-    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
     await page.getByTestId("text-mode-extended").click();
     const intake = page.getByTestId("extended-text-intake");
     await intake.getByTestId("extended-text-input").fill("| C % = _ | Dm |");

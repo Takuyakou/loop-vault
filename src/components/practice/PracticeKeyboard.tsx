@@ -11,7 +11,6 @@ import type {
   PracticeMatchState,
   PracticeSessionLevel,
 } from "../../domain/practice";
-import type { AppLanguage } from "../../domain/types";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 
 interface PracticeKeyboardProps {
@@ -23,7 +22,6 @@ interface PracticeKeyboardProps {
   allowedPitchClasses: readonly number[];
   requiredPitchClasses: readonly number[];
   level: PracticeSessionLevel;
-  language: AppLanguage;
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: PracticeMatchState;
   concealNoteNames?: boolean;
@@ -43,13 +41,6 @@ const copy = {
     foreign: "構成外音があります",
     notes: (count: number) => `${count}音`,
   },
-  en: {
-    input: "Input",
-    missing: "Missing",
-    matched: "Matched",
-    foreign: "Foreign note detected",
-    notes: (count: number) => `${count} notes`,
-  },
 } as const;
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 
@@ -62,7 +53,6 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   allowedPitchClasses,
   requiredPitchClasses,
   level,
-  language,
   accidentalStyle = "flat",
   matchState = "empty",
   concealNoteNames = false,
@@ -115,7 +105,6 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         octaveConvention="fl-studio"
         accidentalStyle={accidentalStyle}
         matchState={visualMatchState}
-        language={language}
         concealNoteNames={concealNoteNames}
         interactionMode={interactionMode}
         centerWhenFitted={centerWhenFitted}
@@ -125,7 +114,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">
-          {language === "ja" ? "BASS：独立したベース参照（左手の練習対象外）" : "BASS: separate bass reference (not a left-hand target)"}
+          {"BASS：独立したベース参照（左手の練習対象外）"}
           {` · ${formatMidiNoteForDisplay(referenceBassNote, "fl-studio", accidentalStyle)}`}
         </p>
       ) : null}
@@ -140,7 +129,6 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
           foreignCount: foreignNotes.length,
           guideNotes,
           heldNotes: currentHeldNotes,
-          language,
           level,
           matchState,
           missingPitchClasses,
@@ -156,7 +144,6 @@ function inputSummary({
   foreignCount,
   guideNotes,
   heldNotes: currentHeldNotes,
-  language,
   level,
   matchState,
   missingPitchClasses,
@@ -166,13 +153,12 @@ function inputSummary({
   foreignCount: number;
   guideNotes: readonly number[];
   heldNotes: readonly number[];
-  language: AppLanguage;
   level: PracticeSessionLevel;
   matchState: PracticeMatchState;
   missingPitchClasses: readonly number[];
   neutralMonitor: boolean;
 }): string {
-  const text = copy[language];
+  const text = copy.ja;
   if (neutralMonitor) {
     const input = currentHeldNotes.length > 0
       ? currentHeldNotes

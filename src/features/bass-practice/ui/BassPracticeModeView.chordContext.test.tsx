@@ -45,7 +45,7 @@ describe("Bass Practice Vault Chord Context handoff", () => {
 
     expect(container.querySelector("[data-testid='bassline-echo-view']")).not.toBeNull();
     expect(container.querySelector("[data-testid='bassline-source']")?.textContent)
-      .toContain("Vault source · C major · bars 1-1");
+      .toContain("Vault進行 · C major · bars 1-1");
     expect(container.querySelector("[role='tab'][aria-selected='true']")?.textContent)
       .toBe("Bassline Echo");
     await act(async () => root.unmount());

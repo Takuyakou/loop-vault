@@ -23,19 +23,19 @@ test("P8.8.4 Standard score seeks exact attacks and supports Pause/Resume/Stop a
   await expect(capture.getByTestId("text-transport-loop")).toHaveAttribute("data-transport-variant", "loop-on");
   await capture.getByTestId("text-transport-loop").click();
   await primary.click();
-  await expect(primary).toContainText(/一時停止|Pause/);
+  await expect(primary).toContainText(/一時停止/);
   expect((await primary.boundingBox())?.width).toBe(initialWidth);
   await primary.click();
-  await expect(primary).toContainText(/再開|Resume/);
+  await expect(primary).toContainText(/再開/);
   expect((await primary.boundingBox())?.width).toBe(initialWidth);
   await primary.click();
-  await expect(primary).toContainText(/一時停止|Pause/);
+  await expect(primary).toContainText(/一時停止/);
   await capture.getByTestId("text-transport-stop").click();
-  await expect(primary).toContainText(/再生|Play/);
-  await expect(capture.getByTestId("text-transport-position")).toContainText(/1小節目|Bar 1/);
+  await expect(primary).toContainText(/再生/);
+  await expect(capture.getByTestId("text-transport-position")).toContainText(/1小節目/);
   await input.focus();
   await page.keyboard.press("Space");
-  await expect(primary).toContainText(/再生|Play/);
+  await expect(primary).toContainText(/再生/);
   await assertNoHorizontalOverflow(page);
   expect(errors).toEqual([]);
 });
@@ -46,7 +46,7 @@ test("P8.8.4 Standard primary Vault save retains the advanced Draft path", async
   await expect(capture.getByTestId("text-progression-convert")).toBeEnabled();
   await capture.getByTestId("text-progression-name").fill("Public text chart");
   await capture.getByTestId("text-progression-save").click();
-  await expect(capture.getByText(/保存しました|Saved/, { exact: true })).toBeVisible();
+  await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
   await expect(page.getByTestId("manual-candidate-editor")).toHaveCount(0);
 });
 
@@ -60,7 +60,7 @@ test("P8.8.4 Extended score exposes reattack and bar targets without an axe viol
   expect(await input.evaluate((element: HTMLTextAreaElement) =>
     element.value.slice(element.selectionStart, element.selectionEnd))).toBe("%");
   await intake.getByTestId("text-preview-bar-select").nth(1).click();
-  await expect(intake.getByTestId("text-transport-position")).toContainText(/2小節目|Bar 2/);
+  await expect(intake.getByTestId("text-transport-position")).toContainText(/2小節目/);
   const audit = await new AxeBuilder({ page: page as never }).include("[data-testid='extended-text-intake']").analyze();
   expect(audit.violations.filter(item => item.impact === "critical" || item.impact === "serious")).toEqual([]);
 });
@@ -75,7 +75,7 @@ test("P8.8.4 200-bar score updates its playhead without rebuilding the score DOM
   const line = intake.getByTestId("text-smooth-playhead").first();
   const before = await line.evaluate(element => (element as HTMLElement).style.left);
   await intake.getByTestId("extended-text-play").click();
-  await expect(intake.getByTestId("extended-text-play")).toContainText(/一時停止|Pause/);
+  await expect(intake.getByTestId("extended-text-play")).toContainText(/一時停止/);
   await expect.poll(async () => line.evaluate(element => (element as HTMLElement).style.left),
     { timeout: 4_000 }).not.toBe(before);
   await expect(intake.getByTestId("extended-text-bar")).toHaveCount(200);

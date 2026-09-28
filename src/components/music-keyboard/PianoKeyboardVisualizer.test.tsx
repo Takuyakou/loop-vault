@@ -35,7 +35,6 @@ function renderKeyboard(
       showCLabels
       octaveConvention="fl-studio"
       matchState="partial"
-      language="ja"
       {...overrides}
     />,
   ));
@@ -95,7 +94,7 @@ describe("PianoKeyboardVisualizer", () => {
     expect(key?.textContent).toContain("L2");
     expect(Array.from(key?.querySelectorAll("text") ?? []).map((node) => node.textContent)).toEqual(["L2"]);
     expect(key?.querySelector("[data-bass-reference='guide']")).not.toBeNull();
-    expect(key?.querySelector("title")?.textContent).toContain("BASS reference");
+    expect(key?.querySelector("title")?.textContent).toContain("ベースの参考音");
   });
 
   it("renders white keys below shorter black keys with C-only labels", () => {
@@ -158,16 +157,15 @@ describe("PianoKeyboardVisualizer", () => {
 
   it("shows localized legend, outside input, and one non-focusable image", () => {
     const container = renderKeyboard({
-      language: "en",
       heldNotes: [36, 60, 96],
     });
 
-    expect(container.textContent).toContain("Guide");
-    expect(container.textContent).toContain("Input outside visible range");
+    expect(container.textContent).toContain("お手本");
+    expect(container.textContent).toContain("範囲外の入力");
     expect(container.querySelectorAll('[role="img"]')).toHaveLength(1);
     expect(container.querySelectorAll("button, [tabindex]")).toHaveLength(1);
     expect(container.querySelector('[role="region"]')?.getAttribute("tabindex")).toBe("0");
-    expect(container.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Piano keyboard");
+    expect(container.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("ピアノ鍵盤");
     expect(container.querySelector('[role="img"]')?.getAttribute("aria-label")).not.toBe("Piano keyboard");
     expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
       .toContain("C3");
@@ -177,7 +175,6 @@ describe("PianoKeyboardVisualizer", () => {
 
   it("conceals concrete note names while preserving C labels", () => {
     const container = renderKeyboard({
-      language: "en",
       heldNotes: [36, 60, 96],
       showGuide: false,
       concealNoteNames: true,
@@ -185,7 +182,7 @@ describe("PianoKeyboardVisualizer", () => {
 
     expect(container.querySelectorAll("svg title")).toHaveLength(0);
     expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
-      .toContain("1 notes");
+      .toContain("1音");
     expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
       .not.toContain("C3");
     expect(container.querySelector('[data-outside-direction="right"]')?.textContent)

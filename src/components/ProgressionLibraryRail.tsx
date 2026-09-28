@@ -5,7 +5,7 @@ import {
   type ProgressionIndexEntry,
   type ProgressionTagCategory,
 } from "../domain/progressionClassification/mod";
-import { smartLibraryCopy, type AppLanguage } from "../i18n";
+import { smartLibraryCopy } from "../i18n";
 import { Clock3, Layers3, Star } from "lucide-react";
 
 export type ProgressionLibraryScope = "all" | "favorites" | "recent";
@@ -14,7 +14,6 @@ interface ProgressionLibraryRailProps {
   entries: readonly ProgressionIndexEntry[];
   selectedTagIds: readonly string[];
   scope: ProgressionLibraryScope;
-  language: AppLanguage;
   onToggleTag: (tagId: string) => void;
   onScopeChange: (scope: ProgressionLibraryScope) => void;
 }
@@ -25,11 +24,10 @@ export function ProgressionLibraryRail({
   entries,
   selectedTagIds,
   scope,
-  language,
   onToggleTag,
   onScopeChange,
 }: ProgressionLibraryRailProps) {
-  const text = smartLibraryCopy[language];
+  const text = smartLibraryCopy.ja;
   const counts = useMemo(() => countTags(entries), [entries]);
   const selected = new Set(selectedTagIds);
   const recentCount = entries.filter((entry) => isRecent(entry.createdAt)).length;
@@ -71,7 +69,7 @@ export function ProgressionLibraryRail({
                     onClick={() => onToggleTag(tagId)}
                     aria-pressed={selected.has(tagId)}
                   >
-                    <span className="truncate">{tagLabel(tagId, language)}</span>
+                    <span className="truncate">{tagLabel(tagId)}</span>
                     <span className="text-xs text-[var(--lv-text-muted)]">{counts.get(tagId)}</span>
                   </button>
                 ))}
@@ -128,8 +126,8 @@ function tagsForCategory(category: ProgressionTagCategory, counts: Map<string, n
   return [...stable, ...dynamic];
 }
 
-function tagLabel(tagId: string, language: AppLanguage): string {
-  const known = progressionTagLabel(tagId, language);
+function tagLabel(tagId: string): string {
+  const known = progressionTagLabel(tagId);
   return known === tagId ? tagId.replace(/^[^.]+\./, "") : known;
 }
 

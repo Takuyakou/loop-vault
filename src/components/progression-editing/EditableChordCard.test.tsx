@@ -55,7 +55,6 @@ async function renderCard() {
         onNavigate={onNavigate}
         onPreview={onPreview}
         onQuickEdit={onQuickEdit}
-        language="en"
       />,
     );
   });
@@ -68,7 +67,7 @@ describe("EditableChordCard", () => {
     document.body.append(container);
     const root = createRoot(container);
     await act(async () => root.render(<EditableChordCard slot={{ ...slot, confidence: 0, warnings: ["入力内容を確認"] }}
-      selected={false} playing={false} onSelect={vi.fn()} showConfidenceReview={false} language="ja" />));
+      selected={false} playing={false} onSelect={vi.fn()} showConfidenceReview={false} />));
     expect(container.querySelector("[data-chord-card]")?.textContent).toContain("要確認 · 入力内容を確認");
     await act(async () => root.unmount());
   });
@@ -105,7 +104,7 @@ describe("EditableChordCard", () => {
   it("opens quick edit from the context menu and hover edit button", async () => {
     const { container, root, onSelect, onQuickEdit } = await renderCard();
     const option = container.querySelector<HTMLElement>("[data-chord-card]")!;
-    const editButton = container.querySelector<HTMLButtonElement>("button[aria-label='Quick edit']")!;
+    const editButton = container.querySelector<HTMLButtonElement>("button[aria-label='すばやく編集']")!;
 
     await act(async () => {
       option.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));

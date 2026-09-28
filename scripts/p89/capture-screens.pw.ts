@@ -61,7 +61,7 @@ for (const [width, height] of SIZES) {
       });
       await shot("capture-text-standard", async () => {
         await nav(page, "capture");
-        await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+        await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
         const capture = page.getByTestId("text-progression-capture");
         await expect(capture).toBeVisible();
         await capture.getByTestId("text-progression-input").fill("| Cmaj7 Dm7 | G7 Cmaj7 |");
@@ -83,10 +83,10 @@ for (const [width, height] of SIZES) {
       // Save one synthetic progression so Vault / progression / Idea / practice screens have content.
       try {
         await chooseFirstCandidate(page);
-        await page.locator('[data-candidate-state="selected"]').getByRole("button", { name: /Vaultに保存|Save to Vault/, exact: true }).click();
+        await page.locator('[data-candidate-state="selected"]').getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
         await form.locator('input[name="progression-title"]').fill("P89 合成進行");
-        await form.getByRole("button", { name: /保存|Save/, exact: true }).click();
+        await form.getByRole("button", { name: /保存/, exact: true }).click();
         await expect(form).toBeHidden();
         // The save toast lasts 3.2 s (App.tsx), longer than the walk to the next screens,
         // and would cover the header on them.
@@ -101,11 +101,11 @@ for (const [width, height] of SIZES) {
       });
       await shot("progression", async () => {
         await nav(page, "vault");
-        await page.getByRole("button", { name: /進行を開く|Open progression/ }).first().click();
-        await expect(page.getByRole("button", { name: /親Ideaを開く|Open parent Idea/ })).toBeVisible();
+        await page.getByRole("button", { name: /進行を開く/ }).first().click();
+        await expect(page.getByRole("button", { name: /親Ideaを開く/ })).toBeVisible();
       });
       await shot("idea-detail", async () => {
-        await page.getByRole("button", { name: /親Ideaを開く|Open parent Idea/ }).click();
+        await page.getByRole("button", { name: /親Ideaを開く/ }).click();
         await expect(page.locator("#main-content")).toBeVisible();
       });
       await shot("chord-dojo", async () => {
@@ -118,27 +118,27 @@ for (const [width, height] of SIZES) {
       let bassTabs: string[] = [];
       await shot("bass-practice", async () => {
         await nav(page, "bass-practice");
-        const tablist = page.getByRole("tablist", { name: "Bass Practice mode" });
+        const tablist = page.getByRole("tablist", { name: "Bass Practice のモード" });
         await expect(tablist).toBeVisible();
         bassTabs = await tablist.getByRole("tab").allInnerTexts();
       });
       for (const tab of bassTabs) {
         const slug = tab.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
         await shot(`bass-practice-${slug}`, async () => {
-          await page.getByRole("tablist", { name: "Bass Practice mode" }).getByRole("tab", { name: tab, exact: true }).click();
+          await page.getByRole("tablist", { name: "Bass Practice のモード" }).getByRole("tab", { name: tab, exact: true }).click();
         });
       }
       await shot("settings", async () => {
         await nav(page, "settings");
-        await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
+        await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
       });
       await page.keyboard.press("Escape");
       if (width === 768) {
         // A toast raised while a dialog is open must not cover the dialog's buttons.
         await shot("settings-toast", async () => {
           await nav(page, "settings");
-          const dialog = page.getByRole("dialog", { name: /設定|Settings/ });
-          await dialog.getByRole("button", { name: /書き出す|書き出し|Export/ }).first().click();
+          const dialog = page.getByRole("dialog", { name: /設定/ });
+          await dialog.getByRole("button", { name: /書き出す|書き出し/ }).first().click();
           await expect(page.locator("[data-toast-tone]").first()).toBeVisible();
           result.toastOverDialogButtons = await page.evaluate(() => {
             const toasts = [...document.querySelectorAll("[data-toast-tone]")].map((toast) => toast.getBoundingClientRect());
@@ -150,9 +150,6 @@ for (const [width, height] of SIZES) {
         });
         await page.keyboard.press("Escape");
       }
-      await shot("history", async () => {
-        await nav(page, "history");
-      });
       await shot("home", async () => {
         await nav(page, "home");
       });

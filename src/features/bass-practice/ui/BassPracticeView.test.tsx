@@ -56,9 +56,9 @@ describe("BassPracticeView", () => {
     expect(container.querySelector("[data-testid='degree-answer']")?.textContent).not.toContain("?");
     expect(container.querySelectorAll("[data-primary-action]")).toHaveLength(1);
 
-    await act(async () => findButton(container, "Good 3")?.click());
+    await act(async () => findButton(container, "良い 3")?.click());
     await clickPrimary(container); // review -> transfer offer
-    expect(primaryText(container)).toContain("Transfer");
+    expect(primaryText(container)).toContain("移調");
   });
 
   test("reveals fretboard markers only through sequential hints", async () => {
@@ -69,9 +69,9 @@ describe("BassPracticeView", () => {
       .toContain("ヒント4まで非表示");
 
     for (let index = 0; index < 4; index += 1) {
-      await act(async () => findButton(container, "Hint")?.click());
+      await act(async () => findButton(container, "ヒント")?.click());
     }
-    expect(container.textContent).toContain("Hint 4");
+    expect(container.textContent).toContain("ヒント 4");
     expect(container.querySelector("[data-testid='degree-fretboard-summary']")?.textContent)
       .toContain("1番目");
   });
@@ -83,12 +83,12 @@ describe("BassPracticeView", () => {
     await clickPrimary(container);
     await clickPrimary(container);
 
-    await act(async () => findButton(container, "Hint")?.click());
+    await act(async () => findButton(container, "ヒント")?.click());
     expect(container.querySelector("[data-testid='degree-tonal-context']")?.textContent).toContain("C major");
     expect(container.querySelector("[data-testid='degree-note-count']")).toBeNull();
 
-    await act(async () => findButton(container, "Hint")?.click());
-    expect(container.querySelector("[data-testid='degree-note-count']")?.textContent).toContain("notes");
+    await act(async () => findButton(container, "ヒント")?.click());
+    expect(container.querySelector("[data-testid='degree-note-count']")?.textContent).toContain("音");
   });
 
   test("updates the singing CTA at the dwell deadline and completes without skip", async () => {
@@ -118,7 +118,7 @@ describe("BassPracticeView", () => {
     await clickPrimary(container);
     const sourceDegrees = container.querySelector("[data-testid='degree-answer']")?.textContent;
 
-    await act(async () => findButton(container, "Good 3")?.click());
+    await act(async () => findButton(container, "良い 3")?.click());
     const issue = container.querySelector<HTMLSelectElement>("#degree-main-issue");
     await act(async () => {
       if (!issue) return;
@@ -133,9 +133,9 @@ describe("BassPracticeView", () => {
     expect(relation?.textContent).toContain("G");
     expect(relation?.textContent).toContain("同じ度数・同じリズム");
     expect(container.querySelector("[data-testid='degree-answer']")?.textContent).toBe(sourceDegrees);
-    expect(primaryText(container)).toContain("Transfer演奏を完了");
+    expect(primaryText(container)).toContain("移調した演奏を完了");
     expect(container.querySelector("[data-testid='degree-status-announcement']")?.textContent)
-      .toBe("Degree Echo: Transfer C → G。移調先はGです。");
+      .toBe("Degree Echo: 移調 C → G。移調先はGです。");
 
     await act(async () => findButton(container, "移調後の音を聴く")?.click());
     expect(container.querySelector("[data-testid='degree-echo-view']")?.getAttribute("data-practice-state"))
@@ -181,7 +181,7 @@ describe("BassPracticeView", () => {
     await act(async () => findButton(container, "歌唱をスキップ")?.click());
     await clickPrimary(container);
     await clickPrimary(container);
-    await act(async () => findButton(container, "Good 3")?.click());
+    await act(async () => findButton(container, "良い 3")?.click());
     await act(async () => {
       primary(container)?.click();
       primary(container)?.click();
@@ -206,12 +206,12 @@ describe("BassPracticeView", () => {
       sessionId: "claimed-session",
     });
     await clickPrimary(container); await clickPrimary(container);
-    await act(async () => findButton(container, "Hint")?.click());
+    await act(async () => findButton(container, "ヒント")?.click());
     expect(container.textContent).toContain("G major");
     await clickPrimary(container);
     await act(async () => findButton(container, "歌唱をスキップ")?.click());
     await clickPrimary(container); await clickPrimary(container);
-    await act(async () => findButton(container, "Good 3")?.click()); await clickPrimary(container);
+    await act(async () => findButton(container, "良い 3")?.click()); await clickPrimary(container);
     expect(onAttemptCompleted).toHaveBeenCalledOnce();
     expect(onAttemptCompleted.mock.calls[0][0]).toMatchObject({
       exerciseId: claimedExercise.id,
@@ -226,11 +226,11 @@ describe("BassPracticeView", () => {
     await clickPrimary(container); await clickPrimary(container); await clickPrimary(container);
     await act(async () => findButton(container, "歌唱をスキップ")?.click());
     await clickPrimary(container); await clickPrimary(container);
-    await act(async () => findButton(container, "Good 3")?.click()); await clickPrimary(container);
+    await act(async () => findButton(container, "良い 3")?.click()); await clickPrimary(container);
     await act(async () => { await Promise.resolve(); });
     await act(async () => findButton(container, "今回は完了")?.click());
-    expect(container.querySelector("[data-testid='degree-session-summary']")?.textContent).toContain("8 / 8 exercises completed");
-    expect(container.textContent).toContain("not an automatic score");
+    expect(container.querySelector("[data-testid='degree-session-summary']")?.textContent).toContain("8 / 8 問完了");
+    expect(container.textContent).toContain("自動採点ではなく");
     expect(primaryText(container)).toContain("次のセッション");
     await clickPrimary(container);
     expect(onSessionRestart).toHaveBeenCalledOnce();

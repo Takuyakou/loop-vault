@@ -31,7 +31,6 @@ async function mount() {
     <EditableProgressionGrid
       editable={editable}
       onSelect={onSelect}
-      language="en"
       quickEditor={quickEditor}
       contextActions={{
         canCutRange: (slotId) => slotId === editable.slots[0]?.id,
@@ -60,14 +59,14 @@ describe("ChordContextMenu", () => {
     const harness = await mount();
     const menu = await openFor(harness, 0);
 
-    expect(menu.getAttribute("aria-label")).toContain("Edit actions");
-    expect(menuButton("Extend previous chord").disabled).toBe(true);
-    expect(menuButton("Extend next chord").disabled).toBe(false);
-    expect(menuButton("Close the gap").disabled).toBe(false);
-    expect(menuButton("Replace with N.C.").disabled).toBe(false);
-    expect(menuButton("Merge and keep left chord").disabled).toBe(false);
-    expect(menuButton("Merge and keep right chord").disabled).toBe(false);
-    expect(menuButton("Cut range here").disabled).toBe(false);
+    expect(menu.getAttribute("aria-label")).toContain("編集");
+    expect(menuButton("前のコードを伸ばす").disabled).toBe(true);
+    expect(menuButton("次のコードを伸ばす").disabled).toBe(false);
+    expect(menuButton("範囲を詰める").disabled).toBe(false);
+    expect(menuButton("N.C.に置き換える").disabled).toBe(false);
+    expect(menuButton("結合して左のコードを残す").disabled).toBe(false);
+    expect(menuButton("結合して右のコードを残す").disabled).toBe(false);
+    expect(menuButton("ここで範囲を切る").disabled).toBe(false);
 
     await act(async () => harness.root.unmount());
   });
@@ -76,7 +75,7 @@ describe("ChordContextMenu", () => {
     const harness = await mount();
     await openFor(harness, 1);
 
-    await act(async () => menuButton("Extend previous chord").click());
+    await act(async () => menuButton("前のコードを伸ばす").click());
 
     expect(harness.onAction).toHaveBeenCalledWith(
       harness.editable.slots[1]?.id,
@@ -84,7 +83,7 @@ describe("ChordContextMenu", () => {
     );
     expect(document.body.querySelector('[role="menu"]')).toBeNull();
     expect(harness.container.querySelector('[role="status"]')?.textContent)
-      .toContain("extended C by 2 beats");
+      .toContain("前のCを2拍延長しました");
 
     await act(async () => harness.root.unmount());
   });
@@ -97,7 +96,7 @@ describe("ChordContextMenu", () => {
       new KeyboardEvent("keydown", { key: "ContextMenu", bubbles: true }),
     ));
     const menu = document.body.querySelector<HTMLElement>('[role="menu"]')!;
-    const first = menuButton("Edit chord");
+    const first = menuButton("コードを編集");
     expect(document.activeElement).toBe(first);
 
     await act(async () => first.dispatchEvent(

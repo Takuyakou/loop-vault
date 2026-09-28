@@ -33,7 +33,7 @@ function Harness() {
   const [chord, setChord] = useState<ChordSymbol>(makeChordSymbol(0, "maj7"));
   return (
     <>
-      <ChordStructureEditor chord={chord} onChange={setChord} language="ja" />
+      <ChordStructureEditor chord={chord} onChange={setChord} />
       <output>{chord.label}</output>
     </>
   );

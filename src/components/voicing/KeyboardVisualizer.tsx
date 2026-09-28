@@ -14,7 +14,7 @@ export function KeyboardVisualizer({ notes, bassNote }: KeyboardVisualizerProps)
     <div className="mt-3">
       <div
         className="flex h-16 overflow-hidden border border-[var(--lv-border)] bg-stone-950"
-        aria-label="Voicing keyboard"
+        aria-label="Voicingの鍵盤"
         data-testid="voicing-keyboard"
       >
         {keys.map((note) => {

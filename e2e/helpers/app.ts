@@ -14,7 +14,7 @@ export async function openCapture(page: Page): Promise<void> {
 export async function openTextCapture(page: Page) {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await expect(capture).toBeVisible();
   return capture;
@@ -79,12 +79,12 @@ export async function chooseFirstCandidate(page: Page): Promise<void> {
 
 export async function saveFirstCandidate(page: Page): Promise<void> {
   await chooseFirstCandidate(page);
-  await page.getByRole("button", { name: /Vaultに保存|Save to Vault/, exact: true }).click();
+  await page.getByRole("button", { name: /Vaultに保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
   const title = form.locator('input[name="progression-title"]');
   await title.fill("E2E 保存済み進行");
-  await form.getByRole("button", { name: /保存|Save/, exact: true }).click();
+  await form.getByRole("button", { name: /保存/, exact: true }).click();
   await expect(form).toBeHidden();
 }
 
@@ -104,11 +104,11 @@ export async function createSavedProgression(
   await chooseFirstCandidate(page);
   const selectedCandidate = page.locator('[data-candidate-state="selected"]');
   await selectedCandidate
-    .getByRole("button", { name: /Vaultに保存|Save to Vault/, exact: true })
+    .getByRole("button", { name: /Vaultに保存/, exact: true })
     .click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await form.locator('input[name="progression-title"]').fill(title);
-  await form.getByRole("button", { name: /保存|Save/, exact: true }).click();
+  await form.getByRole("button", { name: /保存/, exact: true }).click();
   await expect(form).toBeHidden();
 }
 

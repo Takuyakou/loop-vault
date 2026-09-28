@@ -35,18 +35,18 @@ test("uses a safe Vault-derived root path without treating it as an original bas
   await act(async () => root?.render(<RootMotionPracticeView vaultSnapshots={[safeSnapshot()]} playback={async (_notes, _bpm, callbacks) => { callbacks.onEnded("completed"); }} />));
   const source = container.querySelector("[data-testid='root-motion-source']") as HTMLSelectElement;
   await act(async () => { source.value = "vault-root-path"; source.dispatchEvent(new Event("change", { bubbles: true })); });
-  expect(container.textContent).toContain("Vault-derived root path with 4 available roots; not an original bassline.");
-  await act(async () => button(container, "Listen to example").click());
-  await act(async () => button(container, "Down").click());
-  await act(async () => button(container, "Record answer").click());
+  expect(container.textContent).toContain("Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9\u30024\u500b\u306e\u30eb\u30fc\u30c8\u3092\u5229\u7528\u3067\u304d\u3001\u5143\u306e\u30d9\u30fc\u30b9\u30e9\u30a4\u30f3\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002");
+  await act(async () => button(container, "お手本を聴く").click());
+  await act(async () => button(container, "下行").click());
+  await act(async () => button(container, "回答を確定").click());
   expect(container.querySelector("[data-testid='root-motion-first-answer']")).not.toBeNull();
   expect(container.textContent).not.toContain("safe");
 });
 test("releases a listening preview when its Vault source is switched or removed", async () => {
   const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   await act(async () => root?.render(<RootMotionPracticeView vaultSnapshots={[safeSnapshot()]} playback={async () => new Promise<void>(() => undefined)} />));
-  await act(async () => button(container, "Listen to example").click());
-  expect(container.textContent).toContain("Playing");
+  await act(async () => button(container, "お手本を聴く").click());
+  expect(container.textContent).toContain("再生中");
 
   const source = container.querySelector("[data-testid='root-motion-source']") as HTMLSelectElement;
   await act(async () => { source.value = "vault-root-path"; source.dispatchEvent(new Event("change", { bubbles: true })); });
@@ -74,13 +74,13 @@ test("keeps the source and note-count controls available when a Vault path is to
     noteCount.dispatchEvent(new Event("change", { bubbles: true }));
   });
   expect(noteCount.value).toBe("2");
-  expect(button(container, "Listen to example")).toBeInstanceOf(HTMLButtonElement);
+  expect(button(container, "お手本を聴く")).toBeInstanceOf(HTMLButtonElement);
 });
 test("releases active playback before applying a different note count", async () => {
   const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
   await act(async () => root?.render(<RootMotionPracticeView playback={async () => new Promise<void>(() => undefined)} />));
-  await act(async () => button(container, "Listen to example").click());
-  expect(container.textContent).toContain("Playing");
+  await act(async () => button(container, "お手本を聴く").click());
+  expect(container.textContent).toContain("再生中");
 
   const noteCount = container.querySelector("[data-testid='root-motion-note-count']") as HTMLSelectElement;
   await act(async () => {
@@ -96,9 +96,9 @@ test("does not advance to Identify when Stop ends playback synchronously", async
   let callbacks: Parameters<RootMotionPlayback>[2] | undefined;
   const playback: RootMotionPlayback = async (_notes, _bpm, lifecycle) => { callbacks = lifecycle; };
   await act(async () => root?.render(<RootMotionPracticeView playback={playback} />));
-  await act(async () => button(container, "Listen to example").click());
+  await act(async () => button(container, "お手本を聴く").click());
   previewAudio.stopPreview.mockImplementationOnce(() => callbacks?.onEnded("stopped"));
-  await act(async () => button(container, "Stop").click());
-  expect(button(container, "Listen to example")).toBeInstanceOf(HTMLButtonElement);
+  await act(async () => button(container, "停止").click());
+  expect(button(container, "お手本を聴く")).toBeInstanceOf(HTMLButtonElement);
   expect(container.querySelector("fieldset")).toBeNull();
 });

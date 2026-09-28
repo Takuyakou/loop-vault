@@ -29,7 +29,6 @@ export interface PianoKeyboardVisualizerProps {
   octaveConvention: "fl-studio";
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: "idle" | "partial" | "match" | "wrong";
-  language: "ja" | "en";
   concealNoteNames?: boolean;
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
@@ -54,21 +53,6 @@ const copy = {
     neutralKeyboard: (count: number, guide: number, held: number, sustained: number) =>
       `${count}鍵のピアノ鍵盤。お手本${guide}音、押鍵中${held}音、ペダル保持${sustained}音。`,
   },
-  en: {
-    guide: "Guide",
-    leftGuide: "Left-hand guide",
-    rightGuide: "Right-hand guide",
-    held: "Held",
-    foreign: "Foreign",
-    sustain: "Sustain",
-    outside: "Input outside visible range",
-    outsideCount: (count: number) => `${count} notes`,
-    region: "Piano keyboard",
-    keyboard: (count: number, guide: number, held: number, foreign: number, sustained: number) =>
-      `${count}-key piano keyboard. ${guide} guide, ${held} held, ${foreign} foreign, ${sustained} sustained notes.`,
-    neutralKeyboard: (count: number, guide: number, held: number, sustained: number) =>
-      `${count}-key piano keyboard. ${guide} guide, ${held} held, ${sustained} sustained notes.`,
-  },
 } as const;
 
 export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
@@ -88,7 +72,6 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   octaveConvention: _octaveConvention,
   accidentalStyle = "flat",
   matchState = "idle",
-  language,
   concealNoteNames = false,
   interactionMode = "practice",
   centerWhenFitted = false,
@@ -96,7 +79,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   layout = "default",
   hideLegend = false,
 }: PianoKeyboardVisualizerProps) {
-  const text = copy[language];
+  const text = copy.ja;
   const range = useMemo(
     () => ({ minMidiNote, maxMidiNote }),
     [maxMidiNote, minMidiNote],

@@ -27,7 +27,7 @@ import {
 import { filterAndSortProgressions } from "../domain/progressionFilters";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import { smartLibraryCopy, type AppCopy, type AppLanguage } from "../i18n";
+import { smartLibraryCopy, type AppCopy } from "../i18n";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { ChevronRight, Copy, SearchX, SlidersHorizontal, Star, X } from "lucide-react";
 
@@ -41,19 +41,17 @@ const progressionVirtualizationThreshold = 50;
 const progressionPreviewChordLimit = 8;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateProgressionBlock, setToast, copy, language, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
   openDetail: (id: string) => void;
   openProgression?: (ideaId: string, blockId: string) => void;
-  openCreate: () => void;
   openCapture: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
-  language: AppLanguage;
   showRomanNumerals: boolean;
 }) {
   const { sound: previewSound } = usePreviewSound();
@@ -70,7 +68,7 @@ export function VaultView({
   const [sort, setSort] = useState<SortField>("capturedAt");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
-  const libraryText = smartLibraryCopy[language];
+  const libraryText = smartLibraryCopy.ja;
   const progressionIndex = useMemo(() => buildProgressionIndex(ideas), [ideas]);
   const progressionIndexById = useMemo(
     () => new Map(progressionIndex.map((entry) => [entry.id, entry])),
@@ -279,7 +277,7 @@ export function VaultView({
               <ActiveFilterChip
                 key={tagId}
                 clearLabel={libraryText.clear}
-                label={displayTaxonomyTag(tagId, language)}
+                label={displayTaxonomyTag(tagId)}
                 onClear={() => setSelectedLibraryTags((current) => current.filter((entry) => entry !== tagId))}
               />
             ))}
@@ -299,7 +297,6 @@ export function VaultView({
                 entries={progressionIndex}
                 selectedTagIds={selectedLibraryTags}
                 scope={libraryScope}
-                language={language}
                 onToggleTag={(tagId) => setSelectedLibraryTags((current) => current.includes(tagId)
                   ? current.filter((entry) => entry !== tagId)
                   : [...current, tagId])}
@@ -313,9 +310,8 @@ export function VaultView({
               entries={visible}
               selectedIndex={selectedIndex}
               showDegrees={showRomanNumerals}
-              language={language}
               copy={copy}
-              displayTags={(entry) => libraryTags(progressionIndexById.get(progressionEntryId(entry)), language)}
+              displayTags={(entry) => libraryTags(progressionIndexById.get(progressionEntryId(entry)))}
               onSelect={setSelectedIndex}
               onOpen={openProgressionDetail}
               onPin={togglePin}
@@ -328,7 +324,6 @@ export function VaultView({
             entries={visible}
             selectedIndex={selectedIndex}
             showDegrees={showRomanNumerals}
-            language={language}
             copy={copy}
             onSelect={setSelectedIndex}
             onOpen={openProgressionDetail}
@@ -336,8 +331,8 @@ export function VaultView({
             onCopy={(entry) => void copyProgression(entry.block)}
             onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
           />
-        ) : <EmptyState copy={copy} openCreate={openCreate} />}
-        {mode === "library" && visible.length === 0 ? <EmptyState copy={copy} openCreate={openCreate} /> : null}
+        ) : <EmptyState copy={copy} openCapture={openCapture} />}
+        {mode === "library" && visible.length === 0 ? <EmptyState copy={copy} openCapture={openCapture} /> : null}
         {libraryDrawerOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
@@ -363,7 +358,6 @@ export function VaultView({
                 entries={progressionIndex}
                 selectedTagIds={selectedLibraryTags}
                 scope={libraryScope}
-                language={language}
                 onToggleTag={(tagId) => setSelectedLibraryTags((current) => current.includes(tagId)
                   ? current.filter((entry) => entry !== tagId)
                   : [...current, tagId])}
@@ -376,7 +370,7 @@ export function VaultView({
           </div>
         ) : null}
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.library.shortcuts}</p>
-      </> : <IdeaList ideas={ideas} openDetail={openDetail} copy={copy} />}
+      </> : <IdeaList ideas={ideas} openDetail={openDetail} />}
     </div>
   );
 }
@@ -385,7 +379,6 @@ function ProgressionRows({
   entries,
   selectedIndex,
   showDegrees,
-  language,
   copy,
   displayTags,
   onSelect,
@@ -397,7 +390,6 @@ function ProgressionRows({
   entries: ProgressionEntry[];
   selectedIndex: number;
   showDegrees: boolean;
-  language: AppLanguage;
   copy: AppCopy;
   displayTags?: (entry: ProgressionEntry) => string[];
   onSelect: (index: number) => void;
@@ -412,7 +404,6 @@ function ProgressionRows({
       entry={entry}
       selected={index === selectedIndex}
       showDegrees={showDegrees}
-      language={language}
       copy={copy}
       displayTags={displayTags?.(entry)}
       compact={entries.length > progressionVirtualizationThreshold}
@@ -495,7 +486,7 @@ function VirtualizedProgressionRows({
   );
 }
 
-function ProgressionRow({ entry, selected, showDegrees, language, copy, displayTags, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean; language: AppLanguage; copy: AppCopy; displayTags?: string[]; compact: boolean; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
+function ProgressionRow({ entry, selected, showDegrees, copy, displayTags, compact, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean;copy: AppCopy; displayTags?: string[]; compact: boolean; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
   const { sound: previewSound } = usePreviewSound();
   const degrees = degreeSequence(entry.block);
   const playback = usePlaybackState();
@@ -530,7 +521,6 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       </p>
       <PracticeProgressBadge
         block={entry.block}
-        language={language}
         compact
         effectiveKeySignature={keyOf(entry)}
       />
@@ -577,18 +567,18 @@ function formatProgressionPreview(chordLabels: readonly string[]): string {
   return chordLabels.length > progressionPreviewChordLimit ? `${preview} · …` : preview;
 }
 
-function IdeaList({ ideas, openDetail, copy }: { ideas: SongIdea[]; openDetail: (id: string) => void; copy: AppCopy }) {
-  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || copy.library.noNextAction}</p></button>)}</div>;
+function IdeaList({ ideas, openDetail }: { ideas: SongIdea[]; openDetail: (id: string) => void }) {
+  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p></button>)}</div>;
 }
 
-function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) {
+function EmptyState({ copy, openCapture }: { copy: AppCopy; openCapture: () => void }) {
   return (
     <UiEmptyState
       className="mt-4"
       icon={<SearchX aria-hidden="true" size={20} />}
       title={copy.library.noMatchingProgressions}
       description={copy.library.searchPlaceholder}
-      action={<Button onClick={openCreate}>{copy.library.newIdea}</Button>}
+      action={<Button onClick={openCapture}>{copy.library.capture}</Button>}
     />
   );
 }
@@ -611,13 +601,13 @@ function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entr
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
 function sourceOf(entry: ProgressionEntry): PlayingSource { return { kind: "vault", id: `idea:${entry.idea.id}:block:${entry.block.id}` }; }
 function progressionEntryId(entry: ProgressionEntry): string { return `${entry.idea.id}:${entry.block.id}`; }
-function displayTaxonomyTag(tagId: string, language: AppLanguage): string {
-  const label = progressionTagLabel(tagId, language);
+function displayTaxonomyTag(tagId: string): string {
+  const label = progressionTagLabel(tagId);
   return label === tagId ? tagId.replace(/^[^.]+\./, "") : label;
 }
-function libraryTags(entry: ProgressionIndexEntry | undefined, language: AppLanguage): string[] {
+function libraryTags(entry: ProgressionIndexEntry | undefined): string[] {
   if (!entry) return [];
-  return entry.effectiveTags.slice(0, 4).map((tagId) => displayTaxonomyTag(tagId, language));
+  return entry.effectiveTags.slice(0, 4).map((tagId) => displayTaxonomyTag(tagId));
 }
 function requestOf(entry: ProgressionEntry, sound: PreviewSound) {
   return {

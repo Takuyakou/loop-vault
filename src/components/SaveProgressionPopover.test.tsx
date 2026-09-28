@@ -39,7 +39,7 @@ describe("SaveProgressionPopover", () => {
           initialTitle="18-19 bars"
           ideas={[]}
           defaultNextAction="Create a bass loop"
-          copy={appCopy.en}
+          copy={appCopy.ja}
           onCreate={() => true}
           onAppend={() => true}
           onCopyMemo={() => true}
@@ -49,7 +49,7 @@ describe("SaveProgressionPopover", () => {
     });
 
     const saveButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === appCopy.en.capture.saveToVault)!;
+      .find((button) => button.textContent?.trim() === appCopy.ja.capture.saveToVault)!;
     await act(async () => saveButton.click());
 
     const form = document.querySelector<HTMLFormElement>(

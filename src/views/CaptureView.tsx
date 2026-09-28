@@ -95,7 +95,7 @@ import type { TextProgressionEvent } from "../domain/textProgression";
 import type { ExtendedTextResult } from "../domain/extendedTextProgression";
 import { extendedTextSaveData } from "../domain/extendedTextSave";
 import { evaluateExtendedTextPractice, type ExtendedTextPracticeStatus } from "../domain/extendedTextPractice";
-import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
+import { progressionEditorCopy, type AppCopy } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
@@ -231,7 +231,6 @@ interface CaptureViewProps {
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
-  language: AppLanguage;
   showRomanNumerals: boolean;
   controller?: PlaybackController;
   analysisInput?: AnalysisInput;
@@ -285,21 +284,14 @@ export function captureAnalysisRunSummary(
 
 function captureAnalysisRunCopy(
   summary: CaptureAnalysisRunSummary,
-  language: AppLanguage,
 ): { title: string; description: string } {
   if (summary.preset === "standard") {
-    return language === "ja"
-      ? {
+    return {
         title: "標準モードで解析済み",
         description: "この結果には標準のVoice重み付けが適用されています。",
-      }
-      : {
-        title: "Analyzed with Standard mode",
-        description: "This result uses the standard Voice contribution weights.",
       };
   }
-  return language === "ja"
-    ? {
+  return {
       title: "和声コアで解析済み",
       description: [
         `和声を強調 ${summary.amplifiedVoiceCount} Voice`,
@@ -307,15 +299,6 @@ function captureAnalysisRunCopy(
         `ベース／ドラムを除外 ${summary.excludedVoiceCount} Voice`,
         "候補が同じでも内部の重み付けには反映されています。",
       ].join("・"),
-    }
-    : {
-      title: "Analyzed with Harmonic Core",
-      description: [
-        `${summary.amplifiedVoiceCount} harmony Voices boosted`,
-        `${summary.reducedVoiceCount} melody-related Voices reduced`,
-        `${summary.excludedVoiceCount} bass or percussion Voices excluded`,
-        "The weighting is applied even when the visible candidates stay the same.",
-      ].join(" · "),
     };
 }
 
@@ -335,7 +318,6 @@ export function CaptureView(props: CaptureViewProps) {
     updateIdea,
     setToast,
     copy,
-    language,
     showRomanNumerals,
     controller = playbackController,
     analysisInput,
@@ -432,7 +414,7 @@ export function CaptureView(props: CaptureViewProps) {
     [preAnalysisSession],
   );
   const completedAnalysisStatus = completedAnalysisSummary
-    ? captureAnalysisRunCopy(completedAnalysisSummary, language)
+    ? captureAnalysisRunCopy(completedAnalysisSummary)
     : undefined;
   const manualSourceBasslineCandidate = useMemo(() => (
     activeDraft?.source.type === "manual-range" ? draftToCandidate(activeDraft) : undefined
@@ -915,17 +897,13 @@ export function CaptureView(props: CaptureViewProps) {
     if (manualSourceBasslineRangeSelected && manualSourceBasslineAssessment?.snapshot) {
       return manualSourceBasslineAssessment.snapshot;
     }
-    return globalThis.confirm(language === "ja"
-      ? "元ベースラインを付けられません。コード進行だけを保存しますか？"
-      : "The source bassline cannot be attached. Save only the progression?")
+    return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？")
       ? undefined
       : null;
   }
 
   function confirmAggregateSourceBasslineOmission(): boolean {
-    return globalThis.confirm(language === "ja"
-      ? "元ベースラインを含めるとVault全体が16 MiBを超えます。コード進行だけを保存しますか？"
-      : "Including the source bassline would exceed the 16 MiB Vault limit. Save only the progression?");
+    return globalThis.confirm("元ベースラインを含めるとVault全体が16 MiBを超えます。コード進行だけを保存しますか？");
   }
   function announcePersistenceError(message: string): void {
     queueMicrotask(() => {
@@ -1358,9 +1336,7 @@ export function CaptureView(props: CaptureViewProps) {
   async function previewTextProgressionDraft(draft: ManualCandidateDraft) {
     if (draft.source.type !== "text-progression") return;
     if (textDraftContext?.bpm === undefined) {
-      setToast(language === "ja"
-        ? "\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
-        : "Set an explicit BPM from 30 to 240 before previewing this text progression.");
+      setToast("\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002");
       return;
     }
     try {
@@ -1395,11 +1371,10 @@ export function CaptureView(props: CaptureViewProps) {
   if (captureInputMode === "text") {
     const textDraft = activeDraft?.source.type === "text-progression" ? activeDraft : null;
     return (
-      <CaptureModeFrame stage="text" value={captureInputMode} language={language}
+      <CaptureModeFrame stage="text" value={captureInputMode}
         disabled={textDraft !== null} onChange={changeCaptureInputMode}>
         <div className="lv-capture-content lv-capture-text-content grid gap-5">
           <TextProgressionCapturePanel
-            language={language}
             showRomanNumerals={showRomanNumerals}
             draftActive={textDraft !== null}
             onConvert={openTextProgressionDraft}
@@ -1413,8 +1388,8 @@ export function CaptureView(props: CaptureViewProps) {
           {!textDraft && savedTextProgressionTarget ? (
             <StatusMessage
               title={savedTextPracticeStatus?.ready === false
-                ? (language === "ja" ? "保存しました。Voicing Loopには対応していません" : "Saved. Voicing Loop is unavailable")
-                : (language === "ja" ? "保存した進行を練習できます" : "Your saved progression is ready to practice")}
+                ? ("保存しました。Voicing Loopには対応していません")
+                : ("保存した進行を練習できます")}
               tone="success"
               action={(
                 <div className="flex min-w-0 flex-wrap gap-2">
@@ -1429,7 +1404,7 @@ export function CaptureView(props: CaptureViewProps) {
                     >
                       <Dumbbell aria-hidden="true" size={16} />
                       {savedTextPracticeStatus
-                        ? (language === "ja" ? "Voicing Loopで練習" : "Practice in Voicing Loop")
+                        ? ("Voicing Loopで練習")
                         : "Voicing Loop"}
                     </Button>
                   ) : null}
@@ -1442,18 +1417,16 @@ export function CaptureView(props: CaptureViewProps) {
                     >
                       <ExternalLink aria-hidden="true" size={16} />
                       {savedTextPracticeStatus
-                        ? (language === "ja" ? "進行を開く" : "Open progression")
-                        : language === "ja" ? "保存した進行を見る" : "View saved progression"}
+                        ? ("進行を開く")
+                        : "保存した進行を見る"}
                     </Button>
                   ) : null}
                 </div>
               )}
             >
               {savedTextPracticeStatus?.ready === false
-                ? (language === "ja" ? "練習制限: " : "Practice limit: ") + savedTextPracticeStatus.reason
-                : language === "ja"
-                  ? "Vaultへ保存した内容から安全な練習用snapshotを作成します。"
-                  : "Voicing Loop will build a safe practice snapshot from the saved Vault block."}
+                ? ("練習制限: ") + savedTextPracticeStatus.reason
+                : "Vaultへ保存した内容から安全な練習用snapshotを作成します。"}
             </StatusMessage>
           ) : null}
           {textDraft ? (
@@ -1463,7 +1436,6 @@ export function CaptureView(props: CaptureViewProps) {
               timeline={textProgressionDraftTimeline(textDraft)}
               totalBars={textDraft.lengthBars}
               copy={copy}
-              language={language}
               {...(textDraftContext?.confirmedKey ? { keySignature: textDraftContext.confirmedKey } : {})}
               allowRangeAdjustment={false}
               allowStructuralEdits={false}
@@ -1505,13 +1477,12 @@ export function CaptureView(props: CaptureViewProps) {
         source.id === preAnalysisSession.masterSourceId)
         ?? preAnalysisSession.sources[0];
       return (
-        <CaptureModeFrame stage="pre-analysis" value={captureInputMode} language={language}
+        <CaptureModeFrame stage="pre-analysis" value={captureInputMode}
           disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
           <div data-capture-midi-drop-zone {...dropHandlers}>
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <PreAnalysisWorkspace
             session={preAnalysisSession}
-            language={language}
             busy={analysisProgress !== undefined}
             requiresReanalysis={completedAnalysisSummary !== undefined}
             defaultDetailsExpanded={preAnalysisDetailsExpanded}
@@ -1553,7 +1524,7 @@ export function CaptureView(props: CaptureViewProps) {
       );
     }
     return (
-      <CaptureModeFrame stage="empty" value={captureInputMode} language={language}
+      <CaptureModeFrame stage="empty" value={captureInputMode}
         disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
         <div data-capture-midi-drop-zone {...dropHandlers}>
         <CaptureEmptyState
@@ -1703,9 +1674,7 @@ export function CaptureView(props: CaptureViewProps) {
       }));
       applyCandidateSelection(undefined);
     } catch {
-      setToast(language === "ja"
-        ? "この範囲から採集候補を作成できませんでした。"
-        : "A capture draft could not be created from this range.");
+      setToast("この範囲から採集候補を作成できませんでした。");
     }
   }
 
@@ -1787,7 +1756,7 @@ export function CaptureView(props: CaptureViewProps) {
     const candidate = draftToCandidate(activeDraft);
     return saveNew(
       candidate,
-      captureSaveTitle(candidate, result.fileName, result.detectedKey, copy, language),
+      captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
       copy.capture.defaultNextAction,
       false,
       activeDraft.sourceCandidateSnapshot ?? candidate,
@@ -1798,7 +1767,7 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   return (
-    <CaptureModeFrame stage="result" value={captureInputMode} language={language}
+    <CaptureModeFrame stage="result" value={captureInputMode}
       disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
       {persistenceError ? (
         <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
@@ -1824,7 +1793,7 @@ export function CaptureView(props: CaptureViewProps) {
             <p className="mt-2 text-sm text-teal-200">{result.fileName ?? "MIDI"}</p>
             {analysisTargetLabel ? (
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-                {language === "ja" ? "解析対象" : "Analyzed parts"}: {analysisTargetLabel}
+                {"解析対象"}: {analysisTargetLabel}
               </p>
             ) : null}
             <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
@@ -1841,7 +1810,7 @@ export function CaptureView(props: CaptureViewProps) {
                   clearAnalysis();
                 }}
               >
-                {language === "ja" ? "パート選択を変更" : "Change part selection"}
+                {"パート選択を変更"}
               </Button>
             ) : null}
             <Button variant="secondary" onClick={() => void chooseMidi(false)}>
@@ -1881,7 +1850,6 @@ export function CaptureView(props: CaptureViewProps) {
         activeCandidateId={activeDraft?.source.type === "automatic-candidate"
           ? activeDraft.source.candidateId
           : undefined}
-        language={language}
         copy={{
           title: copy.capture.songMiniMap,
           description: copy.capture.songMiniMapDescription,
@@ -2003,7 +1971,6 @@ export function CaptureView(props: CaptureViewProps) {
                   controller={controller}
                   onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                   copy={copy}
-                  language={language}
                   isExpanded={expandedCandidateId === candidate.id}
                   draft={activeDraft?.source.type === "automatic-candidate"
                     && activeDraft.source.candidateId === candidate.id
@@ -2103,7 +2070,6 @@ export function CaptureView(props: CaptureViewProps) {
           timeline={result.fullTimeline}
           totalBars={result.totalBars}
           copy={copy}
-          language={language}
           {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
           beforeSave={manualSourceBasslineAssessment ? (
             <SourceBasslineCapturePanel
@@ -2112,7 +2078,6 @@ export function CaptureView(props: CaptureViewProps) {
               assessment={manualSourceBasslineAssessment}
               rangeSelected={manualSourceBasslineRangeSelected}
               optedIn={manualSourceBasslineOptedIn}
-              language={language}
               onVoiceChange={(voiceId) => {
                 setManualSourceBasslineVoiceId(voiceId);
                 setManualSourceBasslineRangeKey("");
@@ -2204,7 +2169,6 @@ export function CaptureView(props: CaptureViewProps) {
         scrollToBar={timelineScrollBar}
         openRangeSelectorRequest={rangeSelectorRequest}
         renderDraftEditor={false}
-        language={language}
         onManualDraftCreated={(draft) => {
           setActiveDraft(draft);
           applyCandidateSelection(undefined);
@@ -2214,7 +2178,6 @@ export function CaptureView(props: CaptureViewProps) {
 
       {activeDraft ? (
         <CaptureDraftSessionBar
-          language={language}
           dirty={activeDraft.isDirty}
           sourceAvailable={draftHasMidiSourcePreview(activeDraft)}
           playing={capturePlayback.status === "idle"
@@ -2248,7 +2211,7 @@ export function CaptureView(props: CaptureViewProps) {
         description={copy.capture.unsavedCandidateConfirm}
         confirmLabel={copy.common.close}
         cancelLabel={copy.common.cancel}
-        secondaryLabel={language === "ja" ? "Vaultへ保存して続ける" : "Save to Vault and continue"}
+        secondaryLabel={"Vaultへ保存して続ける"}
         onCancel={() => setPendingCandidateSelection(undefined)}
         onSecondary={() => {
           if (saveActiveDraftForSwitch()) applyPendingDraftSelection();
@@ -2260,17 +2223,16 @@ export function CaptureView(props: CaptureViewProps) {
   );
 }
 
-function CaptureModeFrame({ stage, value, language, disabled, onChange, children }: {
+function CaptureModeFrame({ stage, value, disabled, onChange, children }: {
   stage: string;
   value: CaptureInputMode;
-  language: AppLanguage;
   disabled: boolean;
   onChange: (mode: CaptureInputMode) => void;
   children: ReactNode;
 }) {
   const [headerHost, setHeaderHost] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => { setHeaderHost(document.getElementById("capture-mode-tabs-host")); }, []);
-  const selector = <CaptureInputModeSelector value={value} language={language}
+  const selector = <CaptureInputModeSelector value={value}
     disabled={disabled} onChange={onChange} />;
   return <div className="lv-capture-mode-content" data-capture-view-root data-capture-stage={stage}>
     {headerHost ? createPortal(selector, headerHost) : <div data-testid="capture-mode-tabs-fallback">{selector}</div>}
@@ -2438,7 +2400,6 @@ function StepCard({ index, text }: { index: string; text: string }) {
 export function TimelineDetails({
   result,
   copy,
-  language,
   previewSound,
   onPreviewSoundChange,
   onPlaybackError,
@@ -2454,7 +2415,6 @@ export function TimelineDetails({
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
-  language?: AppLanguage;
   previewSound: PreviewSound;
   onPreviewSoundChange: (sound: PreviewSound) => void;
   onPlaybackError?: (error: unknown) => void;
@@ -2618,7 +2578,6 @@ export function TimelineDetails({
               timeline={result.fullTimeline}
               totalBars={result.totalBars}
               copy={copy}
-              language={language ?? "ja"}
               {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
               {...(manualDraftSave ? { save: manualDraftSave } : {})}
               {...(onPreviewManualDraft ? { onPreview: onPreviewManualDraft } : {})}
@@ -2661,7 +2620,6 @@ export function ProgressionCandidateCard({
   onPreviewError,
   controller = playbackController,
   copy,
-  language,
   isExpanded = false,
   inspectorExpanded = true,
   inspectorHost,
@@ -2734,7 +2692,6 @@ export function ProgressionCandidateCard({
   onPreviewError?: (error: unknown) => void;
   controller?: PlaybackController;
   copy: AppCopy;
-  language: AppLanguage;
   isExpanded?: boolean;
   inspectorExpanded?: boolean;
   inspectorHost?: HTMLElement | null;
@@ -2747,7 +2704,7 @@ export function ProgressionCandidateCard({
   onDraftSaved?: () => void;
   showRomanNumerals?: boolean;
 }) {
-  const editorCopy = progressionEditorCopy[language];
+  const editorCopy = progressionEditorCopy.ja;
   const captureDraft = draft?.source.type === "automatic-candidate"
     && draft.source.candidateId === candidate.id
     ? draft
@@ -3166,7 +3123,7 @@ export function ProgressionCandidateCard({
   const selectedRomanHint = selectedChord
     ? romanNumeralHint(selectedChord.chord, detectedKey)
     : undefined;
-  const visibleWarnings = candidate.warnings.map((warning) => warningLabel(warning, language));
+  const visibleWarnings = candidate.warnings.map((warning) => warningLabel(warning));
   const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
   const candidateVoicingSource = useMemo(
     () => timelineVoicingSourceStatus(editedCandidate.chords),
@@ -3240,16 +3197,14 @@ export function ProgressionCandidateCard({
     if (sourceBasslineRangeSelected && sourceBasslineAssessment.snapshot) {
       return sourceBasslineAssessment.snapshot;
     }
-    return globalThis.confirm(language === "ja"
-      ? "元ベースラインを付けられません。コード進行だけを保存しますか？"
-      : "The source bassline cannot be attached. Save the progression without it?")
+    return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？")
       ? undefined
       : null;
   }
 
   const saveProgressionControl = (
           <SaveProgressionPopover
-            initialTitle={captureSaveTitle(editedCandidate, sourceFileName, detectedKey, copy, language)}
+            initialTitle={captureSaveTitle(editedCandidate, sourceFileName, detectedKey, copy)}
             ideas={ideas}
             defaultNextAction={copy.capture.defaultNextAction}
             copy={copy}
@@ -3302,7 +3257,7 @@ export function ProgressionCandidateCard({
             </span>
             {isExpanded ? (
               <span className="border border-[var(--lv-accent)] px-2 py-0.5 text-xs font-semibold text-[var(--lv-accent)]">
-                {language === "ja" ? "選択中・編集対象" : "Selected for editing"}
+                {"選択中・編集対象"}
               </span>
             ) : null}
           </span>
@@ -3315,7 +3270,7 @@ export function ProgressionCandidateCard({
           </p>
           {shouldDisplayConfidence ? (
             <p className="mt-1 text-sm text-amber-200">
-              {editorCopy.confidence}: {confidenceLabel(candidate.confidence, language)}
+              {editorCopy.confidence}: {confidenceLabel(candidate.confidence)}
             </p>
           ) : null}
         </button>
@@ -3355,21 +3310,18 @@ export function ProgressionCandidateCard({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">
-          {candidateLabelList(candidate.labels, language).join(" · ")}
+          {candidateLabelList(candidate.labels).join(" · ")}
         </span>
         <VoicingSourceChip
           status={candidateVoicingSource.status}
           reason={candidateVoicingSource.reason}
-          language={language}
           testId="candidate-voicing-source-chip"
         />
       </div>
       {draft?.source.type === "automatic-candidate"
         && draft.source.candidateId === candidate.id ? (
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="draft-source">
-            {language === "ja"
-              ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
-              : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`}
+            {`自動候補から作成${draft.isDirty ? "・編集中" : ""}`}
           </p>
         ) : null}
       {(presentationSummaryText ?? candidate.summaryText).trim() ? (
@@ -3388,7 +3340,6 @@ export function ProgressionCandidateCard({
               onUndo={() => { stopCandidatePreview(); setPropagationProposal(undefined); undoCurrentEdit(); }}
               onRedo={() => { stopCandidatePreview(); setPropagationProposal(undefined); redoCurrentEdit(); }}
               onResetAll={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => resetAllEditableChords(current)); }}
-              language={language}
             />
           ) : null}
           <EditableProgressionGrid
@@ -3400,7 +3351,6 @@ export function ProgressionCandidateCard({
             onPreviewSlot={(_slotId, _chord, index) => void selectChord(index)}
             keySignature={detectedKey}
             authorReferenceIndex={authorReferenceIndex}
-            language={language}
             contextActions={{
               canCutRange: (slotId) => {
                 const index = editable.slots.findIndex((slot) => slot.id === slotId);
@@ -3445,7 +3395,6 @@ export function ProgressionCandidateCard({
               assessment={sourceBasslineAssessment}
               rangeSelected={sourceBasslineRangeSelected}
               optedIn={sourceBasslineOptedIn}
-              language={language}
               onVoiceChange={(voiceId) => {
                 setSourceBasslineVoiceId(voiceId);
                 setSourceBasslineRangeKey("");
@@ -3463,7 +3412,6 @@ export function ProgressionCandidateCard({
           {captureDraft === undefined ? null : (
             <DraftBoundaryHandles
               draft={captureDraft}
-              language={language}
               onChange={applyCaptureHistory}
             />
           )}
@@ -3472,7 +3420,6 @@ export function ProgressionCandidateCard({
           <ChordInspector
             slot={selectedSlot}
             quickCandidates={selectedQuickCandidates}
-            language={language}
             expanded={inspectorExpanded}
             onExpandedChange={onInspectorExpandedChange}
             onPreview={(chord) => void previewChord(chord)}
@@ -3571,7 +3518,6 @@ export function ProgressionCandidateCard({
       {isExpanded ? (
         <ProgressionEditSummary
           items={progressionEditSummary(editable)}
-          language={language}
           onSelect={(slotId) => {
             const index = editable.slots.findIndex((slot) => slot.id === slotId);
             if (index >= 0) {
@@ -3587,7 +3533,6 @@ export function ProgressionCandidateCard({
       {isExpanded && captureDraft !== undefined ? (
         <CaptureEditHistoryPanel
           draft={captureDraft}
-          language={language}
           onJump={(historyIndex) => applyCaptureHistory(
             jumpCaptureDraftHistory(captureDraft, historyIndex),
           )}
@@ -3939,7 +3884,6 @@ export function captureSaveTitle(
   sourceFileName: string | undefined,
   detectedKey: string | undefined,
   copy: AppCopy,
-  _language: AppLanguage,
 ): string {
   const range = copy.capture.barRange(candidate.startBar, candidate.endBar);
   const fileName = sourceFileName?.trim();
