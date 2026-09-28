@@ -31,11 +31,6 @@ import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSour
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
-  transition,
-  type TransitionOptions,
-  type TransitionResult,
-} from "../domain/transition";
-import {
   MAX_PERSISTED_CHORD_ALTERNATIVES,
   savedTextSourceSchema,
   type QuarantinedRecord,
@@ -49,19 +44,15 @@ import type {
   SongIdea,
   Status,
   VaultFile,
-  AppLanguage,
 } from "../domain/types";
 import type { AnalyzeMidiOptions, MidiSongData, Voice } from "../domain/midi/types";
 import {
-  assetAnchor,
   ideaAnchor,
   progressionBlockAnchor,
   removeUndoSnapshot,
   resolveUndoSnapshotIndex,
-  type PendingAssetDeletion,
   type PendingIdeaDeletion,
   type PendingProgressionBlockDeletion,
-  type PendingReferenceDeletion,
 } from "../domain/undoDeletion";
 
 export type LoadStatus =
@@ -163,7 +154,6 @@ export interface VaultStoreState {
   vaultEpoch: number;
   error?: string;
   initialize: () => Promise<void>;
-  createIdea: (title: string, status?: Status) => string | undefined;
   createIdeaFromDraft: (draft: SongIdeaDraft) => string | undefined;
   createIdeaFromTextProgression: (draft: TextProgressionIdeaDraft) => string | undefined;
   updateIdea: (id: string, changes: Partial<SongIdea>) => VaultMutationResult;
@@ -187,26 +177,11 @@ export interface VaultStoreState {
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
   ) => VaultMutationResult;
-  removeReference: (
-    deletion: PendingReferenceDeletion,
-  ) => VaultMutationResult;
-  unlinkAsset: (
-    deletion: PendingAssetDeletion,
-  ) => VaultMutationResult;
-  transitionIdea: (
-    id: string,
-    to: Status,
-    now?: Date,
-    options?: TransitionOptions,
-  ) => TransitionResult;
-  updateNextAction: (id: string, text: string, now?: Date) => VaultMutationResult;
   analyzeMidiBytes: (
     bytes: Uint8Array,
     options?: AnalyzeMidiOptions,
   ) => MidiProgressionAnalysis | undefined;
   clearAnalysis: () => void;
-  setMonthlyGoal: (goal: number) => void;
-  setLanguage: (language: AppLanguage) => void;
   setShowRomanNumerals?: (show: boolean) => void;
   refreshBackups: () => Promise<void>;
   exportVault: (path: string) => Promise<boolean>;
@@ -449,10 +424,6 @@ export function createVaultStore(
                 : "Vaultを読み込めませんでした。",
           });
         }
-      },
-
-      createIdea(title, status = "idea") {
-        return get().createIdeaFromDraft({ title, status });
       },
 
       createIdeaFromDraft(draft) {
@@ -762,105 +733,6 @@ export function createVaultStore(
         }), true);
       },
 
-      removeReference(deletion) {
-        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
-        const { snapshot } = deletion;
-        const idea = get().ideas.find(
-          (entry) => entry.id === snapshot.parentId,
-        );
-        if (!idea) return true;
-        if (resolveUndoSnapshotIndex(idea.references, snapshot) < 0) return true;
-        return applyVaultChange((vault) => ({
-          ...vault,
-          ideas: vault.ideas.map((entry) =>
-            entry.id === snapshot.parentId
-              ? {
-                  ...entry,
-                  references: removeUndoSnapshot(
-                    entry.references,
-                    snapshot,
-                  ),
-                  updatedAt: now().toISOString(),
-                }
-              : entry,
-          ),
-        }), true);
-      },
-
-      unlinkAsset(deletion) {
-        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
-        const { snapshot } = deletion;
-        const idea = get().ideas.find(
-          (entry) => entry.id === snapshot.parentId,
-        );
-        if (!idea) return true;
-        if (resolveUndoSnapshotIndex(idea.assets, snapshot, assetAnchor) < 0) return true;
-        return applyVaultChange((vault) => ({
-          ...vault,
-          ideas: vault.ideas.map((entry) =>
-            entry.id === snapshot.parentId
-              ? {
-                  ...entry,
-                  assets: removeUndoSnapshot(
-                    entry.assets,
-                    snapshot,
-                    assetAnchor,
-                  ),
-                  updatedAt: now().toISOString(),
-                }
-              : entry,
-          ),
-        }), true);
-      },
-
-      transitionIdea(id, to, transitionNow = now(), transitionOptions = {}) {
-        const idea = get().ideas.find((entry) => entry.id === id);
-        if (!idea) {
-          return {
-            ok: false,
-            error: { code: "invalid-jump", message: "Ideaが見つかりません。" },
-          };
-        }
-
-        const result = transition(idea, to, transitionNow, transitionOptions);
-        if (!result.ok) {
-          return result;
-        }
-
-        const applied = applyVaultChange((vault) => ({
-          ...vault,
-          ideas: vault.ideas.map((entry) =>
-            entry.id === id ? result.idea : entry,
-          ),
-        }));
-        if (!applied) {
-          return {
-            ok: false,
-            error: {
-              code: "persistence-failed",
-              message: get().error ?? "Vaultの変更を保存できませんでした。",
-            },
-          };
-        }
-        return result;
-      },
-
-      updateNextAction(id, text, actionNow = now()) {
-        const updatedAt = actionNow.toISOString();
-        return applyVaultChange((vault) => ({
-          ...vault,
-          ideas: vault.ideas.map((idea) =>
-            idea.id === id
-              ? {
-                  ...idea,
-                  nextAction: { text, updatedAt },
-                  updatedAt,
-                }
-              : idea,
-          ),
-        }), true);
-      },
-
       analyzeMidiBytes(bytes, analyzeOptions = {}) {
         set({ analysis: { status: "analyzing" }, error: undefined });
         try {
@@ -911,21 +783,6 @@ export function createVaultStore(
 
       clearAnalysis() {
         set({ analysis: emptyAnalysisState() });
-      },
-
-      setMonthlyGoal(goal) {
-        const monthlyGoal = Math.max(1, Math.trunc(goal));
-        applyVaultChange((vault) => ({
-          ...vault,
-          settings: { ...vault.settings, monthlyGoal },
-        }));
-      },
-
-      setLanguage(language) {
-        return applyVaultChange((vault) => ({
-          ...vault,
-          settings: { ...vault.settings, language },
-        }));
       },
 
       setShowRomanNumerals(showRomanNumerals) {

@@ -39,7 +39,7 @@ describe("P5.26-01 save projection", () => {
       now: () => new Date("2026-08-31T00:00:00.000Z"),
     });
     await store.getState().initialize();
-    const ideaId = store.getState().createIdea("P5.26 synthetic save");
+    const ideaId = store.getState().createIdeaFromDraft({ title: "P5.26 synthetic save" });
     if (!ideaId) throw new Error("test idea could not be created");
     expect(store.getState().appendBlockToIdea(ideaId, candidate, adapted)).toBe(true);
     await store.getState().flush();

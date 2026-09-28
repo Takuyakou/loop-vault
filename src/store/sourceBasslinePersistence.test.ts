@@ -168,7 +168,7 @@ describe("Source bassline Vault persistence", () => {
     const store = createVaultStore({ repository, debounceMs: 60_000, idFactory: idFactory() });
     await store.getState().initialize();
     expect(store.getState().sizeRecovery).toBe(true);
-    expect(store.getState().createIdea("Blocked addition")).toBeUndefined();
+    expect(store.getState().createIdeaFromDraft({ title: "Blocked addition" })).toBeUndefined();
     const deletion = createUndoSnapshot(store.getState().ideas, 0, "vault", ideaAnchor)!;
     expect(store.getState().deleteIdea({
       kind: "idea",
