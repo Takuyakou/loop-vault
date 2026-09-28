@@ -139,10 +139,14 @@ describe("VaultView", () => {
 
   it("guides an empty Vault to capture", async () => {
     const openCapture = vi.fn();
-    const view = await renderVault({ openCapture });
-    expect(view.container.textContent).toContain("まだ進行がありません");
-    await act(async () => buttonByText(view.container, "コード採集")!.click());
+    const openTextCapture = vi.fn();
+    const view = await renderVault({ openCapture, openTextCapture });
+    // P8.9-08: the same first-capture guide as Home.
+    expect(view.container.textContent).toContain("最初の進行を取り込む");
+    await act(async () => buttonByText(view.container, "MIDI から取り込む")!.click());
     expect(openCapture).toHaveBeenCalled();
+    await act(async () => buttonByText(view.container, "テキストから取り込む")!.click());
+    expect(openTextCapture).toHaveBeenCalled();
     expect(view.container.querySelectorAll(".lv-button-primary")).toHaveLength(1);
     await view.unmount();
   });

@@ -1,4 +1,4 @@
-/* P8.9-08 Settings screen: a section list on the left, cards on the right.
+/* P8.9-08 Settings screen (and the startup / empty states below): a section list on the left, cards on the right.
    Under 900px of content the list sits on top and the cards stack. */
 @layer components {
   .lv-settings-host {
@@ -166,6 +166,28 @@
       flex-direction: row;
       flex-wrap: wrap;
     }
+  }
+
+  /* P8.9-08 startup and the shared first-capture guide (common EmptyState / LoadingState). */
+  .lv-startup {
+    display: flex;
+    min-height: 60vh;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lv-space-5);
+    padding: var(--lv-space-10) 0;
+  }
+
+  .lv-startup-logo {
+    border-radius: 14px;
+  }
+
+  .lv-first-capture {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-lg);
+    background: var(--lv-surface);
   }
 
   @media (prefers-reduced-motion: reduce) {

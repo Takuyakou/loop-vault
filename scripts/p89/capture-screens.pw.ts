@@ -55,6 +55,10 @@ for (const [width, height] of SIZES) {
 
       await openApp(page);
       await shot("home-empty", async () => {});
+      await shot("vault-empty", async () => {
+        await nav(page, "vault");
+        await expect(page.getByText("最初の進行を取り込む")).toBeVisible();
+      });
       await shot("capture-empty", async () => {
         await nav(page, "capture");
         await expect(page.locator("[data-capture-midi-drop-zone]").first()).toBeVisible();
@@ -184,6 +188,9 @@ for (const [width, height] of SIZES) {
         await settle(page);
         await page.screenshot({ path: join(OUT, `gallery@${size}.png`), fullPage: true, animations: "disabled", caret: "hide" });
         result.captured.push("gallery");
+        // P8.9-08: startup / recovery / quarantine / first-capture states rendered with synthetic data.
+        await page.getByTestId("p89-gallery-startup").screenshot({ path: join(OUT, `startup-states@${size}.png`), animations: "disabled", caret: "hide" });
+        result.captured.push("startup-states");
       } catch (error) {
         result.unreachable.push({ screen: "gallery", reason: String(error).split("\n")[0].slice(0, 160) });
       }

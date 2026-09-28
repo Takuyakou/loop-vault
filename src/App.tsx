@@ -3,7 +3,6 @@ import { listen } from "@tauri-apps/api/event";
 import { readBoundedMidiPath } from "./storage/boundedMidiReader";
 import {
   lazy,
-  ReactNode,
   Suspense,
   useCallback,
   useEffect,
@@ -20,6 +19,8 @@ import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { FirstCaptureGuide } from "./components/FirstCaptureGuide";
+import { QuarantineNotice, StartupState } from "./components/StartupStates";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { formatHomeDate } from "./views/home/useHomeSummary";
@@ -76,7 +77,6 @@ import {
 import {
   appCopy,
   progressionDetailCopy,
-  type AppCopy,
 } from "./i18n";
 import {
   registerBrowserCloseGuard,
@@ -844,6 +844,7 @@ function App() {
                 openDetail={openDetail}
                 openProgression={openProgression}
                 openCapture={() => navigateTo("capture")}
+                openTextCapture={openTextProgressionInput}
                 updateIdea={updateIdea}
                 updateProgressionBlock={updateProgressionBlock}
                 setToast={setToast}
@@ -1070,7 +1071,7 @@ function App() {
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (
-              <EmptyState openCapture={() => navigateTo("capture")} copy={copy} />
+              <FirstCaptureGuide className="mx-auto mt-6 w-full max-w-2xl" onMidi={() => navigateTo("capture")} onText={openTextProgressionInput} />
             ) : null}
           </>
         ) : (
@@ -1195,81 +1196,6 @@ export function deleteIdeaForUndo({
 
 
 
-
-function StartupState({
-  loadStatus,
-  recovery,
-  readonly,
-  error,
-  requestRestoreBackup,
-  copy,
-}: {
-  loadStatus: string;
-  recovery: ReturnType<typeof defaultVaultStore.getState>["recovery"];
-  readonly: ReturnType<typeof defaultVaultStore.getState>["readonly"];
-  error?: string;
-  requestRestoreBackup: (backupName: string) => void;
-  copy: AppCopy;
-}) {
-  return (
-    <div className="grid flex-1 place-items-center py-10">
-      <Panel className="w-full max-w-2xl">
-        {loadStatus === "loading" || loadStatus === "idle" ? <StatusPanel title={copy.startup.loadingTitle} body={copy.startup.loadingBody} /> : null}
-        {loadStatus === "recovery" && recovery ? (
-          <div>
-            <StatusPanel title={copy.startup.recoveryTitle} body={copy.startup.recoveryBody} />
-            {recovery.corruptPath ? <p className="mt-3 break-all text-sm text-[var(--lv-text-muted)]">{recovery.corruptPath}</p> : null}
-            <div className="mt-5 space-y-2">
-              {recovery.backups.length > 0 ? recovery.backups.map((backup) => (
-                <button key={backup.name} className="block w-full rounded border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)]" onClick={() => requestRestoreBackup(backup.name)}>
-                  {copy.startup.restoreBackup(backup.name)}
-                </button>
-              )) : <p className="text-sm text-[var(--lv-text-muted)]">{copy.startup.noBackups}</p>}
-            </div>
-          </div>
-        ) : null}
-        {loadStatus === "readonly" && readonly ? <StatusPanel title={copy.startup.readonlyTitle} body={readonly.fileVersion ? copy.startup.newerVersion(readonly.fileVersion) : readonly.message} /> : null}
-        {loadStatus === "error" ? <StatusPanel title={copy.startup.errorTitle} body={error ?? copy.startup.unknownError} /> : null}
-      </Panel>
-    </div>
-  );
-}
-
-function QuarantineNotice({ count, copy }: { count: number; copy: AppCopy;}) {
-  if (count === 0) return null;
-  return (
-    <div className="mt-4 border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-      <p>{copy.startup.quarantine(count)}</p>
-      <p className="mt-1 text-xs">
-        {"不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"}
-      </p>
-    </div>
-  );
-}
-
-function EmptyState({ openCapture, copy }: { openCapture: () => void; copy: AppCopy }) {
-  return (
-    <div className="grid min-h-96 place-items-center py-10">
-      <div className="max-w-md text-center">
-        <h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2>
-        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCapture}>{copy.library.capture}</button>
-      </div>
-    </div>
-  );
-}
-
-function StatusPanel({ title, body }: { title: string; body: string }) {
-  return (
-    <div>
-      <h2 className="text-2xl font-semibold">{title}</h2>
-      <p className="mt-3 text-[var(--lv-text-secondary)]">{body}</p>
-    </div>
-  );
-}
-
-function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 ${className}`}>{children}</section>;
-}
 
 /** P8.9-02: header screen names follow the Japanese sidebar (proper names stay as they are). */
 function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
