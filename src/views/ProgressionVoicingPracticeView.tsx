@@ -1163,8 +1163,8 @@ export function ProgressionVoicingPracticeView({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto" data-testid="voicing-loop-workspace">
-      <Surface className="shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
-        <div className="flex min-w-0 items-center gap-x-4 gap-y-2 overflow-x-auto whitespace-nowrap">
+      <Surface className="lv-vl-controls shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
+        <div className="lv-vl-controls-row flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap" data-testid="voicing-loop-controls-row">
           <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-source-help">
             <legend className="lv-section-kicker mr-1 float-left">ソース</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
@@ -1216,7 +1216,7 @@ export function ProgressionVoicingPracticeView({
                   changeLessonModifier(() => setColorEnabled(enabled));
                 }}
               />
-              {text.colorModifier}
+              <span className="lv-vl-control-text">{text.colorModifier}</span>
             </label>
             <span id="voicing-loop-color-help" className="sr-only">{text.colorHelp}</span>
             <label
@@ -1233,15 +1233,15 @@ export function ProgressionVoicingPracticeView({
                   changeLessonModifier(() => setOpenEnabled(enabled));
                 }}
               />
-              {text.openModifier}
+              <span className="lv-vl-control-text">{text.openModifier}</span>
             </label>
             <span id="voicing-loop-open-help" className="sr-only">{text.openHelp}</span>
           </fieldset>
           <fieldset className="flex shrink-0 items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">表示</legend>
             <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
-              <Button size="sm" variant="secondary" className="lv-choice" aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
-              <Button size="sm" variant="secondary" className="lv-choice" aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
+              <Button size="sm" variant="secondary" className="lv-choice" title={text.learn} aria-label={text.learn} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}><CompactLabel text={text.learn} /></Button>
+              <Button size="sm" variant="secondary" className="lv-choice" title={text.recall} aria-label={text.recall} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}><CompactLabel text={text.recall} /></Button>
             </div>
             <label
               className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
@@ -1257,16 +1257,16 @@ export function ProgressionVoicingPracticeView({
                   changeLessonModifier(() => setProgressionOptimizationEnabled(enabled));
                 }}
               />
-              {text.optimizeProgression}
+              <span className="lv-vl-control-text">{text.optimizeProgression}</span>
             </label>
             <span id="voicing-loop-optimize-help" className="sr-only">{text.optimizeHelp}</span>
-            <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)]">
+            <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)]" title={text.showFingering}>
               <input
                 type="checkbox"
                 checked={showFingering}
                 onChange={(event) => setShowFingering(event.currentTarget.checked)}
               />
-              {text.showFingering}
+              <span className="lv-vl-control-text">{text.showFingering}</span>
             </label>
           </fieldset>
         </div>
@@ -2379,4 +2379,11 @@ function createDefaultTransport(): ProgressionVoicingTransportPort {
     if (window.localStorage.getItem("lv-voicing-loop-v2") === "off") return new ProgressionVoicingTransport();
   } catch { /* non-persistent mode still uses the candidate */ }
   return new ProgressionVoicingTransportV2();
+}
+
+/** 「覚える（Voicing表示）」: the part in （） is visually hidden on a narrow bar and stays in the name. */
+function CompactLabel({ text }: { text: string }) {
+  const cut = text.indexOf("（");
+  if (cut < 0) return <>{text}</>;
+  return <>{text.slice(0, cut)}<span className="lv-vl-control-text">{text.slice(cut)}</span></>;
 }

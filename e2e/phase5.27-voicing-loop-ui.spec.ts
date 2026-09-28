@@ -161,3 +161,24 @@ test("P8.9-09 Voicing Loop bottom bar keeps every control visible at 960 and 768
     }
   }
 });
+
+test("P8.9-09 Voicing Loop top row keeps every control inside the row at 1440, 960 and 768", async ({ page }) => {
+  for (const [width, height] of [[1440, 900], [960, 1032], [768, 640]] as const) {
+    await page.setViewportSize({ width, height });
+    await openApp(page);
+    await chooseVoicingLoop(page);
+    const row = page.getByTestId("voicing-loop-controls-row");
+    await expect(row).toBeVisible();
+    const fit = await row.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const outside = [...element.querySelectorAll("button, input")].filter((control) => {
+        const own = control.getBoundingClientRect();
+        return own.right > box.right + 1 || own.bottom > box.bottom + 1;
+      }).length;
+      return { client: element.clientWidth, scroll: element.scrollWidth, outside };
+    });
+    expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
+    expect(fit.outside, `${width}px`).toBe(0);
+    await expect(row.getByRole("button", { name: "覚える（Voicing表示）" })).toBeVisible();
+  }
+});

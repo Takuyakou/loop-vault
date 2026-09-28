@@ -1,9 +1,27 @@
-/* P8.9-09 Voicing Loop bottom bar: at narrow widths the words beside the controls are hidden
+/* P8.9-09 Voicing Loop bars. Bottom bar: at narrow widths the words beside the controls are hidden
    visually (they stay as accessible names) so every control fits on one row without a hidden
    horizontal scroll. Order and behavior are unchanged. */
 @layer components {
   .lv-vl-transport {
     container-type: inline-size;
+  }
+
+  /* The source / study / display row above: same idea. Under 1500px of row the words of the
+     checkboxes and the （…） of the display buttons are visually hidden (tooltips and accessible
+     names keep them); the row wraps in the same order instead of hiding controls in a scroll. */
+  .lv-vl-controls {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 1500px) {
+    .lv-vl-controls .lv-vl-control-text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   }
 
   @container (max-width: 1000px) {
