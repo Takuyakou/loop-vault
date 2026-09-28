@@ -16,7 +16,6 @@ import {
   SettingsIcon,
   VaultIcon,
   VoicingLoopIcon,
-  VolumeIcon,
   type IconComponent,
 } from "./icons";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
@@ -25,7 +24,6 @@ import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { TitleBar } from "./shell/TitleBar";
 import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
-import { Popover } from "./ui";
 
 export type AppView =
   | "home"
@@ -182,23 +180,7 @@ export function AppShell({
               <GlobalPreviewSoundSelector copy={copy} />
               <GlobalMetronomeButton />
               <div className="lv-volume-group" role="group" aria-label={copy.nav.masterVolume}>
-                <Popover
-                  label={copy.nav.masterVolume}
-                  trigger={(props) => (
-                    <button
-                      type="button"
-                      className="lv-volume-trigger"
-                      aria-label={`${copy.nav.masterVolume} ${masterVolume}%`}
-                      title={`${copy.nav.masterVolume} ${masterVolume}%`}
-                      data-volume-trigger
-                      {...props}
-                    >
-                      <VolumeIcon size={16} />
-                    </button>
-                  )}
-                >
-                  <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
-                </Popover>
+                <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
                 <PlaybackLevelMeter
                   label={copy.nav.previewLevel}
                   masterVolume={masterVolume}

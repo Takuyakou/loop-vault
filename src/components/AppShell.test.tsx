@@ -157,7 +157,7 @@ describe("AppShell (P8.9-02)", () => {
     await act(async () => remembered.root.unmount());
   });
 
-  it("groups the volume icon with the level meter and opens the knob in a popover", async () => {
+  it("shows the volume knob beside the level meter and changes it by drag, wheel, double click and keys", async () => {
     const onMasterVolumeChange = vi.fn();
     const { container, root } = await renderShell({ masterVolume: 72, onMasterVolumeChange });
     const actions = container.querySelector("[data-global-actions]")!;
@@ -166,17 +166,35 @@ describe("AppShell (P8.9-02)", () => {
         : child.getAttribute("data-testid") === "global-metronome" ? "metronome"
           : child.classList.contains("lv-volume-group") ? "volume"
               : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "metronome", "volume", "save"]);
-    expect(container.querySelector('input[aria-label="マスター音量"]')).toBeNull();
-    const trigger = container.querySelector<HTMLButtonElement>("[data-volume-trigger]");
-    expect(trigger?.getAttribute("aria-label")).toBe("マスター音量 72%");
-    await act(async () => trigger?.click());
-    const input = container.querySelector<HTMLInputElement>('input[aria-label="マスター音量"]');
-    expect(input?.value).toBe("72");
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, "41");
-      input?.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    expect(onMasterVolumeChange).toHaveBeenCalledWith(41);
+    expect(container.querySelector("[data-volume-trigger]")).toBeNull();
+    const knob = container.querySelector<HTMLElement>('[role="slider"][aria-label="マスター音量"]')!;
+    expect(knob.closest(".lv-volume-group")?.querySelector("[data-playback-level-meter]")).not.toBeNull();
+    expect(knob.getAttribute("aria-valuenow")).toBe("72");
+    expect(knob.querySelector("[data-volume-tooltip]")?.textContent).toBe("音量 72%");
+    const fire = async (event: Event) => { await act(async () => { knob.dispatchEvent(event); }); };
+    const last = () => onMasterVolumeChange.mock.lastCall?.[0];
+
+    // Up is louder: 150px covers the whole range, so 15px is 10%.
+    await fire(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientY: 100 }));
+    await fire(new MouseEvent("pointermove", { bubbles: true, clientY: 85 }));
+    expect(last()).toBe(82);
+    await fire(new MouseEvent("pointermove", { bubbles: true, clientY: -200 }));
+    expect(last()).toBe(100);
+    await fire(new MouseEvent("pointerup", { bubbles: true, clientY: -200 }));
+    onMasterVolumeChange.mockClear();
+    await fire(new MouseEvent("pointermove", { bubbles: true, clientY: 300 }));
+    expect(onMasterVolumeChange).not.toHaveBeenCalled();
+
+    await fire(new WheelEvent("wheel", { bubbles: true, deltaY: -100 }));
+    expect(last()).toBe(74);
+    await fire(new WheelEvent("wheel", { bubbles: true, deltaY: 100, shiftKey: true }));
+    expect(last()).toBe(71);
+    await fire(new MouseEvent("dblclick", { bubbles: true }));
+    expect(last()).toBe(100);
+    for (const [key, expected] of [["ArrowUp", 74], ["ArrowDown", 70], ["PageUp", 82], ["PageDown", 62], ["Home", 0], ["End", 100]] as const) {
+      await fire(new KeyboardEvent("keydown", { bubbles: true, key }));
+      expect(last(), key).toBe(expected);
+    }
     await act(async () => root.unmount());
   });
 
