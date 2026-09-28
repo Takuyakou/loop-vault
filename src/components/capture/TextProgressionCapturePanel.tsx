@@ -1,3 +1,4 @@
+import { displayKey } from "../../domain/displayLabels";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReserveBottomSpace } from "../notifications";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
@@ -315,12 +316,12 @@ export function TextProgressionCapturePanel({
   const modeSelector = (
     <div className="flex shrink-0 items-center gap-1" role="group" aria-label={"テキスト記法"}>
       <span className="text-xs text-[var(--lv-text-muted)]">{"読み方"}</span>
-      <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
+      <button type="button" className="lv-button-secondary lv-choice px-3 py-2 text-sm"
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
         onClick={() => switchDialect("standard")}>
         {"通常"}
       </button>
-      <button type="button" className={dialect === "extended" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
+      <button type="button" className="lv-button-secondary lv-choice px-3 py-2 text-sm"
         aria-pressed={dialect === "extended"} disabled={disabled} data-testid="text-mode-extended"
         onClick={() => switchDialect("extended")}>
         {"拡張"}
@@ -376,7 +377,7 @@ export function TextProgressionCapturePanel({
                 aria-label={"キーをクリア"}>×</button>
               {suggestions.length ? <div className="mt-2 flex flex-wrap gap-1" data-testid="text-progression-key-suggestions">
                 {suggestions.map(candidate => <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
-                  disabled={disabled} onClick={() => chooseSuggestedKey(candidate.key)}>{candidate.key}</button>)}
+                  disabled={disabled} title={candidate.key} onClick={() => chooseSuggestedKey(candidate.key)}>{displayKey(candidate.key) ?? candidate.key}</button>)}
               </div> : null}
             </div>
           </details>

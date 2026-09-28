@@ -1174,7 +1174,8 @@ export function ProgressionVoicingPracticeView({
                 <Button
                   key={item.id}
                   size="sm"
-                  variant={pressed ? "primary" : "secondary"}
+                  variant="secondary"
+                  className="lv-choice"
                   aria-pressed={pressed}
                   onClick={() => changeSelection(item.id === "lesson-rules" ? "basic-full" : item.id)}
                 >
@@ -1190,7 +1191,8 @@ export function ProgressionVoicingPracticeView({
               <Button
                 key={item.id}
                 size="sm"
-                variant={lessonRulesSelected && studyCategory === item.id ? "primary" : "secondary"}
+                variant="secondary"
+                className="lv-choice"
                 aria-pressed={lessonRulesSelected ? studyCategory === item.id : false}
                 aria-description={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
                 title={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
@@ -1238,8 +1240,8 @@ export function ProgressionVoicingPracticeView({
           <fieldset className="flex shrink-0 items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">表示</legend>
             <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
-              <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
-              <Button size="sm" variant={displayMode === "recall" ? "primary" : "secondary"} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
+              <Button size="sm" variant="secondary" className="lv-choice" aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
+              <Button size="sm" variant="secondary" className="lv-choice" aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
             </div>
             <label
               className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"

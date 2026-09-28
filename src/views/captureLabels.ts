@@ -55,3 +55,14 @@ export function warningLabel(warning: string): string {
 export function describeWarnings(warnings: readonly string[]): string[] {
   return [...new Set(warnings.map(warningLabel))];
 }
+
+/**
+ * A saved block memo written by the analyzer is its warning ids joined by "; " (stored as is).
+ * Show it as reasons; any memo that is not only ids is shown unchanged.
+ */
+export function describeBlockMemo(memo: string): string {
+  const parts = memo.split(/;\s*/).filter(Boolean);
+  return parts.length && parts.every((part) => /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(part))
+    ? describeWarnings(parts).join("、")
+    : memo;
+}

@@ -117,10 +117,18 @@
   }
 
   .lv-segment[aria-checked="true"],
-  .lv-segment[aria-pressed="true"] {
+  .lv-segment[aria-pressed="true"],
+  /* P8.9-09: a chosen option drawn like a segment, not like the one primary action. */
+  .lv-choice[aria-pressed="true"],
+  .lv-choice[aria-selected="true"] {
     background: var(--lv-accent-soft);
     color: #7fe8da;
     font-weight: 600;
+  }
+
+  .lv-choice[aria-pressed="true"],
+  .lv-choice[aria-selected="true"] {
+    border-color: var(--lv-accent);
   }
 
   .lv-segment:disabled {

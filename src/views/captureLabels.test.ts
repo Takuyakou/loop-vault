@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
+import { confidenceLabel, describeBlockMemo, shouldShowConfidence, warningLabel } from "./captureLabels";
 
 describe("capture labels", () => {
   it("rounds confidence into user-facing labels", () => {
@@ -19,6 +19,9 @@ describe("capture labels", () => {
     // P8.9-09: unknown ids no longer leak as humanised English.
     expect(warningLabel("unknown-warning-key")).toBe("要確認");
     expect(warningLabel("入力内容を確認")).toBe("入力内容を確認");
+    // Saved block memos made of analyzer ids read as reasons; hand-written memos stay.
+    expect(describeBlockMemo("ambiguous-bass; sparse-evidence")).toBe("候補が僅差、音数が少ないため要確認");
+    expect(describeBlockMemo("サビ前; ambiguous-bass")).toBe("サビ前; ambiguous-bass");
   });
 
   it("labels the warning the analyzer actually emits for sparse windows", () => {

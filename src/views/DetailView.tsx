@@ -1,3 +1,4 @@
+import { describeBlockMemo } from "./captureLabels";
 import type { ToastFn } from "../components/notifications";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
@@ -94,7 +95,7 @@ function ProgressionBlockCard({
           playingChordIndex={null}
         />
       </div>
-      {block.memo ? <p className="mt-3 text-xs text-amber-200">{block.memo}</p> : null}
+      {block.memo ? <p className="mt-3 text-xs text-amber-200">{describeBlockMemo(block.memo)}</p> : null}
     </div>
   );
 }
