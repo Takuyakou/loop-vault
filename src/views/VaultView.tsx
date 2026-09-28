@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
 import type { PreviewSound } from "../audio/chordPreview";
 import { PlayToggle } from "../components/PlayToggle";
@@ -10,33 +10,23 @@ import {
   IconButton,
   Surface,
 } from "../components/ui";
-import {
-  isRecent,
-  ProgressionLibraryRail,
-  type ProgressionLibraryScope,
-} from "../components/ProgressionLibraryRail";
+import { ProgressionLibraryRail } from "../components/ProgressionLibraryRail";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
 import { resolveTimelineVoicings } from "../domain/voicing";
 import {
   buildProgressionIndex,
-  filterProgressionIndex,
   progressionTagLabel,
   type ProgressionIndexEntry,
 } from "../domain/progressionClassification/mod";
-import { filterAndSortProgressions } from "../domain/progressionFilters";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { smartLibraryCopy, type AppCopy } from "../i18n";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { useVaultKeyboardSelection, useVirtualRowWindow } from "./vault/useVaultKeyboardSelection";
+import { progressionEntryId, useVaultLibraryFilters, type ProgressionEntry, type SortField } from "./vault/useVaultLibraryFilters";
 import { ChevronRight, Copy, SearchX, SlidersHorizontal, Star, X } from "lucide-react";
 
-type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
-type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
-type VaultMode = "library" | "list" | "idea";
-type ProgressionViewMode = Exclude<VaultMode, "idea">;
-
-const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
 const progressionVirtualizationThreshold = 50;
 const progressionPreviewChordLimit = 8;
 
@@ -55,59 +45,28 @@ export function VaultView({
   showRomanNumerals: boolean;
 }) {
   const { sound: previewSound } = usePreviewSound();
-  const [mode, setMode] = useState<VaultMode>(readProgressionViewMode);
-  const [libraryScope, setLibraryScope] = useState<ProgressionLibraryScope>("all");
-  const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([]);
   const [libraryDrawerOpen, setLibraryDrawerOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [onlyPinned, setOnlyPinned] = useState(false);
-  const [lengthBars, setLengthBars] = useState<"all" | "4" | "8" | "16">("all");
-  const [keyFilter, setKeyFilter] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [tagFilter, setTagFilter] = useState("");
-  const [sort, setSort] = useState<SortField>("capturedAt");
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const searchRef = useRef<HTMLInputElement>(null);
   const libraryText = smartLibraryCopy.ja;
   const progressionIndex = useMemo(() => buildProgressionIndex(ideas), [ideas]);
   const progressionIndexById = useMemo(
     () => new Map(progressionIndex.map((entry) => [entry.id, entry])),
     [progressionIndex],
   );
-  const allBlocks = useMemo(() => ideas.flatMap((idea) => idea.progressionBlocks ?? []), [ideas]);
-  const keys = useMemo(() => [...new Set(ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => block.detectedKey ?? idea.key).filter((value): value is string => Boolean(value))))].sort(), [ideas]);
-  const sources = useMemo(() => [...new Set(allBlocks.map((block) => block.sourceFileName).filter((value): value is string => Boolean(value)))].sort(), [allBlocks]);
-  const tags = useMemo(() => [...new Set(allBlocks.flatMap((block) => block.tags))].sort(), [allBlocks]);
-  const hasActiveFilters = onlyPinned
-    || lengthBars !== "all"
-    || keyFilter !== ""
-    || sourceFilter !== ""
-    || tagFilter !== ""
-    || selectedLibraryTags.length > 0;
-  const visible = useMemo(() => {
-    const sorted = filterAndSortProgressions(ideas, {
-      query: mode === "library" ? "" : query,
-      pinnedOnly: onlyPinned,
-      keys: keyFilter ? [keyFilter] : [],
-      lengths: lengthBars === "all" ? [] : [Number(lengthBars)],
-      sources: sourceFilter ? [sourceFilter] : [],
-      tags: tagFilter ? [tagFilter] : [],
-    }, { field: sort, direction: sort === "key" || sort === "bpm" ? "asc" : "desc" });
-    if (mode !== "library") return sorted;
-    const libraryMatches = filterProgressionIndex(progressionIndex, {
-      query,
-      tagIds: selectedLibraryTags,
-    }).filter((entry) => {
-      if (libraryScope === "favorites") return entry.favorite;
-      if (libraryScope === "recent") return isRecent(entry.createdAt);
-      return true;
-    });
-    const allowed = new Set(libraryMatches.map((entry) => entry.id));
-    return sorted.filter((entry) => allowed.has(progressionEntryId(entry)));
-  }, [ideas, keyFilter, lengthBars, libraryScope, mode, onlyPinned, progressionIndex, query, selectedLibraryTags, sort, sourceFilter, tagFilter]);
-  useEffect(() => {
-    setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
-  }, [visible.length]);
+  const {
+    mode, changeMode,
+    libraryScope, setLibraryScope,
+    selectedLibraryTags, setSelectedLibraryTags,
+    query, setQuery,
+    onlyPinned, setOnlyPinned,
+    lengthBars, setLengthBars,
+    keyFilter, setKeyFilter,
+    sourceFilter, setSourceFilter,
+    tagFilter, setTagFilter,
+    sort, setSort,
+    keys, sources, tags,
+    hasActiveFilters, clearFilters,
+    visible,
+  } = useVaultLibraryFilters(ideas, progressionIndex);
 
   const togglePlayback = useCallback(async (entry: ProgressionEntry) => {
     try {
@@ -116,21 +75,6 @@ export function VaultView({
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }, [copy.toast.chordPreviewFailed, previewSound, setToast]);
-
-  function changeMode(next: VaultMode) {
-    setMode(next);
-    if (next !== "idea") writeProgressionViewMode(next);
-  }
-
-  function clearFilters() {
-    setOnlyPinned(false);
-    setLengthBars("all");
-    setKeyFilter("");
-    setSourceFilter("");
-    setTagFilter("");
-    setSelectedLibraryTags([]);
-    setLibraryScope("all");
-  }
 
   const openProgressionDetail = useCallback((entry: ProgressionEntry) => {
     if (openProgression) {
@@ -161,36 +105,14 @@ export function VaultView({
     }
   }, [copy.library.copiedProgression, copy.library.copyFailed, setToast]);
 
-  const handleKey = useCallback((event: KeyboardEvent) => {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("input, textarea, select, button, a, [role='button']") || target?.isContentEditable) return;
-    if (event.key === "/") {
-      event.preventDefault();
-      searchRef.current?.focus();
-      return;
-    }
-    const active = visible[selectedIndex];
-    if (!active || mode === "idea") return;
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      setSelectedIndex((value) => Math.max(0, Math.min(visible.length - 1,
-        value + (event.key === "ArrowDown" ? 1 : -1))));
-    } else if (event.key === " ") {
-      event.preventDefault();
-      void togglePlayback(active);
-    } else if (event.key === "Enter") {
-      openProgressionDetail(active);
-    } else if (event.key.toLowerCase() === "c") {
-      void copyProgression(active.block);
-    } else if (event.key.toLowerCase() === "s") {
-      togglePin(active);
-    }
-  }, [copyProgression, mode, openProgressionDetail, selectedIndex, togglePin, togglePlayback, visible]);
-
-  useEffect(() => {
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [handleKey]);
+  const { selectedIndex, setSelectedIndex, searchRef } = useVaultKeyboardSelection({
+    visible,
+    enabled: mode !== "idea",
+    onPlay: (entry) => void togglePlayback(entry),
+    onOpen: openProgressionDetail,
+    onCopy: (entry) => void copyProgression(entry.block),
+    onPin: togglePin,
+  });
 
   return (
     <div className="py-5">
@@ -439,32 +361,14 @@ function VirtualizedProgressionRows({
 }) {
   const rowHeight = 96;
   const viewportHeight = 560;
-  const overscan = 6;
-  const [scrollTop, setScrollTop] = useState(0);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
-  const end = Math.min(
-    entries.length,
-    Math.ceil((scrollTop + viewportHeight) / rowHeight) + overscan,
-  );
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rowTop = selectedIndex * rowHeight;
-    const rowBottom = rowTop + rowHeight;
-    if (rowTop < viewport.scrollTop) viewport.scrollTop = rowTop;
-    else if (rowBottom > viewport.scrollTop + viewportHeight) {
-      viewport.scrollTop = rowBottom - viewportHeight;
-    }
-  }, [selectedIndex]);
+  const { viewportRef, start, end, onScroll } = useVirtualRowWindow(entries.length, selectedIndex, rowHeight, viewportHeight);
 
   return (
     <div
       ref={viewportRef}
       className="mt-4 overflow-y-auto border border-[var(--lv-border)]"
       style={{ height: viewportHeight }}
-      onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+      onScroll={onScroll}
       data-virtualized="true"
       data-row-height={rowHeight}
     >
@@ -600,7 +504,6 @@ function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
 function sourceOf(entry: ProgressionEntry): PlayingSource { return { kind: "vault", id: `idea:${entry.idea.id}:block:${entry.block.id}` }; }
-function progressionEntryId(entry: ProgressionEntry): string { return `${entry.idea.id}:${entry.block.id}`; }
 function displayTaxonomyTag(tagId: string): string {
   const label = progressionTagLabel(tagId);
   return label === tagId ? tagId.replace(/^[^.]+\./, "") : label;
@@ -618,21 +521,4 @@ function requestOf(entry: ProgressionEntry, sound: PreviewSound) {
     beatsPerBar: beatsPerBar(entry.block.timeSignature),
     explicitMidiNotesByEventId: resolveTimelineVoicings(entry.block.chords, Boolean(entry.block.textSource)),
   };
-}
-
-function readProgressionViewMode(): ProgressionViewMode {
-  try {
-    const stored = window.sessionStorage.getItem(progressionViewModeSessionKey);
-    return stored === "list" || stored === "library" ? stored : "library";
-  } catch {
-    return "library";
-  }
-}
-
-function writeProgressionViewMode(mode: ProgressionViewMode): void {
-  try {
-    window.sessionStorage.setItem(progressionViewModeSessionKey, mode);
-  } catch {
-    // UI preferences must never block the Vault.
-  }
 }

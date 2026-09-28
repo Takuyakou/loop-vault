@@ -11,7 +11,6 @@ import { Button, Surface } from "../components/ui";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
 import { displayKey } from "../domain/displayLabels";
-import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
 import {
@@ -20,6 +19,7 @@ import {
 } from "../domain/voicing";
 import { formatProgressionText } from "../domain/progressionText";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { useHomeSummary } from "./home/useHomeSummary";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
 
@@ -45,16 +45,9 @@ export function HomeView({
 }) {
   const { sound: previewSound } = usePreviewSound();
   const [now, setNow] = useState(() => new Date());
-  const focus = pickFocus(ideas, now);
-  const focusBlock = focus.focus?.progressionBlocks?.[0];
+  const focus = useHomeSummary(ideas, now);
+  const { focusBlock, focusPreview, recentProgressions } = focus;
   const focusDegrees = focusBlock && showRomanNumerals ? degreeSequence(focusBlock) : [];
-  const focusPreview = focusBlock
-    ? formatProgressionText(focusBlock.chords).split("\n")[0]
-    : focus.focus?.chordMemo.split("\n").find((line) => line.trim());
-  const recentProgressions = ideas
-    .flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => ({ idea, block })))
-    .sort((left, right) => new Date(right.block.capturedAt).getTime() - new Date(left.block.capturedAt).getTime())
-    .slice(0, 3);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
