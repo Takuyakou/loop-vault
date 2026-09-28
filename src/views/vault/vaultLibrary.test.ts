@@ -49,6 +49,8 @@ describe("Vault library", () => {
     expect(result.rows.map(({ row }) => row.block.id)).toEqual(["251"]);
     expect(result.rows[0].match).toEqual({ kind: "degree", start: 0, end: 3 });
     expect(ids(emptyVaultFilters, "6-4-1")).toEqual(["axis"]);
+    // P8.9-09: repeats in the query merge like repeats in the progression.
+    expect(ids(emptyVaultFilters, "2-2-5-1")).toEqual(["251"]);
   });
 
   it("finds chord names by prefix and in sequence", () => {

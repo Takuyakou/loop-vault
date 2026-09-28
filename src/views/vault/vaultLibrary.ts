@@ -111,9 +111,11 @@ export function parseDegreeQuery(query: string): DegreeTerm[] | undefined {
   return terms.every(Boolean) ? terms as DegreeTerm[] : undefined;
 }
 
-/** A consecutive run of the progression's degrees (from its key); repeated chords count once. */
-export function matchDegrees(row: Pick<VaultRow, "block" | "key">, terms: readonly DegreeTerm[]): VaultMatch | undefined {
+/** A consecutive run of the progression's degrees (from its key); repeated chords count once, in the progression and in the query. */
+export function matchDegrees(row: Pick<VaultRow, "block" | "key">, query: readonly DegreeTerm[]): VaultMatch | undefined {
   if (!row.key) return undefined;
+  const terms = query.filter((term, index) => index === 0
+    || term.degree !== query[index - 1].degree || term.accidental !== query[index - 1].accidental);
   const runs: { degree?: DegreeTerm; start: number; end: number }[] = [];
   row.block.chords.forEach((item, index) => {
     const found = degreeOf(item.chord, row.key);
