@@ -199,7 +199,7 @@ describe("VaultView", () => {
     await view.unmount();
   });
 
-  it("sorts by the four orders and remembers filters and sort for the session", async () => {
+  it("sorts by the four orders and keeps filters for the session and the sort within the launch", async () => {
     const ideas = [
       makeIdea({ id: "long", title: "Bee", progressionBlocks: [chordBlock("l", ["C"], { lengthBars: 16, capturedAt: "2026-07-01T00:00:00.000Z", practice: { schemaVersion: 1, progressionFingerprint: "x", lastPracticedAt: "2026-07-20T00:00:00.000Z" } })] }),
       makeIdea({ id: "short", title: "Ant", progressionBlocks: [chordBlock("s", ["G"], { lengthBars: 4, capturedAt: "2026-07-10T00:00:00.000Z", pinned: true })] }),
@@ -215,11 +215,42 @@ describe("VaultView", () => {
     await act(async () => buttonByText(view.container.querySelector(".lv-vault-rail")!, "お気に入り")!.click());
     await view.unmount();
 
-    expect(JSON.parse(window.sessionStorage.getItem(VAULT_LIBRARY_SESSION_KEY)!)).toMatchObject({ sort: "length", filters: { favorite: true } });
+    expect(JSON.parse(window.sessionStorage.getItem(VAULT_LIBRARY_SESSION_KEY)!)).toMatchObject({ filters: { favorite: true } });
     const again = await renderVault({ ideas });
-    expect(again.container.querySelector<HTMLSelectElement>("#vault-sort")!.value).toBe("length");
+    const againSort = again.container.querySelector<HTMLSelectElement>("#vault-sort")!;
+    expect(againSort.value).toBe("length");
     expect(rowNames(again.container)).toEqual(["Ant"]);
+    await setSelectValue(againSort, "newest");
     await again.unmount();
+  });
+
+  it("starts every launch at 新しい順 even after another sort was chosen (P8.9-08)", async () => {
+    const ideas = [
+      makeIdea({ id: "old", title: "Aardvark", progressionBlocks: [chordBlock("o", ["C"], { capturedAt: "2026-07-01T00:00:00.000Z" })] }),
+      makeIdea({ id: "new", title: "Zebra", progressionBlocks: [chordBlock("n", ["G"], { capturedAt: "2026-07-10T00:00:00.000Z" })] }),
+    ];
+    const launch = async () => {
+      vi.resetModules();
+      const { VaultView: Fresh } = await import("./VaultView");
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      await act(async () => root.render(
+        <Fresh ideas={ideas} openDetail={vi.fn()} openCapture={vi.fn()} updateIdea={vi.fn()} updateProgressionBlock={vi.fn()} setToast={vi.fn()} copy={appCopy.ja} showRomanNumerals={false} />,
+      ));
+      return { container, root };
+    };
+    const first = await launch();
+    const select = first.container.querySelector<HTMLSelectElement>("#vault-sort")!;
+    expect(select.value).toBe("newest");
+    await setSelectValue(select, "name");
+    expect(rowNames(first.container)).toEqual(["Aardvark", "Zebra"]);
+    await act(async () => first.root.unmount());
+
+    const second = await launch();
+    expect(second.container.querySelector<HTMLSelectElement>("#vault-sort")!.value).toBe("newest");
+    expect(rowNames(second.container)).toEqual(["Zebra", "Aardvark"]);
+    await act(async () => second.root.unmount());
   });
 
   it("pins from the stored block array while another block is pending deletion", async () => {
