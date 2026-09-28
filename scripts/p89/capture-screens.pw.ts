@@ -180,6 +180,12 @@ for (const [width, height] of SIZES) {
       await shot("home", async () => {
         await nav(page, "home");
       });
+      // P8.9-08: the browser build's Live MIDI mini window (same component as the separate window).
+      await shot("live-midi-mini", async () => {
+        await nav(page, "live-midi");
+        await expect(page.getByTestId("live-midi-web-preview")).toBeVisible();
+      });
+      await page.getByRole("button", { name: /メイン画面を表示/ }).click().catch(() => undefined);
       // Component gallery: full page (the app root normally clips scrolling).
       try {
         await page.goto("/?gallery");

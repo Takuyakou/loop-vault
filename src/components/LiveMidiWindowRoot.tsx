@@ -61,7 +61,7 @@ export function LiveMidiWindowRoot() {
 
   if (!snapshot) {
     return (
-      <main className="flex h-screen items-center justify-center bg-[var(--lv-bg)] text-sm text-[var(--lv-text-secondary)]" role="status">
+      <main className="lv-live-mini flex h-screen items-center justify-center text-sm text-[var(--lv-text-secondary)]" role="status">
         Live MIDIを準備しています…
       </main>
     );

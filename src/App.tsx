@@ -1127,7 +1127,7 @@ function App() {
         tone="danger"
       />
       {webLiveMidiPreviewOpen ? (
-        <div ref={webLiveMidiPreviewRef} className="fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
+        <div ref={webLiveMidiPreviewRef} className="lv-live-mini-web fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)]" data-testid="live-midi-web-preview">
           <LiveMidiMiniMode
             copy={copy.liveMidi}
             onShowMain={() => { void leaveLiveMidiMode(); }}

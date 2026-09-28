@@ -1,0 +1,67 @@
+/* P8.9-08 Live MIDI mini window (separate window and the browser preview): design-system colors,
+   type and parts. Window settings (always on top, standard title bar) and behavior are unchanged. */
+@layer components {
+  .lv-live-mini {
+    background: var(--lv-bg);
+    color: var(--lv-text);
+    font-size: var(--lv-text-13);
+  }
+
+  .lv-live-mini-web {
+    overflow: hidden;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    box-shadow: var(--lv-shadow-overlay);
+  }
+
+  .lv-live-mini-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--lv-text-muted);
+  }
+
+  .lv-live-mini-status[data-status="connected"] .lv-live-mini-dot {
+    background: var(--lv-success);
+    box-shadow: 0 0 0 3px rgb(54 201 144 / 18%);
+  }
+
+  .lv-live-mini-status[data-status="connecting"] .lv-live-mini-dot {
+    background: var(--lv-info);
+  }
+
+  .lv-live-mini-status[data-status="error"] .lv-live-mini-dot {
+    background: var(--lv-danger);
+  }
+
+  .lv-live-mini-chord {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface);
+  }
+
+  .lv-live-mini-badge {
+    padding: 1px 9px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-pill);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+  }
+
+  .lv-live-mini-label {
+    color: var(--lv-text);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  .lv-live-mini-history-chip {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border: 1px solid var(--lv-border);
+    border-radius: 7px;
+    background: var(--lv-surface);
+    color: var(--lv-text-secondary);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+  }
+}
