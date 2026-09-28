@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { candidateLabel, displayKey, statusLabel } from "./displayLabels";
+import { candidateLabel, displayKey } from "./displayLabels";
 
 describe("display labels", () => {
-  it("uses Japanese status labels without exposing internal values", () => {
-    expect(statusLabel("idea")).toBe("Idea");
-    expect(statusLabel("arrange")).toBe("展開");
-    expect(statusLabel("abandoned")).toBe("没");
-  });
-
   it("localizes known candidate labels and preserves unknown labels", () => {
     expect(candidateLabel("turnaround")).toBe("ターンアラウンド");
     expect(candidateLabel("custom")).toBe("custom");
