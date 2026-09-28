@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-04",
+  "activeStage": "P8.9-05",
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
     "P8.9-02",
-    "P8.9-03"
+    "P8.9-03",
+    "P8.9-04"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "c8451d9",
-  "lastVerifiedCommit": "d23f25a",
-  "currentBranch": "feat/p8.9-03-cleanup",
+  "baseCommit": "e2cbd35",
+  "lastVerifiedCommit": "c8e2d5b",
+  "currentBranch": "feat/p8.9-04-home-vault",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -78,8 +79,12 @@
     "p89-03-full-fresh": "pass",
     "p89-03-screens": "pass",
     "p89-03-exe": "pass",
-    "p89-03-report": "pass"
+    "p89-03-report": "pass",
+    "p89-04-full-fresh": "pass",
+    "p89-04-screens": "pass",
+    "p89-04-exe": "pass",
+    "p89-04-report": "pass"
   },
-  "nextAction": "P8.9-03 complete; stopped at merge candidate feat/p8.9-03-cleanup (fresh FULL PASS @ d23f25a: Vitest 3723/3723, Playwright 129/129, gallery excluded; p89:screens P8.9-03 18 screens x 3 sizes + 19 at 768x640, History removed; EXE built with tauri build --no-bundle; later commit is docs only). Items a-h removed from the UI and the display is Japanese-only; saved data (including settings.language) unchanged. Stage 2 merged into local master at c8451d9. Human EXE checks are listed at the end of the report. P8.9-04 not started: the stage-4 zip merges this candidate first. No push/tag/release.",
-  "updatedAt": "2026-09-27"
+  "nextAction": "P8.9-04 complete; stopped at merge candidate feat/p8.9-04-home-vault (fresh FULL PASS @ c8e2d5b: Vitest 3757/3757, Playwright 129/129; p89:screens P8.9-04 20 screens x 3 sizes + 21 at 768x640 incl. home-empty/home and vault-filtered/vault-search-degree; EXE built with tauri build --no-bundle; later commit is docs only). Home rebuilt from the approved mock (today's loop device-local in loop-vault:today-loop:v1; practice records read-only), Vault is progressions-only with filters/search/sort, capture save form has no next-action field (default unchanged). Stage 3 merged into local master at e2cbd35. Human EXE checks are listed at the end of the report. P8.9-05 not started: the stage-5 zip merges this candidate first. No push/tag/release.",
+  "updatedAt": "2026-09-28"
 }

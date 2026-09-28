@@ -4,9 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 async function openDegreeEcho(page: Page) {
   await openApp(page);
-  await page.getByTestId("bass-practice-home-card")
-    .getByRole("button")
-    .click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await expect(page.getByTestId("degree-echo-view")).toBeVisible();
 }
 

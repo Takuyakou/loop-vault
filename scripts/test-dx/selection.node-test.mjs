@@ -73,6 +73,12 @@ test("progression page files have their own owner instead of expanding broadly",
   }
 });
 
+test("Home and Vault logic folders stay with their screen owners", () => {
+  assert.deepEqual(select(["src/views/home/useHomeSummary.ts"], "feature").areas, ["home"]);
+  assert.deepEqual(select(["src/views/vault/useVaultLibraryFilters.ts"], "feature").areas, ["vault"]);
+  assert.equal(select(["src/views/vault/useVaultLibraryFilters.ts"], "feature").broad, false);
+});
+
 test("P8.9 screenshot tool is evidence, not a product contract", () => {
   const owner = ownerForFile("scripts/p89/screens.mjs");
   assert.deepEqual(owner.areas, []);

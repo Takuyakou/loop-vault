@@ -8,11 +8,11 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** in-progress — P8.9-03 完了、merge 候補 `feat/p8.9-03-cleanup` で停止（master へは未取り込み）
-- **Active stage:** P8.9-04（未着手。段階4の zip を待つ）
-- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み）
-- **Base:** local `master` `c8451d9`（段階2を取り込み済み）
-- **Next action:** 段階4の zip の最初の手順で `feat/p8.9-03-cleanup` を master に取り込み、P8.9-04 を始める。EXE で人間が確かめる項目は報告の最後
+- **Status:** in-progress — P8.9-04 完了、merge 候補 `feat/p8.9-04-home-vault` で停止（master へは未取り込み）
+- **Active stage:** P8.9-05（未着手。段階5の zip を待つ）
+- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み）
+- **Base:** local `master` `e2cbd35`（段階3を取り込み済み）
+- **Next action:** 段階5の zip の最初の手順で `feat/p8.9-04-home-vault` を master に取り込み、P8.9-05 を始める。EXE で人間が確かめる項目は報告の最後
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
@@ -25,7 +25,7 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 5. [contracts/P8.9-data-retention.md](contracts/P8.9-data-retention.md) — 保存データを守る契約
 6. [contracts/P8.9-test-and-evidence.md](contracts/P8.9-test-and-evidence.md) — テストの回し方と証跡
 7. [contracts/P8.9-ui-direction.md](contracts/P8.9-ui-direction.md) — 見た目と画面の方針
-8. 実行中の段階の指示書：[stages/P8.9-03.md](stages/P8.9-03.md)
+8. 実行中の段階の指示書：[stages/P8.9-04.md](stages/P8.9-04.md)
 9. [reports/README.md](reports/README.md) — 報告の置き場所
 
 段階1以降の指示書（`stages/P8.9-0N.md`）とモックは、各段階の zip で追加される。

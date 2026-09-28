@@ -4,7 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 async function openRootMotion(page: import("@playwright/test").Page) {
   await openApp(page);
-  await page.getByTestId("bass-practice-home-card").getByRole("button").click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await page.getByRole("tab", { name: "Root Motion Echo" }).click();
   return page.getByTestId("root-motion-echo-view");
 }

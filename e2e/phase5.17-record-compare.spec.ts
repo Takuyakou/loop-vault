@@ -17,7 +17,7 @@ test.use({
 
 async function openBasslineReview(page: Page) {
   await openApp(page);
-  await page.getByTestId("bass-practice-home-card").getByRole("button").click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await expect(page.getByTestId("bassline-echo-view")).toBeVisible();
   await page.getByRole("button", { name: /^(レビュー)$/ }).click();
