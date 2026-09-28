@@ -33,7 +33,7 @@ test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる",
 test("空Vaultは次の行動を示し、長いタイトルでも横にはみ出さない", async ({ page }) => {
   await openApp(page);
   await openVault(page);
-  await expect(page.getByText(/条件に合う進行はありません/)).toBeVisible();
+  await expect(page.getByText(/まだ進行がありません/)).toBeVisible();
   await expect(page.getByRole("button", { name: "コード採集", exact: true }).last()).toBeVisible();
   await expect(page.locator('button[title="+ Idea"]')).toHaveCount(0);
 
@@ -52,18 +52,28 @@ test("空Vaultは次の行動を示し、長いタイトルでも横にはみ出
   expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + 1);
 });
 
-test("検索・小節数フィルター・並び替えを組み合わせられる", async ({ page }) => {
+test("検索・絞り込み・並び替えを組み合わせられる", async ({ page }) => {
   await openApp(page);
   await createSavedProgression(page, "Filter Target");
   await openVault(page);
 
+  const filters = page.locator(".lv-vault-rail");
   await page.getByRole("textbox", { name: /検索/ }).fill("Filter Target");
-  await page.getByRole("button", { name: /4小節/ }).click();
-  await page.getByLabel(/並び順/).selectOption("key");
+  await filters.getByRole("button", { name: /〜4小節/ }).click();
+  await page.getByLabel(/並び順/).selectOption("name");
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
 
-  await page.getByRole("button", { name: /8小節/ }).click();
-  await expect(page.locator(".lv-vault-row")).toHaveCount(0);
-  await page.getByRole("button", { name: /すべて/, exact: true }).first().click();
+  // Options that would leave nothing are counted 0 and disabled (OR/AND is covered by unit tests).
+  await filters.getByRole("button", { name: /MIDI/ }).first().click();
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
+  await expect(filters.getByRole("button", { name: /テキスト/ })).toBeDisabled();
+  await expect(filters.getByRole("button", { name: /5〜8小節/ })).toBeDisabled();
+  await filters.getByRole("button", { name: "すべて解除" }).click();
+  await expect(page.locator(".lv-vault-row")).toHaveCount(1);
+
+  await page.getByRole("textbox", { name: /検索/ }).fill("6-4-5");
+  await expect(page.locator(".lv-vault-row")).toHaveCount(1);
+  await expect(page.getByTestId("vault-degree-match")).toContainText("度数で一致");
+  await page.getByRole("textbox", { name: /検索/ }).fill("7-7-7");
+  await expect(page.locator(".lv-vault-row")).toHaveCount(0);
 });

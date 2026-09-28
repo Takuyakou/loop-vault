@@ -99,6 +99,22 @@ for (const [width, height] of SIZES) {
         await nav(page, "vault");
         await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "Vault");
       });
+      // P8.9-04: Vault with a filter (the rail, or the drawer when the content is under 900px) and a degree search.
+      await shot("vault-filtered", async () => {
+        await nav(page, "vault");
+        const rail = page.locator(".lv-vault-rail");
+        const panel = await rail.isVisible() ? rail : page.locator(".lv-vault-drawer-panel");
+        if (!(await rail.isVisible())) await page.locator(".lv-vault-drawer-toggle").click();
+        await panel.getByRole("button", { name: /MIDI/ }).first().click();
+        await expect(page.locator(".lv-vault-condition").first()).toBeAttached();
+      });
+      await page.keyboard.press("Escape");
+      await shot("vault-search-degree", async () => {
+        const clear = page.locator(".lv-vault-conditions").getByRole("button", { name: "すべて解除" });
+        if (await clear.isVisible()) await clear.click();
+        await page.locator("#vault-search").fill("6-4-5");
+        await expect(page.getByTestId("vault-degree-match").first()).toBeVisible();
+      });
       await shot("progression", async () => {
         await nav(page, "vault");
         await page.getByRole("button", { name: /進行を開く/ }).first().click();

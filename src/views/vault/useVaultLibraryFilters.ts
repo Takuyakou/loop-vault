@@ -1,108 +1,76 @@
-import { useMemo, useState } from "react";
-import { isRecent, type ProgressionLibraryScope } from "../../components/ProgressionLibraryRail";
-import { filterProgressionIndex, type ProgressionIndexEntry } from "../../domain/progressionClassification/mod";
-import { filterAndSortProgressions } from "../../domain/progressionFilters";
-import type { SavedProgressionBlock, SongIdea } from "../../domain/types";
+import { useEffect, useMemo, useState } from "react";
+import type { ProgressionIndexEntry } from "../../domain/progressionClassification/mod";
+import type { SongIdea } from "../../domain/types";
+import {
+  activeFilterCount,
+  buildVaultRows,
+  emptyVaultFilters,
+  lengthBuckets,
+  queryVault,
+  sourceKinds,
+  vaultSortLabels,
+  type VaultFilters,
+  type VaultSort,
+} from "./vaultLibrary";
 
-export type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
-export type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
-export type VaultMode = "library" | "list" | "idea";
-type ProgressionViewMode = Exclude<VaultMode, "idea">;
-export type LengthFilter = "all" | "4" | "8" | "16";
+/** Session memory for the Vault's filters and sort (the old view-mode memory used the same scope). */
+export const VAULT_LIBRARY_SESSION_KEY = "loop-vault.vault-library:v1";
 
-const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
-
-/** Filter, search and sort state of the Vault list, plus the remembered view mode. */
+/** Filter, search and sort state of the Vault list. */
 export function useVaultLibraryFilters(ideas: SongIdea[], progressionIndex: ProgressionIndexEntry[]) {
-  const [mode, setMode] = useState<VaultMode>(readProgressionViewMode);
-  const [libraryScope, setLibraryScope] = useState<ProgressionLibraryScope>("all");
-  const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([]);
+  const [remembered] = useState(readRemembered);
+  const [filters, setFilters] = useState<VaultFilters>(remembered.filters);
+  const [sort, setSort] = useState<VaultSort>(remembered.sort);
   const [query, setQuery] = useState("");
-  const [onlyPinned, setOnlyPinned] = useState(false);
-  const [lengthBars, setLengthBars] = useState<LengthFilter>("all");
-  const [keyFilter, setKeyFilter] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [tagFilter, setTagFilter] = useState("");
-  const [sort, setSort] = useState<SortField>("capturedAt");
-  const allBlocks = useMemo(() => ideas.flatMap((idea) => idea.progressionBlocks ?? []), [ideas]);
-  const keys = useMemo(() => [...new Set(ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => block.detectedKey ?? idea.key).filter((value): value is string => Boolean(value))))].sort(), [ideas]);
-  const sources = useMemo(() => [...new Set(allBlocks.map((block) => block.sourceFileName).filter((value): value is string => Boolean(value)))].sort(), [allBlocks]);
-  const tags = useMemo(() => [...new Set(allBlocks.flatMap((block) => block.tags))].sort(), [allBlocks]);
-  const hasActiveFilters = onlyPinned
-    || lengthBars !== "all"
-    || keyFilter !== ""
-    || sourceFilter !== ""
-    || tagFilter !== ""
-    || selectedLibraryTags.length > 0;
-  const visible = useMemo(() => {
-    const sorted = filterAndSortProgressions(ideas, {
-      query: mode === "library" ? "" : query,
-      pinnedOnly: onlyPinned,
-      keys: keyFilter ? [keyFilter] : [],
-      lengths: lengthBars === "all" ? [] : [Number(lengthBars)],
-      sources: sourceFilter ? [sourceFilter] : [],
-      tags: tagFilter ? [tagFilter] : [],
-    }, { field: sort, direction: sort === "key" || sort === "bpm" ? "asc" : "desc" });
-    if (mode !== "library") return sorted;
-    const libraryMatches = filterProgressionIndex(progressionIndex, {
-      query,
-      tagIds: selectedLibraryTags,
-    }).filter((entry) => {
-      if (libraryScope === "favorites") return entry.favorite;
-      if (libraryScope === "recent") return isRecent(entry.createdAt);
-      return true;
+  const rows = useMemo(() => buildVaultRows(ideas, progressionIndex), [ideas, progressionIndex]);
+  const result = useMemo(() => queryVault(rows, filters, query, sort), [filters, query, rows, sort]);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(VAULT_LIBRARY_SESSION_KEY, JSON.stringify({ version: 1, filters, sort }));
+    } catch {
+      // UI preferences must never block the Vault.
+    }
+  }, [filters, sort]);
+
+  function toggle<K extends "keys" | "lengths" | "tags" | "sources">(facet: K, value: VaultFilters[K][number]) {
+    setFilters((current) => {
+      const values = current[facet] as string[];
+      return { ...current, [facet]: values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value] };
     });
-    const allowed = new Set(libraryMatches.map((entry) => entry.id));
-    return sorted.filter((entry) => allowed.has(progressionEntryId(entry)));
-  }, [ideas, keyFilter, lengthBars, libraryScope, mode, onlyPinned, progressionIndex, query, selectedLibraryTags, sort, sourceFilter, tagFilter]);
-
-  function changeMode(next: VaultMode) {
-    setMode(next);
-    if (next !== "idea") writeProgressionViewMode(next);
-  }
-
-  function clearFilters() {
-    setOnlyPinned(false);
-    setLengthBars("all");
-    setKeyFilter("");
-    setSourceFilter("");
-    setTagFilter("");
-    setSelectedLibraryTags([]);
-    setLibraryScope("all");
   }
 
   return {
-    mode, changeMode,
-    libraryScope, setLibraryScope,
-    selectedLibraryTags, setSelectedLibraryTags,
+    filters,
+    toggle,
+    setFavorite: (favorite: boolean) => setFilters((current) => ({ ...current, favorite })),
+    clearFilters: () => setFilters(emptyVaultFilters),
+    activeCount: activeFilterCount(filters),
     query, setQuery,
-    onlyPinned, setOnlyPinned,
-    lengthBars, setLengthBars,
-    keyFilter, setKeyFilter,
-    sourceFilter, setSourceFilter,
-    tagFilter, setTagFilter,
     sort, setSort,
-    keys, sources, tags,
-    hasActiveFilters, clearFilters,
-    visible,
+    total: rows.length,
+    visible: result.rows,
+    counts: result.counts,
   };
 }
 
-export function progressionEntryId(entry: ProgressionEntry): string { return `${entry.idea.id}:${entry.block.id}`; }
-
-function readProgressionViewMode(): ProgressionViewMode {
+function readRemembered(): { filters: VaultFilters; sort: VaultSort } {
+  const fallback = { filters: emptyVaultFilters, sort: "newest" as VaultSort };
   try {
-    const stored = window.sessionStorage.getItem(progressionViewModeSessionKey);
-    return stored === "list" || stored === "library" ? stored : "library";
+    const parsed = JSON.parse(window.sessionStorage.getItem(VAULT_LIBRARY_SESSION_KEY) ?? "null") as
+      { version?: number; filters?: Partial<VaultFilters>; sort?: string } | null;
+    if (parsed?.version !== 1) return fallback;
+    const strings = (value: unknown) => (Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : []);
+    const filters: VaultFilters = {
+      keys: strings(parsed.filters?.keys),
+      tags: strings(parsed.filters?.tags),
+      lengths: strings(parsed.filters?.lengths).filter((value): value is VaultFilters["lengths"][number] => (lengthBuckets as readonly string[]).includes(value)),
+      sources: strings(parsed.filters?.sources).filter((value): value is VaultFilters["sources"][number] => (sourceKinds as readonly string[]).includes(value)),
+      favorite: parsed.filters?.favorite === true,
+    };
+    const sort = parsed.sort && parsed.sort in vaultSortLabels ? parsed.sort as VaultSort : fallback.sort;
+    return { filters, sort };
   } catch {
-    return "library";
-  }
-}
-
-function writeProgressionViewMode(mode: ProgressionViewMode): void {
-  try {
-    window.sessionStorage.setItem(progressionViewModeSessionKey, mode);
-  } catch {
-    // UI preferences must never block the Vault.
+    return fallback;
   }
 }
