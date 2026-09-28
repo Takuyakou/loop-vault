@@ -16,7 +16,8 @@ import {
 } from "../components/icons";
 import { useNotify } from "../components/notifications";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
-import { Button, EmptyState, IconButton } from "../components/ui";
+import { FirstCaptureGuide } from "../components/FirstCaptureGuide";
+import { Button, IconButton } from "../components/ui";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { displayKey } from "../domain/displayLabels";
 import { degreeOf } from "../domain/harmony/degrees";
@@ -148,12 +149,10 @@ export function HomeView({
   if (!summary.progressions.length) {
     return (
       <div className="lv-home">
-        <EmptyState
-          className="lv-home-card mx-auto mt-6 max-w-2xl"
-          icon={<ImportIcon size={20} />}
-          title="最初の進行を取り込む"
-          description="MIDI かコード譜のテキストから進行を取り込むと、ここに続きから・今日のループ・最近の進行が並びます。"
-          action={<Button variant="primary" onClick={() => openCapture("midi")}>取り込む</Button>}
+        <FirstCaptureGuide
+          className="mx-auto mt-6 max-w-2xl"
+          onMidi={() => openCapture("midi")}
+          onText={() => openCapture("text")}
         />
       </div>
     );

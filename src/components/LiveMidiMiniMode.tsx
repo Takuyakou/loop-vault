@@ -53,8 +53,8 @@ export function LiveMidiMiniMode({
       : copy.confirmed;
 
   return (
-    <main className="flex h-screen min-h-40 min-w-[280px] flex-col overflow-hidden bg-[var(--lv-bg)] p-3 text-[var(--lv-text)]">
-      <header className="flex h-9 shrink-0 items-center gap-2 border-b border-[var(--lv-border)] pb-2">
+    <main className="lv-live-mini flex h-screen min-h-40 min-w-[280px] flex-col overflow-hidden p-3">
+      <header className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--lv-border)] pb-2">
         <Button variant="ghost" size="sm" onClick={onShowMain ?? onBack}>
           <ArrowLeft aria-hidden="true" size={16} />
           {copy.showMain}
@@ -62,7 +62,7 @@ export function LiveMidiMiniMode({
         <label className="ml-auto min-w-0 flex-1">
           <span className="sr-only">{copy.chooseDevice}</span>
           <select
-            className="lv-input h-10 w-full min-w-0 px-2 text-xs"
+            className="lv-input h-8 w-full min-w-0 px-2 text-xs"
             value={selected?.backendId ?? ""}
             onChange={(event) => {
               if (onSelectDevice) onSelectDevice(event.target.value);
@@ -97,29 +97,29 @@ export function LiveMidiMiniMode({
       </header>
 
       <div className="flex shrink-0 items-center gap-2 border-b border-[var(--lv-border)] py-2">
-        <div className="flex items-center gap-1.5 text-xs text-[var(--lv-text-muted)]" data-status={status} role="status" aria-live="polite">
-          <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+        <div className="lv-live-mini-status flex items-center gap-1.5 text-xs text-[var(--lv-text-secondary)]" data-status={status} role="status" aria-live="polite">
+          <span className="lv-live-mini-dot" aria-hidden="true" />
           {statusLabel(status, copy)}
         </div>
         {selected ? <span className="min-w-0 truncate text-xs text-[var(--lv-text-secondary)]">{selected.name}</span> : null}
       </div>
 
-      <section className="my-2 flex min-h-0 flex-1 flex-col items-center justify-center border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] p-3 text-center" data-live-midi-current-chord>
+      <section className="lv-live-mini-chord my-2 flex min-h-0 flex-1 flex-col items-center justify-center p-3 text-center" data-live-midi-current-chord>
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{copy.currentChord}</span>
-          <span className="border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] px-2 py-0.5 text-xs font-semibold" data-detection-state={detectionState}>
+          <span className="text-[11px] font-semibold tracking-[0.12em] text-[var(--lv-text-secondary)]">{copy.currentChord}</span>
+          <span className="lv-live-mini-badge" data-detection-state={detectionState}>
             {detectionState}
           </span>
         </div>
         <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
           <Piano aria-hidden="true" className="shrink-0 text-[var(--lv-accent)]" size={20} />
-          <strong className="max-w-[calc(100vw-4rem)] overflow-hidden text-ellipsis whitespace-nowrap text-4xl font-semibold leading-none sm:text-[2.65rem]">
+          <strong className="lv-live-mini-label max-w-[calc(100vw-4rem)] overflow-hidden text-ellipsis whitespace-nowrap text-4xl font-semibold leading-none sm:text-[2.65rem]">
             {displayedChord.label}
           </strong>
         </div>
         <p className="mt-2 max-w-full truncate text-xs text-[var(--lv-text-secondary)]">
           {copy.notes}: {instant.noteNames.length > 0 ? instant.noteNames.join(" · ") : "—"}
-          <span className="mx-2 text-[var(--lv-border-strong)]">|</span>
+          <span className="mx-2 text-[var(--lv-text-muted)]">·</span>
           {copy.bass}: {instant.bass === undefined ? "—" : noteNameFromPitchClass(instant.bass)}
         </p>
         {error ? (
@@ -129,6 +129,7 @@ export function LiveMidiMiniMode({
             className="mt-2 max-w-full p-2 text-left text-xs"
             action={(
               <Button
+                variant="neutral"
                 size="sm"
                 onClick={() => {
                   if (onRefreshDevices) onRefreshDevices();
@@ -147,10 +148,10 @@ export function LiveMidiMiniMode({
 
       {showHistory ? (
         <section className="shrink-0 border-t border-[var(--lv-border)] pt-2" aria-label={copy.history}>
-          <p className="mb-1 text-xs font-semibold text-[var(--lv-text-muted)]">{copy.history}</p>
+          <p className="mb-1 text-[11px] font-semibold tracking-[0.12em] text-[var(--lv-text-secondary)]">{copy.history}</p>
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs">
             {history.length > 0 ? history.slice(-5).map((entry) => (
-              <span key={entry.id} className="shrink-0 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 font-semibold text-[var(--lv-text-secondary)]">{entry.label}</span>
+              <span key={entry.id} className="lv-live-mini-history-chip">{entry.label}</span>
             )) : <span className="truncate text-[var(--lv-text-muted)]">{copy.noHistory}</span>}
           </div>
         </section>

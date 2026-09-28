@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
 import type { PreviewSound } from "../audio/chordPreview";
 import { CloseIcon, FavoriteIcon, PlayIcon, SearchIcon, StopIcon } from "../components/icons";
+import { FirstCaptureGuide } from "../components/FirstCaptureGuide";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import { Button, EmptyState, IconButton } from "../components/ui";
@@ -35,13 +36,14 @@ const progressionVirtualizationThreshold = 50;
 const progressionPreviewChordLimit = 8;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
   openDetail: (id: string) => void;
   openProgression?: (ideaId: string, blockId: string) => void;
   openCapture: () => void;
+  openTextCapture?: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
@@ -215,12 +217,7 @@ export function VaultView({
               action={<Button variant="neutral" onClick={clearAll}>条件をすべて解除</Button>}
             />
           ) : (
-            <EmptyState
-              className="lv-vault-empty"
-              title="まだ進行がありません"
-              description="MIDI かコード譜のテキストから進行を取り込むと、ここに並びます。"
-              action={<Button variant="primary" onClick={openCapture}>{copy.library.capture}</Button>}
-            />
+            <FirstCaptureGuide onMidi={openCapture} onText={openTextCapture} />
           )}
 
           {orphans.length && library.activeCount === 0 ? <OrphanIdeas ideas={orphans} openDetail={openDetail} /> : null}

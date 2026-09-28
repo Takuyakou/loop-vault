@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appCopy } from "../i18n";
 import { createLiveMidiStore, type LiveMidiServicePort } from "../liveMidi/liveMidiStore";
 import type { LiveMidiDevice } from "../liveMidi/types";
-import { SettingsDialog } from "./SettingsDialog";
+import { SettingsView } from "./SettingsView";
 
 const midiDevice: LiveMidiDevice = { backendId: "roland", name: "Roland Digital Piano", index: 2 };
 
@@ -71,55 +71,49 @@ afterEach(() => {
   document.body.style.overflow = "";
 });
 
-describe("SettingsDialog sections", () => {
-  it("shows the four Japanese sections and keeps developer analysis collapsed initially", async () => {
+describe("SettingsView sections", () => {
+  it("is a screen with five sections and keeps the developer section collapsed initially", async () => {
     const mounted = await renderSettings();
-    const headings = [...dialogs()[0]!.querySelectorAll("h3")].map((heading) => heading.textContent);
-    for (const heading of [
-      appCopy.ja.settingsUi.general,
-      appCopy.ja.settingsUi.liveMidiTitle,
-      appCopy.ja.settingsUi.data,
-      appCopy.ja.settingsUi.analysis,
-    ]) {
-      expect(headings.some((text) => text?.startsWith(heading))).toBe(true);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    const headings = [...screen().querySelectorAll("h2")].map((heading) => heading.textContent);
+    expect(headings).toEqual([appCopy.ja.settingsUi.general, "音と MIDI", appCopy.ja.settingsUi.liveMidiTitle, appCopy.ja.settingsUi.data, "開発者向け"]);
+    const sectionNav = screen().querySelector('nav[aria-label="設定の欄"]')!;
+    expect([...sectionNav.querySelectorAll("button")].map((button) => button.textContent))
+      .toEqual(["一般", "音と MIDI", "Live MIDI", "データ", "開発者向け"]);
+    for (const id of ["settings-general", "settings-audio-midi", "settings-live-midi", "settings-data", "settings-developer"]) {
+      expect(screen().querySelector(`#${id}`)).not.toBeNull();
     }
 
-    const disclosure = findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]);
+    const disclosure = developerToggle();
     expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
-    expect(dialogs()[0]?.textContent).not.toContain(appCopy.ja.settingsUi.correctionTitle);
+    expect(screen()?.textContent).not.toContain(appCopy.ja.settingsUi.correctionTitle);
     await click(disclosure);
     expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
-    expect(dialogs()[0]?.textContent).toContain(appCopy.ja.settingsUi.correctionTitle);
-    const categoryNav = dialogs()[0]?.querySelector('nav[aria-label="設定カテゴリ"]');
-    expect(categoryNav?.querySelector('a[href="#settings-general"]')).not.toBeNull();
-    expect(categoryNav?.querySelector('a[href="#settings-audio-midi"]')).not.toBeNull();
-    expect(categoryNav?.querySelector('a[href="#settings-analysis"]')).not.toBeNull();
-    expect(categoryNav?.querySelector('a[href="#settings-about"]')).not.toBeNull();
+    expect(screen()?.textContent).toContain(appCopy.ja.settingsUi.correctionTitle);
     // P8.9-03: the AI settings are gone; only removing a stored API key stays, disabled without a key.
-    expect(categoryNav?.querySelector('a[href="#settings-ai"]')).toBeNull();
-    expect(dialogs()[0]?.querySelector("#settings-ai")).toBeNull();
-    const removeKey = findButton("保存した API キーを削除", dialogs()[0]);
+    expect(screen()?.querySelector("#settings-ai")).toBeNull();
+    const removeKey = findButton("保存した API キーを削除", screen());
     expect(removeKey?.closest("#settings-analysis-content")).not.toBeNull();
     expect(removeKey?.disabled).toBe(true);
     await mounted.unmount();
   });
 
-  it("renders the same four-section hierarchy in English", async () => {
+  it("keeps the section texts and the piano sample attribution in the data section", async () => {
     const mounted = await renderSettings({ copy: appCopy.ja });
-    const text = dialogs()[0]?.textContent;
+    const text = screen()?.textContent;
     expect(text).toContain(appCopy.ja.settingsUi.general);
     expect(text).toContain(appCopy.ja.settingsUi.liveMidiTitle);
     expect(text).toContain(appCopy.ja.settingsUi.data);
-    expect(text).toContain(appCopy.ja.settingsUi.analysis);
-    expect(dialogs()[0]?.querySelector("[data-testid='piano-sample-attribution']")?.textContent)
+    expect(text).not.toMatch(/Build commit|Backup \/ Restore|Pre-Analysis|Export|Import|Accuracy First\b(?!）)/);
+    expect(screen()?.querySelector("#settings-data [data-testid='piano-sample-attribution']")?.textContent)
       .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
   });
 
   it("switches Stable and Accuracy First feature sets without enabling A1 in Stable", async () => {
     const mounted = await renderSettings();
-    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
-    const scope = dialogs()[0]!;
+    await click(developerToggle());
+    const scope = screen();
     const r2 = checkboxForLabel(appCopy.ja.settingsUi.melodyContaminationFilter, scope);
     const union = checkboxForLabel(appCopy.ja.settingsUi.accuracyCandidateUnion, scope);
     const e1 = checkboxForLabel(appCopy.ja.settingsUi.observedFlatNineCandidate, scope);
@@ -152,10 +146,10 @@ describe("SettingsDialog sections", () => {
     }));
     expect(midi.start).not.toHaveBeenCalled();
 
-    await clickButton(appCopy.ja.settingsUi.liveMidiTest, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.liveMidiTest, screen());
     expect(midi.start).toHaveBeenCalledWith(midiDevice);
     expect(midi.stop).toHaveBeenCalled();
-    expect(dialogs()[0]?.textContent).toContain(appCopy.ja.settingsUi.liveMidiTestSucceeded);
+    expect(screen()?.textContent).toContain(appCopy.ja.settingsUi.liveMidiTestSucceeded);
     await mounted.unmount();
   });
 
@@ -174,16 +168,18 @@ describe("SettingsDialog sections", () => {
 
   it("shows build identity and the current pre-analysis rollback state", async () => {
     const mounted = await renderSettings();
+    expect(document.querySelector("[data-testid='loop-vault-build-info']")).toBeNull();
+    await click(developerToggle());
     const buildInfo = document.querySelector("[data-testid='loop-vault-build-info']");
+    expect(buildInfo?.closest("#settings-developer")).not.toBeNull();
 
     expect(buildInfo?.textContent).toContain("アプリ版:");
-    expect(buildInfo?.textContent).toContain("Build commit:");
-    expect(buildInfo?.textContent).toContain("Build日時:");
-    expect(buildInfo?.textContent).toContain("Pre-Analysis Part Selection: ON");
+    expect(buildInfo?.textContent).toContain("ビルドのコミット:");
+    expect(buildInfo?.textContent).toContain("ビルド日時:");
+    expect(buildInfo?.textContent).toContain("解析前のパート選択: ON");
 
-    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
-    await click(checkboxForLabel("解析前のパート選択を有効にする", dialogs()[0]!));
-    expect(buildInfo?.textContent).toContain("Pre-Analysis Part Selection: OFF");
+    await click(checkboxForLabel("解析前のパート選択を有効にする", screen()));
+    expect(buildInfo?.textContent).toContain("解析前のパート選択: OFF");
 
     await mounted.unmount();
   });
@@ -196,34 +192,34 @@ describe("SettingsDialog sections", () => {
     }));
     const mounted = await renderSettings({ backups });
 
-    expect(dialogs()[0]?.textContent).not.toContain("data-backup-6.json");
-    await clickButton(appCopy.ja.settingsUi.showAll, dialogs()[0]);
-    expect(dialogs()[0]?.textContent).toContain("data-backup-6.json");
-    await clickButton(appCopy.ja.settingsUi.showLatestFive, dialogs()[0]);
-    expect(dialogs()[0]?.textContent).not.toContain("data-backup-6.json");
+    expect(screen()?.textContent).not.toContain("data-backup-6.json");
+    await clickButton(appCopy.ja.settingsUi.showAll, screen());
+    expect(screen()?.textContent).toContain("data-backup-6.json");
+    await clickButton(appCopy.ja.settingsUi.showLatestFive, screen());
+    expect(screen()?.textContent).not.toContain("data-backup-6.json");
     await mounted.unmount();
   });
 
   it("exports and clears the local label correction log", async () => {
     mocks.saveFileDialog.mockResolvedValue("C:/exports/label-corrections.jsonl");
     const mounted = await renderSettings();
-    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
+    await click(developerToggle());
 
-    await clickButton(appCopy.ja.settingsUi.exportAnalysisFeedback, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.exportAnalysisFeedback, screen());
     expect(mocks.exportAnalysisFeedback)
       .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
-    await clickButton(appCopy.ja.settingsUi.exportCorrectionLog, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.exportCorrectionLog, screen());
     expect(mocks.exportLabelCorrectionLog)
       .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
-    await clickButton("役割修正ログを書き出す", dialogs()[0]);
+    await clickButton("役割修正ログを書き出す", screen());
     expect(mocks.exportRoleCorrectionLog)
       .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
 
-    await clickButton(appCopy.ja.settingsUi.deleteCorrectionLog, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.deleteCorrectionLog, screen());
     expect(mocks.deleteAnalysisFeedback).not.toHaveBeenCalled();
     expect(mocks.deleteLabelCorrectionLog).not.toHaveBeenCalled();
     expect(mocks.deleteRoleCorrectionLog).not.toHaveBeenCalled();
-    await clickButton(appCopy.ja.settingsUi.delete, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.delete, confirmDialog());
     expect(mocks.deleteAnalysisFeedback).toHaveBeenCalledTimes(1);
     expect(mocks.deleteLabelCorrectionLog).toHaveBeenCalledTimes(1);
     expect(mocks.deleteRoleCorrectionLog).toHaveBeenCalledTimes(1);
@@ -231,14 +227,14 @@ describe("SettingsDialog sections", () => {
   });
 });
 
-describe("SettingsDialog confirmations", () => {
+describe("SettingsView confirmations", () => {
   it("shows import progress and ignores a second click while the file dialog is open", async () => {
     let finishDialog: ((value: null) => void) | undefined;
     mocks.openFileDialog.mockImplementation(() => new Promise<null>((resolve) => {
       finishDialog = resolve;
     }));
     const mounted = await renderSettings();
-    const importButton = findButton(appCopy.ja.settingsUi.importButton, dialogs()[0])!;
+    const importButton = findButton(appCopy.ja.settingsUi.importButton, screen())!;
 
     await act(async () => {
       importButton.click();
@@ -250,7 +246,7 @@ describe("SettingsDialog confirmations", () => {
     expect(importButton.disabled).toBe(true);
     expect(importButton.getAttribute("aria-busy")).toBe("true");
     expect(importButton.textContent).toContain(appCopy.ja.settingsUi.processing);
-    expect(dialogs()[0]?.querySelector('[role="status"]')?.textContent)
+    expect(screen()?.querySelector('[role="status"]')?.textContent)
       .toBe(appCopy.ja.settingsUi.processing);
 
     await act(async () => {
@@ -271,9 +267,9 @@ describe("SettingsDialog confirmations", () => {
 
     await clickButton(appCopy.ja.settingsUi.importButton);
     expect(importVault).not.toHaveBeenCalled();
-    expect(dialogs()[1]?.textContent).toContain(appCopy.ja.settingsUi.replaceTitle);
+    expect(confirmDialog()?.textContent).toContain(appCopy.ja.settingsUi.replaceTitle);
 
-    await clickButton(appCopy.ja.settingsUi.replaceConfirm, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.replaceConfirm, confirmDialog());
     expect(importVault).toHaveBeenCalledWith("C:/backup.json", "replace");
     await mounted.unmount();
   });
@@ -283,16 +279,16 @@ describe("SettingsDialog confirmations", () => {
     const refreshBackups = vi.fn(async () => undefined);
     const mounted = await renderSettings({ restoreBackup, refreshBackups });
 
-    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.restore, screen());
     expect(restoreBackup).not.toHaveBeenCalled();
-    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.restore, confirmDialog());
     expect(restoreBackup).toHaveBeenCalledWith("data-backup.json");
     expect(refreshBackups).toHaveBeenCalled();
 
-    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
-    await clickButton(appCopy.ja.settingsUi.deleteEvaluation, dialogs()[0]);
+    await click(developerToggle());
+    await clickButton(appCopy.ja.settingsUi.deleteEvaluation, screen());
     expect(mocks.deleteRealEvaluationData).not.toHaveBeenCalled();
-    await clickButton(appCopy.ja.settingsUi.delete, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.delete, confirmDialog());
     expect(mocks.deleteRealEvaluationData).toHaveBeenCalledTimes(1);
     await mounted.unmount();
   });
@@ -304,8 +300,8 @@ describe("SettingsDialog confirmations", () => {
     }));
     const mounted = await renderSettings({ restoreBackup });
 
-    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[0]);
-    const confirmButton = findButton(appCopy.ja.settingsUi.restore, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.restore, screen());
+    const confirmButton = findButton(appCopy.ja.settingsUi.restore, confirmDialog());
     await act(async () => {
       confirmButton?.click();
       confirmButton?.click();
@@ -317,14 +313,14 @@ describe("SettingsDialog confirmations", () => {
   });
 });
 
-async function renderSettings(overrides: Partial<React.ComponentProps<typeof SettingsDialog>> = {}) {
+async function renderSettings(overrides: Partial<React.ComponentProps<typeof SettingsView>> = {}) {
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
   const midi = settingsMidiStore();
   await act(async () => {
     root.render(
-      <SettingsDialog
+      <SettingsView
         showRomanNumerals
         ideas={[]}
         backups={[{ name: "data-backup.json", path: "C:/LoopVault/data-backup.json", createdAt: "2026-07-15T00:00:00.000Z" }]}
@@ -335,7 +331,6 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
         importVault={vi.fn(async () => true)}
         setToast={vi.fn()}
         copy={appCopy.ja}
-        onClose={vi.fn()}
         liveMidiStore={midi.store}
         {...overrides}
       />,
@@ -370,8 +365,16 @@ function settingsMidiStore() {
   };
 }
 
-function dialogs() {
-  return [...document.querySelectorAll<HTMLElement>('[role="dialog"]')];
+function screen() {
+  return document.querySelector<HTMLElement>("[data-testid='settings-view']")!;
+}
+
+function confirmDialog() {
+  return document.querySelector<HTMLElement>('[role="dialog"]')!;
+}
+
+function developerToggle() {
+  return screen().querySelector<HTMLButtonElement>("#settings-developer button[aria-expanded]")!;
 }
 
 function findButton(label: string, scope: ParentNode = document) {

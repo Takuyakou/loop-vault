@@ -10,10 +10,10 @@ import { useRecordChannel } from "../application/recordChannelStore";
  */
 
 const CHANNELS: readonly { readonly value: ChannelMode; readonly label: string }[] = [
-  { value: "auto", label: "Auto" },
-  { value: "left", label: "Left / Input 1" },
-  { value: "right", label: "Right / Input 2" },
-  { value: "mono-sum", label: "Mono Sum" },
+  { value: "auto", label: "自動" },
+  { value: "left", label: "左（入力1）" },
+  { value: "right", label: "右（入力2）" },
+  { value: "mono-sum", label: "左右を合わせる（モノ）" },
 ];
 
 export interface BassPracticeRecordingSettingsSectionProps {
@@ -32,9 +32,9 @@ export function BassPracticeRecordingSettingsSection({
       id="settings-record-compare"
       aria-labelledby="settings-record-compare-title"
       data-testid="settings-record-compare"
-      className="mt-5 scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4"
+      className="lv-settings-card"
     >
-      <h3 id="settings-record-compare-title" className="text-sm font-semibold text-[var(--lv-accent)]">
+      <h3 id="settings-record-compare-title" className="lv-settings-card-title">
         Bass Practice · Record &amp; Compare
       </h3>
       <label className="mt-3 block text-xs text-[var(--lv-text-secondary)]" htmlFor="settings-record-channel">

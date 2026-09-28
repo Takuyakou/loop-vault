@@ -116,7 +116,8 @@
     color: var(--lv-text);
   }
 
-  .lv-segment[aria-checked="true"] {
+  .lv-segment[aria-checked="true"],
+  .lv-segment[aria-pressed="true"] {
     background: var(--lv-accent-soft);
     color: #7fe8da;
     font-weight: 600;

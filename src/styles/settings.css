@@ -1,0 +1,198 @@
+/* P8.9-08 Settings screen (and the startup / empty states below): a section list on the left, cards on the right.
+   Under 900px of content the list sits on top and the cards stack. */
+@layer components {
+  .lv-settings-host {
+    /* Contains the absolutely positioned sr-only labels, which would otherwise stretch the document. */
+    position: relative;
+    container-type: inline-size;
+  }
+
+  .lv-settings {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--lv-space-5);
+  }
+
+  .lv-settings-nav {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-bg-subtle);
+  }
+
+  .lv-settings-nav-item {
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-13);
+    text-align: left;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-settings-nav-item:hover {
+    background: var(--lv-surface-raised);
+    color: var(--lv-text);
+  }
+
+  .lv-settings-content {
+    display: flex;
+    min-width: 0;
+    max-width: 960px;
+    flex-direction: column;
+    gap: var(--lv-space-4);
+  }
+
+  .lv-settings-card,
+  .lv-settings-group {
+    scroll-margin-top: 12px;
+  }
+
+  .lv-settings-card {
+    padding: 20px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface);
+    font-size: var(--lv-text-13);
+  }
+
+  .lv-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface);
+  }
+
+  .lv-settings-group > .lv-settings-card {
+    padding: 16px;
+    background: var(--lv-bg-subtle);
+  }
+
+  .lv-settings-card-title,
+  .lv-settings-group-title {
+    color: var(--lv-text);
+    font-size: var(--lv-text-16);
+    font-weight: 700;
+  }
+
+  .lv-settings-subtitle {
+    color: var(--lv-text);
+    font-size: var(--lv-text-14);
+    font-weight: 600;
+  }
+
+  .lv-settings-help {
+    margin-top: 4px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-settings-check {
+    display: flex;
+    margin-top: 14px;
+    cursor: pointer;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .lv-settings-check > input {
+    margin-top: 3px;
+    accent-color: var(--lv-accent);
+  }
+
+  .lv-settings-check > span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .lv-settings-check strong {
+    color: var(--lv-text);
+    font-weight: 600;
+  }
+
+  .lv-settings-check strong + span {
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-settings-divider {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--lv-border);
+  }
+
+  .lv-settings-backup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-sm);
+    font-size: var(--lv-text-13);
+  }
+
+  .lv-settings-disclosure {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--lv-text-secondary);
+    text-align: left;
+  }
+
+  /* 削除は赤い文字だけ（赤い塗りのボタンは使わない）: Common.dc.html ① */
+  .lv-settings-destructive {
+    color: var(--lv-danger);
+  }
+
+  @container (max-width: 899px) {
+    .lv-settings { grid-template-columns: minmax(0, 1fr); }
+    .lv-settings-nav {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  /* P8.9-08 startup and the shared first-capture guide (common EmptyState / LoadingState). */
+  .lv-startup {
+    display: flex;
+    min-height: 60vh;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lv-space-5);
+    padding: var(--lv-space-10) 0;
+  }
+
+  .lv-startup-logo {
+    border-radius: 14px;
+  }
+
+  .lv-first-capture {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-lg);
+    background: var(--lv-surface);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lv-settings-nav-item { transition: none; }
+  }
+}

@@ -9,6 +9,10 @@ import { createNotificationStore, NotificationProvider, useNotify } from "../not
 import { useUndoQueue } from "../../hooks/useUndoQueue";
 import { Button, Chip, EmptyState, IconButton, LoadingState, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./index";
 import "./gallery.css";
+import { appCopy } from "../../i18n";
+import { FirstCaptureGuide } from "../FirstCaptureGuide";
+import { SizeRecoveryNotice } from "../SizeRecoveryNotice";
+import { QuarantineNotice, StartupState } from "../StartupStates";
 
 /** The single marker the FULL gate searches for in dist/ (scripts/test-dx/check-gallery-excluded.mjs). */
 export const P89_GALLERY_MARKER = "lv-p89-component-gallery-marker";
@@ -172,6 +176,30 @@ export function ComponentGallery() {
             <Button variant="neutral" size="sm" onClick={() => undoQueue.enqueue({ label: "進行を削除しました", payload: null, undo: () => undefined })}>元に戻す付き</Button>
             <Button variant="neutral" size="sm" onClick={() => setModalOpen(true)}>モーダル</Button>
             <Button variant="neutral" size="sm" onClick={() => setConfirmOpen(true)}>確認ダイアログ</Button>
+          </div>
+        </Section>
+
+        <Section title="起動・復旧・空の状態（P8.9-08、合成データ）">
+          <div className="grid gap-4 lg:grid-cols-2" data-testid="p89-gallery-startup">
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)]" data-testid="p89-gallery-startup-loading">
+              <StartupState loadStatus="loading" recovery={undefined} readonly={undefined} requestRestoreBackup={() => undefined} copy={appCopy.ja} />
+            </div>
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-4">
+              <FirstCaptureGuide onMidi={() => undefined} onText={() => undefined} />
+            </div>
+            <div data-testid="p89-gallery-quarantine">
+              <QuarantineNotice count={2} copy={appCopy.ja} />
+              <SizeRecoveryNotice saving={false} onOpenVault={() => undefined} />
+            </div>
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4">
+              <StartupState
+                loadStatus="recovery"
+                recovery={{ kind: "invalid-json", corruptPath: "data.corrupt-20260928.json", backups: [{ name: "data-backup-20260927.json", path: "data-backup-20260927.json", createdAt: "2026-09-27T00:00:00.000Z" }] } as never}
+                readonly={undefined}
+                requestRestoreBackup={() => undefined}
+                copy={appCopy.ja}
+              />
+            </div>
           </div>
         </Section>
 

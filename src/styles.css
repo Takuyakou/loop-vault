@@ -6,6 +6,8 @@
 @import "./styles/text-intake.css";
 @import "./styles/home.css";
 @import "./styles/vault.css";
+@import "./styles/settings.css";
+@import "./styles/live-midi.css";
 
 @tailwind base;
 @tailwind components;

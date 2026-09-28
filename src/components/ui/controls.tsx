@@ -73,6 +73,7 @@ export function SegmentedControl<T extends string>({ className = "", label, onCh
             tabIndex={checked ? 0 : -1}
             disabled={option.disabled}
             title={option.title}
+            data-value={option.value}
             className="lv-segment"
             onClick={() => onChange(option.value)}
             onKeyDown={(event) => move(event, index)}

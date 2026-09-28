@@ -47,9 +47,10 @@ describe("HomeView", () => {
     const { container } = await renderHome([makeIdea({ id: "empty", progressionBlocks: [] })], { openCapture });
     expect(container.querySelectorAll("section[aria-label]")).toHaveLength(0);
     expect(container.textContent).toContain("最初の進行を取り込む");
-    const button = Array.from(container.querySelectorAll("button")).find((item) => item.textContent === "取り込む");
-    await act(async () => button?.click());
+    await act(async () => findButton(container, "MIDI から取り込む").click());
     expect(openCapture).toHaveBeenCalledWith("midi");
+    await act(async () => findButton(container, "テキストから取り込む").click());
+    expect(openCapture).toHaveBeenCalledWith("text");
   });
 
   it("continues the latest Chord Dojo practice, else the latest edited progression", async () => {

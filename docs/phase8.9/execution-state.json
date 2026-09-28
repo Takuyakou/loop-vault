@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-05",
+  "activeStage": "P8.9-09",
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
     "P8.9-02",
     "P8.9-03",
-    "P8.9-04"
+    "P8.9-04",
+    "P8.9-08"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "e2cbd35",
-  "lastVerifiedCommit": "c8e2d5b",
-  "currentBranch": "feat/p8.9-04-home-vault",
+  "baseCommit": "9ddf367",
+  "lastVerifiedCommit": "62a81c3",
+  "currentBranch": "feat/p8.9-08-settings",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -48,17 +49,17 @@
       "p89-04-exe",
       "p89-04-report"
     ],
-    "P8.9-05": [
-      "p89-05-full-fresh",
-      "p89-05-screens",
-      "p89-05-exe",
-      "p89-05-report"
-    ],
     "P8.9-08": [
       "p89-08-full-fresh",
       "p89-08-screens",
       "p89-08-exe",
       "p89-08-report"
+    ],
+    "P8.9-09": [
+      "p89-09-full-fresh",
+      "p89-09-screens",
+      "p89-09-exe",
+      "p89-09-report"
     ]
   },
   "gateResults": {
@@ -83,8 +84,12 @@
     "p89-04-full-fresh": "pass",
     "p89-04-screens": "pass",
     "p89-04-exe": "pass",
-    "p89-04-report": "pass"
+    "p89-04-report": "pass",
+    "p89-08-full-fresh": "pass",
+    "p89-08-screens": "pass",
+    "p89-08-exe": "pass",
+    "p89-08-report": "pass"
   },
-  "nextAction": "P8.9-04 complete; stopped at merge candidate feat/p8.9-04-home-vault (fresh FULL PASS @ c8e2d5b: Vitest 3757/3757, Playwright 129/129; p89:screens P8.9-04 20 screens x 3 sizes + 21 at 768x640 incl. home-empty/home and vault-filtered/vault-search-degree; EXE built with tauri build --no-bundle; later commit is docs only). Home rebuilt from the approved mock (today's loop device-local in loop-vault:today-loop:v1; practice records read-only), Vault is progressions-only with filters/search/sort, capture save form has no next-action field (default unchanged). Stage 3 merged into local master at e2cbd35. Human EXE checks are listed at the end of the report. P8.9-05 not started: the stage-5 zip merges this candidate first. No push/tag/release.",
+  "nextAction": "P8.9-08 complete; stopped at merge candidate feat/p8.9-08-settings (fresh FULL PASS @ 62a81c3: Vitest 3758/3758, Playwright 129/129; p89:screens P8.9-08 27 screens x 3 sizes + 28 at 768x640 incl. settings sections, startup-states, vault-empty, live-midi-mini; EXE built with tauri build --no-bundle; later commit is docs only). Settings is a screen with five sections (no new items), Vault sort resets to newest each launch, startup/quarantine/empty states and the Live MIDI mini window use the design system, header tone is a segment and the metronome an icon button. P8.9-05 dropped, P8.9-09 added. Stage 4 merged into local master at 9ddf367. Human EXE checks are listed at the end of the report. P8.9-09 not started: its zip merges this candidate first. No push/tag/release.",
   "updatedAt": "2026-09-28"
 }

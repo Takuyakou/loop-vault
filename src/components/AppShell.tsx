@@ -33,7 +33,8 @@ export type AppView =
   | "library"
   | "detail"
   | "progression-detail"
-  | "practice";
+  | "practice"
+  | "settings";
 export type SaveStatus = "saved" | "saving" | "unsaved" | "error";
 
 /** Below this window width the sidebar starts as icons only. */

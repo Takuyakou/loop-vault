@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
-import { Modal } from "../components/Modal";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
+import { ChevronDownIcon } from "../components/icons";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
@@ -50,7 +50,27 @@ import type { StoreApi } from "zustand/vanilla";
 import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
 import { loopVaultBuildInfo } from "../buildInfo";
 
-const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+const inputClass = "lv-input w-full px-3 text-sm";
+
+/**
+ * Scrolls only the app's content area (#main-content) to a section. `scrollIntoView` would also
+ * scroll the fixed app frame, which clips the title bar and header.
+ */
+function scrollToSection(id: string) {
+  const section = document.getElementById(id);
+  const main = document.getElementById("main-content");
+  if (!section || !main) return;
+  main.scrollTop += section.getBoundingClientRect().top - main.getBoundingClientRect().top - 12;
+}
+
+/** Left list of the settings screen: [section id, label]. */
+const settingsSections = [
+  ["settings-general", "一般"],
+  ["settings-audio-midi", "音と MIDI"],
+  ["settings-live-midi", "Live MIDI"],
+  ["settings-data", "データ"],
+  ["settings-developer", "開発者向け"],
+] as const;
 
 async function writeClipboardText(text: string): Promise<void> {
   if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available.");
@@ -73,7 +93,7 @@ interface PendingConfirmation {
   action: () => Promise<void>;
 }
 
-interface SettingsDialogProps {
+interface SettingsViewProps {
   showRomanNumerals: boolean;
   ideas: SongIdea[];
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
@@ -85,11 +105,13 @@ interface SettingsDialogProps {
   importVault: (path: string, mode: "replace" | "merge") => Promise<boolean>;
   setToast: (toast: string) => void;
   copy: AppCopy;
-  onClose: () => void;
   liveMidiStore?: StoreApi<LiveMidiStoreState>;
+  /** Section to show first, e.g. Live MIDI when opened from a practice screen's MIDI link. */
+  initialSection?: "settings-live-midi";
 }
 
-export function SettingsDialog({
+/** P8.9-08: Settings is a screen (view "settings"), no longer a dialog. Same settings, same behavior. */
+export function SettingsView({
   showRomanNumerals,
   ideas,
   backups,
@@ -101,9 +123,9 @@ export function SettingsDialog({
   importVault,
   setToast,
   copy,
-  onClose,
   liveMidiStore,
-}: SettingsDialogProps) {
+  initialSection,
+}: SettingsViewProps) {
   const ui = copy.settingsUi;
   const [dataPath, setDataPath] = useState<string>(ui.dataPathFallback);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
@@ -123,7 +145,10 @@ export function SettingsDialog({
   const [dataOperation, setDataOperation] = useState<"export" | "import">();
   const confirmationLockRef = useRef(false);
   const dataOperationLockRef = useRef(false);
-  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (initialSection) scrollToSection(initialSection);
+  }, [initialSection]);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {
@@ -376,49 +401,36 @@ export function SettingsDialog({
   }
 
   return (
-    <>
-      <Modal
-        ariaLabelledBy="settings-dialog-title"
-        initialFocusRef={closeRef}
-        onClose={onClose}
-        panelClassName="max-h-[90vh] w-full max-w-4xl overflow-y-auto p-5"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="settings-dialog-title" className="text-xl font-semibold">{ui.title}</h2>
-          <Button ref={closeRef} variant="ghost" size="sm" onClick={onClose}>{ui.close}</Button>
-        </div>
+    <div className="lv-settings-host" data-testid="settings-view">
+    <div className="lv-settings">
+      <nav className="lv-settings-nav" aria-label="設定の欄">
+        {settingsSections.map(([target, label]) => (
+          <button
+            key={target}
+            type="button"
+            className="lv-settings-nav-item"
+            onClick={() => {
+              if (target === "settings-developer") setAnalysisExpanded(true);
+              window.requestAnimationFrame(() => scrollToSection(target));
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">
-        <nav className="h-fit border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2 md:sticky md:top-0" aria-label={"設定カテゴリ"}>
-          {[
-            ["settings-general", "一般"],
-            ["settings-audio-midi", "Audio & MIDI"],
-            ["settings-data", "データ"],
-            ["settings-analysis", "解析とログ"],
-            ["settings-about", "このアプリについて"],
-          ].map(([target, label]) => (
-            <a
-              key={target}
-              href={`#${target}`}
-              className="block min-h-10 px-3 py-2 text-sm text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface)] hover:text-[var(--lv-text)]"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
-        <div className="min-w-0">
-        <section id="settings-general" aria-labelledby="settings-general-title" className="scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
-          <h3 id="settings-general-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.general}</h3>
-          <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
-            <input className="mt-1" type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
+      <div className="lv-settings-content">
+        <section id="settings-general" aria-labelledby="settings-general-title" className="lv-settings-card">
+          <h2 id="settings-general-title" className="lv-settings-card-title">{ui.general}</h2>
+          <label className="lv-settings-check">
+            <input type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
             <span>
-              <strong className="block text-[var(--lv-text-secondary)]">{ui.showDegrees}</strong>
-              <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.showDegreesHelp}</span>
+              <strong>{ui.showDegrees}</strong>
+              <span>{ui.showDegreesHelp}</span>
             </span>
           </label>
-          <label className="mt-4 flex cursor-pointer items-start gap-3 border-t border-[var(--lv-border)] pt-4 text-sm">
+          <label className="lv-settings-check">
             <input
-              className="mt-1"
               type="checkbox"
               checked={standardTitleBar}
               onChange={(event) => {
@@ -428,52 +440,36 @@ export function SettingsDialog({
               data-testid="settings-standard-title-bar"
             />
             <span>
-              <strong className="block text-[var(--lv-text-secondary)]">標準のタイトルバーを使う</strong>
-              <span className="mt-1 block text-[var(--lv-text-muted)]">アプリのタイトルバーの代わりに Windows の標準のバーを使います。次の起動から変わります。この端末だけに保存します。</span>
+              <strong>標準のタイトルバーを使う</strong>
+              <span>アプリのタイトルバーの代わりに Windows の標準のバーを使います。次の起動から変わります。この端末だけに保存します。</span>
             </span>
           </label>
-          <div
-            id="settings-about"
-            className="mt-4 grid gap-1 border-t border-[var(--lv-border)] pt-3 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
-            aria-label={ui.formatInfo}
-            data-testid="loop-vault-build-info"
-          >
-            <span>{ui.appVersion(loopVaultBuildInfo.version)}</span>
-            <span>{ui.buildCommit(loopVaultBuildInfo.commit)}</span>
-            <span>{ui.buildDate(loopVaultBuildInfo.builtAt)}</span>
-            <span>{ui.preAnalysisStatus(
-              preAnalysisSettings.enablePreAnalysisSourceSelection,
-            )}</span>
-            <span>{ui.appFormat}</span>
-            <span>{ui.dataFormat}</span>
-            <span className="sm:col-span-2" data-testid="piano-sample-attribution">
-              Salamander Grand Piano V3 by Alexander Holm · CC BY 3.0 · https://creativecommons.org/licenses/by/3.0/
-            </span>
-          </div>
         </section>
 
-        <div id="settings-audio-midi" className="scroll-mt-4">
-          <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
-        </div>
+        <section id="settings-audio-midi" aria-labelledby="settings-audio-midi-title" className="lv-settings-group">
+          <h2 id="settings-audio-midi-title" className="lv-settings-group-title">音と MIDI</h2>
+          <p className="lv-settings-help">試聴の音色・メトロノーム・音量は、画面の上のヘッダーでいつでも切り替えられます。</p>
+          <BassPracticeRecordingSettingsSection />
+        </section>
 
-        <BassPracticeRecordingSettingsSection />
+        <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
 
-        <section id="settings-data" aria-labelledby="settings-data-title" className="mt-5 scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
-          <h3 id="settings-data-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.data}</h3>
-          <div className="mt-4">
-            <h4 className="font-semibold">{ui.dataLocation}</h4>
+        <section id="settings-data" aria-labelledby="settings-data-title" className="lv-settings-card">
+          <h2 id="settings-data-title" className="lv-settings-card-title">{ui.data}</h2>
+          <div>
+            <h3 className="lv-settings-subtitle">{ui.dataLocation}</h3>
             <p className="mt-2 break-all text-sm text-[var(--lv-text-muted)]">{dataPath}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</Button>
-              <Button onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</Button>
+              <Button variant="neutral" onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</Button>
+              <Button variant="neutral" onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</Button>
             </div>
           </div>
-          <div className="mt-5 grid gap-5 border-t border-[var(--lv-border)] pt-4 md:grid-cols-2">
+          <div className="lv-settings-divider grid gap-5 md:grid-cols-2">
             <div>
-              <h4 className="font-semibold">{ui.exportTitle}</h4>
+              <h3 className="lv-settings-subtitle">{ui.exportTitle}</h3>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.exportDescription}</p>
               <Button
-                variant="primary"
+                variant="neutral"
                 className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "export"}
@@ -484,7 +480,7 @@ export function SettingsDialog({
               </Button>
             </div>
             <div>
-              <h4 className="font-semibold">{ui.importTitle}</h4>
+              <h3 className="lv-settings-subtitle">{ui.importTitle}</h3>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.importDescription}</p>
               <label className="sr-only" htmlFor="settings-import-mode">{ui.importTitle}</label>
               <select id="settings-import-mode" name="settings-import-mode" className={`${inputClass} mt-2`} disabled={Boolean(dataOperation)} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
@@ -492,6 +488,7 @@ export function SettingsDialog({
                 <option value="replace">{ui.importReplace}</option>
               </select>
               <Button
+                variant="neutral"
                 className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "import"}
@@ -506,53 +503,67 @@ export function SettingsDialog({
               {error ? <StatusMessage className="mt-3" tone="error" title={error} /> : null}
             </div>
           </div>
-          <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
+          <div className="lv-settings-divider">
             <div className="flex items-center justify-between gap-3">
-              <h4 className="font-semibold">{ui.backups}</h4>
-              <Button size="sm" onClick={() => void refreshBackups()}>{ui.refresh}</Button>
+              <h3 className="lv-settings-subtitle">{ui.backups}</h3>
+              <Button variant="neutral" size="sm" onClick={() => void refreshBackups()}>{ui.refresh}</Button>
             </div>
             <div className="mt-3 space-y-2">
               {backups.length === 0 ? <p className="text-sm text-[var(--lv-text-muted)]">{ui.noBackups}</p> : null}
               {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
-                <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] p-3 text-sm">
+                <div key={backup.name} className="lv-settings-backup">
                   <div><p className="font-medium">{backup.name}</p><p className="text-[var(--lv-text-muted)]">{backup.createdAt}</p></div>
-                  <Button size="sm" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</Button>
+                  <Button variant="neutral" size="sm" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</Button>
                 </div>
               ))}
             </div>
             {backups.length > 5 ? (
-              <Button variant="ghost" size="sm" className="mt-3 !px-0 text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>
+              <Button variant="ghost" size="sm" className="mt-3 !px-0 text-[var(--lv-accent)] hover:underline" onClick={() => setShowAllBackups((value) => !value)}>
                 {showAllBackups ? ui.showLatestFive : ui.showAll}
               </Button>
             ) : null}
           </div>
+          <div
+            id="settings-about"
+            className="lv-settings-divider grid gap-1 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
+            aria-label={ui.formatInfo}
+            data-testid="loop-vault-format-info"
+          >
+            <span>{ui.appVersion(loopVaultBuildInfo.version)}</span>
+            <span>{ui.appFormat}</span>
+            <span>{ui.dataFormat}</span>
+            <span className="sm:col-span-2" data-testid="piano-sample-attribution">
+              Salamander Grand Piano V3 by Alexander Holm · CC BY 3.0 · https://creativecommons.org/licenses/by/3.0/
+            </span>
+          </div>
         </section>
 
-        <section id="settings-analysis" className="mt-5 scroll-mt-4 border border-amber-400/35 bg-amber-950/10">
-          <h3>
+        <section id="settings-developer" className="lv-settings-card" aria-labelledby="settings-developer-title">
+          <h2 id="settings-developer-title">
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-4 px-4 pt-4 text-left"
+              className="lv-settings-disclosure"
               aria-expanded={analysisExpanded}
               aria-controls="settings-analysis-content"
               aria-describedby="settings-analysis-help"
               onClick={() => setAnalysisExpanded((value) => !value)}
             >
-              <span className="text-sm font-semibold text-amber-200">{ui.analysis}</span>
-              <span aria-hidden="true" className="text-xl font-normal text-amber-200">{analysisExpanded ? "−" : "+"}</span>
+              <span className="lv-settings-card-title">開発者向け</span>
+              <ChevronDownIcon size={16} className={analysisExpanded ? "rotate-180" : ""} />
             </button>
-          </h3>
-          <p id="settings-analysis-help" className="px-4 pb-4 text-sm text-[var(--lv-text-muted)]">{ui.analysisHelp}</p>
+          </h2>
+          <p id="settings-analysis-help" className="lv-settings-help">{ui.analysisHelp}</p>
           {analysisExpanded ? (
-            <div id="settings-analysis-content" className="border-t border-amber-400/25 p-4 text-sm">
-              <div>
-                <h4 className="font-semibold">{ui.accuracyFirstTitle}</h4>
+            <div id="settings-analysis-content" className="text-sm">
+              <div className="lv-settings-divider">
+                <h3 className="lv-settings-subtitle">{ui.analysis}</h3>
+                <h4 className="mt-3 font-semibold">{ui.accuracyFirstTitle}</h4>
                 <p className="mt-1 text-[var(--lv-text-muted)]">{ui.accuracyFirstHelp}</p>
                 <fieldset className="mt-4">
                   <legend className="text-xs font-semibold text-[var(--lv-text-secondary)]">
                     {ui.analysisProfile}
                   </legend>
-                  <div className="mt-2 inline-flex border border-[var(--lv-border-strong)]">
+                  <div className="lv-segmented mt-2" role="group" aria-label={ui.analysisProfile}>
                     {([
                       ["stable", ui.stableProfile],
                       ["accuracy-first", ui.accuracyProfile],
@@ -560,7 +571,7 @@ export function SettingsDialog({
                       <button
                         type="button"
                         key={profile}
-                        className={`px-3 py-2 text-sm ${analysisProfile === profile ? "bg-[var(--lv-accent)] font-semibold text-stone-950" : "text-[var(--lv-text-secondary)]"}`}
+                        className="lv-segment"
                         aria-pressed={analysisProfile === profile}
                         onClick={() => updateAnalysisProfile(profile)}
                       >
@@ -574,26 +585,24 @@ export function SettingsDialog({
                       : ui.accuracyProfileHelp}
                   </p>
                 </fieldset>
-                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                <label className="lv-settings-check">
                   <input
-                    className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.bassCompanionCandidates}
                     disabled={!analysisProfileFeatureDefaults[analysisProfile].bassCompanionCandidates}
                     onChange={(event) => updateAccuracyFirst("bassCompanionCandidates", event.target.checked)}
                   />
                   <span>
-                    <strong className="block text-[var(--lv-text-secondary)]">{ui.bassCompanionCandidates}</strong>
-                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.bassCompanionCandidatesHelp}</span>
+                    <strong>{ui.bassCompanionCandidates}</strong>
+                    <span>{ui.bassCompanionCandidatesHelp}</span>
                   </span>
                 </label>
-                <div className="mt-5 border-t border-amber-400/20 pt-4">
+                <div className="lv-settings-divider">
                   <h4 className="font-semibold">
                     {"MIDI解析前のパート選択"}
                   </h4>
-                  <label className="mt-3 flex cursor-pointer items-start gap-3">
+                  <label className="lv-settings-check">
                     <input
-                      className="mt-1"
                       type="checkbox"
                       checked={preAnalysisSettings.enablePreAnalysisSourceSelection}
                       onChange={(event) => updatePreAnalysisSetting(
@@ -602,34 +611,28 @@ export function SettingsDialog({
                       )}
                     />
                     <span>
-                      <strong className="block text-[var(--lv-text-secondary)]">
-                        {"解析前のパート選択を有効にする"}
-                      </strong>
-                      <span className="mt-1 block text-[var(--lv-text-muted)]">
-                        {"オフにすると従来のPhase 5解析経路へすぐ戻ります。"}
-                      </span>
+                      <strong>{"解析前のパート選択を有効にする"}</strong>
+                      <span>{"オフにすると、以前の解析の流れ（Phase 5）へすぐ戻ります。"}</span>
                     </span>
                   </label>
                   <p className="mt-3 text-xs text-[var(--lv-text-muted)]">
-                    {"Stable / Accuracy Firstの両方で有効です。単純MIDIはcompact、複雑MIDIは自動展開します。"}
+                    {"安定・精度優先のどちらでも有効です。単純な MIDI は簡単な表示、複雑な MIDI は自動で広げて表示します。"}
                   </p>
                 </div>
-                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                <label className="lv-settings-check">
                   <input
-                    className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.melodyContaminationFilter}
                     disabled={!analysisProfileFeatureDefaults[analysisProfile].melodyContaminationFilter}
                     onChange={(event) => updateAccuracyFirst("melodyContaminationFilter", event.target.checked)}
                   />
                   <span>
-                    <strong className="block text-[var(--lv-text-secondary)]">{ui.melodyContaminationFilter}</strong>
-                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.melodyContaminationFilterHelp}</span>
+                    <strong>{ui.melodyContaminationFilter}</strong>
+                    <span>{ui.melodyContaminationFilterHelp}</span>
                   </span>
                 </label>
-                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                <label className="lv-settings-check">
                   <input
-                    className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.enableObservedFlatNineDominantCandidate}
                     disabled={!analysisProfileFeatureDefaults[analysisProfile].enableObservedFlatNineDominantCandidate}
@@ -639,13 +642,12 @@ export function SettingsDialog({
                     )}
                   />
                   <span>
-                    <strong className="block text-[var(--lv-text-secondary)]">{ui.observedFlatNineCandidate}</strong>
-                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.observedFlatNineCandidateHelp}</span>
+                    <strong>{ui.observedFlatNineCandidate}</strong>
+                    <span>{ui.observedFlatNineCandidateHelp}</span>
                   </span>
                 </label>
-                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                <label className="lv-settings-check">
                   <input
-                    className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.enableAccuracyCandidateUnion}
                     disabled={!analysisProfileFeatureDefaults[analysisProfile].enableAccuracyCandidateUnion}
@@ -655,42 +657,53 @@ export function SettingsDialog({
                     )}
                   />
                   <span>
-                    <strong className="block text-[var(--lv-text-secondary)]">{ui.accuracyCandidateUnion}</strong>
-                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.accuracyCandidateUnionHelp}</span>
+                    <strong>{ui.accuracyCandidateUnion}</strong>
+                    <span>{ui.accuracyCandidateUnionHelp}</span>
                   </span>
                 </label>
               </div>
-              <div className="mt-5 border-t border-amber-400/20 pt-4">
-                <h4 className="font-semibold">{ui.correctionTitle}</h4>
-                <label className="mt-3 flex cursor-pointer items-start gap-3">
-                  <input className="mt-1" type="checkbox" checked={feedbackEnabled} onChange={(event) => updateFeedbackEnabled(event.target.checked)} />
-                  <span><strong className="block text-[var(--lv-text-secondary)]">{ui.correctionStore}</strong><span className="mt-1 block text-[var(--lv-text-muted)]">{ui.correctionStoreHelp}</span></span>
+              <div className="lv-settings-divider">
+                <h3 className="lv-settings-subtitle">{ui.correctionTitle}</h3>
+                <label className="lv-settings-check">
+                  <input type="checkbox" checked={feedbackEnabled} onChange={(event) => updateFeedbackEnabled(event.target.checked)} />
+                  <span><strong>{ui.correctionStore}</strong><span>{ui.correctionStoreHelp}</span></span>
                 </label>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportProgressionFeedback()}><Download aria-hidden="true" size={16} />{ui.exportAnalysisFeedback}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportRoleCorrections()}><Download aria-hidden="true" size={16} />{"役割修正ログを書き出す"}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
+                  <Button variant="neutral" onClick={() => void exportProgressionFeedback()}><Download aria-hidden="true" size={16} />{ui.exportAnalysisFeedback}</Button>
+                  <Button variant="neutral" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</Button>
+                  <Button variant="neutral" onClick={() => void exportRoleCorrections()}><Download aria-hidden="true" size={16} />{"役割修正ログを書き出す"}</Button>
+                  <Button variant="neutral" className="lv-settings-destructive" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</Button>
                 </div>
               </div>
-              <div className="mt-5 border-t border-amber-400/20 pt-4">
-                <h4 className="font-semibold">{ui.evaluationTitle}</h4>
+              <div className="lv-settings-divider">
+                <h3 className="lv-settings-subtitle">{ui.evaluationTitle}</h3>
                 <p className="mt-1 text-[var(--lv-text-muted)]">{ui.evaluationDescription}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void runEvaluationAction(openRealEvaluationFolder, ui.evaluationFolderOpened)}>{ui.openEvaluationFolder}</button>
-                  <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void rebuildSourceIndex()}>{ui.rebuildSourceIndex}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteDifferenceReviews, ui.deleteReviewsTitle, ui.reviewsDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteReviews}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deletePromotedCorrections, ui.deletePromotedTitle, ui.promotedDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deletePromoted}</button>
-                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, ui.deleteEvaluationTitle, ui.evaluationDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteEvaluation}</button>
+                  <Button variant="neutral" onClick={() => void runEvaluationAction(openRealEvaluationFolder, ui.evaluationFolderOpened)}>{ui.openEvaluationFolder}</Button>
+                  <Button variant="neutral" onClick={() => void rebuildSourceIndex()}>{ui.rebuildSourceIndex}</Button>
+                  <Button variant="neutral" className="lv-settings-destructive" onClick={() => confirmEvaluationDeletion(deleteDifferenceReviews, ui.deleteReviewsTitle, ui.reviewsDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteReviews}</Button>
+                  <Button variant="neutral" className="lv-settings-destructive" onClick={() => confirmEvaluationDeletion(deletePromotedCorrections, ui.deletePromotedTitle, ui.promotedDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deletePromoted}</Button>
+                  <Button variant="neutral" className="lv-settings-destructive" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, ui.deleteEvaluationTitle, ui.evaluationDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteEvaluation}</Button>
                 </div>
+              </div>
+              <div
+                className="lv-settings-divider grid gap-1 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
+                aria-label="ビルドの情報"
+                data-testid="loop-vault-build-info"
+              >
+                <h3 className="lv-settings-subtitle sm:col-span-2">ビルドの情報</h3>
+                <span>{ui.appVersion(loopVaultBuildInfo.version)}</span>
+                <span>{ui.buildCommit(loopVaultBuildInfo.commit)}</span>
+                <span>{ui.buildDate(loopVaultBuildInfo.builtAt)}</span>
+                <span>{ui.preAnalysisStatus(
+                  preAnalysisSettings.enablePreAnalysisSourceSelection,
+                )}</span>
               </div>
               <StoredApiKeyRemoval setToast={setToast} />
             </div>
           ) : null}
         </section>
-        </div>
-        </div>
-      </Modal>
+      </div>
       <ConfirmDialog
         open={Boolean(pendingConfirmation)}
         title={pendingConfirmation?.title ?? ""}
@@ -702,7 +715,8 @@ export function SettingsDialog({
         tone="danger"
         busy={confirmationBusy}
       />
-    </>
+    </div>
+    </div>
   );
 }
 
@@ -730,20 +744,20 @@ function StoredApiKeyRemoval({ setToast }: { setToast: (message: string) => void
   }
 
   return (
-    <div className="mt-5 border-t border-amber-400/20 pt-4" data-testid="stored-api-key-removal">
-      <h4 className="font-semibold">保存した API キー</h4>
+    <div className="lv-settings-divider" data-testid="stored-api-key-removal">
+      <h3 className="lv-settings-subtitle">保存した API キー</h3>
       <p className="mt-1 text-[var(--lv-text-muted)]">
         {registered ? "以前の AI 展開案のために保存した OpenAI の API キーがあります。" : "保存されている API キーはありません。"}
       </p>
-      <button
-        type="button"
+      <Button
+        variant="neutral"
         disabled={busy || !registered}
-        className="mt-3 inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="lv-settings-destructive mt-3"
         onClick={() => void remove()}
       >
         <Trash2 aria-hidden="true" size={16} />
         保存した API キーを削除
-      </button>
+      </Button>
     </div>
   );
 }

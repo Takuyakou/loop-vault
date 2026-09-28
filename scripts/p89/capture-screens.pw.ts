@@ -55,6 +55,10 @@ for (const [width, height] of SIZES) {
 
       await openApp(page);
       await shot("home-empty", async () => {});
+      await shot("vault-empty", async () => {
+        await nav(page, "vault");
+        await expect(page.getByText("最初の進行を取り込む")).toBeVisible();
+      });
       await shot("capture-empty", async () => {
         await nav(page, "capture");
         await expect(page.locator("[data-capture-midi-drop-zone]").first()).toBeVisible();
@@ -144,18 +148,25 @@ for (const [width, height] of SIZES) {
           await page.getByRole("tablist", { name: "Bass Practice のモード" }).getByRole("tab", { name: tab, exact: true }).click();
         });
       }
+      // P8.9-08: Settings is a screen; one shot per section (the list on the left scrolls to it).
       await shot("settings", async () => {
         await nav(page, "settings");
-        await expect(page.getByRole("dialog", { name: /設定/ })).toBeVisible();
+        await expect(page.getByTestId("settings-view")).toBeVisible();
       });
-      await page.keyboard.press("Escape");
+      for (const [id, label] of [["audio-midi", "音と MIDI"], ["live-midi", "Live MIDI"], ["data", "データ"], ["developer", "開発者向け"]] as const) {
+        await shot(`settings-${id}`, async () => {
+          await page.getByRole("navigation", { name: "設定の欄" }).getByRole("button", { name: label, exact: true }).click();
+          await expect(page.locator(`#settings-${id}`)).toBeInViewport();
+        });
+      }
       if (width === 768) {
-        // A toast raised while a dialog is open must not cover the dialog's buttons.
+        // A toast raised while the confirmation dialog is open must not cover the dialog's buttons.
         await shot("settings-toast", async () => {
-          await nav(page, "settings");
-          const dialog = page.getByRole("dialog", { name: /設定/ });
-          await dialog.getByRole("button", { name: /書き出す|書き出し/ }).first().click();
+          const view = page.getByTestId("settings-view");
+          await view.getByRole("button", { name: /JSONを書き出す/ }).click();
           await expect(page.locator("[data-toast-tone]").first()).toBeVisible();
+          await view.getByRole("button", { name: "修正ログを削除" }).click();
+          await expect(page.getByRole("dialog", { name: /修正ログを削除/ })).toBeVisible();
           result.toastOverDialogButtons = await page.evaluate(() => {
             const toasts = [...document.querySelectorAll("[data-toast-tone]")].map((toast) => toast.getBoundingClientRect());
             const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
@@ -169,6 +180,12 @@ for (const [width, height] of SIZES) {
       await shot("home", async () => {
         await nav(page, "home");
       });
+      // P8.9-08: the browser build's Live MIDI mini window (same component as the separate window).
+      await shot("live-midi-mini", async () => {
+        await nav(page, "live-midi");
+        await expect(page.getByTestId("live-midi-web-preview")).toBeVisible();
+      });
+      await page.getByRole("button", { name: /メイン画面を表示/ }).click().catch(() => undefined);
       // Component gallery: full page (the app root normally clips scrolling).
       try {
         await page.goto("/?gallery");
@@ -177,6 +194,9 @@ for (const [width, height] of SIZES) {
         await settle(page);
         await page.screenshot({ path: join(OUT, `gallery@${size}.png`), fullPage: true, animations: "disabled", caret: "hide" });
         result.captured.push("gallery");
+        // P8.9-08: startup / recovery / quarantine / first-capture states rendered with synthetic data.
+        await page.getByTestId("p89-gallery-startup").screenshot({ path: join(OUT, `startup-states@${size}.png`), animations: "disabled", caret: "hide" });
+        result.captured.push("startup-states");
       } catch (error) {
         result.unreachable.push({ screen: "gallery", reason: String(error).split("\n")[0].slice(0, 160) });
       }
