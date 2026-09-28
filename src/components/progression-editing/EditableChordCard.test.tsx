@@ -69,6 +69,13 @@ describe("EditableChordCard", () => {
     await act(async () => root.render(<EditableChordCard slot={{ ...slot, confidence: 0, warnings: ["入力内容を確認"] }}
       selected={false} playing={false} onSelect={vi.fn()} showConfidenceReview={false} />));
     expect(container.querySelector("[data-chord-card]")?.textContent).toContain("要確認 · 入力内容を確認");
+    // P8.9-09: analyzer ids read as short Japanese reasons, never as the internal name.
+    await act(async () => root.render(<EditableChordCard slot={{ ...slot, confidence: 0, warnings: ["ambiguous-bass", "unknown-new-id"] }}
+      selected={false} playing={false} onSelect={vi.fn()} showConfidenceReview={false} />));
+    const text = container.querySelector("[data-chord-card]")?.textContent ?? "";
+    expect(text).toContain("候補が僅差");
+    expect(text).not.toContain("ambiguous-bass");
+    expect(text).not.toContain("unknown-new-id");
     await act(async () => root.unmount());
   });
 

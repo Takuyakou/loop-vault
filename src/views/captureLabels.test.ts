@@ -16,7 +16,9 @@ describe("capture labels", () => {
     // exist. The key itself is unchanged for compatibility with saved memos.
     expect(warningLabel("ambiguous-bass")).toBe("候補が僅差");
     expect(warningLabel("sparse-notes")).toBe("音数が少ないため要確認");
-    expect(warningLabel("unknown-warning-key")).toBe("Unknown Warning Key");
+    // P8.9-09: unknown ids no longer leak as humanised English.
+    expect(warningLabel("unknown-warning-key")).toBe("要確認");
+    expect(warningLabel("入力内容を確認")).toBe("入力内容を確認");
   });
 
   it("labels the warning the analyzer actually emits for sparse windows", () => {

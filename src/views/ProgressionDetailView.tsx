@@ -289,7 +289,7 @@ export function ProgressionDetailView({
 
   function startChordContextPractice() {
     if (!openPractice || !selectedChordContextSection) {
-      setToast("Chord Context Practice is unavailable for this saved progression.");
+      setToast("この進行では Chord Context の練習を開けません。");
       return;
     }
     const snapshot = buildVaultChordContextSnapshot({
@@ -298,7 +298,7 @@ export function ProgressionDetailView({
       sectionId: selectedChordContextSection.id,
     });
     if (!snapshot.ok) {
-      setToast(snapshot.error.message);
+      setToast(chordContextErrorText(snapshot.error.code));
       return;
     }
     runLeaveAction(() => openPractice(snapshot.snapshot));
@@ -512,7 +512,7 @@ export function ProgressionDetailView({
                 <label className="text-xs text-[var(--lv-text-secondary)]">
                   {"Chord Context セクション"}
                   <select
-                    aria-label="Chord Context section"
+                    aria-label="Chord Context のセクション"
                     className="ml-1 rounded border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 text-sm text-[var(--lv-text)]"
                     data-testid="chord-context-section-select"
                     value={selectedChordContextSection.id}
@@ -527,7 +527,7 @@ export function ProgressionDetailView({
                 </label>
               ) : (
                 <p className="text-xs text-[var(--lv-text-secondary)]" role="status">
-                  {chordContextSectionsResult.ok ? "Chord Context Practice is unavailable." : chordContextSectionsResult.error.message}
+                  {chordContextSectionsResult.ok ? "Chord Context の練習は使えません。" : chordContextErrorText(chordContextSectionsResult.error.code)}
                 </p>
               )}
               <Button
@@ -842,4 +842,14 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
       <dd className="min-w-0 truncate text-[var(--lv-text)]">{value}</dd>
     </div>
   );
+}
+
+/** P8.9-09: the Bass Practice domain explains Chord Context failures in English; show Japanese by code. */
+function chordContextErrorText(code: "source-unavailable" | "unsupported-source" | "invalid-section" | "invalid-snapshot"): string {
+  switch (code) {
+    case "source-unavailable": return "保存した進行が見つかりません。";
+    case "unsupported-source": return "この進行はコードの長さや拍子が合わないため、Chord Context の練習に使えません。";
+    case "invalid-section": return "選んだセクションを Chord Context の練習に使えません。";
+    default: return "Chord Context の練習を準備できませんでした。";
+  }
 }

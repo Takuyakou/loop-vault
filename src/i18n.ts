@@ -463,7 +463,7 @@ export const appCopy = {
       fields: {
         title: "タイトルを編集",
         bpm: "BPMを編集",
-        key: "Keyを編集",
+        key: "キーを編集",
         genre: "ジャンルを編集",
         mood: "ムードを編集",
         memo: "コード進行メモを編集",
@@ -516,13 +516,13 @@ export const appCopy = {
       copyFailed: "進行をコピーできませんでした。",
       placeholders: {
         bpm: "BPM",
-        key: "Key",
+        key: "キー",
         genre: "ジャンル",
         mood: "ムード（カンマ区切り）",
         chordMemo: "コード進行メモ",
         title: "タイトル",
         url: "URL",
-        memo: "Memo",
+        memo: "メモ",
       },
     },
     create: {
