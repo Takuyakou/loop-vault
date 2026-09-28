@@ -130,7 +130,7 @@ export function BpmScrubField({
           data-testid={inputTestId}
           disabled={disabled}
           aria-describedby={`${idPrefix}-drag-help`}
-          className={`lv-field-control min-h-8 w-20 px-2 pr-6 font-mono text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+          className={`lv-field-control lv-bpm-input min-h-8 font-mono text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
           type="text"
           inputMode="numeric"
           role="spinbutton"
@@ -164,7 +164,7 @@ export function BpmScrubField({
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 flex w-6 items-center justify-center text-[var(--lv-text-muted)]"
+          className="pointer-events-none absolute inset-y-0 right-0 flex w-5 items-center justify-center text-[var(--lv-text-muted)]"
           data-testid={`${idPrefix}-drag`}
           title={dragLabel}
         >

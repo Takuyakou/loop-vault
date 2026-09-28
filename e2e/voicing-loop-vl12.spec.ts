@@ -64,15 +64,17 @@ test("VL-12 BPM scrub works from the full field and keeps direct input, wheel, a
   const dragFrom = async (offsetX: number, deltaY: number, modifier?: "Shift" | "Control") => {
     const bounds = await field.boundingBox();
     if (modifier) await page.keyboard.down(modifier);
-    await page.mouse.move(bounds!.x + offsetX, bounds!.y + bounds!.height / 2);
+    // A negative offset starts from the right edge (the drag grip).
+    const x = bounds!.x + (offsetX < 0 ? bounds!.width + offsetX : offsetX);
+    await page.mouse.move(x, bounds!.y + bounds!.height / 2);
     await page.mouse.down();
-    await page.mouse.move(bounds!.x + offsetX + 100, bounds!.y + bounds!.height / 2 + deltaY);
+    await page.mouse.move(x + 100, bounds!.y + bounds!.height / 2 + deltaY);
     await page.mouse.up();
     if (modifier) await page.keyboard.up(modifier);
   };
   await dragFrom(40, -20, "Shift");
   await expect(bpm).toHaveValue("130");
-  await dragFrom(72, -8, "Control");
+  await dragFrom(-6, -8, "Control");
   await expect(bpm).toHaveValue("140");
   await dragFrom(5, -500);
   await expect(bpm).toHaveValue("240");

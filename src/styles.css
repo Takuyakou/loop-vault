@@ -39,6 +39,14 @@ button {
   font: inherit;
 }
 
+/* P8.9-09b: every BPM field fits three digits (and the "—" placeholder) beside its 20px drag grip. */
+.lv-bpm-input {
+  width: calc(3ch + 2.25rem);
+  min-width: calc(3ch + 2.25rem);
+  padding-right: 1.25rem;
+  padding-left: 0.375rem;
+}
+
 .lv-level-meter {
   display: inline-flex;
   width: 3rem;
