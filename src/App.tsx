@@ -848,7 +848,6 @@ function App() {
                 updateProgressionBlock={updateProgressionBlock}
                 setToast={setToast}
                 copy={copy}
-                showRomanNumerals={settings.showRomanNumerals ?? true}
               />
             ) : null}
             {view === "capture" ? (

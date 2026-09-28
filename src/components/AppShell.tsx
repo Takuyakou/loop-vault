@@ -152,7 +152,6 @@ export function AppShell({
             ) : null}
             <div className="lv-sidebar-rule" role="separator" />
             <NavItem nav="live-midi" label="Live MIDI" icon={LiveMidiIcon} collapsed={collapsed} active={false} onClick={openLiveMidi} />
-            <div className="lv-sidebar-spacer" />
             <NavItem nav="settings" label="設定" icon={SettingsIcon} collapsed={collapsed} active={settingsOpen} onClick={openSettings} />
           </nav>
           <div className="lv-sidebar-footer">
