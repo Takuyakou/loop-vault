@@ -414,6 +414,20 @@
   }
 }
 
+/* P8.9-08 header tone segment: the mock's 30px ピアノ／エレピ switch (RHome.dc.html). */
+@layer components {
+  .lv-header-segmented {
+    height: 30px;
+    box-sizing: border-box;
+    align-items: center;
+  }
+
+  .lv-header-segmented .lv-segment {
+    min-height: 22px;
+    font-size: var(--lv-text-11);
+  }
+}
+
 /* Keep the header one 56px row at compact widths: icon-only labels. */
 @media (max-width: 1299px) {
   .lv-app-header {
@@ -421,8 +435,7 @@
     gap: 8px;
   }
 
-  .lv-app-header .lv-midi-label,
-  .lv-app-header .lv-global-metronome span:not(.lv-metronome-icon) {
+  .lv-app-header .lv-midi-label {
     display: none;
   }
 
@@ -435,7 +448,7 @@
    the screen name and the essential actions. */
 @media (max-width: 639px) {
   .lv-app-header .lv-midi-chip,
-  .lv-app-header [data-global-actions] > [role="group"]:not(.lv-volume-group) {
+  .lv-app-header [data-global-actions] > :is([role="group"], [role="radiogroup"]):not(.lv-volume-group) {
     display: none;
   }
 

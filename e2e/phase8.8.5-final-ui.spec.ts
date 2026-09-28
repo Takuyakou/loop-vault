@@ -11,7 +11,8 @@ test("Final Capture empty and populated states follow the single-toolbar contrac
   await expect(header.locator(".lv-app-header-title")).toHaveText("取り込む");
   await expect(header).not.toContainText("MIDIやテキストからコード進行を採集");
   await expect(header.getByTestId("capture-input-mode")).toHaveCount(1);
-  await expect(header.getByTestId("global-metronome")).toContainText("メトロノーム");
+  // P8.9-08: icon-only; the name is in the tooltip.
+  await expect(header.getByTestId("global-metronome")).toHaveAttribute("title", /メトロノーム/);
   await page.getByTestId("capture-input-mode").getByRole("button", { name: "テキスト" }).click();
   const capture = page.getByTestId("text-progression-capture");
   const toolbar = capture.getByTestId("text-capture-toolbar");

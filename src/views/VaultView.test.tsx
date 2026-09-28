@@ -430,7 +430,7 @@ describe("VaultView", () => {
         </PreviewSoundProvider>,
       );
     });
-    await act(async () => container.querySelector<HTMLButtonElement>('button[data-preview-sound="electric-piano"]')?.click());
+    await act(async () => container.querySelector<HTMLButtonElement>('button[data-value="electric-piano"]')?.click());
     await act(async () => container.querySelector<HTMLButtonElement>('button[aria-label="試聴"]')?.click());
     expect(toggle).toHaveBeenCalledWith(expect.objectContaining({ kind: "vault" }), expect.objectContaining({ sound: "electric-piano" }));
     await act(async () => root.unmount());

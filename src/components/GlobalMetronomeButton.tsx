@@ -1,12 +1,21 @@
+import { MetronomeIcon } from "./icons";
 import { useMetronome } from "./MetronomeProvider";
+import { IconButton } from "./ui";
 
+/** P8.9-08: icon-only state button (purple while on); the name is in the tooltip. Shared metronome state. */
 export function GlobalMetronomeButton() {
   const { enabled, toggle } = useMetronome();
   const label = "メトロノーム：" + (enabled ? "ON" : "OFF");
-  return <button type="button" onClick={toggle} title={label} aria-label={label}
-    aria-pressed={enabled} data-testid="global-metronome"
-    className={"lv-global-metronome inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded border px-2.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] "
-      + (enabled ? "lv-global-metronome-on" : "lv-global-metronome-off")}>
-    <span className="lv-metronome-icon" aria-hidden="true" /><span>メトロノーム</span>
-  </button>;
+  return (
+    <IconButton
+      variant="state"
+      label={label}
+      aria-pressed={enabled}
+      data-testid="global-metronome"
+      className="lv-global-metronome !h-[30px] !min-h-[30px] !w-[34px]"
+      onClick={toggle}
+    >
+      <MetronomeIcon size={17} />
+    </IconButton>
+  );
 }
