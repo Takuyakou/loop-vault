@@ -5,7 +5,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { analyzeCurrentMidi, chooseFirstCandidate, loadMidiForPreAnalysis, openApp } from "../../e2e/helpers/app";
+import { analyzeCurrentMidi, chooseFirstCandidate, loadMidiForPreAnalysis, openApp, waitForSidebarSettled } from "../../e2e/helpers/app";
 import { createMidiFixture } from "../../e2e/helpers/midiFixture";
 
 const NAME = process.env.P89_SCREENS_NAME ?? "adhoc";
@@ -108,6 +108,8 @@ for (const [width, height] of SIZES) {
         try {
           await reach();
           await settle(page);
+          // P8.9-09b: the sidebar width animates; shoot only once it has settled.
+          await waitForSidebarSettled(page);
           await page.screenshot({ path: join(OUT, `${screen}@${size}.png`), animations: "disabled", caret: "hide" });
           result.captured.push(screen);
           (result.audits ??= {})[screen] = await audit(page);

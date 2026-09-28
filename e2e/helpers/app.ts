@@ -133,3 +133,16 @@ export async function capturePageErrors(page: Page): Promise<string[]> {
   });
   return errors;
 }
+
+/**
+ * P8.9-09b: the sidebar width animates after a toggle or a resize across 1200px; measure only
+ * once it has settled. Two frames first so a pending media change has started the animation.
+ */
+export async function waitForSidebarSettled(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(page.locator("[data-sidebar-animating]")).toHaveCount(0);
+  await expect.poll(() => page.locator("[data-sidebar]").evaluate((aside) => {
+    const target = aside.getAttribute("data-sidebar") === "collapsed" ? 64 : 232;
+    return Math.round(aside.getBoundingClientRect().width) === target;
+  })).toBe(true);
+}

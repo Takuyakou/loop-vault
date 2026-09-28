@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow } from "./helpers/app";
+import { assertNoHorizontalOverflow, waitForSidebarSettled } from "./helpers/app";
 
 async function openLoop(page: Page, status = "both-hands-long") {
   await page.goto(`/?p527Status=${status}`);
@@ -110,10 +110,12 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
     await page.goto("/?p527Status=selector");
     const expand = page.getByRole("button", { name: "サイドバーを広げる" });
     if (await expand.isVisible()) await expand.click();
+    await waitForSidebarSettled(page);
     await page.locator('[data-nav="voicing-loop"]').click();
     const heading = page.getByRole("heading", { name: "Voicing Loop", exact: true, level: 2 });
     for (const collapsed of [false, true]) {
       if (collapsed) await page.getByRole("button", { name: "サイドバーを狭める" }).click();
+      await waitForSidebarSettled(page);
       const bounds = await heading.boundingBox();
       const main = await page.getByRole("main").boundingBox();
       expect(bounds && main).toBeTruthy();

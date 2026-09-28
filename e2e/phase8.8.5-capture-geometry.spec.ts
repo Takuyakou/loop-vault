@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, waitForSidebarSettled } from "./helpers/app";
 
 test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", async ({ page }) => {
   test.setTimeout(90_000);
@@ -7,6 +7,8 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
   await page.locator('[data-nav="capture"]').click();
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
     await page.setViewportSize({ width, height: 900 });
+    // Crossing 1200px collapses the sidebar with a 0.18 s animation; measure after it.
+    await waitForSidebarSettled(page);
     const frame = page.getByTestId("capture-mode-tabs-frame");
     const tabs = page.getByTestId("capture-input-mode");
     await expect(tabs).toHaveCount(1);
