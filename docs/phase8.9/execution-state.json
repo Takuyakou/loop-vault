@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.9",
-  "status": "in-progress",
+  "status": "completed",
   "activeStage": null,
   "completedStages": [
     "P8.9-00",
@@ -15,8 +15,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d93c4b1",
-  "lastVerifiedCommit": "32a29ae",
-  "currentBranch": "feat/p8.9-09-finish",
+  "lastVerifiedCommit": "22569e1",
+  "currentBranch": "master",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -95,6 +95,6 @@
     "p89-09-exe": "pass",
     "p89-09-report": "pass"
   },
-  "nextAction": "人間の確認のあと、段階9の候補 feat/p8.9-09-finish を local master に取り込み、フェーズを completed にする。P8.9-09 complete; stopped at the merge candidate (fresh FULL PASS @ 32a29ae: Vitest 3658/3658, Playwright 130/130; p89:screens P8.9-09 with per-screen audits; EXE built with tauri build --no-bundle; later commits are docs only). Final report reports/P8.9-FINAL.md. Stage 8 merged into local master at d93c4b1. No push/tag/release; next phase not started.",
+  "nextAction": "Phase 8.9 完了。後日のフェーズ：Chord Dojo・Bass Practice・進行ページの作り直し、練習の記録の保存先",
   "updatedAt": "2026-09-28"
 }
