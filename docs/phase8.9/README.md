@@ -8,11 +8,11 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** in-progress — P8.9-08 実行中（`feat/p8.9-08-settings`）
-- **Active stage:** P8.9-08（設定・起動と空の状態・Live MIDI・ヘッダーの部品）
-- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み。local `master` へ `9ddf367` で取り込み済み）
+- **Status:** in-progress — P8.9-08 完了、merge 候補 `feat/p8.9-08-settings` で停止（master へは未取り込み）
+- **Active stage:** P8.9-09（未着手。段階9の zip を待つ）
+- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み。local `master` へ `9ddf367` で取り込み済み）、P8.9-08（設定・起動と空の状態・Live MIDI・ヘッダーの部品 — [reports/P8.9-08-settings.md](reports/P8.9-08-settings.md)、fresh FULL PASS @ `62a81c3`、EXE 作成済み）
 - **Base:** local `master` `9ddf367`（段階4を取り込み済み）
-- **Next action:** P8.9-08 の手順0〜8（[stages/P8.9-08.md](stages/P8.9-08.md)）を進め、merge 候補で止める
+- **Next action:** 段階9の zip の最初の手順で `feat/p8.9-08-settings` を master に取り込み、P8.9-09 を始める。EXE で人間が確かめる項目は報告の最後
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 

@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-08",
+  "activeStage": "P8.9-09",
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
     "P8.9-02",
     "P8.9-03",
-    "P8.9-04"
+    "P8.9-04",
+    "P8.9-08"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "9ddf367",
-  "lastVerifiedCommit": "c8e2d5b",
+  "lastVerifiedCommit": "62a81c3",
   "currentBranch": "feat/p8.9-08-settings",
   "requiredGates": {
     "P8.9-00": [
@@ -83,8 +84,12 @@
     "p89-04-full-fresh": "pass",
     "p89-04-screens": "pass",
     "p89-04-exe": "pass",
-    "p89-04-report": "pass"
+    "p89-04-report": "pass",
+    "p89-08-full-fresh": "pass",
+    "p89-08-screens": "pass",
+    "p89-08-exe": "pass",
+    "p89-08-report": "pass"
   },
-  "nextAction": "P8.9-08 in progress on feat/p8.9-08-settings (base local master 9ddf367, stage 4 merged). Steps 0-8 of stages/P8.9-08.md: phase plan update (P8.9-05 dropped, P8.9-09 added, AI back end kept), Vault sort resets to newest on launch, Settings as a screen, startup/empty/quarantine states, Live MIDI mini window, header parts, baselines/screens, fresh FULL, EXE, report. Stop at the merge candidate; no push/tag/release.",
+  "nextAction": "P8.9-08 complete; stopped at merge candidate feat/p8.9-08-settings (fresh FULL PASS @ 62a81c3: Vitest 3758/3758, Playwright 129/129; p89:screens P8.9-08 27 screens x 3 sizes + 28 at 768x640 incl. settings sections, startup-states, vault-empty, live-midi-mini; EXE built with tauri build --no-bundle; later commit is docs only). Settings is a screen with five sections (no new items), Vault sort resets to newest each launch, startup/quarantine/empty states and the Live MIDI mini window use the design system, header tone is a segment and the metronome an icon button. P8.9-05 dropped, P8.9-09 added. Stage 4 merged into local master at 9ddf367. Human EXE checks are listed at the end of the report. P8.9-09 not started: its zip merges this candidate first. No push/tag/release.",
   "updatedAt": "2026-09-28"
 }
