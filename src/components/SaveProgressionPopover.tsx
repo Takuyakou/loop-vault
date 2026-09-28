@@ -55,7 +55,6 @@ export function SaveProgressionPopover({
   const [menuOpen, setMenuOpen] = useState(false);
   const [panel, setPanel] = useState<SavePanel>();
   const [title, setTitle] = useState(initialTitle);
-  const [nextAction, setNextAction] = useState(defaultNextAction);
   const [ideaId, setIdeaId] = useState("");
   const [userVerified, setUserVerified] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -151,7 +150,6 @@ export function SaveProgressionPopover({
     if (requestOpen && !requestOpen()) return;
     restoreFocusRef.current = primaryButtonRef.current ?? undefined;
     setTitle(initialTitle);
-    setNextAction(defaultNextAction);
     setIdeaId("");
     setUserVerified(false);
     setMenuOpen(false);
@@ -175,7 +173,8 @@ export function SaveProgressionPopover({
   function save() {
     let saved = false;
     if (panel === "new" && title.trim()) {
-      saved = onCreate(title.trim(), nextAction.trim(), userVerified);
+      // P8.9-04: the next-action field is gone from the UI; new Ideas still get the default (data-retention contract).
+      saved = onCreate(title.trim(), defaultNextAction.trim(), userVerified);
     } else if (panel === "append" && ideaId) {
       saved = onAppend(ideaId, userVerified);
     } else if (panel === "memo" && ideaId) {
@@ -304,10 +303,6 @@ export function SaveProgressionPopover({
               <label className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
                 {copy.common.title}
                 <input ref={titleInputRef} name="progression-title" autoComplete="off" className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} />
-              </label>
-              <label className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
-                {copy.capture.nextAction}
-                <input name="progression-next-action" autoComplete="off" className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
               </label>
             </div>
           ) : (

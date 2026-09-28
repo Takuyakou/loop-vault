@@ -80,6 +80,36 @@ describe("SaveProgressionPopover", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("has no next-action field but still saves the default next action (P8.9-04)", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const onCreate = vi.fn(() => true);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <SaveProgressionPopover
+          initialTitle="1-4 bars"
+          ideas={[]}
+          defaultNextAction={appCopy.ja.capture.defaultNextAction}
+          copy={appCopy.ja}
+          onCreate={onCreate}
+          onAppend={() => true}
+          onCopyMemo={() => true}
+          onSaved={vi.fn()}
+        />,
+      );
+    });
+    await act(async () => [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === appCopy.ja.capture.saveToVault)!.click());
+
+    const form = document.querySelector<HTMLFormElement>('form[role="dialog"]')!;
+    expect(form.elements.namedItem("progression-next-action")).toBeNull();
+    expect(form.textContent).not.toContain(appCopy.ja.capture.nextAction);
+    await act(async () => form.requestSubmit());
+    expect(onCreate).toHaveBeenCalledWith("1-4 bars", appCopy.ja.capture.defaultNextAction, false);
+    await act(async () => root.unmount());
+  });
 });
 
 function rect(left: number, top: number, right: number, bottom: number): DOMRect {
