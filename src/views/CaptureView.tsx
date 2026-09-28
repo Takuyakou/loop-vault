@@ -1,3 +1,4 @@
+import type { ToastFn } from "../components/notifications";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   open as openFileDialog,
@@ -229,7 +230,7 @@ interface CaptureViewProps {
   openSavedTextProgression?: (target: SavedTextProgressionTarget) => void;
   openSavedTextProgressionPractice?: (target: SavedTextProgressionTarget) => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
-  setToast: (toast: string) => void;
+  setToast: ToastFn;
   copy: AppCopy;
   showRomanNumerals: boolean;
   controller?: PlaybackController;
@@ -592,7 +593,7 @@ export function CaptureView(props: CaptureViewProps) {
       setAnalysisProgress("finalizing");
       await waitForNextPaint();
       if (!captureViewMountedRef.current) return false;
-      setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
+      setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed, analyzed ? "info" : "error");
       await waitForStatusFeedback();
       if (!captureViewMountedRef.current) return false;
       setAnalysisProgress(undefined);
@@ -622,7 +623,7 @@ export function CaptureView(props: CaptureViewProps) {
         const issue = intake.issues[0];
         const message = issue?.message ?? copy.toast.midiReadFailed;
         setIntakeError(message);
-        setToast(message);
+        setToast(message, "error");
         return;
       }
       setIntakeError(undefined);
@@ -670,7 +671,7 @@ export function CaptureView(props: CaptureViewProps) {
     async (paths: readonly string[], append = false) => {
       const midiPaths = paths.filter(isMidiFileName);
       if (!midiPaths.length) {
-        setToast(copy.toast.midiDropInvalid);
+        setToast(copy.toast.midiDropInvalid, "error");
         return;
       }
 
@@ -694,7 +695,7 @@ export function CaptureView(props: CaptureViewProps) {
         setAnalysisProgress(undefined);
         const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
         setIntakeError(message);
-        setToast(message);
+        setToast(message, "error");
       }
     },
     [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
@@ -704,7 +705,7 @@ export function CaptureView(props: CaptureViewProps) {
     async (files: readonly File[], append = false) => {
       const midiFiles = files.filter((file) => isMidiFileName(file.name));
       if (!midiFiles.length) {
-        setToast(copy.toast.midiDropInvalid);
+        setToast(copy.toast.midiDropInvalid, "error");
         return;
       }
 
@@ -726,7 +727,7 @@ export function CaptureView(props: CaptureViewProps) {
         setAnalysisProgress(undefined);
         const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
         setIntakeError(message);
-        setToast(message);
+        setToast(message, "error");
       }
     },
     [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
@@ -755,7 +756,7 @@ export function CaptureView(props: CaptureViewProps) {
         setIsDraggingMidi(false);
         const paths = event.payload.paths.filter(isMidiFileName);
         if (!paths.length) {
-          setToast(copy.toast.midiDropInvalid);
+          setToast(copy.toast.midiDropInvalid, "error");
           return;
         }
 
@@ -839,7 +840,7 @@ export function CaptureView(props: CaptureViewProps) {
     const files = Array.from(event.dataTransfer.files).filter((item) =>
       isMidiFileName(item.name));
     if (!files.length) {
-      setToast(copy.toast.midiDropInvalid);
+      setToast(copy.toast.midiDropInvalid, "error");
       return;
     }
 
@@ -909,7 +910,7 @@ export function CaptureView(props: CaptureViewProps) {
     queueMicrotask(() => {
       if (!captureViewMountedRef.current) return;
       setPersistenceError(message);
-      setToast(message);
+      setToast(message, "error");
     });
   }
   function saveNew(
@@ -951,10 +952,10 @@ export function CaptureView(props: CaptureViewProps) {
         ),
       ]);
       persistLabelCorrectionLogs(original, editable);
-      setToast(copy.capture.savedToVault);
+      setToast(copy.capture.savedToVault, "success");
       return true;
     }
-    setToast(copy.capture.createFailed);
+    setToast(copy.capture.createFailed, "error");
     return false;
   }
 
@@ -980,7 +981,7 @@ export function CaptureView(props: CaptureViewProps) {
       return;
     }
     void appendAnalysisFeedback(events)
-      .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed));
+      .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed, "error"));
   }
 
   function progressionSaveFeedback(
@@ -1015,7 +1016,7 @@ export function CaptureView(props: CaptureViewProps) {
       occurredAt: new Date().toISOString(),
     });
     void appendLabelCorrectionLogs(events)
-      .catch(() => setToast(copy.capture.feedbackSaveFailed));
+      .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
   }
 
   function appendExisting(
@@ -1055,10 +1056,10 @@ export function CaptureView(props: CaptureViewProps) {
         ),
       ]);
       persistLabelCorrectionLogs(original, editable);
-      setToast(copy.toast.blockSaved);
+      setToast(copy.toast.blockSaved, "success");
       return true;
     }
-    setToast(copy.capture.appendFailed);
+    setToast(copy.capture.appendFailed, "error");
     return false;
   }
 
@@ -1085,7 +1086,7 @@ export function CaptureView(props: CaptureViewProps) {
       await writeClipboardText(presentationText ?? formatProgressionText(candidate.chords));
       setToast(copy.capture.copiedProgression);
     } catch {
-      setToast(copy.capture.copyFailed);
+      setToast(copy.capture.copyFailed, "error");
     }
   }
 
@@ -1110,7 +1111,7 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1127,7 +1128,7 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1150,7 +1151,7 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1173,7 +1174,7 @@ export function CaptureView(props: CaptureViewProps) {
         );
       }
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1197,12 +1198,12 @@ export function CaptureView(props: CaptureViewProps) {
       userVerified: true,
     });
     if (!saved) {
-      setToast(copy.capture.createFailed);
+      setToast(copy.capture.createFailed, "error");
       return false;
     }
     if (typeof saved === "object") setSavedTextProgressionTarget(saved);
     setSavedTextPracticeStatus(evaluateExtendedTextPractice(result, result.metadata.bpm ?? 120));
-    setToast(copy.capture.savedToVault);
+    setToast(copy.capture.savedToVault, "success");
     return true;
   }
 
@@ -1214,10 +1215,10 @@ export function CaptureView(props: CaptureViewProps) {
       ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
     });
     const saved = createIdeaFromTextProgression(payload);
-    if (!saved) { setToast(copy.capture.createFailed); return false; }
+    if (!saved) { setToast(copy.capture.createFailed, "error"); return false; }
     if (typeof saved === "object") setSavedTextProgressionTarget(saved);
     setSavedTextPracticeStatus(undefined);
-    setToast(copy.capture.savedToVault);
+    setToast(copy.capture.savedToVault, "success");
     return true;
   }
 
@@ -1257,17 +1258,17 @@ export function CaptureView(props: CaptureViewProps) {
   ): boolean {
     const payload = textDraftSavePayload(draft, title, nextAction, userVerified);
     if (!payload || !createIdeaFromTextProgression) {
-      setToast(copy.capture.createFailed);
+      setToast(copy.capture.createFailed, "error");
       return false;
     }
     const saved = createIdeaFromTextProgression(payload);
     if (!saved) {
-      setToast(copy.capture.createFailed);
+      setToast(copy.capture.createFailed, "error");
       return false;
     }
     if (typeof saved === "object") setSavedTextProgressionTarget(saved);
     setSavedTextPracticeStatus(undefined);
-    setToast(copy.capture.savedToVault);
+    setToast(copy.capture.savedToVault, "success");
     return true;
   }
 
@@ -1283,13 +1284,13 @@ export function CaptureView(props: CaptureViewProps) {
       userVerified,
     );
     if (!payload || !ideaId || !appendTextProgressionToIdea) {
-      setToast(ideaId ? copy.capture.appendFailed : copy.capture.chooseIdeaFirst);
+      setToast(ideaId ? copy.capture.appendFailed : copy.capture.chooseIdeaFirst, ideaId ? "error" : "info");
       return false;
     }
     const appended = appendTextProgressionToIdea(ideaId, payload);
     if (typeof appended === "object") setSavedTextProgressionTarget(appended);
     setSavedTextPracticeStatus(undefined);
-    setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed);
+    setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed, appended ? "success" : "error");
     return Boolean(appended);
   }
 
@@ -1329,14 +1330,14 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
   async function previewTextProgressionDraft(draft: ManualCandidateDraft) {
     if (draft.source.type !== "text-progression") return;
     if (textDraftContext?.bpm === undefined) {
-      setToast("\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002");
+      setToast("\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
       return;
     }
     try {
@@ -1364,7 +1365,7 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1515,7 +1516,7 @@ export function CaptureView(props: CaptureViewProps) {
               } catch (error) {
                 setToast(error instanceof Error
                   ? error.message
-                  : copy.toast.midiFailed);
+                  : copy.toast.midiFailed, "error");
               }
             }}
           />
@@ -1674,7 +1675,7 @@ export function CaptureView(props: CaptureViewProps) {
       }));
       applyCandidateSelection(undefined);
     } catch {
-      setToast("この範囲から採集候補を作成できませんでした。");
+      setToast("この範囲から採集候補を作成できませんでした。", "error");
     }
   }
 
@@ -1715,7 +1716,7 @@ export function CaptureView(props: CaptureViewProps) {
         },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1969,7 +1970,7 @@ export function CaptureView(props: CaptureViewProps) {
                   playbackSource={captureCandidateSource(result, candidate.id)}
                   previewSound={previewSound}
                   controller={controller}
-                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
                   copy={copy}
                   isExpanded={expandedCandidateId === candidate.id}
                   draft={activeDraft?.source.type === "automatic-candidate"
@@ -2162,7 +2163,7 @@ export function CaptureView(props: CaptureViewProps) {
           stopCapturePlayback(controller);
           setPreviewSound(sound);
         }}
-        onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+        onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
         controller={controller}
         open={isTimelineOpen}
         onOpenChange={setTimelineOpen}

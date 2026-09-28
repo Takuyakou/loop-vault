@@ -1,3 +1,4 @@
+import type { ToastFn } from "./notifications";
 import {
   useId,
   useRef,
@@ -33,7 +34,7 @@ export interface ProgressionMidiControlActions {
 interface ProgressionMidiControlProps {
   result?: ProgressionMidiExportResult;
   disabledReason?: string;
-  setToast: (message: string) => void;
+  setToast: ToastFn;
   actions?: ProgressionMidiControlActions;
 }
 
@@ -86,12 +87,12 @@ export function ProgressionMidiControl({
     try {
       const saved = await actions.save(result);
       if (saved.status === "saved") {
-        setToast("MIDIファイルを保存しました。");
+        setToast("MIDIファイルを保存しました。", "success");
       }
     } catch {
       const message = "MIDIを保存できませんでした。保存先と権限を確認してください。";
       setInlineError(message);
-      setToast(message);
+      setToast(message, "error");
     } finally {
       setState("idle");
     }
@@ -154,7 +155,7 @@ export function ProgressionMidiControl({
         return;
       }
       if (dragResult.status === "dropped") {
-        setToast("MIDIをDAWへ渡しました。");
+        setToast("MIDIをDAWへ渡しました。", "success");
       }
     } catch {
       showDragError();
@@ -167,7 +168,7 @@ export function ProgressionMidiControl({
   function showDragError() {
     const message = "DAWへのドラッグを開始できませんでした。クリックしてMIDI保存をお試しください。";
     setInlineError(message);
-    setToast(message);
+    setToast(message, "error");
     setState("idle");
   }
 

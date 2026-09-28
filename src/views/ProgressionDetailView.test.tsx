@@ -528,7 +528,7 @@ describe("ProgressionDetailView", () => {
         chords: [expect.objectContaining({ chord: expect.objectContaining({ label: "G7" }) })],
       }),
     );
-    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.ja.savedToast);
+    expect(setToast).toHaveBeenLastCalledWith(progressionDetailCopy.ja.savedToast, "success");
     expect(save.disabled).toBe(true);
 
     await act(async () => root.unmount());

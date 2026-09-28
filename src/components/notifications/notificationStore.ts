@@ -3,6 +3,9 @@
 
 export type NotificationTone = "success" | "info" | "warning" | "error";
 
+/** The screens' `setToast(message, tone?)` callback; the tone defaults to お知らせ. */
+export type ToastFn = (message: string, tone?: NotificationTone) => void;
+
 export interface NotifyInput {
   message: string;
   tone?: NotificationTone;
@@ -43,6 +46,9 @@ export function createNotificationStore(): NotificationStore {
   return {
     notify(input) {
       const tone = input.tone ?? "info";
+      // Errors stay until closed, so the same error raised again reuses the one already shown.
+      const shown = tone === "error" ? items.find((item) => item.tone === "error" && item.message === input.message) : undefined;
+      if (shown) return shown.id;
       const item: NotificationItem = {
         id: nextId++,
         message: input.message,

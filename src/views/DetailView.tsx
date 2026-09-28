@@ -1,3 +1,4 @@
+import type { ToastFn } from "../components/notifications";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
@@ -119,7 +120,7 @@ export function DetailView({
   enqueueUndo?: <T>(request: UndoRequest<T>) => string;
   vaultEpoch?: number;
   requestDelete: (idea: SongIdea) => void;
-  setToast: (toast: string) => void;
+  setToast: ToastFn;
   copy: AppCopy;
   recoveryPending?: boolean;
 }) {
@@ -169,12 +170,12 @@ export function DetailView({
     try {
       const copied = await writeClipboardText(formatProgressionText(block.chords));
       if (!copied) {
-        setToast(copy.detail.copyFailed);
+        setToast(copy.detail.copyFailed, "error");
         return;
       }
       setToast(copy.detail.copiedProgression);
     } catch {
-      setToast(copy.detail.copyFailed);
+      setToast(copy.detail.copyFailed, "error");
     }
   }
 
@@ -247,7 +248,7 @@ export function DetailView({
                   source={{ kind: "detail", id: `idea:${idea.id}:block:${block.id}` }}
                   bpm={block.bpm ?? idea.bpm}
                   effectiveKeySignature={block.detectedKey ?? idea.key}
-                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
                   onOpen={() => openProgression(idea.id, block.id)}
                   onCopyProgression={() => void copySavedBlock(block)}
                   onRemove={() => {

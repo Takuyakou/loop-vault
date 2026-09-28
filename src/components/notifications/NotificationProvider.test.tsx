@@ -97,3 +97,21 @@ describe("P8.9 notifications", () => {
     expect(toasts()[0].textContent).toContain("開きます");
   });
 });
+
+describe("P8.9-09 error toasts", () => {
+  it("does not stack the same error twice while it is still shown", () => {
+    const errors = createNotificationStore();
+    const first = errors.notify({ message: "保存できませんでした。", tone: "error" });
+    const again = errors.notify({ message: "保存できませんでした。", tone: "error" });
+    errors.notify({ message: "別の失敗です。", tone: "error" });
+    errors.notify({ message: "保存できませんでした。" });
+    expect(again).toBe(first);
+    expect(errors.getSnapshot().map((item) => [item.tone, item.message])).toEqual([
+      ["error", "保存できませんでした。"],
+      ["error", "別の失敗です。"],
+      ["info", "保存できませんでした。"],
+    ]);
+    errors.dismiss(first);
+    expect(errors.notify({ message: "保存できませんでした。", tone: "error" })).not.toBe(first);
+  });
+});

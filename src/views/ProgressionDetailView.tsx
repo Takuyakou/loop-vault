@@ -1,3 +1,4 @@
+import type { ToastFn } from "../components/notifications";
 import { useEffect, useMemo, useState } from "react";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
@@ -98,7 +99,7 @@ interface ProgressionDetailViewProps {
   openVoicingPractice?: (ideaId: string, blockId: string) => void;
   requestLeave?: (action: () => void) => void;
   onDirtyChange?: (dirty: boolean) => void;
-  setToast: (message: string) => void;
+  setToast: ToastFn;
   copy: AppCopy;
   controller?: PlaybackController;
   loadMidiSource?: (path: string) => Promise<MidiSongData>;
@@ -244,7 +245,7 @@ export function ProgressionDetailView({
     );
     if (saved === "pending") return;
     if (!saved) {
-      setToast(text.saveFailed);
+      setToast(text.saveFailed, "error");
       return;
     }
     const correctionEvents = buildCorrectionEvents(
@@ -261,20 +262,20 @@ export function ProgressionDetailView({
     );
     if (correctionEvents.length > 0) {
       void appendAnalysisFeedback(correctionEvents)
-        .catch(() => setToast(copy.capture.feedbackSaveFailed));
+        .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
     }
     setEditable((current) => markEditableProgressionSaved(current));
-    setToast(text.savedToast);
+    setToast(text.savedToast, "success");
   }
 
   function duplicate() {
     runLeaveAction(() => {
       const duplicateId = duplicateProgressionBlock(idea.id, block.id);
       if (!duplicateId) {
-        setToast(text.duplicateFailed);
+        setToast(text.duplicateFailed, "error");
         return;
       }
-      setToast(text.duplicatedToast);
+      setToast(text.duplicatedToast, "success");
       openProgression(idea.id, duplicateId);
     });
   }
@@ -289,7 +290,7 @@ export function ProgressionDetailView({
 
   function startChordContextPractice() {
     if (!openPractice || !selectedChordContextSection) {
-      setToast("この進行では Chord Context の練習を開けません。");
+      setToast("この進行では Chord Context の練習を開けません。", "error");
       return;
     }
     const snapshot = buildVaultChordContextSnapshot({
@@ -298,7 +299,7 @@ export function ProgressionDetailView({
       sectionId: selectedChordContextSection.id,
     });
     if (!snapshot.ok) {
-      setToast(chordContextErrorText(snapshot.error.code));
+      setToast(chordContextErrorText(snapshot.error.code), "error");
       return;
     }
     runLeaveAction(() => openPractice(snapshot.snapshot));
@@ -310,14 +311,14 @@ export function ProgressionDetailView({
   }
   async function copyForChordDrip() {
     if (!navigator.clipboard?.writeText) {
-      setToast(text.copyFailed);
+      setToast(text.copyFailed, "error");
       return;
     }
     try {
       await navigator.clipboard.writeText(formatProgressionText(editingBlock.chords));
       setToast(text.copiedForChordDrip);
     } catch {
-      setToast(text.copyFailed);
+      setToast(text.copyFailed, "error");
     }
   }
 
@@ -342,13 +343,13 @@ export function ProgressionDetailView({
         { type: "chord", chord, sound: previewSound, explicitMidiNotes },
       );
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
   async function reextractSourceVoicings() {
     if (!sourceAsset?.path || !loadMidiSource) {
-      setToast("元MIDIファイルを見つけられませんでした。");
+      setToast("元MIDIファイルを見つけられませんでした。", "error");
       return;
     }
     if (
@@ -390,7 +391,7 @@ export function ProgressionDetailView({
     } catch (error) {
       setToast(error instanceof Error ? error.message : (
         "元MIDIから取得できませんでした。"
-      ));
+      ), "error");
     } finally {
       setReextracting(false);
     }
@@ -585,7 +586,7 @@ export function ProgressionDetailView({
           playLabel={copy.common.preview}
           stopLabel={copy.common.stop}
           className="lv-button-primary lv-progression-preview-toggle inline-flex min-h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-3 text-sm font-semibold"
-          onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+          onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
           controller={controller}
         />
         <PreviewSoundSelector
@@ -643,7 +644,7 @@ export function ProgressionDetailView({
               keySignature={block.detectedKey ?? idea.key}
               onChange={(changes) => {
                 const updated = updateProgressionBlock(idea.id, block.id, changes);
-                if (updated === false) setToast(text.saveFailed);
+                if (updated === false) setToast(text.saveFailed, "error");
               }}
             />
             <dl className="grid gap-2 text-sm">
@@ -669,7 +670,7 @@ export function ProgressionDetailView({
             playbackSource={playbackSource}
             previewSound={previewSound}
             stopLabel={copy.common.stop}
-            onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+            onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
             controller={controller}
             originalLabel={text.savedChord}
             currentLabel={text.editingChord}

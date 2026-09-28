@@ -50,7 +50,7 @@ import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
-import { createNotificationStore, NotificationProvider, useReserveBottomSpace } from "./components/notifications";
+import { createNotificationStore, NotificationProvider, useReserveBottomSpace, type NotificationTone } from "./components/notifications";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
@@ -262,8 +262,8 @@ function App() {
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
   // the unified bottom-right stack (4 s, pauses on hover/focus).
-  const setToast = useCallback((message?: string) => {
-    if (message) notifications.notify({ message });
+  const setToast = useCallback((message?: string, tone?: NotificationTone) => {
+    if (message) notifications.notify({ message, tone });
   }, [notifications]);
   const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
   const { masterVolume, changeMasterVolume } = useMasterVolume();
@@ -563,7 +563,7 @@ function App() {
   function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
     const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
     if (!result.ok) {
-      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。");
+      setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。", "error");
       return false;
     }
     setPracticeTarget(undefined);
@@ -616,7 +616,7 @@ function App() {
         if (liveMidiLeaseRef.current === modeLease) liveMidiLeaseRef.current = undefined;
         if (!isCurrent()) return;
         await miniWindowControllerRef.current?.close().catch(() => undefined);
-        setToast(errorMessage(error, copy.liveMidi.miniModeFailed));
+        setToast(errorMessage(error, copy.liveMidi.miniModeFailed), "error");
         setWebLiveMidiPreviewOpen(false);
       }
     });
@@ -639,7 +639,7 @@ function App() {
         },
         hidePreview: () => setWebLiveMidiPreviewOpen(false),
         preserveHistory: (history) => setPendingLiveMidiHistory(history),
-        reportFailure: () => setToast(copy.liveMidi.miniModeCloseFailed),
+        reportFailure: () => setToast(copy.liveMidi.miniModeCloseFailed, "error"),
       });
     } finally {
       liveMidiClosingRef.current = false;
@@ -663,11 +663,11 @@ function App() {
       { id: crypto.randomUUID(), capturedAt: new Date().toISOString() },
     );
     if (!ideaId || !block || appendBlockToIdea(ideaId, block, undefined, { userVerified: false }) !== true) {
-      setToast(copy.liveMidi.importFailed);
+      setToast(copy.liveMidi.importFailed, "error");
       return;
     }
     discardLiveMidiHistory();
-    setToast(copy.liveMidi.imported);
+    setToast(copy.liveMidi.imported, "success");
     openDetail(ideaId);
   }
 
@@ -901,7 +901,7 @@ function App() {
                       && idea.progressionBlocks?.some((block) => block.id === blockId))) {
                       openProgression(ideaId, blockId);
                     } else {
-                      setToast("保存済み進行を確認できません。");
+                      setToast("保存済み進行を確認できません。", "error");
                     }
                   }}
                   openSavedTextProgressionPractice={openProgressionVoicingPractice}

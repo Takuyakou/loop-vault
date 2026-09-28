@@ -113,7 +113,7 @@ describe("DetailView status reasons", () => {
     const japanese = await renderDetail(idea, { setToast });
     expect(japanese.container.textContent).toContain("採集したMIDI · 2–5小節");
     await clickButton(japanese.container, appCopy.ja.capture.copyProgression);
-    expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.detail.copyFailed);
+    expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.detail.copyFailed, "error");
     await japanese.unmount();
   });
 
