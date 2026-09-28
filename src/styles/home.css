@@ -1,0 +1,371 @@
+/* P8.9-04 Home (mock RHome.dc.html / RHomeCompact.dc.html).
+   The layout follows the content width, so it holds with the wide and the icon-only sidebar. */
+@layer components {
+  .lv-home {
+    container-type: inline-size;
+  }
+
+  .lv-home-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--lv-space-5);
+  }
+
+  .lv-home-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 14px;
+    box-sizing: border-box;
+    padding: 22px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-lg);
+    background: var(--lv-surface);
+  }
+
+  .lv-home-card[data-tone="quiet"] {
+    background: var(--lv-bg-subtle);
+  }
+
+  .lv-home-continue { grid-column: span 8; }
+  .lv-home-import { grid-column: span 4; gap: 12px; }
+  .lv-home-loop { grid-column: span 7; }
+  .lv-home-practice { grid-column: span 5; gap: 12px; }
+  .lv-home-recent { grid-column: span 12; gap: 6px; padding-bottom: 10px; }
+
+  .lv-home-kicker {
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  .lv-home-kicker[data-accent="true"] {
+    color: var(--lv-accent);
+  }
+
+  .lv-home-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-home-mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  /* 続きから: one cell per bar, like the 8.8 score strip. */
+  .lv-home-strip {
+    display: grid;
+    grid-template-columns: repeat(16, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .lv-home-strip-cell {
+    display: flex;
+    height: 30px;
+    min-width: 0;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 6px;
+    border: 1px solid var(--lv-border);
+    border-left: 3px solid var(--lv-accent-soft);
+    border-radius: 6px;
+    background: var(--lv-bg-subtle);
+    color: var(--lv-text-secondary);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+  }
+
+  .lv-home-strip-cell[data-hold="true"] {
+    border-left-color: var(--lv-border);
+    background-image: repeating-linear-gradient(135deg, rgb(150 170 195 / 7%) 0 2px, transparent 2px 7px);
+  }
+
+  .lv-home-strip-cell[data-current="true"] {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent);
+    color: var(--lv-text-on-accent);
+  }
+
+  .lv-home-strip-cell > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-home-drop {
+    display: flex;
+    min-height: 96px;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1.5px dashed var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    color: var(--lv-text-secondary);
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-drop:hover,
+  .lv-home-drop:focus-visible {
+    border-color: var(--lv-accent);
+    background: rgb(66 216 198 / 6%);
+  }
+
+  .lv-home-row-button {
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--lv-border);
+    border-radius: 10px;
+    color: var(--lv-text);
+    font-size: var(--lv-text-13);
+    text-align: left;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-row-button:hover {
+    background: var(--lv-surface-raised);
+  }
+
+  /* 今日のループ */
+  .lv-home-loop-play {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 50%;
+    color: var(--lv-text);
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-loop-play:hover,
+  .lv-home-loop-play[aria-pressed="true"] {
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-home-chips {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .lv-home-chip {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 10px;
+    border: 1px solid var(--lv-border);
+    border-radius: 10px;
+    background: var(--lv-bg-subtle);
+    text-align: left;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-chip:hover {
+    border-color: var(--lv-border-strong);
+  }
+
+  .lv-home-chip[data-current="true"] {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent-soft);
+    box-shadow: 0 0 0 3px rgb(66 216 198 / 14%);
+  }
+
+  .lv-home-chip-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--lv-text);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-home-chip-sub {
+    color: var(--lv-text-muted);
+    font-size: 10px;
+  }
+
+  .lv-home-chip[data-current="true"] .lv-home-chip-sub {
+    color: var(--lv-accent);
+  }
+
+  /* 今日の練習 */
+  .lv-home-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-home-dot[data-practiced="true"] {
+    background: var(--lv-record);
+  }
+
+  .lv-home-dot[data-today="true"][data-practiced="false"] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--lv-record);
+  }
+
+  .lv-home-practice-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-bg-subtle);
+    color: inherit;
+    text-align: left;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-practice-row:hover {
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-home-practice-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+  }
+
+  .lv-home-practice-icon[data-kind="bass-practice"] {
+    background: var(--lv-accent-secondary-soft);
+    color: var(--lv-accent-secondary);
+  }
+
+  /* 最近の進行 */
+  .lv-home-recent-row {
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    gap: 14px;
+    padding: 0 10px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .lv-home-recent-row:hover,
+  .lv-home-recent-row:focus-within {
+    background: var(--lv-surface);
+  }
+
+  .lv-home-recent-name {
+    display: flex;
+    width: 240px;
+    min-width: 0;
+    flex-shrink: 0;
+    flex-direction: column;
+    text-align: left;
+  }
+
+  .lv-home-recent-chips {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .lv-home-recent-chip {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border: 1px solid var(--lv-border);
+    border-radius: 7px;
+    background: var(--lv-surface);
+    color: var(--lv-text-secondary);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-home-recent-actions {
+    opacity: 0.55;
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-recent-row:hover .lv-home-recent-actions,
+  .lv-home-recent-row:focus-within .lv-home-recent-actions {
+    opacity: 1;
+  }
+
+  .lv-home-round-play {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 50%;
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-home-round-play[aria-pressed="true"] {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+  }
+
+  /* 1440×900: same order, fewer columns. */
+  @container (max-width: 1399px) {
+    .lv-home-continue { grid-column: span 7; }
+    .lv-home-import { grid-column: span 5; }
+    .lv-home-strip { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .lv-home-strip-cell:nth-child(n + 13) { display: none; }
+  }
+
+  /* Icon-only sidebar (window < 1200px): RHomeCompact. */
+  @container (max-width: 1099px) {
+    .lv-home-grid { gap: 16px; }
+    .lv-home-card { padding: 18px; }
+    .lv-home-strip { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    .lv-home-strip-cell:nth-child(n + 9) { display: none; }
+    .lv-home-chips { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .lv-home-chip:nth-child(n + 7) { display: none; }
+    .lv-home-chip-name { font-size: 13px; }
+    .lv-home-recent-chip:nth-child(n + 5) { display: none; }
+    .lv-home-recent-name { width: 200px; }
+  }
+
+  /* 768×640 and below: one column. */
+  @container (max-width: 759px) {
+    .lv-home-continue,
+    .lv-home-import,
+    .lv-home-loop,
+    .lv-home-practice { grid-column: span 12; }
+    .lv-home-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .lv-home-chip:nth-child(n + 5) { display: none; }
+    .lv-home-recent-chips,
+    .lv-home-recent-src { display: none; }
+    .lv-home-recent-name { width: auto; flex: 1 1 auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lv-home-drop,
+    .lv-home-chip,
+    .lv-home-row-button,
+    .lv-home-practice-row,
+    .lv-home-loop-play,
+    .lv-home-recent-actions { transition: none; }
+  }
+}

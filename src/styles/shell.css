@@ -293,6 +293,17 @@
     white-space: nowrap;
   }
 
+  .lv-app-header-title:has(+ .lv-app-header-subtitle) {
+    min-width: 0;
+  }
+
+  .lv-app-header-subtitle {
+    flex-shrink: 0;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+    white-space: nowrap;
+  }
+
   .lv-app-header-actions {
     display: flex;
     min-width: 0;

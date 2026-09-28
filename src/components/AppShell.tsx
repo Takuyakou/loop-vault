@@ -59,6 +59,8 @@ interface AppShellProps {
   masterVolume: number;
   onMasterVolumeChange: (value: number) => void;
   pageTitle: string;
+  /** Small text beside the title, e.g. today's date on Home. */
+  pageSubtitle?: string;
   pageNavigation?: ReactNode;
   children?: ReactNode;
   controller?: PlaybackController;
@@ -84,6 +86,7 @@ export function AppShell({
   openBassPractice,
   pageNavigation,
   pageTitle,
+  pageSubtitle,
   saveStatus,
   settingsOpen = false,
   standardTitleBar = false,
@@ -170,6 +173,7 @@ export function AppShell({
           <header className="lv-app-header">
             <div className="lv-app-header-leading">
               <p className="lv-app-header-title">{pageTitle}</p>
+              {pageSubtitle ? <span className="lv-app-header-subtitle">{pageSubtitle}</span> : null}
               {view === "capture" ? <div id="capture-mode-tabs-host" data-testid="capture-mode-tabs-frame" className="shrink-0" /> : null}
               {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
             </div>

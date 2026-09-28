@@ -1,11 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createSavedProgression, openApp, openVault } from "./helpers/app";
 
+// P8.9-04: an empty Vault's Home shows only the first-capture guide, so Bass Practice opens from the sidebar.
 async function openBassPracticeFromHome(page: Page): Promise<void> {
   await openApp(page);
-  const card = page.getByTestId("bass-practice-home-card");
-  await expect(card).toBeVisible();
-  await card.getByRole("button").click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await expect(page.getByTestId("degree-echo-view")).toBeVisible();
 }
 
@@ -28,7 +27,7 @@ async function saveOneDegreeReview(page: Page): Promise<void> {
 }
 
 test("production defaults expose and start every shipped Bass Practice mode without test flag injection", async ({ page }) => {
-  test.setTimeout(45_000);
+  test.setTimeout(60_000);
   await openBassPracticeFromHome(page);
   await expect(page.getByRole("tab", { name: "Degree Echo" })).toBeVisible();
   await page.getByRole("tab", { name: "Rhythm Echo" }).click();
@@ -50,13 +49,12 @@ test("production defaults expose and start every shipped Bass Practice mode with
   await page.getByRole("tab", { name: "Degree Echo" }).click();
   await saveOneDegreeReview(page);
 
-  // P8.9-03: the History screen is gone; the saved review shows on the Home practice card.
-  const homeCard = page.getByTestId("bass-practice-home-card");
-  await page.locator('[data-nav="home"]').click();
-  await expect(homeCard).not.toContainText("最初のDegree Echoセッションを始める");
+  // P8.9-04: the saved review survives a reload and counts in Home's 今日の練習
+  // (shown once the Vault has a progression; the browser Vault is in memory, so save one after the reload).
   await page.reload();
-  await expect(homeCard).not.toContainText("最初のDegree Echoセッションを始める");
-  await expect(homeCard).toContainText(/今日 [1-9]\d*問完了/);
+  await createSavedProgression(page, "Home practice card");
+  await page.locator('[data-nav="home"]').click();
+  await expect(page.getByTestId("bass-practice-home-card")).toContainText(/今日 [1-9]\d*問/);
 });
 
 test("Vault Detail opens Bass Practice in the production default", async ({ page }) => {

@@ -22,6 +22,7 @@ import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
+import { formatHomeDate } from "./views/home/useHomeSummary";
 import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
@@ -32,14 +33,12 @@ import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isB
 import { buildVaultPickerCandidateViews, buildVaultSourceBasslineCandidateViews, type VaultPickerCandidateView, type VaultSourceBasslineCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
-  derivePracticeHomeSummary,
   createPracticeControllerIfEnabled,
   PracticeDataController,
   restoreClaimedExercise,
   type PracticeDataSnapshot,
 } from "./features/bass-practice/application/practiceData";
 import { createRuntimePracticeStorage } from "./features/bass-practice/infra/repository";
-import { BassPracticeHomeCard } from "./features/bass-practice/ui/BassPracticeHomeCard";
 import { PracticeRecoveryPanel } from "./features/bass-practice/ui/PracticeRecoveryPanel";
 import {
   PracticeModeTabs,
@@ -313,7 +312,6 @@ function App() {
     void controller.initialize();
     return () => { unsubscribe(); if (practiceControllerRef.current === controller) practiceControllerRef.current = undefined; };
   }, [bassPracticeEnabled]);
-  const practiceHomeSummary = useMemo(() => practiceData.file ? derivePracticeHomeSummary(practiceData.file, new Date()) : undefined, [practiceData]);
   const practiceSession = useMemo(() => {
     const file = practiceData.file;
     const active = file?.sessions.find((session) => !session.completedAt && !session.abandoned && session.completedCount < session.targetCount);
@@ -539,6 +537,15 @@ function App() {
     setView("practice");
   }
 
+  function openChordDojo(target?: { ideaId: string; blockId: string }) {
+    requestProgressionLeave(() => {
+      setPracticeTarget(target);
+      setChordContextSnapshot(undefined);
+      setPracticeMode("chord-dojo");
+      setView("practice");
+    });
+  }
+
   function openBassPractice() {
     if (!bassPracticeEnabled) return;
     setPracticeTarget(undefined);
@@ -754,6 +761,7 @@ function App() {
         masterVolume={masterVolume}
         onMasterVolumeChange={changeMasterVolume}
         pageTitle={shellTitle(view, practiceMode)}
+        pageSubtitle={view === "home" ? formatHomeDate(new Date()) : undefined}
         pageNavigation={view === "practice" ? (
           <PracticeModeTabs
             bassPracticeAvailable={bassPracticeEnabled}
@@ -791,16 +799,18 @@ function App() {
             ) : null}
             {view === "home" ? (
               <HomeView
-                bassPracticeCard={bassPracticeEnabled ? (
-                  <BassPracticeHomeCard onOpen={openBassPractice} summary={practiceHomeSummary} />
-                ) : undefined}
                 ideas={visibleIdeas}
-                copy={copy}
+                storedIdeas={ideas}
+                practiceFile={practiceData.file}
+                bassPracticeAvailable={bassPracticeEnabled}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
-                openDetail={openDetail}
-                openCapture={() => navigateTo("capture")}
+                openProgression={openProgression}
+                openCapture={(mode) => (mode === "text" ? openTextProgressionInput() : navigateTo("capture"))}
                 openVault={() => setView("library")}
-                setToast={setToast}
+                openChordDojo={openChordDojo}
+                openBassPractice={openBassPractice}
+                openVoicingLoop={openProgressionVoicingPractice}
+                updateProgressionBlock={updateProgressionBlock}
               />
             ) : null}
             {view === "library" ? (

@@ -4,6 +4,7 @@
 @import "./styles/shell.css";
 @import "./styles/transport-button.css";
 @import "./styles/text-intake.css";
+@import "./styles/home.css";
 
 @tailwind base;
 @tailwind components;

@@ -5,9 +5,7 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   await page.setViewportSize({ width: 320, height: 720 });
   await openApp(page);
   await assertNoHorizontalOverflow(page);
-  const card = page.getByTestId("bass-practice-home-card");
-  await expect(card).toBeVisible();
-  await card.getByRole("button").click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await expect(page.getByRole("heading", { name: "Degree Echo", exact: true })).toBeVisible();
   await expect(page.getByLabel("Degree Echoの進行")).toContainText("聴く歌う考える演奏レビュー移調");
   const scrollContract = await page.evaluate(() => {
@@ -79,7 +77,7 @@ test("P5.18 remains operable with reduced motion and an effective 200% scale", a
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 640, height: 720 });
   await openApp(page);
-  await page.getByTestId("bass-practice-home-card").getByRole("button").click();
+  await page.locator('[data-nav="bass-practice"]').click();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
 
