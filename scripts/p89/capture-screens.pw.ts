@@ -17,7 +17,19 @@ const SIZES = [
   [768, 640],
 ] as const;
 
-interface SizeResult { size: string; captured: string[]; unreachable: { screen: string; reason: string }[]; toastOverDialogButtons?: string[] }
+interface ScreenAudit {
+  /** Visible filled primary (teal) buttons. */
+  primary: number;
+  /** Visible buttons drawn in red or yellow (text, fill or border), outside confirmation dialogs. */
+  redYellow: string[];
+  /** Latin words in visible text that are not proper names, chord names or units. */
+  english: string[];
+  /** Horizontal overflow of the page or the content area, in px. */
+  overflowX: number;
+  /** Scroll areas inside the content area that currently scroll vertically. */
+  nestedScroll: number;
+}
+interface SizeResult { size: string; captured: string[]; unreachable: { screen: string; reason: string }[]; toastOverDialogButtons?: string[]; audits?: Record<string, ScreenAudit> }
 const results: SizeResult[] = [];
 
 /** Fonts loaded and the autosave settled (the header save mark is back to "saved"). */
@@ -25,6 +37,56 @@ async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
   await page.locator('[data-save-status="saved"]').waitFor({ state: "attached", timeout: 5_000 }).catch(() => undefined);
   await page.waitForTimeout(250);
+}
+
+/** P8.9-09 final check: measured on every captured screen and written to manifest.json. */
+async function audit(page: Page): Promise<ScreenAudit> {
+  return page.evaluate(() => {
+    const visible = (element: Element) => {
+      const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && box.bottom > 0 && box.top < innerHeight;
+    };
+    const rgb = (value: string) => (value.match(/\d+(\.\d+)?/g) ?? []).map(Number);
+    const tone = (value: string) => {
+      const [r, g, b, a = 1] = rgb(value);
+      if (a < 0.35 || r === undefined) return "";
+      if (r > 190 && g < 140 && b < 150) return "red";
+      if (r > 190 && g > 150 && b < 130) return "yellow";
+      return "";
+    };
+    const buttons = [...document.querySelectorAll("button")].filter(visible);
+    const primary = buttons.filter((button) => {
+      const style = getComputedStyle(button);
+      const [r, g, b, a = 1] = rgb(style.backgroundColor);
+      return a > 0.8 && r < 110 && g > 180 && b > 170 && !button.closest(".lv-segmented, [role='radiogroup'], nav, aside, [role='tablist']");
+    }).length;
+    const redYellow = buttons
+      .filter((button) => !button.closest("[role='dialog']"))
+      .filter((button) => {
+        const style = getComputedStyle(button);
+        return tone(style.color) || tone(style.backgroundColor) || tone(style.borderTopColor);
+      })
+      .map((button) => (button.textContent || button.getAttribute("aria-label") || "?").trim().slice(0, 24));
+    const allowed = /^(Loop|Vault|Voicing|Chord|Dojo|Bass|Practice|Live|MIDI|BPM|Idea|Degree|Rhythm|Bassline|Root|Motion|Echo|Context|Lesson|Rules|Source|Custom|Teacher|Core|Color|Record|Compare|Ctrl|ON|OFF|Stable|Accuracy|First|Salamander|Grand|Piano|by|Alexander|Holm|CC|https|creativecommons|org|licenses|Style|Phase|LBR|Voice|aware|DAW|Style|JSON|OpenAI|API|Windows|Drip|Space|Enter|Esc|Shift|Alt|Tab|Sus|sus|add|maj|dim|aug|min|mid|midi|synthetic|visual|test|commit|Transfer|Standard|Extended|Mono|Loop)$/;
+    const words = new Set<string>();
+    const walker = document.createTreeWalker(document.querySelector("#main-content") ?? document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const parent = node.parentElement;
+      if (!parent || !visible(parent) || parent.closest(".sr-only, [aria-hidden='true'], select, option, code, .font-mono")) continue;
+      for (const word of node.textContent?.match(/[A-Za-z][A-Za-z]{2,}/g) ?? []) {
+        if (/^[A-G](maj|min|m|dim|aug|sus|add)/.test(word) || allowed.test(word)) continue;
+        words.add(word);
+      }
+    }
+    const main = document.querySelector<HTMLElement>("#main-content");
+    const overflowX = Math.max(document.documentElement.scrollWidth - innerWidth, main ? main.scrollWidth - main.clientWidth : 0);
+    const nestedScroll = main ? [...main.querySelectorAll<HTMLElement>("*")].filter((element) => {
+      const style = getComputedStyle(element);
+      return /(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight + 2 && element.clientHeight > 80 && visible(element);
+    }).length : 0;
+    return { primary, redYellow: [...new Set(redYellow)], english: [...words].slice(0, 20), overflowX, nestedScroll };
+  });
 }
 
 /** Clicks a sidebar entry by its stable data-nav hook (icon-only items stay clickable). */
@@ -48,6 +110,7 @@ for (const [width, height] of SIZES) {
           await settle(page);
           await page.screenshot({ path: join(OUT, `${screen}@${size}.png`), animations: "disabled", caret: "hide" });
           result.captured.push(screen);
+          (result.audits ??= {})[screen] = await audit(page);
         } catch (error) {
           result.unreachable.push({ screen, reason: (error instanceof Error ? error.message : String(error)).split("\n")[0].slice(0, 160) });
         }
