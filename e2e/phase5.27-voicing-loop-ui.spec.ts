@@ -182,3 +182,33 @@ test("P8.9-09 Voicing Loop top row keeps every control inside the row at 1440, 9
     await expect(row.getByRole("button", { name: "覚える（Voicing表示）" })).toBeVisible();
   }
 });
+
+test("P8.9-09b every BPM field shows three digits without clipping at 4 sizes", async ({ page }) => {
+  const fits = async (field: import("@playwright/test").Locator, label: string) => {
+    await field.click();
+    await field.fill("240");
+    const fit = await field.evaluate((input: HTMLInputElement) => {
+      const grip = input.parentElement!.querySelector<HTMLElement>("[data-testid$='-drag']")!.getBoundingClientRect();
+      const box = input.getBoundingClientRect();
+      const style = getComputedStyle(input);
+      const context = document.createElement("canvas").getContext("2d")!;
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const textRight = box.left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft) + context.measureText("240").width;
+      return { scroll: input.scrollWidth, client: input.clientWidth, textRight, gripLeft: grip.left };
+    });
+    expect(fit.scroll, `${label} scroll`).toBeLessThanOrEqual(fit.client);
+    expect(fit.textRight, `${label} grip`).toBeLessThanOrEqual(fit.gripLeft + 1);
+    await field.press("Escape");
+  };
+  for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640]] as const) {
+    await page.setViewportSize({ width, height });
+    await openApp(page);
+    await chooseVoicingLoop(page);
+    await fits(page.locator("#voicing-loop-bpm"), `${width} Voicing Loop`);
+    await page.locator('[data-nav="capture"]').click();
+    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
+    await fits(page.getByTestId("text-progression-bpm"), `${width} text standard`);
+    await page.getByTestId("text-mode-extended").click();
+    await fits(page.locator("#text-intake-bpm"), `${width} text extended`);
+  }
+});

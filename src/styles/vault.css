@@ -257,7 +257,8 @@
 
   .lv-vault-row {
     display: grid;
-    grid-template-columns: 36px minmax(0, 260px) minmax(0, 1fr) auto;
+    /* The name gets about 30% (176–280px) so the chord band keeps the rest on every size. */
+    grid-template-columns: 36px minmax(0, clamp(11rem, 30%, 17.5rem)) minmax(0, 1fr) auto;
     grid-template-areas: "play main chips actions";
     box-sizing: border-box;
     align-items: center;
@@ -353,45 +354,73 @@
     white-space: nowrap;
   }
 
-  /* Chord cards: up to 6 × 2 (12). Under 460px of chord area, 5 × 2 (10) so a name like
-     Ebadd9/G still fits; the "…" then also marks 11–12 chords. Degrees stay in the tooltip. */
+  /* P8.9-09b chord band: one line; frame widths come from chordBand.ts (12px mono = 7.2px/char). */
   .lv-vault-chips {
     display: flex;
     min-width: 0;
     align-items: center;
-    gap: 6px;
-    overflow: hidden;
-    container-type: inline-size;
-  }
-
-  .lv-vault-chip-grid {
-    display: grid;
-    min-width: 0;
-    grid-template-columns: repeat(6, minmax(0, 88px));
     gap: 4px;
+    overflow: hidden;
   }
 
   .lv-vault-chip {
+    display: flex;
+    box-sizing: border-box;
+    min-height: 28px;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
     overflow: hidden;
-    padding: 4px 6px;
+    padding: 3px 6px;
+    border: 1px solid transparent;
     border-radius: 5px;
     background: var(--lv-bg-subtle);
     color: var(--lv-text);
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: var(--lv-text-12);
     font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-vault-chips[data-degrees] .lv-vault-chip {
+    min-height: 36px;
+  }
+
+  .lv-vault-chip:hover {
+    border-color: var(--lv-border-strong);
+  }
+
+  .lv-vault-chip-name {
+    display: flex;
+    max-width: 100%;
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .lv-vault-chip-label {
+    min-width: 0;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .lv-vault-chip-more[data-narrow-only] {
-    display: none;
+  .lv-vault-chip-count,
+  .lv-vault-chip-degree {
+    flex: none;
+    color: var(--lv-text-muted);
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
-  @container (max-width: 459px) {
-    .lv-vault-chip-grid { grid-template-columns: repeat(5, minmax(0, 88px)); }
-    .lv-vault-chip:nth-child(n + 11) { display: none; }
-    .lv-vault-chip-more[data-narrow-only] { display: inline; }
+  /* The degree is secondary: a long one (♭IIIadd9/3rd) is cut, the name never is. */
+  .lv-vault-chip-degree {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .lv-vault-chip[data-match="true"] {
@@ -404,9 +433,15 @@
     color: var(--lv-text-on-accent);
   }
 
+  .lv-vault-chip[data-current="true"] :is(.lv-vault-chip-count, .lv-vault-chip-degree) {
+    color: var(--lv-text-on-accent);
+  }
+
   .lv-vault-chip-more {
-    align-self: center;
+    flex: none;
     color: var(--lv-text-muted);
+    font-size: var(--lv-text-11);
+    white-space: nowrap;
   }
 
   .lv-vault-row[data-compact="true"] .lv-vault-main-cell {
@@ -486,7 +521,8 @@
     background: var(--lv-bg);
   }
 
-  @container (max-width: 1099px) {
+  /* Only a very narrow list puts the band under the name; 768px and up keep one line. */
+  @container (max-width: 599px) {
     .lv-vault-row {
       grid-template-columns: 36px minmax(0, 1fr) auto;
       grid-template-areas:

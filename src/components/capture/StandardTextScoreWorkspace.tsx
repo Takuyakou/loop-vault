@@ -72,7 +72,7 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
       <section className={"lv-text-intake-pane min-w-0 border-r border-[var(--lv-border)] p-3" +
         (visiblePane === "input" ? " lv-text-intake-pane-active" : "")}
         aria-label={"元テキストの入力"}>
-        <label className="mb-3 block text-sm font-semibold" htmlFor="text-progression-input">
+        <label className="lv-text-pane-head mb-3 flex items-center text-sm font-semibold" htmlFor="text-progression-input">
           {"進行テキスト"}
         </label>
         <div className="lv-text-intake-editor relative flex overflow-hidden bg-[var(--lv-surface)]">
@@ -94,7 +94,7 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
       <section ref={previewRef} aria-label={"入力中のプレビュー"}
         className={"lv-text-intake-pane min-w-0 p-3" + (visiblePane === "preview" ? " lv-text-intake-pane-active" : "")}
         data-testid="standard-text-preview">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+        <div className="lv-text-pane-head mb-3 flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-semibold">{"プレビュー"}</h3>
           <span className="text-xs text-[var(--lv-text-muted)]">{result.bars} {"小節"}</span>
           <TextCapturePreviewStatus model={statusModel} />

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { displayKey } from "../../domain/displayLabels";
 import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
@@ -20,6 +21,7 @@ import { usePreviewSound } from "../PreviewSoundProvider";
 import { useMetronome } from "../MetronomeProvider";
 import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
 import { TextCapturePreviewStatus } from "./TextCapturePreviewStatus";
+import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, TextSaveControls, textSaveBlockedReason } from "./TextCaptureFields";
 
 interface Props {
   readonly input: string;
@@ -66,7 +68,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
   const [practiceBpm, setPracticeBpm] = useState(120);
   const [playError, setPlayError] = useState<string>();
   const { transport, state: transportState } = useTextTransport(controller, selectedSound, "extended-text-whole");
-  const [name, setName] = useState("テキスト進行");
+  const [name, setName] = useState(TEXT_CAPTURE_DEFAULT_NAME);
   const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
@@ -104,6 +106,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
     practiceLimits: practiceStatus?.ready === false ? 1 : 0, hasSource: Boolean(input.trim()),
   });
   const saveReason = textCaptureSaveReason(statusModel);
+  const saveBlocked = textSaveBlockedReason(result.canConvert, saveReason, name);
   const lines = input.split(/\r\n|\r|\n/);
   const diagnosticLines = new Map<number, "ERROR" | "WARNING">();
   for (const issue of result.diagnostics) if (issue.severity !== "INFO") {
@@ -165,23 +168,9 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
       <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
         {modeSelector}
 
-        <label className="lv-text-toolbar-meter text-xs">{"拍子"}
-          <select data-testid="extended-text-meter" value={beat} disabled={disabled}
-            onChange={event => setBeat(event.target.value)}
-            className="lv-field-control min-h-9 px-2">
-            {Array.from({ length: 12 }, (_, index) => String(index + 1) + "/4").map(value => (
-              <option key={value} value={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label className="lv-text-toolbar-key text-xs">{"キー"}
-          <select data-testid="extended-text-key" className="lv-field-control min-h-9 w-24 px-1 text-xs"
-            value={key ?? ""} disabled={disabled} onChange={event => setKey(event.target.value || undefined)}>
-            <option value="">{"未確定"}</option>
-            {["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root =>
-              ["major", "minor"].map(mode => <option key={root + mode} value={root + " " + mode}>{root} {mode}</option>))}
-          </select>
-        </label>
+        <TextMeterSelect testId="extended-text-meter" value={beat} disabled={disabled}
+          options={Array.from({ length: 12 }, (_, index) => String(index + 1) + "/4")} onChange={setBeat} />
+        <TextKeySelect testId="extended-text-key" value={key} disabled={disabled} onChange={setKey} />
         <div className="lv-text-toolbar-bpm"><BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
           dragLabel={"上下にドラッグしてBPMを変更"}
           value={practiceBpm} onChange={value => {
@@ -194,21 +183,9 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={sourceMatches} primaryTestId="extended-text-play"
           frozenTestId="extended-text-frozen-playback" />
-        <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
-          <label className="text-xs">{"名前"}
-            <input value={name} maxLength={80} onChange={event => setName(event.target.value)}
-              className="lv-field-control ml-1 min-h-9 w-24 px-2" data-testid="extended-text-name" />
-          </label>
-          <button type="button" data-testid="extended-text-save" className="lv-button-primary min-h-9 whitespace-nowrap px-2 text-xs"
-            disabled={disabled || !result.canConvert || !name.trim()} onClick={save}
-            title={!result.canConvert ? "保存前に診断を修正してください" : undefined}
-            aria-describedby={!result.canConvert ? "extended-text-save-reason" : undefined}>
-            {"Vaultに保存"}
-          </button>
-          {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="extended-text-save-reason"
-            title={"保存前に診断を修正してください"}
-            className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
-        </div>
+        <TextSaveControls nameTestId="extended-text-name" saveTestId="extended-text-save" reasonId="extended-text-save-reason"
+          name={name} blockedReason={saveBlocked} disabled={disabled}
+          onName={value => { setName(value); setSaved(false); setSaveFailed(false); }} onSave={save} />
         {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
       </div>
 
@@ -225,14 +202,14 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
       <div className="lv-text-intake-grid">
         <section className={"lv-text-intake-pane min-w-0 border-r border-[var(--lv-border)] p-3" + (visiblePane === "input" ? " lv-text-intake-pane-active" : "")}
           aria-label={"元テキストの入力"} data-testid="extended-text-editor">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="lv-text-pane-head mb-3 flex flex-wrap items-center justify-between gap-2">
             <label htmlFor="extended-text-input" className="text-sm font-semibold">{"進行テキスト"}</label>
             <div className="flex flex-wrap gap-2">
               {hints.key ? <button type="button" className={key === hints.key ? appliedClass : pendingClass}
                 disabled={disabled || key === hints.key} onClick={() => setKey(hints.key)}>
                 {key === hints.key
-                  ? ("キー " + hints.key + " 使用中")
-                  : ("キー " + hints.key + "を使う")}
+                  ? ("キー " + (displayKey(hints.key) ?? hints.key) + " 使用中")
+                  : ("キー " + (displayKey(hints.key) ?? hints.key) + "を使う")}
               </button> : null}
               {hints.bpm !== undefined ? <button type="button" className={bpm === hints.bpm ? appliedClass : pendingClass}
                 disabled={disabled || bpm === hints.bpm}
@@ -269,13 +246,13 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
               className="lv-text-intake-textarea min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
           </div>
           {(key || bpm !== undefined) ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="extended-text-metadata">
-            {key ? "Key: " + key : ""}{key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? String(bpm) + " BPM" : ""}
+            {key ? "キー " + (displayKey(key) ?? key) : ""}{key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? "BPM " + String(bpm) : ""}
           </p> : null}
         </section>
         <section ref={previewRef} aria-label={"入力中のプレビュー"}
           className={"lv-text-intake-pane min-w-0 p-3" + (visiblePane === "preview" ? " lv-text-intake-pane-active" : "")}
           data-testid="extended-text-preview">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="lv-text-pane-head mb-3 flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold">{"プレビュー"}</h3>
             <span className="text-xs text-[var(--lv-text-muted)]">{result.bars.length} {"小節"}</span>
             <TextCapturePreviewStatus model={statusModel} />
@@ -320,11 +297,16 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
         <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-text-status-summary>
           {textCaptureSummary(statusModel)}
         </span>
-        {saved ? <span role="status" className="ml-auto text-[var(--lv-accent)]">{"保存しました"}</span> : null}
-        {saveFailed ? <span role="alert" className="ml-auto text-[var(--lv-danger)]">
+        {/* Same place as in 通常; the capability list and the Draft editor exist only for 通常. */}
+        <button type="button" className="lv-button-ghost ml-auto whitespace-nowrap text-xs" disabled
+          title={"拡張の読み方では表示できません（通常の読み方で使えます）"} data-testid="extended-text-capabilities-unavailable">{"使える機能"}</button>
+        <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" disabled data-testid="extended-text-convert-unavailable"
+          title={"拡張の読み方では使えません（通常の読み方で使えます）"}>{"詳細編集"}</button>
+        {saved ? <span role="status" className="text-[var(--lv-accent)]">{"保存しました"}</span> : null}
+        {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">
           {"保存できませんでした。入力内容は保持されています。"}
         </span> : null}
-        <span id="extended-text-save-reason" className="lv-text-save-reason ml-auto min-w-0 truncate text-[var(--lv-text-muted)]">
+        <span id="extended-text-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">
           {saveReason}
         </span>
       </footer>

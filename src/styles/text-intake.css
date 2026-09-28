@@ -106,7 +106,6 @@
 }
 
 
-.lv-text-toolbar-bpm .lv-field-control { width: 3.5rem; }
 .lv-text-toolbar-bpm > small, .lv-text-toolbar-bpm > span { font-size: 0.6875rem; }
 .lv-text-transport-position { width: 4.5rem; overflow: hidden; text-overflow: ellipsis; }
 
@@ -135,7 +134,7 @@
 .lv-text-intake-grid { border-top: 1px solid var(--lv-border); }
 .lv-text-intake-pane { background: var(--lv-surface); }
 .lv-text-status-bar { min-height: 34px; flex-wrap: nowrap; background: var(--lv-bg-subtle); }
-.lv-text-save-reason { margin-left: auto; text-align: right; }
+.lv-text-save-reason { text-align: right; } /* P8.9-09b: the tools before it carry the auto margin, so both readers line up */
 .lv-text-control-row { padding-inline: 8px; }
 .lv-text-control-row .lv-text-toolbar-save { margin-left: auto; white-space: nowrap; }
 .lv-text-control-row .lv-text-toolbar-save label { white-space: nowrap; }
@@ -243,3 +242,6 @@
   .lv-text-intake-pane { display: none; }
   .lv-text-intake-pane-active { display: flex; }
 }
+
+/* P8.9-09b: the editor and preview headings share one height in both readers. */
+.lv-text-pane-head { min-height: 1.75rem; }

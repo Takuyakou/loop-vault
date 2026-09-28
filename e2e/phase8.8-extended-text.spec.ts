@@ -18,9 +18,9 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   await expect(intake.getByTestId("text-preview-attack")).toHaveCount(3);
   await expect(intake.getByTestId("text-preview-rest")).toHaveCount(1);
   await expect(intake.getByTestId("extended-text-metadata")).toHaveCount(0);
-  await intake.getByRole("button", { name: /キー C majorを使う/ }).click();
+  await intake.getByRole("button", { name: /キー Cメジャーを使う/ }).click();
   await intake.getByRole("button", { name: /BPM 120を使う/ }).click();
-  await expect(intake.getByTestId("extended-text-metadata")).toContainText("120 BPM");
+  await expect(intake.getByTestId("extended-text-metadata")).toContainText("BPM 120");
   await expect(input).toHaveValue(raw);
   await intake.getByTestId("extended-text-save").click();
   await expect(page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習/ })).toBeVisible();

@@ -40,17 +40,26 @@
     user-select: none;
   }
 
+  /* The logo sits over the sidebar icons (centre 32px) in both widths; only the name fades. */
   .lv-titlebar-brand {
     display: flex;
+    box-sizing: border-box;
     width: var(--lv-sidebar-wide);
     flex-shrink: 0;
     align-items: center;
     gap: 9px;
-    padding-left: 18px;
+    overflow: hidden;
+    padding-left: 22px;
     color: #cfd8e6;
     font-size: var(--lv-text-12);
     font-weight: 600;
     letter-spacing: 0.06em;
+    white-space: nowrap;
+    transition: width var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-titlebar-brand > span {
+    transition: opacity 120ms var(--lv-ease-standard) 120ms;
   }
 
   .lv-titlebar-brand > * {
@@ -60,11 +69,12 @@
   /* Compact (RHomeCompact): the brand area follows the icon-only sidebar. */
   .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand {
     width: var(--lv-sidebar-narrow);
-    padding-left: 22px;
+    transition-delay: 60ms;
   }
 
   .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand > span {
-    display: none;
+    opacity: 0;
+    transition-delay: 0ms;
   }
 
   .lv-titlebar-center {
@@ -138,18 +148,23 @@
   }
 
   /* ---- sidebar ---- */
+  /* P8.9-09b: the width animates (0.18 s). Closing fades the names first (0.12 s) and starts the
+     width 60 ms later; opening grows the width and fades the names in as it ends. Icons keep one x. */
   .lv-sidebar {
     display: flex;
+    box-sizing: border-box;
     width: var(--lv-sidebar-wide);
     flex-shrink: 0;
     flex-direction: column;
+    overflow: hidden;
     border-right: 1px solid rgb(150 170 195 / 10%);
     background: var(--lv-topbar);
-    /* No width animation: the content column would reflow for 0.18 s on every toggle. */
+    transition: width var(--lv-motion-normal) var(--lv-ease-standard);
   }
 
   .lv-sidebar[data-sidebar="collapsed"] {
     width: var(--lv-sidebar-narrow);
+    transition-delay: 60ms;
   }
 
   .lv-sidebar-nav {
@@ -158,20 +173,48 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap: 2px;
+    overflow-x: hidden;
     overflow-y: auto;
-    padding: 12px;
-  }
-
-  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-nav {
     padding: 12px 10px;
   }
 
   .lv-sidebar-heading {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
     padding: 14px 12px 6px;
     color: var(--lv-text-muted); /* mock #5f7089 fails WCAG AA (3.72:1) */
     font-size: var(--lv-text-11);
     font-weight: 600;
     letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .lv-sidebar-heading > span {
+    transition: opacity 120ms var(--lv-ease-standard) 120ms;
+  }
+
+  /* Collapsed: the same block shows a rule instead of the words. */
+  .lv-sidebar-heading::after {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    left: 4px;
+    height: 1px;
+    background: rgb(150 170 195 / 10%);
+    content: "";
+    opacity: 0;
+    transition: opacity 120ms var(--lv-ease-standard);
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-heading > span {
+    opacity: 0;
+    transition-delay: 0ms;
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-heading::after {
+    opacity: 1;
+    transition-delay: 120ms;
   }
 
   .lv-sidebar-rule {
@@ -187,17 +230,14 @@
     flex-shrink: 0;
     align-items: center;
     gap: 11px;
-    padding: 0 12px;
+    overflow: hidden;
+    /* Icon (19px) centre = nav padding 10 + this + 9.5 = 32px, the middle of the 64px bar. */
+    padding: 0 12px 0 calc((var(--lv-sidebar-narrow) - 19px) / 2 - 10px);
     border-radius: 10px;
     color: var(--lv-text-secondary);
     font-size: var(--lv-text-13);
     font-weight: 500;
     transition: background-color var(--lv-motion-fast) var(--lv-ease-standard), color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-sidebar[data-sidebar="collapsed"] .lv-nav-item {
-    justify-content: center;
-    padding: 0;
   }
 
   .lv-nav-item:hover {
@@ -212,19 +252,30 @@
     font-weight: 600;
   }
 
+  .lv-nav-item > svg {
+    flex: none;
+  }
+
   .lv-nav-label {
     min-width: 0;
     flex: 1 1 auto;
     overflow: hidden;
     text-align: left;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    transition: opacity 120ms var(--lv-ease-standard) 120ms;
   }
 
+  .lv-sidebar[data-sidebar="collapsed"] .lv-nav-label {
+    opacity: 0;
+    transition-delay: 0ms;
+  }
+
+  /* Fixed so it is not clipped by (or widening) the scrolling nav; top comes from AppShell. */
   .lv-tooltip.lv-tooltip-right {
-    top: 50%;
+    position: fixed;
+    top: var(--lv-nav-tip-top, 50%);
     bottom: auto;
-    left: calc(100% + 10px);
+    left: calc(var(--lv-sidebar-narrow) + 8px);
     transform: translate(-2px, -50%);
   }
 
@@ -233,15 +284,11 @@
     transform: translate(0, -50%);
   }
 
+  /* The toggle rides the right edge and ends centred in the 64px bar (15 + 34 + 15). */
   .lv-sidebar-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 8px 12px 12px;
-  }
-
-  .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-footer {
-    justify-content: center;
-    padding-inline: 0;
+    padding: 8px 15px 12px;
   }
 
   .lv-sidebar-toggle {
@@ -355,30 +402,105 @@
     background: var(--lv-danger);
   }
 
+  /* P8.9-09b header volume: an always-visible knob (drag up/down) beside the level meter. */
   .lv-volume-group {
     display: inline-flex;
+    box-sizing: border-box;
     height: 30px;
     align-items: center;
-    gap: 2px;
-    padding: 0 4px 0 2px;
+    gap: 8px;
+    padding: 0 8px 0 6px;
     border: 1px solid rgb(150 170 195 / 14%);
     border-radius: 8px;
   }
 
-  .lv-volume-trigger {
-    display: flex;
-    width: 28px;
-    height: 26px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    color: var(--lv-text-secondary);
+  .lv-volume-knob {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #2a3b55, #131d2c 70%);
+    box-shadow: inset 0 0 0 1px rgb(150 170 195 / 28%);
+    cursor: ns-resize;
+    touch-action: none;
+    user-select: none;
   }
 
-  .lv-volume-trigger:hover,
-  .lv-volume-trigger[aria-expanded="true"] {
-    background: var(--lv-surface);
+  .lv-volume-knob:focus {
+    outline: none;
+  }
+
+  .lv-volume-knob:focus-visible {
+    outline: 2px solid var(--lv-accent);
+    outline-offset: 3px;
+  }
+
+  /* 270° ring from -135° to +135°: the value in the accent, the rest in the track colour. */
+  .lv-volume-knob-arc {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 225deg,
+      var(--lv-accent) 0deg calc(var(--lv-knob-value) * 270deg),
+      #1f2e42 calc(var(--lv-knob-value) * 270deg) 270deg,
+      transparent 270deg
+    );
+    mask: radial-gradient(circle, transparent 12px, #000 12.5px);
+    opacity: 0.85;
+    pointer-events: none;
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-volume-knob:hover .lv-volume-knob-arc,
+  .lv-volume-knob[data-dragging] .lv-volume-knob-arc {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+
+  .lv-volume-knob-line {
+    position: absolute;
+    top: 3px;
+    left: 10px;
+    width: 2px;
+    height: 8px;
+    border-radius: 1px;
+    background: #f2f6fc;
+    pointer-events: none;
+    transform: rotate(calc(-135deg + var(--lv-knob-value) * 270deg));
+    transform-origin: 1px 8px;
+  }
+
+  .lv-volume-knob-tip {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    z-index: 50;
+    padding: 4px 8px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-surface-raised);
     color: var(--lv-text);
+    font-size: var(--lv-text-11);
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-volume-knob:hover .lv-volume-knob-tip,
+  .lv-volume-knob:focus-visible .lv-volume-knob-tip,
+  .lv-volume-knob[data-dragging] .lv-volume-knob-tip {
+    opacity: 1;
+  }
+
+  .lv-volume-group .lv-level-meter {
+    width: 36px;
+    height: 26px;
+    padding: 0;
   }
 
   .lv-save-status {
@@ -466,6 +588,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lv-nav-item,
+  .lv-nav-label,
+  .lv-sidebar,
+  .lv-sidebar-heading > span,
+  .lv-sidebar-heading::after,
+  .lv-titlebar-brand,
+  .lv-titlebar-brand > span,
   .lv-titlebar-button,
   .lv-titlebar-search {
     transition: none;

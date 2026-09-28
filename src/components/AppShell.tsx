@@ -1,6 +1,6 @@
 // P8.9-02 app shell: integrated title bar (36px), sidebar (232px / 64px) and
 // header (56px). Only the content area scrolls. Mock: RHome.dc.html / RHomeCompact.dc.html.
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type TransitionEvent } from "react";
 import { useStore } from "zustand";
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
@@ -16,7 +16,6 @@ import {
   SettingsIcon,
   VaultIcon,
   VoicingLoopIcon,
-  VolumeIcon,
   type IconComponent,
 } from "./icons";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
@@ -25,7 +24,6 @@ import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { TitleBar } from "./shell/TitleBar";
 import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
-import { Popover } from "./ui";
 
 export type AppView =
   | "home"
@@ -101,6 +99,7 @@ export function AppShell({
   const [manualCollapsed, setManualCollapsed] = useState(() => loadSidebarCollapsed());
   const [narrow, setNarrow] = useState(() => narrowMedia()?.matches ?? false);
   const collapsed = manualCollapsed ?? narrow;
+  const animating = useSidebarAnimating(collapsed);
 
   useEffect(() => {
     const media = narrowMedia();
@@ -139,12 +138,17 @@ export function AppShell({
           className="lv-sidebar"
           aria-label="サイドバー"
           data-sidebar={collapsed ? "collapsed" : "expanded"}
+          data-sidebar-animating={animating.active || undefined}
+          onTransitionEnd={animating.onTransitionEnd}
         >
           <nav className="lv-sidebar-nav" aria-label="メインメニュー">
             <NavItem nav="home" label="ホーム" icon={HomeIcon} collapsed={collapsed} active={!settingsOpen && view === "home"} onClick={() => setView("home")} />
             <NavItem nav="capture" label="取り込む" icon={ImportIcon} collapsed={collapsed} active={!settingsOpen && view === "capture"} onClick={() => setView("capture")} />
             <NavItem nav="vault" label="Vault" icon={VaultIcon} collapsed={collapsed} active={!settingsOpen && (view === "library" || view === "detail" || view === "progression-detail")} onClick={() => setView("library")} />
-            {collapsed ? <div className="lv-sidebar-rule" role="separator" /> : <p className="lv-sidebar-heading">練習</p>}
+            {/* One block for both states so nothing below moves: the heading fades into a rule. */}
+            <p className="lv-sidebar-heading" role={collapsed ? "separator" : undefined} aria-label={collapsed ? "練習" : undefined}>
+              <span aria-hidden={collapsed || undefined}>練習</span>
+            </p>
             <NavItem nav="voicing-loop" label="Voicing Loop" icon={VoicingLoopIcon} collapsed={collapsed} active={!settingsOpen && voicingLoopActive} onClick={openVoicingLoop} />
             <NavItem nav="chord-dojo" label="Chord Dojo" icon={ChordDojoIcon} collapsed={collapsed} active={!settingsOpen && chordDojoActive} onClick={openChordDojo ?? (() => setView("practice"))} />
             {bassPracticeAvailable ? (
@@ -182,23 +186,7 @@ export function AppShell({
               <GlobalPreviewSoundSelector copy={copy} />
               <GlobalMetronomeButton />
               <div className="lv-volume-group" role="group" aria-label={copy.nav.masterVolume}>
-                <Popover
-                  label={copy.nav.masterVolume}
-                  trigger={(props) => (
-                    <button
-                      type="button"
-                      className="lv-volume-trigger"
-                      aria-label={`${copy.nav.masterVolume} ${masterVolume}%`}
-                      title={`${copy.nav.masterVolume} ${masterVolume}%`}
-                      data-volume-trigger
-                      {...props}
-                    >
-                      <VolumeIcon size={16} />
-                    </button>
-                  )}
-                >
-                  <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
-                </Popover>
+                <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
                 <PlaybackLevelMeter
                   label={copy.nav.previewLevel}
                   masterVolume={masterVolume}
@@ -232,6 +220,11 @@ function NavItem({
   nav: string;
   onClick: () => void;
 }) {
+  // The tooltip is position: fixed (the nav scrolls, so an absolute one would widen it); place it on hover/focus.
+  const placeTooltip = (event: { currentTarget: HTMLButtonElement }) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--lv-nav-tip-top", `${box.top + box.height / 2}px`);
+  };
   return (
     <button
       type="button"
@@ -240,11 +233,36 @@ function NavItem({
       aria-label={collapsed ? label : undefined}
       data-nav={nav}
       onClick={onClick}
+      onPointerEnter={collapsed ? placeTooltip : undefined}
+      onFocus={collapsed ? placeTooltip : undefined}
     >
       <Icon size={19} />
-      {collapsed ? <span aria-hidden="true" className="lv-tooltip lv-tooltip-right">{label}</span> : <span className="lv-nav-label">{label}</span>}
+      {/* Always rendered so it can fade with the width; icons never move sideways. */}
+      <span className="lv-nav-label" aria-hidden={collapsed || undefined}>{label}</span>
+      {collapsed ? <span aria-hidden="true" className="lv-tooltip lv-tooltip-right">{label}</span> : null}
     </button>
   );
+}
+
+/**
+ * True while the sidebar width animates after a toggle or the 1200px auto switch, so tests and
+ * screenshots can wait for layout to settle. Never set on first render or with reduced motion.
+ */
+function useSidebarAnimating(collapsed: boolean) {
+  const [active, setActive] = useState(false);
+  const previous = useRef(collapsed);
+  useEffect(() => {
+    if (previous.current === collapsed) return undefined;
+    previous.current = collapsed;
+    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    setActive(true);
+    const fallback = window.setTimeout(() => setActive(false), 500);
+    return () => window.clearTimeout(fallback);
+  }, [collapsed]);
+  const onTransitionEnd = (event: TransitionEvent<HTMLElement>) => {
+    if (event.target === event.currentTarget && event.propertyName === "width") setActive(false);
+  };
+  return { active, onTransitionEnd };
 }
 
 function SidebarToggleGlyph({ collapsed }: { collapsed: boolean }) {

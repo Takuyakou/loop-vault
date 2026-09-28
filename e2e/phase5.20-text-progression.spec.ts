@@ -30,9 +30,7 @@ async function enterEligibleProgression(page: Page) {
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await expect(capture.getByTestId("text-progression-card")).toHaveCount(4);
 
-  await capture.getByTestId("text-key-picker").click();
-  await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /\u30ad\u30fc\u3092\u78ba\u5b9a|Confirm key/ }).click();
+  await capture.getByTestId("text-progression-key").selectOption("C major");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
 
   await capture.getByTestId("text-progression-bpm").fill("120");
@@ -162,9 +160,7 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const row = page.locator(".lv-vault-row").filter({ hasText: textTitle });
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("C");
-  // P8.9: Vault chord cards keep the degree in the tooltip only.
-  await expect(row).not.toContainText(/I.*V.*vi.*IV/);
-  await expect(row.locator(".lv-vault-chip").first()).toHaveAttribute("title", "C（I）");
+  await expect(row).toContainText(/I.*V.*vi.*IV/);
 
   await row.getByRole("button", { name: /\u9032\u884c\u3092\u958b\u304f|Open progression/ }).click();
   const detail = page.locator("[data-progression-detail-view]");

@@ -18,9 +18,7 @@ async function saveTextToLoop(page: Page, input: string) {
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(input);
   await expect(capture.getByTestId("text-progression-invalid-card")).toHaveCount(0);
-  await capture.getByTestId("text-key-picker").click();
-  await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /キーを確定/ }).click();
+  await capture.getByTestId("text-progression-key").selectOption("C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").focus();
   await page.keyboard.press("Enter");

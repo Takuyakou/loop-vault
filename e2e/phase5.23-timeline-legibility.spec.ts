@@ -6,6 +6,7 @@ import {
   chooseFirstCandidate,
   loadMidiForPreAnalysis,
   openApp,
+  waitForSidebarSettled,
 } from "./helpers/app";
 import { createMidiFixture } from "./helpers/midiFixture";
 
@@ -118,6 +119,7 @@ test("Vault save form stays visible with the sidebar expanded at the reported na
     await page.getByRole("button", { name: "サイドバーを広げる" }).click();
   }
   await expect(sidebar).toHaveAttribute("data-sidebar", "expanded");
+  await waitForSidebarSettled(page);
 
   await loadMidiForPreAnalysis(
     page,

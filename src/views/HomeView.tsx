@@ -18,17 +18,16 @@ import { useNotify } from "../components/notifications";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { FirstCaptureGuide } from "../components/FirstCaptureGuide";
 import { Button, IconButton } from "../components/ui";
-import { voiceChordForPreview } from "../domain/chordVoicing";
 import { displayKey } from "../domain/displayLabels";
 import { degreeOf } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
-import { voiceTextChordForAudition } from "../domain/textChordTones";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import { resolveTimelineVoicings, resolveVoicingForUse } from "../domain/voicing";
+import { resolveTimelineVoicings } from "../domain/voicing";
 import type { PracticeFileV2 } from "../features/bass-practice/infra/repository/practiceRepository";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { PracticeKind } from "./home/practiceActivity";
 import { useTimelinePlayhead } from "./home/timelinePlayhead";
+import { auditionSavedChord } from "./chordAudition";
 import {
   loadTodayLoopState,
   localDateKey,
@@ -312,11 +311,12 @@ function ContinueCard({ entry, label, sound, onContinue, onPlaybackError }: {
           <div
             key={cell.bar}
             className="lv-home-strip-cell"
-            data-hold={!cell.label}
+            data-hold={!cell.chords.length}
             data-current={currentBar === cell.bar}
-            title={cell.label || undefined}
           >
-            <span>{cell.label}</span>
+            {cell.chords.map((index) => (
+              <StripChord key={index} entry={entry} index={index} sound={sound} onPlaybackError={onPlaybackError} />
+            ))}
           </div>
         ))}
       </div>
@@ -403,11 +403,6 @@ function ChordChip({ entry, index, degree, current, sound, onPlaybackError }: {
   onPlaybackError: (error: unknown) => void;
 }) {
   const event = entry.block.chords[index];
-  const notes = resolveVoicingForUse(
-    event.chord,
-    event.voicingMemory,
-    entry.block.textSource ? [...voiceTextChordForAudition(event.chord)] : voiceChordForPreview(event.chord).notes,
-  ).midiNotes;
   const source: PlayingSource = { kind: "home", id: `chip:${entry.id}:${index}` };
   return (
     <button
@@ -417,12 +412,41 @@ function ChordChip({ entry, index, degree, current, sound, onPlaybackError }: {
       data-home-loop-chord={index}
       aria-label={`試聴: ${event.chord.label}`}
       title={`試聴: ${event.chord.label}`}
-      onClick={() => void playbackController.toggle(source, { type: "chord", chord: event.chord, sound, explicitMidiNotes: notes }).catch(onPlaybackError)}
+      onClick={() => previewChord(entry, index, source, sound, onPlaybackError)}
     >
       <span className="lv-home-chip-name">{event.chord.label}</span>
       <span className="lv-home-chip-sub">{degree ?? `${event.bar}小節`}</span>
     </button>
   );
+}
+
+/** 続きから: one chord of the bar strip; plays like a 今日のループ chip and lights while it sounds. */
+function StripChord({ entry, index, sound, onPlaybackError }: {
+  entry: HomeProgression;
+  index: number;
+  sound: PreviewSound;
+  onPlaybackError: (error: unknown) => void;
+}) {
+  const label = entry.block.chords[index].chord.label;
+  const source: PlayingSource = { kind: "home", id: `strip:${entry.id}:${index}` };
+  const playback = usePlaybackState();
+  const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
+  return (
+    <button
+      type="button"
+      className="lv-home-strip-chord"
+      data-playing={playing}
+      aria-label={`試聴: ${label}`}
+      title={label.length > 7 ? label : undefined}
+      onClick={() => previewChord(entry, index, source, sound, onPlaybackError)}
+    >
+      {label}
+    </button>
+  );
+}
+
+function previewChord(entry: HomeProgression, index: number, source: PlayingSource, sound: PreviewSound, onError: (error: unknown) => void) {
+  void auditionSavedChord(entry.block, index, source, sound).catch(onError);
 }
 
 function PracticeRow({ kind, title, count, unit, onOpen }: {
@@ -556,12 +580,13 @@ function TimelinePlayButton({ source, block, idea, sound, className, playLabel =
 }
 
 /** One cell per bar from the block's first bar; a cell names the chords that start in it. */
-function barCells(block: SavedProgressionBlock, limit: number): { bar: number; label: string }[] {
+/** One cell per bar with the indexes of the chords that start in it (empty = held over). */
+function barCells(block: SavedProgressionBlock, limit: number): { bar: number; chords: number[] }[] {
   if (!block.chords.length) return [];
   const first = Math.min(...block.chords.map((item) => item.bar));
   const count = Math.min(limit, Math.max(1, progressionBars(block)));
   return Array.from({ length: count }, (_, offset) => {
     const bar = first + offset;
-    return { bar, label: block.chords.filter((item) => item.bar === bar).map((item) => item.chord.label).join(" ") };
+    return { bar, chords: block.chords.flatMap((item, index) => item.bar === bar ? [index] : []) };
   });
 }
