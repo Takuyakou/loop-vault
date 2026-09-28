@@ -2,6 +2,8 @@
    Under 900px of content the list sits on top and the cards stack. */
 @layer components {
   .lv-settings-host {
+    /* Contains the absolutely positioned sr-only labels, which would otherwise stretch the document. */
+    position: relative;
     container-type: inline-size;
   }
 
