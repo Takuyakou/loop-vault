@@ -58,11 +58,12 @@ export function describeWarnings(warnings: readonly string[]): string[] {
 
 /**
  * A saved block memo written by the analyzer is its warning ids joined by "; " (stored as is).
- * Show it as reasons; any memo that is not only ids is shown unchanged.
+ * Show it as reasons only when every part is a known warning id; a memo with any other word
+ * (for example a hand-written "verse-2") is shown unchanged.
  */
 export function describeBlockMemo(memo: string): string {
   const parts = memo.split(/;\s*/).filter(Boolean);
-  return parts.length && parts.every((part) => /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(part))
+  return parts.length && parts.every((part) => Object.prototype.hasOwnProperty.call(warningLabels.ja, part))
     ? describeWarnings(parts).join("、")
     : memo;
 }

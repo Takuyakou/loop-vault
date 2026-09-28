@@ -24,6 +24,14 @@ describe("capture labels", () => {
     expect(describeBlockMemo("サビ前; ambiguous-bass")).toBe("サビ前; ambiguous-bass");
   });
 
+  it("keeps a memo unchanged unless every part is a known warning id", () => {
+    expect(describeBlockMemo("verse-2")).toBe("verse-2");
+    expect(describeBlockMemo("ambiguous-bass; verse-2")).toBe("ambiguous-bass; verse-2");
+    expect(describeBlockMemo("unknown-new-id")).toBe("unknown-new-id");
+    expect(describeBlockMemo("constructor")).toBe("constructor");
+    expect(describeBlockMemo("low-confidence")).toBe("コード候補が不安定");
+  });
+
   it("labels the warning the analyzer actually emits for sparse windows", () => {
     // The analyzer emits `sparse-evidence`; the map previously only knew
     // `sparse-notes`, so the Japanese UI showed humanised English.
