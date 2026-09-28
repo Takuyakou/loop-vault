@@ -8,11 +8,11 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** in-progress — P8.9-09 実行中（`feat/p8.9-09-finish`）
-- **Active stage:** P8.9-09（微修正・整理・フェーズの締め）
-- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み。local `master` へ `9ddf367` で取り込み済み）、P8.9-08（設定・起動と空の状態・Live MIDI・ヘッダーの部品 — [reports/P8.9-08-settings.md](reports/P8.9-08-settings.md)、fresh FULL PASS @ `62a81c3`、EXE 作成済み。local `master` へ `d93c4b1` で取り込み済み）
+- **Status:** in-progress — P8.9-09 完了、merge 候補 `feat/p8.9-09-finish` で停止（master へは未取り込み）。人間の確認のあと取り込んでフェーズを completed にする
+- **Active stage:** なし（全段階が完了。05・06・07 は欠番）
+- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み。local `master` へ `12baad7` で取り込み済み）、P8.9-02（共通レイアウト — [reports/P8.9-02-shell.md](reports/P8.9-02-shell.md)、fresh FULL PASS @ `883ef33`、EXE 作成済み。local `master` へ `c8451d9` で取り込み済み）、P8.9-03（機能の整理と日本語化 — [reports/P8.9-03-cleanup.md](reports/P8.9-03-cleanup.md)、fresh FULL PASS @ `d23f25a`、EXE 作成済み。local `master` へ `e2cbd35` で取り込み済み）、P8.9-04（ホームと Vault — [reports/P8.9-04-home-vault.md](reports/P8.9-04-home-vault.md)、fresh FULL PASS @ `c8e2d5b`、EXE 作成済み。local `master` へ `9ddf367` で取り込み済み）、P8.9-08（設定・起動と空の状態・Live MIDI・ヘッダーの部品 — [reports/P8.9-08-settings.md](reports/P8.9-08-settings.md)、fresh FULL PASS @ `62a81c3`、EXE 作成済み。local `master` へ `d93c4b1` で取り込み済み）、P8.9-09（微修正・整理・フェーズの締め — [reports/P8.9-09-finish.md](reports/P8.9-09-finish.md)、fresh FULL PASS @ `32a29ae`、EXE 作成済み）。フェーズの最終報告：[reports/P8.9-FINAL.md](reports/P8.9-FINAL.md)
 - **Base:** local `master` `d93c4b1`（段階8を取り込み済み）
-- **Next action:** P8.9-09 の手順0〜5（[stages/P8.9-09.md](stages/P8.9-09.md)）を進め、merge 候補で止める
+- **Next action:** 人間の確認のあと、段階9の候補を local master に取り込み、フェーズを completed にする。EXE で人間が確かめる項目は段階9の報告の最後
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 

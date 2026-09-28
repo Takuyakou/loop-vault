@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-09",
+  "activeStage": null,
   "completedStages": [
     "P8.9-00",
     "P8.9-01",
     "P8.9-02",
     "P8.9-03",
     "P8.9-04",
-    "P8.9-08"
+    "P8.9-08",
+    "P8.9-09"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d93c4b1",
-  "lastVerifiedCommit": "62a81c3",
+  "lastVerifiedCommit": "32a29ae",
   "currentBranch": "feat/p8.9-09-finish",
   "requiredGates": {
     "P8.9-00": [
@@ -88,8 +89,12 @@
     "p89-08-full-fresh": "pass",
     "p89-08-screens": "pass",
     "p89-08-exe": "pass",
-    "p89-08-report": "pass"
+    "p89-08-report": "pass",
+    "p89-09-full-fresh": "pass",
+    "p89-09-screens": "pass",
+    "p89-09-exe": "pass",
+    "p89-09-report": "pass"
   },
-  "nextAction": "P8.9-09 in progress on feat/p8.9-09-finish (base local master d93c4b1, stage 8 merged). Steps 0-5 of stages/P8.9-09.md: small fixes (progression/Idea pages Japanese, toast tones, Live MIDI settings modal from practice, Voicing Loop bar check), dead-code cleanup, final screen check, final report and AI handoff, fresh FULL, EXE. Stop at the merge candidate; no push/tag/release.",
+  "nextAction": "人間の確認のあと、段階9の候補 feat/p8.9-09-finish を local master に取り込み、フェーズを completed にする。P8.9-09 complete; stopped at the merge candidate (fresh FULL PASS @ 32a29ae: Vitest 3658/3658, Playwright 130/130; p89:screens P8.9-09 with per-screen audits; EXE built with tauri build --no-bundle; later commits are docs only). Final report reports/P8.9-FINAL.md. Stage 8 merged into local master at d93c4b1. No push/tag/release; next phase not started.",
   "updatedAt": "2026-09-28"
 }
