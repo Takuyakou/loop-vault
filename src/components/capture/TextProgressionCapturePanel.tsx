@@ -1,4 +1,3 @@
-import { displayKey } from "../../domain/displayLabels";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReserveBottomSpace } from "../notifications";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
@@ -10,6 +9,7 @@ import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
 import { TextCaptureShell } from "./TextCaptureShell";
+import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, TextSaveControls, textSaveBlockedReason } from "./TextCaptureFields";
 import { StandardTextScoreWorkspace } from "./StandardTextScoreWorkspace";
 import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
 import {
@@ -93,12 +93,9 @@ export function TextProgressionCapturePanel({
   const statusBarRef = useRef<HTMLElement>(null);
   useReserveBottomSpace(statusBarRef);
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
-  const [keyInput, setKeyInput] = useState("");
   const [confirmedKey, setConfirmedKey] = useState<string>();
-  const [keyError, setKeyError] = useState<string>();
   const [bpmInput, setBpmInput] = useState("");
-  const [saveTitle, setSaveTitle] = useState("");
-  const [titleEdited, setTitleEdited] = useState(false);
+  const [saveTitle, setSaveTitle] = useState(TEXT_CAPTURE_DEFAULT_NAME);
   const [saved, setSaved] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [selectedEventKey, setSelectedEventKey] = useState<string>();
@@ -186,32 +183,12 @@ export function TextProgressionCapturePanel({
     }
   }
 
-  function confirmKey() {
-    onStop();
-    const state = confirmedTextProgressionKeyState(keyInput);
-    if (state.kind !== "confirmed") {
-      setKeyError("C major のような対応キーを入力してください。");
-      return;
-    }
-    setKeyError(undefined);
-    setKeyInput(state.key);
-    setConfirmedKey(state.key);
-  }
-
-  function clearKey() {
+  /** Choosing a key confirms it: roman numerals and degrees use only a confirmed key. */
+  function chooseKey(key: string | undefined) {
     if (draftActive) return;
     onStop();
-    setKeyError(undefined);
-    setKeyInput("");
-    setConfirmedKey(undefined);
-  }
-
-  function chooseSuggestedKey(key: string) {
-    if (draftActive) return;
-    onStop();
-    if (draftActive) return;
-    setKeyError(undefined);
-    setKeyInput(key);
+    const state = confirmedTextProgressionKeyState(key);
+    setConfirmedKey(state.kind === "confirmed" ? state.key : undefined);
   }
 
   function updateVoicing(memory: ChordVoicingMemory | undefined) {
@@ -282,10 +259,10 @@ export function TextProgressionCapturePanel({
   }
 
   function saveStandard() {
-    if (draftActive || !result.canConvert || !onSaveStandard) return;
+    if (draftActive || !result.canConvert || !onSaveStandard || !saveTitle.trim()) return;
     try {
       const converted = convertedDraft();
-      const success = onSaveStandard(converted, (titleEdited ? saveTitle : converted.title).trim());
+      const success = onSaveStandard(converted, saveTitle.trim());
       setSaved(success); setSaveFailed(!success);
     } catch { setSaved(false); setSaveFailed(true); }
   }
@@ -310,6 +287,7 @@ export function TextProgressionCapturePanel({
     practiceLimits: 0, hasSource: Boolean(input.trim()),
   });
   const saveReason = textCaptureSaveReason(statusModel);
+  const saveBlocked = textSaveBlockedReason(result.canConvert, saveReason, saveTitle);
   const confirmed = result.keyState.kind === "confirmed";
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
@@ -352,36 +330,10 @@ export function TextProgressionCapturePanel({
       <div className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]" data-testid="standard-text-intake">
       <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
         {modeSelector}
-        <label className="lv-text-toolbar-meter text-xs" title={"通常モードは4/4のみ"}>
-          {"拍子"}
-          <select disabled aria-label={"拍子"} title={"通常モードは4/4のみ"} value="4/4" onChange={() => undefined}><option>4/4</option></select>
-        </label>
-        <div className="lv-text-toolbar-key">
-          <span className="text-xs">{"キー"}</span>
-          <details className="lv-text-key-picker relative">
-            <summary className="lv-field-control flex min-h-9 min-w-24 cursor-pointer list-none items-center justify-between gap-2 px-2 text-xs"
-              data-testid="text-key-picker">{confirmedKey ?? "未確定"} <span aria-hidden="true">▾</span></summary>
-            <div className="lv-text-key-menu absolute left-0 top-full z-40 min-w-64 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-2 shadow-lg">
-              <label htmlFor="text-progression-key" className="sr-only">{"キー"}</label>
-              <input id="text-progression-key" list="text-progression-key-options" data-testid="text-progression-key"
-                className="lv-field-control min-h-9 w-36 px-2 text-xs" value={keyInput} disabled={disabled}
-                onChange={event => { onStop(); setKeyInput(event.target.value); }}
-                placeholder={"未確定"} />
-              <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
-                <option key={root + mode} value={root + " " + mode} />))}</datalist>
-              <button type="button" className="lv-button-secondary ml-1 min-h-9 px-2 text-xs" disabled={disabled}
-                aria-label={"キーを確定"} onClick={confirmKey}>
-                {"確定"}</button>
-              <button type="button" className="lv-button-ghost ml-1 min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey}
-                onClick={clearKey} title={"キーをクリア"}
-                aria-label={"キーをクリア"}>×</button>
-              {suggestions.length ? <div className="mt-2 flex flex-wrap gap-1" data-testid="text-progression-key-suggestions">
-                {suggestions.map(candidate => <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
-                  disabled={disabled} title={candidate.key} onClick={() => chooseSuggestedKey(candidate.key)}>{displayKey(candidate.key) ?? candidate.key}</button>)}
-              </div> : null}
-            </div>
-          </details>
-        </div>
+        <TextMeterSelect testId="text-progression-meter" value="4/4" options={["4/4"]} disabled
+          reason={"通常の読み方は4/4だけです。ほかの拍子は拡張で使えます"} onChange={() => undefined} />
+        <TextKeySelect testId="text-progression-key" value={confirmedKey} disabled={disabled}
+          suggestions={suggestions.map(candidate => candidate.key)} onChange={chooseKey} />
         <div className="lv-text-toolbar-bpm">
           <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
             label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
@@ -396,22 +348,9 @@ export function TextProgressionCapturePanel({
         <TextTransportBar transport={transport} state={transportState}
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
-        {onSaveStandard ? <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
-          <label className="text-xs">{"名前"}
-            <input className="lv-field-control ml-1 min-h-9 w-24 px-2" maxLength={80}
-              data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
-              onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
-                setSaved(false); setSaveFailed(false); }} />
-          </label>
-          <button type="button" className="lv-button-primary min-h-9 whitespace-nowrap px-2 text-xs"
-            data-testid="text-progression-save" disabled={disabled || !result.canConvert}
-            title={!result.canConvert ? saveReason : undefined}
-            aria-describedby={!result.canConvert ? "text-progression-save-reason" : undefined}
-            onClick={saveStandard}>{"Vaultに保存"}</button>
-          {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="text-progression-save-reason"
-            title={saveReason}
-            className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
-        </div> : null}
+        {onSaveStandard ? <TextSaveControls nameTestId="text-progression-name" saveTestId="text-progression-save"
+          reasonId="text-progression-save-reason" name={saveTitle} blockedReason={saveBlocked} disabled={disabled}
+          onName={value => { setSaveTitle(value); setSaved(false); setSaveFailed(false); }} onSave={saveStandard} /> : null}
       </div>
       <StandardTextScoreWorkspace input={input} result={result} statusModel={statusModel} disabled={disabled}
         editorSelection={editorSelection.current}
@@ -428,7 +367,6 @@ export function TextProgressionCapturePanel({
         {confirmed ? `確定: ${result.keyState.key}`
           : "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。"}
       </span>
-      {keyError ? <p role="alert" className="mt-1 text-xs text-[var(--lv-danger)]">{keyError}</p> : null}
 
       <TextDiagnostics diagnostics={visibleDiagnostics} />
 
@@ -512,10 +450,12 @@ export function TextProgressionCapturePanel({
           </details>
         ) : null}
         <details name="capture-details" className="relative ml-auto" data-testid="text-progression-capability-details">
-          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{"利用条件"}</summary>
+          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]"
+            title={"この進行を保存したあと、どの練習や機能で使えるか"}>{"使える機能"}</summary>
           <TextCapabilityList capabilities={capabilities} />
         </details>
         <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" data-testid="text-progression-convert"
+          title={result.canConvert ? "コードと長さを1つずつ直してから保存します" : "正しいコード進行を入れると使えます"}
           disabled={disabled || !result.canConvert} onClick={convert}>{"詳細編集"}</button>
         {saved ? <span role="status" className="text-[var(--lv-accent)]">{"保存しました"}</span> : null}
         {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">

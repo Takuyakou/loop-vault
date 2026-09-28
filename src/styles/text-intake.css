@@ -242,3 +242,6 @@
   .lv-text-intake-pane { display: none; }
   .lv-text-intake-pane-active { display: flex; }
 }
+
+/* P8.9-09b: the editor and preview headings share one height in both readers. */
+.lv-text-pane-head { min-height: 1.75rem; }

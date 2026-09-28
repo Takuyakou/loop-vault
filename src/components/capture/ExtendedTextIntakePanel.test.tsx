@@ -44,8 +44,8 @@ describe("P8.8 extended Capture intake", () => {
     expect(container.querySelector('[data-testid="extended-text-metadata"]')).toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-field"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-drag"]')).not.toBeNull();
-    await press([...container.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.includes("キー C majorを使う"))!);
-    expect(container.querySelector('[data-testid="extended-text-metadata"]')?.textContent).toContain("C major");
+    await press([...container.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.includes("キー Cメジャーを使う"))!);
+    expect(container.querySelector('[data-testid="extended-text-metadata"]')?.textContent).toContain("キー Cメジャー");
     const title = container.querySelector<HTMLInputElement>('[data-testid="extended-text-name"]')!;
     await act(async () => {
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;

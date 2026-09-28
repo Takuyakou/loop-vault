@@ -59,9 +59,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
 
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
-  await capture.getByTestId("text-key-picker").click();
-  await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /キーを確定/ }).click();
+  await capture.getByTestId("text-progression-key").selectOption("C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").click();
 

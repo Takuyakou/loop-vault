@@ -30,9 +30,7 @@ async function enterEligibleProgression(page: Page) {
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await expect(capture.getByTestId("text-progression-card")).toHaveCount(4);
 
-  await capture.getByTestId("text-key-picker").click();
-  await capture.getByTestId("text-progression-key").fill("C major");
-  await capture.getByRole("button", { name: /\u30ad\u30fc\u3092\u78ba\u5b9a|Confirm key/ }).click();
+  await capture.getByTestId("text-progression-key").selectOption("C major");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
 
   await capture.getByTestId("text-progression-bpm").fill("120");
