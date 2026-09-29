@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "p9-public-repeated-chord-1-4",
+  "scope": "offline local ranking with one fixed source window; excludes candidate generation, analyzer, Vault and UI",
+  "rows": [
+    {
+      "policy": "OLD",
+      "beats": 1200,
+      "candidateEvaluations": 178800,
+      "elapsedMs": 297.3,
+      "peakSampledHeapMiB": 22.84
+    },
+    {
+      "policy": "PITCH_BASS",
+      "beats": 1200,
+      "candidateEvaluations": 178800,
+      "elapsedMs": 306.18,
+      "peakSampledHeapMiB": 24.26
+    },
+    {
+      "policy": "FACTOR_NO_CONTEXT",
+      "beats": 1200,
+      "candidateEvaluations": 178800,
+      "elapsedMs": 312.94,
+      "peakSampledHeapMiB": 23.21
+    },
+    {
+      "policy": "FACTOR_CONTEXT",
+      "beats": 1200,
+      "candidateEvaluations": 178800,
+      "elapsedMs": 312.28,
+      "peakSampledHeapMiB": 39.26
+    }
+  ]
+}

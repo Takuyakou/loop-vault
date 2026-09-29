@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "corpusId": "p9.5-public-ranking-mixed-v1",
+    "corpusVersion": "v1",
+    "authoredManifestSha": "d1a7408021750bf980d6acf5f2fda866cc1a9a5f06323ed518500aa0337df2c9",
+    "harmonyManifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+    "split": "dev",
+    "codeCommit": "cbcadf8ca6f625bc21396a99cacd48fa030b9ffc",
+    "policyId": "p9.5-local-ranking-comparison-v1",
+    "boundarySource": "AUTHORED_GOLD",
+    "identitySource": "CANDIDATE_GENERATOR_SOURCE_ONLY",
+    "snapshotSource": "RAW_SOURCE_WINDOW",
+    "scoringContract": "p9.4-tier2-v1+structural-proxy-v1",
+    "metricVersion": "p9.5-ranking-v1"
+  },
+  "availability": {
+    "authoredFullTier2": "AVAILABLE",
+    "harmonyFullTier2": "UNAVAILABLE_NO_INDEPENDENT_ACCEPTED_SET",
+    "candidateRendererPlayback": "UNAVAILABLE",
+    "humanReviewMetrics": "UNAVAILABLE_REVIEW_PROXY_ONLY"
+  },
+  "results": {
+    "OLD": {
+      "authored": {
+        "events": 18,
+        "candidateRecallFull": 15,
+        "candidateRecallBounded32": 15,
+        "top3": 14,
+        "top1": 11,
+        "correctionEvents": 7,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1009,
+        "wrongMarginMean": 0.09
+      },
+      "harmonyStructuralProxy": {
+        "events": 160,
+        "candidateRecallFull": 146,
+        "candidateRecallBounded32": 145,
+        "top3": 110,
+        "top1": 68,
+        "correctionEvents": 92,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.1407,
+        "wrongMarginMean": 0.1249
+      },
+      "unknownControls": {
+        "events": 3,
+        "correctUnknown": 0,
+        "wrongResolved": 3,
+        "reviewFlags": 0,
+        "reviewTruePositive": 0,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 3
+      },
+      "reviewProxy": {
+        "precision": null,
+        "recall": 0,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "seventh": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "diminished": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "extension": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "rootless": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "pedal": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "arpeggio": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "non-chord-tone": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 80,
+          "top1": 40,
+          "recall": 80
+        },
+        "harmony-support-stress": {
+          "events": 80,
+          "top1": 28,
+          "recall": 66
+        }
+      }
+    },
+    "PITCH_BASS": {
+      "authored": {
+        "events": 18,
+        "candidateRecallFull": 15,
+        "candidateRecallBounded32": 15,
+        "top3": 15,
+        "top1": 11,
+        "correctionEvents": 7,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.12,
+        "wrongMarginMean": 0.1206
+      },
+      "harmonyStructuralProxy": {
+        "events": 160,
+        "candidateRecallFull": 146,
+        "candidateRecallBounded32": 145,
+        "top3": 112,
+        "top1": 72,
+        "correctionEvents": 88,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.1533,
+        "wrongMarginMean": 0.1026
+      },
+      "unknownControls": {
+        "events": 3,
+        "correctUnknown": 2,
+        "wrongResolved": 1,
+        "reviewFlags": 2,
+        "reviewTruePositive": 2,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 3
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.2,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "seventh": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "diminished": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "extension": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "rootless": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "pedal": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "arpeggio": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "non-chord-tone": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 80,
+          "top1": 42,
+          "recall": 80
+        },
+        "harmony-support-stress": {
+          "events": 80,
+          "top1": 30,
+          "recall": 66
+        }
+      }
+    },
+    "FACTOR_NO_CONTEXT": {
+      "authored": {
+        "events": 18,
+        "candidateRecallFull": 15,
+        "candidateRecallBounded32": 15,
+        "top3": 14,
+        "top1": 11,
+        "correctionEvents": 7,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1487,
+        "wrongMarginMean": 0.12
+      },
+      "harmonyStructuralProxy": {
+        "events": 160,
+        "candidateRecallFull": 146,
+        "candidateRecallBounded32": 146,
+        "top3": 106,
+        "top1": 71,
+        "correctionEvents": 89,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.1609,
+        "wrongMarginMean": 0.1415
+      },
+      "unknownControls": {
+        "events": 3,
+        "correctUnknown": 2,
+        "wrongResolved": 1,
+        "reviewFlags": 2,
+        "reviewTruePositive": 2,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 3
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.2,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "seventh": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "diminished": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "extension": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "rootless": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "pedal": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "arpeggio": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "non-chord-tone": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 80,
+          "top1": 41,
+          "recall": 80
+        },
+        "harmony-support-stress": {
+          "events": 80,
+          "top1": 30,
+          "recall": 66
+        }
+      }
+    },
+    "FACTOR_CONTEXT": {
+      "authored": {
+        "events": 18,
+        "candidateRecallFull": 15,
+        "candidateRecallBounded32": 15,
+        "top3": 14,
+        "top1": 11,
+        "correctionEvents": 7,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1487,
+        "wrongMarginMean": 0.12
+      },
+      "harmonyStructuralProxy": {
+        "events": 160,
+        "candidateRecallFull": 146,
+        "candidateRecallBounded32": 146,
+        "top3": 106,
+        "top1": 71,
+        "correctionEvents": 89,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.1609,
+        "wrongMarginMean": 0.1431
+      },
+      "unknownControls": {
+        "events": 3,
+        "correctUnknown": 2,
+        "wrongResolved": 1,
+        "reviewFlags": 2,
+        "reviewTruePositive": 2,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 3
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.2,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "seventh": {
+          "events": 2,
+          "top1": 2,
+          "recall": 2
+        },
+        "diminished": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "extension": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "rootless": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "pedal": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "arpeggio": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "non-chord-tone": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 80,
+          "top1": 41,
+          "recall": 80
+        },
+        "harmony-support-stress": {
+          "events": 80,
+          "top1": 30,
+          "recall": 66
+        }
+      }
+    }
+  }
+}

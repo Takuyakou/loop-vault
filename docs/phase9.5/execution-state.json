@@ -10,7 +10,7 @@
   "lastVerifiedCommit": "e5961dbfa55ce84433ac9deac89299dd425b008e",
   "currentBranch": "research/phase9-core-v2",
   "requiredGates": {
-    "P9.5-00": ["ranking-tests", "research-typecheck", "research-lint", "dev-freeze", "frozen-validation", "candidate-membership", "unknown-calibration", "resource", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+    "P9.5-00": ["ranking-tests", "research-typecheck", "research-lint", "dev-freeze", "frozen-validation", "candidate-membership", "unknown-assessment", "resource", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
   },
   "gateResults": {},
   "nextAction": "Freeze public dev policy before validation.",
