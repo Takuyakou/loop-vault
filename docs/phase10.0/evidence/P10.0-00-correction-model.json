@@ -1,0 +1,1065 @@
+{
+  "generatedBy": "scripts/p10/correction-model-audit.ts",
+  "note": "Synthetic MIDI built in memory; product pipeline with the default analysis profile. Aggregates only.",
+  "thresholdsTried": {
+    "shortBeats": [
+      0.25,
+      0.3,
+      0.5
+    ],
+    "repeatN": [
+      4,
+      8,
+      16
+    ],
+    "grid": 0.25,
+    "gridTolerance": 0.05,
+    "melodyRules": [
+      "continued-top",
+      "melody-role",
+      "either",
+      "melody-role-nonchord",
+      "continued-top-or-melody-nonchord"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "plain-8",
+      "melodyContaminationFilter": false,
+      "about": "piano chords + bass, one chord a bar",
+      "bars": 8,
+      "sourceNotes": 36,
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 8,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 8,
+        "aggregated": 0,
+        "pitchesMatched": 36,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 8
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 8,
+        "agreesWithCard": 8,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 34,
+        "sourceVoicing": 1
+      }
+    },
+    {
+      "id": "melody-track-8",
+      "melodyContaminationFilter": false,
+      "about": "plain-8 + a melody track crossing bar lines",
+      "bars": 9,
+      "sourceNotes": 52,
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass",
+        "melody"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 12,
+        "cardsWithoutVoicing": 1,
+        "simultaneous": 12,
+        "aggregated": 0,
+        "pitchesMatched": 70,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 12
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 3,
+          "melody-role": 12,
+          "either": 12,
+          "melody-role-nonchord": 5,
+          "continued-top-or-melody-nonchord": 7
+        },
+        "melodyOnlyPitchUsed": 12,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 12,
+        "agreesWithCard": 12,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 21,
+        "sourceVoicing": 0
+      }
+    },
+    {
+      "id": "melody-in-piano-8",
+      "melodyContaminationFilter": false,
+      "about": "melody notes inside the piano track",
+      "bars": 9,
+      "sourceNotes": 52,
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 12,
+        "cardsWithoutVoicing": 1,
+        "simultaneous": 12,
+        "aggregated": 0,
+        "pitchesMatched": 70,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 12
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 3,
+          "melody-role": 0,
+          "either": 3,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 3
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 12,
+        "agreesWithCard": 12,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 18,
+        "sourceVoicing": 0
+      }
+    },
+    {
+      "id": "hats-in-piano-8",
+      "melodyContaminationFilter": false,
+      "about": "short repeated C#2 hits inside the piano track",
+      "bars": 8,
+      "sourceNotes": 100,
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 8,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 8,
+        "aggregated": 0,
+        "pitchesMatched": 36,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 8
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 8
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 8,
+        "agreesWithCard": 8,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 18,
+        "sourceVoicing": 1
+      }
+    },
+    {
+      "id": "reattack-8",
+      "melodyContaminationFilter": false,
+      "about": "each chord struck twice a bar",
+      "bars": 8,
+      "sourceNotes": 64,
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 8,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 8,
+        "aggregated": 0,
+        "pitchesMatched": 36,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 8
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 8,
+        "agreesWithCard": 8,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 18,
+        "sourceVoicing": 0
+      }
+    },
+    {
+      "id": "repeat-pairs-8",
+      "melodyContaminationFilter": false,
+      "about": "the same chord for two bars (C C Am Am …)",
+      "bars": 8,
+      "sourceNotes": 36,
+      "cards": 4,
+      "expectedCards": 4,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 2,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 4,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 4,
+        "aggregated": 0,
+        "pitchesMatched": 18,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 4
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 4,
+        "agreesWithCard": 4,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 16,
+        "sourceVoicing": 0
+      }
+    },
+    {
+      "id": "stabs-8",
+      "melodyContaminationFilter": false,
+      "about": "short stabs with rests, two bars per chord",
+      "bars": 8,
+      "sourceNotes": 64,
+      "cards": 4,
+      "expectedCards": 4,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 2,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 4,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 4,
+        "aggregated": 0,
+        "pitchesMatched": 18,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 4
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 9,
+            "cardsUsingSuspect": 4,
+            "cardsContainingSuspect": 4
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 4,
+            "cardsUsingSuspect": 4,
+            "cardsContainingSuspect": 4
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 4,
+        "agreesWithCard": 4,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 16,
+        "sourceVoicing": 0
+      }
+    },
+    {
+      "id": "long-64",
+      "melodyContaminationFilter": false,
+      "about": "64 bars: chords, bass, melody track, hats in piano",
+      "bars": 65,
+      "sourceNotes": 928,
+      "cards": 97,
+      "expectedCards": 64,
+      "cardDelta": 33,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass",
+        "melody"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 96,
+        "cardsWithoutVoicing": 1,
+        "simultaneous": 96,
+        "aggregated": 0,
+        "pitchesMatched": 554,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 96
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 31,
+          "melody-role": 96,
+          "either": 96,
+          "melody-role-nonchord": 32,
+          "continued-top-or-melody-nonchord": 58
+        },
+        "melodyOnlyPitchUsed": 96,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 96,
+        "agreesWithCard": 96,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 127,
+        "sourceVoicing": 6
+      }
+    },
+    {
+      "id": "long-300",
+      "melodyContaminationFilter": false,
+      "about": "300 bars, chords + bass (performance only)",
+      "bars": 300,
+      "sourceNotes": 1350,
+      "cards": 300,
+      "expectedCards": 300,
+      "cardDelta": 0,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 300,
+        "cardsWithoutVoicing": 0,
+        "simultaneous": 300,
+        "aggregated": 0,
+        "pitchesMatched": 1350,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 300
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 0,
+          "melody-role": 0,
+          "either": 0,
+          "melody-role-nonchord": 0,
+          "continued-top-or-melody-nonchord": 0
+        },
+        "melodyOnlyPitchUsed": 0,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 300,
+        "agreesWithCard": 300,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 637,
+        "sourceVoicing": 15
+      }
+    },
+    {
+      "id": "melody-track-8+melodyFilter",
+      "melodyContaminationFilter": true,
+      "about": "plain-8 + a melody track crossing bar lines",
+      "bars": 9,
+      "sourceNotes": 52,
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass",
+        "melody"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 12,
+        "cardsWithoutVoicing": 1,
+        "simultaneous": 12,
+        "aggregated": 0,
+        "pitchesMatched": 70,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 12
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 3,
+          "melody-role": 12,
+          "either": 12,
+          "melody-role-nonchord": 5,
+          "continued-top-or-melody-nonchord": 7
+        },
+        "melodyOnlyPitchUsed": 12,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 0,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 0
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 12,
+        "agreesWithCard": 12,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 17,
+        "sourceVoicing": 1
+      }
+    },
+    {
+      "id": "long-64+melodyFilter",
+      "melodyContaminationFilter": true,
+      "about": "64 bars: chords, bass, melody track, hats in piano",
+      "bars": 65,
+      "sourceNotes": 928,
+      "cards": 97,
+      "expectedCards": 64,
+      "cardDelta": 33,
+      "sections": 0,
+      "sectionsViaSegmenter": 1,
+      "alternativesPerCard": 5,
+      "voiceRoles": [
+        "harmony",
+        "bass",
+        "melody"
+      ],
+      "mapping": {
+        "cardsWithVoicing": 96,
+        "cardsWithoutVoicing": 1,
+        "simultaneous": 96,
+        "aggregated": 0,
+        "pitchesMatched": 554,
+        "pitchesUnmatched": 0,
+        "cardsFullyMatched": 96
+      },
+      "review": {
+        "melodyByRule": {
+          "continued-top": 31,
+          "melody-role": 96,
+          "either": 96,
+          "melody-role-nonchord": 32,
+          "continued-top-or-melody-nonchord": 58
+        },
+        "melodyOnlyPitchUsed": 96,
+        "percussionGrid": {
+          "short<=0.25&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.25&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.25&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.3&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=4": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=8": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          },
+          "short<=0.5&n>=16": {
+            "suspectPitches": 1,
+            "cardsUsingSuspect": 0,
+            "cardsContainingSuspect": 96
+          }
+        },
+        "sameChordSplit": 0
+      },
+      "naming": {
+        "cardsNamed": 96,
+        "agreesWithCard": 96,
+        "meanCandidates": 3,
+        "maxCandidates": 3
+      },
+      "timingMs": {
+        "analysis": 125,
+        "sourceVoicing": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "generatedBy": "scripts/p10/correction-model-audit.ts",
+  "proposedThresholds": "docs/phase10.0/contracts/P10-review-thresholds.json",
+  "scenarios": [
+    {
+      "id": "plain-8",
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 34,
+      "sourceVoicingMs": 1
+    },
+    {
+      "id": "melody-track-8",
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "flagged": {
+        "melody": 7,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 3,
+        "melody-role": 12,
+        "either": 12,
+        "melody-role-nonchord": 5,
+        "continued-top-or-melody-nonchord": 7
+      },
+      "analysisMs": 21,
+      "sourceVoicingMs": 0
+    },
+    {
+      "id": "melody-in-piano-8",
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "flagged": {
+        "melody": 3,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 3,
+        "melody-role": 0,
+        "either": 3,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 3
+      },
+      "analysisMs": 18,
+      "sourceVoicingMs": 0
+    },
+    {
+      "id": "hats-in-piano-8",
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 8,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 18,
+      "sourceVoicingMs": 1
+    },
+    {
+      "id": "reattack-8",
+      "cards": 8,
+      "expectedCards": 8,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 18,
+      "sourceVoicingMs": 0
+    },
+    {
+      "id": "repeat-pairs-8",
+      "cards": 4,
+      "expectedCards": 4,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 16,
+      "sourceVoicingMs": 0
+    },
+    {
+      "id": "stabs-8",
+      "cards": 4,
+      "expectedCards": 4,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 16,
+      "sourceVoicingMs": 0
+    },
+    {
+      "id": "long-64",
+      "cards": 97,
+      "expectedCards": 64,
+      "cardDelta": 33,
+      "flagged": {
+        "melody": 58,
+        "percussionUsed": 0,
+        "percussionPresent": 96,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 31,
+        "melody-role": 96,
+        "either": 96,
+        "melody-role-nonchord": 32,
+        "continued-top-or-melody-nonchord": 58
+      },
+      "analysisMs": 127,
+      "sourceVoicingMs": 6
+    },
+    {
+      "id": "long-300",
+      "cards": 300,
+      "expectedCards": 300,
+      "cardDelta": 0,
+      "flagged": {
+        "melody": 0,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 0,
+        "melody-role": 0,
+        "either": 0,
+        "melody-role-nonchord": 0,
+        "continued-top-or-melody-nonchord": 0
+      },
+      "analysisMs": 637,
+      "sourceVoicingMs": 15
+    },
+    {
+      "id": "melody-track-8+melodyFilter",
+      "cards": 13,
+      "expectedCards": 8,
+      "cardDelta": 5,
+      "flagged": {
+        "melody": 7,
+        "percussionUsed": 0,
+        "percussionPresent": 0,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 3,
+        "melody-role": 12,
+        "either": 12,
+        "melody-role-nonchord": 5,
+        "continued-top-or-melody-nonchord": 7
+      },
+      "analysisMs": 17,
+      "sourceVoicingMs": 1
+    },
+    {
+      "id": "long-64+melodyFilter",
+      "cards": 97,
+      "expectedCards": 64,
+      "cardDelta": 33,
+      "flagged": {
+        "melody": 58,
+        "percussionUsed": 0,
+        "percussionPresent": 96,
+        "sameChordSplit": 0
+      },
+      "melodyRuleAlternatives": {
+        "continued-top": 31,
+        "melody-role": 96,
+        "either": 96,
+        "melody-role-nonchord": 32,
+        "continued-top-or-melody-nonchord": 58
+      },
+      "analysisMs": 125,
+      "sourceVoicingMs": 15
+    }
+  ]
+}
