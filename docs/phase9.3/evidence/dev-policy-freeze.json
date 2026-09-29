@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "policyId": "p9.3-product-guarded-v1",
+  "selected": "PRODUCT_GUARDED",
+  "status": "NO_GO_ON_DEV",
+  "selectionSplit": "dev",
+  "reason": "Source-only ranking increased missing support on public Usage and missing Gold notes on Harmony. Safe-prune also increased Harmony missing Gold notes. Product-guarded preserves Product notes but does not improve exactness on dev.",
+  "guardrails": { "missingSupportIncreaseAllowed": 0, "missingBassIncreaseAllowed": 0, "missingDefiningToneIncreaseAllowed": 0, "extraNoteDeltaAllowed": 0 },
+  "validationUse": "one frozen diagnostic pass; never retune",
+  "privateWitnessUsed": false,
+  "sealedHoldoutUsed": false
+}

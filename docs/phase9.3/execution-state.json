@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "9.3",
+  "status": "in-progress",
+  "activeStage": "P9.3-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "4d25508e9d353515dbac8b1d30cb5e153bf08810",
+  "lastVerifiedCommit": "",
+  "currentBranch": "research/phase9-core-v2",
+  "requiredGates": {
+    "P9.3-00": [
+      "research-tests",
+      "matched-dev",
+      "frozen-validation",
+      "candidate-funnel",
+      "source-restoration",
+      "typecheck",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-security",
+      "production-diff-zero",
+      "fresh-full"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Freeze Product-guarded diagnostic comparison, then run validation once.",
+  "updatedAt": "2026-09-29"
+}
