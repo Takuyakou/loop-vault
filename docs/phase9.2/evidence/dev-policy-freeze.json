@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "stage": "P9.2-00",
+  "policyId": "p9.2-structural-v1",
+  "selected": {
+    "harmonic": "STRUCTURAL",
+    "voicing": "STRUCTURAL",
+    "ornamentNoteEvent": "STRUCTURAL"
+  },
+  "source": "raw MIDI onset, offset, sounding notes, sustain pedal, re-strike, source meter and PPQ",
+  "selectionSplit": "public-dev-only",
+  "devSummary": {
+    "authoredTemporal": {
+      "harmonic": { "gold": 4, "hit": 4, "false": 1 },
+      "voicing": { "gold": 5, "hit": 4, "false": 1 },
+      "noteEvent": { "gold": 5, "hit": 3, "false": 3 }
+    },
+    "expandedTemporal": {
+      "harmonic": { "gold": 3, "hit": 3, "false": 0 },
+      "voicing": { "gold": 4, "hit": 3, "false": 0 },
+      "noteEvent": { "gold": 3, "hit": 2, "false": 3 }
+    },
+    "harmonyPrimary": {
+      "harmonic": { "gold": 140, "hit": 82, "false": 78, "proposed": 160 },
+      "voicing": { "gold": 140, "hit": 82, "false": 91, "proposed": 173 },
+      "productHarmonic": { "gold": 140, "hit": 140, "false": 160, "proposed": 300 }
+    }
+  },
+  "harmonicCardInflationHarmonyDev": 0.125,
+  "candidatePromotionStatusAtFreeze": "NO_GO_ON_DEV",
+  "reason": "Structural selection reduces false harmonic boundaries but loses 58/140 Harmony Gold boundaries and exceeds the 10 percent card inflation guardrail.",
+  "limitations": [
+    "Diagnostic-only Harmony files exist only in validation; they are not available for dev selection.",
+    "The high-recall lattice is a proposal ceiling, not a card plan.",
+    "No minimum duration alone suppresses short passing chords.",
+    "Validation is one pass after this freeze with no threshold adjustment."
+  ]
+}
