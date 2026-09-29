@@ -168,6 +168,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       }
       this.voicingInstrument = voicingInstrument;
       if (this.v2) {
+        // A rolling callback at tick zero cannot reliably add another event at
+        // that same tick after Tone has begun dispatching it. Prime the first
+        // attack while the Transport is still stopped.
+        if (countInBeats === 0) this.refillRolling(Tone.now(), ppq, generation);
         this.transport.start("+0.05");
         return;
       }
@@ -340,6 +344,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     }
     this.scheduleRuntimeCallbacks(options, generation, this.transport.PPQ, this.countInBeats);
     this.paused = false;
+    if (this.v2 && this.countInBeats === 0) {
+      this.refillRolling(Tone.now(), this.transport.PPQ, generation);
+    }
     this.transport.start("+0.05");
     return true;
   }
