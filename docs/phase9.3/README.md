@@ -6,11 +6,11 @@ Git and current code are authoritative. This package covers only the separately 
 
 ## Status
 
-- Status: in-progress
-- Active stage: P9.3-00
-- Completed stages: none
+- Status: completed
+- Active stage: none
+- Completed stages: P9.3-00 (fresh FULL tested HEAD 175807c0207bc761c0571f563824268ea9a155f2)
 - Branch: research/phase9-core-v2
-- Next action: freeze a public-dev-selected source extraction policy, then evaluate validation once.
+- Next action: STOP after P9.3 research. Candidate is NO-GO; await separate assignment for P9.4.
 
 ## Required Reading Order
 
