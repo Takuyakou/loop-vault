@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "stage": "P9.1-00",
+  "policyId": "p9.1-onset-support-v1",
+  "selectedPolicy": "onset-support",
+  "selectionSplit": "public-dev-only",
+  "selectionMetric": "sum of conditional Tier 1 exact events across P7 temporal synthetic, Harmony Support dev, and P9 usage v2 dev",
+  "devScoreByPolicy": {
+    "densest": { "exact": 50, "events": 221 },
+    "onset-support": { "exact": 72, "events": 221 },
+    "duration-support": { "exact": 58, "events": 221 },
+    "role-aware-union": { "exact": 68, "events": 221 }
+  },
+  "matchedProduct": { "exact": 88, "events": 221 },
+  "candidatePromotionStatusAtFreeze": "NO_GO_ON_DEV",
+  "parameters": {
+    "onsetSupport": "select onset plus already-sounding support with largest total remaining overlap; tie to earlier onset",
+    "maximumNotes": 10,
+    "noGlobalDurationThreshold": true,
+    "identityInput": false
+  },
+  "validationPolicy": "evaluate selected frozen policy once on public Harmony Support validation; never inspect sealed holdout or private witness",
+  "limitations": [
+    "Research policy is frozen for validation despite failing dev promotion conditions; validation is for generalization diagnosis, not retuning.",
+    "Harmony Support has Gold identity while usage v2 has matched Product-predicted identity; compare only within each corpus and identity condition."
+  ]
+}

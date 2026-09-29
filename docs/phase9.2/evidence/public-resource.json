@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "p9-public-repeated-chord-1-4",
+  "corpusVersion": "v1",
+  "codeCommit": "30563aaeebab7f6a92a30bcc56030cbaa874b064",
+  "policyId": "p9.2-structural-v1",
+  "workload": "offline source evidence + proposal + bounded selection",
+  "rows": [
+    {
+      "minutes": 3,
+      "bpm": 120,
+      "noteCount": 1440,
+      "sourceBeats": 360,
+      "proposalCount": 719,
+      "selected": {
+        "harmonic": 0,
+        "voicing": 0,
+        "noteEvent": 359
+      },
+      "elapsedMs": 42.06,
+      "heapDeltaMiB": 23.4,
+      "heapUsedMiB": 180.6
+    },
+    {
+      "minutes": 5,
+      "bpm": 120,
+      "noteCount": 2400,
+      "sourceBeats": 600,
+      "proposalCount": 1199,
+      "selected": {
+        "harmonic": 0,
+        "voicing": 0,
+        "noteEvent": 599
+      },
+      "elapsedMs": 83.28,
+      "heapDeltaMiB": 1.47,
+      "heapUsedMiB": 182.5
+    },
+    {
+      "minutes": 10,
+      "bpm": 120,
+      "noteCount": 4800,
+      "sourceBeats": 1200,
+      "proposalCount": 2399,
+      "selected": {
+        "harmonic": 0,
+        "voicing": 0,
+        "noteEvent": 1199
+      },
+      "elapsedMs": 174.55,
+      "heapDeltaMiB": -2.5,
+      "heapUsedMiB": 180.83
+    },
+    {
+      "minutes": 10,
+      "bpm": 240,
+      "noteCount": 9600,
+      "sourceBeats": 2400,
+      "proposalCount": 4799,
+      "selected": {
+        "harmonic": 0,
+        "voicing": 0,
+        "noteEvent": 2399
+      },
+      "elapsedMs": 506.53,
+      "heapDeltaMiB": -7.04,
+      "heapUsedMiB": 175.33
+    }
+  ]
+}

@@ -1,0 +1,2204 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+  "selectedPolicy": "onset-support",
+  "split": "dev",
+  "results": [
+    {
+      "source": "temporal",
+      "policy": "densest",
+      "files": 13,
+      "events": 22,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-densest"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 22,
+            "exact": 20,
+            "gold": 83,
+            "predicted": 85,
+            "matched": 83,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 46
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 20,
+            "gold": 83,
+            "predicted": 85,
+            "matched": 83,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 46
+          },
+          "card": {
+            "events": 22,
+            "exact": 20,
+            "gold": 83,
+            "predicted": 85,
+            "matched": 83,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 46
+          },
+          "capture": {
+            "events": 22,
+            "exact": 20,
+            "gold": 83,
+            "predicted": 85,
+            "matched": 83,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 46
+          },
+          "whole": {
+            "events": 22,
+            "exact": 20,
+            "gold": 83,
+            "predicted": 85,
+            "matched": 83,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 46
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 29,
+        "rawGoldNotesPresent": 83,
+        "rawGoldNotesTotal": 83,
+        "eventsWithExactSimultaneousCandidate": 21
+      },
+      "runtime": {
+        "productMs": 2,
+        "independentMs": 1,
+        "peakHeapBytes": 193280216
+      }
+    },
+    {
+      "source": "usage",
+      "policy": "densest",
+      "files": 26,
+      "events": 39,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-densest"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "card": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "capture": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "whole": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 39,
+            "exact": 30,
+            "gold": 153,
+            "predicted": 166,
+            "matched": 153,
+            "missing": 0,
+            "extra": 13,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 80
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 30,
+            "gold": 153,
+            "predicted": 166,
+            "matched": 153,
+            "missing": 0,
+            "extra": 13,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 80
+          },
+          "card": {
+            "events": 39,
+            "exact": 30,
+            "gold": 153,
+            "predicted": 166,
+            "matched": 153,
+            "missing": 0,
+            "extra": 13,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 80
+          },
+          "capture": {
+            "events": 39,
+            "exact": 30,
+            "gold": 153,
+            "predicted": 166,
+            "matched": 153,
+            "missing": 0,
+            "extra": 13,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 80
+          },
+          "whole": {
+            "events": 39,
+            "exact": 30,
+            "gold": 153,
+            "predicted": 166,
+            "matched": 153,
+            "missing": 0,
+            "extra": 13,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 80
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 58,
+        "rawGoldNotesPresent": 153,
+        "rawGoldNotesTotal": 153,
+        "eventsWithExactSimultaneousCandidate": 37
+      },
+      "runtime": {
+        "productMs": 2,
+        "independentMs": 1,
+        "peakHeapBytes": 183338352
+      }
+    },
+    {
+      "source": "harmony",
+      "policy": "densest",
+      "files": 20,
+      "events": 160,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-densest"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "card": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "capture": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "whole": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 736,
+            "matched": 592,
+            "missing": 160,
+            "extra": 144,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 736,
+            "matched": 592,
+            "missing": 160,
+            "extra": 144,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "card": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 736,
+            "matched": 592,
+            "missing": 160,
+            "extra": 144,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "capture": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 736,
+            "matched": 592,
+            "missing": 160,
+            "extra": 144,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "whole": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 736,
+            "matched": 592,
+            "missing": 160,
+            "extra": 144,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 0
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 1090,
+        "rawGoldNotesPresent": 752,
+        "rawGoldNotesTotal": 752,
+        "eventsWithExactSimultaneousCandidate": 64
+      },
+      "runtime": {
+        "productMs": 5,
+        "independentMs": 5,
+        "peakHeapBytes": 224227568
+      }
+    },
+    {
+      "source": "temporal",
+      "policy": "onset-support",
+      "files": 13,
+      "events": 22,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-onset-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 29,
+        "rawGoldNotesPresent": 83,
+        "rawGoldNotesTotal": 83,
+        "eventsWithExactSimultaneousCandidate": 21
+      },
+      "runtime": {
+        "productMs": 1,
+        "independentMs": 1,
+        "peakHeapBytes": 187641168
+      }
+    },
+    {
+      "source": "usage",
+      "policy": "onset-support",
+      "files": 26,
+      "events": 39,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-onset-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "card": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "capture": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "whole": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 39,
+            "exact": 35,
+            "gold": 153,
+            "predicted": 160,
+            "matched": 153,
+            "missing": 0,
+            "extra": 7,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 96
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 35,
+            "gold": 153,
+            "predicted": 160,
+            "matched": 153,
+            "missing": 0,
+            "extra": 7,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 96
+          },
+          "card": {
+            "events": 39,
+            "exact": 35,
+            "gold": 153,
+            "predicted": 160,
+            "matched": 153,
+            "missing": 0,
+            "extra": 7,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 96
+          },
+          "capture": {
+            "events": 39,
+            "exact": 35,
+            "gold": 153,
+            "predicted": 160,
+            "matched": 153,
+            "missing": 0,
+            "extra": 7,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 96
+          },
+          "whole": {
+            "events": 39,
+            "exact": 35,
+            "gold": 153,
+            "predicted": 160,
+            "matched": 153,
+            "missing": 0,
+            "extra": 7,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 96
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 58,
+        "rawGoldNotesPresent": 153,
+        "rawGoldNotesTotal": 153,
+        "eventsWithExactSimultaneousCandidate": 37
+      },
+      "runtime": {
+        "productMs": 2,
+        "independentMs": 1,
+        "peakHeapBytes": 257090016
+      }
+    },
+    {
+      "source": "harmony",
+      "policy": "onset-support",
+      "files": 20,
+      "events": 160,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-onset-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "card": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "capture": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "whole": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 659,
+            "matched": 560,
+            "missing": 192,
+            "extra": 99,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 659,
+            "matched": 560,
+            "missing": 192,
+            "extra": 99,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "card": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 659,
+            "matched": 560,
+            "missing": 192,
+            "extra": 99,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "capture": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 659,
+            "matched": 560,
+            "missing": 192,
+            "extra": 99,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "whole": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 659,
+            "matched": 560,
+            "missing": 192,
+            "extra": 99,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 1090,
+        "rawGoldNotesPresent": 752,
+        "rawGoldNotesTotal": 752,
+        "eventsWithExactSimultaneousCandidate": 64
+      },
+      "runtime": {
+        "productMs": 5,
+        "independentMs": 4,
+        "peakHeapBytes": 218390904
+      }
+    },
+    {
+      "source": "temporal",
+      "policy": "duration-support",
+      "files": 13,
+      "events": 22,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-duration-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 29,
+        "rawGoldNotesPresent": 83,
+        "rawGoldNotesTotal": 83,
+        "eventsWithExactSimultaneousCandidate": 21
+      },
+      "runtime": {
+        "productMs": 1,
+        "independentMs": 1,
+        "peakHeapBytes": 207397200
+      }
+    },
+    {
+      "source": "usage",
+      "policy": "duration-support",
+      "files": 26,
+      "events": 39,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-duration-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "card": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "capture": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "whole": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 39,
+            "exact": 37,
+            "gold": 153,
+            "predicted": 155,
+            "matched": 153,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 100
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 37,
+            "gold": 153,
+            "predicted": 155,
+            "matched": 153,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 100
+          },
+          "card": {
+            "events": 39,
+            "exact": 37,
+            "gold": 153,
+            "predicted": 155,
+            "matched": 153,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 100
+          },
+          "capture": {
+            "events": 39,
+            "exact": 37,
+            "gold": 153,
+            "predicted": 155,
+            "matched": 153,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 100
+          },
+          "whole": {
+            "events": 39,
+            "exact": 37,
+            "gold": 153,
+            "predicted": 155,
+            "matched": 153,
+            "missing": 0,
+            "extra": 2,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 100
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 58,
+        "rawGoldNotesPresent": 153,
+        "rawGoldNotesTotal": 153,
+        "eventsWithExactSimultaneousCandidate": 37
+      },
+      "runtime": {
+        "productMs": 2,
+        "independentMs": 1,
+        "peakHeapBytes": 207758328
+      }
+    },
+    {
+      "source": "harmony",
+      "policy": "duration-support",
+      "files": 20,
+      "events": 160,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-duration-support"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "card": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "capture": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "whole": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 0,
+            "matched": 0,
+            "missing": 752,
+            "extra": 0,
+            "bassMissing": 160,
+            "unavailable": 160,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 0,
+            "matched": 0,
+            "missing": 752,
+            "extra": 0,
+            "bassMissing": 160,
+            "unavailable": 160,
+            "duration": 640,
+            "exactDuration": 0
+          },
+          "card": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 760,
+            "matched": 540,
+            "missing": 212,
+            "extra": 220,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "capture": {
+            "events": 160,
+            "exact": 16,
+            "gold": 752,
+            "predicted": 760,
+            "matched": 540,
+            "missing": 212,
+            "extra": 220,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 64
+          },
+          "whole": {
+            "events": 160,
+            "exact": 0,
+            "gold": 752,
+            "predicted": 0,
+            "matched": 0,
+            "missing": 752,
+            "extra": 0,
+            "bassMissing": 160,
+            "unavailable": 160,
+            "duration": 640,
+            "exactDuration": 0
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 160,
+        "independentCandidateCount": 1090,
+        "rawGoldNotesPresent": 752,
+        "rawGoldNotesTotal": 752,
+        "eventsWithExactSimultaneousCandidate": 64
+      },
+      "runtime": {
+        "productMs": 5,
+        "independentMs": 4,
+        "peakHeapBytes": 209316696
+      }
+    },
+    {
+      "source": "temporal",
+      "policy": "role-aware-union",
+      "files": 13,
+      "events": 22,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p7-temporal-synthetic",
+          "corpusVersion": "p7-temporal-gold-v1",
+          "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+          "split": "authored-regression",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-role-aware-union"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "card": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "capture": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          },
+          "whole": {
+            "events": 22,
+            "exact": 21,
+            "gold": 83,
+            "predicted": 84,
+            "matched": 83,
+            "missing": 0,
+            "extra": 1,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 52,
+            "exactDuration": 50
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 29,
+        "rawGoldNotesPresent": 83,
+        "rawGoldNotesTotal": 83,
+        "eventsWithExactSimultaneousCandidate": 21
+      },
+      "runtime": {
+        "productMs": 1,
+        "independentMs": 1,
+        "peakHeapBytes": 224849712
+      }
+    },
+    {
+      "source": "usage",
+      "policy": "role-aware-union",
+      "files": 26,
+      "events": 39,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "p9-usage-profile-public",
+          "corpusVersion": "p9-usage-profile-v2",
+          "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "product-predicted",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-role-aware-union"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "card": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "capture": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          },
+          "whole": {
+            "events": 39,
+            "exact": 36,
+            "gold": 153,
+            "predicted": 159,
+            "matched": 153,
+            "missing": 0,
+            "extra": 6,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 98
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 39,
+            "exact": 39,
+            "gold": 153,
+            "predicted": 153,
+            "matched": 153,
+            "missing": 0,
+            "extra": 0,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 106
+          },
+          "persistence": {
+            "events": 39,
+            "exact": 39,
+            "gold": 153,
+            "predicted": 153,
+            "matched": 153,
+            "missing": 0,
+            "extra": 0,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 106
+          },
+          "card": {
+            "events": 39,
+            "exact": 39,
+            "gold": 153,
+            "predicted": 153,
+            "matched": 153,
+            "missing": 0,
+            "extra": 0,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 106
+          },
+          "capture": {
+            "events": 39,
+            "exact": 39,
+            "gold": 153,
+            "predicted": 153,
+            "matched": 153,
+            "missing": 0,
+            "extra": 0,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 106
+          },
+          "whole": {
+            "events": 39,
+            "exact": 39,
+            "gold": 153,
+            "predicted": 153,
+            "matched": 153,
+            "missing": 0,
+            "extra": 0,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 106,
+            "exactDuration": 106
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 0,
+        "independentCandidateCount": 58,
+        "rawGoldNotesPresent": 153,
+        "rawGoldNotesTotal": 153,
+        "eventsWithExactSimultaneousCandidate": 37
+      },
+      "runtime": {
+        "productMs": 2,
+        "independentMs": 1,
+        "peakHeapBytes": 247206120
+      }
+    },
+    {
+      "source": "harmony",
+      "policy": "role-aware-union",
+      "files": 20,
+      "events": 160,
+      "provenanceByArm": {
+        "product": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "product-extractor"
+        },
+        "independent": {
+          "corpusId": "harmony-support",
+          "corpusVersion": "1.0.0",
+          "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+          "split": "dev",
+          "codeCommit": "e566945ddf82e304a8d184463267384330d70f7b",
+          "policyId": "p9.1-source-selection-shadow-v1",
+          "boundarySource": "gold",
+          "identitySource": "gold",
+          "scoringContract": "p9.1-tier1-note-set-checkpoints-v1",
+          "metricVersion": "1",
+          "snapshotSource": "source-independent-role-aware-union"
+        }
+      },
+      "totals": {
+        "product": {
+          "extraction": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "card": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "capture": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          },
+          "whole": {
+            "events": 160,
+            "exact": 31,
+            "gold": 752,
+            "predicted": 642,
+            "matched": 588,
+            "missing": 164,
+            "extra": 54,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 124
+          }
+        },
+        "independent": {
+          "extraction": {
+            "events": 160,
+            "exact": 8,
+            "gold": 752,
+            "predicted": 168,
+            "matched": 168,
+            "missing": 584,
+            "extra": 0,
+            "bassMissing": 112,
+            "unavailable": 112,
+            "duration": 640,
+            "exactDuration": 32
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 8,
+            "gold": 752,
+            "predicted": 168,
+            "matched": 168,
+            "missing": 584,
+            "extra": 0,
+            "bassMissing": 112,
+            "unavailable": 112,
+            "duration": 640,
+            "exactDuration": 32
+          },
+          "card": {
+            "events": 160,
+            "exact": 18,
+            "gold": 752,
+            "predicted": 700,
+            "matched": 534,
+            "missing": 218,
+            "extra": 166,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 72
+          },
+          "capture": {
+            "events": 160,
+            "exact": 18,
+            "gold": 752,
+            "predicted": 700,
+            "matched": 534,
+            "missing": 218,
+            "extra": 166,
+            "bassMissing": 0,
+            "unavailable": 0,
+            "duration": 640,
+            "exactDuration": 72
+          },
+          "whole": {
+            "events": 160,
+            "exact": 8,
+            "gold": 752,
+            "predicted": 168,
+            "matched": 168,
+            "missing": 584,
+            "extra": 0,
+            "bassMissing": 112,
+            "unavailable": 112,
+            "duration": 640,
+            "exactDuration": 32
+          }
+        }
+      },
+      "review": {
+        "productUnavailable": 0,
+        "independentUnavailable": 112,
+        "independentCandidateCount": 1090,
+        "rawGoldNotesPresent": 752,
+        "rawGoldNotesTotal": 752,
+        "eventsWithExactSimultaneousCandidate": 64
+      },
+      "runtime": {
+        "productMs": 5,
+        "independentMs": 4,
+        "peakHeapBytes": 175500416
+      }
+    }
+  ]
+}

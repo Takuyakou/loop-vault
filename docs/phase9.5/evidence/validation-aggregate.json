@@ -1,0 +1,381 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "corpusId": "p9.5-public-ranking-mixed-v1",
+    "corpusVersion": "v1",
+    "authoredManifestSha": "d1a7408021750bf980d6acf5f2fda866cc1a9a5f06323ed518500aa0337df2c9",
+    "harmonyManifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+    "split": "validation",
+    "codeCommit": "cbcadf8ca6f625bc21396a99cacd48fa030b9ffc",
+    "policyId": "p9.5-local-ranking-comparison-v1",
+    "boundarySource": "AUTHORED_GOLD",
+    "identitySource": "CANDIDATE_GENERATOR_SOURCE_ONLY",
+    "snapshotSource": "RAW_SOURCE_WINDOW",
+    "scoringContract": "p9.4-tier2-v1+structural-proxy-v1",
+    "metricVersion": "p9.5-ranking-v1"
+  },
+  "availability": {
+    "authoredFullTier2": "AVAILABLE",
+    "harmonyFullTier2": "UNAVAILABLE_NO_INDEPENDENT_ACCEPTED_SET",
+    "candidateRendererPlayback": "UNAVAILABLE",
+    "humanReviewMetrics": "UNAVAILABLE_REVIEW_PROXY_ONLY"
+  },
+  "results": {
+    "OLD": {
+      "authored": {
+        "events": 9,
+        "candidateRecallFull": 8,
+        "candidateRecallBounded32": 8,
+        "top3": 8,
+        "top1": 7,
+        "correctionEvents": 2,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1286,
+        "wrongMarginMean": 0.085
+      },
+      "harmonyStructuralProxy": {
+        "events": 48,
+        "candidateRecallFull": 42,
+        "candidateRecallBounded32": 42,
+        "top3": 19,
+        "top1": 3,
+        "correctionEvents": 45,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.29,
+        "wrongMarginMean": 0.0811
+      },
+      "unknownControls": {
+        "events": 2,
+        "correctUnknown": 0,
+        "wrongResolved": 2,
+        "reviewFlags": 0,
+        "reviewTruePositive": 0,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 2
+      },
+      "reviewProxy": {
+        "precision": null,
+        "recall": 0,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "seventh": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "altered": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 24,
+          "top1": 0,
+          "recall": 24
+        },
+        "harmony-support-stress": {
+          "events": 24,
+          "top1": 3,
+          "recall": 18
+        }
+      }
+    },
+    "PITCH_BASS": {
+      "authored": {
+        "events": 9,
+        "candidateRecallFull": 8,
+        "candidateRecallBounded32": 8,
+        "top3": 8,
+        "top1": 7,
+        "correctionEvents": 2,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1443,
+        "wrongMarginMean": 0.12
+      },
+      "harmonyStructuralProxy": {
+        "events": 48,
+        "candidateRecallFull": 42,
+        "candidateRecallBounded32": 42,
+        "top3": 25,
+        "top1": 11,
+        "correctionEvents": 37,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.1089,
+        "wrongMarginMean": 0.0881
+      },
+      "unknownControls": {
+        "events": 2,
+        "correctUnknown": 1,
+        "wrongResolved": 1,
+        "reviewFlags": 1,
+        "reviewTruePositive": 1,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 2
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.25,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "seventh": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "altered": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 24,
+          "top1": 6,
+          "recall": 24
+        },
+        "harmony-support-stress": {
+          "events": 24,
+          "top1": 5,
+          "recall": 18
+        }
+      }
+    },
+    "FACTOR_NO_CONTEXT": {
+      "authored": {
+        "events": 9,
+        "candidateRecallFull": 8,
+        "candidateRecallBounded32": 8,
+        "top3": 8,
+        "top1": 7,
+        "correctionEvents": 2,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1817,
+        "wrongMarginMean": 0.129
+      },
+      "harmonyStructuralProxy": {
+        "events": 48,
+        "candidateRecallFull": 42,
+        "candidateRecallBounded32": 42,
+        "top3": 11,
+        "top1": 7,
+        "correctionEvents": 41,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.2157,
+        "wrongMarginMean": 0.0899
+      },
+      "unknownControls": {
+        "events": 2,
+        "correctUnknown": 1,
+        "wrongResolved": 1,
+        "reviewFlags": 1,
+        "reviewTruePositive": 1,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 2
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.25,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "seventh": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "altered": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 24,
+          "top1": 3,
+          "recall": 24
+        },
+        "harmony-support-stress": {
+          "events": 24,
+          "top1": 4,
+          "recall": 18
+        }
+      }
+    },
+    "FACTOR_CONTEXT": {
+      "authored": {
+        "events": 9,
+        "candidateRecallFull": 8,
+        "candidateRecallBounded32": 8,
+        "top3": 8,
+        "top1": 7,
+        "correctionEvents": 2,
+        "unknownFlags": 0,
+        "shortPassingEvents": 1,
+        "shortPassingTop1": 1,
+        "correctMarginMean": 0.1817,
+        "wrongMarginMean": 0.129
+      },
+      "harmonyStructuralProxy": {
+        "events": 48,
+        "candidateRecallFull": 42,
+        "candidateRecallBounded32": 42,
+        "top3": 11,
+        "top1": 7,
+        "correctionEvents": 41,
+        "unknownFlags": 0,
+        "shortPassingEvents": 0,
+        "shortPassingTop1": 0,
+        "correctMarginMean": 0.2157,
+        "wrongMarginMean": 0.0899
+      },
+      "unknownControls": {
+        "events": 2,
+        "correctUnknown": 1,
+        "wrongResolved": 1,
+        "reviewFlags": 1,
+        "reviewTruePositive": 1,
+        "reviewFalsePositive": 0,
+        "reviewErrors": 2
+      },
+      "reviewProxy": {
+        "precision": 1,
+        "recall": 0.25,
+        "falseAlarmPer100Cards": 0
+      },
+      "categories": {
+        "block": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "seventh": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "inversion": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "short-passing": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "suspended": {
+          "events": 1,
+          "top1": 0,
+          "recall": 1
+        },
+        "altered": {
+          "events": 1,
+          "top1": 1,
+          "recall": 1
+        },
+        "ghost-bass": {
+          "events": 1,
+          "top1": 0,
+          "recall": 0
+        },
+        "harmony-support-clean": {
+          "events": 24,
+          "top1": 3,
+          "recall": 24
+        },
+        "harmony-support-stress": {
+          "events": 24,
+          "top1": 4,
+          "recall": 18
+        }
+      }
+    }
+  }
+}

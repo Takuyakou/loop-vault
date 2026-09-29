@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phase": "9",
+  "status": "CLOSED",
+  "decision": "CORE C RETAINED / CORE V2 NOT PROMOTED",
+  "recommendedFutureDirection": "CORE_C_PLUS_CORRECTION_UX",
+  "productPromotion": false,
+  "vaultMigration": false,
+  "baseCommit": "4ce81e7ca30fa0b8213f7656a0404ec0a899991a",
+  "completed": ["P9.0", "P9.1", "P9.2", "P9.3", "P9.4", "P9.5", "P9.MID"],
+  "notRun": {
+    "P9.1-P": "P9.1 PROMOTION GATE NOT MET",
+    "P9.6": "PREREQUISITE NOT MET; FORMAL DECODER COMPARISON UNUSED",
+    "P9.7": "NO QUALIFIED CORE V2 CANDIDATE; NO RECORDED HOLDOUT OPENING",
+    "P9.8": "NO PRODUCT INTEGRATION OR PERSISTENCE DECISION"
+  },
+  "formalDecoderComparisonConsumed": false,
+  "sealedHoldoutResultAvailable": false,
+  "report": "FINAL-CLOSEOUT.md"
+}

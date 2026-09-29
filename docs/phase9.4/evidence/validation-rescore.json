@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "metricVersion": "p9.4-tier2-v1",
+  "provenance": {
+    "corpusId": "p7-public-authored-harmonic-truth",
+    "corpusVersion": "v1+p9.4-authored-roles-v1",
+    "manifestSha256": "5983dad10ae9bc346e676b2bb1cf6f9cac529d3d356450ee0b0e16df48d5e857",
+    "split": "validation",
+    "codeCommit": "19e0ec76937eb954fa19f8f77329d1dcf3a1a675",
+    "policyId": "p8.6-frozen-legacy-vs-shortcut-factorized",
+    "boundarySource": "AUTHORED_EVENT",
+    "identitySource": "P8.6_SOURCE_ORACLE_CANDIDATE",
+    "snapshotSource": "AUTHORED_SOURCE_NOTES_ORACLE",
+    "scoringContract": "p9.4-tier2-v1"
+  },
+  "availability": {
+    "acceptedIdentity": "AVAILABLE",
+    "rendererPlayback": "UNAVAILABLE_NO_RENDERED_CANDIDATE",
+    "definingToneLoss": "UNAVAILABLE_NO_RENDERED_CANDIDATE",
+    "harmonyCorpusFullTier2": "UNAVAILABLE_NO_INDEPENDENT_ACCEPTED_SETS"
+  },
+  "results": {
+    "legacy-closed": {
+      "events": 2,
+      "structuralRecall": 1,
+      "acceptedRecallFull": 1,
+      "acceptedRecallBounded32": 1,
+      "acceptedTop3": 1,
+      "acceptedTop1": 1,
+      "canonicalTop1": 1,
+      "acceptedAlternateTop1": 0,
+      "rendererPlaybackAvailable": 0,
+      "top1DefiningToneLossAvailable": 0,
+      "top1RootAgreement": 1,
+      "top1QualityAgreement": 1,
+      "top1BassAgreement": 1,
+      "top1FactorAgreement": 1
+    },
+    "shortcut-factorized": {
+      "events": 2,
+      "structuralRecall": 2,
+      "acceptedRecallFull": 2,
+      "acceptedRecallBounded32": 2,
+      "acceptedTop3": 2,
+      "acceptedTop1": 2,
+      "canonicalTop1": 2,
+      "acceptedAlternateTop1": 0,
+      "rendererPlaybackAvailable": 0,
+      "top1DefiningToneLossAvailable": 0,
+      "top1RootAgreement": 2,
+      "top1QualityAgreement": 2,
+      "top1BassAgreement": 2,
+      "top1FactorAgreement": 2
+    }
+  }
+}
