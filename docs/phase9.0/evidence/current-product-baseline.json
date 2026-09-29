@@ -1,0 +1,688 @@
+{
+  "schemaVersion": 1,
+  "testedCodeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+  "p7TemporalAudit": {
+    "provenance": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "authored-regression",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-default-filter-off",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    },
+    "result": {
+      "files": 13,
+      "raw": {
+        "events": 22,
+        "exact": 21,
+        "gold": 83,
+        "matched": 83,
+        "predicted": 84,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0
+      },
+      "optionalFilter": {
+        "events": 22,
+        "exact": 21,
+        "gold": 83,
+        "matched": 83,
+        "predicted": 84,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0
+      },
+      "boundaries": {
+        "gold": 9,
+        "product": 8,
+        "exactHits": 5
+      },
+      "tier2Structural": {
+        "events": 22,
+        "root": 19,
+        "quality": 18,
+        "bass": 18,
+        "all": 16
+      },
+      "filterImpact": {
+        "newlyMissingGold": 0,
+        "recoveredGold": 0,
+        "extraRemoved": 0,
+        "extraAdded": 0
+      },
+      "elapsedMs": 49,
+      "peakHeapBytes": 177365672
+    },
+    "optionalFilterProvenance": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "authored-regression",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-relative-support-filter-on",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    }
+  },
+  "harmonyDevAudit": {
+    "provenance": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "dev",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-default-filter-off",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    },
+    "result": {
+      "files": 20,
+      "raw": {
+        "events": 160,
+        "exact": 31,
+        "gold": 752,
+        "matched": 588,
+        "predicted": 642,
+        "missing": 164,
+        "extra": 54,
+        "bassMissing": 0
+      },
+      "optionalFilter": {
+        "events": 160,
+        "exact": 64,
+        "gold": 752,
+        "matched": 590,
+        "predicted": 590,
+        "missing": 162,
+        "extra": 0,
+        "bassMissing": 0
+      },
+      "boundaries": {
+        "gold": 140,
+        "product": 300,
+        "exactHits": 140
+      },
+      "tier2Structural": {
+        "events": 160,
+        "root": 155,
+        "quality": 48,
+        "bass": 160,
+        "all": 48
+      },
+      "filterImpact": {
+        "newlyMissingGold": 18,
+        "recoveredGold": 20,
+        "extraRemoved": 54,
+        "extraAdded": 0
+      },
+      "elapsedMs": 356,
+      "peakHeapBytes": 201863176
+    },
+    "optionalFilterProvenance": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "dev",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-relative-support-filter-on",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    }
+  },
+  "harmonyValidationAudit": {
+    "provenance": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-default-filter-off",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    },
+    "result": {
+      "files": 6,
+      "raw": {
+        "events": 48,
+        "exact": 16,
+        "gold": 192,
+        "matched": 150,
+        "predicted": 182,
+        "missing": 42,
+        "extra": 32,
+        "bassMissing": 0
+      },
+      "optionalFilter": {
+        "events": 48,
+        "exact": 32,
+        "gold": 192,
+        "matched": 150,
+        "predicted": 166,
+        "missing": 42,
+        "extra": 16,
+        "bassMissing": 0
+      },
+      "boundaries": {
+        "gold": 42,
+        "product": 88,
+        "exactHits": 42
+      },
+      "tier2Structural": {
+        "events": 48,
+        "root": 48,
+        "quality": 14,
+        "bass": 48,
+        "all": 14
+      },
+      "filterImpact": {
+        "newlyMissingGold": 0,
+        "recoveredGold": 0,
+        "extraRemoved": 16,
+        "extraAdded": 0
+      },
+      "elapsedMs": 119,
+      "peakHeapBytes": 197262320
+    },
+    "optionalFilterProvenance": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-relative-support-filter-on",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-conditional+structural-proxy-v1",
+      "metricVersion": "1"
+    }
+  },
+  "usageV2": {
+    "provenance": {
+      "corpusId": "p9-usage-profile-public",
+      "corpusVersion": "p9-usage-profile-v2",
+      "manifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+      "split": "dev",
+      "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+      "policyId": "current-product-default",
+      "boundarySource": "authored-gold",
+      "identitySource": "product-predicted",
+      "snapshotSource": "product-extractor",
+      "scoringContract": "tier1-note-set-conditional-v1",
+      "metricVersion": "1"
+    },
+    "condition": "Gold source windows + Product-predicted identity",
+    "totals": {
+      "events": 39,
+      "exact": 36,
+      "expected": 153,
+      "matched": 153,
+      "predicted": 159,
+      "missing": 0,
+      "extra": 6,
+      "bassMissing": 0,
+      "supportExpected": 153,
+      "supportMatched": 153
+    },
+    "byFamily": {
+      "clean": {
+        "events": 13,
+        "exact": 12,
+        "expected": 50,
+        "matched": 50,
+        "predicted": 51,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0,
+        "supportExpected": 50,
+        "supportMatched": 50
+      },
+      "instrument": {
+        "events": 4,
+        "exact": 4,
+        "expected": 16,
+        "matched": 16,
+        "predicted": 16,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportExpected": 16,
+        "supportMatched": 16
+      },
+      "temporal": {
+        "events": 10,
+        "exact": 10,
+        "expected": 40,
+        "matched": 40,
+        "predicted": 40,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportExpected": 40,
+        "supportMatched": 40
+      },
+      "transcription": {
+        "events": 8,
+        "exact": 6,
+        "expected": 31,
+        "matched": 31,
+        "predicted": 36,
+        "missing": 0,
+        "extra": 5,
+        "bassMissing": 0,
+        "supportExpected": 31,
+        "supportMatched": 31
+      },
+      "metadata": {
+        "events": 4,
+        "exact": 4,
+        "expected": 16,
+        "matched": 16,
+        "predicted": 16,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportExpected": 16,
+        "supportMatched": 16
+      }
+    },
+    "boundaries": {
+      "gold": 13,
+      "product": 10,
+      "hits": 10
+    },
+    "elapsedMs": 89,
+    "peakHeapBytes": 188154800
+  },
+  "tier1Dev": {
+    "provenanceByArm": {
+      "product-extractor": {
+        "corpusId": "harmony-support",
+        "corpusVersion": "1.0.0",
+        "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+        "split": "dev",
+        "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+        "policyId": "current-product-default-filter-off",
+        "boundarySource": "gold",
+        "identitySource": "gold",
+        "scoringContract": "p7-tier1-checkpoints-v1",
+        "metricVersion": "1",
+        "snapshotSource": "product-extractor"
+      },
+      "copy-oracle": {
+        "corpusId": "harmony-support",
+        "corpusVersion": "1.0.0",
+        "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+        "split": "dev",
+        "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+        "policyId": "current-product-default-filter-off",
+        "boundarySource": "gold",
+        "identitySource": "gold",
+        "scoringContract": "p7-tier1-checkpoints-v1",
+        "metricVersion": "1",
+        "snapshotSource": "copy-oracle"
+      }
+    },
+    "version": "p7-tier1-checkpoints-v1",
+    "result": {
+      "harmony-support-dev": {
+        "files": 20,
+        "events": 160,
+        "checkpoints": {
+          "product-extractor": {
+            "extraction": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            },
+            "representation": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            },
+            "persistence": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            },
+            "cardPlayback": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            },
+            "capturePlayback": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            },
+            "wholePlayback": {
+              "events": 160,
+              "exact": 31,
+              "truePositive": 588,
+              "predicted": 642,
+              "gold": 752,
+              "missing": 164,
+              "extra": 54,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 124
+            }
+          },
+          "copy-oracle": {
+            "extraction": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            },
+            "representation": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            },
+            "persistence": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            },
+            "cardPlayback": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            },
+            "capturePlayback": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            },
+            "wholePlayback": {
+              "events": 160,
+              "exact": 160,
+              "truePositive": 752,
+              "predicted": 752,
+              "gold": 752,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 640,
+              "exactDurationBeats": 640
+            }
+          }
+        }
+      }
+    }
+  },
+  "tier1Validation": {
+    "provenanceByArm": {
+      "product-extractor": {
+        "corpusId": "harmony-support",
+        "corpusVersion": "1.0.0",
+        "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+        "split": "validation",
+        "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+        "policyId": "current-product-default-filter-off",
+        "boundarySource": "gold",
+        "identitySource": "gold",
+        "scoringContract": "p7-tier1-checkpoints-v1",
+        "metricVersion": "1",
+        "snapshotSource": "product-extractor"
+      },
+      "copy-oracle": {
+        "corpusId": "harmony-support",
+        "corpusVersion": "1.0.0",
+        "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+        "split": "validation",
+        "codeCommit": "6f846047c3e028bc5280efaa72627f2c83413213",
+        "policyId": "current-product-default-filter-off",
+        "boundarySource": "gold",
+        "identitySource": "gold",
+        "scoringContract": "p7-tier1-checkpoints-v1",
+        "metricVersion": "1",
+        "snapshotSource": "copy-oracle"
+      }
+    },
+    "version": "p7-tier1-checkpoints-v1",
+    "result": {
+      "harmony-support-validation": {
+        "files": 6,
+        "events": 48,
+        "checkpoints": {
+          "product-extractor": {
+            "extraction": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            },
+            "representation": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            },
+            "persistence": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            },
+            "cardPlayback": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            },
+            "capturePlayback": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            },
+            "wholePlayback": {
+              "events": 48,
+              "exact": 16,
+              "truePositive": 150,
+              "predicted": 182,
+              "gold": 192,
+              "missing": 42,
+              "extra": 32,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 64
+            }
+          },
+          "copy-oracle": {
+            "extraction": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            },
+            "representation": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            },
+            "persistence": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            },
+            "cardPlayback": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            },
+            "capturePlayback": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            },
+            "wholePlayback": {
+              "events": 48,
+              "exact": 48,
+              "truePositive": 192,
+              "predicted": 192,
+              "gold": 192,
+              "missing": 0,
+              "extra": 0,
+              "unavailable": 0,
+              "durationBeats": 192,
+              "exactDurationBeats": 192
+            }
+          }
+        }
+      }
+    }
+  }
+}
