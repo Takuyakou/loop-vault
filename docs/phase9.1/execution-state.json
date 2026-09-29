@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "9.1",
+  "status": "in-progress",
+  "activeStage": "P9.1-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "33c166a97f844edb505cee9d3a05f25887d41bfa",
+  "lastVerifiedCommit": "",
+  "currentBranch": "research/phase9-core-v2",
+  "requiredGates": {
+    "P9.1-00": ["research-tests", "matched-dev", "frozen-validation", "vault-playback", "typecheck", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+  },
+  "gateResults": {},
+  "nextAction": "Freeze dev-selected research policy before public validation; do not start P9.1-P.",
+  "updatedAt": "2026-09-29"
+}
