@@ -6,11 +6,11 @@ Read root AGENTS.md and the AI handoff first. Git and current code outrank this 
 
 ## Status
 
-- Status: in-progress
-- Active stage: P9.1-00
-- Completed stages: none
+- Status: completed
+- Active stage: none
+- Completed stages: P9.1-00 (fresh FULL tested HEAD 418d19443fe1f64271ebc34801b8a629136cbe6f)
 - Branch: research/phase9-core-v2
-- Next action: freeze dev-selected source-only policy, run one public validation, record matched gates.
+- Next action: STOP after P9.1 research. Source-independent candidate is NO-GO; await separate assignment for later work.
 
 ## Required Reading Order
 

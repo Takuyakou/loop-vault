@@ -1,18 +1,42 @@
 {
   "schemaVersion": 1,
   "phaseId": "9.1",
-  "status": "in-progress",
-  "activeStage": "P9.1-00",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P9.1-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "33c166a97f844edb505cee9d3a05f25887d41bfa",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "418d19443fe1f64271ebc34801b8a629136cbe6f",
   "currentBranch": "research/phase9-core-v2",
   "requiredGates": {
-    "P9.1-00": ["research-tests", "matched-dev", "frozen-validation", "vault-playback", "typecheck", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+    "P9.1-00": [
+      "research-tests",
+      "matched-dev",
+      "frozen-validation",
+      "vault-playback",
+      "typecheck",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-security",
+      "production-diff-zero",
+      "fresh-full"
+    ]
   },
-  "gateResults": {},
-  "nextAction": "Freeze dev-selected research policy before public validation; do not start P9.1-P.",
+  "gateResults": {
+    "research-tests": "pass",
+    "matched-dev": "pass",
+    "frozen-validation": "pass",
+    "vault-playback": "pass",
+    "typecheck": "pass",
+    "phase-docs": "pass",
+    "ai-handoff": "pass",
+    "privacy-security": "pass",
+    "production-diff-zero": "pass",
+    "fresh-full": "pass"
+  },
+  "nextAction": "STOP after P9.1 research; candidate NO-GO. Do not start P9.1-P or P9.2 without assignment.",
   "updatedAt": "2026-09-29"
 }
