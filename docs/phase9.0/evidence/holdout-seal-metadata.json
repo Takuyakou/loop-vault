@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "p9-sealed-v1",
+  "status": "SEALED",
+  "split": "holdout",
+  "generatorVersion": "p9-usage-profile-v1+shift-v1",
+  "recipeFamily": "composite-temporal-transcription-instrument",
+  "sourceRecipeCount": 10,
+  "shift": {
+    "tempoBpm": [
+      166,
+      206
+    ],
+    "jitterTicks": [
+      16,
+      32
+    ],
+    "meter": [
+      "3/4",
+      "5/4"
+    ],
+    "registerSemitones": [
+      -12,
+      -7,
+      7,
+      12
+    ],
+    "trackPattern": "three-way-split"
+  },
+  "manifestSha256": "22723cdc814177531281f5093c103684414d9b5122f389e3e5ac0399b19bf8d1",
+  "payloadSha256": "611cf41f9234a7795eff488708e0b44f44e7e2e2b958a3c641b263d7d5870b9e",
+  "openingCount": 0,
+  "contentsTracked": false
+}

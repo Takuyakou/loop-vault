@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "policyId": "p9-baseline-guardrails-v1",
+  "frozenBeforeStage": "P9.2",
+  "selectionEvidence": ["p7-temporal-synthetic", "p9-usage-profile-v2-dev", "harmony-support-v1-dev", "harmony-support-v1-validation", "public-10-minute-resource-fixture"],
+  "privateWitnessUsed": false,
+  "sealedHoldoutUsed": false,
+  "rules": {
+    "missingSupport": "no increase from matched current Product baseline",
+    "missingBass": "no increase from matched current Product baseline",
+    "missingDefiningTone": "no increase once independent factor Gold is available",
+    "extraNotesMaximumPer100Gold": 17,
+    "extraNotesMaximumPer100GoldByCorpus": { "p7-temporal-synthetic": 1.21, "p9-usage-profile-v2-dev": 3.93, "harmony-support-v1-dev": 7.19, "harmony-support-v1-validation": 16.67 },
+    "extraNotesMaximumDeltaFromMatchedProduct": 0,
+    "reviewPrecisionMinimum": 0.8,
+    "reviewRecallMinimum": 0.9,
+    "reviewFalseAlarmMaximumPer100Cards": 10,
+    "cardInflationMaximumFraction": 0.1,
+    "runtime10MinuteWarningMs": 1200,
+    "runtime10MinuteHardMs": 3000,
+    "heapUsedHardMiB": 512
+  },
+  "definitions": {
+    "extraNotesPer100Gold": "100 * extra source-note instances / Gold source-note instances",
+    "reviewPrecision": "correct review flags / all review flags; undefined when no flags",
+    "reviewRecall": "flagged true errors / all true errors; undefined when no errors",
+    "reviewFalseAlarmPer100Cards": "100 * false review flags / evaluated Gold cards",
+    "cardInflation": "(proposed harmonic cards - Gold harmonic cards) / Gold harmonic cards",
+    "runtime10Minute": "same published 120 BPM repeated-chord, 10-minute fixture on the same host",
+    "heapUsed": "maximum sampled Node heapUsed during the same workload, not total process memory"
+  },
+  "limitations": [
+    "Extra note caps are split-specific ceilings rounded just above the measured current Product baseline; matched-product delta must be nonpositive.",
+    "Review thresholds are predeclared policy limits because current Product does not emit comparable ReviewReason predictions.",
+    "Defining-tone non-regression awaits accepted factor Gold in P9.4.",
+    "Resource limits are local-host research gates and require comparable runtime provenance."
+  ]
+}

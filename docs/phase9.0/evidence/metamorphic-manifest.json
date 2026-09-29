@@ -1,0 +1,15 @@
+{
+  "sourceManifestSha": "a733577154e4af3f0f7ab1fd701c464f5a1b452ab8c8807b9b912607419ac9d7",
+  "variantCount": 208,
+  "variantTypes": [
+    "transpose-plus-2",
+    "tempo-136",
+    "jitter-plus-5-ticks",
+    "velocity-minus-12",
+    "register-plus-12",
+    "meter-representation-one-quarter",
+    "track-split",
+    "track-merge"
+  ],
+  "sha256": "44148324993a442c81b2ec6219d67c1c12747979e4958efa349276335d33fe6d"
+}
