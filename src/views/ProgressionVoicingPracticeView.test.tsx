@@ -995,12 +995,39 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).not.toContain("練習する進行を選択してください");
   });
 
-  it("shows explicit unavailable when Source MIDI is missing from a loaded Custom progression", async () => {
+  it("disables absent Source MIDI without affecting a saved Custom progression", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { custom: snapshot("custom") }, "custom");
+    expect(button(container, "Source MIDI").disabled).toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-source-unavailable']")?.textContent)
+      .toContain("Source MIDI はありません");
+    expect(button(container, "Custom").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "開始").disabled).toBe(false);
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start).toHaveBeenCalledOnce();
+  });
+
+  it("shows a partial Source MIDI count before selection and retains per-event unavailability", async () => {
+    const runtime = new FakeTransport();
+    const partial = snapshot("source-midi");
+    delete (partial.events[1] as { voicing?: unknown }).voicing;
+    const container = await renderView(runtime, {
+      "source-midi": partial,
+      "basic-full": snapshot("basic-full"),
+    }, "basic-full");
+    expect(button(container, "Source MIDI").disabled).toBe(false);
+    expect(container.querySelector("[data-testid='voicing-loop-source-availability']")?.textContent).toContain("1/2");
     await act(async () => button(container, "Source MIDI").click());
-    expect(container.textContent).toContain("選択したVoicingを利用できません");
-    expect(container.textContent).not.toContain("練習する進行を選択してください");
+    expect(container.textContent).toContain("Dm7: 利用不可");
+    expect(button(container, "開始").disabled).toBe(true);
+  });
+
+  it("keeps complete Source MIDI available without a partial-count warning", async () => {
+    const container = await renderView(new FakeTransport(), {
+      "source-midi": snapshot("source-midi"),
+    }, "source-midi");
+    expect(button(container, "Source MIDI").disabled).toBe(false);
+    expect(container.querySelector("[data-testid='voicing-loop-source-availability']")).toBeNull();
   });
 
   it("requires every event to resolve before Start and lists every unresolved chord", async () => {

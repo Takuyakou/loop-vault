@@ -13,6 +13,7 @@ import {
   createProgressionPracticeClockState,
   projectProgressionPracticeClock,
   reduceProgressionPracticeClock,
+  resolveProgressionPracticeVoicings,
   type ProgressionVoicingSelection,
 } from "./progressionVoicingPractice";
 import {
@@ -228,7 +229,13 @@ describe("Text Progression downstream persistence", () => {
       expect(snapshot).toMatchObject({ bpm: 96, key: "C major", lengthBeats: 16 });
     }
 
+    expect(block.chords.every((event) => event.voicingMemory?.sourceVoicing === undefined)).toBe(true);
+    const source = handoff.handoff.snapshots["source-midi"]!;
+    expect(source.events).toHaveLength(block.chords.length);
+    expect(source.events.every((event) => event.voicing === undefined)).toBe(true);
     const snapshot = handoff.handoff.snapshots["basic-full"]!;
+    expect(resolveProgressionPracticeVoicings(snapshot, { lessonStudyCategory: "teacher" }).events
+      .every((event) => event.status === "SUPPORTED")).toBe(true);
     let state = reduceProgressionPracticeClock(
       snapshot,
       createProgressionPracticeClockState(snapshot, { countInBars: 0 }),
