@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: b97d9d2f7d5bd58cf7539fb27f548c85d68e9a17
-- date: 2026-09-28
+- commit: 4ce81e7ca30fa0b8213f7656a0404ec0a899991a
+- date: 2026-09-29
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -42,6 +42,10 @@ progression vocabulary. It is **not** a chord detector.
 - P5.37 Family B correction and P5.38 Family A presentation grouping are both
   promoted, hardened, and enabled by default with explicit-false exact-legacy
   rollback flags retained.
+- Phase 9 Core v2 research is closed on `research/phase9-core-v2` without Product
+  promotion or merge. P9.0–P9.5 and P9.MID are complete; P9.6–P9.8 were not run.
+  Current Core C remains the Product/rollback baseline. The disposition and
+  limitations are in [`FINAL-CLOSEOUT.md`](../phase9/FINAL-CLOSEOUT.md).
 
 ## Major systems (see ARCHITECTURE-MAP for paths)
 

@@ -149,3 +149,14 @@ code/tests; `PROPOSED` items are direction only.
 - Evidence: `docs/phase5.40/reports/P5.40-closeout.md` and the frozen P5.40-02c safety report; production default in `src/domain/midi/analysis.ts`.
 - Consequences: Preserve the independent source-first reviews, anonymous safety corpus, Shadow diagnostics, and deterministic/source-fidelity harness for a future Core v2 acceptance corpus; keep private artifacts Git ignored.
 - Do not: treat a local ranking PASS as Promotion; retune P5.40, stack another advanced-analysis patch on the old Core, remove the old Core before replacement, or claim Core v2 exists.
+
+## ADR-011 — Phase 9 Core v2 research closeout
+
+- ID: ADR-011
+- Title: Close Phase 9 without Core v2 Product promotion
+- Status: CONFIRMED (research disposition; no new Product implementation)
+- Decision: Retain Core C, the current Product extractor and Identity/Decoder, and Vault v2 as the Product/rollback baseline. P9.0–P9.5 and P9.MID are complete; P9.6–P9.8 were not run. P9.MID recommends Core C plus Correction UX as a separately scoped future investment, not a promoted feature.
+- Reason: Source and Temporal candidates did not meet public non-regression; Ranking v2 did not improve accepted Top1. P9.6's Ranking-improvement prerequisite was not met. The Product integration and correction-effort gates remain unmeasured.
+- Evidence: `docs/phase9/FINAL-CLOSEOUT.md`, `docs/phase9/P9.MID-oracle-and-strategy.md`, `docs/phase9/P9.6-status.json`; research branch has no `src/**` or `src-tauri/**` difference from local `master` at closeout base HEAD.
+- Consequences: Preserve research assets and the unused formal Decoder comparison. No sealed holdout result or Vault v3 decision is claimed.
+- Do not: interpret Phase 9 closure as Core v2 promotion, Decoder NO-GO, P9.7 holdout validation, P9.8 persistence completion, or authorization to implement Correction UX.
