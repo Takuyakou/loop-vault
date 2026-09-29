@@ -267,6 +267,10 @@ export function ProgressionVoicingPracticeView({
   const [openEnabled, setOpenEnabled] = useState(false);
   const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(true);
   const lessonRulesSelected = selection !== "source-midi" && selection !== "custom";
+  const sourceMidiEvents = snapshots?.["source-midi"]?.events ?? [];
+  const sourceMidiTotal = snapshots?.["source-midi"]?.events.length
+    ?? Object.values(snapshots ?? {}).find((candidate) => candidate !== undefined)?.events.length ?? 0;
+  const sourceMidiAvailable = sourceMidiEvents.filter((event) => event.voicing?.kind === "source-midi").length;
   const sourceSnapshot = snapshots?.[selection];
   const sourceKey = useMemo(
     () => sourceSnapshot?.key ? parseKeySignature(sourceSnapshot.key) : undefined,
@@ -1165,7 +1169,7 @@ export function ProgressionVoicingPracticeView({
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto" data-testid="voicing-loop-workspace">
       <Surface className="lv-vl-controls shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
         <div className="lv-vl-controls-row flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap" data-testid="voicing-loop-controls-row">
-          <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-source-help">
+          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-source-help">
             <legend className="lv-section-kicker mr-1 float-left">ソース</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
             {sourceSelections.map((item) => {
@@ -1177,12 +1181,27 @@ export function ProgressionVoicingPracticeView({
                   variant="secondary"
                   className="lv-choice"
                   aria-pressed={pressed}
+                  aria-describedby={item.id === "source-midi" && sourceMidiTotal > 0 && sourceMidiAvailable === 0
+                    ? "voicing-loop-source-unavailable" : undefined}
+                  disabled={item.id === "source-midi" && sourceMidiAvailable === 0}
                   onClick={() => changeSelection(item.id === "lesson-rules" ? "basic-full" : item.id)}
                 >
                   {item.ja}
                 </Button>
               );
             })}
+            {sourceMidiAvailable > 0 && sourceMidiAvailable < sourceMidiTotal
+              ? <span className="text-xs text-[var(--lv-text-secondary)]" data-testid="voicing-loop-source-availability"
+                  aria-label={`Source MIDI ${sourceMidiAvailable}/${sourceMidiTotal}`}>
+                  {`${sourceMidiAvailable}/${sourceMidiTotal}`}
+                </span>
+              : null}
+            {sourceMidiTotal > 0 && sourceMidiAvailable === 0
+              ? <span id="voicing-loop-source-unavailable" className="max-w-xs whitespace-normal text-xs text-[var(--lv-text-secondary)]"
+                  data-testid="voicing-loop-source-unavailable">
+                  Source MIDI はありません。保存済みの Source MIDI Voicing がありません。Teacher または Custom を使用してください。
+                </span>
+              : null}
           </fieldset>
           <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help">
             <legend className="lv-section-kicker mr-1 float-left">学び方</legend>

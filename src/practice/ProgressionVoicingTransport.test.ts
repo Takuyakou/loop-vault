@@ -10,6 +10,7 @@ import {
   reduceProgressionPracticeClock,
   PROGRESSION_VOICING_PRACTICE_PPQ,
   progressionPracticeTicksAtBeat,
+  resolveProgressionPracticeVoicings,
 } from "../domain/progressionVoicingPractice";
 import { createPreviewInstrument } from "../audio/chordPreview";
 import { ProgressionVoicingTransport, ProgressionVoicingTransportV2 } from "./ProgressionVoicingTransport";
@@ -28,11 +29,16 @@ const toneMock = vi.hoisted(() => {
   }
   const activeScheduleIds = new Set<number>();
   const activeInstruments = new Set<PolySynth>();
+  let positionValue: number | string = 0;
   const transport = {
     PPQ: 192,
     ticks: 0,
     getTicksAtTime: vi.fn((_time: number) => 0),
-    position: 0 as number | string,
+    get position(): number | string { return positionValue; },
+    set position(value: number | string) {
+      positionValue = value;
+      if (typeof value === "string" && /^\d+i$/.test(value)) this.ticks = Number.parseInt(value, 10);
+    },
     bpm: { value: 80, rampTo: vi.fn() },
     start: vi.fn(),
     stop: vi.fn(),
@@ -113,6 +119,77 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("registers the first no-count-in attack before starting Tone Transport", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(toneMock.oneShots.some((item) => item.at === "0i")).toBe(true);
+    runtime.stop();
+  });
+  it.each([
+    ["source-midi", 0], ["custom", 0], ["basic-full", 0],
+    ["source-midi", 1], ["custom", 1], ["basic-full", 1],
+  ] as const)("starts %s in first-then-second order with %i count-in bars", async (selection, countInBars) => {
+    const events = snapshot.events.map((event) => ({
+      ...event,
+      ...(selection === "basic-full" ? { voicing: undefined }
+        : { voicing: { ...event.voicing!, kind: selection } }),
+    }));
+    const selectedSnapshot: ProgressionVoicingPracticeSnapshot = { ...snapshot, selection, events };
+    const selectedPlan = resolveProgressionPracticeVoicings(selectedSnapshot,
+      selection === "basic-full" ? { lessonStudyCategory: "teacher" } : {});
+    expect(selectedPlan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot: selectedSnapshot, plan: selectedPlan, bpm: 80, countInBars,
+      metronomeEnabled: countInBars > 0, onTransportBeat: vi.fn() });
+
+    const ppq = toneMock.transport.PPQ;
+    if (countInBars > 0) {
+      expect(toneMock.oneShots).toHaveLength(0);
+      toneMock.transport.ticks = 2 * ppq;
+      toneMock.scheduled[0]!.callback(2);
+    }
+    const first = toneMock.oneShots.find((item) => item.at === `${countInBars * 4 * ppq}i`);
+    expect(first).toBeDefined();
+    first!.callback(2);
+    expect(toneMock.instruments[0]!.triggerAttackRelease).toHaveBeenCalledTimes(1);
+
+    toneMock.transport.ticks = (countInBars * 4 + 2) * ppq;
+    toneMock.scheduled[0]!.callback(3);
+    const second = toneMock.oneShots.find((item) => item.at === `${(countInBars * 4 + 2) * ppq}i`);
+    expect(second).toBeDefined();
+    second!.callback(3);
+    expect(toneMock.instruments[0]!.triggerAttackRelease).toHaveBeenCalledTimes(2);
+    expect(toneMock.instruments[0]!.triggerAttackRelease.mock.calls.map((call) => call[2]))
+      .toEqual([2, 3]);
+    runtime.stop();
+  });
+
+  it("attacks a single first chord once after Start, Stop/Start, and Restart", async () => {
+    const one = { ...snapshot,
+      lengthBeats: 4,
+      events: [{ ...snapshot.events[0]!, durationBeats: 4 }],
+      spans: [{ kind: "chord" as const, eventIndex: 0, startBeat: 0, durationBeats: 4 }],
+    };
+    const onePlan = { ...plan, events: [plan.events[0]!] };
+    const runtime = new ProgressionVoicingTransportV2();
+    const start = () => runtime.start({ snapshot: one, plan: onePlan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+
+    await start();
+    toneMock.oneShots.find((item) => item.at === "0i")!.callback(1);
+    expect(toneMock.instruments[0]!.triggerAttackRelease).toHaveBeenCalledTimes(1);
+    runtime.stop();
+
+    await start();
+    toneMock.oneShots.filter((item) => item.at === "0i").slice(-1)[0]!.callback(2);
+    expect(toneMock.instruments[2]!.triggerAttackRelease).toHaveBeenCalledTimes(1);
+
+    await runtime.restart();
+    toneMock.oneShots.filter((item) => item.at === "0i").slice(-1)[0]!.callback(3);
+    expect(toneMock.instruments[2]!.triggerAttackRelease).toHaveBeenCalledTimes(2);
+    runtime.stop();
+  });
   it("v2 registers bounded rolling work and invalidates old chord callbacks on seek", async () => {
     const runtime = new ProgressionVoicingTransportV2();
     const onTransportBeat = vi.fn();
@@ -892,7 +969,8 @@ describe("ProgressionVoicingTransport", () => {
     oldVisual.callback(2);
     expect(toneMock.drawCallbacks).toHaveLength(0);
     expect(onTransportBeat).toHaveBeenCalledTimes(deliveredBeforeStale);
-    expect(toneMock.activeScheduleIds.size).toBe(3);
+    expect(toneMock.activeScheduleIds.size).toBe(5);
+    expect(toneMock.oneShots.slice(-2).map((item) => item.at)).toEqual(["0i", "384i"]);
 
     const newVisual = toneMock.scheduled[toneMock.scheduled.length - 1]!;
     toneMock.transport.ticks = 0;
