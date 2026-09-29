@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "status": "proposal (P10.0-00, synthetic data only; the human confirms or changes it)",
+  "evidence": [
+    "docs/phase10.0/evidence/P10.0-00-correction-model.json",
+    "docs/phase10.0/evidence/P10.0-00-baseline.json"
+  ],
+  "melody": {
+    "rule": "continued-top-or-melody-nonchord",
+    "description": "Flag a card when a used note is the highest note of the span and started before the card (held over from the previous one), or when a used note belongs to a voice whose pre-analysis role is melody and its pitch class is not a chord tone of the card name.",
+    "continuedToleranceBeats": 0.000001,
+    "melodyRoles": ["melody"],
+    "requireNonChordToneForRoleMatch": true
+  },
+  "percussion": {
+    "shortMaxBeats": 0.3,
+    "gridBeats": 0.25,
+    "gridToleranceBeats": 0.05,
+    "minRepeatsInSong": 16,
+    "description": "A pitch is percussion-like when at least minRepeatsInSong of its notes last shortMaxBeats or less and start on the gridBeats grid. Flag a card when a used note has such a pitch. 'Select the same short notes' uses the same shortMaxBeats (spec 7.2)."
+  },
+  "sameChordSplit": {
+    "compare": "pitch-class set of used notes + lowest used pitch",
+    "description": "Flag a card when the next card's used notes have the same pitch-class set and the same lowest pitch. Shift+M merges only these (exact match)."
+  },
+  "reviewLimits": {
+    "note": "Spec 1: a flag rate target (false flags per 100 cards) is set after the P10.0-07 measurement; none is fixed here."
+  }
+}
