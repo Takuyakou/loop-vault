@@ -1,18 +1,48 @@
 {
   "schemaVersion": 1,
   "phaseId": "9.5",
-  "status": "in-progress",
-  "activeStage": "P9.5-00",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P9.5-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "e5961dbfa55ce84433ac9deac89299dd425b008e",
-  "lastVerifiedCommit": "e5961dbfa55ce84433ac9deac89299dd425b008e",
+  "lastVerifiedCommit": "b82e9f48b6cba325df63308c21b044b4cdd839c3",
   "currentBranch": "research/phase9-core-v2",
   "requiredGates": {
-    "P9.5-00": ["ranking-tests", "research-typecheck", "research-lint", "dev-freeze", "frozen-validation", "candidate-membership", "unknown-assessment", "resource", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+    "P9.5-00": [
+      "ranking-tests",
+      "research-typecheck",
+      "research-lint",
+      "dev-freeze",
+      "frozen-validation",
+      "candidate-membership",
+      "unknown-assessment",
+      "resource",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-security",
+      "production-diff-zero",
+      "fresh-full"
+    ]
   },
-  "gateResults": {},
-  "nextAction": "Freeze public dev policy before validation.",
+  "gateResults": {
+    "ranking-tests": "pass",
+    "research-typecheck": "pass",
+    "research-lint": "pass",
+    "dev-freeze": "pass",
+    "frozen-validation": "pass",
+    "candidate-membership": "pass",
+    "unknown-assessment": "pass",
+    "resource": "pass",
+    "phase-docs": "pass",
+    "ai-handoff": "pass",
+    "privacy-security": "pass",
+    "production-diff-zero": "pass",
+    "fresh-full": "pass"
+  },
+  "nextAction": "STOP after P9.5 research; ranking NO-GO. P9.6 requires separate assignment.",
   "updatedAt": "2026-09-29"
 }

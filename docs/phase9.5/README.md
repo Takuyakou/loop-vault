@@ -6,10 +6,11 @@ Git and current code are authoritative. This package covers only the separately 
 
 ## Status
 
-- Status: in progress
-- Active stage: P9.5-00
+- Status: completed
+- Active stage: none
 - Branch: research/phase9-core-v2
-- Next action: freeze the dev comparison, then evaluate public validation once.
+- Completed stage: P9.5-00 (fresh FULL tested HEAD b82e9f48b6cba325df63308c21b044b4cdd839c3).
+- Next action: STOP after P9.5; P9.6 requires separate assignment.
 
 ## Required Reading Order
 
