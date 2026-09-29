@@ -6,12 +6,12 @@ Read root `AGENTS.md` and the AI handoff first. Git and current code outrank thi
 
 ## Status
 
-- **Status:** in progress
-- **Active stage:** P9.0-00
-- **Completed stages:** none
+- **Status:** completed
+- **Active stage:** none
+- **Completed stages:** P9.0-00 (tested HEAD 7409cf31ab036e9517093dd6f7390200a4290c88)
 - **Base commit:** `a1ce207`
 - **Branch:** `research/phase9-core-v2`
-- **Next action:** complete the P9.0 baseline, research harness, seal, thresholds and gates.
+- **Next action:** STOP at P9.0 handoff; P9.1 needs a separate assignment.
 
 ## Required Reading Order
 
@@ -23,7 +23,7 @@ Read root `AGENTS.md` and the AI handoff first. Git and current code outrank thi
 
 ## Stages
 
-### P9.0-00 — Repository audit
+### P9.0-00 — Architecture consolidation, baseline and holdout seal
 
 Audit Product and historical evidence; establish research contracts, baseline, deterministic public-safe corpus, provenance, and a sealed future holdout. No Product behavior or Vault schema change.
 

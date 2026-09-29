@@ -1,18 +1,36 @@
 {
   "schemaVersion": 1,
   "phaseId": "9.0",
-  "status": "in-progress",
-  "activeStage": "P9.0-00",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P9.0-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "a1ce207",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "7409cf31ab036e9517093dd6f7390200a4290c88",
   "currentBranch": "research/phase9-core-v2",
   "requiredGates": {
-    "P9.0-00": ["research-tests", "baseline-reproducible", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+    "P9.0-00": [
+      "research-tests",
+      "baseline-reproducible",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-security",
+      "production-diff-zero",
+      "fresh-full"
+    ]
   },
-  "gateResults": {},
-  "nextAction": "Complete P9.0 research foundation and run the stage candidate gates",
+  "gateResults": {
+    "research-tests": "pass",
+    "baseline-reproducible": "pass",
+    "phase-docs": "pass",
+    "ai-handoff": "pass",
+    "privacy-security": "pass",
+    "production-diff-zero": "pass",
+    "fresh-full": "pass"
+  },
+  "nextAction": "STOP after P9.0; await separate P9.1 assignment. Holdout remains sealed until P9.7.",
   "updatedAt": "2026-09-29"
 }
