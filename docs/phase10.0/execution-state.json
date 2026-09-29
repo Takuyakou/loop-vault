@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
   "phaseId": "10.0",
-  "status": "planned",
-  "activeStage": "P10.0-00",
-  "completedStages": [],
+  "status": "in-progress",
+  "activeStage": "P10.0-01",
+  "completedStages": [
+    "P10.0-00"
+  ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "",
-  "lastVerifiedCommit": "",
+  "baseCommit": "0a7af95",
+  "lastVerifiedCommit": "1758cee",
   "currentBranch": "feat/p10.0-00-audit",
   "requiredGates": {
     "P10.0-00": [
@@ -21,15 +23,62 @@
       "p10-00-full-fresh",
       "p10-00-report"
     ],
-    "P10.0-01": ["p10-01-full-fresh", "p10-01-exe", "p10-01-report"],
-    "P10.0-02": ["p10-02-full-fresh", "p10-02-screens", "p10-02-exe", "p10-02-report"],
-    "P10.0-03": ["p10-03-full-fresh", "p10-03-screens", "p10-03-exe", "p10-03-report"],
-    "P10.0-04": ["p10-04-full-fresh", "p10-04-screens", "p10-04-exe", "p10-04-report"],
-    "P10.0-05": ["p10-05-full-fresh", "p10-05-screens", "p10-05-exe", "p10-05-report"],
-    "P10.0-06": ["p10-06-full-fresh", "p10-06-screens", "p10-06-data-retention", "p10-06-exe", "p10-06-report"],
-    "P10.0-07": ["p10-07-full-fresh", "p10-07-measurement", "p10-07-exe", "p10-07-report"]
+    "P10.0-01": [
+      "p10-01-full-fresh",
+      "p10-01-exe",
+      "p10-01-report"
+    ],
+    "P10.0-02": [
+      "p10-02-full-fresh",
+      "p10-02-screens",
+      "p10-02-exe",
+      "p10-02-report"
+    ],
+    "P10.0-03": [
+      "p10-03-full-fresh",
+      "p10-03-screens",
+      "p10-03-exe",
+      "p10-03-report"
+    ],
+    "P10.0-04": [
+      "p10-04-full-fresh",
+      "p10-04-screens",
+      "p10-04-exe",
+      "p10-04-report"
+    ],
+    "P10.0-05": [
+      "p10-05-full-fresh",
+      "p10-05-screens",
+      "p10-05-exe",
+      "p10-05-report"
+    ],
+    "P10.0-06": [
+      "p10-06-full-fresh",
+      "p10-06-screens",
+      "p10-06-data-retention",
+      "p10-06-exe",
+      "p10-06-report"
+    ],
+    "P10.0-07": [
+      "p10-07-full-fresh",
+      "p10-07-measurement",
+      "p10-07-exe",
+      "p10-07-report"
+    ]
   },
-  "gateResults": {},
-  "nextAction": "Run stages/P10.0-00.md end to end, then stop at the merge candidate.",
+  "gateResults": {
+    "P10.0-00": {
+      "p10-00-phase-docs": "pass",
+      "p10-00-audit-inventory": "pass",
+      "p10-00-audit-voicing": "pass",
+      "p10-00-audit-correction-model": "pass",
+      "p10-00-baseline": "pass",
+      "p10-00-screens-before": "pass",
+      "p10-00-data-retention": "pass",
+      "p10-00-full-fresh": "pass",
+      "p10-00-report": "pass"
+    }
+  },
+  "nextAction": "人間の判断待ち：P10.0-01 を行うか。行わないなら P10.0-02",
   "updatedAt": "2026-09-29"
 }

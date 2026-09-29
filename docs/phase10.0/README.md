@@ -8,11 +8,11 @@ MIDI 取り込み後の画面を、解析の誤りを人が速く直せる「修
 
 ## Status
 
-- **Status:** planned
-- **Active stage:** P10.0-00
-- **Completed stages:** none
-- **Base:** local `master`（Phase 8.9 が完了して取り込み済みであること）
-- **Next action:** [stages/P10.0-00.md](stages/P10.0-00.md) を最後まで実行する
+- **Status:** in-progress — P10.0-00 完了、merge 候補 `feat/p10.0-00-audit` で停止（master へは未取り込み）
+- **Active stage:** P10.0-01（人間の判断待ち）
+- **Completed stages:** P10.0-00（基準と監査 — [reports/P10.0-00-audit.md](reports/P10.0-00-audit.md)、fresh FULL PASS @ `1758cee`、製品コードの変更なし）
+- **Base:** local `master` `0a7af95`（Phase 8.9 完了、`research/phase9-core-v2` 取り込み済み）
+- **Next action:** 人間の判断待ち：P10.0-01 を行うか。行わないなら P10.0-02
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
