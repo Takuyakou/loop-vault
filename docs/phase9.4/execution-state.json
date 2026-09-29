@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "9.4",
+  "status": "in-progress",
+  "activeStage": "P9.4-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "d74f3eced123e6e746eab9edc37a1cf47b967bf7",
+  "lastVerifiedCommit": "d74f3eced123e6e746eab9edc37a1cf47b967bf7",
+  "currentBranch": "research/phase9-core-v2",
+  "requiredGates": {
+    "P9.4-00": ["scorer-tests", "research-typecheck", "research-lint", "frozen-validation", "provenance", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+  },
+  "gateResults": {},
+  "nextAction": "Freeze scorer after dev, then evaluate public validation once.",
+  "updatedAt": "2026-09-29"
+}

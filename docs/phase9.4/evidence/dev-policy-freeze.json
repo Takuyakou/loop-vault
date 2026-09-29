@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "policyId": "p9.4-tier2-v1",
+  "metricVersion": "p9.4-tier2-v1",
+  "authoredGoldId": "p7-public-authored-harmonic-truth",
+  "candidateModes": ["legacy-closed", "shortcut-factorized"],
+  "candidateBound": 32,
+  "devExampleIds": ["equivalent-c6-am7c", "rootless-c9", "omitted-fifth", "altered-dominant"],
+  "validationExampleIds": ["extension-thirteen", "slash-bass"],
+  "candidatePlaybackPolicy": "actual-renderer-output-only; unavailable otherwise",
+  "harmonyFullAcceptedEquivalence": "unavailable-no-independent-accepted-set",
+  "selection": "No method or threshold change after dev freeze"
+}
