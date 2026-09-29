@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "policyId": "p9.5-local-ranking-comparison-v1",
+  "metricVersion": "p9.5-ranking-v1",
+  "candidateGenerator": "p8.6-shortcut-factorized-public-source-window",
+  "candidateBound": 32,
+  "devSelectedPolicy": "PITCH_BASS",
+  "comparisonPolicies": ["OLD", "PITCH_BASS", "FACTOR_NO_CONTEXT", "FACTOR_CONTEXT"],
+  "unknownRule": "non-OLD: fewer than three distinct observed pitch classes; retain Top-K",
+  "selectionRationale": "Dev authored accepted Top1 ties at 11/18; PITCH_BASS has highest Harmony structural proxy Top1 at 72/160 versus OLD 68/160, with unchanged candidate set and short-passing Top1. This is diagnostic selection, not promotion.",
+  "devPromotionStatus": "NO_GO_FULL_TIER2_GAIN_AND_REVIEW_RECALL",
+  "validationRule": "Run each public validation cohort once after this freeze; do not retune on validation",
+  "privateWitnessUsed": false,
+  "sealedHoldoutUsed": false
+}
