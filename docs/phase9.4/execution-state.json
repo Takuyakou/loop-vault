@@ -1,18 +1,42 @@
 {
   "schemaVersion": 1,
   "phaseId": "9.4",
-  "status": "in-progress",
-  "activeStage": "P9.4-00",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P9.4-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d74f3eced123e6e746eab9edc37a1cf47b967bf7",
-  "lastVerifiedCommit": "d74f3eced123e6e746eab9edc37a1cf47b967bf7",
+  "lastVerifiedCommit": "71cd854a86a087291c4a671082bdc0bdc768db31",
   "currentBranch": "research/phase9-core-v2",
   "requiredGates": {
-    "P9.4-00": ["scorer-tests", "research-typecheck", "research-lint", "frozen-validation", "provenance", "phase-docs", "ai-handoff", "privacy-security", "production-diff-zero", "fresh-full"]
+    "P9.4-00": [
+      "scorer-tests",
+      "research-typecheck",
+      "research-lint",
+      "frozen-validation",
+      "provenance",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-security",
+      "production-diff-zero",
+      "fresh-full"
+    ]
   },
-  "gateResults": {},
-  "nextAction": "Freeze scorer after dev, then evaluate public validation once.",
+  "gateResults": {
+    "scorer-tests": "pass",
+    "research-typecheck": "pass",
+    "research-lint": "pass",
+    "frozen-validation": "pass",
+    "provenance": "pass",
+    "phase-docs": "pass",
+    "ai-handoff": "pass",
+    "privacy-security": "pass",
+    "production-diff-zero": "pass",
+    "fresh-full": "pass"
+  },
+  "nextAction": "STOP after P9.4 scoring-contract research; P9.5 requires separate assignment.",
   "updatedAt": "2026-09-29"
 }
