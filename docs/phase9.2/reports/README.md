@@ -1,3 +1,3 @@
 # Phase 9.2 reports
 
-Aggregate public temporal research results and limitations are recorded here. Private source details and sealed holdout contents are excluded.
+- [P9.2 Temporal v2 generalization and bounded selection](P9.2-temporal-v2-research.md) — public aggregate results, decision, limitations, and fresh FULL Gate.

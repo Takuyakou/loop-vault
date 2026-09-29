@@ -6,11 +6,11 @@ Git and current code are authoritative. This package covers only the separately 
 
 ## Status
 
-- Status: in-progress
-- Active stage: P9.2-00
-- Completed stages: none
+- Status: completed
+- Active stage: none
+- Completed stages: P9.2-00 (fresh FULL tested HEAD 9c7808b72d26f4621969891dba7b2fd9e0076e67)
 - Branch: research/phase9-core-v2
-- Next action: audit retained P8.5 research and compare bounded temporal selection on public dev before a frozen validation.
+- Next action: STOP after P9.2 research. Temporal v2 candidate is NO-GO; await separate assignment for P9.3.
 
 ## Required Reading Order
 
