@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "stage": "P9.6",
+  "status": "NOT RUN — PREREQUISITE NOT MET",
+  "reason": "P9.5 Candidate Ranking v2 is NO-GO; the Architecture Freeze prerequisite to evaluate Decoder after Ranking improvement is not met.",
+  "decoderDecision": null,
+  "formalComparisonConsumed": false,
+  "decoderArmsRun": 0,
+  "checkpoint": "P9.MID",
+  "decisionReport": "P9.MID-oracle-and-strategy.md"
+}
