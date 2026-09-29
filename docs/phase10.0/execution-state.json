@@ -67,17 +67,15 @@
     ]
   },
   "gateResults": {
-    "P10.0-00": {
-      "p10-00-phase-docs": "pass",
-      "p10-00-audit-inventory": "pass",
-      "p10-00-audit-voicing": "pass",
-      "p10-00-audit-correction-model": "pass",
-      "p10-00-baseline": "pass",
-      "p10-00-screens-before": "pass",
-      "p10-00-data-retention": "pass",
-      "p10-00-full-fresh": "pass",
-      "p10-00-report": "pass"
-    }
+    "p10-00-phase-docs": "pass",
+    "p10-00-audit-inventory": "pass",
+    "p10-00-audit-voicing": "pass",
+    "p10-00-audit-correction-model": "pass",
+    "p10-00-baseline": "pass",
+    "p10-00-screens-before": "pass",
+    "p10-00-data-retention": "pass",
+    "p10-00-full-fresh": "pass",
+    "p10-00-report": "pass"
   },
   "nextAction": "人間の判断待ち：P10.0-01 を行うか。行わないなら P10.0-02",
   "updatedAt": "2026-09-29"
