@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "p9-public-repeated-chord-1-4",
+  "workload": "offline source truth + candidates + Product-guarded selection per interval",
+  "rows": [
+    {
+      "minutes": 3,
+      "bpm": 120,
+      "sourceBeats": 360,
+      "noteCount": 1440,
+      "selected": 1440,
+      "excluded": 0,
+      "elapsedMs": 36.26,
+      "heapUsedMiB": 113.15
+    },
+    {
+      "minutes": 5,
+      "bpm": 120,
+      "sourceBeats": 600,
+      "noteCount": 2400,
+      "selected": 2400,
+      "excluded": 0,
+      "elapsedMs": 74.67,
+      "heapUsedMiB": 121.34
+    },
+    {
+      "minutes": 10,
+      "bpm": 120,
+      "sourceBeats": 1200,
+      "noteCount": 4800,
+      "selected": 4800,
+      "excluded": 0,
+      "elapsedMs": 281.91,
+      "heapUsedMiB": 119.03
+    },
+    {
+      "minutes": 10,
+      "bpm": 240,
+      "sourceBeats": 2400,
+      "noteCount": 9600,
+      "selected": 9600,
+      "excluded": 0,
+      "elapsedMs": 1121.45,
+      "heapUsedMiB": 125.37
+    }
+  ],
+  "codeCommit": "9d56169ab67ba85ddf16df51fd3ac702b2bd4466",
+  "policyId": "p9.3-product-guarded-v1"
+}

@@ -1,0 +1,255 @@
+{
+  "provenanceByArm": {
+    "product": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "product-extractor"
+    },
+    "source-rank": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-source-rank"
+    },
+    "product-guarded": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-product-guarded"
+    },
+    "product-safe-prune": {
+      "corpusId": "harmony-support",
+      "corpusVersion": "1.0.0",
+      "manifestSha": "0ef1a1a4b630213cc66b75331718ebc6e462a31aa673d2d9be278976fc718a7e",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-product-safe-prune"
+    }
+  },
+  "files": 6,
+  "sourceInvariantFiles": 6,
+  "totals": {
+    "product": {
+      "events": 48,
+      "exact": 16,
+      "gold": 192,
+      "matched": 150,
+      "missing": 42,
+      "extra": 32,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0
+    },
+    "source-rank": {
+      "events": 48,
+      "exact": 9,
+      "gold": 192,
+      "matched": 106,
+      "missing": 86,
+      "extra": 8,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 138,
+      "excludedTotal": 138
+    },
+    "product-guarded": {
+      "events": 48,
+      "exact": 16,
+      "gold": 192,
+      "matched": 150,
+      "missing": 42,
+      "extra": 32,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 70,
+      "excludedTotal": 70
+    },
+    "product-safe-prune": {
+      "events": 48,
+      "exact": 9,
+      "gold": 192,
+      "matched": 100,
+      "missing": 92,
+      "extra": 14,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 138,
+      "excludedTotal": 138
+    }
+  },
+  "byCategory": {
+    "harmony-support-clean": {
+      "product": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 72,
+        "missing": 24,
+        "extra": 16,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 56,
+        "missing": 40,
+        "extra": 8,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 56,
+        "excludedTotal": 56
+      },
+      "product-guarded": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 72,
+        "missing": 24,
+        "extra": 16,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 32,
+        "excludedTotal": 32
+      },
+      "product-safe-prune": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 56,
+        "missing": 40,
+        "extra": 8,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 56,
+        "excludedTotal": 56
+      }
+    },
+    "harmony-support-stress": {
+      "product": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 78,
+        "missing": 18,
+        "extra": 16,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 24,
+        "exact": 1,
+        "gold": 96,
+        "matched": 50,
+        "missing": 46,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 82,
+        "excludedTotal": 82
+      },
+      "product-guarded": {
+        "events": 24,
+        "exact": 8,
+        "gold": 96,
+        "matched": 78,
+        "missing": 18,
+        "extra": 16,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 38,
+        "excludedTotal": 38
+      },
+      "product-safe-prune": {
+        "events": 24,
+        "exact": 1,
+        "gold": 96,
+        "matched": 44,
+        "missing": 52,
+        "extra": 6,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 82,
+        "excludedTotal": 82
+      }
+    }
+  },
+  "runtime": {
+    "candidateMs": 5,
+    "peakHeapMiB": 180
+  },
+  "schemaVersion": 1,
+  "candidateCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+  "candidateFunnel": {
+    "events": 48,
+    "rawGold": 192,
+    "candidateUnionGold": 192,
+    "candidateExact": 48
+  },
+  "candidateFunnelByCategory": {
+    "harmony-support-clean": {
+      "events": 24,
+      "rawGold": 96,
+      "candidateUnionGold": 96,
+      "candidateExact": 24
+    },
+    "harmony-support-stress": {
+      "events": 24,
+      "rawGold": 96,
+      "candidateUnionGold": 96,
+      "candidateExact": 24
+    }
+  },
+  "postprocess": "Shared candidate funnel moved out of arm rows; Product excluded-note sidecar removed because Product does not persist P9.3 evidence. No score changed."
+}

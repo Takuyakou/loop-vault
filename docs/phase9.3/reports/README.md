@@ -1,3 +1,3 @@
 # Phase 9.3 reports
 
-Aggregate public research results and limitations are recorded here. No private witness or sealed holdout content belongs in reports.
+- [P9.3 Source Extraction v2 research](P9.3-source-extraction-v2-research.md) — matched public aggregates, NO-GO decision, and limitations.

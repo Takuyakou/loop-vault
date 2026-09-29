@@ -1,0 +1,379 @@
+{
+  "provenanceByArm": {
+    "product": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "product-extractor"
+    },
+    "source-rank": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-source-rank"
+    },
+    "product-guarded": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-product-guarded"
+    },
+    "product-safe-prune": {
+      "corpusId": "p7-temporal-synthetic",
+      "corpusVersion": "p7-temporal-gold-v1",
+      "manifestSha": "e726173c3b7eccb7daee4b62b986dcb44b5325118820aa95c147743df4150772",
+      "split": "validation",
+      "codeCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+      "policyId": "p9.3-extraction-shadow-v1",
+      "boundarySource": "gold",
+      "identitySource": "gold",
+      "scoringContract": "p9.3-tier1-note-set-v1",
+      "metricVersion": "1",
+      "snapshotSource": "p9.3-product-safe-prune"
+    }
+  },
+  "files": 4,
+  "sourceInvariantFiles": 4,
+  "totals": {
+    "product": {
+      "events": 8,
+      "exact": 7,
+      "gold": 32,
+      "matched": 32,
+      "missing": 0,
+      "extra": 1,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0
+    },
+    "source-rank": {
+      "events": 8,
+      "exact": 7,
+      "gold": 32,
+      "matched": 32,
+      "missing": 0,
+      "extra": 1,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 0,
+      "excludedTotal": 0
+    },
+    "product-guarded": {
+      "events": 8,
+      "exact": 7,
+      "gold": 32,
+      "matched": 32,
+      "missing": 0,
+      "extra": 1,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 0,
+      "excludedTotal": 0
+    },
+    "product-safe-prune": {
+      "events": 8,
+      "exact": 7,
+      "gold": 32,
+      "matched": 32,
+      "missing": 0,
+      "extra": 1,
+      "bassMissing": 0,
+      "supportGold": 0,
+      "supportMatched": 0,
+      "unavailable": 0,
+      "excludedRestorable": 0,
+      "excludedTotal": 0
+    }
+  },
+  "byCategory": {
+    "true-harmonic-change": {
+      "product": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-guarded": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-safe-prune": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      }
+    },
+    "sustained-pedal-residual": {
+      "product": {
+        "events": 2,
+        "exact": 1,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 2,
+        "exact": 1,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-guarded": {
+        "events": 2,
+        "exact": 1,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-safe-prune": {
+        "events": 2,
+        "exact": 1,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 1,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      }
+    },
+    "bass-pedal-point": {
+      "product": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-guarded": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-safe-prune": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      }
+    },
+    "syncopated-harmonic-change": {
+      "product": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0
+      },
+      "source-rank": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-guarded": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      },
+      "product-safe-prune": {
+        "events": 2,
+        "exact": 2,
+        "gold": 8,
+        "matched": 8,
+        "missing": 0,
+        "extra": 0,
+        "bassMissing": 0,
+        "supportGold": 0,
+        "supportMatched": 0,
+        "unavailable": 0,
+        "excludedRestorable": 0,
+        "excludedTotal": 0
+      }
+    }
+  },
+  "runtime": {
+    "candidateMs": 1,
+    "peakHeapMiB": 177
+  },
+  "schemaVersion": 1,
+  "candidateCommit": "d02a320e9234ed1eb237c0f0f330303692478d19",
+  "candidateFunnel": {
+    "events": 8,
+    "rawGold": 32,
+    "candidateUnionGold": 32,
+    "candidateExact": 7
+  },
+  "candidateFunnelByCategory": {
+    "true-harmonic-change": {
+      "events": 2,
+      "rawGold": 8,
+      "candidateUnionGold": 8,
+      "candidateExact": 2
+    },
+    "sustained-pedal-residual": {
+      "events": 2,
+      "rawGold": 8,
+      "candidateUnionGold": 8,
+      "candidateExact": 1
+    },
+    "bass-pedal-point": {
+      "events": 2,
+      "rawGold": 8,
+      "candidateUnionGold": 8,
+      "candidateExact": 2
+    },
+    "syncopated-harmonic-change": {
+      "events": 2,
+      "rawGold": 8,
+      "candidateUnionGold": 8,
+      "candidateExact": 2
+    }
+  },
+  "postprocess": "Shared candidate funnel moved out of arm rows; Product excluded-note sidecar removed because Product does not persist P9.3 evidence. No score changed."
+}
