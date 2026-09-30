@@ -10,7 +10,6 @@ import type { Section } from "../domain/midi/sections";
 import {
   createTimelineVoicingPlaybackPlan,
   resolveVoicingForUse,
-  resolveTimelineItemVoicing,
   timelineVoicingSourceStatus,
 } from "../domain/voicing";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -121,11 +120,7 @@ import {
   draftEditable,
   draftToCandidate,
 } from "../domain/midi/manualDraftEditing";
-import {
-  draftHasMidiSourcePreview,
-  draftPreviewTimeline,
-  draftSourcePreviewTimeline,
-} from "../domain/midi/manualDraftPlayback";
+import { draftHasMidiSourcePreview } from "../domain/midi/manualDraftPlayback";
 import {
   createManualDraft,
   createDraftFromCandidate,
@@ -157,8 +152,11 @@ import { SourceBasslineCapturePanel } from "../components/capture/SourceBassline
 import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
 import { useCaptureDraft } from "./capture/useCaptureDraft";
+import { useCapturePlayback } from "./capture/useCapturePlayback";
 import {
   captureAnalysisIdentity,
+  captureCandidateSource,
+  singleChordVoicing,
   stopCapturePlayback,
   type CaptureAnalysisProgressStage,
 } from "./capture/captureRuntime";
@@ -378,7 +376,6 @@ export function CaptureView(props: CaptureViewProps) {
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
-  const capturePlayback = usePlaybackState(controller);
   const {
     activeDraft,
     setActiveDraft,
@@ -394,6 +391,14 @@ export function CaptureView(props: CaptureViewProps) {
     resetManualSourceBassline,
     manualSourceBasslineForSave,
   } = useCaptureDraft({ analysis, analysisProgress, analysisRunGeneration, preAnalysisSession });
+  const {
+    capturePlayback,
+    previewManualDraft,
+    previewCandidate,
+    previewOccurrence,
+    previewCandidateChord,
+    previewSourceDraft,
+  } = useCapturePlayback({ controller, result, previewSound, setToast, copy });
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -550,94 +555,6 @@ export function CaptureView(props: CaptureViewProps) {
       setToast(copy.capture.copiedProgression);
     } catch {
       setToast(copy.capture.copyFailed, "error");
-    }
-  }
-
-  /**
-   * Auditions a manual draft.
-   *
-   * Plays the same event list the save path stores, so what the user hears
-   * before saving is what they get afterwards. Voicings resolve by the product's
-   * existing rule: the captured one where it still fits the chord, a generated
-   * one where an edit made it no longer fit.
-   */
-  async function previewManualDraft(draft: ManualCandidateDraft) {
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-manual-draft:${draft.draftId}` },
-        {
-          type: "timeline",
-          timeline: draftPreviewTimeline(draft),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  async function previewCandidate(candidate: ProgressionBlockCandidate) {
-    try {
-      await controller.toggle(
-        captureCandidateSource(result, candidate.id),
-        {
-          type: "timeline",
-          timeline: candidate.chords,
-          bpm: result?.bpm,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  /**
-   * Auditions one appearance of a progression.
-   *
-   * Plays that occurrence's own events, so the second chorus sounds like the
-   * second chorus rather than replaying the one the card happens to show.
-   */
-  async function previewOccurrence(occurrence: CandidateOccurrence) {
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-occurrence:${occurrence.id}` },
-        {
-          type: "timeline",
-          timeline: occurrence.events.map((event) => event.source),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  async function previewCandidateChord(candidate: ProgressionBlockCandidate, chordIndex: number) {
-    try {
-      const event = candidate.chords[chordIndex];
-      const chord = event?.chord;
-      if (chord) {
-        await controller.toggle(
-          {
-            kind: "capture",
-            id: `${captureCandidateSource(result, candidate.id).id}:chord:${chordIndex}:${chord.label}`,
-          },
-          {
-            type: "chord",
-            chord,
-            sound: previewSound,
-            explicitMidiNotes: singleChordVoicing(event),
-          },
-        );
-      }
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1163,24 +1080,6 @@ export function CaptureView(props: CaptureViewProps) {
         .find((element) => element.dataset.candidateId === candidateId);
     target?.scrollIntoView?.({ behavior: preferredScrollBehavior(), block: "start" });
     target?.focus();
-  }
-
-  async function previewSourceDraft(draft: ManualCandidateDraft) {
-    if (!draftHasMidiSourcePreview(draft)) return;
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-draft-source:${draft.draftId}` },
-        {
-          type: "timeline",
-          timeline: draftSourcePreviewTimeline(draft),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
   }
 
   function applyPendingDraftSelection() {
@@ -3170,23 +3069,6 @@ export function useStickyInspectorHeight(
   }, [active, host]);
 }
 
-/**
- * Notes for a single chord card click.
- *
- * Clicking one chord used to fall through to the generated preview voicing while
- * the same chord played its original MIDI voicing everywhere else, so a chord
- * auditioned in capture sounded different from the same chord in Progression
- * Detail and Chord Dojo. This resolves it the same way those screens do.
- *
- * `resolveTimelineItemVoicing` checks the stored voicing against the chord, so an
- * edited chord falls back to a generated voicing instead of replaying the
- * voicing of the chord it replaced.
- */
-function singleChordVoicing(event: ChordTimelineItem | undefined): readonly number[] | undefined {
-  if (!event) return undefined;
-  return resolveTimelineItemVoicing(event).midiNotes;
-}
-
 type CandidateLaneKind = "progression" | "vamp" | "fragment";
 
 interface CandidateLane {
@@ -3227,16 +3109,6 @@ export function candidateLanes(
   return lanes.length <= 1
     ? lanes.map((lane) => ({ ...lane, heading: null }))
     : lanes;
-}
-
-function captureCandidateSource(
-  result: MidiProgressionAnalysis | undefined,
-  candidateId: string,
-): PlayingSource {
-  return {
-    kind: "capture",
-    id: `analysis:${captureAnalysisIdentity(result)}:candidate:${candidateId}`,
-  };
 }
 
 function captureFullTimelineSource(result: MidiProgressionAnalysis): PlayingSource {

@@ -1,6 +1,7 @@
 import type { DragEvent } from "react";
-import { playbackController, type PlaybackController } from "../../audio/playbackController";
-import type { MidiProgressionAnalysis } from "../../domain/types";
+import { playbackController, type PlaybackController, type PlayingSource } from "../../audio/playbackController";
+import type { ChordTimelineItem, MidiProgressionAnalysis } from "../../domain/types";
+import { resolveTimelineItemVoicing } from "../../domain/voicing";
 
 /** Shared by CaptureView and its hooks (moved out of CaptureView.tsx unchanged). */
 export type CaptureAnalysisProgressStage = "reading" | "analyzing" | "finalizing";
@@ -50,4 +51,31 @@ export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefi
     `analyzed:${encodeURIComponent(result.analyzedAt)}`,
     `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
   ].filter(Boolean).join("|");
+}
+
+/**
+ * Notes for a single chord card click.
+ *
+ * Clicking one chord used to fall through to the generated preview voicing while
+ * the same chord played its original MIDI voicing everywhere else, so a chord
+ * auditioned in capture sounded different from the same chord in Progression
+ * Detail and Chord Dojo. This resolves it the same way those screens do.
+ *
+ * `resolveTimelineItemVoicing` checks the stored voicing against the chord, so an
+ * edited chord falls back to a generated voicing instead of replaying the
+ * voicing of the chord it replaced.
+ */
+export function singleChordVoicing(event: ChordTimelineItem | undefined): readonly number[] | undefined {
+  if (!event) return undefined;
+  return resolveTimelineItemVoicing(event).midiNotes;
+}
+
+export function captureCandidateSource(
+  result: MidiProgressionAnalysis | undefined,
+  candidateId: string,
+): PlayingSource {
+  return {
+    kind: "capture",
+    id: `analysis:${captureAnalysisIdentity(result)}:candidate:${candidateId}`,
+  };
 }
