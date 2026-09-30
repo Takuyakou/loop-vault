@@ -286,6 +286,21 @@ for (const [width, height] of SIZES) {
         await page.locator("body").press("]");
         await expect(page.locator('[data-testid="correction-card"][data-review][aria-pressed="true"]')).toHaveCount(1);
       });
+      // P10.0-03: editing — melody notes excluded, ② with a manual note and a moved, selected note.
+      await shot("capture-workspace-edit", async () => {
+        await openWorkspace("melody-track-8");
+        await page.getByTestId("correction-select-melody").click();
+        await page.keyboard.press("Delete");
+        const note = page.locator('[data-testid="correction-piano-roll"] .lv-cw-note[data-kind="harmony"]').first();
+        await note.click();
+        await page.keyboard.press("ArrowUp");
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible()) await toggle.click();
+        await page.getByTestId("correction-add-note").click();
+        await page.getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(9).click();
+        await page.keyboard.press("n");
+        await expect(page.getByTestId("correction-history")).toContainText("操作 3");
+      });
       await shot("capture-workspace-long", async () => {
         await openWorkspace("long-64");
       });
