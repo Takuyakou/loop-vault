@@ -12,7 +12,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
-import { buildScenarioMidi, p10Scenarios } from "../../src/testing/p10SyntheticCapture";
+import { buildScenarioMidi, p10Scenarios } from "../../src/testing/p10SyntheticSongs";
 import { analyzeMidi, annotateVoiceRolesV2, buildVoices, normalizeNotes, parseMidi } from "../../src/domain/midi";
 import { beatsPerBar } from "../../src/domain/midi/timing";
 import { segmentSections } from "../../src/domain/midi/sections";
@@ -24,7 +24,7 @@ import { getAnalysisProfileAnalyzeOptions } from "../../src/storage/accuracyFirs
 import type { ChordTimelineItem } from "../../src/domain/types";
 import type { TimedNote, Voice } from "../../src/domain/midi/types";
 
-type Scenario = import("../../src/testing/p10SyntheticCapture").Scenario;
+type Scenario = import("../../src/testing/p10SyntheticSongs").Scenario;
 const scenarios = p10Scenarios;
 const build = buildScenarioMidi;
 

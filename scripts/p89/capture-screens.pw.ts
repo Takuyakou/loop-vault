@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { analyzeCurrentMidi, chooseFirstCandidate, loadMidiForPreAnalysis, openApp, waitForSidebarSettled } from "../../e2e/helpers/app";
 import { createMidiFixture } from "../../e2e/helpers/midiFixture";
+import { buildScenarioMidi, p10Scenario } from "../../src/testing/p10SyntheticSongs";
 
 const NAME = process.env.P89_SCREENS_NAME ?? "adhoc";
 const OUT = join(process.cwd(), "p89-generated", NAME);
@@ -265,6 +266,30 @@ for (const [width, height] of SIZES) {
       } catch (error) {
         result.unreachable.push({ screen: "gallery", reason: String(error).split("\n")[0].slice(0, 160) });
       }
+
+      // P10.0-02: the correction workspace (developer switch on, display only), on a fresh page each.
+      async function openWorkspace(id: string) {
+        await page.goto("/");
+        await page.evaluate(() => localStorage.setItem("loop-vault:p10-workspace:v1", "on"));
+        await openApp(page);
+        await loadMidiForPreAnalysis(page, buildScenarioMidi(p10Scenario(id)), `p10-${id}.mid`);
+        await page.getByTestId("pre-analysis-analyze").click();
+        await expect(page.getByTestId("correction-workspace")).toBeVisible();
+        const closeButtons = page.locator("[data-toast-tone] .lv-toast-close");
+        while (await closeButtons.count() > 0) await closeButtons.first().click();
+      }
+      await shot("capture-workspace-short", async () => {
+        await openWorkspace("melody-track-8");
+      });
+      await shot("capture-workspace-review", async () => {
+        await page.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
+        await page.locator("body").press("]");
+        await expect(page.locator('[data-testid="correction-card"][data-review][aria-pressed="true"]')).toHaveCount(1);
+      });
+      await shot("capture-workspace-long", async () => {
+        await openWorkspace("long-64");
+      });
+      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-workspace:v1"));
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });
