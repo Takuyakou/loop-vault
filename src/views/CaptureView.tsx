@@ -57,18 +57,12 @@ import {
   beatsPerBar as beatsPerBarFor,
   buildRoleCorrectionLogEvents,
   buildSessionAnalysisRequest,
-  buildCorrectionEvents,
   removeMidiSource,
   type AnalysisSession,
   type SessionAnalysisRequest,
 } from "../domain/midi";
-import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput, AnalyzeMidiOptions } from "../domain/midi/types";
-import {
-  buildProgressionSaveFeedbackEvent,
-  type CorrectionPropagationFeedbackEvent,
-  type PersistedAnalysisFeedbackEvent,
-} from "../domain/midi/analysisFeedback";
+import type { CorrectionPropagationFeedbackEvent } from "../domain/midi/analysisFeedback";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
@@ -91,8 +85,6 @@ import { progressionEditorCopy, type AppCopy } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
-import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
-import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
 import { appendRoleCorrectionLog } from "../storage/roleCorrectionLogStorage";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
@@ -164,6 +156,7 @@ import { Copy, Dumbbell, ExternalLink, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
 import { useCaptureIntake } from "./capture/useCaptureIntake";
+import { useCaptureSave } from "./capture/useCaptureSave";
 import {
   stopCapturePlayback,
   type CaptureAnalysisProgressStage,
@@ -336,7 +329,6 @@ export function CaptureView(props: CaptureViewProps) {
   }>();
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
-  const [persistenceError, setPersistenceError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
   const [manualSourceBasslineVoiceId, setManualSourceBasslineVoiceId] = useState("");
@@ -378,6 +370,15 @@ export function CaptureView(props: CaptureViewProps) {
     copy,
     mountedRef: captureViewMountedRef,
     onAnalysisReset: resetSelectionForNewAnalysis,
+  });
+  const { persistenceError, saveNew, appendExisting } = useCaptureSave({
+    analysis,
+    createIdeaFromDraft,
+    appendBlockToIdea,
+    sourcePath,
+    setToast,
+    copy,
+    mountedRef: captureViewMountedRef,
   });
   const manualSourceBasslineSessionRef = useRef(preAnalysisSession);
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
@@ -630,166 +631,6 @@ export function CaptureView(props: CaptureViewProps) {
     return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？")
       ? undefined
       : null;
-  }
-
-  function confirmAggregateSourceBasslineOmission(): boolean {
-    return globalThis.confirm("元ベースラインを含めるとVault全体が16 MiBを超えます。コード進行だけを保存しますか？");
-  }
-  function announcePersistenceError(message: string): void {
-    queueMicrotask(() => {
-      if (!captureViewMountedRef.current) return;
-      setPersistenceError(message);
-      setToast(message, "error");
-    });
-  }
-  function saveNew(
-    candidate: ProgressionBlockCandidate,
-    title: string,
-    nextAction: string,
-    userVerified: boolean,
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
-    userEditedOverride?: boolean,
-    sourceBassline?: SourceBasslineSnapshotV1,
-  ): boolean {
-    setPersistenceError(undefined);
-    const corrections = correctionEvents(original, candidate, editable);
-    const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
-    const id = createIdeaFromDraft({
-      title,
-      status: "idea",
-      bpm: analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
-        ? undefined : analysis.result?.bpm,
-      key: analysis.result?.detectedKey,
-      chordMemo: candidate.summaryText,
-      nextAction,
-      progressionBlock: candidate,
-      progressionAnalysis: analysis.result,
-      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
-    });
-    if (id) {
-      persistCorrectionEvents([
-        ...corrections,
-        ...propagationEvents,
-        ...progressionSaveFeedback(
-          original,
-          candidate,
-          editable,
-          userEdited,
-          userVerified,
-        ),
-      ]);
-      persistLabelCorrectionLogs(original, editable);
-      setToast(copy.capture.savedToVault, "success");
-      return true;
-    }
-    setToast(copy.capture.createFailed, "error");
-    return false;
-  }
-
-  function correctionEvents(
-    original: ProgressionBlockCandidate,
-    edited: ProgressionBlockCandidate,
-    editable: EditableProgression,
-  ) {
-    if (!analysis.result) {
-      return [];
-    }
-    return buildCorrectionEvents(
-      original,
-      edited,
-      analysis.result,
-      editable.slots.map((slot) => slot.editSource),
-      editable.slots.map((slot) => slot.quickCandidateSelection),
-    );
-  }
-
-  function persistCorrectionEvents(events: readonly PersistedAnalysisFeedbackEvent[]) {
-    if (events.length === 0) {
-      return;
-    }
-    void appendAnalysisFeedback(events)
-      .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed, "error"));
-  }
-
-  function progressionSaveFeedback(
-    original: ProgressionBlockCandidate,
-    saved: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    userEdited: boolean,
-    userVerified: boolean,
-  ): PersistedAnalysisFeedbackEvent[] {
-    if (!analysis.result) return [];
-    const event = buildProgressionSaveFeedbackEvent(
-      original,
-      saved,
-      analysis.result,
-      editable.slots.map((slot) => slot.editSource),
-      {
-        occurredAt: new Date().toISOString(),
-        userEdited,
-        userVerified,
-      },
-    );
-    return event ? [event] : [];
-  }
-
-  function persistLabelCorrectionLogs(
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-  ) {
-    if (!analysis.result) return;
-    const events = buildLabelCorrectionLogs(original, editable, analysis.result, {
-      analyzerMode: "phase4-v1",
-      occurredAt: new Date().toISOString(),
-    });
-    void appendLabelCorrectionLogs(events)
-      .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
-  }
-
-  function appendExisting(
-    candidate: ProgressionBlockCandidate,
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    ideaId: string,
-    userVerified: boolean,
-    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
-    userEditedOverride?: boolean,
-    sourceBassline?: SourceBasslineSnapshotV1,
-  ): boolean {
-    setPersistenceError(undefined);
-    if (!ideaId) {
-      setToast(copy.capture.chooseIdeaFirst);
-      return false;
-    }
-
-    const appended = appendBlockToIdea(ideaId, candidate, analysis.result, {
-      sourcePath,
-      userEdited: userEditedOverride ?? hasProgressionEdits(editable),
-      userVerified,
-      onPersistenceError: announcePersistenceError,
-      ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}),
-    });
-    if (appended) {
-      const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
-      persistCorrectionEvents([
-        ...correctionEvents(original, candidate, editable),
-        ...propagationEvents,
-        ...progressionSaveFeedback(
-          original,
-          candidate,
-          editable,
-          userEdited,
-          userVerified,
-        ),
-      ]);
-      persistLabelCorrectionLogs(original, editable);
-      setToast(copy.toast.blockSaved, "success");
-      return true;
-    }
-    setToast(copy.capture.appendFailed, "error");
-    return false;
   }
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
