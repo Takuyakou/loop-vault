@@ -41,6 +41,14 @@ export function nameCandidatesFor(
   return out;
 }
 
+/** The chord the used notes read as (detectLiveChord's first), when they read as one. */
+export function detectedName(notes: readonly PitchedNote[]): ChordSymbol | undefined {
+  const pitches = [...new Set(notes.filter((note) => note.used).map((note) => note.pitch))];
+  if (new Set(pitches.map((pitch) => pitch % 12)).size < 3) return undefined;
+  const detection = detect(pitches);
+  return detection.kind === "chord" ? detection.chord : undefined;
+}
+
 /** The name the used notes would read as without one pitch, when one is found. */
 export function nameAfterRemoving(notes: readonly PitchedNote[], pitch: number): string | undefined {
   const rest = [...new Set(notes.filter((note) => note.used && note.pitch !== pitch).map((note) => note.pitch))];

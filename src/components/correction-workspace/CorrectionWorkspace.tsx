@@ -202,7 +202,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     scrollToBeat(((event.clientX - box.left) / box.width) * model.totalBeats);
   };
 
-  const suggestion = suggestionClosed ? undefined : model.suggestions[0];
+  const suggestion = suggestionClosed ? undefined : model.suggestions.find((entry) => entry.kind === "melody-voice");
   const barStep = pxPerBeat * meter < 18 ? 8 : pxPerBeat * meter < 36 ? 4 : 1;
   const viewStart = scrollLeft / pxPerBeat;
   const viewEnd = (scrollLeft + viewportWidth) / pxPerBeat;
@@ -305,7 +305,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   {segmentsOpen ? model.segments.map((segment) => (
                     <span key={segment.id} className="lv-cw-segment" data-testid="correction-segment"
                       style={{ left: (segment.startBar - 1) * meter * pxPerBeat + 1, width: (segment.endBar - segment.startBar + 1) * meter * pxPerBeat - 2 }}>
-                      {segment.label}{segment.repeatGroup ? ` · ${segment.repeatGroup}回目` : ""}
+                      {segment.label}{segment.repeatCount ? ` · ${segment.repeatCount}回出てくる` : ""}
                     </span>
                   )) : null}
                 </div>

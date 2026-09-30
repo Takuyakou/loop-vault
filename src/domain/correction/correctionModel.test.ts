@@ -86,8 +86,10 @@ describe("CorrectionModel (P10.0-02, display only)", () => {
     const last = long.segments[long.segments.length - 1]!;
     expect(last.endBar).toBe(Math.round(long.totalBeats / 4));
     expect(last.endBar - last.startBar).toBeLessThan(8);
-    // A 4-bar loop repeats, so later 8-bar ranges are the same chords again.
-    expect(model("long-300").segments[1]!.repeatGroup).toBe(2);
+    // A 4-bar loop repeats, so every 8-bar range with the same chords says how often (spec v2.3 4.3).
+    const long300 = model("long-300").segments;
+    expect(long300[0]!.repeatCount).toBeGreaterThanOrEqual(2);
+    expect(long300[0]!.repeatCount).toBe(long300[1]!.repeatCount);
   });
 
   it("counts the three review rules exactly as the P10.0-00 audit (docs/phase10.0/evidence)", () => {
@@ -120,7 +122,8 @@ describe("CorrectionModel (P10.0-02, display only)", () => {
     const built = model("melody-track-8");
     expect(built.suggestions).toHaveLength(1);
     expect(built.suggestions[0]).toMatchObject({ kind: "melody-voice", voiceLabel: "Lead", cardCount: 12 });
-    expect(built.suggestions[0]!.noteIds.length).toBeGreaterThan(0);
+    const melody = built.suggestions[0]!;
+    expect(melody.kind === "melody-voice" && melody.noteIds.length > 0).toBe(true);
     expect(model("melody-in-piano-8").suggestions).toHaveLength(0);
     expect(model("plain-8").suggestions).toHaveLength(0);
   });
@@ -160,7 +163,7 @@ describe("CorrectionModel (P10.0-02, display only)", () => {
     const built = buildCorrectionModel({ result: { fullTimeline: [item], totalBars: 1, bpm: 120, timeSignature: "4/4" }, sourceData: data, sourceVoices: [] as Voice[] }, reviewThresholds);
     expect(built.cards).toHaveLength(1);
     expect(built.notes).toHaveLength(0);
-    expect(built.segments.map((segment) => segment.label)).toEqual(["1〜1小節"]);
+    expect(built.segments.map((segment) => segment.label)).toEqual(["1小節"]);
     expect(built.pitchRange.high - built.pitchRange.low).toBeGreaterThanOrEqual(24);
   });
 });
