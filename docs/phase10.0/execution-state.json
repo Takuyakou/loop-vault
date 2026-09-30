@@ -9,9 +9,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "692e794",
+  "baseCommit": "42633cd",
   "lastVerifiedCommit": "3c0f2c1",
-  "currentBranch": "feat/p10.0-02-display",
+  "currentBranch": "feat/p10.0-03-editing",
   "requiredGates": {
     "P10.0-00": [
       "p10-00-phase-docs",
@@ -42,20 +42,28 @@
       "p10-02-report"
     ],
     "P10.0-03": [
-      "p10-03-full-fresh",
-      "p10-03-screens",
-      "p10-03-exe",
-      "p10-03-report"
+      "p10-03-phase-docs",
+      "p10-03-unit",
+      "p10-03-fast-feature",
+      "p10-03-ui",
+      "p10-03-e2e",
+      "p10-03-checkpoint"
     ],
     "P10.0-04": [
-      "p10-04-full-fresh",
-      "p10-04-screens",
-      "p10-04-exe",
-      "p10-04-report"
+      "p10-04-unit",
+      "p10-04-fast-feature",
+      "p10-04-ui",
+      "p10-04-e2e",
+      "p10-04-checkpoint"
     ],
     "P10.0-05": [
-      "p10-05-full-fresh",
+      "p10-05-unit",
+      "p10-05-ui",
+      "p10-05-e2e",
+      "p10-05-perf",
+      "p10-05-data-retention",
       "p10-05-screens",
+      "p10-05-full-fresh",
       "p10-05-exe",
       "p10-05-report"
     ],
@@ -94,6 +102,6 @@
     "p10-02-exe": "pass",
     "p10-02-report": "pass"
   },
-  "nextAction": "P10.0-03 の zip を待つ。P10.0-02 は merge 候補 feat/p10.0-02-display で停止（fresh FULL PASS @ 3c0f2c1、EXE 作成済み）。P10.0-01 は行わない。",
+  "nextAction": "Bundle A: run stages/P10.0-03.md, P10.0-04.md and P10.0-05.md on feat/p10.0-03-editing, then stop at the merge candidate.",
   "updatedAt": "2026-09-30"
 }

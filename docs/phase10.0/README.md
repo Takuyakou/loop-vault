@@ -9,11 +9,11 @@ MIDI 取り込み後の画面を、解析の誤りを人が速く直せる「修
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P10.0-03（P10.0-03 の zip を待つ）
-- **Completed stages:** P10.0-00（基準と監査 — [reports/P10.0-00-audit.md](reports/P10.0-00-audit.md)、fresh FULL PASS @ `1758cee`、製品コードの変更なし。local `master` へ `a5e111a` で取り込み済み）、P10.0-02（作業データと表示 — [reports/P10.0-02-display.md](reports/P10.0-02-display.md)、fresh FULL PASS @ `3c0f2c1`、EXE 作成済み。merge 候補 `feat/p10.0-02-display`）
+- **Active stage:** P10.0-03〜05 のまとめ A（区切り1：P10.0-03）
+- **Completed stages:** P10.0-00（基準と監査 — [reports/P10.0-00-audit.md](reports/P10.0-00-audit.md)、fresh FULL PASS @ `1758cee`、製品コードの変更なし。local `master` へ `a5e111a` で取り込み済み）、P10.0-02（作業データと表示 — [reports/P10.0-02-display.md](reports/P10.0-02-display.md)、fresh FULL PASS @ `3c0f2c1`、EXE 作成済み。local `master` へ `42633cd` で取り込み済み）
 - **P10.0-01:** 行わない（2026-09-29 人間の判断。監査で、合否は「取った時の名前」と「今の名前」の比較だけと分かったため。作業場で名前を変えた時に札を付け直す。仕様書 v2.2 の 16章）
-- **Base:** local `master` `692e794`（P10.0-00 を `a5e111a` で取り込み済み、その後の Voicing Loop の直しを含む）
-- **Next action:** P10.0-03 の zip を待つ（P10.0-02 は merge 候補で停止、master へは未取り込み）
+- **Base:** local `master` `42633cd`（P10.0-02 を取り込み済み）
+- **Next action:** まとめ A を [stages/P10.0-03.md](stages/P10.0-03.md) → [P10.0-04.md](stages/P10.0-04.md) → [P10.0-05.md](stages/P10.0-05.md) の順に最後まで実行する（ブランチ `feat/p10.0-03-editing`）
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
@@ -25,7 +25,7 @@ MIDI 取り込み後の画面を、解析の誤りを人が速く直せる「修
 4. [execution-state.json](execution-state.json) — 再開用の状態
 5. [contracts/P10-autonomous-run.md](contracts/P10-autonomous-run.md) — 全自動で進める時の決まり
 6. [contracts/P10-test-and-evidence.md](contracts/P10-test-and-evidence.md) — テストの回し方と証跡
-7. 実行中の段階の指示書：[stages/P10.0-02.md](stages/P10.0-02.md)
+7. 実行中の段階の指示書：[stages/P10.0-03.md](stages/P10.0-03.md)・[P10.0-04.md](stages/P10.0-04.md)・[P10.0-05.md](stages/P10.0-05.md)（まとめ A）
 8. [reports/README.md](reports/README.md) — 報告の置き場所
 
 モック（`correction-workspace.html`）は Git 管理外の `p10-generated/mocks/` に置く。段階1以降の指示書は各段階の zip で追加される。
@@ -33,6 +33,8 @@ MIDI 取り込み後の画面を、解析の誤りを人が速く直せる「修
 ## Stages
 
 1段階＝1つの zip＝1セッション。段階をまたいで自動で進まない。仕様書の15章の段階と同じ番号を使う。
+
+**まとめ方（v2.3、2026-09-30）：** A＝P10.0-03〜05（1つの zip・1つのブランチ、中を3つの区切りに分ける）、B＝P10.0-06、C＝P10.0-07。人間用の計測シートは任意。
 
 ### P10.0-00 — 基準と監査
 
