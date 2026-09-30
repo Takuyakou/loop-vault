@@ -153,9 +153,14 @@ import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
 import { useCaptureDraft } from "./capture/useCaptureDraft";
 import { useCapturePlayback } from "./capture/useCapturePlayback";
+import { CorrectionWorkspace } from "../components/correction-workspace/CorrectionWorkspace";
+import { buildCorrectionModel } from "../domain/correction/correctionModel";
+import { reviewThresholds } from "../domain/correction/reviewThresholds";
+import { getCorrectionWorkspaceEnabled } from "../storage/correctionWorkspaceSettings";
 import {
   captureAnalysisIdentity,
   captureCandidateSource,
+  captureFullTimelineSource,
   singleChordVoicing,
   stopCapturePlayback,
   type CaptureAnalysisProgressStage,
@@ -399,6 +404,21 @@ export function CaptureView(props: CaptureViewProps) {
     previewCandidateChord,
     previewSourceDraft,
   } = useCapturePlayback({ controller, result, previewSound, setToast, copy });
+  // P10.0-02: the new correction workspace, display only, behind a developer switch.
+  const [correctionWorkspaceEnabled] = useState(getCorrectionWorkspaceEnabled);
+  const [currentScreenDatasetKey, setCurrentScreenDatasetKey] = useState<string>();
+  const workspaceDatasetKey = result ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}` : undefined;
+  const correctionModel = useMemo(() => (
+    correctionWorkspaceEnabled && result && analysis.sourceData && analysis.sourceVoices
+      ? buildCorrectionModel({
+          result,
+          sourceData: analysis.sourceData,
+          sourceVoices: analysis.sourceVoices,
+          ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
+        }, reviewThresholds)
+      : undefined
+  ), [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, correctionWorkspaceEnabled, result]);
+  const workspaceShown = correctionModel !== undefined && currentScreenDatasetKey !== workspaceDatasetKey;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -499,7 +519,7 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   useEffect(() => {
-    if (!activeDraft) return undefined;
+    if (!activeDraft || workspaceShown) return undefined;
     const keyboardDraft: ManualCandidateDraft = activeDraft;
     function onKeyDown(event: KeyboardEvent) {
       if (
@@ -529,7 +549,7 @@ export function CaptureView(props: CaptureViewProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm]);
+  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm, workspaceShown]);
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
     const idea = ideas.find((entry) => entry.id === ideaId);
@@ -1126,6 +1146,46 @@ export function CaptureView(props: CaptureViewProps) {
       draftEditable(activeDraft),
       [],
       activeDraft.isDirty,
+    );
+  }
+
+  if (workspaceShown && correctionModel) {
+    return (
+      <CaptureModeFrame stage="result" value={captureInputMode}
+        disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+        {persistenceError ? (
+          <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
+            {persistenceError}
+          </p>
+        ) : null}
+        {analysisProgress ? (
+          <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
+        ) : null}
+        <div className="lv-capture-content grid gap-5" data-capture-midi-drop-zone {...dropHandlers}>
+          {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
+          <CorrectionWorkspace
+            model={correctionModel}
+            timeline={result.fullTimeline}
+            fileName={result.fileName ?? "MIDI"}
+            {...(analysisTargetLabel ? { analysisTargetLabel } : {})}
+            previewSound={previewSound}
+            controller={controller}
+            fullSource={captureFullTimelineSource(result)}
+            onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
+            onUseCurrentScreen={() => {
+              stopCapturePlayback(controller);
+              setCurrentScreenDatasetKey(workspaceDatasetKey);
+            }}
+            onChooseAnotherMidi={() => void chooseMidi(false)}
+            {...(preAnalysisSession ? {
+              onPartSettings: () => {
+                stopCapturePlayback(controller);
+                clearAnalysis();
+              },
+            } : {})}
+          />
+        </div>
+      </CaptureModeFrame>
     );
   }
 
@@ -3109,13 +3169,6 @@ export function candidateLanes(
   return lanes.length <= 1
     ? lanes.map((lane) => ({ ...lane, heading: null }))
     : lanes;
-}
-
-function captureFullTimelineSource(result: MidiProgressionAnalysis): PlayingSource {
-  return {
-    kind: "capture",
-    id: `analysis:${captureAnalysisIdentity(result)}:full-timeline`,
-  };
 }
 
 export function timelinePlaybackPosition(

@@ -79,3 +79,10 @@ export function captureCandidateSource(
     id: `analysis:${captureAnalysisIdentity(result)}:candidate:${candidateId}`,
   };
 }
+
+export function captureFullTimelineSource(result: MidiProgressionAnalysis): PlayingSource {
+  return {
+    kind: "capture",
+    id: `analysis:${captureAnalysisIdentity(result)}:full-timeline`,
+  };
+}

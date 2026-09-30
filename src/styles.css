@@ -9,6 +9,7 @@
 @import "./styles/settings.css";
 @import "./styles/live-midi.css";
 @import "./styles/voicing-loop.css";
+@import "./styles/correction-workspace.css";
 
 @tailwind base;
 @tailwind components;
