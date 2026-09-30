@@ -1,5 +1,6 @@
 import type { DragEvent } from "react";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
+import type { MidiProgressionAnalysis } from "../../domain/types";
 
 /** Shared by CaptureView and its hooks (moved out of CaptureView.tsx unchanged). */
 export type CaptureAnalysisProgressStage = "reading" | "analyzing" | "finalizing";
@@ -37,4 +38,16 @@ export function stopCapturePlayback(controller: PlaybackController = playbackCon
   if (controller.getState().source?.kind === "capture") {
     controller.stop();
   }
+}
+
+export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefined): string {
+  if (!result) return "analysis";
+  if (result.sourceFingerprint) return `fingerprint:${encodeURIComponent(result.sourceFingerprint)}`;
+
+  return [
+    result.sourceAssetId ? `asset:${encodeURIComponent(result.sourceAssetId)}` : undefined,
+    result.fileName ? `file:${encodeURIComponent(result.fileName)}` : undefined,
+    `analyzed:${encodeURIComponent(result.analyzedAt)}`,
+    `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
+  ].filter(Boolean).join("|");
 }

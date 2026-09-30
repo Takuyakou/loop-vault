@@ -76,7 +76,6 @@ import type {
   Status,
 } from "../domain/types";
 import type { AnalysisState, ProgressionSaveMetadata, TextProgressionIdeaDraft } from "../store/vaultStore";
-import { selectInitialTimelineCandidate } from "../domain/timelineCandidateGrouping";
 import type { TextProgressionEvent } from "../domain/textProgression";
 import type { ExtendedTextResult } from "../domain/extendedTextProgression";
 import { extendedTextSaveData } from "../domain/extendedTextSave";
@@ -157,12 +156,13 @@ import { Button, StatusMessage } from "../components/ui";
 import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
 import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
+import { useCaptureDraft } from "./capture/useCaptureDraft";
 import {
+  captureAnalysisIdentity,
   stopCapturePlayback,
   type CaptureAnalysisProgressStage,
 } from "./capture/captureRuntime";
 import {
-  assessManualSourceBasslineCapture,
   assessSourceBasslineCapture,
   sourceBasslineAuthorizationKey,
   sourceBasslineCandidateVoices,
@@ -284,7 +284,7 @@ function captureAnalysisRunCopy(
     };
 }
 
-export { isMidiFileName, stopCapturePlayback } from "./capture/captureRuntime";
+export { captureAnalysisIdentity, isMidiFileName, stopCapturePlayback } from "./capture/captureRuntime";
 
 export function CaptureView(props: CaptureViewProps) {
   const {
@@ -330,11 +330,6 @@ export function CaptureView(props: CaptureViewProps) {
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
-  const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
-  const [manualSourceBasslineVoiceId, setManualSourceBasslineVoiceId] = useState("");
-  const [manualSourceBasslineRangeKey, setManualSourceBasslineRangeKey] = useState("");
-  const [manualSourceBasslineAuthorization, setManualSourceBasslineAuthorization] = useState("");
-  const manualSourceBasslineDraftKeyRef = useRef("");
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>(initialInputMode);
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
@@ -380,42 +375,25 @@ export function CaptureView(props: CaptureViewProps) {
     copy,
     mountedRef: captureViewMountedRef,
   });
-  const manualSourceBasslineSessionRef = useRef(preAnalysisSession);
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
   const capturePlayback = usePlaybackState(controller);
-  const analysisDatasetKey = result
-    ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}`
-    : undefined;
-  const initializedAnalysisDatasetKeyRef = useRef<string>();
-  const activeDraftDatasetKeyRef = useRef<string>();
-  useEffect(() => {
-    if (analysisProgress === "reading" || analysisProgress === "analyzing") return;
-    if (analysis.status !== "done" || !result || analysisDatasetKey === undefined) {
-      initializedAnalysisDatasetKeyRef.current = undefined;
-      setActiveDraft(null);
-      activeDraftDatasetKeyRef.current = undefined;
-      return;
-    }
-    if (initializedAnalysisDatasetKeyRef.current === analysisDatasetKey) return;
-    initializedAnalysisDatasetKeyRef.current = analysisDatasetKey;
-
-    const initialCandidate = selectInitialTimelineCandidate(result.blockCandidates);
-    const initialMeter = beatsPerBarFor(result.timeSignature);
-    const initialDraft = initialCandidate === undefined
-      ? null
-      : createDraftFromCandidate({
-          candidate: initialCandidate,
-          timelineFingerprint: fingerprintTimeline(result.fullTimeline, initialMeter),
-          beatsPerBar: initialMeter,
-        });
-    const previousDatasetKey = activeDraftDatasetKeyRef.current;
-    activeDraftDatasetKeyRef.current = analysisDatasetKey;
-    setActiveDraft((current) => (
-      previousDatasetKey === analysisDatasetKey ? current : initialDraft
-    ));
-  }, [analysis.status, analysisDatasetKey, analysisProgress, result]);
+  const {
+    activeDraft,
+    setActiveDraft,
+    manualSourceBasslineVoiceId,
+    setManualSourceBasslineVoiceId,
+    setManualSourceBasslineRangeKey,
+    setManualSourceBasslineAuthorization,
+    manualSourceBasslineVoices,
+    manualSourceBasslineAssessment,
+    manualSourceBasslineCurrentAuthorization,
+    manualSourceBasslineRangeSelected,
+    manualSourceBasslineOptedIn,
+    resetManualSourceBassline,
+    manualSourceBasslineForSave,
+  } = useCaptureDraft({ analysis, analysisProgress, analysisRunGeneration, preAnalysisSession });
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -424,75 +402,6 @@ export function CaptureView(props: CaptureViewProps) {
   const completedAnalysisStatus = completedAnalysisSummary
     ? captureAnalysisRunCopy(completedAnalysisSummary)
     : undefined;
-  const manualSourceBasslineCandidate = useMemo(() => (
-    activeDraft?.source.type === "manual-range" ? draftToCandidate(activeDraft) : undefined
-  ), [activeDraft]);
-  const manualSourceBasslineVoices = useMemo(
-    () => sourceBasslineCandidateVoices(preAnalysisSession),
-    [preAnalysisSession],
-  );
-  const manualSourceBasslineAssessment = useMemo(() => {
-    if (!manualSourceBasslineCandidate || activeDraft?.source.type !== "manual-range") return undefined;
-    return assessManualSourceBasslineCapture(
-      preAnalysisSession,
-      manualSourceBasslineCandidate,
-      activeDraft.selectedRange,
-      activeDraft.beatsPerBar,
-      manualSourceBasslineVoiceId,
-      result?.sourceFingerprint,
-    );
-  }, [
-    activeDraft,
-    manualSourceBasslineCandidate,
-    manualSourceBasslineVoiceId,
-    preAnalysisSession,
-    result?.sourceFingerprint,
-  ]);
-  const manualSourceBasslineCurrentAuthorization = manualSourceBasslineCandidate
-    ? sourceBasslineAuthorizationKey(
-        manualSourceBasslineCandidate,
-        manualSourceBasslineVoiceId,
-        result?.sourceFingerprint,
-      )
-    : "";
-  const manualSourceBasslineRangeSelected = manualSourceBasslineAssessment !== undefined
-    && manualSourceBasslineRangeKey === manualSourceBasslineAssessment.rangeKey;
-  const manualSourceBasslineOptedIn = manualSourceBasslineAuthorization !== ""
-    && manualSourceBasslineAuthorization === manualSourceBasslineCurrentAuthorization;
-  const manualSourceBasslineContextKey = manualSourceBasslineCandidate
-    ? `${sourceBasslineAuthorizationKey(
-        manualSourceBasslineCandidate,
-        "",
-        result?.sourceFingerprint,
-      )}:${analysisRunGeneration}`
-    : `none:${analysisRunGeneration}`;
-  const manualSourceBasslineContextKeyRef = useRef(manualSourceBasslineContextKey);
-  useEffect(() => {
-    if (manualSourceBasslineContextKeyRef.current === manualSourceBasslineContextKey) return;
-    manualSourceBasslineContextKeyRef.current = manualSourceBasslineContextKey;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [manualSourceBasslineContextKey]);
-  useEffect(() => {
-    if (manualSourceBasslineSessionRef.current === preAnalysisSession) return;
-    manualSourceBasslineSessionRef.current = preAnalysisSession;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [preAnalysisSession]);
-
-  useEffect(() => {
-    const nextDraftKey = activeDraft?.source.type === "manual-range"
-      ? `${activeDraft.draftId}:${manualSourceBasslineAssessment?.rangeKey ?? ""}`
-      : "";
-    if (manualSourceBasslineDraftKeyRef.current === nextDraftKey) return;
-    manualSourceBasslineDraftKeyRef.current = nextDraftKey;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [activeDraft, manualSourceBasslineAssessment?.rangeKey]);
-
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
   useEffect(() => {
@@ -616,22 +525,6 @@ export function CaptureView(props: CaptureViewProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm]);
-
-  function resetManualSourceBassline() {
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }
-
-  function manualSourceBasslineForSave(): SourceBasslineSnapshotV1 | undefined | null {
-    if (!manualSourceBasslineOptedIn) return undefined;
-    if (manualSourceBasslineRangeSelected && manualSourceBasslineAssessment?.snapshot) {
-      return manualSourceBasslineAssessment.snapshot;
-    }
-    return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？")
-      ? undefined
-      : null;
-  }
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
     const idea = ideas.find((entry) => entry.id === ideaId);
@@ -3275,18 +3168,6 @@ export function useStickyInspectorHeight(
       root.style.removeProperty(property);
     };
   }, [active, host]);
-}
-
-export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefined): string {
-  if (!result) return "analysis";
-  if (result.sourceFingerprint) return `fingerprint:${encodeURIComponent(result.sourceFingerprint)}`;
-
-  return [
-    result.sourceAssetId ? `asset:${encodeURIComponent(result.sourceAssetId)}` : undefined,
-    result.fileName ? `file:${encodeURIComponent(result.fileName)}` : undefined,
-    `analyzed:${encodeURIComponent(result.analyzedAt)}`,
-    `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
-  ].filter(Boolean).join("|");
 }
 
 /**
