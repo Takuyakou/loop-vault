@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "10.0",
   "status": "in-progress",
-  "activeStage": "P10.0-01",
+  "activeStage": "P10.0-03",
   "completedStages": [
-    "P10.0-00"
+    "P10.0-00",
+    "P10.0-02"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "0a7af95",
-  "lastVerifiedCommit": "1758cee",
-  "currentBranch": "feat/p10.0-00-audit",
+  "baseCommit": "692e794",
+  "lastVerifiedCommit": "3c0f2c1",
+  "currentBranch": "feat/p10.0-02-display",
   "requiredGates": {
     "P10.0-00": [
       "p10-00-phase-docs",
@@ -29,8 +30,14 @@
       "p10-01-report"
     ],
     "P10.0-02": [
-      "p10-02-full-fresh",
+      "p10-02-phase-docs",
+      "p10-02-hooks",
+      "p10-02-model-unit",
+      "p10-02-ui-gate",
+      "p10-02-e2e-display",
+      "p10-02-data-retention",
       "p10-02-screens",
+      "p10-02-full-fresh",
       "p10-02-exe",
       "p10-02-report"
     ],
@@ -75,8 +82,18 @@
     "p10-00-screens-before": "pass",
     "p10-00-data-retention": "pass",
     "p10-00-full-fresh": "pass",
-    "p10-00-report": "pass"
+    "p10-00-report": "pass",
+    "p10-02-phase-docs": "pass",
+    "p10-02-hooks": "pass",
+    "p10-02-model-unit": "pass",
+    "p10-02-ui-gate": "pass",
+    "p10-02-e2e-display": "pass",
+    "p10-02-data-retention": "pass",
+    "p10-02-screens": "pass",
+    "p10-02-full-fresh": "pass",
+    "p10-02-exe": "pass",
+    "p10-02-report": "pass"
   },
-  "nextAction": "人間の判断待ち：P10.0-01 を行うか。行わないなら P10.0-02",
-  "updatedAt": "2026-09-29"
+  "nextAction": "P10.0-03 の zip を待つ。P10.0-02 は merge 候補 feat/p10.0-02-display で停止（fresh FULL PASS @ 3c0f2c1、EXE 作成済み）。P10.0-01 は行わない。",
+  "updatedAt": "2026-09-30"
 }

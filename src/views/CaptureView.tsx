@@ -1,8 +1,4 @@
 import type { ToastFn } from "../components/notifications";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
-import {
-  open as openFileDialog,
-} from "@tauri-apps/plugin-dialog";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
 import { OccurrenceList } from "../components/OccurrenceList";
 import {
@@ -14,13 +10,10 @@ import type { Section } from "../domain/midi/sections";
 import {
   createTimelineVoicingPlaybackPlan,
   resolveVoicingForUse,
-  resolveTimelineItemVoicing,
   timelineVoicingSourceStatus,
 } from "../domain/voicing";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { DragEvent, ReactNode } from "react";
-import { assertMidiTotalBytes } from "../security/intakeBudgets";
-import { readBoundedMidiPaths } from "../storage/boundedMidiReader";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   applyEditableProgression,
@@ -60,24 +53,15 @@ import type {
   SimilarityVoiceContext,
 } from "../domain/progressionEditing";
 import {
-  addMidiSources,
   beatsPerBar as beatsPerBarFor,
   buildRoleCorrectionLogEvents,
   buildSessionAnalysisRequest,
-  buildCorrectionEvents,
-  createAnalysisSession,
   removeMidiSource,
   type AnalysisSession,
-  type MidiSourceInput,
   type SessionAnalysisRequest,
 } from "../domain/midi";
-import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput, AnalyzeMidiOptions } from "../domain/midi/types";
-import {
-  buildProgressionSaveFeedbackEvent,
-  type CorrectionPropagationFeedbackEvent,
-  type PersistedAnalysisFeedbackEvent,
-} from "../domain/midi/analysisFeedback";
+import type { CorrectionPropagationFeedbackEvent } from "../domain/midi/analysisFeedback";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
@@ -91,7 +75,6 @@ import type {
   Status,
 } from "../domain/types";
 import type { AnalysisState, ProgressionSaveMetadata, TextProgressionIdeaDraft } from "../store/vaultStore";
-import { selectInitialTimelineCandidate } from "../domain/timelineCandidateGrouping";
 import type { TextProgressionEvent } from "../domain/textProgression";
 import type { ExtendedTextResult } from "../domain/extendedTextProgression";
 import { extendedTextSaveData } from "../domain/extendedTextSave";
@@ -100,17 +83,7 @@ import { progressionEditorCopy, type AppCopy } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
-import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
-import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
 import { appendRoleCorrectionLog } from "../storage/roleCorrectionLogStorage";
-import {
-  getAnalysisProfileAnalyzeOptions,
-  getAnalysisProfileSettings,
-} from "../storage/accuracyFirstSettings";
-import {
-  getPreAnalysisSourceSelectionSettings,
-  shouldOpenPreAnalysis,
-} from "../storage/preAnalysisSettings";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -147,11 +120,7 @@ import {
   draftEditable,
   draftToCandidate,
 } from "../domain/midi/manualDraftEditing";
-import {
-  draftHasMidiSourcePreview,
-  draftPreviewTimeline,
-  draftSourcePreviewTimeline,
-} from "../domain/midi/manualDraftPlayback";
+import { draftHasMidiSourcePreview } from "../domain/midi/manualDraftPlayback";
 import {
   createManualDraft,
   createDraftFromCandidate,
@@ -180,8 +149,23 @@ import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Copy, Dumbbell, ExternalLink, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
+import { useCaptureIntake } from "./capture/useCaptureIntake";
+import { useCaptureSave } from "./capture/useCaptureSave";
+import { useCaptureDraft } from "./capture/useCaptureDraft";
+import { useCapturePlayback } from "./capture/useCapturePlayback";
+import { CorrectionWorkspace } from "../components/correction-workspace/CorrectionWorkspace";
+import { buildCorrectionModel } from "../domain/correction/correctionModel";
+import { reviewThresholds } from "../domain/correction/reviewThresholds";
+import { getCorrectionWorkspaceEnabled } from "../storage/correctionWorkspaceSettings";
 import {
-  assessManualSourceBasslineCapture,
+  captureAnalysisIdentity,
+  captureCandidateSource,
+  captureFullTimelineSource,
+  singleChordVoicing,
+  stopCapturePlayback,
+  type CaptureAnalysisProgressStage,
+} from "./capture/captureRuntime";
+import {
   assessSourceBasslineCapture,
   sourceBasslineAuthorizationKey,
   sourceBasslineCandidateVoices,
@@ -303,6 +287,8 @@ function captureAnalysisRunCopy(
     };
 }
 
+export { captureAnalysisIdentity, isMidiFileName, stopCapturePlayback } from "./capture/captureRuntime";
+
 export function CaptureView(props: CaptureViewProps) {
   const {
     ideas,
@@ -323,7 +309,6 @@ export function CaptureView(props: CaptureViewProps) {
     controller = playbackController,
     analysisInput,
   } = props;
-  const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
   /**
    * How many cards each lane has rendered, and which collapsed lanes are open.
@@ -347,26 +332,11 @@ export function CaptureView(props: CaptureViewProps) {
   }>();
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
-  const [sourcePath, setSourcePath] = useState<string>();
-  const [preAnalysisSession, setPreAnalysisSession] = useState<AnalysisSession>();
-  const [preAnalysisDetailsExpanded, setPreAnalysisDetailsExpanded] = useState(false);
-  const [completedAnalysisSummary, setCompletedAnalysisSummary] =
-    useState<CaptureAnalysisRunSummary>();
-  const [intakeError, setIntakeError] = useState<string>();
-  const [persistenceError, setPersistenceError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
-  const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
-  const [manualSourceBasslineVoiceId, setManualSourceBasslineVoiceId] = useState("");
-  const [manualSourceBasslineRangeKey, setManualSourceBasslineRangeKey] = useState("");
-  const [manualSourceBasslineAuthorization, setManualSourceBasslineAuthorization] = useState("");
-  const manualSourceBasslineSessionRef = useRef(preAnalysisSession);
-  const manualSourceBasslineDraftKeyRef = useRef("");
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>(initialInputMode);
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
   const [savedTextPracticeStatus, setSavedTextPracticeStatus] = useState<ExtendedTextPracticeStatus>();
-  const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
-  const [analysisRunGeneration, setAnalysisRunGeneration] = useState(0);
   const captureViewMountedRef = useRef(true);
   useEffect(() => {
     captureViewMountedRef.current = true;
@@ -374,41 +344,81 @@ export function CaptureView(props: CaptureViewProps) {
       captureViewMountedRef.current = false;
     };
   }, []);
+  const {
+    isDraggingMidi,
+    sourcePath,
+    setSourcePath,
+    preAnalysisSession,
+    setPreAnalysisSession,
+    preAnalysisDetailsExpanded,
+    setPreAnalysisDetailsExpanded,
+    completedAnalysisSummary,
+    setCompletedAnalysisSummary,
+    intakeError,
+    analysisProgress,
+    analysisRunGeneration,
+    analyzeMidiBytesWithToast,
+    chooseMidi,
+    dropHandlers,
+  } = useCaptureIntake({
+    controller,
+    analyzeMidiBytes,
+    clearAnalysis,
+    setToast,
+    copy,
+    mountedRef: captureViewMountedRef,
+    onAnalysisReset: resetSelectionForNewAnalysis,
+  });
+  const { persistenceError, saveNew, appendExisting } = useCaptureSave({
+    analysis,
+    createIdeaFromDraft,
+    appendBlockToIdea,
+    sourcePath,
+    setToast,
+    copy,
+    mountedRef: captureViewMountedRef,
+  });
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
-  const capturePlayback = usePlaybackState(controller);
-  const analysisDatasetKey = result
-    ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}`
-    : undefined;
-  const initializedAnalysisDatasetKeyRef = useRef<string>();
-  const activeDraftDatasetKeyRef = useRef<string>();
-  useEffect(() => {
-    if (analysisProgress === "reading" || analysisProgress === "analyzing") return;
-    if (analysis.status !== "done" || !result || analysisDatasetKey === undefined) {
-      initializedAnalysisDatasetKeyRef.current = undefined;
-      setActiveDraft(null);
-      activeDraftDatasetKeyRef.current = undefined;
-      return;
-    }
-    if (initializedAnalysisDatasetKeyRef.current === analysisDatasetKey) return;
-    initializedAnalysisDatasetKeyRef.current = analysisDatasetKey;
-
-    const initialCandidate = selectInitialTimelineCandidate(result.blockCandidates);
-    const initialMeter = beatsPerBarFor(result.timeSignature);
-    const initialDraft = initialCandidate === undefined
-      ? null
-      : createDraftFromCandidate({
-          candidate: initialCandidate,
-          timelineFingerprint: fingerprintTimeline(result.fullTimeline, initialMeter),
-          beatsPerBar: initialMeter,
-        });
-    const previousDatasetKey = activeDraftDatasetKeyRef.current;
-    activeDraftDatasetKeyRef.current = analysisDatasetKey;
-    setActiveDraft((current) => (
-      previousDatasetKey === analysisDatasetKey ? current : initialDraft
-    ));
-  }, [analysis.status, analysisDatasetKey, analysisProgress, result]);
+  const {
+    activeDraft,
+    setActiveDraft,
+    manualSourceBasslineVoiceId,
+    setManualSourceBasslineVoiceId,
+    setManualSourceBasslineRangeKey,
+    setManualSourceBasslineAuthorization,
+    manualSourceBasslineVoices,
+    manualSourceBasslineAssessment,
+    manualSourceBasslineCurrentAuthorization,
+    manualSourceBasslineRangeSelected,
+    manualSourceBasslineOptedIn,
+    resetManualSourceBassline,
+    manualSourceBasslineForSave,
+  } = useCaptureDraft({ analysis, analysisProgress, analysisRunGeneration, preAnalysisSession });
+  const {
+    capturePlayback,
+    previewManualDraft,
+    previewCandidate,
+    previewOccurrence,
+    previewCandidateChord,
+    previewSourceDraft,
+  } = useCapturePlayback({ controller, result, previewSound, setToast, copy });
+  // P10.0-02: the new correction workspace, display only, behind a developer switch.
+  const [correctionWorkspaceEnabled] = useState(getCorrectionWorkspaceEnabled);
+  const [currentScreenDatasetKey, setCurrentScreenDatasetKey] = useState<string>();
+  const workspaceDatasetKey = result ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}` : undefined;
+  const correctionModel = useMemo(() => (
+    correctionWorkspaceEnabled && result && analysis.sourceData && analysis.sourceVoices
+      ? buildCorrectionModel({
+          result,
+          sourceData: analysis.sourceData,
+          sourceVoices: analysis.sourceVoices,
+          ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
+        }, reviewThresholds)
+      : undefined
+  ), [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, correctionWorkspaceEnabled, result]);
+  const workspaceShown = correctionModel !== undefined && currentScreenDatasetKey !== workspaceDatasetKey;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -417,75 +427,6 @@ export function CaptureView(props: CaptureViewProps) {
   const completedAnalysisStatus = completedAnalysisSummary
     ? captureAnalysisRunCopy(completedAnalysisSummary)
     : undefined;
-  const manualSourceBasslineCandidate = useMemo(() => (
-    activeDraft?.source.type === "manual-range" ? draftToCandidate(activeDraft) : undefined
-  ), [activeDraft]);
-  const manualSourceBasslineVoices = useMemo(
-    () => sourceBasslineCandidateVoices(preAnalysisSession),
-    [preAnalysisSession],
-  );
-  const manualSourceBasslineAssessment = useMemo(() => {
-    if (!manualSourceBasslineCandidate || activeDraft?.source.type !== "manual-range") return undefined;
-    return assessManualSourceBasslineCapture(
-      preAnalysisSession,
-      manualSourceBasslineCandidate,
-      activeDraft.selectedRange,
-      activeDraft.beatsPerBar,
-      manualSourceBasslineVoiceId,
-      result?.sourceFingerprint,
-    );
-  }, [
-    activeDraft,
-    manualSourceBasslineCandidate,
-    manualSourceBasslineVoiceId,
-    preAnalysisSession,
-    result?.sourceFingerprint,
-  ]);
-  const manualSourceBasslineCurrentAuthorization = manualSourceBasslineCandidate
-    ? sourceBasslineAuthorizationKey(
-        manualSourceBasslineCandidate,
-        manualSourceBasslineVoiceId,
-        result?.sourceFingerprint,
-      )
-    : "";
-  const manualSourceBasslineRangeSelected = manualSourceBasslineAssessment !== undefined
-    && manualSourceBasslineRangeKey === manualSourceBasslineAssessment.rangeKey;
-  const manualSourceBasslineOptedIn = manualSourceBasslineAuthorization !== ""
-    && manualSourceBasslineAuthorization === manualSourceBasslineCurrentAuthorization;
-  const manualSourceBasslineContextKey = manualSourceBasslineCandidate
-    ? `${sourceBasslineAuthorizationKey(
-        manualSourceBasslineCandidate,
-        "",
-        result?.sourceFingerprint,
-      )}:${analysisRunGeneration}`
-    : `none:${analysisRunGeneration}`;
-  const manualSourceBasslineContextKeyRef = useRef(manualSourceBasslineContextKey);
-  useEffect(() => {
-    if (manualSourceBasslineContextKeyRef.current === manualSourceBasslineContextKey) return;
-    manualSourceBasslineContextKeyRef.current = manualSourceBasslineContextKey;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [manualSourceBasslineContextKey]);
-  useEffect(() => {
-    if (manualSourceBasslineSessionRef.current === preAnalysisSession) return;
-    manualSourceBasslineSessionRef.current = preAnalysisSession;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [preAnalysisSession]);
-
-  useEffect(() => {
-    const nextDraftKey = activeDraft?.source.type === "manual-range"
-      ? `${activeDraft.draftId}:${manualSourceBasslineAssessment?.rangeKey ?? ""}`
-      : "";
-    if (manualSourceBasslineDraftKeyRef.current === nextDraftKey) return;
-    manualSourceBasslineDraftKeyRef.current = nextDraftKey;
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }, [activeDraft, manualSourceBasslineAssessment?.rangeKey]);
-
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
   useEffect(() => {
@@ -496,6 +437,12 @@ export function CaptureView(props: CaptureViewProps) {
     header?.focus();
     candidateHeaderFocusIdRef.current = undefined;
   }, [expandedCandidateId]);
+
+  /** A new file or a new analysis drops the draft and the open candidate (was inline in the intake code). */
+  function resetSelectionForNewAnalysis() {
+    setActiveDraft(null);
+    setExpandedCandidateId(undefined);
+  }
 
   const markCandidateDirty = useCallback((candidateId: string, dirty: boolean) => {
     setDirtyCandidateIds((current) => {
@@ -571,291 +518,8 @@ export function CaptureView(props: CaptureViewProps) {
     setExpandedCandidateId(candidateId);
   }
 
-  const analyzeMidiBytesWithToast = useCallback(
-    async (
-      bytes: Uint8Array,
-      fileName: string,
-      optionOverrides: AnalyzeMidiOptions = {},
-    ) => {
-      stopCapturePlayback(controller);
-      setActiveDraft(null);
-      setExpandedCandidateId(undefined);
-      setAnalysisProgress("analyzing");
-      await waitForNextPaint();
-      if (!captureViewMountedRef.current) return false;
-      const analyzed = analyzeMidiBytes(bytes, {
-        fileName,
-        ...getAnalysisProfileAnalyzeOptions(),
-        ...optionOverrides,
-      });
-      if (!captureViewMountedRef.current) return false;
-      setAnalysisRunGeneration((current) => current + 1);
-      setAnalysisProgress("finalizing");
-      await waitForNextPaint();
-      if (!captureViewMountedRef.current) return false;
-      setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed, analyzed ? "info" : "error");
-      await waitForStatusFeedback();
-      if (!captureViewMountedRef.current) return false;
-      setAnalysisProgress(undefined);
-      return Boolean(analyzed);
-    },
-    [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
-  );
-
-  const prepareMidiInputs = useCallback(
-    async (
-      inputs: readonly MidiSourceInput[],
-      options: { append?: boolean; sourcePath?: string } = {},
-    ) => {
-      assertMidiTotalBytes(inputs.map(({ bytes }) => bytes.byteLength));
-      stopCapturePlayback(controller);
-      if (!options.append) {
-        setCompletedAnalysisSummary(undefined);
-      }
-      setAnalysisProgress("reading");
-      await waitForNextPaint();
-      if (!captureViewMountedRef.current) return;
-      const intake = options.append && preAnalysisSession
-        ? addMidiSources(preAnalysisSession, inputs)
-        : createAnalysisSession(inputs);
-      if (!intake.session) {
-        setAnalysisProgress(undefined);
-        const issue = intake.issues[0];
-        const message = issue?.message ?? copy.toast.midiReadFailed;
-        setIntakeError(message);
-        setToast(message, "error");
-        return;
-      }
-      setIntakeError(undefined);
-      if (
-        !options.append
-        && !shouldOpenPreAnalysis(
-          getAnalysisProfileSettings().profile,
-          getPreAnalysisSourceSelectionSettings(),
-          intake.session,
-        )
-      ) {
-        setPreAnalysisSession(undefined);
-        setSourcePath(options.sourcePath);
-        setAnalysisProgress(undefined);
-        await analyzeMidiBytesWithToast(
-          inputs[0].bytes,
-          inputs[0].displayName,
-        );
-        if (!captureViewMountedRef.current) return;
-        return;
-      }
-      clearAnalysis();
-      setPreAnalysisSession(intake.session);
-      if (!options.append) {
-        setSourcePath(options.sourcePath);
-      }
-      setActiveDraft(null);
-      setExpandedCandidateId(undefined);
-      setAnalysisProgress(undefined);
-      if (intake.issues.length) {
-        setToast(intake.issues[0].message);
-      }
-    },
-    [
-      clearAnalysis,
-      controller,
-      copy.toast.midiReadFailed,
-      analyzeMidiBytesWithToast,
-      preAnalysisSession,
-      setToast,
-    ],
-  );
-
-  const analyzeMidiPath = useCallback(
-    async (paths: readonly string[], append = false) => {
-      const midiPaths = paths.filter(isMidiFileName);
-      if (!midiPaths.length) {
-        setToast(copy.toast.midiDropInvalid, "error");
-        return;
-      }
-
-      try {
-        setAnalysisProgress("reading");
-        await waitForNextPaint();
-        if (!captureViewMountedRef.current) return;
-        const byteArrays = await readBoundedMidiPaths(midiPaths);
-        if (!captureViewMountedRef.current) return;
-        const inputs = midiPaths.map((path, index): MidiSourceInput => ({
-          bytes: byteArrays[index],
-          displayName: fileNameFromPath(path),
-        }));
-        await prepareMidiInputs(inputs, {
-          append,
-          sourcePath: append ? undefined : midiPaths[0],
-        });
-        if (!captureViewMountedRef.current) return;
-      } catch (error) {
-        if (!captureViewMountedRef.current) return;
-        setAnalysisProgress(undefined);
-        const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
-        setIntakeError(message);
-        setToast(message, "error");
-      }
-    },
-    [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
-  );
-
-  const analyzeDroppedFile = useCallback(
-    async (files: readonly File[], append = false) => {
-      const midiFiles = files.filter((file) => isMidiFileName(file.name));
-      if (!midiFiles.length) {
-        setToast(copy.toast.midiDropInvalid, "error");
-        return;
-      }
-
-      try {
-        setAnalysisProgress("reading");
-        await waitForNextPaint();
-        if (!captureViewMountedRef.current) return;
-        assertMidiTotalBytes(midiFiles.map(({ size }) => size));
-        const inputs = await Promise.all(midiFiles.map(async (file): Promise<MidiSourceInput> => ({
-          bytes: new Uint8Array(await file.arrayBuffer()),
-          displayName: file.name,
-        })));
-        if (!captureViewMountedRef.current) return;
-        assertMidiTotalBytes(inputs.map(({ bytes }) => bytes.byteLength));
-        await prepareMidiInputs(inputs, { append });
-        if (!captureViewMountedRef.current) return;
-      } catch (error) {
-        if (!captureViewMountedRef.current) return;
-        setAnalysisProgress(undefined);
-        const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
-        setIntakeError(message);
-        setToast(message, "error");
-      }
-    },
-    [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
-  );
-
   useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      return undefined;
-    }
-
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-
-    void getCurrentWebview()
-      .onDragDropEvent((event) => {
-        if (event.payload.type === "enter" || event.payload.type === "over") {
-          setIsDraggingMidi(true);
-          return;
-        }
-
-        if (event.payload.type === "leave") {
-          setIsDraggingMidi(false);
-          return;
-        }
-
-        setIsDraggingMidi(false);
-        const paths = event.payload.paths.filter(isMidiFileName);
-        if (!paths.length) {
-          setToast(copy.toast.midiDropInvalid, "error");
-          return;
-        }
-
-        void analyzeMidiPath(paths, Boolean(preAnalysisSession));
-      })
-      .then((listener) => {
-        if (disposed) {
-          listener();
-          return;
-        }
-
-        unlisten = listener;
-      })
-      .catch(() => {
-        setIsDraggingMidi(false);
-      });
-
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  }, [analyzeMidiPath, copy.toast.midiDropInvalid, preAnalysisSession, setToast]);
-
-  async function chooseMidi(append = false) {
-    stopCapturePlayback(controller);
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.desktopMidiOnly);
-      return;
-    }
-
-    const path = await openFileDialog({
-      multiple: append
-        || getPreAnalysisSourceSelectionSettings()
-          .enablePreAnalysisSourceSelection,
-      filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
-    });
-    if (!captureViewMountedRef.current || !path) {
-      return;
-    }
-
-    await analyzeMidiPath(
-      typeof path === "string" ? [path] : path,
-      append,
-    );
-  }
-
-  function handleDragEnter(event: DragEvent<HTMLDivElement>) {
-    if (!hasDroppedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-    setIsDraggingMidi(true);
-  }
-
-  function handleDragOver(event: DragEvent<HTMLDivElement>) {
-    if (!hasDroppedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    setIsDraggingMidi(true);
-  }
-
-  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
-      return;
-    }
-
-    setIsDraggingMidi(false);
-  }
-
-  function handleDrop(event: DragEvent<HTMLDivElement>) {
-    if (!hasDroppedFiles(event)) {
-      return;
-    }
-
-    event.preventDefault();
-    setIsDraggingMidi(false);
-    const files = Array.from(event.dataTransfer.files).filter((item) =>
-      isMidiFileName(item.name));
-    if (!files.length) {
-      setToast(copy.toast.midiDropInvalid, "error");
-      return;
-    }
-
-    void analyzeDroppedFile(files, Boolean(preAnalysisSession));
-  }
-
-  const dropHandlers = {
-    onDragEnter: handleDragEnter,
-    onDragOver: handleDragOver,
-    onDragLeave: handleDragLeave,
-    onDrop: handleDrop,
-  };
-
-  useEffect(() => {
-    if (!activeDraft) return undefined;
+    if (!activeDraft || workspaceShown) return undefined;
     const keyboardDraft: ManualCandidateDraft = activeDraft;
     function onKeyDown(event: KeyboardEvent) {
       if (
@@ -885,183 +549,7 @@ export function CaptureView(props: CaptureViewProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm]);
-
-  function resetManualSourceBassline() {
-    setManualSourceBasslineVoiceId("");
-    setManualSourceBasslineRangeKey("");
-    setManualSourceBasslineAuthorization("");
-  }
-
-  function manualSourceBasslineForSave(): SourceBasslineSnapshotV1 | undefined | null {
-    if (!manualSourceBasslineOptedIn) return undefined;
-    if (manualSourceBasslineRangeSelected && manualSourceBasslineAssessment?.snapshot) {
-      return manualSourceBasslineAssessment.snapshot;
-    }
-    return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？")
-      ? undefined
-      : null;
-  }
-
-  function confirmAggregateSourceBasslineOmission(): boolean {
-    return globalThis.confirm("元ベースラインを含めるとVault全体が16 MiBを超えます。コード進行だけを保存しますか？");
-  }
-  function announcePersistenceError(message: string): void {
-    queueMicrotask(() => {
-      if (!captureViewMountedRef.current) return;
-      setPersistenceError(message);
-      setToast(message, "error");
-    });
-  }
-  function saveNew(
-    candidate: ProgressionBlockCandidate,
-    title: string,
-    nextAction: string,
-    userVerified: boolean,
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
-    userEditedOverride?: boolean,
-    sourceBassline?: SourceBasslineSnapshotV1,
-  ): boolean {
-    setPersistenceError(undefined);
-    const corrections = correctionEvents(original, candidate, editable);
-    const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
-    const id = createIdeaFromDraft({
-      title,
-      status: "idea",
-      bpm: analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
-        ? undefined : analysis.result?.bpm,
-      key: analysis.result?.detectedKey,
-      chordMemo: candidate.summaryText,
-      nextAction,
-      progressionBlock: candidate,
-      progressionAnalysis: analysis.result,
-      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
-    });
-    if (id) {
-      persistCorrectionEvents([
-        ...corrections,
-        ...propagationEvents,
-        ...progressionSaveFeedback(
-          original,
-          candidate,
-          editable,
-          userEdited,
-          userVerified,
-        ),
-      ]);
-      persistLabelCorrectionLogs(original, editable);
-      setToast(copy.capture.savedToVault, "success");
-      return true;
-    }
-    setToast(copy.capture.createFailed, "error");
-    return false;
-  }
-
-  function correctionEvents(
-    original: ProgressionBlockCandidate,
-    edited: ProgressionBlockCandidate,
-    editable: EditableProgression,
-  ) {
-    if (!analysis.result) {
-      return [];
-    }
-    return buildCorrectionEvents(
-      original,
-      edited,
-      analysis.result,
-      editable.slots.map((slot) => slot.editSource),
-      editable.slots.map((slot) => slot.quickCandidateSelection),
-    );
-  }
-
-  function persistCorrectionEvents(events: readonly PersistedAnalysisFeedbackEvent[]) {
-    if (events.length === 0) {
-      return;
-    }
-    void appendAnalysisFeedback(events)
-      .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed, "error"));
-  }
-
-  function progressionSaveFeedback(
-    original: ProgressionBlockCandidate,
-    saved: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    userEdited: boolean,
-    userVerified: boolean,
-  ): PersistedAnalysisFeedbackEvent[] {
-    if (!analysis.result) return [];
-    const event = buildProgressionSaveFeedbackEvent(
-      original,
-      saved,
-      analysis.result,
-      editable.slots.map((slot) => slot.editSource),
-      {
-        occurredAt: new Date().toISOString(),
-        userEdited,
-        userVerified,
-      },
-    );
-    return event ? [event] : [];
-  }
-
-  function persistLabelCorrectionLogs(
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-  ) {
-    if (!analysis.result) return;
-    const events = buildLabelCorrectionLogs(original, editable, analysis.result, {
-      analyzerMode: "phase4-v1",
-      occurredAt: new Date().toISOString(),
-    });
-    void appendLabelCorrectionLogs(events)
-      .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
-  }
-
-  function appendExisting(
-    candidate: ProgressionBlockCandidate,
-    original: ProgressionBlockCandidate,
-    editable: EditableProgression,
-    ideaId: string,
-    userVerified: boolean,
-    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
-    userEditedOverride?: boolean,
-    sourceBassline?: SourceBasslineSnapshotV1,
-  ): boolean {
-    setPersistenceError(undefined);
-    if (!ideaId) {
-      setToast(copy.capture.chooseIdeaFirst);
-      return false;
-    }
-
-    const appended = appendBlockToIdea(ideaId, candidate, analysis.result, {
-      sourcePath,
-      userEdited: userEditedOverride ?? hasProgressionEdits(editable),
-      userVerified,
-      onPersistenceError: announcePersistenceError,
-      ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}),
-    });
-    if (appended) {
-      const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
-      persistCorrectionEvents([
-        ...correctionEvents(original, candidate, editable),
-        ...propagationEvents,
-        ...progressionSaveFeedback(
-          original,
-          candidate,
-          editable,
-          userEdited,
-          userVerified,
-        ),
-      ]);
-      persistLabelCorrectionLogs(original, editable);
-      setToast(copy.toast.blockSaved, "success");
-      return true;
-    }
-    setToast(copy.capture.appendFailed, "error");
-    return false;
-  }
+  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm, workspaceShown]);
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
     const idea = ideas.find((entry) => entry.id === ideaId);
@@ -1087,94 +575,6 @@ export function CaptureView(props: CaptureViewProps) {
       setToast(copy.capture.copiedProgression);
     } catch {
       setToast(copy.capture.copyFailed, "error");
-    }
-  }
-
-  /**
-   * Auditions a manual draft.
-   *
-   * Plays the same event list the save path stores, so what the user hears
-   * before saving is what they get afterwards. Voicings resolve by the product's
-   * existing rule: the captured one where it still fits the chord, a generated
-   * one where an edit made it no longer fit.
-   */
-  async function previewManualDraft(draft: ManualCandidateDraft) {
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-manual-draft:${draft.draftId}` },
-        {
-          type: "timeline",
-          timeline: draftPreviewTimeline(draft),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  async function previewCandidate(candidate: ProgressionBlockCandidate) {
-    try {
-      await controller.toggle(
-        captureCandidateSource(result, candidate.id),
-        {
-          type: "timeline",
-          timeline: candidate.chords,
-          bpm: result?.bpm,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  /**
-   * Auditions one appearance of a progression.
-   *
-   * Plays that occurrence's own events, so the second chorus sounds like the
-   * second chorus rather than replaying the one the card happens to show.
-   */
-  async function previewOccurrence(occurrence: CandidateOccurrence) {
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-occurrence:${occurrence.id}` },
-        {
-          type: "timeline",
-          timeline: occurrence.events.map((event) => event.source),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
-  async function previewCandidateChord(candidate: ProgressionBlockCandidate, chordIndex: number) {
-    try {
-      const event = candidate.chords[chordIndex];
-      const chord = event?.chord;
-      if (chord) {
-        await controller.toggle(
-          {
-            kind: "capture",
-            id: `${captureCandidateSource(result, candidate.id).id}:chord:${chordIndex}:${chord.label}`,
-          },
-          {
-            type: "chord",
-            chord,
-            sound: previewSound,
-            explicitMidiNotes: singleChordVoicing(event),
-          },
-        );
-      }
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
     }
   }
 
@@ -1702,24 +1102,6 @@ export function CaptureView(props: CaptureViewProps) {
     target?.focus();
   }
 
-  async function previewSourceDraft(draft: ManualCandidateDraft) {
-    if (!draftHasMidiSourcePreview(draft)) return;
-    try {
-      await controller.toggle(
-        { kind: "capture", id: `capture-draft-source:${draft.draftId}` },
-        {
-          type: "timeline",
-          timeline: draftSourcePreviewTimeline(draft),
-          bpm: result?.bpm ?? 96,
-          sound: previewSound,
-          beatsPerBar: beatsPerBarFor(result?.timeSignature),
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
   function applyPendingDraftSelection() {
     if (!pendingCandidateSelection) return;
     const manualRange = pendingCandidateSelection.manualRange;
@@ -1764,6 +1146,46 @@ export function CaptureView(props: CaptureViewProps) {
       draftEditable(activeDraft),
       [],
       activeDraft.isDirty,
+    );
+  }
+
+  if (workspaceShown && correctionModel) {
+    return (
+      <CaptureModeFrame stage="result" value={captureInputMode}
+        disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+        {persistenceError ? (
+          <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
+            {persistenceError}
+          </p>
+        ) : null}
+        {analysisProgress ? (
+          <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
+        ) : null}
+        <div className="lv-capture-content grid gap-5" data-capture-midi-drop-zone {...dropHandlers}>
+          {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
+          <CorrectionWorkspace
+            model={correctionModel}
+            timeline={result.fullTimeline}
+            fileName={result.fileName ?? "MIDI"}
+            {...(analysisTargetLabel ? { analysisTargetLabel } : {})}
+            previewSound={previewSound}
+            controller={controller}
+            fullSource={captureFullTimelineSource(result)}
+            onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
+            onUseCurrentScreen={() => {
+              stopCapturePlayback(controller);
+              setCurrentScreenDatasetKey(workspaceDatasetKey);
+            }}
+            onChooseAnotherMidi={() => void chooseMidi(false)}
+            {...(preAnalysisSession ? {
+              onPartSettings: () => {
+                stopCapturePlayback(controller);
+                clearAnalysis();
+              },
+            } : {})}
+          />
+        </div>
+      </CaptureModeFrame>
     );
   }
 
@@ -2328,8 +1750,6 @@ function CaptureEmptyState({
   );
 }
 
-type CaptureAnalysisProgressStage = "reading" | "analyzing" | "finalizing";
-
 export function CaptureAnalysisProgress({
   stage,
   copy,
@@ -2358,22 +1778,6 @@ function analysisProgressLabel(stage: CaptureAnalysisProgressStage, copy: AppCop
   if (stage === "reading") return copy.capture.readingMidi;
   if (stage === "finalizing") return copy.capture.finalizingAnalysis;
   return copy.capture.analyzing;
-}
-
-function waitForNextPaint(): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof requestAnimationFrame === "function") {
-      requestAnimationFrame(() => resolve());
-    } else {
-      setTimeout(resolve, 0);
-    }
-  });
-}
-
-function waitForStatusFeedback(): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 300);
-  });
 }
 
 function DropOverlay({ copy }: { copy: AppCopy }) {
@@ -3674,19 +3078,6 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function fileNameFromPath(path: string): string {
-  const normalized = path.replace(/\\/g, "/");
-  return normalized.split("/").pop() || "midi.mid";
-}
-
-export function isMidiFileName(fileName: string): boolean {
-  return /\.(mid|midi)$/i.test(fileName);
-}
-
-function hasDroppedFiles(event: DragEvent<HTMLDivElement>): boolean {
-  return Array.from(event.dataTransfer.types).includes("Files");
-}
-
 async function writeClipboardText(text: string): Promise<void> {
   if (!navigator.clipboard?.writeText) {
     throw new Error("clipboard-unavailable");
@@ -3738,41 +3129,6 @@ export function useStickyInspectorHeight(
   }, [active, host]);
 }
 
-export function stopCapturePlayback(controller: PlaybackController = playbackController): void {
-  if (controller.getState().source?.kind === "capture") {
-    controller.stop();
-  }
-}
-
-export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefined): string {
-  if (!result) return "analysis";
-  if (result.sourceFingerprint) return `fingerprint:${encodeURIComponent(result.sourceFingerprint)}`;
-
-  return [
-    result.sourceAssetId ? `asset:${encodeURIComponent(result.sourceAssetId)}` : undefined,
-    result.fileName ? `file:${encodeURIComponent(result.fileName)}` : undefined,
-    `analyzed:${encodeURIComponent(result.analyzedAt)}`,
-    `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
-  ].filter(Boolean).join("|");
-}
-
-/**
- * Notes for a single chord card click.
- *
- * Clicking one chord used to fall through to the generated preview voicing while
- * the same chord played its original MIDI voicing everywhere else, so a chord
- * auditioned in capture sounded different from the same chord in Progression
- * Detail and Chord Dojo. This resolves it the same way those screens do.
- *
- * `resolveTimelineItemVoicing` checks the stored voicing against the chord, so an
- * edited chord falls back to a generated voicing instead of replaying the
- * voicing of the chord it replaced.
- */
-function singleChordVoicing(event: ChordTimelineItem | undefined): readonly number[] | undefined {
-  if (!event) return undefined;
-  return resolveTimelineItemVoicing(event).midiNotes;
-}
-
 type CandidateLaneKind = "progression" | "vamp" | "fragment";
 
 interface CandidateLane {
@@ -3813,23 +3169,6 @@ export function candidateLanes(
   return lanes.length <= 1
     ? lanes.map((lane) => ({ ...lane, heading: null }))
     : lanes;
-}
-
-function captureCandidateSource(
-  result: MidiProgressionAnalysis | undefined,
-  candidateId: string,
-): PlayingSource {
-  return {
-    kind: "capture",
-    id: `analysis:${captureAnalysisIdentity(result)}:candidate:${candidateId}`,
-  };
-}
-
-function captureFullTimelineSource(result: MidiProgressionAnalysis): PlayingSource {
-  return {
-    kind: "capture",
-    id: `analysis:${captureAnalysisIdentity(result)}:full-timeline`,
-  };
 }
 
 export function timelinePlaybackPosition(

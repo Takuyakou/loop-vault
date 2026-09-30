@@ -7,6 +7,7 @@ import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
+import { getCorrectionWorkspaceEnabled, setCorrectionWorkspaceEnabled } from "../storage/correctionWorkspaceSettings";
 import { ChevronDownIcon } from "../components/icons";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
@@ -130,6 +131,7 @@ export function SettingsView({
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
   const [standardTitleBar, setStandardTitleBar] = useState(loadUseStandardTitleBar);
+  const [correctionWorkspace, setCorrectionWorkspace] = useState(getCorrectionWorkspaceEnabled);
   const [analysisProfile, setAnalysisProfileState] = useState(
     () => getAnalysisProfileSettings().profile,
   );
@@ -548,6 +550,21 @@ export function SettingsView({
           <p id="settings-analysis-help" className="lv-settings-help">{ui.analysisHelp}</p>
           {analysisExpanded ? (
             <div id="settings-analysis-content" className="text-sm">
+              <label className="lv-settings-check">
+                <input
+                  type="checkbox"
+                  checked={correctionWorkspace}
+                  onChange={(event) => {
+                    setCorrectionWorkspace(event.target.checked);
+                    setCorrectionWorkspaceEnabled(event.target.checked);
+                  }}
+                  data-testid="settings-correction-workspace"
+                />
+                <span>
+                  <strong>新しい修正作業場を使う（試作）</strong>
+                  <span>MIDI 取り込み後の画面を、作りかけの新しい画面にします。保存は今の画面で行います。</span>
+                </span>
+              </label>
               <div className="lv-settings-divider">
                 <h3 className="lv-settings-subtitle">{ui.analysis}</h3>
                 <h4 className="mt-3 font-semibold">{ui.accuracyFirstTitle}</h4>

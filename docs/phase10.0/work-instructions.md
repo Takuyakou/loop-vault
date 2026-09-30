@@ -25,7 +25,7 @@
 
 ## Contracts
 
-- [P10-correction-workspace-spec.md](contracts/P10-correction-workspace-spec.md) — 画面の仕様（Freeze 済み、v2.1）
+- [P10-correction-workspace-spec.md](contracts/P10-correction-workspace-spec.md) — 画面の仕様（Freeze 済み、v2.2）
 - [P10-autonomous-run.md](contracts/P10-autonomous-run.md) — 全自動で進める時の決まり、迷った時の扱い、止める条件
 - [P10-test-and-evidence.md](contracts/P10-test-and-evidence.md) — Test DX の使い方、基準画像、スクリーンショット、報告
 
