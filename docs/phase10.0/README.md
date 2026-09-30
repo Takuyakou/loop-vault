@@ -9,11 +9,11 @@ MIDI 取り込み後の画面を、解析の誤りを人が速く直せる「修
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P10.0-02
-- **Completed stages:** P10.0-00（基準と監査 — [reports/P10.0-00-audit.md](reports/P10.0-00-audit.md)、fresh FULL PASS @ `1758cee`、製品コードの変更なし。local `master` へ `a5e111a` で取り込み済み）
+- **Active stage:** P10.0-03（P10.0-03 の zip を待つ）
+- **Completed stages:** P10.0-00（基準と監査 — [reports/P10.0-00-audit.md](reports/P10.0-00-audit.md)、fresh FULL PASS @ `1758cee`、製品コードの変更なし。local `master` へ `a5e111a` で取り込み済み）、P10.0-02（作業データと表示 — [reports/P10.0-02-display.md](reports/P10.0-02-display.md)、fresh FULL PASS @ `3c0f2c1`、EXE 作成済み。merge 候補 `feat/p10.0-02-display`）
 - **P10.0-01:** 行わない（2026-09-29 人間の判断。監査で、合否は「取った時の名前」と「今の名前」の比較だけと分かったため。作業場で名前を変えた時に札を付け直す。仕様書 v2.2 の 16章）
 - **Base:** local `master` `692e794`（P10.0-00 を `a5e111a` で取り込み済み、その後の Voicing Loop の直しを含む）
-- **Next action:** [stages/P10.0-02.md](stages/P10.0-02.md) を最後まで実行する
+- **Next action:** P10.0-03 の zip を待つ（P10.0-02 は merge 候補で停止、master へは未取り込み）
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
