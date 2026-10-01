@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "2fbfd8a",
-  "lastVerifiedCommit": "47a5181",
+  "lastVerifiedCommit": "612436a",
   "currentBranch": "feat/p10.0-06-save",
   "requiredGates": {
     "P10.0-00": [
@@ -130,8 +130,11 @@
     "p10-05-full-fresh": "pass",
     "p10-05-exe": "pass",
     "p10-05-report": "pass",
-    "p10-06-phase-docs": "pass"
+    "p10-06-phase-docs": "pass",
+    "p10-06-save-unit": "pass",
+    "p10-06-data-retention": "pass",
+    "p10-06-playback-match": "pass"
   },
-  "nextAction": "P10.0-06: run stages/P10.0-06.md (save content, save flow, default switch, layout fixes) on feat/p10.0-06-save, then stop at the merge candidate.",
+  "nextAction": "P10.0-06: checkpoint 1 done (save candidate); continue with checkpoint 2 (save flow) on feat/p10.0-06-save.",
   "updatedAt": "2026-10-01"
 }
