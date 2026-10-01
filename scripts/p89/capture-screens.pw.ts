@@ -314,6 +314,18 @@ for (const [width, height] of SIZES) {
       await shot("capture-workspace-long", async () => {
         await openWorkspace("long-64");
       });
+      // P10.0-05: 64 bars at the 4-bar zoom; the narrow window with the panel closed (one line under the timeline).
+      await shot("capture-workspace-long-zoom", async () => {
+        await page.getByRole("button", { name: "4小節", exact: true }).click();
+        await page.getByTestId("correction-review-count").focus();
+        await page.keyboard.press("]");
+      });
+      if (size === "768x640") {
+        await shot("capture-workspace-narrow", async () => {
+          await openWorkspace("long-64");
+          await page.getByTestId("correction-piano-roll").scrollIntoViewIfNeeded();
+        });
+      }
       await page.evaluate(() => localStorage.removeItem("loop-vault:p10-workspace:v1"));
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);

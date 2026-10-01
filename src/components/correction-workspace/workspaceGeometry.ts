@@ -27,8 +27,9 @@ export function cardSize(widthPx: number): CardSize {
   return widthPx < 18 ? "bare" : widthPx < 40 ? "tiny" : widthPx < 72 ? "narrow" : "full";
 }
 
-const charPx: Record<CardSize, number> = { full: 9.6, narrow: 7.8, tiny: 6.2, bare: 0 };
-const padPx: Record<CardSize, number> = { full: 20, narrow: 10, tiny: 4, bare: 0 };
+// Estimated bold glyph widths at 16 / 13 / 10px (E2E checks that no drawn name is clipped).
+const charPx: Record<CardSize, number> = { full: 10.5, narrow: 8.6, tiny: 6.8, bare: 0 };
+const padPx: Record<CardSize, number> = { full: 22, narrow: 12, tiny: 6, bare: 0 };
 
 /**
  * What a card shows: the whole name when it fits, otherwise only the root

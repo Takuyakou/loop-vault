@@ -51,6 +51,7 @@ export const p10Scenarios: Scenario[] = [
   { id: "repeat-pairs-8", about: "the same chord for two bars (C C Am Am …)", parts: [piano(chords(8, 1, REPEAT_LOOP)), { name: "Bass", program: 33, channel: 1, notes: Array.from({ length: 8 }, (_, bar) => ({ pitch: [36, 36, 33, 33, 41, 41, 43, 43][bar]!, start: bar * 4, dur: 4 })) }], expectedCards: 4 },
   { id: "stabs-8", about: "short stabs with rests, two bars per chord", parts: [piano(stabs(8)), { name: "Bass", program: 33, channel: 1, notes: Array.from({ length: 8 }, (_, bar) => ({ pitch: ROOTS[Math.floor(bar / 2) % 4]!, start: bar * 4, dur: 4 })) }], expectedCards: 4 },
   { id: "long-64", about: "64 bars: chords, bass, melody track, hats in piano", parts: [piano([...chords(64), ...hats(64)]), { name: "Bass", program: 33, channel: 1, notes: bass(64) }, { name: "Lead", program: 80, channel: 2, notes: melody(64) }], expectedCards: 64 },
+  { id: "long-300-5k", about: "300 bars, 5,000 notes: chords struck twice, bass, melody track, hats for 250 bars (P10.0-05 performance)", parts: [piano([...chords(300, 2), ...hats(250)]), { name: "Bass", program: 33, channel: 1, notes: bass(300) }, { name: "Lead", program: 80, channel: 2, notes: melody(300) }] },
   { id: "long-300", about: "300 bars, chords + bass (performance only)", parts: [piano(chords(300)), { name: "Bass", program: 33, channel: 1, notes: bass(300) }], expectedCards: 300 },
 ];
 

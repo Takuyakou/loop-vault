@@ -318,3 +318,124 @@ test("P10.0-04 Y moves to the next review card; the run suggestion merges after 
   await expect(cards(page)).toHaveCount(8);
   await expect(suggestion).toHaveCount(0);
 });
+
+// ---- P10.0-05 long songs and narrow screens --------------------------------------------
+
+/** Median ms from an action to two painted frames, over five runs. */
+async function timeIt(page: Page, action: "scroll" | "right" | "zoom" | "end"): Promise<number> {
+  return page.evaluate(async (kind) => {
+    const scroller = document.querySelector<HTMLElement>('[data-testid="correction-timeline-scroll"]')!;
+    const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const zoomButtons = [...document.querySelectorAll<HTMLButtonElement>(".lv-cw-tools .lv-cw-btn")].filter((button) => ["16小節", "4小節"].includes(button.textContent ?? ""));
+    const runs: number[] = [];
+    for (let run = 0; run < 5; run += 1) {
+      const t0 = performance.now();
+      if (kind === "scroll") scroller.scrollLeft += scroller.clientWidth;
+      else if (kind === "right") window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      else if (kind === "end") window.dispatchEvent(new KeyboardEvent("keydown", { key: run % 2 ? "Home" : "End", bubbles: true }));
+      else zoomButtons[run % 2 === 0 ? 1 : 0]!.click();
+      await frames();
+      runs.push(performance.now() - t0);
+    }
+    return runs.sort((a, b) => a - b)[2]!;
+  }, action);
+}
+
+for (const id of ["long-300", "long-300-5k"]) {
+  test(`P10.0-05 ${id}: scrolling, → , zoom and End stay quick and draw only the visible part`, async ({ page }) => {
+    test.setTimeout(120_000);
+    const started = Date.now();
+    await importScenario(page, id, true);
+    const workspace = page.getByTestId("correction-workspace");
+    await expect(workspace).toBeVisible();
+    const openMs = Date.now() - started;
+    await workspace.getByTestId("correction-review-count").focus();
+    const dom = await workspace.evaluate((element) => element.querySelectorAll("*").length);
+    const notes = await workspace.locator(".lv-cw-note").count();
+    const scroll = await timeIt(page, "scroll");
+    const right = await timeIt(page, "right");
+    const zoom = await timeIt(page, "zoom");
+    const end = await timeIt(page, "end");
+    console.log(`P10.0-05 perf ${id}: open ${openMs}ms, DOM ${dom}, drawn notes ${notes}, scroll ${scroll.toFixed(1)}ms, → ${right.toFixed(1)}ms, zoom ${zoom.toFixed(1)}ms, Home/End ${end.toFixed(1)}ms`);
+    test.info().annotations.push({ type: "perf", description: `${id} DOM=${dom} notes=${notes} scroll=${scroll.toFixed(1)} right=${right.toFixed(1)} zoom=${zoom.toFixed(1)} end=${end.toFixed(1)}` });
+    expect(dom).toBeLessThan(3000);
+    for (const ms of [scroll, right, zoom, end]) expect(ms).toBeLessThan(500);
+    // End reaches the last card and shows it.
+    await page.keyboard.press("End");
+    const last = workspace.locator('[data-testid="correction-card"][aria-pressed="true"]');
+    await expect(last).toBeVisible();
+    await expect(last).toBeInViewport();
+  });
+}
+
+test("P10.0-05 Ctrl+wheel keeps the beat under the pointer; the wheel scrolls sideways and stops following", async ({ page }) => {
+  await importScenario(page, "long-64", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const scroller = workspace.getByTestId("correction-timeline-scroll");
+  await scroller.scrollIntoViewIfNeeded();
+  const box = (await scroller.boundingBox())!;
+  const pointer = { x: box.x + box.width * 0.6, y: box.y + 60 };
+  const beatAt = () => scroller.evaluate((element, x) => {
+    const px = Number.parseFloat(getComputedStyle(element.firstElementChild!).getPropertyValue("--lv-cw-beat"));
+    return (element.scrollLeft + x - element.getBoundingClientRect().left) / px;
+  }, pointer.x);
+  await scroller.evaluate((element) => { element.scrollLeft = 400; });
+  const before = await beatAt();
+  await page.mouse.move(pointer.x, pointer.y);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -100);
+  await page.keyboard.up("Control");
+  await expect(workspace.getByRole("button", { name: "16小節", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(beatAt).toBeGreaterThan(before - 0.5);
+  expect(Math.abs((await beatAt()) - before)).toBeLessThan(0.5);
+
+  // Plain wheel: sideways.
+  const left = await scroller.evaluate((element) => element.scrollLeft);
+  await page.mouse.wheel(0, 200);
+  await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(left);
+
+  // While the song plays, a wheel turns following off.
+  const followButton = workspace.getByRole("button", { name: "追従", exact: true });
+  await expect(followButton).toHaveAttribute("aria-pressed", "true");
+  await workspace.getByTestId("correction-play-song").click();
+  await expect(workspace.getByTestId("correction-play-song")).toHaveAttribute("aria-pressed", "true");
+  await page.mouse.move(pointer.x, pointer.y);
+  await page.mouse.wheel(0, 200);
+  await expect(followButton).toHaveAttribute("aria-pressed", "false");
+  await workspace.getByTestId("correction-play-song").click();
+});
+
+test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is one line below it", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 640 });
+  await importScenario(page, "long-64", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const roll = workspace.getByTestId("correction-piano-roll");
+  await roll.scrollIntoViewIfNeeded();
+  const visible = await roll.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0);
+  });
+  expect(visible).toBeGreaterThanOrEqual(160);
+  // A name that does not fit shows only its root: no drawn name is clipped (spec 6.2).
+  const clipped = await workspace.locator(".lv-cw-card-name").evaluateAll((items) => items
+    .filter((item) => item.textContent && item.scrollWidth > item.clientWidth + 1)
+    .map((item) => `${item.textContent}/${item.getAttribute("data-full-name")}`));
+  expect(clipped).toEqual([]);
+  const toggle = workspace.getByTestId("correction-panel-toggle");
+  const rollBox = (await roll.boundingBox())!;
+  const toggleBox = (await toggle.boundingBox())!;
+  expect(toggleBox.y).toBeGreaterThanOrEqual(rollBox.y + rollBox.height);
+  expect(toggleBox.height).toBeLessThan(60);
+  // Opened: a sheet from the bottom, at most 60% of the window.
+  await toggle.click();
+  const panel = workspace.locator(".lv-cw-insp");
+  await expect(workspace.getByTestId("correction-inspector")).toBeVisible();
+  const panelBox = (await panel.boundingBox())!;
+  expect(panelBox.height).toBeLessThanOrEqual(640 * 0.6 + 1);
+  expect(Math.round(panelBox.y + panelBox.height)).toBe(640);
+  const overflow = await page.evaluate(() => {
+    const main = document.querySelector<HTMLElement>("#main-content");
+    return Math.max(document.documentElement.scrollWidth - innerWidth, main ? main.scrollWidth - main.clientWidth : 0);
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
+});

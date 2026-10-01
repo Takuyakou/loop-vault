@@ -137,6 +137,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   // ---- playback --------------------------------------------------------------------------
   const fullPlan = useMemo(() => createTimelineVoicingPlaybackPlan(timeline, "capture-full"), [timeline]);
   const songPlaying = playback.status !== "idle" && samePlaybackSource(playback.source, fullSource);
+  // Moving the view by hand (wheel, overview, keys) while the song plays stops following (spec 7.3).
+  const playingRef = useRef(songPlaying);
+  playingRef.current = songPlaying;
+  const stopFollow = useCallback(() => { if (playingRef.current) setFollow(false); }, []);
   useEffect(() => {
     if (!songPlaying || playback.status !== "playing") return undefined;
     const interval = window.setInterval(() => tick((value) => value + 1), 100);
@@ -300,14 +304,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         if (!ids.length) return;
         handled();
         edit((model) => movePitch(model, ids, key === "ArrowUp" ? 1 : -1));
-      } else if (key === "ArrowRight") { handled(); selectCard(present.cards[Math.min(present.cards.length - 1, selectedIndex + 1)]); }
-      else if (key === "ArrowLeft") { handled(); selectCard(present.cards[Math.max(0, selectedIndex - 1)]); }
-      else if (key === "]") { handled(); nextReview(1); }
-      else if (key === "[") { handled(); nextReview(-1); }
+      } else if (key === "ArrowRight") { handled(); stopFollow(); selectCard(present.cards[Math.min(present.cards.length - 1, selectedIndex + 1)]); }
+      else if (key === "ArrowLeft") { handled(); stopFollow(); selectCard(present.cards[Math.max(0, selectedIndex - 1)]); }
+      else if (key === "]") { handled(); stopFollow(); nextReview(1); }
+      else if (key === "[") { handled(); stopFollow(); nextReview(-1); }
       else if (key === " ") { handled(); toggleSong(); }
       else if (key === "f" || key === "F") { handled(); setFollow((value) => !value); }
-      else if (key === "Home") { handled(); selectCard(present.cards[0]); }
-      else if (key === "End") { handled(); selectCard(present.cards[present.cards.length - 1]); }
+      else if (key === "Home") { handled(); stopFollow(); selectCard(present.cards[0]); }
+      else if (key === "End") { handled(); stopFollow(); selectCard(present.cards[present.cards.length - 1]); }
       else if (key === "?") { handled(); setHelpOpen((value) => !value); }
       else if ((key === "Delete" || key === "Backspace") && ids.length) { handled(); edit((model) => deleteNotes(model, ids)); }
       else if ((key === "r" || key === "R") && ids.length) { handled(); edit((model) => restoreNotes(model, ids)); }
@@ -331,14 +335,26 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, selectNotes, selected, selectedIndex, selectedNotes, toggleSong]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong]);
 
-  // Ctrl + wheel zooms around the pointer (a native listener, so preventDefault works).
+  // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
+  // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
   useEffect(() => {
     const element = scrollRef.current;
     if (!element) return undefined;
     const onWheel = (event: WheelEvent) => {
-      if (!event.ctrlKey) return;
+      if (!event.ctrlKey) {
+        if (event.shiftKey) {
+          event.preventDefault();
+          verticalScroller(element).scrollBy({ top: event.deltaY || event.deltaX });
+          return;
+        }
+        stopFollow();
+        if (Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return; // a touchpad already scrolls sideways
+        event.preventDefault();
+        element.scrollLeft += event.deltaY;
+        return;
+      }
       event.preventDefault();
       const box = element.getBoundingClientRect();
       const pointerX = event.clientX - box.left;
@@ -350,12 +366,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     };
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);
-  }, [maxPx, minPx, pxPerBeat]);
+  }, [maxPx, minPx, pxPerBeat, stopFollow]);
 
   const overviewRef = useRef<HTMLDivElement>(null);
   const moveFromOverview = (event: ReactPointerEvent<HTMLDivElement>) => {
     const box = overviewRef.current?.getBoundingClientRect();
     if (!box || box.width === 0) return;
+    stopFollow();
     scrollToBeat(((event.clientX - box.left) / box.width) * present.totalBeats);
   };
 
@@ -761,6 +778,14 @@ function pct(value: number, total: number): string {
 
 function formatBeats(beats: number): string {
   return Number.isInteger(beats) ? String(beats) : beats.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function verticalScroller(from: HTMLElement): Element {
+  for (let element = from.parentElement; element; element = element.parentElement) {
+    const overflow = getComputedStyle(element).overflowY;
+    if ((overflow === "auto" || overflow === "scroll") && element.scrollHeight > element.clientHeight) return element;
+  }
+  return document.scrollingElement ?? document.documentElement;
 }
 
 function isEditable(target: EventTarget | null): boolean {
