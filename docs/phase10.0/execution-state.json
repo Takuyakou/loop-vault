@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "10.0",
   "status": "in-progress",
-  "activeStage": "P10.0-06",
+  "activeStage": "P10.0-07",
   "completedStages": [
     "P10.0-00",
     "P10.0-02",
     "P10.0-03",
     "P10.0-04",
-    "P10.0-05"
+    "P10.0-05",
+    "P10.0-06"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "2fbfd8a",
-  "lastVerifiedCommit": "41e4cc4",
+  "lastVerifiedCommit": "bbd843c",
   "currentBranch": "feat/p10.0-06-save",
   "requiredGates": {
     "P10.0-00": [
@@ -133,8 +134,15 @@
     "p10-06-phase-docs": "pass",
     "p10-06-save-unit": "pass",
     "p10-06-data-retention": "pass",
-    "p10-06-playback-match": "pass"
+    "p10-06-playback-match": "pass",
+    "p10-06-fast-feature": "pass",
+    "p10-06-ui": "pass",
+    "p10-06-e2e": "pass",
+    "p10-06-screens": "pass",
+    "p10-06-full-fresh": "pass",
+    "p10-06-exe": "pass",
+    "p10-06-report": "pass"
   },
-  "nextAction": "P10.0-06: checkpoints 1-3 done; continue with checkpoint 4 (layout fixes), then screens, fresh FULL, EXE and report.",
+  "nextAction": "C（P10.0-07）の zip を待つ。Bundle B (P10.0-06) is the merge candidate feat/p10.0-06-save (fresh FULL PASS and EXE @ bbd843c); merge it into local master first.",
   "updatedAt": "2026-10-01"
 }
