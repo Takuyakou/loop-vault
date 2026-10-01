@@ -1326,6 +1326,49 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("構成音");
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
+  it("selects A/B by context menu, preserves the old range while A is pending, and keeps outside clicks selection-only", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    const rightClick = async (index: number, shiftKey = false) => act(async () => {
+      cards[index]!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, shiftKey }));
+    });
+    await rightClick(0);
+    expect(cards[0]!.dataset.range).toBe("pending-a");
+    await rightClick(1);
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("1〜2");
+    expect(cards[0]!.dataset.range).toBe("a");
+    expect(cards[1]!.dataset.range).toBe("b");
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.loopBounds).toEqual({ startBeat: 0, endBeat: 4 });
+    await rightClick(1);
+    expect(cards[1]!.dataset.range).toBe("pending-a");
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("1〜2");
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(container.querySelector("[data-testid='voicing-loop-range-pending']")).toBeNull();
+    await rightClick(1, true);
+    expect(runtime.setLoopBounds).toHaveBeenCalledWith({ startBeat: 2, endBeat: 4 });
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
+    const beforeSeek = runtime.seek.mock.calls.length;
+    await act(async () => cards[0]!.click());
+    expect(runtime.seek).toHaveBeenCalledTimes(beforeSeek);
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Cmaj7");
+    await act(async () => runtime.activateRange());
+    expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("2 / 2");
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-chip']")!.click());
+    expect(runtime.setLoopBounds).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("uses Shift+F10/Menu for the same range action and supports one-card selection", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    await act(async () => cards[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "F10", shiftKey: true, bubbles: true, cancelable: true })));
+    expect(cards[1]!.dataset.range).toBe("pending-a");
+    await act(async () => cards[1]!.dispatchEvent(new KeyboardEvent("keydown", { key: "ContextMenu", bubbles: true, cancelable: true })));
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
+  });
+
   it("v2 card click seeks, preview stays separate, and keyboard moves by chord", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
@@ -1495,6 +1538,13 @@ class FakeTransport implements ProgressionVoicingTransportPort {
 
 class SeekingTransport extends FakeTransport {
   readonly supportsSeek = true;
+  private pendingBounds?: { readonly startBeat: number; readonly endBeat: number };
+  setLoopBounds = vi.fn((bounds: { readonly startBeat: number; readonly endBeat: number } | undefined) => {
+    this.pendingBounds = bounds;
+    return true;
+  });
+  activateRange() { this.options?.onLoopBoundsActivated?.(this.pendingBounds, this.pendingBounds?.startBeat ?? 0); }
+
   private isPaused = false;
   override pause = vi.fn(() => { this.isPaused = true; return true; });
   override resume = vi.fn(async () => { this.isPaused = false; return true; });

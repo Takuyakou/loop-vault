@@ -9,6 +9,11 @@ export interface ProgressionPracticeClockSchedule {
   readonly eventStarts: readonly number[];
 }
 
+export interface ProgressionPracticeLoopBounds {
+  readonly startBeat: number;
+  readonly endBeat: number;
+}
+
 export interface ProgressionPracticeClockState {
   readonly status: ProgressionPracticeClockStatus;
   readonly bpm: number;
@@ -17,6 +22,9 @@ export interface ProgressionPracticeClockState {
   readonly transportBeat: number;
   /** Chord onset selected while stopped or during count-in. */
   readonly anchorBeat?: number;
+  readonly loopBounds?: ProgressionPracticeLoopBounds;
+  /** Frozen for the running session; a mid-play range change has no new count-in. */
+  readonly countInBeats?: number;
 }
 
 export type ProgressionPracticeClockAction =
@@ -28,6 +36,8 @@ export type ProgressionPracticeClockAction =
   | { readonly type: "SET_BPM"; readonly bpm: number }
   | { readonly type: "STOP" }
   | { readonly type: "STOP_RESET" }
+  | { readonly type: "SET_LOOP_BOUNDS"; readonly bounds?: ProgressionPracticeLoopBounds; readonly startBeat?: number;
+      readonly status?: "running" | "paused" | "count-in" | "stopped" | "ready" }
   | { readonly type: "SEEK"; readonly absoluteBeat: number; readonly status: "stopped" | "paused" | "running" | "count-in"; readonly anchorBeat: number };
 
 export interface ProgressionPracticeClockProjection {
@@ -54,12 +64,16 @@ const LOOP_BOUNDARY_ULP_MULTIPLIER = 8;
 export function buildProgressionPracticeClockSchedule(
   snapshot: ProgressionVoicingPracticeSnapshot,
   countInBars: 0 | 1 | 2,
+  loopBounds?: ProgressionPracticeLoopBounds,
+  frozenCountInBeats?: number,
 ): ProgressionPracticeClockSchedule {
-  const countInBeats = countInBars * (snapshot.practiceGroupBeats ?? snapshot.meter.numerator);
+  const countInBeats = frozenCountInBeats ?? countInBars * (loopBounds
+    ? snapshot.meter.numerator
+    : snapshot.practiceGroupBeats ?? snapshot.meter.numerator);
   return Object.freeze({
     countInBeats,
     progressionStartBeat: countInBeats,
-    loopBeats: snapshot.lengthBeats,
+    loopBeats: loopBounds ? loopBounds.endBeat - loopBounds.startBeat : snapshot.lengthBeats,
     eventStarts: Object.freeze(snapshot.events.map((event) => event.startBeat)),
   });
 }
@@ -78,11 +92,13 @@ export function reduceProgressionPracticeClock(
   state: ProgressionPracticeClockState,
   action: ProgressionPracticeClockAction,
 ): ProgressionPracticeClockState {
-  const schedule = buildProgressionPracticeClockSchedule(snapshot, state.countInBars);
+  const schedule = buildProgressionPracticeClockSchedule(snapshot, state.countInBars, state.loopBounds, state.countInBeats);
   switch (action.type) {
     case "START":
       if (state.status === "paused" || state.status === "running" || state.status === "count-in") return state;
-      return freezeState(state, schedule.countInBeats > 0 ? "count-in" : "running", 0);
+      return Object.freeze({ ...freezeState(state, schedule.countInBeats > 0 ? "count-in" : "running", 0),
+        anchorBeat: state.loopBounds?.startBeat ?? state.anchorBeat ?? 0,
+        countInBeats: buildProgressionPracticeClockSchedule(snapshot, state.countInBars, state.loopBounds).countInBeats });
     case "SYNC_TRANSPORT": {
       if (state.status !== "running" && state.status !== "count-in") return state;
       if (!Number.isFinite(action.absoluteBeat) || action.absoluteBeat < state.transportBeat) return state;
@@ -106,13 +122,21 @@ export function reduceProgressionPracticeClock(
         state.transportBeat,
       );
     case "RESTART":
-      return Object.freeze({ ...state, status: schedule.countInBeats > 0 ? "count-in" : "running", transportBeat: 0, anchorBeat: 0 });
+      return Object.freeze({ ...state, status: schedule.countInBeats > 0 ? "count-in" : "running",
+        transportBeat: 0, anchorBeat: state.loopBounds?.startBeat ?? 0,
+        countInBeats: buildProgressionPracticeClockSchedule(snapshot, state.countInBars, state.loopBounds).countInBeats });
     case "SEEK":
       if (!Number.isFinite(action.absoluteBeat) || !Number.isFinite(action.anchorBeat)
         || action.anchorBeat < 0 || action.anchorBeat >= snapshot.lengthBeats) return state;
       return Object.freeze({ ...state, status: action.status, transportBeat: action.absoluteBeat, anchorBeat: action.anchorBeat });
     case "STOP_RESET":
-      return Object.freeze({ ...state, status: "stopped", transportBeat: 0, anchorBeat: 0 });
+      return Object.freeze({ ...state, status: "stopped", transportBeat: 0, anchorBeat: state.loopBounds?.startBeat ?? 0 });
+    case "SET_LOOP_BOUNDS":
+      return Object.freeze({ ...state, loopBounds: action.bounds, status: action.status ?? state.status,
+        transportBeat: action.status === "running" || action.status === "paused"
+          ? schedule.countInBeats + (action.startBeat ?? action.bounds?.startBeat ?? 0)
+            - (action.bounds?.startBeat ?? 0) : 0,
+        anchorBeat: action.startBeat ?? action.bounds?.startBeat ?? 0 });
     case "SET_BPM":
       assertBpm(action.bpm);
       if (action.bpm === state.bpm) return state;
@@ -126,13 +150,15 @@ export function projectProgressionPracticeClock(
   snapshot: ProgressionVoicingPracticeSnapshot,
   state: ProgressionPracticeClockState,
 ): ProgressionPracticeClockProjection {
-  const schedule = buildProgressionPracticeClockSchedule(snapshot, state.countInBars);
+  const schedule = buildProgressionPracticeClockSchedule(snapshot, state.countInBars, state.loopBounds, state.countInBeats);
   const beforeProgression = state.transportBeat < schedule.progressionStartBeat;
   const inCountIn = (state.status === "count-in" || state.status === "paused") && beforeProgression;
+  const rangeStart = state.loopBounds?.startBeat ?? 0;
   const elapsed = beforeProgression
-    ? Math.max(0, state.anchorBeat ?? 0)
+    ? Math.max(0, (state.anchorBeat ?? rangeStart) - rangeStart)
     : Math.max(0, state.transportBeat - schedule.progressionStartBeat);
-  const { loopCount, progressionBeat } = splitLoopPosition(elapsed, schedule.loopBeats);
+  const { loopCount, progressionBeat: rangeBeat } = splitLoopPosition(elapsed, schedule.loopBeats);
+  const progressionBeat = rangeStart + rangeBeat;
   const currentSpanIndex = findCurrentSpanIndex(snapshot, progressionBeat);
   const current = snapshot.spans[currentSpanIndex]!;
   const nextSpanIndex = (currentSpanIndex + 1) % snapshot.spans.length;
@@ -153,7 +179,7 @@ export function projectProgressionPracticeClock(
     beatsInChord,
     beatInBar: Math.floor(progressionBeat % snapshot.meter.numerator) + 1,
     chordProgress: clampUnit(beatWithinChord / current.durationBeats),
-    progressionProgress: clampUnit(progressionBeat / schedule.loopBeats),
+    progressionProgress: clampUnit(progressionBeat / snapshot.lengthBeats),
     progressionBeat,
     loopCount,
   });

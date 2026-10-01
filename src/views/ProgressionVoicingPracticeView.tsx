@@ -35,6 +35,8 @@ import {
   type ProgressionPracticeSourceReference,
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
+import { cancelVoicingLoopRangePending, emptyVoicingLoopRangeSelection, rangeBeatBounds,
+  rangeContainsCard, selectVoicingLoopRangeCard, type VoicingLoopRangeSelection } from "../domain/progressionVoicingPractice/rangeLoop";
 import { chordIndexAtTimelineBeat } from "../domain/progressionVoicingPractice/timelineNavigation";
 import { clampTimelineScale, compactTimelineCard, remainingBeatsLabel, visualTransportBeat, timelinePixelsPerBeat as pixelsPerBeatForTimeline } from "../domain/progressionVoicingPractice/timelineLayout";
 import type {
@@ -380,6 +382,11 @@ export function ProgressionVoicingPracticeView({
   }, [snapshots, targetTonicPitchClass, octaveShift]);
   const [countInBars, setCountInBars] = useState<0 | 1 | 2>(1);
   const [seekAnchorIndex, setSeekAnchorIndex] = useState(0);
+  const [rangeSelection, setRangeSelection] = useState<VoicingLoopRangeSelection>(emptyVoicingLoopRangeSelection);
+  const rangeSelectionRef = useRef(rangeSelection);
+  rangeSelectionRef.current = rangeSelection;
+  const previousRangeSourceRef = useRef(sourceIdentity);
+  const selectedRangeBounds = rangeBeatBounds(snapshot?.events ?? [], rangeSelection.active);
   const [clockState, setClockState] = useState(
     () => snapshot ? createProgressionPracticeClockState(snapshot, { countInBars }) : undefined,
   );
@@ -426,6 +433,7 @@ export function ProgressionVoicingPracticeView({
     return () => observer.disconnect();
   }, [snapshot]);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const keyboardRangeMenuRef = useRef<{ cardIndex: number; at: number }>();
   const pageTurnFrameRef = useRef<number>();
   const pageTurnHighlightTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [pageTurnHighlightIndex, setPageTurnHighlightIndex] = useState<number>();
@@ -452,7 +460,9 @@ export function ProgressionVoicingPracticeView({
     cardHeldSpanRef.current = undefined;
     setSeekAnchorIndex(0);
     setClockState(sourceSnapshot
-      ? createProgressionPracticeClockState(sourceSnapshot, { countInBars })
+      ? { ...createProgressionPracticeClockState(sourceSnapshot, { countInBars }),
+          loopBounds: rangeBeatBounds(sourceSnapshot.events, rangeSelectionRef.current.active),
+          anchorBeat: rangeBeatBounds(sourceSnapshot.events, rangeSelectionRef.current.active)?.startBeat ?? 0 }
       : undefined);
     return () => {
       runtimeRequestRef.current += 1;
@@ -460,6 +470,15 @@ export function ProgressionVoicingPracticeView({
       transport?.stop();
     };
   }, [countInBars, previewSound, sourceSnapshot]);
+
+  useEffect(() => {
+    if (previousRangeSourceRef.current === sourceIdentity) return;
+    previousRangeSourceRef.current = sourceIdentity;
+    setRangeSelection(emptyVoicingLoopRangeSelection);
+    setClockState(state => state && sourceSnapshot
+      ? reduceProgressionPracticeClock(sourceSnapshot, state, { type: "SET_LOOP_BOUNDS" })
+      : state);
+  }, [sourceIdentity, sourceSnapshot]);
 
   useEffect(() => {
     if (!plan || !snapshot) return;
@@ -768,15 +787,15 @@ export function ProgressionVoicingPracticeView({
   async function start() {
     if (!snapshot || !plan || !clockState || !allEventsPlayable) return;
     const runtimeCountInBars = metronomeEnabled ? countInBars : 0;
-    const ready = createProgressionPracticeClockState(snapshot, {
+    const ready = { ...createProgressionPracticeClockState(snapshot, {
       bpm: clockState.bpm,
       countInBars: runtimeCountInBars,
-    });
+    }), loopBounds: selectedRangeBounds, anchorBeat: selectedRangeBounds?.startBeat ?? 0 };
     setRuntimeError(undefined);
-    const anchorBeat = snapshot.events[seekAnchorIndex]?.startBeat ?? 0;
+    const anchorBeat = selectedRangeBounds?.startBeat ?? snapshot.events[seekAnchorIndex]?.startBeat ?? 0;
     const started = reduceProgressionPracticeClock(snapshot, ready, { type: "START" });
     // START resets the clock to zero; apply the selected card anchor afterwards.
-    setClockState(anchorBeat > 0
+    setClockState(anchorBeat > 0 && !selectedRangeBounds
       ? reduceProgressionPracticeClock(snapshot, started, {
         type: "SEEK", status: runtimeCountInBars > 0 ? "count-in" : "running",
         absoluteBeat: runtimeCountInBars > 0 ? 0 : anchorBeat, anchorBeat,
@@ -803,6 +822,14 @@ export function ProgressionVoicingPracticeView({
         referenceSoundEnabled,
         sound: previewSound,
         startBeat,
+        loopBounds: selectedRangeBounds,
+        onLoopBoundsActivated(bounds, rangeStartBeat) {
+          if (runtimeRequestRef.current !== request) return;
+          setClockState((state) => state
+            ? reduceProgressionPracticeClock(snapshot, state, { type: "SET_LOOP_BOUNDS", bounds,
+              startBeat: rangeStartBeat, status: state.status === "paused" ? "paused" : state.status === "count-in" ? "count-in" : "running" })
+            : state);
+        },
         onTransportBeat(absoluteBeat) {
           if (runtimeRequestRef.current !== request) return;
           setClockState((state) => state
@@ -822,6 +849,10 @@ export function ProgressionVoicingPracticeView({
 
   function seekToEvent(eventIndex: number, origin: TimelineSeekOrigin = "keyboard") {
     if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
+    if (!rangeContainsCard(rangeSelection.active, eventIndex)) {
+      setAuditionedIndex(eventIndex);
+      return;
+    }
     cardHeldSpanRef.current = shouldHoldCardPageTurn(origin)
       ? snapshot.spans.findIndex((span) => span.kind === "chord" && span.eventIndex === eventIndex)
       : undefined;
@@ -844,6 +875,10 @@ export function ProgressionVoicingPracticeView({
   }
 
   function selectTimelineCard(eventIndex: number, origin: TimelineSeekOrigin) {
+    if (!rangeContainsCard(rangeSelection.active, eventIndex)) {
+      setAuditionedIndex(eventIndex);
+      return;
+    }
     if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex, true); return; }
     const status = clockStateRef.current?.status;
     seekToEvent(eventIndex, origin);
@@ -851,6 +886,32 @@ export function ProgressionVoicingPracticeView({
       // The clicked event index is passed directly; never resolve from asynchronously updated Current state.
       void auditionResolved(eventIndex, true);
     }
+  }
+
+  function markRangeCard(cardIndex: number, immediate = false) {
+    if (!snapshot || !transportRef.current?.supportsSeek) return;
+    const next = selectVoicingLoopRangeCard(rangeSelection, cardIndex, snapshot.events.length, immediate);
+    setRangeSelection(next);
+    if (next.active === rangeSelection.active) return;
+    const bounds = rangeBeatBounds(snapshot.events, next.active);
+    const status = clockStateRef.current?.status;
+    if (status === "running" || status === "count-in" || status === "paused") {
+      if (transportRef.current?.setLoopBounds?.(bounds)) return;
+    }
+    setSeekAnchorIndex(next.active?.first ?? 0);
+    setClockState(state => state ? reduceProgressionPracticeClock(snapshot, state,
+      { type: "SET_LOOP_BOUNDS", bounds }) : state);
+  }
+
+  function clearRange() {
+    if (!snapshot) return;
+    setRangeSelection(emptyVoicingLoopRangeSelection);
+    const status = clockStateRef.current?.status;
+    if ((status === "running" || status === "count-in" || status === "paused")
+      && transportRef.current?.setLoopBounds?.(undefined)) return;
+    setSeekAnchorIndex(0);
+    setClockState(state => state ? reduceProgressionPracticeClock(snapshot, state,
+      { type: "SET_LOOP_BOUNDS" }) : state);
   }
 
   function seekToBeat(beat: number, origin: TimelineSeekOrigin) {
@@ -909,7 +970,7 @@ export function ProgressionVoicingPracticeView({
         : state);
       if (!restarted) {
         runtimeRequestRef.current += 1;
-        await launchRuntime(0, clockState.bpm);
+        await launchRuntime(selectedRangeBounds?.startBeat ?? 0, clockState.bpm);
       }
     } catch {
       if (runtimeRequestRef.current !== request) return;
@@ -956,13 +1017,16 @@ export function ProgressionVoicingPracticeView({
   function stop() {
     if (!snapshot) return;
     const v2 = Boolean(transportRef.current?.supportsSeek);
-    if (v2) setSeekAnchorIndex(0);
+    if (v2) setSeekAnchorIndex(rangeSelection.active?.first ?? 0);
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
-    setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: v2 ? "STOP_RESET" : "STOP" })
-      : state);
+    setClockState((state) => {
+      if (!state) return state;
+      const reset = reduceProgressionPracticeClock(snapshot, state, { type: v2 ? "STOP_RESET" : "STOP" });
+      return v2 ? reduceProgressionPracticeClock(snapshot, reset,
+        { type: "SET_LOOP_BOUNDS", bounds: selectedRangeBounds, status: "stopped" }) : reset;
+    });
   }
 
   function changeBpm(value: number) {
@@ -1075,7 +1139,10 @@ export function ProgressionVoicingPracticeView({
         if (active) pause();
         else if (paused) void resume();
         else void start();
-      } else if (key === "escape") stop();
+      } else if (key === "escape") {
+        if (rangeSelection.pendingStart !== undefined) setRangeSelection(cancelVoicingLoopRangePending(rangeSelection));
+        else stop();
+      }
       else if (key === "f") resumeTimelineFollow(true);
       else if (key === "m") toggleMetronome();
       else if (key === "r") changeReferenceSound(!referenceSoundEnabled);
@@ -1409,6 +1476,12 @@ export function ProgressionVoicingPracticeView({
               <div className="flex items-center gap-2" data-testid="voicing-loop-status">
                 <Metric compact label={"コード"} testId="voicing-loop-position-metric" value={`${currentIndex + 1} / ${snapshot.events.length}`} />
                 <Metric compact label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
+                {rangeSelection.active ? <button type="button" data-testid="voicing-loop-range-chip"
+                  className="rounded border border-[var(--lv-accent)] px-1.5 py-0.5 text-[var(--lv-accent)]"
+                  aria-label={`区間ループ ${rangeSelection.active.first + 1}〜${rangeSelection.active.last + 1} を解除`}
+                  onClick={clearRange}>{`区間 ${rangeSelection.active.first + 1}〜${rangeSelection.active.last + 1} ×`}</button> : null}
+                {rangeSelection.pendingStart !== undefined ? <span data-testid="voicing-loop-range-pending"
+                  className="text-[var(--lv-accent)]">{`ここから ${rangeSelection.pendingStart + 1}`}</span> : null}
               </div>
               <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
                 <button type="button" className={`rounded px-1.5 py-0.5 ${followEnabled ? "text-[var(--lv-accent)]" : "text-amber-200"}`}
@@ -1471,6 +1544,10 @@ export function ProgressionVoicingPracticeView({
                   const cardWidth = span.durationBeats * timelinePixelsPerBeat;
                   const compact = compactTimelineCard(cardWidth);
                   const showPreview = playable && cardWidth >= 96;
+                  const rangeCard = span.kind === "chord" && rangeContainsCard(rangeSelection.active, eventIndex);
+                  const rangeStart = span.kind === "chord" && rangeSelection.active?.first === eventIndex;
+                  const rangeEnd = span.kind === "chord" && rangeSelection.active?.last === eventIndex;
+                  const pendingStart = span.kind === "chord" && rangeSelection.pendingStart === eventIndex;
                   return (
                     <div key={event?.id ?? `rest-${span.startBeat}`} className="relative flex-none" style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}>
                     <button
@@ -1480,14 +1557,34 @@ export function ProgressionVoicingPracticeView({
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
                       data-compact={compact}
+                      data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard ? "inside" : rangeSelection.active ? "outside" : "none"}
                       title={event?.chord.label ?? restLabel}
                       style={{ width: `${cardWidth}px` }}
-                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${rangeCard && rangeSelection.active ? "ring-1 ring-inset ring-[var(--lv-accent)]" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onMouseDown={(event) => event.preventDefault()}
+                      onContextMenu={(event) => {
+                        if (span.kind !== "chord") return;
+                        event.preventDefault();
+                        const keyboardMenu = keyboardRangeMenuRef.current;
+                        keyboardRangeMenuRef.current = undefined;
+                        if (event.detail === 0 && keyboardMenu?.cardIndex === eventIndex
+                          && performance.now() - keyboardMenu.at < 500) return;
+                        markRangeCard(eventIndex, event.shiftKey);
+                      }}
+                      onKeyDown={(event) => {
+                        if (span.kind !== "chord") return;
+                        if (event.key === "ContextMenu" || event.key === "Menu"
+                          || event.shiftKey && event.key === "F10") {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          keyboardRangeMenuRef.current = { cardIndex: eventIndex, at: performance.now() };
+                          markRangeCard(eventIndex);
+                        }
+                      }}
                       onFocus={(event) => {
                         if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
                         pageTurnFrameRef.current = undefined;
@@ -1499,6 +1596,10 @@ export function ProgressionVoicingPracticeView({
                         else selectTimelineCard(eventIndex, origin);
                       }}
                     >
+                      {pendingStart || rangeStart || rangeEnd ? <span aria-hidden="true"
+                        className="absolute bottom-0.5 right-1 text-[10px] text-[var(--lv-accent)]">
+                        {pendingStart ? "A?" : rangeStart && rangeEnd ? "A/B" : rangeStart ? "A" : "B"}
+                      </span> : null}
                       <span className="flex min-w-0 items-baseline gap-1">
                         {!compact ? <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span> : null}
                         <span className={`min-w-0 leading-tight ${compact ? "block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] tracking-tight" : "break-all text-sm"}`}>{event?.chord.label ?? restLabel}</span>
@@ -1508,7 +1609,7 @@ export function ProgressionVoicingPracticeView({
                           <span data-testid="voicing-loop-event-timing" className={`absolute bottom-1 left-2 text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}>
                             {compactDurationLabel(span.durationBeats)}
                           </span>
-                          {degree ? <span className={`absolute bottom-1 text-[10px] font-bold leading-3 text-[var(--lv-accent)] ${showPreview ? "right-8" : "right-2"}`} data-testid="voicing-loop-event-degree">{degree}</span> : null}
+                          {degree && !pendingStart && !rangeStart && !rangeEnd ? <span className={`absolute bottom-1 text-[10px] font-bold leading-3 text-[var(--lv-accent)] ${showPreview ? "right-8" : "right-2"}`} data-testid="voicing-loop-event-degree">{degree}</span> : null}
                         </>
                       ) : null}
                     </button>
