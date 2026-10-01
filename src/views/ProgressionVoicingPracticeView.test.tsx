@@ -130,7 +130,7 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(container.textContent).toContain("練習する進行");
       expect(container.textContent).toContain("練習できる保存済み進行はまだありません。");
       expect(container.querySelector("#voicing-loop-progression-search")).not.toBeNull();
-      expect(container.textContent).not.toContain("Source MIDI");
+      expect(container.textContent).not.toContain("元MIDI");
       expect(container.querySelector("fieldset")).toBeNull();
       expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
       expect(activate).not.toHaveBeenCalled();
@@ -572,28 +572,25 @@ describe("ProgressionVoicingPracticeView", () => {
 
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
-      "ソース", "学び方", "表示",
+      "ソース", "生成タイプ", "表示",
     ]);
-    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core"]
-      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
+    expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
+      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
       .toBe(true);
     expect(toolbar.textContent).toContain("Colorを加える");
     expect(toolbar.textContent).toContain("Open配置");
     expect(toolbar.textContent).toContain("進行に合わせて最適化");
     expect(toolbar.textContent).not.toContain("SHELL TYPE");
-    expect(button(container, "Source MIDI").getAttribute("aria-pressed")).toBe("true");
-    for (const label of ["Teacher", "Core"]) {
-      expect(button(container, label).disabled).toBe(true);
-    }
+    expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
     const sourceCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
       expect(sourceCheckboxes.find((input) => input.parentElement?.textContent?.includes(label))?.disabled).toBe(true);
     }
 
-    await act(async () => button(container, "Lesson Rules").click());
-    expect(button(container, "Teacher").getAttribute("aria-pressed")).toBe("true");
-    expect(button(container, "Core").disabled).toBe(false);
-    expect(button(container, "Core").getAttribute("aria-pressed")).toBe("false");
+    await act(async () => button(container, "自動生成").click());
+    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.value).toBe("teacher");
+    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(false);
     const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
@@ -604,8 +601,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(explanation.textContent).toContain("ルールP5.33-GEN-TEACHER-MAJ7");
     expect(explanation.textContent).toContain("トップトップ候補");
 
-    await act(async () => button(container, "Custom").click());
-    expect(button(container, "Core").disabled).toBe(true);
+    await act(async () => button(container, "カスタム").click());
+    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")).toBeNull();
   });
 
@@ -782,7 +779,7 @@ describe("ProgressionVoicingPracticeView", () => {
       }),
     };
     const container = await renderView(runtime, { "basic-full": slash }, "basic-full");
-    await act(async () => button(container, "Core").click());
+    await selectStudy(container, "core");
     const current = container.querySelector("[data-testid='voicing-loop-current-voicing']")!;
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
@@ -813,10 +810,10 @@ describe("ProgressionVoicingPracticeView", () => {
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
     expect(toolbar.textContent).not.toMatch(/\bMY\b|\bLESSON\b|SHELL TYPE/);
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
-      "ソース", "学び方", "表示",
+      "ソース", "生成タイプ", "表示",
     ]);
-    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core"]
-      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
+    expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
+      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
       .toBe(true);
     expect(toolbar.textContent).toContain("Colorを加える");
     expect(toolbar.textContent).toContain("Open配置");
@@ -832,7 +829,7 @@ describe("ProgressionVoicingPracticeView", () => {
 
     expect(container.textContent).not.toContain("Legacy Full-chord Shell");
     expect(container.textContent).not.toContain("Full Shell Voicing");
-    expect(button(container, "Lesson Rules").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.selection).toBe("full-shell");
     expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
@@ -981,8 +978,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("選択したVoicingを利用できません");
     expect(button(container, "開始").disabled).toBe(true);
 
-    await act(async () => button(container, "Lesson Rules").click());
-    expect(container.textContent).toContain("選択中Lesson Voicingの規則がありません");
+    await act(async () => button(container, "自動生成").click());
+    expect(container.textContent).toContain("このコードにはこの生成タイプの形がありません。");
     expect(button(container, "開始").disabled).toBe(true);
     expect(runtime.start).not.toHaveBeenCalled();
   });
@@ -990,18 +987,23 @@ describe("ProgressionVoicingPracticeView", () => {
   it("shows explicit unavailable when Custom is missing from a loaded Source MIDI progression", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
-    await act(async () => button(container, "Custom").click());
-    expect(container.textContent).toContain("選択したVoicingを利用できません");
+    await act(async () => button(container, "カスタム").click());
+    expect(container.textContent).toContain("カスタムのVoicingがありません");
+    expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
     expect(container.textContent).not.toContain("練習する進行を選択してください");
   });
 
   it("disables absent Source MIDI without affecting a saved Custom progression", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { custom: snapshot("custom") }, "custom");
-    expect(button(container, "Source MIDI").disabled).toBe(true);
-    expect(container.querySelector("[data-testid='voicing-loop-source-unavailable']")?.textContent)
-      .toContain("Source MIDI はありません");
-    expect(button(container, "Custom").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "元MIDI").getAttribute("aria-disabled")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
+    await act(async () => button(container, "元MIDI").click());
+    expect(container.querySelector("[data-testid='voicing-loop-source-info']")?.textContent).toContain("元MIDIのVoicingがありません");
+    expect(button(container, "カスタム").getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button(container, "説明を閉じる").click());
+    expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
+    expect(button(container, "カスタム").getAttribute("aria-pressed")).toBe("true");
     expect(button(container, "開始").disabled).toBe(false);
     await act(async () => button(container, "開始").click());
     expect(runtime.start).toHaveBeenCalledOnce();
@@ -1015,9 +1017,9 @@ describe("ProgressionVoicingPracticeView", () => {
       "source-midi": partial,
       "basic-full": snapshot("basic-full"),
     }, "basic-full");
-    expect(button(container, "Source MIDI").disabled).toBe(false);
-    expect(container.querySelector("[data-testid='voicing-loop-source-availability']")?.textContent).toContain("1/2");
-    await act(async () => button(container, "Source MIDI").click());
+    expect(button(container, "元MIDI").disabled).toBe(false);
+    expect(container.querySelector("[data-testid='voicing-loop-source-midi-availability']")?.textContent).toContain("1/2");
+    await act(async () => button(container, "元MIDI").click());
     expect(container.querySelectorAll("[data-testid='voicing-loop-auto-fallback']")).toHaveLength(1);
     expect(button(container, "開始").disabled).toBe(false);
     await act(async () => button(container, "開始").click());
@@ -1030,8 +1032,8 @@ describe("ProgressionVoicingPracticeView", () => {
     const container = await renderView(new FakeTransport(), {
       "source-midi": snapshot("source-midi"),
     }, "source-midi");
-    expect(button(container, "Source MIDI").disabled).toBe(false);
-    expect(container.querySelector("[data-testid='voicing-loop-source-availability']")).toBeNull();
+    expect(button(container, "元MIDI").disabled).toBe(false);
+    expect(container.querySelector("[data-testid='voicing-loop-source-midi-availability']")).toBeNull();
   });
 
   it("requires every event to resolve before Start and lists every unresolved chord", async () => {
@@ -1231,7 +1233,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const staleSync = runtime.options!.onTransportBeat;
     const stopsBeforeSwitch = runtime.stop.mock.calls.length;
 
-    await act(async () => button(container, "Custom").click());
+    await act(async () => button(container, "カスタム").click());
     expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeSwitch);
     await act(async () => staleSync(8));
     expect(container.textContent).toContain("0 周完了");
@@ -1283,7 +1285,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-finger-label='L5']")).not.toBeNull();
     expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
 
-    for (const label of ["Custom", "Lesson Rules"]) {
+    for (const label of ["カスタム", "自動生成"]) {
       await act(async () => button(container, label).click());
       expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
         .toContain("指");
@@ -1331,6 +1333,29 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("構成音");
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
+  it("restores the previous usable source without changing the Vault snapshot", async () => {
+    const values = { "source-midi": snapshot("source-midi"), custom: snapshot("custom"), "basic-full": snapshot("basic-full") };
+    const before = JSON.stringify(values);
+    const container = await renderView(new FakeTransport(), values, "source-midi");
+    await act(async () => button(container, "カスタム").click());
+    await act(async () => root?.unmount()); root = undefined;
+    const reopened = await renderView(new FakeTransport(), values, "source-midi");
+    expect(button(reopened, "カスタム").getAttribute("aria-pressed")).toBe("true");
+    expect(JSON.stringify(values)).toBe(before);
+  });
+
+  it("retains every legacy generated family as an explicit detailed choice", async () => {
+    const values = Object.fromEntries(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"].map(mode => [mode, snapshot(mode as ProgressionVoicingSelection)]));
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, values, "basic-full");
+    const chooser = container.querySelector<HTMLSelectElement>("[aria-label='既存の形']")!;
+    expect(Array.from(chooser.options, option => option.value)).toEqual(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"]);
+    await act(async () => { chooser.value = "rootless-shell"; chooser.dispatchEvent(new Event("change", { bubbles: true })); });
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.plan.selection).toBe("rootless-shell");
+    expect(runtime.options?.plan.events.every(event => event.status === "SUPPORTED")).toBe(true);
+  });
+
   it("selects A/B by context menu, preserves the old range while A is pending, and keeps outside clicks selection-only", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
@@ -1461,9 +1486,18 @@ function vaultCandidate(index: number): VoicingLoopVaultCandidate {
   };
 }
 
+async function selectStudy(container: HTMLElement, value: "teacher" | "core") {
+  const select = container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")!;
+  await act(async () => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
 function button(container: HTMLElement, label: string): HTMLButtonElement {
-  const found = Array.from(container.querySelectorAll("button"))
-    .find((entry) => entry.textContent?.includes(label) || entry.getAttribute("aria-label")?.includes(label));
+  const buttons = Array.from(container.querySelectorAll("button"));
+  const found = buttons.find(entry => entry.textContent === label || entry.getAttribute("aria-label") === label)
+    ?? buttons.find(entry => entry.textContent?.includes(label) || entry.getAttribute("aria-label")?.includes(label));
   if (!found) throw new Error(`Button not found: ${label}`);
   return found;
 }

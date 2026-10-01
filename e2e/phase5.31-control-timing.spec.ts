@@ -49,12 +49,12 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats")))).toEqual(expectedDurations);
     observed.push(await cards.evaluateAll(items => items.map(item => item.getAttribute("aria-label") ?? "")));
     await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
-    await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
-    await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+    await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
+    await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
-    await workspace.getByRole("button", { name: "Core", exact: true }).click();
-    await expect(workspace.getByRole("button", { name: "Core", exact: true }))
-      .toHaveAttribute("aria-pressed", "true");
+    await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+    await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
+      .toHaveValue("core");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
     await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
@@ -119,12 +119,12 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
 test("P5.31 slash identity remains playable through promoted Core upper-structure rules", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 812 });
   const workspace = await saveTextToLoop(page, "| Am9/C | Am11/B | Am9/C |");
-  await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+  await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
-  await workspace.getByRole("button", { name: "Core", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: "Core", exact: true }))
-    .toHaveAttribute("aria-pressed", "true");
+  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
+    .toHaveValue("core");
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
   await expect(workspace.getByTestId("voicing-loop-current-explanation"))
     .toContainText("Family Core");

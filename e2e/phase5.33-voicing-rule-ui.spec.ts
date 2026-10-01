@@ -14,6 +14,7 @@ async function openRuleFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-rules");
   await page.evaluate(() => document.fonts.ready);
   await chooseVoicingLoop(page);
+  await page.getByTestId("voicing-loop-generated-details").locator("summary").click();
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -21,6 +22,7 @@ async function openExtendedReductionFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-extended-reductions");
   await page.evaluate(() => document.fonts.ready);
   await chooseVoicingLoop(page);
+  await page.getByTestId("voicing-loop-generated-details").locator("summary").click();
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -63,9 +65,9 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   const workspace = await openRuleFixture(page);
   const controls = workspace.getByTestId("voicing-loop-controls");
 
-  await expect(controls.locator("legend")).toHaveText(["ソース", "学び方", "表示"]);
-  await expect(controls.getByRole("button", { name: "Lesson Rules", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(controls.getByRole("button", { name: "Teacher", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(controls.locator("legend")).toHaveText(["ソース", "生成タイプ", "表示"]);
+  await expect(controls.getByRole("button", { name: "自動生成", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveValue("teacher");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "Open配置", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).toBeChecked();
@@ -77,19 +79,17 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(explanation).toContainText("ルールP5.33-GEN-TEACHER-MAJ7");
   await expect(explanation).toContainText("トップトップ候補");
 
-  await controls.getByRole("button", { name: "Core", exact: true }).click();
+  await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
   await expect(explanation).toContainText("Family Core");
   await expect(explanation).toContainText("ルールP5.33-GEN-CORE-MAJ7");
 
-  await controls.getByRole("button", { name: "Source MIDI", exact: true }).click();
+  await controls.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
-  for (const label of ["Teacher", "Core"]) {
-    await expect(controls.getByRole("button", { name: label, exact: true })).toBeDisabled();
-  }
+  await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
   for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
     await expect(controls.getByRole("checkbox", { name: label, exact: true })).toBeDisabled();
   }
-  await controls.getByRole("button", { name: "Custom", exact: true }).click();
+  await controls.getByRole("button", { name: "カスタム", exact: true }).click();
   await expect(explanation).toHaveCount(0);
 });
 
@@ -151,7 +151,7 @@ test("P5.33 supports all eight acceptance chords in every base/modifier combinat
     ["Teacher", false, false], ["Teacher", true, false], ["Teacher", false, true], ["Teacher", true, true],
     ["Core", false, false], ["Core", true, false], ["Core", false, true], ["Core", true, true],
   ] as const) {
-    await controls.getByRole("button", { name: study, exact: true }).click();
+    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
     await controls.getByRole("checkbox", { name: "Colorを加える", exact: true }).setChecked(color);
     await controls.getByRole("checkbox", { name: "Open配置", exact: true }).setChecked(open);
     await expect(workspace.getByText(/個のコードを再生できません/)).toHaveCount(0);
@@ -172,12 +172,12 @@ test("P5.33 keeps one 88-key A0-C8 geometry across source and study changes", as
   await expect(keyboard.locator('[data-midi-note="96"]')).toBeAttached();
   const baseline = await keyboardGeometry(workspace);
 
-  for (const source of ["Source MIDI", "Custom", "Lesson Rules"]) {
+  for (const source of ["元MIDI", "カスタム", "自動生成"]) {
     await controls.getByRole("button", { name: source, exact: true }).click();
     expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   }
   for (const study of ["Teacher", "Core"]) {
-    await controls.getByRole("button", { name: study, exact: true }).click();
+    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
     expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   }
   await controls.getByRole("checkbox", { name: "Colorを加える", exact: true }).check();
@@ -260,9 +260,9 @@ test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clea
   await page.setViewportSize({ width: 320, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   const workspace = await openRuleFixture(page);
-  await workspace.getByRole("button", { name: "Core", exact: true }).focus();
-  await page.keyboard.press("Enter");
-  await expect(workspace.getByRole("button", { name: "Core", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveValue("core");
   await assertNoHorizontalOverflow(page);
 
   const axe = await new AxeBuilder({ page: page as never })

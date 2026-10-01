@@ -32,7 +32,7 @@ test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallba
   await expect(page.getByRole("heading", { name: "練習する進行" })).toBeVisible();
   await expect(page.getByRole("searchbox", { name: "進行を検索" })).toBeVisible();
   await expect(page.getByText("練習できる保存済み進行はまだありません。")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Source MIDI" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "元MIDI" })).toHaveCount(0);
   await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 
@@ -75,7 +75,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
   const workspace = page.getByTestId("voicing-loop-workspace");
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
-  await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+  await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "false");
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 

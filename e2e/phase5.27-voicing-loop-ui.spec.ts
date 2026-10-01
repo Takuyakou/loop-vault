@@ -59,9 +59,9 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("あと2拍");
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
-  await expect(page.getByRole("button", { name: "Source MIDI" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Lesson Rules", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Core", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "元MIDI" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "自動生成", exact: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: /開始/ })).toBeEnabled();
   await assertNoHorizontalOverflow(page);
 
@@ -133,7 +133,7 @@ test("P5.27 populated harness exposes every resolver status without fallback", a
   const scenarios = [
     ["", "Cmaj7"],
     ["unavailable", "選択したVoicingを利用できません"],
-    ["unsupported", "選択中Lesson Voicingの規則がありません"],
+    ["unsupported", "このコードにはこの生成タイプの形がありません。"],
     ["generation-error", "Voicingを生成できませんでした"],
   ] as const;
   for (const [status, expected] of scenarios) {
@@ -172,6 +172,7 @@ test("P8.9-09 Voicing Loop top row keeps every control inside the row at 1440, 9
     const fit = await row.evaluate((element) => {
       const box = element.getBoundingClientRect();
       const outside = [...element.querySelectorAll("button, input")].filter((control) => {
+        if (!control.checkVisibility()) return false;
         const own = control.getBoundingClientRect();
         return own.right > box.right + 1 || own.bottom > box.bottom + 1;
       }).length;

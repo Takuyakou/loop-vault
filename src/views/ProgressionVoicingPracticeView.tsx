@@ -76,6 +76,7 @@ import {
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
 import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
+import { preferenceId, rememberVoicingSource, restoreVoicingSource, sourceCoverage } from "../voicingPractice/sourcePreference";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
 import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
@@ -104,21 +105,18 @@ export interface ProgressionVoicingPracticeViewProps {
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
 }
 
-const sourceSelections: readonly {
-  readonly id: "lesson-rules" | "source-midi" | "custom";
-  readonly ja: string;
-}[] = [
-  { id: "lesson-rules", ja: "Lesson Rules" },
-  { id: "source-midi", ja: "Source MIDI" },
-  { id: "custom", ja: "Custom" },
+const sourceSelections = [
+  { id: "saved", ja: "保存した音" },
+  { id: "source-midi", ja: "元MIDI" },
+  { id: "custom", ja: "カスタム" },
+  { id: "basic-full", ja: "自動生成" },
 ] as const;
-
-const studySelections: readonly {
-  readonly id: VoicingBaseStudy;
-  readonly ja: string;
-}[] = [
-  { id: "teacher", ja: "Teacher" },
-  { id: "core", ja: "Core" },
+const advancedSelections = [
+  { id: "basic-full", label: "基本（旧 basic-full）" },
+  { id: "basic-shell", label: "ルートありシェル（basic-shell）" },
+  { id: "rootless-shell", label: "ルートレスシェル（rootless-shell）" },
+  { id: "full-shell", label: "フルシェル（full-shell）" },
+  { id: "left-hand", label: "左手 Rootless A/B（left-hand）" },
 ] as const;
 
 const copy = {
@@ -126,8 +124,8 @@ const copy = {
     title: "Voicing Loop",
     description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
-    sourceHelp: "Source MIDIとCustomは保存済みの音をそのまま使い、Lesson Rulesは承認済みの規則だけを使います。",
-    studyHelp: "TeacherまたはCoreを土台にし、ColorとOpenを必要に応じて加えます。Source MIDIとCustomでは変更できません。",
+    sourceHelp: "保存した音・元MIDI・カスタムは保存済みの実音を使います。一部に音がない場合だけ自動生成で補完し、カードに印を表示します。",
+    studyHelp: "基本または骨組みを選択します。Color・Openやその他の既存の形は詳しい設定で選べます。固定音では変更できません。",
     teacherHelp: "先生由来の考え方を一般化した実用Voicing",
     coreHelp: "コードの骨格・特徴音を中心に練習",
     colorModifier: "Colorを加える",
@@ -223,8 +221,8 @@ const copy = {
     enterText: "＋ Textで新しい進行を入力",
     unavailable: "選択したVoicingを利用できません",
     unavailableBody: "このコードには選択したSource/Custom Voicingが保存されていません。別の明示的なVoicingを選んでください。",
-    unsupported: "このコードには選択中Lesson Voicingの規則がありません",
-    unsupportedBody: "Source MIDI、Custom、または対応しているLesson Voicingへ切り替えてください。",
+    unsupported: "このコードにはこの生成タイプの形がありません。",
+    unsupportedBody: "元MIDI、カスタム、または対応している生成タイプへ切り替えてください。",
     generationError: "Voicingを生成できませんでした",
     generationErrorBody: "選択中のLesson規則は対応していますが、安全な音域へ配置できませんでした。",
     playbackError: "再生できませんでした",
@@ -263,16 +261,16 @@ export function ProgressionVoicingPracticeView({
   const text = copy.ja;
   const { sound: previewSound } = usePreviewSound();
   const { enabled: metronomeEnabled, toggle: toggleGlobalMetronome } = useMetronome();
-  const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
+  const [selection, setSelection] = useState<ProgressionVoicingSelection>(() => restoreVoicingSource(snapshots, initialSelection));
+  const [sourceInfo, setSourceInfo] = useState<string>();
+  const progressionPreferenceId = preferenceId(snapshots);
+  const previousPreferenceId = useRef(progressionPreferenceId);
   const [studyCategory, setStudyCategory] = useState<VoicingBaseStudy>("teacher");
   const [colorEnabled, setColorEnabled] = useState(false);
   const [openEnabled, setOpenEnabled] = useState(false);
+  const [leftHandVariant, setLeftHandVariant] = useState<"auto" | "A" | "B">(resolutionOptions?.leftHandVariant ?? "auto");
   const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(true);
   const lessonRulesSelected = selection !== "saved" && selection !== "source-midi" && selection !== "custom";
-  const sourceMidiEvents = snapshots?.["source-midi"]?.events ?? [];
-  const sourceMidiTotal = snapshots?.["source-midi"]?.events.length
-    ?? Object.values(snapshots ?? {}).find((candidate) => candidate !== undefined)?.events.length ?? 0;
-  const sourceMidiAvailable = sourceMidiEvents.filter((event) => event.voicing?.kind === "source-midi").length;
   const sourceSnapshot = snapshots?.[selection];
   const sourceKey = useMemo(
     () => sourceSnapshot?.key ? parseKeySignature(sourceSnapshot.key) : undefined,
@@ -350,7 +348,7 @@ export function ProgressionVoicingPracticeView({
     ? text.results
     : showAllProgressions ? text.all : recentProgressions.length ? text.recent : text.saved;
   const effectiveResolutionOptions = useMemo<ResolveProgressionPracticeVoicingsOptions>(
-    () => lessonRulesSelected ? {
+    () => lessonRulesSelected && selection === "basic-full" ? {
       ...resolutionOptions,
       lessonStudyCategory: studyCategory,
       lessonColorEnabled: colorEnabled,
@@ -362,8 +360,8 @@ export function ProgressionVoicingPracticeView({
         bass: "self-played",
         top: "normal-voicing-top",
       },
-    } : { ...resolutionOptions, octaveShift },
-    [colorEnabled, lessonCandidateIndexes, lessonRulesSelected, octaveShift, openEnabled, progressionOptimizationEnabled, resolutionOptions, studyCategory],
+    } : { ...resolutionOptions, leftHandVariant, octaveShift },
+    [colorEnabled, leftHandVariant, lessonCandidateIndexes, lessonRulesSelected, octaveShift, openEnabled, progressionOptimizationEnabled, resolutionOptions, selection, studyCategory],
   );
   const plan = useMemo(
     () => snapshot ? resolveProgressionPracticeVoicings(snapshot, effectiveResolutionOptions) : undefined,
@@ -450,6 +448,13 @@ export function ProgressionVoicingPracticeView({
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedMidiDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
   const midiStoreError = useStore(defaultLiveMidiStore, (state) => state.error);
+
+  useEffect(() => {
+    if (previousPreferenceId.current === progressionPreferenceId) return;
+    previousPreferenceId.current = progressionPreferenceId;
+    setSelection(restoreVoicingSource(snapshots, initialSelection));
+    setSourceInfo(undefined);
+  }, [initialSelection, progressionPreferenceId, snapshots]);
 
   useEffect(() => {
     const transport = transportRef.current;
@@ -726,6 +731,8 @@ export function ProgressionVoicingPracticeView({
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
+    setSourceInfo(undefined);
+    rememberVoicingSource(snapshots, next);
   }
 
   function changeStudyCategory(next: VoicingBaseStudy) {
@@ -737,6 +744,7 @@ export function ProgressionVoicingPracticeView({
     setRuntimeError(undefined);
     setSelection("basic-full");
     setStudyCategory(next);
+    rememberVoicingSource(snapshots, "basic-full");
   }
 
   function changeLessonModifier(update: () => void) {
@@ -1241,54 +1249,50 @@ export function ProgressionVoicingPracticeView({
             <legend className="lv-section-kicker mr-1 float-left">ソース</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
             {sourceSelections.map((item) => {
-              const pressed = item.id === "lesson-rules" ? lessonRulesSelected : selection === item.id;
+              const generated = item.id === "basic-full";
+              const pressed = generated ? lessonRulesSelected : selection === item.id;
+              const coverage = generated ? undefined : sourceCoverage(snapshots, item.id);
+              const unavailable = coverage?.available === 0;
               return (
-                <Button
-                  key={item.id}
-                  size="sm"
-                  variant="secondary"
-                  className="lv-choice"
-                  aria-pressed={pressed}
-                  aria-describedby={item.id === "source-midi" && sourceMidiTotal > 0 && sourceMidiAvailable === 0
-                    ? "voicing-loop-source-unavailable" : undefined}
-                  disabled={item.id === "source-midi" && sourceMidiAvailable === 0}
-                  onClick={() => changeSelection(item.id === "lesson-rules" ? "basic-full" : item.id)}
-                >
+                <Button key={item.id} size="sm" variant="secondary" className={`lv-choice ${unavailable ? "opacity-50" : ""}`}
+                  aria-label={item.ja} aria-pressed={pressed} aria-disabled={unavailable || undefined}
+                  aria-description={coverage ? `${coverage.available}/${coverage.total}コードで利用できます` : undefined}
+                  title={unavailable ? `この進行には${item.ja}のVoicingがありません。` : undefined}
+                  onClick={() => {
+                    if (unavailable) {
+                      setSourceInfo(`この進行には${item.ja}のVoicingがありません。自動生成または利用可能な音を選んでください。`);
+                    } else changeSelection(item.id);
+                  }}>
                   {item.ja}
+                  {coverage && coverage.available < coverage.total ? <span className="text-[10px]" data-testid={`voicing-loop-${item.id}-availability`}>{coverage.available}/{coverage.total}</span> : null}
                 </Button>
               );
             })}
-            {sourceMidiAvailable > 0 && sourceMidiAvailable < sourceMidiTotal
-              ? <span className="text-xs text-[var(--lv-text-secondary)]" data-testid="voicing-loop-source-availability"
-                  aria-label={`Source MIDI ${sourceMidiAvailable}/${sourceMidiTotal}`}>
-                  {`${sourceMidiAvailable}/${sourceMidiTotal}`}
-                </span>
-              : null}
-            {sourceMidiTotal > 0 && sourceMidiAvailable === 0
-              ? <span id="voicing-loop-source-unavailable" className="max-w-xs whitespace-normal text-xs text-[var(--lv-text-secondary)]"
-                  data-testid="voicing-loop-source-unavailable">
-                  Source MIDI はありません。保存済みの Source MIDI Voicing がありません。Teacher または Custom を使用してください。
-                </span>
-              : null}
           </fieldset>
           <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help">
-            <legend className="lv-section-kicker mr-1 float-left">学び方</legend>
+            <legend className="lv-section-kicker mr-1 float-left">生成タイプ</legend>
             <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
-            {studySelections.map((item) => (
-              <Button
-                key={item.id}
-                size="sm"
-                variant="secondary"
-                className="lv-choice"
-                aria-pressed={lessonRulesSelected ? studyCategory === item.id : false}
-                aria-description={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
-                title={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
-                disabled={!lessonRulesSelected}
-                onClick={() => changeStudyCategory(item.id)}
-              >
-                {item.ja}
-              </Button>
-            ))}
+            <select aria-label="生成タイプ" className="lv-field-control min-h-9 w-20 px-2 text-xs"
+              value={selection === "basic-full" || !lessonRulesSelected ? studyCategory : "advanced"}
+              disabled={!lessonRulesSelected} onChange={event => changeStudyCategory(event.currentTarget.value as VoicingBaseStudy)}>
+              <option value="teacher">基本</option><option value="core">骨組み</option>
+              {lessonRulesSelected && selection !== "basic-full" ? <option value="advanced" disabled>詳細の形</option> : null}
+            </select>
+            <details className="relative" data-testid="voicing-loop-generated-details">
+              <summary className="cursor-pointer rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs">詳しい設定</summary>
+              <div className="absolute right-0 top-full z-50 mt-1 flex w-60 max-w-[75vw] flex-col gap-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 shadow-xl">
+                <label className="flex flex-col gap-1 text-xs">既存の形
+                  <select aria-label="既存の形" className="lv-field-control min-h-9 w-full px-2 text-xs" disabled={!lessonRulesSelected}
+                    value={lessonRulesSelected ? selection : "basic-full"} onChange={event => changeSelection(event.currentTarget.value as ProgressionVoicingSelection)}>
+                    {advancedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs">左手の形
+                  <select aria-label="左手の形" className="lv-field-control min-h-9 px-2 text-xs" disabled={selection !== "left-hand"}
+                    value={leftHandVariant} onChange={event => setLeftHandVariant(event.currentTarget.value as "auto" | "A" | "B")}>
+                    <option value="auto">自動 A/B</option><option value="A">A</option><option value="B">B</option>
+                  </select>
+                </label>
             <label
               className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
               title={text.colorHelp}
@@ -1296,14 +1300,14 @@ export function ProgressionVoicingPracticeView({
               <input
                 type="checkbox"
                 checked={colorEnabled}
-                disabled={!lessonRulesSelected}
+                disabled={!lessonRulesSelected || selection !== "basic-full"}
                 aria-describedby="voicing-loop-color-help"
                 onChange={(event) => {
                   const enabled = event.currentTarget.checked;
                   changeLessonModifier(() => setColorEnabled(enabled));
                 }}
               />
-              <span className="lv-vl-control-text">{text.colorModifier}</span>
+              <span >{text.colorModifier}</span>
             </label>
             <span id="voicing-loop-color-help" className="sr-only">{text.colorHelp}</span>
             <label
@@ -1313,16 +1317,18 @@ export function ProgressionVoicingPracticeView({
               <input
                 type="checkbox"
                 checked={openEnabled}
-                disabled={!lessonRulesSelected}
+                disabled={!lessonRulesSelected || selection !== "basic-full"}
                 aria-describedby="voicing-loop-open-help"
                 onChange={(event) => {
                   const enabled = event.currentTarget.checked;
                   changeLessonModifier(() => setOpenEnabled(enabled));
                 }}
               />
-              <span className="lv-vl-control-text">{text.openModifier}</span>
+              <span >{text.openModifier}</span>
             </label>
             <span id="voicing-loop-open-help" className="sr-only">{text.openHelp}</span>
+              </div>
+            </details>
           </fieldset>
           <fieldset className="flex shrink-0 items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">表示</legend>
@@ -1337,7 +1343,7 @@ export function ProgressionVoicingPracticeView({
               <input
                 type="checkbox"
                 checked={progressionOptimizationEnabled}
-                disabled={!lessonRulesSelected}
+                disabled={!lessonRulesSelected || selection !== "basic-full"}
                 aria-describedby="voicing-loop-optimize-help"
                 onChange={(event) => {
                   const enabled = event.currentTarget.checked;
@@ -1358,6 +1364,9 @@ export function ProgressionVoicingPracticeView({
           </fieldset>
         </div>
       </Surface>
+      {sourceInfo ? <div role="status" className="flex items-center gap-2 text-xs text-[var(--lv-text-secondary)]" data-testid="voicing-loop-source-info">
+        <span>{sourceInfo}</span><Button size="sm" aria-label="説明を閉じる" onClick={() => setSourceInfo(undefined)}>×</Button>
+      </div> : null}
 
       {!snapshot ? (
         <StatusMessage
