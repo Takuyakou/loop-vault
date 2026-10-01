@@ -2,7 +2,7 @@
 
 ## 状態
 
-実装済み、最終Gate準備中。P11-07のRange/Space/区間解除/timeline修正を維持。人間の最新判断に従い、次への動き非表示の判断だけを上書き。master merge / push / tag / releaseなし。
+実装・fresh FULL・runnable Windows EXE完了。READY_FOR_HUMAN_PRODUCT_ACCEPTANCE。P11-07のRange/Space/区間解除/timeline修正を維持。人間の最新判断に従い、次への動き非表示の判断だけを上書き。master merge / push / tag / releaseなし。
 
 ## 1. 詳しい設定のROOT CAUSE
 
@@ -59,9 +59,24 @@ Browser追加: Source変更close/reopen、outside、Esc、toggle、内部Open保
 
 初回report-inclusive HEAD `34964e2d0566e4b45daa5b55a60fedf3de98b305`でfresh FULLを実行。Vitest3,670 PASS、Playwright173 PASS / 4 FAIL / 0 UNRUN。4件はP5.33既存testの操作手順が、detailsはSource/type変更・外側Start後も開いたままと仮定し、閉じた詳細内checkboxへ操作/role lookupしていたため。ROOT CAUSEは新しく承認されたdismiss契約に対する旧操作手順。実ユーザー操作でsummaryを再クリックするhelperを当該testに追加。disabled / eight chords × eight modifiers / 88-key geometry / playback継続assertionは維持し、type変更closeのassertionも追加。Product修正やassertion弱化で逃げない。初回FAILはPASS扱いにしない。
 
-当該P5.33＋popover focused **12/12 PASS**（13.6秒）確認後、修正後のreport-inclusive code HEADでfresh FULL予定。PASS cacheは使わない。結果/件数/実行HEADは実測後追記。修正後relevant Playwright **32/32 PASS**（33.9秒）、4解像度＋popover＋Range＋VL09/10/11/12＋P8.8.4。
+当該P5.33＋popover focused **12/12 PASS**（13.6秒）確認後、最終report-inclusive code HEAD `55aa6c67f30067dd69f91f6e6d662a14071ae61b` で `npm run test:full -- --fresh` を1回実行し、全Gate **PASS / 0 FAIL / 0 UNRUN**。FULLのPASS cacheは使用していない。修正後relevant Playwright **32/32 PASS**（33.9秒）、4解像度＋popover＋Range＋VL09/10/11/12＋P8.8.4。
 
-Windows EXEはD-drive既存targetでno-bundle、fixture/gallery flagなし。実Vaultを起動/変更しない。
+| 最終Gate（tested HEAD `55aa6c67`） | 結果 |
+|---|---|
+| repository ESLint / class lint / source contracts | PASS |
+| App / E2E TypeScript | PASS |
+| phase-doc / AI-handoff / privacy-security | PASS |
+| production build / gallery excluded | PASS |
+| runner contracts | 27/27 PASS |
+| Full Vitest | 3,670/3,670 PASS |
+| repository-wide Playwright（accessibility / 4サイズ / Range含む） | 177/177 PASS |
+| git diff check | PASS |
+
+最終FULL wall time **285.1秒**、runner raw logs **28,323 B**。177予定 / 177実行 / 177 PASS、skip / unrun / failなし。初回4件の旧操作手順FAILからの修正後実測を上記に記録。最終FULLでも4サイズのPNG/geometryを再生成。
+
+`npm run tauri build -- --no-bundle` **PASS**。Rust/Tauri release compile **56.77秒**。EXE: `src-tauri/target/release/loop-vault.exe`（24,708,608 B）。D-drive既存target/TEMPでno-bundle、fixture/gallery flagなし、インストーラーなし。実Vaultを起動/変更していない。
+
+結果追記はdocumentation-only commit。tested code / EXE HEADは上記`55aa6c67`のまま、後続文書HEADと混同しない。追記文書にはphase-doc / AI-handoff / privacy / diff checkを別途実行し、すべてPASS。local masterは`73507e87`のまま、保存済みorigin/masterより689 ahead / 0 behind（fetchなし）。merge / push / tag / releaseなし。
 
 ## 8. 残る制約
 

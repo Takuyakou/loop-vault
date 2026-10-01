@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-08",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -11,12 +11,13 @@
     "P11.0-04",
     "P11.0-05",
     "P11.0-06",
-    "P11.0-07"
+    "P11.0-07",
+    "P11.0-08"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "2377448a620173951c6b65001ae28807afcbaa4d",
+  "lastVerifiedCommit": "55aa6c67f30067dd69f91f6e6d662a14071ae61b",
   "currentBranch": "feat/phase11-voicing-loop-v4",
   "requiredGates": {
     "P11.0-00": [
@@ -111,8 +112,11 @@
     "p11-07-exe": "pass",
     "p11-07-docs": "pass",
     "p11-08-focused": "pass",
-    "p11-08-ui": "pass"
+    "p11-08-ui": "pass",
+    "p11-08-full": "pass",
+    "p11-08-exe": "pass",
+    "p11-08-docs": "pass"
   },
-  "nextAction": "P11-08 authorized: verify details dismissal and restored compact Next Move; fresh FULL / EXE then stop without master merge.",
+  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. P11-08 details / compact Next Move plus preserved P11-07 fixes complete; fresh FULL and runnable EXE PASS at 55aa6c67. Stop without master merge/push/tag/release.",
   "updatedAt": "2026-10-01"
 }
