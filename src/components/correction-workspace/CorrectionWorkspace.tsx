@@ -15,7 +15,10 @@ import {
   sameShortPitchIds,
   type EditResult,
 } from "../../domain/correction/edits";
-import { commitEdit, editCount, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { commitEdit, editCount, editKindCounts, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { buildMetricsRecord, type CorrectionMetricsSession } from "../../domain/correction/metrics";
+import { appendCorrectionMetrics } from "../../storage/correctionMetricsStorage";
+import { registerClosePreparation } from "../../store/closePreparation";
 import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
@@ -73,6 +76,39 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const meter = beatsPerBarFor(present.timeSignature);
   const totalBars = Math.round(present.totalBeats / meter);
   const reviewCards = useMemo(() => present.cards.filter((card) => card.reviewReasons.length > 0), [present.cards]);
+  // Local edit metrics (spec v2.5 §13): counts and times only, one row when this import's workspace goes away.
+  const metricsRef = useRef<CorrectionMetricsSession>({
+    startedAtMs: Date.now(),
+    bars: Math.round(props.model.totalBeats / beatsPerBarFor(props.model.timeSignature)),
+    cards: props.model.cards.length,
+    reviewAtStart: props.model.cards.filter((card) => card.reviewReasons.length > 0).length,
+    saves: [],
+    undos: 0,
+  });
+  const historyRef = useRef(history);
+  historyRef.current = history;
+  const undoOnce = useCallback(() => {
+    if (historyRef.current.past.length) metricsRef.current.undos += 1;
+    setHistory(undo);
+    setPreview(undefined);
+  }, []);
+  useEffect(() => {
+    let written = false;
+    const write = () => {
+      if (written) return;
+      written = true;
+      const session = metricsRef.current;
+      // ponytail: React StrictMode (dev) unmounts once right away; a session under 1s is not an import someone worked on.
+      if (Date.now() - session.startedAtMs < 1000) return;
+      const current = historyRef.current;
+      void appendCorrectionMetrics(buildMetricsRecord(session, { ms: Date.now(), iso: new Date().toISOString() }, {
+        reviewedCards: current.present.cards.filter((card) => card.reviewed).length,
+        edits: editKindCounts(current),
+      }));
+    };
+    const unregister = registerClosePreparation(write);
+    return () => { unregister(); write(); };
+  }, []);
   const [selectedId, setSelectedId] = useState(() => (reviewCards[0] ?? present.cards[0])?.id);
   const [selectedNotes, setSelectedNotes] = useState<ReadonlySet<string>>(() => new Set());
   const [mode, setMode] = useState<Mode>("check");
@@ -304,7 +340,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       const ids = [...selectedNotes];
       if (event.ctrlKey) {
         const lower = key.toLowerCase();
-        if (lower === "z" && !event.shiftKey) { handled(); setHistory(undo); setPreview(undefined); }
+        if (lower === "z" && !event.shiftKey) { handled(); undoOnce(); }
         else if ((lower === "z" && event.shiftKey) || lower === "y") { handled(); setHistory(redo); setPreview(undefined); }
         else if (lower === "a" && selected) { handled(); selectNotes(cardNoteIds(present, selected.id), "replace"); }
         else if ((key === "ArrowUp" || key === "ArrowDown") && ids.length) { handled(); edit((model) => movePitch(model, ids, key === "ArrowUp" ? 12 : -12)); }
@@ -346,7 +382,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -705,7 +741,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             </button>
             <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)}>追従</button>
             <span className="lv-cw-time">{startedAt !== undefined ? <span ref={timeRef} /> : position} / {totalBars}小節</span>
-            <button type="button" className="lv-cw-btn" onClick={() => setHistory(undo)} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
+            <button type="button" className="lv-cw-btn" onClick={undoOnce} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
             <button type="button" className="lv-cw-btn" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label="やり直す（Ctrl+Y）">やり直す</button>
             <span className="lv-cw-history" data-testid="correction-history">操作 {count}{last ? `・最後：${last}` : ""}</span>
             {notice ? <span className="lv-cw-notice" role="status" data-testid="correction-notice">{notice}</span> : null}
@@ -729,6 +765,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
                 setSavedPresent(history.present);
                 setSavedCount(editCount(history));
+                metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
               }}
             />
           ) : <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />}
@@ -746,7 +783,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               shortSameCount={(noteId) => sameShortPitchIds(present, noteId).length}
               onEditNotes={enterEdit}
               canUndo={count > 0}
-              onUndo={() => { setHistory(undo); setPreview(undefined); }}
+              onUndo={undoOnce}
               onChooseName={(name) => pickName(name, selected.id)}
               onTypeName={() => openNameEditor(selected.id)}
               onReviewed={markAndNext}

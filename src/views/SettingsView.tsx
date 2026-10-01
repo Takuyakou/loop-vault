@@ -3,6 +3,7 @@ import { open as openFileDialog, save as saveFileDialog } from "@tauri-apps/plug
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { CorrectionMetricsSettings } from "../components/CorrectionMetricsSettings";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
@@ -565,6 +566,7 @@ export function SettingsView({
                   <span>P10.0-07 で消えます。新しい画面で困った時だけ使ってください。</span>
                 </span>
               </label>
+              <CorrectionMetricsSettings />
               <div className="lv-settings-divider">
                 <h3 className="lv-settings-subtitle">{ui.analysis}</h3>
                 <h4 className="mt-3 font-semibold">{ui.accuracyFirstTitle}</h4>
