@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture } from "./helpers/app";
+import { dropMidi, openApp, openCapture, enableLegacyCaptureScreen } from "./helpers/app";
 
-/** P10.0-02..05: the correction workspace behind the developer switch. */
+/** P10.0-02..06: the correction workspace, the default screen after a MIDI analysis since P10.0-06. */
 
+/** `workspace: false` opens the old screen through 「古い取り込み画面を使う（一時）」. */
 async function importScenario(page: Page, id: string, workspace: boolean) {
-  if (workspace) await page.addInitScript(() => localStorage.setItem("loop-vault:p10-workspace:v1", "on"));
+  if (!workspace) await enableLegacyCaptureScreen(page);
   await openApp(page);
   await openCapture(page);
   await dropMidi(page, buildScenarioMidi(p10Scenario(id)), `${id}.mid`);
@@ -20,13 +21,13 @@ async function currentScreenChordNames(page: Page): Promise<string[]> {
   return details.locator('[aria-label="コード進行"] button strong').allTextContents();
 }
 
-test("P10.0-02 the workspace is off by default and the current screen is unchanged", async ({ page }) => {
+test("P10.0-06 the workspace is the default; the temporary legacy setting brings the old screen back", async ({ page }) => {
   await importScenario(page, "melody-track-8", false);
   await expect(page.getByTestId("correction-workspace")).toHaveCount(0);
   await expect(page.locator("[data-candidate-toggle]").first()).toBeVisible();
 });
 
-test("P10.0-02 shows the same cards as the current screen, moves between them and keeps saving on the current screen", async ({ page }) => {
+test("P10.0-02 shows the same cards as the old screen and moves between them", async ({ page }) => {
   await importScenario(page, "melody-track-8", true);
   const workspace = page.getByTestId("correction-workspace");
   await expect(workspace).toBeVisible();
@@ -60,13 +61,12 @@ test("P10.0-02 shows the same cards as the current screen, moves between them an
     await expect(position).toHaveText(before ?? "");
   }
 
-  // Back to the current screen for this import: same chords, and the save flow is there.
-  await workspace.getByTestId("correction-use-current-screen").click();
+  // The old screen (legacy setting) shows the same chords for the same file.
+  await page.evaluate(() => localStorage.setItem("loop-vault:p10-legacy-capture:v1", "on"));
+  await page.reload();
+  await importScenario(page, "melody-track-8", false);
   await expect(page.getByTestId("correction-workspace")).toHaveCount(0);
   expect(await currentScreenChordNames(page)).toEqual(workspaceNames);
-  await expect(page.locator("[data-candidate-toggle]").first()).toBeVisible();
-  await page.locator("[data-candidate-toggle]").first().click();
-  await expect(page.getByRole("button", { name: /Vaultに保存/, exact: true }).first()).toBeVisible();
 });
 
 test("P10.0-02 a long song opens at 16 bars and the page never scrolls sideways at 768x640", async ({ page }) => {
@@ -438,4 +438,33 @@ test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is o
     return Math.max(document.documentElement.scrollWidth - innerWidth, main ? main.scrollWidth - main.clientWidth : 0);
   });
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+// ---- P10.0-06 small layout fixes ------------------------------------------------------
+
+test("P10.0-06 root letters from 14px, segment names stay in view, one row per pitch, file bar on one line", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await importScenario(page, "long-64", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const fileBar = workspace.locator(".lv-cw-file");
+  expect((await fileBar.boundingBox())!.height).toBeLessThan(56);
+
+  // One row per pitch in 「鳴らす音」.
+  const pitches = await workspace.getByTestId("correction-note-list").locator(".lv-cw-nrow-pitch").allTextContents();
+  expect(new Set(pitches).size).toBe(pitches.length);
+
+  // Zoomed in and scrolled into the first segment: its name is still on screen.
+  await workspace.getByRole("button", { name: "4小節", exact: true }).click();
+  const scroller = workspace.getByTestId("correction-timeline-scroll");
+  await scroller.evaluate((element) => { element.scrollLeft = element.clientWidth * 1.2; });
+  const name = workspace.getByTestId("correction-segment").first().locator(".lv-cw-segment-name");
+  await expect.poll(async () => (await name.boundingBox())!.x).toBeGreaterThanOrEqual((await scroller.boundingBox())!.x - 1);
+
+  // 768: cards at least 22px wide always show something (a root letter at the least).
+  await page.setViewportSize({ width: 768, height: 640 });
+  await workspace.getByRole("button", { name: "16小節", exact: true }).click();
+  const empty = await workspace.getByTestId("correction-card").evaluateAll((cards) => cards
+    .filter((card) => card.getBoundingClientRect().width >= 22 && !card.querySelector(".lv-cw-card-name")?.textContent)
+    .length);
+  expect(empty).toBe(0);
 });

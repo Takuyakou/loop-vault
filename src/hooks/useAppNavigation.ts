@@ -19,12 +19,14 @@ export function useAppNavigation(options: UseAppNavigationOptions = {}) {
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<ProgressionSelection>();
   const [progressionDetailDirty, setProgressionDetailDirty] = useState(false);
+  // P10.0-06: the correction workspace keeps its edits only while it is shown.
+  const [captureWorkspaceDirty, setCaptureWorkspaceDirty] = useState(false);
   const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
   const onNavigateRef = useRef(options.onNavigate);
   onNavigateRef.current = options.onNavigate;
 
   function requestProgressionLeave(action: () => void) {
-    if (view === "progression-detail" && progressionDetailDirty) {
+    if ((view === "progression-detail" && progressionDetailDirty) || (view === "capture" && captureWorkspaceDirty)) {
       setPendingProgressionLeave(() => action);
       return;
     }
@@ -59,6 +61,8 @@ export function useAppNavigation(options: UseAppNavigationOptions = {}) {
     setSelectedProgression,
     progressionDetailDirty,
     setProgressionDetailDirty,
+    captureWorkspaceDirty,
+    setCaptureWorkspaceDirty,
     pendingProgressionLeave,
     setPendingProgressionLeave,
     requestProgressionLeave,

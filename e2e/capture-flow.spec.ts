@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  enableLegacyCaptureScreen,
   analyzeCurrentMidi,
   capturePageErrors,
   chooseFirstCandidate,
@@ -11,6 +12,8 @@ import {
 import { createMidiFixture } from "./helpers/midiFixture";
 
 test("MIDIをドロップし、Voice確認から解析結果へ進める", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   const pageErrors = await capturePageErrors(page);
   await openApp(page);
   await loadMidiForPreAnalysis(
@@ -107,6 +110,8 @@ test("Web版のファイル選択はデスクトップ操作が必要と通知�
 });
 
 test("未保存のコード修正を残した候補切替では確認し、キャンセルで編集へ戻れる", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   await openApp(page);
   await loadMidiForPreAnalysis(
     page,

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  enableLegacyCaptureScreen,
   createSavedProgression,
   loadMidiForPreAnalysis,
   openApp,
@@ -53,6 +54,8 @@ test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ�
 });
 
 test("Voice選択、プリセット、Solo、解析、候補選択をキーボード操作できる", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   await openApp(page);
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 4 }), "keyboard-flow.mid");
 

@@ -26,8 +26,9 @@
   }
 
   .lv-cw-file-name { font-size: var(--lv-text-14); font-weight: 600; overflow-wrap: anywhere; }
-  .lv-cw-file-meta { color: var(--lv-text-muted); font-size: var(--lv-text-12); }
-  .lv-cw-spacer { flex: 1 1 0; }
+  /* One line at 1440: the part list shrinks with an ellipsis (full text in the tooltip); narrower windows wrap. */
+  .lv-cw-file-meta { flex: 1 1 160px; min-width: 0; overflow: hidden; color: var(--lv-text-muted); font-size: var(--lv-text-12); text-overflow: ellipsis; white-space: nowrap; }
+  .lv-cw-spacer { flex: 0 0 0; }
 
   .lv-cw-stat {
     display: inline-flex;
@@ -335,6 +336,21 @@
   .lv-cw-chips { position: relative; height: 20px; }
   .lv-cw-chip { position: absolute; top: 2px; height: 16px; padding: 0 7px; transform: translateX(-50%); border: 1px solid var(--lv-warning); border-radius: 999px; background: var(--lv-surface); color: var(--lv-warning); font-size: var(--lv-text-11); line-height: 14px; white-space: nowrap; }
   .lv-cw-chip:hover { background: var(--lv-warning-soft); }
+
+  /* P10.0-06 saving */
+  button.lv-cw-segment { cursor: pointer; text-align: left; }
+  .lv-cw-segment-name { white-space: nowrap; }
+  .lv-cw-segment[aria-pressed="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-text); }
+  .lv-cw-card[data-out-of-range] { opacity: 0.4; }
+  .lv-cw-saved { margin-left: 6px; padding: 0 6px; border: 1px solid var(--lv-accent); border-radius: 999px; color: var(--lv-accent); font-size: var(--lv-text-11); }
+  .lv-cw-save { display: grid; gap: 8px; margin-bottom: 14px; padding: 12px; border: 1px solid var(--lv-accent); border-radius: var(--lv-radius-sm); background: var(--lv-surface); }
+  .lv-cw-save-range { font-weight: 700; }
+  .lv-cw-save-names { overflow-wrap: anywhere; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
+  .lv-cw-details summary { cursor: pointer; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
+  .lv-cw-recommend { display: grid; gap: 6px; }
+  .lv-cw-recommend-item { display: grid; gap: 2px; padding: 6px 10px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
+  .lv-cw-recommend-item:hover { border-color: var(--lv-accent); }
+  .lv-cw-recommend-item span { overflow: hidden; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
 
   .lv-cw-keys-help {
     display: flex;

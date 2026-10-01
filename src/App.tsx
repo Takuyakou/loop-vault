@@ -237,6 +237,7 @@ function App() {
     selectedProgression,
     setSelectedProgression,
     setProgressionDetailDirty,
+    setCaptureWorkspaceDirty,
     pendingProgressionLeave,
     setPendingProgressionLeave,
     requestProgressionLeave,
@@ -869,13 +870,14 @@ function App() {
                   analysis={analysis}
                   analyzeMidiBytes={analyzeMidiBytes}
                   clearAnalysis={clearAnalysis}
-                  createIdeaFromDraft={(draft) => {
+                  createIdeaFromDraft={(draft, options) => {
                     const id = createIdeaFromDraft(draft);
-                    if (id) {
+                    if (id && !options?.stayOnCapture) {
                       openDetail(id);
                     }
                     return id;
                   }}
+                  onWorkspaceDirtyChange={setCaptureWorkspaceDirty}
                   createIdeaFromTextProgression={(draft) => {
                     const id = createIdeaFromTextProgression(draft);
                     if (!id) return undefined;
@@ -1100,7 +1102,9 @@ function App() {
       <ConfirmDialog
         open={Boolean(pendingProgressionLeave)}
         title={progressionCopy.leaveUnsavedTitle}
-        description={progressionCopy.leaveUnsavedDescription}
+        description={view === "capture"
+          ? "修正作業場に保存していない直しがあります。破棄すると元に戻せません。"
+          : progressionCopy.leaveUnsavedDescription}
         confirmLabel={progressionCopy.discardAndLeave}
         cancelLabel={copy.common.cancel}
         onCancel={() => setPendingProgressionLeave(undefined)}
@@ -1108,6 +1112,7 @@ function App() {
           const action = pendingProgressionLeave;
           setPendingProgressionLeave(undefined);
           setProgressionDetailDirty(false);
+          setCaptureWorkspaceDirty(false);
           action?.();
         }}
         tone="danger"

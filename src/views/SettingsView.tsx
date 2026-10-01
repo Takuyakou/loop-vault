@@ -7,7 +7,7 @@ import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
-import { getCorrectionWorkspaceEnabled, setCorrectionWorkspaceEnabled } from "../storage/correctionWorkspaceSettings";
+import { getLegacyCaptureEnabled, setLegacyCaptureEnabled } from "../storage/correctionWorkspaceSettings";
 import { ChevronDownIcon } from "../components/icons";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
@@ -131,7 +131,7 @@ export function SettingsView({
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
   const [standardTitleBar, setStandardTitleBar] = useState(loadUseStandardTitleBar);
-  const [correctionWorkspace, setCorrectionWorkspace] = useState(getCorrectionWorkspaceEnabled);
+  const [legacyCapture, setLegacyCapture] = useState(getLegacyCaptureEnabled);
   const [analysisProfile, setAnalysisProfileState] = useState(
     () => getAnalysisProfileSettings().profile,
   );
@@ -553,16 +553,16 @@ export function SettingsView({
               <label className="lv-settings-check">
                 <input
                   type="checkbox"
-                  checked={correctionWorkspace}
+                  checked={legacyCapture}
                   onChange={(event) => {
-                    setCorrectionWorkspace(event.target.checked);
-                    setCorrectionWorkspaceEnabled(event.target.checked);
+                    setLegacyCapture(event.target.checked);
+                    setLegacyCaptureEnabled(event.target.checked);
                   }}
-                  data-testid="settings-correction-workspace"
+                  data-testid="settings-legacy-capture"
                 />
                 <span>
-                  <strong>新しい修正作業場を使う（試作）</strong>
-                  <span>MIDI 取り込み後の画面を、作りかけの新しい画面にします。保存は今の画面で行います。</span>
+                  <strong>古い取り込み画面を使う（一時）</strong>
+                  <span>P10.0-07 で消えます。新しい画面で困った時だけ使ってください。</span>
                 </span>
               </label>
               <div className="lv-settings-divider">

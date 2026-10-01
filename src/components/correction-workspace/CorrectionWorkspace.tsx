@@ -19,13 +19,17 @@ import { commitEdit, editCount, lastEditLabel, redo, startHistory, undo, type Co
 import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
-import type { ChordSymbol, ChordTimelineItem } from "../../domain/types";
-import { createTimelineVoicingPlaybackPlan, resolveTimelineItemVoicing } from "../../domain/voicing";
+import type { ChordSymbol, ChordTimelineItem, ProgressionBlockCandidate } from "../../domain/types";
+import type { SaveRange } from "../../domain/correction/saveCandidate";
+import { registerCloseBlocker } from "../../store/closeBlocker";
+import { createTimelineVoicingPlaybackPlan } from "../../domain/voicing";
+import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
+import { RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
 import { cardLabel, cardSize, followScrollLeft, overlaps, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 
@@ -48,9 +52,14 @@ export interface CorrectionWorkspaceProps {
   /** The capture full-timeline source, shared with the current screen. */
   fullSource: PlayingSource;
   onPlaybackError: (error: unknown) => void;
-  onUseCurrentScreen: () => void;
   onChooseAnotherMidi: () => void;
   onPartSettings?: () => void;
+  /** P10.0-06: saving from the workspace. */
+  save: WorkspaceSaveActions;
+  /** 「おすすめの範囲」 (analysis.result.blockCandidates). */
+  blockCandidates: readonly ProgressionBlockCandidate[];
+  /** True while there are edits not yet saved (leave guard). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
@@ -81,6 +90,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const boundaryDrag = useRef<{ leftId: string; pointerId: number; result?: EditResult }>();
   const [segmentsOpen, setSegmentsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia?.("(max-width: 959px)").matches);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [saveRange, setSaveRange] = useState<SaveRange>();
+  const [savedRanges, setSavedRanges] = useState<ReadonlySet<string>>(() => new Set());
+  const [savedPresent, setSavedPresent] = useState<CorrectionModel>();
+  const [pendingLeave, setPendingLeave] = useState<() => void>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const playback = usePlaybackState(controller);
   const [, tick] = useState(0);
@@ -208,11 +221,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const mine = present.notes.filter((note) => note.cardId === selected.id);
     const notes = kind === "source"
       ? [...new Set(mine.filter((note) => note.provenance === "SOURCE").map((note) => note.originalPitch ?? note.pitch))].sort((a, b) => a - b)
-      : selected.edited
-        ? [...new Set(mine.filter((note) => note.used).map((note) => note.pitch))].sort((a, b) => a - b)
-        : resolveTimelineItemVoicing(timeline[selected.timelineIndex]!).midiNotes;
+      : cardAuditionNotes(present, selected, timeline); // exactly what saving writes (P10.0-06)
     playNotes(kind, selected, notes);
-  }, [playNotes, present.notes, selected, timeline]);
+  }, [playNotes, present, selected, timeline]);
   const cardPlaying = selected && playback.status !== "idle"
     ? samePlaybackSource(playback.source, sourceId("source", selected)) ? "source"
       : samePlaybackSource(playback.source, sourceId("card", selected)) ? "card" : null
@@ -331,11 +342,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if (key === "Escape") {
         if (helpOpen) { handled(); setHelpOpen(false); }
         else if (ids.length) { handled(); setSelectedNotes(new Set()); }
+        else if (saveRange) { handled(); setSaveRange(undefined); }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -387,8 +399,23 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const card = cardAt(beat);
     return card ? `${card.bar}.${card.beat}` : `${Math.floor(beat / meter) + 1}.1`;
   })();
+  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisTargetLabel]
+    .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
+  const dirty = count > 0 && history.present !== savedPresent;
+  const { onDirtyChange } = props;
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+  useEffect(() => dirty ? registerCloseBlocker({
+    title: "未保存の変更を破棄しますか？",
+    message: "修正作業場に保存していない直しがあります。破棄すると元に戻せません。",
+    confirmLabel: "破棄して閉じる",
+    cancelLabel: "キャンセル",
+  }) : undefined, [dirty]);
+  const guarded = (action: () => void) => () => { if (dirty) setPendingLeave(() => action); else action(); };
+  const lastBarOf = (card: CorrectionCard) => Math.floor((card.start + card.duration - 1e-6) / meter) + 1;
+  const inSaveRange = (card: CorrectionCard) => !saveRange || (card.start < saveRange.endBar * meter - 1e-6 && card.start + card.duration > (saveRange.startBar - 1) * meter + 1e-6);
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
 
@@ -396,18 +423,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     <section className="lv-cw" data-testid="correction-workspace" data-mode={mode} aria-label="修正作業場（試作）">
       <div className="lv-cw-file">
         <span className="lv-cw-file-name">{props.fileName}</span>
-        <span className="lv-cw-file-meta">
-          {totalBars}小節・{present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし"}・{present.timeSignature ?? "4/4"}
-          {props.analysisTargetLabel ? `・${props.analysisTargetLabel}` : ""}
-        </span>
+        <span className="lv-cw-file-meta" title={fileMeta}>{fileMeta}</span>
         <span className="lv-cw-spacer" />
         <button type="button" className="lv-cw-stat" data-kind="warn" onClick={() => nextReview(1)} disabled={!reviewCards.length} data-testid="correction-review-count">
           要確認 <b>{reviewCards.length}</b>
         </button>
         <span className="lv-cw-stat" data-testid="correction-edit-count">直した回数 <b>{count}</b></span>
-        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={props.onPartSettings}>パートの設定</button> : null}
-        <button type="button" className="lv-cw-btn" onClick={props.onChooseAnotherMidi}>別の MIDI</button>
-        <button type="button" className="lv-cw-btn" data-kind="accent" onClick={props.onUseCurrentScreen} data-testid="correction-use-current-screen">今の画面で保存する</button>
+        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)}>パートの設定</button> : null}
+        <button type="button" className="lv-cw-btn" onClick={guarded(props.onChooseAnotherMidi)} data-testid="correction-another-midi">別の MIDI</button>
       </div>
 
       {suggestion?.kind === "melody-voice" ? (
@@ -511,11 +534,21 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 <div className="lv-cw-segments" data-open={segmentsOpen || undefined}>
                   {segmentsOpen ? present.segments.map((segment) => {
                     const width = (segment.endBar - segment.startBar + 1) * meter * pxPerBeat - 2;
+                    const segmentLeft = (segment.startBar - 1) * meter * pxPerBeat + 1;
+                    // The name sticks to the left edge of the view (spec v2.4 §4.3), within its band.
+                    const shift = Math.max(0, Math.min(scrollLeft - segmentLeft, width - 160));
                     return (
-                      <span key={segment.id} className="lv-cw-segment" data-testid="correction-segment"
-                        style={{ left: (segment.startBar - 1) * meter * pxPerBeat + 1, width }}>
-                        {segment.label}{segment.repeatCount ? (width < 140 ? ` ×${segment.repeatCount}` : ` · ${segment.repeatCount}回出てくる`) : ""}
-                      </span>
+                      <button key={segment.id} type="button" className="lv-cw-segment" data-testid="correction-segment"
+                        aria-pressed={saveRange?.startBar === segment.startBar && saveRange.endBar === segment.endBar}
+                        data-saved={savedRanges.has(rangeKey(segment)) || undefined}
+                        title={`${segment.label}を保存する範囲にする`}
+                        style={{ left: segmentLeft, width }}
+                        onClick={() => setSaveRange({ startBar: segment.startBar, endBar: segment.endBar })}>
+                        <span className="lv-cw-segment-name" style={shift > 0 ? { transform: `translateX(${shift}px)` } : undefined}>
+                          {segment.label}{segment.repeatCount ? (width < 140 ? ` ×${segment.repeatCount}` : ` · ${segment.repeatCount}回出てくる`) : ""}
+                          {savedRanges.has(rangeKey(segment)) ? <span className="lv-cw-saved">保存済み</span> : null}
+                        </span>
+                      </button>
                     );
                   }) : null}
                 </div>
@@ -538,7 +571,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         title={card.name.label}
                         style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
                         data-card-id={card.id}
-                        onClick={() => selectCard(card, false)}
+                        data-out-of-range={!inSaveRange(card) || undefined}
+                        onClick={(event) => {
+                          // Shift+click: the range from the selected card to this one, in whole bars.
+                          if (event.shiftKey && selected) setSaveRange({ startBar: Math.min(selected.bar, card.bar), endBar: Math.max(lastBarOf(selected), lastBarOf(card)) });
+                          selectCard(card, false);
+                        }}
                         onDoubleClick={() => openNameEditor(card.id)}
                       >
                         <span className="lv-cw-card-name" data-full-name={card.name.label}>{cardLabel(card.name.label, width)}</span>
@@ -637,6 +675,21 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           <button type="button" className="lv-cw-panel-toggle" aria-expanded={panelOpen} onClick={() => setPanelOpen((value) => !value)} data-testid="correction-panel-toggle">
             {selected ? `${selected.name.label}${selected.reviewReasons.length ? "・要確認" : ""}` : "カード"}（{panelOpen ? "閉じる" : "開く"}）
           </button>
+          {saveRange ? (
+            <WorkspaceSaveForm
+              model={present}
+              timeline={timeline}
+              range={saveRange}
+              saved={savedRanges.has(rangeKey(saveRange))}
+              actions={props.save}
+              onClear={() => setSaveRange(undefined)}
+              onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
+              onSaved={() => {
+                setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
+                setSavedPresent(history.present);
+              }}
+            />
+          ) : <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />}
           {selected ? (
             <CorrectionInspector
               card={selected}
@@ -691,6 +744,16 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       </div>
 
       {helpOpen ? <ShortcutSheet onClose={() => setHelpOpen(false)} /> : null}
+      <ConfirmDialog
+        open={Boolean(pendingLeave)}
+        title="未保存の変更を破棄しますか？"
+        description="修正作業場に保存していない直しがあります。破棄すると元に戻せません。"
+        confirmLabel="破棄して進む"
+        cancelLabel="キャンセル"
+        tone="danger"
+        onCancel={() => setPendingLeave(undefined)}
+        onConfirm={() => { const action = pendingLeave; setPendingLeave(undefined); action?.(); }}
+      />
       <ConfirmDialog
         open={confirm === "runs"}
         title="同じ音が続く所をつなぐ"
