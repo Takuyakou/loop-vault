@@ -8,7 +8,6 @@ import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
-import { getLegacyCaptureEnabled, setLegacyCaptureEnabled } from "../storage/correctionWorkspaceSettings";
 import { ChevronDownIcon } from "../components/icons";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
@@ -132,7 +131,6 @@ export function SettingsView({
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
   const [standardTitleBar, setStandardTitleBar] = useState(loadUseStandardTitleBar);
-  const [legacyCapture, setLegacyCapture] = useState(getLegacyCaptureEnabled);
   const [analysisProfile, setAnalysisProfileState] = useState(
     () => getAnalysisProfileSettings().profile,
   );
@@ -551,21 +549,6 @@ export function SettingsView({
           <p id="settings-analysis-help" className="lv-settings-help">{ui.analysisHelp}</p>
           {analysisExpanded ? (
             <div id="settings-analysis-content" className="text-sm">
-              <label className="lv-settings-check">
-                <input
-                  type="checkbox"
-                  checked={legacyCapture}
-                  onChange={(event) => {
-                    setLegacyCapture(event.target.checked);
-                    setLegacyCaptureEnabled(event.target.checked);
-                  }}
-                  data-testid="settings-legacy-capture"
-                />
-                <span>
-                  <strong>古い取り込み画面を使う（一時）</strong>
-                  <span>P10.0-07 で消えます。新しい画面で困った時だけ使ってください。</span>
-                </span>
-              </label>
               <CorrectionMetricsSettings />
               <div className="lv-settings-divider">
                 <h3 className="lv-settings-subtitle">{ui.analysis}</h3>

@@ -52,6 +52,8 @@ export interface CorrectionWorkspaceProps {
   timeline: readonly ChordTimelineItem[];
   fileName: string;
   analysisTargetLabel?: string;
+  /** 「標準モードで解析済み」「和声コアで解析済み」 (the old screen's header, now in the file bar). */
+  analysisModeLabel?: string;
   previewSound: PreviewSound;
   controller: PlaybackController;
   /** The capture full-timeline source, shared with the current screen. */
@@ -337,6 +339,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         return;
       }
       if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || isEditable(event.target)) return;
+      // Enter and Space on a focused button, link or summary press that control (keyboard users).
+      if ((key === "Enter" || key === " ") && isPressable(event.target)) return;
       const ids = [...selectedNotes];
       if (event.ctrlKey) {
         const lower = key.toLowerCase();
@@ -463,7 +467,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [bpm, firstBeat, pxPerBeat, present.totalBeats, startedAt]);
-  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisTargetLabel]
+  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
@@ -488,13 +492,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     <section className="lv-cw" data-testid="correction-workspace" data-mode={mode} aria-label="修正作業場（試作）">
       <div className="lv-cw-file">
         <span className="lv-cw-file-name">{props.fileName}</span>
-        <span className="lv-cw-file-meta" title={fileMeta}>{fileMeta}</span>
+        <span className="lv-cw-file-meta" title={fileMeta} data-testid="capture-analysis-preset-summary">{fileMeta}</span>
         <span className="lv-cw-spacer" />
         <button type="button" className="lv-cw-stat" data-kind="warn" onClick={() => nextReview(1)} disabled={!reviewCards.length} data-testid="correction-review-count">
           要確認 <b>{reviewCards.length}</b>
         </button>
         <span className="lv-cw-stat" data-testid="correction-edit-count">直した回数 <b>{count}</b></span>
-        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)}>パートの設定</button> : null}
+        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)} data-testid="capture-change-part-selection">パートの設定</button> : null}
         <button type="button" className="lv-cw-btn" onClick={guarded(props.onChooseAnotherMidi)} data-testid="correction-another-midi">別の MIDI</button>
       </div>
 
@@ -930,6 +934,10 @@ function verticalScroller(from: HTMLElement): Element {
     if ((overflow === "auto" || overflow === "scroll") && element.scrollHeight > element.clientHeight) return element;
   }
   return document.scrollingElement ?? document.documentElement;
+}
+
+function isPressable(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("button, a[href], summary, [role='button'], [role='menuitem']"));
 }
 
 function isEditable(target: EventTarget | null): boolean {
