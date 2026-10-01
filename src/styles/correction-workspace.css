@@ -270,11 +270,6 @@
   .lv-cw-reason b { color: var(--lv-warning); }
   .lv-cw-ok { border: 1px solid rgb(66 216 198 / 40%); background: var(--lv-accent-soft); color: #bff3ec; }
 
-  .lv-cw-pitches { display: flex; flex-wrap: wrap; gap: 6px; }
-  .lv-cw-pitch { padding: 2px 8px; border: 1px solid var(--lv-border-strong); border-radius: 6px; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
-  .lv-cw-pitch[data-kind="harmony"] { border-color: rgb(66 216 198 / 55%); color: var(--lv-accent); }
-  .lv-cw-pitch[data-kind="bass"] { border-color: rgb(120 200 245 / 55%); color: var(--lv-info); }
-  .lv-cw-pitch[data-kind="warn"] { border-color: var(--lv-warning); color: var(--lv-warning); }
 
   .lv-cw-ab { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .lv-cw-ab button { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
