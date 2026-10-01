@@ -149,6 +149,7 @@ import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Copy, Dumbbell, ExternalLink, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
+import { useWorkspaceBassline } from "./capture/workspaceBassline";
 import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
 import { useCaptureDraft } from "./capture/useCaptureDraft";
@@ -197,7 +198,9 @@ interface CaptureViewProps {
     progressionBlock?: ProgressionBlockCandidate;
     progressionAnalysis?: MidiProgressionAnalysis;
     progressionMetadata?: ProgressionSaveMetadata;
-  }) => string | undefined;
+  }, options?: { stayOnCapture?: boolean }) => string | undefined;
+  /** P10.0-06: the correction workspace has edits not saved yet (App's leave guard). */
+  onWorkspaceDirtyChange?: (dirty: boolean) => void;
   appendBlockToIdea: (
     ideaId: string,
     block: ProgressionBlockCandidate,
@@ -381,6 +384,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
+  const workspaceBassline = useWorkspaceBassline(preAnalysisSession, result?.sourceFingerprint, beatsPerBarFor(result?.timeSignature));
   const {
     activeDraft,
     setActiveDraft,
@@ -1178,6 +1182,26 @@ export function CaptureView(props: CaptureViewProps) {
               setCurrentScreenDatasetKey(workspaceDatasetKey);
             }}
             onChooseAnotherMidi={() => void chooseMidi(false)}
+            blockCandidates={result.blockCandidates}
+            {...(props.onWorkspaceDirtyChange ? { onDirtyChange: props.onWorkspaceDirtyChange } : {})}
+            save={{
+              ideas,
+              defaultNextAction: copy.capture.defaultNextAction,
+              copy,
+              titleFor: (candidate) => captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
+              onCreate: (ready, title, nextAction, userVerified) => {
+                const sourceBassline = workspaceBassline.forSave(ready.candidate);
+                if (sourceBassline === null) return false;
+                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true });
+              },
+              onAppend: (ready, ideaId, userVerified) => {
+                const sourceBassline = workspaceBassline.forSave(ready.candidate);
+                if (sourceBassline === null) return false;
+                return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline);
+              },
+              onCopyMemo: copyMemo,
+              renderBassline: (ready) => workspaceBassline.panel(ready.candidate),
+            }}
             {...(preAnalysisSession ? {
               onPartSettings: () => {
                 stopCapturePlayback(controller);

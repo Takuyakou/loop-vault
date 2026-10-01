@@ -25,7 +25,7 @@ type CreateIdeaFromDraft = (draft: {
   progressionBlock?: ProgressionBlockCandidate;
   progressionAnalysis?: MidiProgressionAnalysis;
   progressionMetadata?: ProgressionSaveMetadata;
-}) => string | undefined;
+}, options?: { stayOnCapture?: boolean }) => string | undefined;
 
 type AppendBlockToIdea = (
   ideaId: string,
@@ -79,11 +79,14 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
+    options?: { stayOnCapture?: boolean },
   ): boolean {
     setPersistenceError(undefined);
     const corrections = correctionEvents(original, candidate, editable);
     const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
-    const id = createIdeaFromDraft({
+    // The workspace stays on the capture screen after saving; the old screen's call is unchanged.
+    const create = (draft: Parameters<CreateIdeaFromDraft>[0]) => options ? createIdeaFromDraft(draft, options) : createIdeaFromDraft(draft);
+    const id = create({
       title,
       status: "idea",
       bpm: analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
