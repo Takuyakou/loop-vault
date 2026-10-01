@@ -34,7 +34,8 @@ describe("workspace geometry (P10.0-05)", () => {
   });
 
   it("shows only the root when a name does not fit, never a cut name", () => {
-    expect(cardSize(17)).toBe("bare");
+    expect(cardSize(13)).toBe("bare");
+    expect(cardSize(14)).toBe("tiny");
     expect(cardSize(39)).toBe("tiny");
     expect(cardSize(71)).toBe("narrow");
     expect(cardLabel("Fmaj7", 200)).toBe("Fmaj7");
@@ -42,6 +43,10 @@ describe("workspace geometry (P10.0-05)", () => {
     expect(cardLabel("Bbm7b5", 50)).toBe("Bb");
     expect(cardLabel("C#dim7", 30)).toBe("C#");
     expect(cardLabel("Fmaj7", 10)).toBe("");
+    // From 14px a root letter shows (P10.0-06); a root with an accidental needs more.
+    expect(cardLabel("Fmaj7", 14)).toBe("F");
+    expect(cardLabel("F#m7", 14)).toBe("");
+    expect(cardLabel("F#m7", 22)).toBe("F#");
     expect(cardLabel("Fmaj7", 60)).not.toContain("·");
   });
 

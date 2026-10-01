@@ -439,3 +439,32 @@ test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is o
   });
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+// ---- P10.0-06 small layout fixes ------------------------------------------------------
+
+test("P10.0-06 root letters from 14px, segment names stay in view, one row per pitch, file bar on one line", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await importScenario(page, "long-64", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const fileBar = workspace.locator(".lv-cw-file");
+  expect((await fileBar.boundingBox())!.height).toBeLessThan(56);
+
+  // One row per pitch in 「鳴らす音」.
+  const pitches = await workspace.getByTestId("correction-note-list").locator(".lv-cw-nrow-pitch").allTextContents();
+  expect(new Set(pitches).size).toBe(pitches.length);
+
+  // Zoomed in and scrolled into the first segment: its name is still on screen.
+  await workspace.getByRole("button", { name: "4小節", exact: true }).click();
+  const scroller = workspace.getByTestId("correction-timeline-scroll");
+  await scroller.evaluate((element) => { element.scrollLeft = element.clientWidth * 1.2; });
+  const name = workspace.getByTestId("correction-segment").first().locator(".lv-cw-segment-name");
+  await expect.poll(async () => (await name.boundingBox())!.x).toBeGreaterThanOrEqual((await scroller.boundingBox())!.x - 1);
+
+  // 768: cards at least 22px wide always show something (a root letter at the least).
+  await page.setViewportSize({ width: 768, height: 640 });
+  await workspace.getByRole("button", { name: "16小節", exact: true }).click();
+  const empty = await workspace.getByTestId("correction-card").evaluateAll((cards) => cards
+    .filter((card) => card.getBoundingClientRect().width >= 22 && !card.querySelector(".lv-cw-card-name")?.textContent)
+    .length);
+  expect(empty).toBe(0);
+});

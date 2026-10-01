@@ -34,7 +34,11 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
   const warnIds = new Set(card.reviewReasons.flatMap((reason) => reason.noteIds));
   const names = nameCandidatesFor(card, notes);
   const diff = chordToneDiff(card.name, notes);
-  const rows = [...notes].sort((a, b) => b.pitch - a.pitch || Number(b.used) - Number(a.used));
+  // One row per pitch (spec v2.4 §4.4): a held-over note and a new one of the same pitch are one row.
+  const rows = [...new Set(notes.map((note) => note.pitch))].sort((a, b) => b - a).map((pitch) => {
+    const same = notes.filter((note) => note.pitch === pitch);
+    return { pitch, notes: same, lead: same.find((note) => note.used) ?? same[0]! };
+  });
   return (
     <div className="lv-cw-insp-body" aria-live="polite" data-testid="correction-inspector">
       <div>
@@ -94,21 +98,25 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
           </div>
         ) : null}
         <ul className="lv-cw-nlist" data-testid="correction-note-list">
-          {rows.map((note) => (
-            <li key={note.id} className="lv-cw-nrow" data-used={note.used || undefined}>
-              <span className="lv-cw-nrow-pitch" data-kind={note.provenance === "MANUAL_ADDED" ? "manual" : warnIds.has(note.id) ? "warn" : note.used ? note.roleHint === "bass" ? "bass" : "harmony" : "off"}>
-                {noteLabel(note.pitch)}
-              </span>
-              <span className="lv-cw-nrow-why">{noteWhy(note)}</span>
-              {note.provenance === "MANUAL_ADDED" ? (
-                <button type="button" className="lv-cw-tog" onClick={() => props.onDelete([note.id])}>消す</button>
-              ) : note.used ? (
-                <button type="button" className="lv-cw-tog" onClick={() => props.onDelete([note.id])}>外す</button>
-              ) : (
-                <button type="button" className="lv-cw-tog" data-out onClick={() => props.onRestore([note.id])}>戻す</button>
-              )}
-            </li>
-          ))}
+          {rows.map(({ pitch, notes: same, lead }) => {
+            const used = same.filter((note) => note.used);
+            const manualOnly = same.every((note) => note.provenance === "MANUAL_ADDED");
+            return (
+              <li key={pitch} className="lv-cw-nrow" data-used={used.length > 0 || undefined}>
+                <span className="lv-cw-nrow-pitch" data-kind={manualOnly ? "manual" : same.some((note) => warnIds.has(note.id)) ? "warn" : used.length ? lead.roleHint === "bass" ? "bass" : "harmony" : "off"}>
+                  {noteLabel(pitch)}
+                </span>
+                <span className="lv-cw-nrow-why">{noteWhy(lead)}{same.length > 1 ? `・${same.length}つ` : ""}</span>
+                {manualOnly ? (
+                  <button type="button" className="lv-cw-tog" onClick={() => props.onDelete(same.map((note) => note.id))}>消す</button>
+                ) : used.length ? (
+                  <button type="button" className="lv-cw-tog" onClick={() => props.onDelete(used.map((note) => note.id))}>外す</button>
+                ) : (
+                  <button type="button" className="lv-cw-tog" data-out onClick={() => props.onRestore(same.map((note) => note.id))}>戻す</button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 

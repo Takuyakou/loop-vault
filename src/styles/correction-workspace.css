@@ -26,8 +26,9 @@
   }
 
   .lv-cw-file-name { font-size: var(--lv-text-14); font-weight: 600; overflow-wrap: anywhere; }
-  .lv-cw-file-meta { color: var(--lv-text-muted); font-size: var(--lv-text-12); }
-  .lv-cw-spacer { flex: 1 1 0; }
+  /* One line at 1440: the part list shrinks with an ellipsis (full text in the tooltip); narrower windows wrap. */
+  .lv-cw-file-meta { flex: 1 1 160px; min-width: 0; overflow: hidden; color: var(--lv-text-muted); font-size: var(--lv-text-12); text-overflow: ellipsis; white-space: nowrap; }
+  .lv-cw-spacer { flex: 0 0 0; }
 
   .lv-cw-stat {
     display: inline-flex;
@@ -338,6 +339,7 @@
 
   /* P10.0-06 saving */
   button.lv-cw-segment { cursor: pointer; text-align: left; }
+  .lv-cw-segment-name { white-space: nowrap; }
   .lv-cw-segment[aria-pressed="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-text); }
   .lv-cw-card[data-out-of-range] { opacity: 0.4; }
   .lv-cw-saved { margin-left: 6px; padding: 0 6px; border: 1px solid var(--lv-accent); border-radius: 999px; color: var(--lv-accent); font-size: var(--lv-text-11); }

@@ -24,7 +24,7 @@ export function overlaps(start: number, duration: number, range: BeatRange): boo
 export type CardSize = "full" | "narrow" | "tiny" | "bare";
 
 export function cardSize(widthPx: number): CardSize {
-  return widthPx < 18 ? "bare" : widthPx < 40 ? "tiny" : widthPx < 72 ? "narrow" : "full";
+  return widthPx < 14 ? "bare" : widthPx < 40 ? "tiny" : widthPx < 72 ? "narrow" : "full";
 }
 
 // Estimated bold glyph widths at 16 / 13 / 10px (E2E checks that no drawn name is clipped).
@@ -33,13 +33,15 @@ const padPx: Record<CardSize, number> = { full: 22, narrow: 12, tiny: 6, bare: 0
 
 /**
  * What a card shows: the whole name when it fits, otherwise only the root
- * (「Fmaj7」→「F」, never 「F···」), nothing on a bare card (spec v2.3 §6.2).
+ * (「Fmaj7」→「F」, never 「F···」), nothing when not even the root fits (spec v2.4 §6.2).
  */
 export function cardLabel(label: string, widthPx: number): string {
   const size = cardSize(widthPx);
   if (size === "bare") return "";
-  if (label.length * charPx[size] + padPx[size] <= widthPx) return label;
-  return /^[A-G][#b♯♭]?/.exec(label)?.[0] ?? label.slice(0, 1);
+  const fits = (text: string) => text.length * charPx[size] + padPx[size] <= widthPx;
+  if (fits(label)) return label;
+  const root = /^[A-G][#b♯♭]?/.exec(label)?.[0] ?? label.slice(0, 1);
+  return fits(root) ? root : "";
 }
 
 /** Following: past 80% of the view, jump so the playhead sits at 20%. Undefined = stay. */

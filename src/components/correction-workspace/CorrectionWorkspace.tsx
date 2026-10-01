@@ -399,6 +399,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const card = cardAt(beat);
     return card ? `${card.bar}.${card.beat}` : `${Math.floor(beat / meter) + 1}.1`;
   })();
+  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisTargetLabel]
+    .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
   const dirty = count > 0 && history.present !== savedPresent;
@@ -421,10 +423,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     <section className="lv-cw" data-testid="correction-workspace" data-mode={mode} aria-label="修正作業場（試作）">
       <div className="lv-cw-file">
         <span className="lv-cw-file-name">{props.fileName}</span>
-        <span className="lv-cw-file-meta">
-          {totalBars}小節・{present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし"}・{present.timeSignature ?? "4/4"}
-          {props.analysisTargetLabel ? `・${props.analysisTargetLabel}` : ""}
-        </span>
+        <span className="lv-cw-file-meta" title={fileMeta}>{fileMeta}</span>
         <span className="lv-cw-spacer" />
         <button type="button" className="lv-cw-stat" data-kind="warn" onClick={() => nextReview(1)} disabled={!reviewCards.length} data-testid="correction-review-count">
           要確認 <b>{reviewCards.length}</b>
@@ -535,15 +534,20 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 <div className="lv-cw-segments" data-open={segmentsOpen || undefined}>
                   {segmentsOpen ? present.segments.map((segment) => {
                     const width = (segment.endBar - segment.startBar + 1) * meter * pxPerBeat - 2;
+                    const segmentLeft = (segment.startBar - 1) * meter * pxPerBeat + 1;
+                    // The name sticks to the left edge of the view (spec v2.4 §4.3), within its band.
+                    const shift = Math.max(0, Math.min(scrollLeft - segmentLeft, width - 160));
                     return (
                       <button key={segment.id} type="button" className="lv-cw-segment" data-testid="correction-segment"
                         aria-pressed={saveRange?.startBar === segment.startBar && saveRange.endBar === segment.endBar}
                         data-saved={savedRanges.has(rangeKey(segment)) || undefined}
                         title={`${segment.label}を保存する範囲にする`}
-                        style={{ left: (segment.startBar - 1) * meter * pxPerBeat + 1, width }}
+                        style={{ left: segmentLeft, width }}
                         onClick={() => setSaveRange({ startBar: segment.startBar, endBar: segment.endBar })}>
-                        {segment.label}{segment.repeatCount ? (width < 140 ? ` ×${segment.repeatCount}` : ` · ${segment.repeatCount}回出てくる`) : ""}
-                        {savedRanges.has(rangeKey(segment)) ? <span className="lv-cw-saved">保存済み</span> : null}
+                        <span className="lv-cw-segment-name" style={shift > 0 ? { transform: `translateX(${shift}px)` } : undefined}>
+                          {segment.label}{segment.repeatCount ? (width < 140 ? ` ×${segment.repeatCount}` : ` · ${segment.repeatCount}回出てくる`) : ""}
+                          {savedRanges.has(rangeKey(segment)) ? <span className="lv-cw-saved">保存済み</span> : null}
+                        </span>
                       </button>
                     );
                   }) : null}
