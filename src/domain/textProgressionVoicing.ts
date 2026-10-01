@@ -81,7 +81,7 @@ export function createTextProgressionStyleSnapshot(
 
 export function textProgressionStyleFromSnapshot(
   snapshot: VoicingSnapshot | undefined,
-  chord: ChordSymbol,
+  _chord: ChordSymbol,
 ): TextProgressionVoicingStyleId | undefined {
   if (
     !snapshot
@@ -90,7 +90,6 @@ export function textProgressionStyleFromSnapshot(
     || snapshot.representation !== "simultaneous-voicing"
     || snapshot.userVerified !== true
     || snapshot.confidence !== 1
-    || snapshot.capturedForChordKey !== normalizedChordKey(chord)
     || !snapshot.extractorVersion?.startsWith(TEXT_STYLE_EXTRACTOR_PREFIX)
     || !isValidVoicingSnapshot(snapshot)
     || Object.keys(snapshot).some((key) => !TEXT_STYLE_SNAPSHOT_KEYS.has(key))

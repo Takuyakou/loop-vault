@@ -1,5 +1,5 @@
 import type { ChordSymbol, ChordVoicingMemory } from "../types";
-import { voicingCompatibility } from "../voicing";
+import { isUsablePracticeVoicing, voicingCompatibility } from "../voicing";
 
 export function compatibleVoicingMemory(
   memory: ChordVoicingMemory | undefined,
@@ -11,11 +11,12 @@ export function compatibleVoicingMemory(
     ? memory.sourceVoicing
     : undefined;
   const practiceVoicingOverride = memory.practiceVoicingOverride
-    && voicingCompatibility(memory.practiceVoicingOverride, chord) === "compatible"
+    && isUsablePracticeVoicing(memory.practiceVoicingOverride, chord)
     ? memory.practiceVoicingOverride
     : undefined;
-  if (!sourceVoicing && !practiceVoicingOverride) return undefined;
+  if (!sourceVoicing && !practiceVoicingOverride && memory.playbackChoice !== "GENERATED") return undefined;
   return {
+    ...(memory.playbackChoice ? { playbackChoice: memory.playbackChoice } : {}),
     ...(sourceVoicing ? { sourceVoicing } : {}),
     ...(practiceVoicingOverride ? { practiceVoicingOverride } : {}),
   };

@@ -3,10 +3,10 @@ import type { ChordSymbol, VoicingSnapshot } from "./types";
 import { canChooseSource, normalizedChordKey, resolveVoicingForUse } from "./voicing";
 
 /**
- * P10.0-00 audit: pins today's playback choice so P10.0-01 can change it on purpose.
+ * P10.0-00 audit, updated by the explicitly approved P11 human-note contract.
  * "Compatible" means the snapshot's capturedForChordKey equals the chord's key; the
  * notes themselves are never compared with the name.
- * (Lives here, not in src/domain/voicing/, because that folder is edit-protected.)
+ * Human overrides preserve pitches on rename; analyzer/source evidence remains guarded.
  */
 
 const c: ChordSymbol = { root: 0, quality: "maj", tensions: [], label: "C" };
@@ -27,10 +27,10 @@ function snapshot(chord: ChordSymbol, midiNotes: number[], overrides: Partial<Vo
 }
 
 describe("P10.0-00 current behavior: playback choice versus the chord name", () => {
-  it("P10.0-00 current behavior (a): CUSTOM notes captured for another name fall back to generated", () => {
+  it("P11 adopted contract (a): human CUSTOM notes survive an identity rename", () => {
     const custom = snapshot(c, [48, 55, 60, 64, 67], { source: "manual", userVerified: true });
     const resolved = resolveVoicingForUse(g7sus4, { practiceVoicingOverride: custom, playbackChoice: "CUSTOM" }, generated);
-    expect(resolved).toEqual({ midiNotes: generated, origin: "generated" });
+    expect(resolved).toEqual({ midiNotes: custom.midiNotes, origin: "practice-override", representation: "simultaneous-voicing" });
   });
 
   it("P10.0-00 current behavior (b): SOURCE notes captured for another name fall back to generated, even when verified", () => {

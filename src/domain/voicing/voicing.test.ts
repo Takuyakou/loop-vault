@@ -57,6 +57,16 @@ describe("voicing memory", () => {
     }, [48, 52, 55]).origin).toBe("generated");
   });
 
+  it("never bypasses validation or Source MIDI compatibility when preserving a renamed human override", () => {
+    const changed = { ...cMajor, root: 2, label: "D" };
+    for (const source of ["manual", "live-played"] as const) {
+      const valid = snapshot({ source });
+      expect(resolveVoicingForUse(changed, { practiceVoicingOverride: valid }, [50, 54, 57]).midiNotes).toEqual(valid.midiNotes);
+      expect(resolveVoicingForUse(changed, { practiceVoicingOverride: { ...valid, midiNotes: [60], bassNote: 60 }, playbackChoice: "CUSTOM" }, [50, 54, 57]).origin).toBe("generated");
+    }
+    expect(resolveVoicingForUse(changed, { sourceVoicing: snapshot(), playbackChoice: "SOURCE" }, [50, 54, 57]).origin).toBe("generated");
+  });
+
   it("extracts the same simultaneous voicing deterministically and excludes drums", () => {
     const input = {
       chord: cMajor,

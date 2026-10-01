@@ -5,7 +5,7 @@ import { parseTextChordLabel } from "../chords";
 import { TEXT_GENERATED_VOICING_POLICY } from "../textSource";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
-import { isExplicitSourceMidiVoicingAvailable, voicingCompatibility } from "../voicing";
+import { isExplicitSourceMidiVoicingAvailable, isUsablePracticeVoicing } from "../voicing";
 import {
   PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION,
   type DetachedPracticeVoicing,
@@ -292,7 +292,7 @@ function selectVoicing(
   if (selection === "custom") {
     const custom = event.voicingMemory?.practiceVoicingOverride;
     if (!custom || isTextProgressionStyleSnapshot(custom, event.chord)
-      || voicingCompatibility(custom, event.chord) !== "compatible") return undefined;
+      || !isUsablePracticeVoicing(custom, event.chord)) return undefined;
     return cloneSelectedVoicing(custom, "custom");
   }
   return undefined;
