@@ -401,7 +401,7 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(sections[index - 1]!.compareDocumentPosition(sections[index]!)
         & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
-    expect(sections[1]!.querySelector("[data-testid='voicing-loop-next-move']")).toBeNull();
+    expect(sections[1]!.querySelector("[data-testid='voicing-loop-next-move']")).not.toBeNull();
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     expect(playhead.style.transform).toBe("translateX(0px)");
     expect(playhead.style.transitionTimingFunction).toBe("");
@@ -1399,11 +1399,59 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
   });
 
-  it("current panel hides Next Move only at composition, preserving hand facts and generated explanation", async () => {
+  it("dismisses native details on Source/type changes, outside pointer and Escape without stopping transport", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full"), "source-midi": snapshot("source-midi") }, "basic-full");
+    const details = container.querySelector<HTMLDetailsElement>("[data-testid='voicing-loop-generated-details']")!;
+    details.open = true;
+    await act(async () => button(container, "元MIDI").click());
+    expect(details.open).toBe(false);
+    details.open = true;
+    await act(async () => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(details.open).toBe(false);
+    details.open = true;
+    await act(async () => details.querySelector("select")!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(details.open).toBe(true);
+    const stops = runtime.stop.mock.calls.length;
+    const escape = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    await act(async () => details.dispatchEvent(escape));
+    expect(escape.defaultPrevented).toBe(true);
+    expect(details.open).toBe(false);
+    expect(runtime.stop).toHaveBeenCalledTimes(stops);
+    expect(document.activeElement).toBe(details.querySelector("summary"));
+    await act(async () => button(container, "自動生成").click());
+    for (const value of ["core", "teacher"] as const) {
+      details.open = true;
+      await selectStudy(container, value);
+      expect(details.open).toBe(false);
+    }
+  });
+
+  it("movement follows the resolved current/next pitches and updates after Source, generated type and card changes", async () => {
+    const source = snapshot("source-midi");
+    const container = await renderView(new SeekingTransport(), { "source-midi": source, "basic-full": snapshot("basic-full") }, "source-midi");
+    const hints = () => Array.from(container.querySelectorAll("[data-testid='voicing-loop-finger-slot']"), node => node.getAttribute("title")).join(";");
+    const original = hints();
+    for (const pitch of ["C4", "G4", "B4", "D4", "A4", "C5"]) expect(original).toContain(pitch);
+    await act(async () => button(container, "自動生成").click());
+    const generated = hints();
+    expect(generated).not.toBe(original);
+    await selectStudy(container, "core");
+    expect(hints()).not.toBe(generated);
+    await act(async () => button(container, "元MIDI").click());
+    expect(hints()).toBe(original);
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    await act(async () => cards[1]!.click());
+    expect(hints()).not.toBe(original);
+    expect(container.querySelector("[data-testid='voicing-loop-next-move']")?.textContent).toContain("ループ先");
+    expect(JSON.stringify(source)).toBe(JSON.stringify(snapshot("source-midi")));
+  });
+
+  it("current panel restores compact Next Move, preserving hand facts and generated explanation", async () => {
     const container = await renderView(new SeekingTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
     const panel = container.querySelector("[data-testid='voicing-loop-current-panel']")!;
-    expect(panel.querySelector("[data-testid='voicing-loop-next-move']")).toBeNull();
-    expect(panel.textContent).not.toContain("次への動き");
+    expect(panel.querySelectorAll("[data-testid='voicing-loop-finger-slot']")).toHaveLength(10);
+    expect(panel.textContent).toContain("次への動き");
     for (const hand of ["left", "right"]) {
       const card = panel.querySelector(`[data-testid='voicing-loop-${hand}-hand']`)!;
       expect(card).not.toBeNull();

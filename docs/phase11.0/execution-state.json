@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-08",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -67,6 +67,13 @@
       "p11-07-full",
       "p11-07-exe",
       "p11-07-docs"
+    ],
+    "P11.0-08": [
+      "p11-08-focused",
+      "p11-08-ui",
+      "p11-08-full",
+      "p11-08-exe",
+      "p11-08-docs"
     ]
   },
   "gateResults": {
@@ -102,8 +109,10 @@
     "p11-07-ui": "pass",
     "p11-07-full": "pass",
     "p11-07-exe": "pass",
-    "p11-07-docs": "pass"
+    "p11-07-docs": "pass",
+    "p11-08-focused": "pass",
+    "p11-08-ui": "pass"
   },
-  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. P11-07 fixes and runnable Windows EXE complete; stop without master merge/push/tag/release.",
+  "nextAction": "P11-08 authorized: verify details dismissal and restored compact Next Move; fresh FULL / EXE then stop without master merge.",
   "updatedAt": "2026-10-01"
 }

@@ -54,7 +54,7 @@ test("VL-11 mouse card seek stays beneath the pointer; ruler, overview and keybo
   expect(focused!.x).toBeLessThan(visible!.x + visible!.width);
 });
 
-test("P11 hides the movement strip and retains current and next hand surfaces at scaling samples", async ({ page }) => {
+test("P11 compact movement strip retains current and next hand surfaces at scaling samples", async ({ page }) => {
   test.setTimeout(90_000);
   for (const { width, height, zoom } of [
     { width: 1920, height: 1080, zoom: 1 },
@@ -66,7 +66,8 @@ test("P11 hides the movement strip and retains current and next hand surfaces at
     const workspace = await openLoop(page);
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
     const strip = workspace.getByTestId("voicing-loop-next-move");
-    await expect(strip).toHaveCount(0);
+    await expect(strip).toBeVisible();
+    await expect(strip.getByTestId("voicing-loop-finger-slot")).toHaveCount(10);
     const facts = workspace.getByTestId("voicing-loop-current-voicing");
     await expect(facts).toContainText("指");
     await expect(facts).toContainText("音名");

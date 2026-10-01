@@ -78,7 +78,7 @@ import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable,
 import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
 import { preferenceId, rememberVoicingSource, restoreVoicingSource, sourceCoverage } from "../voicingPractice/sourcePreference";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
-import { fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
+import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
@@ -263,6 +263,28 @@ export function ProgressionVoicingPracticeView({
   const { enabled: metronomeEnabled, toggle: toggleGlobalMetronome } = useMetronome();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(() => restoreVoicingSource(snapshots, initialSelection));
   const [sourceInfo, setSourceInfo] = useState<string>();
+  const generatedDetailsRef = useRef<HTMLDetailsElement>(null);
+  // The native details.open property is the only open state; no stale React mirror.
+  useEffect(() => {
+    const onOutsidePointer = (event: PointerEvent) => {
+      const details = generatedDetailsRef.current;
+      if (details?.open && event.target instanceof Node && !details.contains(event.target)) details.open = false;
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      const details = generatedDetailsRef.current;
+      if (event.key !== "Escape" || !details?.open || event.isComposing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      details.open = false;
+      details.querySelector("summary")?.focus();
+    };
+    document.addEventListener("pointerdown", onOutsidePointer, true);
+    document.addEventListener("keydown", onEscape, true);
+    return () => {
+      document.removeEventListener("pointerdown", onOutsidePointer, true);
+      document.removeEventListener("keydown", onEscape, true);
+    };
+  }, []);
   const progressionPreferenceId = preferenceId(snapshots);
   const previousPreferenceId = useRef(progressionPreferenceId);
   const [studyCategory, setStudyCategory] = useState<VoicingBaseStudy>("teacher");
@@ -577,6 +599,12 @@ export function ProgressionVoicingPracticeView({
     () => effectiveFingering(nextRightSuggested, fingeringPreferences),
     [nextRightSuggested, fingeringPreferences],
   );
+  const nextMoves = useMemo(() => currentVoicing && nextVoicing
+    ? computeNextMoves(currentHandTargets, nextHandTargets,
+      { left: currentLeftFingering, right: currentRightFingering },
+      { left: nextLeftFingering, right: nextRightFingering }) : [],
+  [currentVoicing, nextVoicing, currentHandTargets, nextHandTargets,
+    currentLeftFingering, currentRightFingering, nextLeftFingering, nextRightFingering]);
   const keyboardEventIndex = currentIndex;
   const keyboardEvent = snapshot?.events[keyboardEventIndex];
   const keyboardResolution = plan?.events[keyboardEventIndex];
@@ -720,7 +748,12 @@ export function ProgressionVoicingPracticeView({
     cardHeldSpanRef.current = undefined;
     setFollowEnabled(false);
   }
+  function closeGeneratedDetails() {
+    if (generatedDetailsRef.current) generatedDetailsRef.current.open = false;
+  }
+
   function changeSelection(next: ProgressionVoicingSelection) {
+    closeGeneratedDetails();
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
@@ -730,6 +763,7 @@ export function ProgressionVoicingPracticeView({
   }
 
   function changeStudyCategory(next: VoicingBaseStudy) {
+    closeGeneratedDetails();
     if (!lessonRulesSelected || (next === studyCategory && selection === "basic-full")) return;
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
@@ -1159,7 +1193,7 @@ export function ProgressionVoicingPracticeView({
       if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
       if (target instanceof Element && target.closest("input, select, textarea, [contenteditable], [role='textbox'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
-      if (key === " " && target instanceof Element && target.closest("button, [role='button']")) return;
+      if (key === " " && target instanceof Element && target.closest("button, summary, [role='button']")) return;
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
       event.preventDefault();
       if (key === " ") {
@@ -1294,7 +1328,7 @@ export function ProgressionVoicingPracticeView({
               <option value="teacher">基本</option><option value="core">骨組み</option>
               {lessonRulesSelected && selection !== "basic-full" ? <option value="advanced" disabled>詳細の形</option> : null}
             </select>
-            <details className="relative" data-testid="voicing-loop-generated-details">
+            <details ref={generatedDetailsRef} className="relative" data-testid="voicing-loop-generated-details">
               <summary className="cursor-pointer rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs">詳しい設定</summary>
               <div className="absolute right-0 top-full z-50 mt-1 flex w-60 max-w-[75vw] flex-col gap-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 shadow-xl">
                 <label className="flex flex-col gap-1 text-xs">既存の形
@@ -1393,7 +1427,7 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="min-h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)] lg:min-h-0" data-testid="voicing-loop-current-next">
+          <div className="min-h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(380px,40dvh,440px)] lg:min-h-0" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_auto] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
               <Surface variant="primary" className="flex min-w-0 flex-col p-3 lg:h-full" data-testid="voicing-loop-current-panel" aria-label={"現在のコード詳細"}>
                 <div className="flex min-w-0 flex-1 flex-col" data-testid="voicing-loop-current-content" tabIndex={0} aria-label={"現在のコードの詳細"}>
@@ -1447,8 +1481,11 @@ export function ProgressionVoicingPracticeView({
                   <CurrentRuleExplanation explanation={currentVoicing.explanation}
                     onNextCandidate={() => changeCurrentCandidate(1)} onPreviousCandidate={() => changeCurrentCandidate(-1)} text={text} />
                 ) : null}
+                {displayMode === "learn" && showFingering ? (
+                  <NextMovePreview moves={nextMoves} hasNext={Boolean(currentVoicing && nextVoicing)}
+                    loopWrap={nextIndex <= currentIndex} accidentalStyle={accidentalStyle} />
+                ) : null}
                 </div>
-                {/* NextMovePreview and its domain/standalone tests are retained; acceptance hides this UI row. */}
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
                 <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" aria-label={"次のコード詳細"}>
@@ -1937,20 +1974,20 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
   const slots = fixedFingerSlots(hasNext ? moves : []);
   const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   return (
-    <section className="relative mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-move" aria-label={"次への動き"}>
-      <span className="absolute left-0 top-1 max-w-[24%] truncate text-[9px] font-bold tracking-[0.04em] text-[var(--lv-text-muted)]">{"次への動き"}</span>
+    <section className="relative mt-2 h-[54px] min-h-[54px] min-w-0 shrink-0 border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-next-move" aria-label={"次への動き"}>
+      <span className="absolute left-0 top-0.5 max-w-[24%] truncate text-[9px] font-bold tracking-[0.04em] text-[var(--lv-text-muted)]">{"次への動き"}</span>
       <div className="grid min-w-0 grid-cols-2 gap-1">
         {(["left", "right"] as const).map((hand) => (
           <div key={hand} className="min-w-0" role="group" data-testid="voicing-loop-next-move-hand-group" data-hand={hand}
             aria-label={hand === "left" ? ("左手") : ("右手")}>
-            <div className={`flex h-[14px] min-w-0 items-center justify-center gap-1 truncate text-[10px] font-bold tracking-[0.04em] ${hand === "left" ? "text-amber-200" : "text-cyan-200"}`}
+            <div className={`flex h-[11px] min-w-0 items-center justify-center gap-1 truncate text-[10px] font-bold tracking-[0.04em] ${hand === "left" ? "text-amber-200" : "text-cyan-200"}`}
               data-testid="voicing-loop-next-move-summary">
               <span>{hand === "left" ? ("左手") : ("右手")}</span>
               <span className="min-w-0 truncate font-extrabold">{handMoveSummary(moves.filter((move) => move.hand === hand))}</span>
               {loopWrap && hand === "right" ? <span className="truncate text-[var(--lv-text-muted)]">{"ループ先"}</span> : null}
               {moves.some((move) => move.hand === hand && move.estimated) ? <span className="sr-only">{"推定"}</span> : null}
             </div>
-            <div className="mt-0.5 grid min-w-0 grid-cols-5 gap-0.5" role="list">
+            <div className="mt-px grid min-w-0 grid-cols-5 gap-0.5" role="list">
               {slots.filter((slot) => slot.hand === hand).map((slot) => {
                 const id = `${slot.hand === "left" ? "L" : "R"}${slot.finger}`;
                 const strongest = slot.moves.some((move) => move.kind === "LARGE") ? "LARGE"
@@ -1967,12 +2004,12 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
                     : strongest === "SMALL" ? "border-current/40 font-semibold"
                       : strongest === "KEEP" ? "border-current/50 bg-current/[0.04] font-semibold" : "border-dashed border-current/20";
                 return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
-                  className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
+                  className={`flex h-[38px] min-w-0 flex-col items-center justify-center rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
                   aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${"推定"})` : ""}`}
                   title={`${id}: ${description}`}>
                   <span className={`text-[10px] font-bold ${strongest === "EMPTY" ? "text-[var(--lv-text-muted)]" : ""}`}>{id}</span>
                   {strongest === "KEEP" ? (
-                    <span aria-hidden="true" className="my-1 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
+                    <span aria-hidden="true" className="my-0.5 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
                   ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span> : null}
                   {strongest !== "EMPTY" && next !== undefined ? <span className="mt-0.5 text-[9px]">{note(next)}</span> : null}
                 </div>;

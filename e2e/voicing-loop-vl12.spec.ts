@@ -121,7 +121,7 @@ test("VL-12 transport rows fit vertically at desktop viewports and scaling", asy
   }
 });
 
-test("P11 current hand cards keep fingering information with Next Move absent", async ({ page }) => {
+test("P11 current hand cards keep fingering information with compact Next Move", async ({ page }) => {
   for (const { width, height, zoom } of [
     { width: 1920, height: 1080, zoom: 1 },
     { width: 1280, height: 800, zoom: 1 },
@@ -137,7 +137,8 @@ test("P11 current hand cards keep fingering information with Next Move absent", 
     }
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
     const strip = page.getByTestId("voicing-loop-next-move");
-    await expect(strip).toHaveCount(0);
+    await expect(strip).toBeVisible();
+    await expect(strip.getByTestId("voicing-loop-finger-slot")).toHaveCount(10);
     for (const hand of ["left", "right"]) {
       const card = page.getByTestId(`voicing-loop-${hand}-hand`);
       await expect(card).toBeVisible();
