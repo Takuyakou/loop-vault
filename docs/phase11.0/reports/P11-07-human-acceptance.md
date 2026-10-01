@@ -45,7 +45,7 @@
 
 添付HTMLモックを当該panelのvisual specとして適用。View compositionの`<NextMovePreview>`呼出と不要な表示用計算bindingだけを外した。`nextMove.ts`、`computeNextMoves`、`NextMovePreview` componentと単体テストは保持。
 
-大きなコード名、Source badge、編集button、左右hand factsは保持。左右cardを均等2列、指ラベル列3remへ整理。補足情報は既存stripにまとめ、Ruleはellipsis＋全文title、他情報はwrapを許す。本文overflow-y:autoとouter hiddenを除去。desktopの元サイズは維持し、小画面は当該current/next親の固定2段高さを内容に合わせて伸長可能にした（next panelの内容/機能は変更なし）。page scrollは許容し、情報をclipしない。
+大きなコード名、Source badge、編集button、左右hand factsは保持。左右cardを均等2列、指ラベル列3remへ整理。補足情報は既存stripにまとめ、Ruleはellipsis＋全文title、他情報はwrapを許す。本文overflow-y:autoとouter hiddenを除去し、スクロール不要の本文に既存キーボードnavigation用tabIndex/aria-labelを保持。desktopの元サイズは維持し、小画面は当該current/next親の固定2段高さを内容に合わせて伸長可能にした（next panelの内容/機能は変更なし）。page scrollは許容し、情報をclipしない。
 
 ## 6. 4解像度の画面 / 実測
 
@@ -69,7 +69,14 @@
 
 ## 8. 最終Gate / EXE
 
-PENDING — report-inclusive code HEADでfresh FULLを1回実行、更新runnable EXEをD-driveで生成して追記する。
+初回fresh FULL（HEAD `7b1aa39a33603c4eba2a16a698b931a2df651c56`）はVitest 3,668 PASS、Playwright 2 FAIL。失敗は以下の最小原因まで切り分けた。
+
+1. 新しい常設buttonにより、960px Transport scrollWidth 876 > clientWidth 846。既存1000/720px container条件のgapとneutral button padding、BPM control間gapをcompact化した。区間解除の文字は保持、BPM input幅/3桁表示、既存touch controlの最小幅は維持。768もhorizontal scrollなしに収まる。
+2. 旧geometry testがfocusする現在本文のtabIndexをUI変更時に外していた。本文はscrollしないままtabIndex=0と正確なaria-labelを戻し、keyboard navigationを維持。
+
+切り分け後のP5.27 / VL09 / VL12 / Range / current-panel Playwright **25/25 PASS**（20.5秒）。既存geometry/overflow thresholdは変更せず、skip/retry/snapshot更新なし。底部geometry assertionには新しい区間解除buttonも追加する。
+
+修正後report-inclusive code HEADで最終fresh FULLを1回実行し、更新runnable EXEをD-driveで生成して追記する（PENDING）。失敗した旧HEADの結果は成功扱いにせず保存する。
 
 ## 9. 残る制約
 

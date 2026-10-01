@@ -1396,7 +1396,7 @@ export function ProgressionVoicingPracticeView({
           <div className="min-h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)] lg:min-h-0" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_auto] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
               <Surface variant="primary" className="flex min-w-0 flex-col p-3 lg:h-full" data-testid="voicing-loop-current-panel" aria-label={"現在のコード詳細"}>
-                <div className="flex min-w-0 flex-1 flex-col" data-testid="voicing-loop-current-content">
+                <div className="flex min-w-0 flex-1 flex-col" data-testid="voicing-loop-current-content" tabIndex={0} aria-label={"現在のコードの詳細"}>
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
@@ -1826,7 +1826,7 @@ export function ProgressionVoicingPracticeView({
                 />
                 <span className="lv-vl-button-text">{text.referenceSound}</span>
               </label>
-              <TransportButton variant="neutral" data-testid="voicing-loop-range-clear"
+              <TransportButton variant="neutral" className="lv-vl-range-clear" data-testid="voicing-loop-range-clear"
                 disabled={!rangeSelection.active && rangeSelection.pendingStart === undefined}
                 onClick={clearRange}>区間解除</TransportButton>
               </div>

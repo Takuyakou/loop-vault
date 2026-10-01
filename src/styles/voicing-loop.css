@@ -25,6 +25,16 @@
   }
 
   @container (max-width: 1000px) {
+    /* The permanent range shortcut shares the existing compact transport row. */
+    .lv-vl-transport .lv-transport-row {
+      gap: 4px;
+    }
+
+    .lv-vl-transport .lv-vl-range-clear {
+      padding-inline: 0.4rem;
+      font-size: 0.75rem;
+    }
+
     .lv-vl-transport .lv-vl-label-text,
     .lv-vl-transport .lv-vl-button-text {
       position: absolute;
@@ -42,8 +52,16 @@
 
   /* 768×640 (bar about 670px): tighter gaps and narrower fields; 開始 keeps its word. */
   @container (max-width: 720px) {
+    .lv-vl-transport .lv-transport-row > :has(> label[for="voicing-loop-bpm"]) {
+      gap: 2px;
+    }
+
+    .lv-vl-transport .lv-transport-neutral {
+      padding-inline: 0.3rem;
+    }
+
     .lv-vl-transport .lv-transport-row {
-      gap: 4px;
+      gap: 2px;
     }
 
     .lv-vl-transport .lv-vl-key-select {

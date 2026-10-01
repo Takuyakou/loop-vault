@@ -155,7 +155,7 @@ test("P8.9-09 Voicing Loop bottom bar keeps every control visible at 960 and 768
     const fit = await row.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
     expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
     const rowBox = (await row.boundingBox())!;
-    for (const name of [/開始/, /最初から/, /停止/]) {
+    for (const name of [/開始/, /最初から/, /停止/, /区間解除/]) {
       const box = (await row.getByRole("button", { name }).boundingBox())!;
       expect(box.x + box.width, `${width}px ${name}`).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
     }
