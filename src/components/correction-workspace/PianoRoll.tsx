@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import type { CorrectionCard, CorrectionModel, CorrectionNote } from "../../domain/correction/correctionModel";
 import { noteLabel } from "../../domain/correction/correctionModel";
 import { aboveLineIds, deleteNotes, movePitch, restoreNotes, type EditResult } from "../../domain/correction/edits";
@@ -23,7 +23,9 @@ export interface PianoRollProps {
   selectedNoteIds: ReadonlySet<string>;
   warnNoteIds: ReadonlySet<string>;
   melodyLine?: number;
-  playheadBeat?: number;
+  /** The song is playing: the playhead line is drawn and moved by the workspace every frame. */
+  playing: boolean;
+  playheadRef: RefObject<HTMLSpanElement>;
   onPreview: (model: CorrectionModel | undefined) => void;
   onCommit: (result: EditResult) => void;
   onSelectNotes: (ids: string[], how: "replace" | "add" | "toggle") => void;
@@ -227,7 +229,7 @@ export function PianoRoll(props: PianoRollProps) {
       ) : null}
       {marquee ? <span className="lv-cw-marquee" style={marquee} /> : null}
       {tip ? <span className="lv-cw-pitch-tip" style={{ left: tip.x, top: tip.y }}>{tip.text}</span> : null}
-      {props.playheadBeat !== undefined ? <span className="lv-cw-playhead" style={{ left: props.playheadBeat * pxPerBeat }} /> : null}
+      {props.playing ? <span ref={props.playheadRef} className="lv-cw-playhead" data-testid="correction-playhead" /> : null}
     </div>
   );
 }

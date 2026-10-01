@@ -96,13 +96,21 @@ test("P10.0-06 saving with a one-note card shows why and where; leaving with edi
   await problems.getByRole("button", { name: "このカードへ" }).click();
   await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
 
-  // Unsaved edits: another MIDI asks first, and Cancel keeps the workspace.
+  // Unsaved changes (P10.0-07 text): another MIDI asks first, and 戻る keeps the workspace.
+  const edits = Number((await workspace(page).getByTestId("correction-edit-count").locator("b").textContent()) ?? "0");
   await workspace(page).getByTestId("correction-another-midi").click();
-  const confirm = page.getByRole("dialog", { name: "未保存の変更を破棄しますか？" });
+  const confirm = page.getByRole("dialog", { name: "保存していない変更があります" });
   await expect(confirm).toBeVisible();
-  await confirm.getByRole("button", { name: "キャンセル" }).click();
+  await expect(confirm).toContainText(`この曲で直した内容のうち、${edits} 件をまだ Vault に保存していません。このまま開くと、その変更は消えます。`);
+  await expect(confirm.getByRole("button", { name: "保存せずに開く" })).toBeVisible();
+  await expect(confirm.getByRole("button", { name: "戻る" })).toBeFocused();
+  await confirm.getByRole("button", { name: "戻る" }).click();
   await expect(workspace(page)).toBeVisible();
-  // Leaving the page asks too.
+  // Leaving the page asks too, with 「移る」.
   await page.locator('[data-nav="vault"]').click();
-  await expect(page.getByRole("dialog", { name: "未保存の変更を破棄しますか？" })).toBeVisible();
+  const leave = page.getByRole("dialog", { name: "保存していない変更があります" });
+  await expect(leave).toContainText("このまま移ると、その変更は消えます。");
+  await expect(leave).not.toContainText(/破棄|直しがあります/);
+  await leave.getByRole("button", { name: "保存せずに移る" }).click();
+  await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "Vault");
 });

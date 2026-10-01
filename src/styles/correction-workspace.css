@@ -117,7 +117,8 @@
   .lv-cw-ov-card { position: absolute; bottom: 5px; height: 6px; border-radius: 1px; background: rgb(66 216 198 / 45%); box-shadow: inset -1px 0 0 var(--lv-bg-subtle); }
   .lv-cw-ov-mark { position: absolute; top: 15px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--lv-warning); }
   .lv-cw-ov-view { position: absolute; top: 1px; bottom: 1px; border: 2px solid var(--lv-accent); border-radius: 4px; background: rgb(66 216 198 / 8%); pointer-events: none; }
-  .lv-cw-ov-ph, .lv-cw-playhead { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; }
+  .lv-cw-ov-ph, .lv-cw-playhead { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; will-change: transform; }
+  .lv-cw-check { display: inline-flex; align-items: center; gap: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
 
   .lv-cw-tools {
     display: flex;

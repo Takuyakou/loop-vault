@@ -107,7 +107,8 @@ export function cardTimelineItem(model: CorrectionModel, card: CorrectionCard, t
   const extractorVersion = baseMemory?.sourceVoicing?.extractorVersion ?? VOICING_EXTRACTOR_VERSION;
   const changedNotes = mine.some((note) => note.used && (note.provenance === "MANUAL_ADDED" || note.originalPitch !== undefined));
   if (card.edited && now.length < 2) return { problem: `2音以上にしてください：${cardPlace(card)}` };
-  if (!card.edited && now.length < 2) return { item: item(undefined) }; // nothing to write; the store extracts at save time
+  // P10.0-07: never let the store re-extract a re-spanned card; what was heard (B) is what is saved.
+  if (!card.edited && now.length < 2) return { problem: `区間を変えたので、このカードの音が2音未満です：${cardPlace(card)}` };
 
   if (!changedNotes) {
     return { item: item({ sourceVoicing: snapshot(now, chord, { source: "midi-extracted", extractorVersion }), playbackChoice: "SOURCE" }) };

@@ -468,3 +468,62 @@ test("P10.0-06 root letters from 14px, segment names stay in view, one row per p
     .length);
   expect(empty).toBe(0);
 });
+
+// ---- P10.0-07 fixes from the EXE check -------------------------------------------------
+
+test("P10.0-07 「押して鳴らす」: off by default, a plain click plays the card, Shift+click does not, and it is remembered", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const cards = workspace.getByTestId("correction-card");
+  const playingB = workspace.getByTestId("correction-play-card");
+  const toggle = workspace.getByTestId("correction-click-audition");
+  await expect(toggle).not.toBeChecked();
+  await cards.nth(1).click();
+  await expect(playingB).toHaveAttribute("aria-pressed", "false");
+
+  await toggle.check();
+  await cards.nth(2).click();
+  await expect(playingB).toHaveAttribute("aria-pressed", "true");
+  await cards.nth(4).click({ modifiers: ["Shift"] });
+  await expect(cards.nth(4)).toHaveAttribute("aria-pressed", "true");
+  await expect(playingB).toHaveAttribute("aria-pressed", "false");
+
+  await page.reload();
+  await importScenario(page, "plain-8", true);
+  await expect(page.getByTestId("correction-click-audition")).toBeChecked();
+});
+
+test("P10.0-07 the playhead moves every frame while the song plays", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  await workspace.getByTestId("correction-play-song").click();
+  const playhead = workspace.getByTestId("correction-playhead");
+  await expect(playhead).toBeAttached({ timeout: 10_000 });
+  const distinct = await playhead.evaluate((element) => new Promise<number>((resolve) => {
+    const seen = new Set<string>();
+    const until = performance.now() + 500;
+    const sample = () => {
+      seen.add((element as HTMLElement).style.transform);
+      if (performance.now() < until) requestAnimationFrame(sample);
+      else resolve(seen.size);
+    };
+    requestAnimationFrame(sample);
+  }));
+  expect(distinct).toBeGreaterThanOrEqual(20);
+  await workspace.getByTestId("correction-play-song").click();
+});
+
+test("P10.0-07 元に戻す in the right panel, and no 「印はありません」 while a card has a warning", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const undoButton = workspace.getByTestId("correction-inspector-undo");
+  await expect(undoButton).toBeDisabled();
+  const list = workspace.getByTestId("correction-note-list");
+  while (await list.getByRole("button", { name: "外す" }).count() > 1) await list.getByRole("button", { name: "外す" }).first().click();
+  const inspector = workspace.getByTestId("correction-inspector");
+  await expect(inspector).toContainText("2音以上にしてください");
+  await expect(inspector).not.toContainText("このカードに要確認の印はありません");
+  const before = await workspace.getByTestId("correction-history").textContent();
+  await undoButton.click();
+  await expect(workspace.getByTestId("correction-history")).not.toHaveText(before ?? "");
+});

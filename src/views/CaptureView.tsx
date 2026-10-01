@@ -199,8 +199,8 @@ interface CaptureViewProps {
     progressionAnalysis?: MidiProgressionAnalysis;
     progressionMetadata?: ProgressionSaveMetadata;
   }, options?: { stayOnCapture?: boolean }) => string | undefined;
-  /** P10.0-06: the correction workspace has edits not saved yet (App's leave guard). */
-  onWorkspaceDirtyChange?: (dirty: boolean) => void;
+  /** P10.0-06/07: operations in the correction workspace not saved yet (App's leave guard). */
+  onWorkspaceDirtyChange?: (unsavedCount: number) => void;
   appendBlockToIdea: (
     ideaId: string,
     block: ProgressionBlockCandidate,

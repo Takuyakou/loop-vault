@@ -6,7 +6,7 @@ import type { VaultStoreState } from "./vaultStore";
 import { playbackController } from "../audio/playbackController";
 import { liveMidiService } from "../liveMidi/liveMidiService";
 import { runClosePreparations } from "./closePreparation";
-import { firstCloseBlocker, hasCloseBlockers } from "./closeBlocker";
+import { firstCloseBlocker, hasCloseBlockers, showCloseDialogInApp } from "./closeBlocker";
 
 const MAX_CLOSE_FLUSH_ATTEMPTS = 2;
 
@@ -97,12 +97,17 @@ export async function registerTauriCloseGuard(
 
     const blocker = firstCloseBlocker();
     if (blocker) {
-      const discardAndClose = await ask(blocker.message, {
-        title: blocker.title,
-        kind: "warning",
-        okLabel: blocker.confirmLabel,
-        cancelLabel: blocker.cancelLabel,
-      });
+      // P10.0-07: inside the app when the App's host is mounted; the OS dialog otherwise.
+      const inApp = showCloseDialogInApp({ kind: "confirm", blocker });
+      if (inApp) await bringWindowToFront();
+      const discardAndClose = inApp
+        ? await inApp
+        : await ask(blocker.message, {
+          title: blocker.title,
+          kind: "warning",
+          okLabel: blocker.confirmLabel,
+          cancelLabel: blocker.cancelLabel,
+        });
       if (!discardAndClose) {
         closeInProgress = false;
         return;
@@ -124,11 +129,27 @@ async function flushPendingChangesBeforeClose(
   }
 }
 
+const CLOSE_SAVE_ERROR = "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。";
+
 async function showCloseSaveError(): Promise<void> {
-  await message(
-    "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
-    { title: "Loop Vault", kind: "error" },
-  );
+  const inApp = showCloseDialogInApp({ kind: "error", message: CLOSE_SAVE_ERROR });
+  if (inApp) {
+    await bringWindowToFront();
+    await inApp;
+    return;
+  }
+  await message(CLOSE_SAVE_ERROR, { title: "Loop Vault", kind: "error" });
+}
+
+/** Best effort: the dialog is inside the window, so the window comes to the front. */
+async function bringWindowToFront(): Promise<void> {
+  try {
+    const current = getCurrentWindow() as Partial<ReturnType<typeof getCurrentWindow>>;
+    await current.unminimize?.();
+    await current.setFocus?.();
+  } catch {
+    // A window that cannot be focused still shows the dialog.
+  }
 }
 
 export async function exitDesktopApp(): Promise<void> {

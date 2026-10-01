@@ -10,7 +10,7 @@ import {
   registerTauriCloseGuard,
   shouldBlockClose,
 } from "./closeGuard";
-import { registerCloseBlocker } from "./closeBlocker";
+import { registerCloseBlocker, registerCloseDialogHost, type CloseDialogRequest } from "./closeBlocker";
 import { registerClosePreparation } from "./closePreparation";
 
 type CloseRequestHandler = (event: { preventDefault(): void }) => Promise<void> | void;
@@ -228,6 +228,53 @@ describe("close guards", () => {
 
     expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
     cleanupBlocker();
+  });
+
+  it("P10.0-07 asks inside the app when the App's host is mounted: 戻る keeps it open, the other button closes", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    vi.spyOn(playbackController, "stop").mockImplementation(() => undefined);
+    const requests: CloseDialogRequest[] = [];
+    let answer = false;
+    const unhost = registerCloseDialogHost(async (request) => { requests.push(request); return answer; });
+    const blocker = { title: "保存していない変更があります", message: "N 件", confirmLabel: "保存せずに閉じる", cancelLabel: "戻る" };
+    const cleanupBlocker = registerCloseBlocker(blocker);
+    await registerTauriCloseGuard(storeFrom(() => state({ unsaved: false })));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+    expect(requests).toEqual([{ kind: "confirm", blocker }]);
+    expect(tauriMocks.ask).not.toHaveBeenCalled();
+    expect(tauriMocks.invoke).not.toHaveBeenCalled();
+
+    answer = true;
+    await closeHandler?.({ preventDefault: vi.fn() });
+    expect(requests).toHaveLength(2);
+    expect(tauriMocks.ask).not.toHaveBeenCalled();
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
+    cleanupBlocker();
+    unhost();
+  });
+
+  it("P10.0-07 shows the close-save error inside the app when the host is mounted", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    const requests: CloseDialogRequest[] = [];
+    const unhost = registerCloseDialogHost(async (request) => { requests.push(request); return false; });
+    await registerTauriCloseGuard(storeFrom(() => state({ unsaved: true, flush: vi.fn(async () => undefined) })));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+    expect(requests).toEqual([{ kind: "error", message: expect.stringContaining("閉じませんでした") }]);
+    expect(tauriMocks.message).not.toHaveBeenCalled();
+    expect(tauriMocks.invoke).not.toHaveBeenCalled();
+    unhost();
   });
 
   it("commits mounted view changes before flushing and closing", async () => {

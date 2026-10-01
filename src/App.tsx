@@ -19,6 +19,8 @@ import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { UNSAVED_TITLE, unsavedMessage } from "./components/correction-workspace/unsavedText";
+import { CloseDialogHost } from "./components/shell/CloseDialogHost";
 import { FirstCaptureGuide } from "./components/FirstCaptureGuide";
 import { LiveMidiSettingsDialog } from "./components/LiveMidiSettingsDialog";
 import { QuarantineNotice, StartupState } from "./components/StartupStates";
@@ -237,6 +239,7 @@ function App() {
     selectedProgression,
     setSelectedProgression,
     setProgressionDetailDirty,
+    captureWorkspaceDirty,
     setCaptureWorkspaceDirty,
     pendingProgressionLeave,
     setPendingProgressionLeave,
@@ -1099,20 +1102,21 @@ function App() {
           onSave={importLiveMidiHistory}
         />
       ) : null}
+      <CloseDialogHost />
       <ConfirmDialog
         open={Boolean(pendingProgressionLeave)}
-        title={progressionCopy.leaveUnsavedTitle}
+        title={view === "capture" ? UNSAVED_TITLE : progressionCopy.leaveUnsavedTitle}
         description={view === "capture"
-          ? "修正作業場に保存していない直しがあります。破棄すると元に戻せません。"
+          ? unsavedMessage(captureWorkspaceDirty, "移る")
           : progressionCopy.leaveUnsavedDescription}
-        confirmLabel={progressionCopy.discardAndLeave}
-        cancelLabel={copy.common.cancel}
+        confirmLabel={view === "capture" ? "保存せずに移る" : progressionCopy.discardAndLeave}
+        cancelLabel={view === "capture" ? "戻る" : copy.common.cancel}
         onCancel={() => setPendingProgressionLeave(undefined)}
         onConfirm={() => {
           const action = pendingProgressionLeave;
           setPendingProgressionLeave(undefined);
           setProgressionDetailDirty(false);
-          setCaptureWorkspaceDirty(false);
+          setCaptureWorkspaceDirty(0);
           action?.();
         }}
         tone="danger"

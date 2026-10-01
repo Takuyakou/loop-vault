@@ -124,6 +124,18 @@ describe("save candidate from the workspace (P10.0-06)", () => {
     expect(buildSaveCandidate(thin, { startBar: 4, endBar: 8 }, timelineOf("plain-8")).ok).toBe(true);
   });
 
+  it("refuses a card whose new span plays fewer than two notes (P10.0-07)", () => {
+    // A card the analysis found no voicing for has no used notes; splitting it changes its span.
+    const model0 = fresh("plain-8");
+    const silent = { ...model0, notes: model0.notes.map((note) => note.cardId === "card-2" ? { ...note, used: false } : note) };
+    const model = splitCard(silent, "card-2").model;
+    const result = buildSaveCandidate(model, { startBar: 1, endBar: 8 }, timelineOf("plain-8"));
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.problems[0]).toEqual({ cardId: "card-2", text: `区間を変えたので、このカードの音が2音未満です：3小節の ${model.cards.find((card) => card.id === "card-2")!.name.label}` });
+    // Untouched, the same card saves as analysed (nothing re-extracted, nothing refused).
+    expect(buildSaveCandidate(silent, { startBar: 1, endBar: 8 }, timelineOf("plain-8")).ok).toBe(true);
+  });
+
   it("saves ten notes, and a range from the middle keeps the song's bar numbers like the current path", () => {
     let model = fresh("plain-8");
     for (let pitch = 72; usedOf(model, "card-4").length < 10; pitch += 1) model = addNote(model, "card-4", pitch).model;
