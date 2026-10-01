@@ -13,9 +13,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "2fbfd8a",
+  "baseCommit": "327b2c1",
   "lastVerifiedCommit": "bbd843c",
-  "currentBranch": "feat/p10.0-06-save",
+  "currentBranch": "feat/p10.0-07-finish",
   "requiredGates": {
     "P10.0-00": [
       "p10-00-phase-docs",
@@ -85,8 +85,15 @@
       "p10-06-report"
     ],
     "P10.0-07": [
+      "p10-07-phase-docs",
+      "p10-07-fixes",
+      "p10-07-metrics",
+      "p10-07-removal",
+      "p10-07-fast-feature",
+      "p10-07-ui",
+      "p10-07-data-retention",
+      "p10-07-screens",
       "p10-07-full-fresh",
-      "p10-07-measurement",
       "p10-07-exe",
       "p10-07-report"
     ]
@@ -141,8 +148,9 @@
     "p10-06-screens": "pass",
     "p10-06-full-fresh": "pass",
     "p10-06-exe": "pass",
-    "p10-06-report": "pass"
+    "p10-06-report": "pass",
+    "p10-07-phase-docs": "pass"
   },
-  "nextAction": "C（P10.0-07）の zip を待つ。Bundle B (P10.0-06) is the merge candidate feat/p10.0-06-save (fresh FULL PASS and EXE @ bbd843c); merge it into local master first.",
+  "nextAction": "P10.0-07: run stages/P10.0-07.md (EXE fixes, metrics, legacy removal, finish) on feat/p10.0-07-finish, then stop at the merge candidate.",
   "updatedAt": "2026-10-01"
 }
