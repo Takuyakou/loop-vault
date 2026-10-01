@@ -349,6 +349,23 @@ for (const [width, height] of SIZES) {
         await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         await expect(page.getByTestId("correction-save-problems")).toBeVisible();
       });
+      // P10.0-07: 「押して鳴らす」 on with a card just clicked; the in-app confirm when leaving with unsaved changes.
+      await shot("capture-workspace-click-audition", async () => {
+        await openWorkspace("plain-8");
+        await page.getByTestId("correction-click-audition").check();
+        await page.getByTestId("correction-card").nth(2).click();
+        await expect(page.getByTestId("correction-click-audition")).toBeChecked();
+      });
+      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-card-click-audition:v1"));
+      await shot("capture-workspace-close-confirm", async () => {
+        await openWorkspace("plain-8");
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible()) await toggle.click();
+        await page.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
+        if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") === "true") await toggle.click();
+        await nav(page, "vault");
+        await expect(page.getByRole("dialog", { name: "保存していない変更があります" })).toBeVisible();
+      });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });
