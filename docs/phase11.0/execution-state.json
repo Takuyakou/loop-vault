@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "11.0",
   "status": "in-progress",
-  "activeStage": "P11.0-05",
+  "activeStage": "P11.0-06",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
     "P11.0-02",
     "P11.0-03",
-    "P11.0-04"
+    "P11.0-04",
+    "P11.0-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "88c4bd8d02773c0045295e62f3ecd6edc3fee035",
+  "lastVerifiedCommit": "7a21e01a43cd07992b4f5987509f23810cb38746",
   "currentBranch": "feat/phase11-voicing-loop-v4",
   "requiredGates": {
     "P11.0-00": [
@@ -43,6 +44,12 @@
       "p11-04-feature",
       "p11-04-ui",
       "p11-04-phase-docs"
+    ],
+    "P11.0-05": [
+      "p11-05-focused",
+      "p11-05-fast",
+      "p11-05-phase-docs",
+      "p11-05-privacy"
     ]
   },
   "gateResults": {
@@ -63,8 +70,12 @@
     "p11-04-focused": "pass",
     "p11-04-feature": "pass",
     "p11-04-ui": "pass",
-    "p11-04-phase-docs": "pass"
+    "p11-04-phase-docs": "pass",
+    "p11-05-focused": "pass",
+    "p11-05-fast": "pass",
+    "p11-05-phase-docs": "pass",
+    "p11-05-privacy": "pass"
   },
-  "nextAction": "Implement confirmed human-voicing resolver consistency, then final P11.0-06.",
+  "nextAction": "Final migration audit/screens/focused regression, one fresh FULL, Windows EXE; no merge.",
   "updatedAt": "2026-10-01"
 }

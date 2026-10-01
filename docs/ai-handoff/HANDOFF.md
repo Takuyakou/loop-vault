@@ -47,6 +47,10 @@ progression vocabulary. It is **not** a chord detector.
   Current Core C remains the Product/rollback baseline. The disposition and
   limitations are in [`FINAL-CLOSEOUT.md`](../phase9/FINAL-CLOSEOUT.md).
 
+## Phase 11 candidate (not merged)
+
+`feat/phase11-voicing-loop-v4` implements session-only native A–B ranges, exact saved Text preview notes, four explicit voicing sources, visible partial-source fallback, and preservation of human manual/live pitches across chord rename. Source MIDI compatibility remains guarded; Vault stays v2. Teacher/Core move to 基本/骨組み, with Color/Open and all legacy families retained in 詳しい設定. The accepted gate and stage evidence are in [`phase11.0/README.md`](../phase11.0/README.md) and [`final report`](../phase11.0/reports/P11-06-final.md). Final FULL/EXE status must be read from that report; no automatic master merge is authorized for this task.
+
 ## Major systems (see ARCHITECTURE-MAP for paths)
 
 1. Vault (data model + persistence + store)

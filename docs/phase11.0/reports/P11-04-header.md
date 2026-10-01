@@ -25,7 +25,7 @@ Color/Open、basic-full/basic-shell/rootless-shell/full-shell/left-handと左手
 | 1280 | 974 | 396.3 | 250.7 | 257.8 | 1 |
 | 960 | 838 | 396.3 | 250.7 | 257.8 | 2 |
 
-既存container 1500px以下のoptionラベル省略とflex-wrapを再利用。1444px画像を視覚確認。指定6幅にページ横overflowなし、重大/深刻axe違反なし。スクリーンショットとgeometryはgit-ignored `test-results/p11-header/`。p89 screenshot runnerはgallery対象が主であるため、この画面の既存product harnessに専用specを追加した。
+既存container 1500px以下のoptionラベル省略とflex-wrapを再利用。1444px画像を視覚確認。指定6幅にページ横overflowなし、重大/深刻axe違反なし。スクリーンショットとgeometryはgit-ignored `test-results/p11-header/`。指定6幅とpopulated状態の測定には既存product harnessへ専用specを追加し、P11-06で既存p89 reachable-screen撮影も併用した。
 
 ## Gate
 

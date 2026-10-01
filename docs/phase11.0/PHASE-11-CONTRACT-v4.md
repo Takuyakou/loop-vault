@@ -6,6 +6,10 @@
 - Vault schema: change only with explicit human gate
 - Training redesign: deferred
 
+## Accepted execution deltas
+
+The human explicitly approved P11-01 and P11-02 through P11-06. Primary generated types are 基本 (Teacher) / 骨組み (Core). Preserve Color/Open and all audited legacy modes under 詳しい設定; no new upper-triad generator. P11-05 human-note preservation is authorized; Source MIDI compatibility stays guarded. Actual repository Text provenance is `text-style-v1:`; occurrences of `text-style:` below describe the superseded package proposal. Final fresh FULL and runnable Windows EXE are required; no master merge/push/tag/release. Reuse the existing isolated D-drive Phase 11 worktree.
+
 ## 0. Goal
 
 Keep the current Voicing Loop central layout and practice flow largely intact while stabilizing:

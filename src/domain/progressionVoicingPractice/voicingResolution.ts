@@ -54,9 +54,9 @@ export interface ResolveProgressionPracticeVoicingsOptions {
 }
 
 /**
- * Resolves the explicitly selected P5.27 family without crossing family
- * boundaries. MY selections only consume detached exact pitches. Lesson
- * selections only consume audited rules and never enable generated-close.
+ * Resolves the selected family. Fixed sources consume detached exact pitches;
+ * only their missing X/N events use the marked, fixed Teacher fallback.
+ * Generated selections consume audited rules, never implicit generated-close.
  */
 export function resolveProgressionPracticeVoicings(
   snapshot: ProgressionVoicingPracticeSnapshot,

@@ -1279,6 +1279,43 @@ describe("ProgressionVoicingTransport", () => {
     runtime.stop();
   });
 
+  it.each([0, 1, 2] as const)("plays marked partial Source fallback through Start/Stop/Restart with %i count-in bars", async countInBars => {
+    const partial = { ...snapshot, events: snapshot.events.map((event, index) => index === 0 ? event : {
+      id: event.id, startBeat: event.startBeat, durationBeats: event.durationBeats, chord: event.chord,
+    }) };
+    const mixed = resolveProgressionPracticeVoicings(partial);
+    expect(mixed.events[1]).toMatchObject({ status: "SUPPORTED", fallbackFrom: "source-midi" });
+    const runtime = new ProgressionVoicingTransportV2();
+    const options = { snapshot: partial, plan: mixed, bpm: 80, countInBars, metronomeEnabled: false, onTransportBeat: vi.fn() };
+    const fireFirst = () => {
+      const firstTick = countInBars * 4 * toneMock.transport.PPQ;
+      toneMock.transport.ticks = Math.max(0, firstTick - toneMock.transport.PPQ);
+      toneMock.scheduled.slice(-3)[0]!.callback(1);
+      toneMock.transport.ticks = firstTick;
+      const shot = toneMock.oneShots.filter(item => item.at === `${firstTick}i` && toneMock.activeScheduleIds.has(item.id)).slice(-1)[0]!;
+      expect(shot).toBeDefined(); shot.callback(2);
+    };
+    await runtime.start(options); fireFirst();
+    const synth = toneMock.instruments[0]!;
+    expect(synth.triggerAttackRelease.mock.calls.map(call => call[0])).toEqual([["C3", "G3", "B3"]]);
+    const secondTick = (countInBars * 4 + 2) * toneMock.transport.PPQ;
+    toneMock.transport.ticks = secondTick;
+    toneMock.scheduled[0]!.callback(3);
+    const second = toneMock.oneShots.find(item => item.at === `${secondTick}i`)!;
+    expect(second).toBeDefined(); second.callback(3);
+    const fallback = mixed.events[1]!;
+    if (fallback.status !== "SUPPORTED") throw new Error("Expected explicit fallback");
+    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    expect(synth.triggerAttackRelease.mock.calls[1]![0]).toEqual(fallback.voicing.midiNotes.map(note => `${names[note % 12]}${Math.floor(note / 12) - 1}`));
+    await expect(runtime.restart()).resolves.toBe(true); fireFirst();
+    expect(synth.triggerAttackRelease.mock.calls.slice(-1)[0]![0]).toEqual(["C3", "G3", "B3"]);
+    runtime.stop(); expect(runtime.activeNoteCount).toBe(0);
+    await runtime.start(options); fireFirst();
+    expect(toneMock.instruments.slice(-2)[0]!.triggerAttackRelease.mock.calls[0]![0]).toEqual(["C3", "G3", "B3"]);
+    runtime.stop(); expect(runtime.activeNoteCount).toBe(0);
+    expect(partial.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
+  });
+
 });
 
 const snapshot: ProgressionVoicingPracticeSnapshot = {

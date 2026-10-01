@@ -5,9 +5,9 @@
 ## Status
 
 - Status: in-progress; HUMAN_GATE_AFTER_P11_01 approved by the user.
-- Completed stages: P11.0-00 (`c1d2aa5b`), P11.0-01 (`a1b75252`).
+- Completed stages: P11.0-00 through P11.0-05; verified commits/gates in execution-state.json.
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
-- Continue: P11.0-02 through P11.0-06 in order; finish with fresh FULL and Windows EXE.
+- Continue: P11.0-06 final regression, fresh FULL and Windows EXE. No master merge.
 
 ## Required Reading Order
 
