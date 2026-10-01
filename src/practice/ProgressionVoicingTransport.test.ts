@@ -5,6 +5,7 @@ import type {
 } from "../domain/progressionVoicingPractice";
 import {
   buildProgressionPracticeClockSchedule,
+  type ProgressionPracticeClockState,
   createProgressionPracticeClockState,
   projectProgressionPracticeClock,
   reduceProgressionPracticeClock,
@@ -1194,6 +1195,127 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.activeScheduleIds.size).toBe(0);
     expect(toneMock.activeInstruments.size).toBe(0);
   });
+
+  it.each([0, 1, 2] as const)("range starts at original beat 3 and attacks once per wrap after %i count-in bars", async countInBars => {
+    const bounds = { startBeat: 2, endBeat: 8 };
+    let state: ProgressionPracticeClockState = { ...createProgressionPracticeClockState(snapshot, { countInBars }), loopBounds: bounds, anchorBeat: 2 };
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "START" });
+    const onTransportBeat = vi.fn((absoluteBeat: number) => {
+      state = reduceProgressionPracticeClock(snapshot, state, { type: "SYNC_TRANSPORT", absoluteBeat });
+    });
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars, metronomeEnabled: true,
+      loopBounds: bounds, onTransportBeat });
+    const ppq = toneMock.transport.PPQ;
+    const firstTick = countInBars * 4 * ppq;
+    toneMock.transport.ticks = Math.max(0, firstTick - ppq);
+    toneMock.scheduled[0]!.callback(1);
+    const first = toneMock.oneShots.find(item => item.at === `${firstTick}i`);
+    expect(first).toBeDefined();
+    toneMock.transport.ticks = firstTick;
+    first!.callback(2);
+    expect(toneMock.instruments[0]!.triggerAttackRelease).toHaveBeenCalledTimes(1);
+    expect(toneMock.instruments[0]!.triggerAttackRelease.mock.calls[0]![0]).toEqual(["D3", "A3", "C4"]);
+    const visual = toneMock.scheduled[2]!;
+    visual.callback(2);
+    toneMock.drawCallbacks.shift()?.();
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({
+      currentEventIndex: 1, progressionBeat: 2, beatInBar: 3, loopCount: 0,
+    });
+    toneMock.transport.ticks = firstTick + 6 * ppq;
+    toneMock.scheduled[0]!.callback(3);
+    const wrap = toneMock.oneShots.find(item => item.at === `${firstTick + 6 * ppq}i`);
+    expect(wrap).toBeDefined();
+    wrap!.callback(3);
+    expect(toneMock.instruments[0]!.triggerAttackRelease).toHaveBeenCalledTimes(2);
+    visual.callback(3);
+    toneMock.drawCallbacks.shift()?.();
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({
+      currentEventIndex: 1, progressionBeat: 2, beatInBar: 3, loopCount: 1,
+    });
+    runtime.stop();
+    expect(runtime.activeNoteCount).toBe(0);
+  });
+
+  it("clears a one-card range at its boundary and continues with the natural next full-progression card", async () => {
+    const activated = vi.fn();
+    const onTransportBeat = vi.fn();
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false,
+      loopBounds: { startBeat: 0, endBeat: 2 }, onTransportBeat, onLoopBoundsActivated: activated });
+    toneMock.oneShots.find(item => item.at === "0i")!.callback(1);
+    toneMock.transport.ticks = 192;
+    expect(runtime.setLoopBounds(undefined)).toBe(true);
+    expect(activated).not.toHaveBeenCalled();
+    const boundary = toneMock.oneShots.find(item => item.at === "384i"
+      && toneMock.activeScheduleIds.has(item.id))!;
+    toneMock.transport.ticks = 384;
+    boundary.callback(2);
+    expect(activated).toHaveBeenCalledWith(undefined, 2);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(2);
+    expect(toneMock.instruments[0]!.triggerAttackRelease.mock.calls.map(call => call[0]))
+      .toEqual([["C3", "G3", "B3"], ["D3", "A3", "C4"]]);
+    runtime.stop();
+  });
+
+  it("keeps the current chord until a mid-play replacement boundary, then attacks new A once", async () => {
+    const activated = vi.fn();
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false,
+      onTransportBeat: vi.fn(), onLoopBoundsActivated: activated });
+    const first = toneMock.oneShots.find(item => item.at === "0i")!;
+    first.callback(1);
+    toneMock.transport.ticks = 192;
+    expect(runtime.setLoopBounds({ startBeat: 2, endBeat: 8 })).toBe(true);
+    expect(activated).not.toHaveBeenCalled();
+    const switchShot = toneMock.oneShots.find(item => item.at === "384i"
+      && toneMock.activeScheduleIds.has(item.id))!;
+    expect(switchShot).toBeDefined();
+    toneMock.transport.ticks = 384;
+    switchShot.callback(2);
+    expect(activated).toHaveBeenCalledWith({ startBeat: 2, endBeat: 8 }, 2);
+    expect(toneMock.instruments[0]!.triggerAttackRelease.mock.calls.map(call => call[0]))
+      .toEqual([["C3", "G3", "B3"], ["D3", "A3", "C4"]]);
+    runtime.stop();
+  });
+
+  it.each([0, 1, 2] as const)("plays marked partial Source fallback through Start/Stop/Restart with %i count-in bars", async countInBars => {
+    const partial = { ...snapshot, events: snapshot.events.map((event, index) => index === 0 ? event : {
+      id: event.id, startBeat: event.startBeat, durationBeats: event.durationBeats, chord: event.chord,
+    }) };
+    const mixed = resolveProgressionPracticeVoicings(partial);
+    expect(mixed.events[1]).toMatchObject({ status: "SUPPORTED", fallbackFrom: "source-midi" });
+    const runtime = new ProgressionVoicingTransportV2();
+    const options = { snapshot: partial, plan: mixed, bpm: 80, countInBars, metronomeEnabled: false, onTransportBeat: vi.fn() };
+    const fireFirst = () => {
+      const firstTick = countInBars * 4 * toneMock.transport.PPQ;
+      toneMock.transport.ticks = Math.max(0, firstTick - toneMock.transport.PPQ);
+      toneMock.scheduled.slice(-3)[0]!.callback(1);
+      toneMock.transport.ticks = firstTick;
+      const shot = toneMock.oneShots.filter(item => item.at === `${firstTick}i` && toneMock.activeScheduleIds.has(item.id)).slice(-1)[0]!;
+      expect(shot).toBeDefined(); shot.callback(2);
+    };
+    await runtime.start(options); fireFirst();
+    const synth = toneMock.instruments[0]!;
+    expect(synth.triggerAttackRelease.mock.calls.map(call => call[0])).toEqual([["C3", "G3", "B3"]]);
+    const secondTick = (countInBars * 4 + 2) * toneMock.transport.PPQ;
+    toneMock.transport.ticks = secondTick;
+    toneMock.scheduled[0]!.callback(3);
+    const second = toneMock.oneShots.find(item => item.at === `${secondTick}i`)!;
+    expect(second).toBeDefined(); second.callback(3);
+    const fallback = mixed.events[1]!;
+    if (fallback.status !== "SUPPORTED") throw new Error("Expected explicit fallback");
+    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    expect(synth.triggerAttackRelease.mock.calls[1]![0]).toEqual(fallback.voicing.midiNotes.map(note => `${names[note % 12]}${Math.floor(note / 12) - 1}`));
+    await expect(runtime.restart()).resolves.toBe(true); fireFirst();
+    expect(synth.triggerAttackRelease.mock.calls.slice(-1)[0]![0]).toEqual(["C3", "G3", "B3"]);
+    runtime.stop(); expect(runtime.activeNoteCount).toBe(0);
+    await runtime.start(options); fireFirst();
+    expect(toneMock.instruments.slice(-2)[0]!.triggerAttackRelease.mock.calls[0]![0]).toEqual(["C3", "G3", "B3"]);
+    runtime.stop(); expect(runtime.activeNoteCount).toBe(0);
+    expect(partial.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
+  });
+
 });
 
 const snapshot: ProgressionVoicingPracticeSnapshot = {

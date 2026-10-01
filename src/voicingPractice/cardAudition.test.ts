@@ -18,7 +18,7 @@ function plan(selection: ProgressionVoicingSelection, notes?: readonly number[])
     source: { kind: "vault", reference: { ideaId: "public", blockId: "card" } },
     selection, bpm: 120, meter: { numerator: 4, denominator: 4 }, lengthBeats: 4,
     spans: [{ kind: "chord", startBeat: 0, durationBeats: 4, eventIndex: 0 }],
-    events: [{ ...event, ...(notes && (selection === "source-midi" || selection === "custom")
+    events: [{ ...event, ...(notes && (selection === "saved" || selection === "source-midi" || selection === "custom")
       ? { voicing: { kind: selection, midiNotes: notes } } : {}) }],
   };
   return resolveProgressionPracticeVoicings(snapshot);
@@ -41,6 +41,14 @@ describe("saved card audition intent", () => {
   it("uses the legacy automatic order and avoids low-confidence source", () => {
     expect(cardAuditionResolution(event, 0, plans)?.voicing?.midiNotes).toEqual([43, 52, 59]);
     expect(cardAuditionResolution({ ...event, sourceNeedsReview: true }, 0, { source: plans.source, generated: plans.generated })?.voicing?.origin)
+      .toBe("basic-full");
+  });
+
+  it("auditions a legacy persisted Text snapshot before generated notes", () => {
+    const saved = plan("saved", [36, 52, 59, 64]);
+    expect(cardAuditionResolution(event, 0, { ...plans, saved })?.voicing?.midiNotes)
+      .toEqual([36, 52, 59, 64]);
+    expect(cardAuditionResolution({ ...event, playbackChoice: "GENERATED" }, 0, { ...plans, saved })?.voicing?.origin)
       .toBe("basic-full");
   });
 

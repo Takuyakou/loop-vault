@@ -47,6 +47,10 @@ progression vocabulary. It is **not** a chord detector.
   Current Core C remains the Product/rollback baseline. The disposition and
   limitations are in [`FINAL-CLOSEOUT.md`](../phase9/FINAL-CLOSEOUT.md).
 
+## Phase 11 candidate (not merged)
+
+`feat/phase11-voicing-loop-v4` implements session-only native A–B ranges, exact saved Text preview notes, four explicit voicing sources, visible partial-source fallback, and preservation of human manual/live pitches across chord rename. Source MIDI compatibility remains guarded; Vault stays v2. Teacher/Core move to 基本/骨組み, with Color/Open and all legacy families retained in 詳しい設定. The accepted gate and stage evidence are in [`phase11.0/README.md`](../phase11.0/README.md) and [`final report`](../phase11.0/reports/P11-06-final.md). P11-00 through P11-06 are complete; fresh FULL and raw Windows EXE are PASS at tested HEAD `266b24a2` (details in the final report). P11-06 historical acceptance-ready evidence is retained. Human follow-up P11-07 is complete: Range clear/Space/timeline shortcuts and compact current panel, with fresh FULL 3,668 Vitest / 174 Playwright PASS and updated EXE at tested HEAD `2377448a`. READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; see the [acceptance report](../phase11.0/reports/P11-07-human-acceptance.md). No master merge is authorized for this task. P11-08 is the latest authorized follow-up: native details dismissal and restored compact Next Move (supersedes P11-07 hiding only). P11-08 complete: final fresh FULL 3,670 Vitest / 177 Playwright PASS and raw Windows EXE at tested HEAD `55aa6c67`. READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; no master merge. See [P11-08 report](../phase11.0/reports/P11-08-details-next-move.md).
+
 ## Major systems (see ARCHITECTURE-MAP for paths)
 
 1. Vault (data model + persistence + store)

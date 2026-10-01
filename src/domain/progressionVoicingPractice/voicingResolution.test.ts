@@ -565,6 +565,39 @@ describe("P5.27 resolution status and determinism", () => {
   });
 });
 
+describe("P11 partial explicit-source fallback", () => {
+  it.each(["saved", "source-midi", "custom"] as const)("keeps exact %s notes across every coverage pattern", selection => {
+    const base = makeSnapshot(selection, Array.from({ length: 4 }, () => chord("maj7")));
+    for (const present of [[], [0], [0, 2], [0, 1, 2], [1, 2, 3], [0, 1, 2, 3]]) {
+      const source = { ...base, events: base.events.map((event, index) => ({
+        ...event, ...(present.includes(index) ? { voicing: {
+          kind: selection, midiNotes: [43, 59, 64, 72], bassNote: 43,
+          ...(selection === "saved" ? { savedSource: "custom" as const } : {}),
+        } } : {}),
+      })) };
+      const plan = resolveProgressionPracticeVoicings(source);
+      const modified = resolveProgressionPracticeVoicings(source, {
+        lessonStudyCategory: "core", lessonColorEnabled: true, lessonOpenEnabled: true,
+        lessonProgressionOptimization: true,
+      });
+      expect(modified).toEqual(plan);
+      plan.events.forEach((result, index) => {
+        if (present.length === 0) {
+          expect(result.status).toBe("UNAVAILABLE");
+        } else if (present.includes(index)) {
+          expect(result.voicing?.midiNotes).toEqual([43, 59, 64, 72]);
+          expect(result).not.toHaveProperty("fallbackFrom");
+        } else {
+          expect(result).toMatchObject({ status: "SUPPORTED", fallbackFrom: selection });
+          expect(result.voicing?.midiNotes.length).toBeGreaterThan(0);
+        }
+      });
+      expect(source.events.filter(event => event.voicing).map(event => event.voicing!.midiNotes))
+        .toEqual(present.map(() => [43, 59, 64, 72]));
+    }
+  });
+});
+
 function resolveOne(
   selection: ProgressionVoicingSelection,
   sourceChord: ChordSymbol,

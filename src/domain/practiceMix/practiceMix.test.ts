@@ -417,7 +417,7 @@ describe("Mix preflight", () => {
     ]);
   });
 
-  it("detects an override becoming stale and switching to the source voicing", () => {
+  it.each(["manual", "midi-extracted"] as const)("keeps human notes authoritative while guarding stale %s evidence", source => {
     const candidates = makeCandidates(2);
     candidates[0].block!.chords[0] = {
       ...candidates[0].block!.chords[0],
@@ -441,6 +441,7 @@ describe("Mix preflight", () => {
         practiceVoicingOverride: {
           ...makeVoicing([52, 55, 60, 64, 67]),
           capturedForChordKey: "5:maj7:-:-",
+          source,
         },
       },
     };
@@ -448,12 +449,15 @@ describe("Mix preflight", () => {
       result.snapshots,
       candidates,
       resolvedConfig,
-    )).toEqual([
-      expect.objectContaining({
-        reference: references[0],
-        reason: "fingerprint-changed",
-      }),
+    )).toEqual(source === "manual" ? [] : [
+      expect.objectContaining({ reference: references[0], reason: "fingerprint-changed" }),
     ]);
+    if (source === "manual") {
+      const after = preflightMixSession({ config: resolvedConfig, candidates });
+      expect(after.ok).toBe(true);
+      if (after.ok) expect(after.snapshots[0]?.targetPlan.events[0]?.midiNotes)
+        .toEqual(result.snapshots[0]?.targetPlan.events[0]?.midiNotes);
+    }
   });
 
   it("produces deterministic effective-target content fingerprints", () => {

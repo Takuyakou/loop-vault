@@ -1,4 +1,5 @@
-import { voiceChordForPreview } from "./chordVoicing";
+import { voiceTextChordForAudition } from "./textChordTones";
+import { isValidVoicingSnapshot } from "./voicing/normalizeVoicing";
 import type { ChordSymbol, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { normalizedChordKey } from "./voicing";
 import {
@@ -39,7 +40,7 @@ export function textProgressionVoicingNotes(
   chord: ChordSymbol,
   styleId: TextProgressionVoicingStyleId,
 ): number[] | undefined {
-  if (styleId === "generated-close") return [...voiceChordForPreview(chord).notes];
+  if (styleId === "generated-close") return [...voiceTextChordForAudition(chord)];
   const event: ChordTimelineItem = {
     eventId: "text-style-preview",
     bar: 1,
@@ -60,7 +61,7 @@ export function textProgressionVoicingNotes(
 
 export function createTextProgressionStyleSnapshot(
   chord: ChordSymbol,
-  styleId: Exclude<TextProgressionVoicingStyleId, "generated-close">,
+  styleId: TextProgressionVoicingStyleId,
 ): VoicingSnapshot | undefined {
   const midiNotes = textProgressionVoicingNotes(chord, styleId);
   if (!midiNotes || midiNotes.length < 2 || midiNotes.length > 10) return undefined;
@@ -80,8 +81,8 @@ export function createTextProgressionStyleSnapshot(
 
 export function textProgressionStyleFromSnapshot(
   snapshot: VoicingSnapshot | undefined,
-  chord: ChordSymbol,
-): Exclude<TextProgressionVoicingStyleId, "generated-close"> | undefined {
+  _chord: ChordSymbol,
+): TextProgressionVoicingStyleId | undefined {
   if (
     !snapshot
     || snapshot.schemaVersion !== 1
@@ -89,19 +90,15 @@ export function textProgressionStyleFromSnapshot(
     || snapshot.representation !== "simultaneous-voicing"
     || snapshot.userVerified !== true
     || snapshot.confidence !== 1
-    || snapshot.capturedForChordKey !== normalizedChordKey(chord)
-    || snapshot.capturedForChordLabel !== chord.label
     || !snapshot.extractorVersion?.startsWith(TEXT_STYLE_EXTRACTOR_PREFIX)
+    || !isValidVoicingSnapshot(snapshot)
     || Object.keys(snapshot).some((key) => !TEXT_STYLE_SNAPSHOT_KEYS.has(key))
   ) return undefined;
   const styleId = snapshot.extractorVersion.slice(TEXT_STYLE_EXTRACTOR_PREFIX.length);
-  if (styleId !== "shell-17" && styleId !== "open-17" && styleId !== "rootless-ab") {
+  if (!isTextProgressionVoicingStyleId(styleId)) {
     return undefined;
   }
-  const expected = textProgressionVoicingNotes(chord, styleId);
-  return expected && snapshot.bassNote === expected[0] && sameNotes(snapshot.midiNotes, expected)
-    ? styleId
-    : undefined;
+  return styleId;
 }
 
 export function isTextProgressionStyleSnapshot(
@@ -109,8 +106,4 @@ export function isTextProgressionStyleSnapshot(
   chord: ChordSymbol,
 ): boolean {
   return textProgressionStyleFromSnapshot(snapshot, chord) !== undefined;
-}
-
-function sameNotes(left: readonly number[], right: readonly number[]): boolean {
-  return left.length === right.length && left.every((note, index) => note === right[index]);
 }

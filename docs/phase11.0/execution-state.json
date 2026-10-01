@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "11.0",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P11.0-00",
+    "P11.0-01",
+    "P11.0-02",
+    "P11.0-03",
+    "P11.0-04",
+    "P11.0-05",
+    "P11.0-06",
+    "P11.0-07",
+    "P11.0-08"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
+  "lastVerifiedCommit": "55aa6c67f30067dd69f91f6e6d662a14071ae61b",
+  "currentBranch": "feat/phase11-voicing-loop-v4",
+  "requiredGates": {
+    "P11.0-00": [
+      "p11-00-audit",
+      "p11-00-phase-docs",
+      "p11-00-hook"
+    ],
+    "P11.0-01": [
+      "p11-01-focused",
+      "p11-01-feature",
+      "p11-01-ui",
+      "p11-01-screens",
+      "p11-01-phase-docs"
+    ],
+    "P11.0-02": [
+      "p11-02-focused",
+      "p11-02-fast",
+      "p11-02-phase-docs"
+    ],
+    "P11.0-03": [
+      "p11-03-focused",
+      "p11-03-fast",
+      "p11-03-phase-docs"
+    ],
+    "P11.0-04": [
+      "p11-04-focused",
+      "p11-04-feature",
+      "p11-04-ui",
+      "p11-04-phase-docs"
+    ],
+    "P11.0-05": [
+      "p11-05-focused",
+      "p11-05-fast",
+      "p11-05-phase-docs",
+      "p11-05-privacy"
+    ],
+    "P11.0-06": [
+      "p11-06-focused",
+      "p11-06-ui",
+      "p11-06-screens",
+      "p11-06-full",
+      "p11-06-exe",
+      "p11-06-phase-docs"
+    ],
+    "P11.0-07": [
+      "p11-07-focused",
+      "p11-07-ui",
+      "p11-07-full",
+      "p11-07-exe",
+      "p11-07-docs"
+    ],
+    "P11.0-08": [
+      "p11-08-focused",
+      "p11-08-ui",
+      "p11-08-full",
+      "p11-08-exe",
+      "p11-08-docs"
+    ]
+  },
+  "gateResults": {
+    "p11-00-audit": "pass",
+    "p11-00-phase-docs": "pass",
+    "p11-00-hook": "pass",
+    "p11-01-focused": "pass",
+    "p11-01-feature": "pass",
+    "p11-01-ui": "pass",
+    "p11-01-screens": "pass",
+    "p11-01-phase-docs": "pass",
+    "p11-02-focused": "pass",
+    "p11-02-fast": "pass",
+    "p11-02-phase-docs": "pass",
+    "p11-03-focused": "pass",
+    "p11-03-fast": "pass",
+    "p11-03-phase-docs": "pass",
+    "p11-04-focused": "pass",
+    "p11-04-feature": "pass",
+    "p11-04-ui": "pass",
+    "p11-04-phase-docs": "pass",
+    "p11-05-focused": "pass",
+    "p11-05-fast": "pass",
+    "p11-05-phase-docs": "pass",
+    "p11-05-privacy": "pass",
+    "p11-06-focused": "pass",
+    "p11-06-ui": "pass",
+    "p11-06-screens": "pass",
+    "p11-06-full": "pass",
+    "p11-06-exe": "pass",
+    "p11-06-phase-docs": "pass",
+    "p11-07-focused": "pass",
+    "p11-07-ui": "pass",
+    "p11-07-full": "pass",
+    "p11-07-exe": "pass",
+    "p11-07-docs": "pass",
+    "p11-08-focused": "pass",
+    "p11-08-ui": "pass",
+    "p11-08-full": "pass",
+    "p11-08-exe": "pass",
+    "p11-08-docs": "pass"
+  },
+  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. P11-08 details / compact Next Move plus preserved P11-07 fixes complete; fresh FULL and runnable EXE PASS at 55aa6c67. Stop without master merge/push/tag/release.",
+  "updatedAt": "2026-10-01"
+}

@@ -9,3 +9,12 @@ export function chordIndexAtTimelineBeat(snapshot: ProgressionVoicingPracticeSna
   const next = snapshot.events.findIndex((event) => event.startBeat >= target);
   return next >= 0 ? next : snapshot.events.length - 1;
 }
+
+
+/** Map the visible pointer to full-progression beats; contentLeft includes scroll offset. */
+export function timelineBeatAtPointer(clientX: number, contentLeft: number,
+  pixelsPerBeat: number, lengthBeats: number): number | undefined {
+  if (![clientX, contentLeft, pixelsPerBeat, lengthBeats].every(Number.isFinite)
+    || pixelsPerBeat <= 0 || lengthBeats <= 0) return undefined;
+  return Math.max(0, Math.min(lengthBeats, (clientX - contentLeft) / pixelsPerBeat));
+}

@@ -23,6 +23,9 @@ export interface ProgressionVoicingTransportStartOptions {
   readonly referenceSoundEnabled?: boolean;
   readonly sound?: PreviewSound;
   readonly startBeat?: number;
+  readonly loopBounds?: { readonly startBeat: number; readonly endBeat: number };
+  readonly onLoopBoundsActivated?: (bounds: { readonly startBeat: number; readonly endBeat: number } | undefined,
+    startBeat: number) => void;
   readonly onTransportBeat: (absoluteBeat: number) => void;
 }
 
@@ -44,6 +47,7 @@ export interface ProgressionVoicingTransportPort {
   setReferenceSoundEnabled(enabled: boolean): void;
   audition(midiNotes: readonly number[], sound?: PreviewSound): Promise<void>;
   readonly supportsSeek?: boolean;
+  setLoopBounds?(bounds: { readonly startBeat: number; readonly endBeat: number } | undefined): boolean;
   seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
@@ -74,6 +78,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private originProgressionBeat = 0;
   private loopBaseCount = 0;
   private countInBeats = 0;
+  private loopBounds?: { readonly startBeat: number; readonly endBeat: number };
+  private pendingLoopChange?: { readonly id: number; readonly toneBeat: number };
   private voicingInstrument?: PreviewInstrument;
   // After all instrument effects: release envelopes/reverb must not fill rests.
   private referenceOutput?: Tone.Gain;
@@ -137,9 +143,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.startingGeneration = undefined;
 
     const countInBeats = options.countInBars * (this.v2
-      ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
+      ? options.loopBounds ? options.snapshot.meter.numerator
+        : options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
       : options.snapshot.meter.numerator);
-    const startBeat = Math.max(0, options.startBeat ?? 0);
+    this.loopBounds = this.v2 ? options.loopBounds : undefined;
+    const startBeat = Math.max(0, options.startBeat ?? this.loopStart());
     this.ownsTransport = true;
     this.transport.stop();
     this.transport.position = `${Math.round((this.v2 ? 0 : startBeat) * ppq)}i`;
@@ -156,7 +164,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
     this.running = true;
     this.paused = false;
-    options.onTransportBeat(this.v2 && countInBeats > 0 ? 0 : startBeat);
+    options.onTransportBeat(this.v2 && (countInBeats > 0 || this.loopBounds) ? 0 : startBeat);
     const transportStartAudioTime = Tone.now() + 0.05;
     if (!this.v2) this.transport.start("+0.05");
 
@@ -253,9 +261,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
       if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
       const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-      const beatInBar = Math.floor(absoluteBeat) % (this.v2
-        ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
-        : options.snapshot.meter.numerator);
+      const beatInBar = this.v2 && this.loopBounds
+        ? ((Math.floor(absoluteBeat < countInBeats
+          ? this.loopStart() + absoluteBeat - countInBeats
+          : this.progressionBeatAtLogical(absoluteBeat)) % options.snapshot.meter.numerator)
+          + options.snapshot.meter.numerator) % options.snapshot.meter.numerator
+        : Math.floor(absoluteBeat) % (this.v2
+          ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
+          : options.snapshot.meter.numerator);
       const applied = beatInBar === 0 && this.applyPendingSessionUpdate(absoluteBeat);
       if (applied && !this.hasEventAttackAt(absoluteBeat)) {
         this.attackCurrentVoicing(absoluteBeat, time);
@@ -329,6 +342,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
     this.scheduleEpoch += 1;
+    if (this.pendingLoopChange) this.transport.clear(this.pendingLoopChange.id);
+    this.pendingLoopChange = undefined;
     if (this.v2) this.clearPending();
     this.closeReferenceOutput(Tone.now(), true);
     this.releaseVoices();
@@ -337,10 +352,13 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.scheduleIds = [];
     this.transport.position = "0i";
     if (this.v2) {
+      this.countInBeats = options.countInBars * (this.loopBounds
+        ? options.snapshot.meter.numerator
+        : options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator);
       this.originToneBeat = this.countInBeats;
-      this.originProgressionBeat = 0;
+      this.originProgressionBeat = this.loopStart();
       this.loopBaseCount = 0;
-      this.resetRollingCursor(0);
+      this.resetRollingCursor(this.loopStart());
     }
     this.scheduleRuntimeCallbacks(options, generation, this.transport.PPQ, this.countInBeats);
     this.paused = false;
@@ -430,15 +448,81 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.auditionVoiceIndex = nextIndex;
   }
 
+  private loopStart(): number { return this.loopBounds?.startBeat ?? 0; }
+  private loopEnd(): number { return this.loopBounds?.endBeat ?? this.activeOptions?.snapshot.lengthBeats ?? 1; }
+  private loopLength(): number { return this.loopEnd() - this.loopStart(); }
+
+  private progressionBeatAtLogical(absoluteBeat: number): number {
+    const elapsed = Math.max(0, absoluteBeat - this.countInBeats);
+    return this.loopStart() + elapsed % this.loopLength();
+  }
+
+  /** Applies a new session range only after the currently sounding card ends. */
+  setLoopBounds(bounds: { readonly startBeat: number; readonly endBeat: number } | undefined): boolean {
+    const options = this.activeOptions;
+    if (!this.v2 || !options || !this.ownsTransport || !this.running) return false;
+    if (bounds && (!Number.isFinite(bounds.startBeat) || !Number.isFinite(bounds.endBeat)
+      || bounds.startBeat < 0 || bounds.endBeat > options.snapshot.lengthBeats
+      || bounds.endBeat <= bounds.startBeat
+      || !options.snapshot.events.some(event => event.startBeat === bounds.startBeat))) return false;
+    if (this.pendingLoopChange) this.transport.clear(this.pendingLoopChange.id);
+    this.pendingLoopChange = undefined;
+    let start = bounds?.startBeat ?? 0;
+    const apply = (toneBeat: number, time: number, playFirst: boolean) => {
+      this.projectionEpoch += 1;
+      this.clearPending();
+      this.closeReferenceOutput(time, true);
+      this.releaseVoices(time);
+      this.loopBounds = bounds;
+      this.originToneBeat = toneBeat < this.countInBeats ? this.countInBeats : toneBeat;
+      this.originProgressionBeat = start;
+      this.loopBaseCount = 0;
+      this.resetRollingCursor(start);
+      if (playFirst) {
+        this.skipCurrentRollingAttack();
+        this.attackCurrentVoicing(this.countInBeats + start - this.loopStart(), time);
+      }
+      options.onLoopBoundsActivated?.(bounds, start);
+      options.onTransportBeat(toneBeat < this.countInBeats ? 0
+        : this.countInBeats + start - this.loopStart());
+    };
+    const toneBeat = this.transport.ticks / this.transport.PPQ;
+    if (this.paused || toneBeat < this.countInBeats) {
+      if (!bounds && toneBeat >= this.countInBeats) start = this.currentProgressionBeat();
+      apply(toneBeat, Tone.now(), false);
+      return true;
+    }
+    const current = this.currentProgressionBeat();
+    const span = options.snapshot.spans.find(item => current >= item.startBeat
+      && current < item.startBeat + item.durationBeats);
+    const remaining = span ? span.startBeat + span.durationBeats - current : 0;
+    if (!bounds) start = span ? (span.startBeat + span.durationBeats) % options.snapshot.lengthBeats : 0;
+    const dueBeat = toneBeat + Math.max(1 / this.transport.PPQ, remaining);
+    // Previously queued look-ahead attacks past this boundary belong to the old range.
+    this.clearPending();
+    this.resetRollingCursor(current);
+    this.skipCurrentRollingAttack();
+    const generation = this.generation;
+    const id = this.transport.scheduleOnce((time) => {
+      if (!this.acceptsCallback(generation) || this.pendingLoopChange?.id !== id) return;
+      this.pendingLoopChange = undefined;
+      apply(dueBeat, time, true);
+    }, `${Math.round(dueBeat * this.transport.PPQ)}i`);
+    this.pendingLoopChange = { id, toneBeat: dueBeat };
+    this.scheduleIds.push(id);
+    return true;
+  }
+
   seek(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined {
     const options = this.activeOptions;
     if (!this.v2 || !options || !this.ownsTransport || !Number.isInteger(eventIndex)
       || eventIndex < 0 || eventIndex >= options.snapshot.events.length) return;
     const target = options.snapshot.events[eventIndex]!.startBeat;
+    if (target < this.loopStart() || target >= this.loopEnd()) return;
     const wasCountIn = this.transport.ticks / this.transport.PPQ < this.countInBeats;
     const toneBeat = this.transport.ticks / this.transport.PPQ;
     const logical = this.logicalBeat(toneBeat);
-    const previousLoop = Math.floor(Math.max(0, logical - this.countInBeats) / options.snapshot.lengthBeats);
+    const previousLoop = Math.floor(Math.max(0, logical - this.countInBeats) / this.loopLength());
     this.projectionEpoch += 1;
     this.clearPending();
     this.closeReferenceOutput(Tone.now(), true);
@@ -463,7 +547,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.loopBaseCount = previousLoop;
     this.resetRollingCursor(target);
     this.skipCurrentRollingAttack(eventIndex);
-    const absoluteBeat = this.countInBeats + previousLoop * options.snapshot.lengthBeats + target;
+    const absoluteBeat = this.countInBeats + previousLoop * this.loopLength() + target - this.loopStart();
     options.onTransportBeat(absoluteBeat);
     if (!this.paused) this.attackCurrentVoicing(absoluteBeat, Tone.now() + 0.01);
     return { status: this.paused ? "paused" : "running", absoluteBeat };
@@ -472,14 +556,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private logicalBeat(toneBeat: number): number {
     const options = this.activeOptions;
     if (!options || toneBeat < this.countInBeats) return toneBeat;
-    return this.countInBeats + this.loopBaseCount * options.snapshot.lengthBeats
-      + this.originProgressionBeat + Math.max(0, toneBeat - this.originToneBeat);
+    return this.countInBeats + this.loopBaseCount * this.loopLength()
+      + this.originProgressionBeat - this.loopStart() + Math.max(0, toneBeat - this.originToneBeat);
   }
 
   private currentProgressionBeat(): number {
     const options = this.activeOptions;
     if (!options) return 0;
-    return Math.max(0, this.logicalBeat(this.transport.ticks / this.transport.PPQ) - this.countInBeats) % options.snapshot.lengthBeats;
+    return this.progressionBeatAtLogical(this.logicalBeat(this.transport.ticks / this.transport.PPQ));
   }
 
   private clearPending(): void {
@@ -495,11 +579,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
         (event.attackBeats ?? [event.startBeat]).map(startBeat => ({ startBeat, eventIndex }))),
       ...options.snapshot.spans.filter((span) => span.kind === "rest")
         .map((span) => ({ startBeat: span.startBeat, eventIndex: -1 })),
-    ].sort((a, b) => a.startBeat - b.startBeat || a.eventIndex - b.eventIndex);
+    ].filter(item => item.startBeat >= this.loopStart() - 1e-9
+      && item.startBeat < this.loopEnd() - 1e-9)
+      .sort((a, b) => a.startBeat - b.startBeat || a.eventIndex - b.eventIndex);
+    if (this.rollingItems.length === 0) return;
     this.rollingCursor = this.rollingItems.findIndex((item) => item.startBeat + 1e-9 >= targetBeat);
     if (this.rollingCursor < 0) this.rollingCursor = 0;
     const currentLoop = Math.floor(Math.max(0, this.logicalBeat(this.transport.ticks / this.transport.PPQ) - this.countInBeats)
-      / options.snapshot.lengthBeats);
+      / this.loopLength());
     this.rollingLoop = currentLoop + (this.rollingItems[this.rollingCursor]!.startBeat < targetBeat ? 1 : 0);
   }
 
@@ -524,10 +611,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const horizon = toneBeat + Math.max(0.75, this.desiredBpm * 1.5 / 60);
     while (this.pendingIds.size < 128) {
       const item = this.rollingItems[this.rollingCursor]!;
-      const logicalDue = this.countInBeats + this.rollingLoop * options.snapshot.lengthBeats + item.startBeat;
+      const logicalDue = this.countInBeats + this.rollingLoop * this.loopLength()
+        + item.startBeat - this.loopStart();
       const toneDue = this.originToneBeat + logicalDue
-        - (this.countInBeats + this.loopBaseCount * options.snapshot.lengthBeats + this.originProgressionBeat);
-      if (toneDue > horizon) break;
+        - (this.countInBeats + this.loopBaseCount * this.loopLength()
+          + this.originProgressionBeat - this.loopStart());
+      if (toneDue > horizon || this.pendingLoopChange && toneDue >= this.pendingLoopChange.toneBeat - 1e-9) break;
       this.rollingCursor += 1;
       if (this.rollingCursor >= this.rollingItems.length) {
         this.rollingCursor = 0;
@@ -557,6 +646,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.auditionGeneration += 1;
     this.projectionEpoch += 1;
     this.scheduleEpoch += 1;
+    this.pendingLoopChange = undefined;
     this.startingGeneration = undefined;
     if (this.ownsTransport) {
       this.transport.stop();
@@ -661,7 +751,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (!options) return false;
     const countInBeats = this.v2 ? this.countInBeats : options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return false;
-    const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
+    const progressionBeat = this.v2 ? this.progressionBeatAtLogical(absoluteBeat)
+      : (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
     return options.snapshot.events.some((event) =>
       (event.attackBeats ?? [event.startBeat]).some(beat =>
         Math.abs(beat - progressionBeat) <= 1 / this.transport.PPQ));
@@ -672,7 +763,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (!options) return;
     const countInBeats = this.v2 ? this.countInBeats : options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return;
-    const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
+    const progressionBeat = this.v2 ? this.progressionBeatAtLogical(absoluteBeat)
+      : (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
     const eventIndex = options.snapshot.events.findIndex((event) => progressionBeat >= event.startBeat
       && progressionBeat < event.startBeat + event.durationBeats);
     if (eventIndex < 0) return;

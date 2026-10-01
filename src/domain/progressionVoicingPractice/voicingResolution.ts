@@ -54,9 +54,9 @@ export interface ResolveProgressionPracticeVoicingsOptions {
 }
 
 /**
- * Resolves the explicitly selected P5.27 family without crossing family
- * boundaries. MY selections only consume detached exact pitches. Lesson
- * selections only consume audited rules and never enable generated-close.
+ * Resolves the selected family. Fixed sources consume detached exact pitches;
+ * only their missing X/N events use the marked, fixed Teacher fallback.
+ * Generated selections consume audited rules, never implicit generated-close.
  */
 export function resolveProgressionPracticeVoicings(
   snapshot: ProgressionVoicingPracticeSnapshot,
@@ -68,11 +68,27 @@ export function resolveProgressionPracticeVoicings(
   };
 
   const selection = snapshot.selection;
-  if (selection === "source-midi" || selection === "custom") {
-    return applyOctaveShift(
-      freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection))),
-      options.octaveShift ?? 0,
+  if (selection === "saved" || selection === "source-midi" || selection === "custom") {
+    const exact = snapshot.events.map((event) => resolveMyVoicing(event, selection));
+    // A 0/N source stays unavailable. For X/N, generate only missing cards
+    // with a fixed, chord-local Teacher policy. Exact notes never enter the
+    // optimizer and cannot be moved by neighboring fallback candidates.
+    if (!exact.some((resolution) => resolution.status === "SUPPORTED")
+      || exact.every((resolution) => resolution.status === "SUPPORTED")) {
+      return applyOctaveShift(freezePlan(snapshot, exact), options.octaveShift ?? 0);
+    }
+    const generated = resolveStudyVoicings(
+      { ...snapshot, selection: "basic-full" }, "teacher",
+      { bass: "self-played", top: "normal-voicing-top" },
+      { ...candidateOptions, color: false, open: false, optimize: false },
     );
+    const mixed = exact.map((resolution, index): ProgressionPracticeVoicingResolution => {
+      if (resolution.status === "SUPPORTED") return resolution;
+      const fallback = generated.events[index];
+      return fallback?.status === "SUPPORTED"
+        ? freezeResolution({ ...fallback, fallbackFrom: selection }) : resolution;
+    });
+    return applyOctaveShift(freezePlan(snapshot, mixed), options.octaveShift ?? 0);
   }
 
   if (options.lessonStudyCategory && selection !== "left-hand") {
@@ -186,7 +202,7 @@ function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): Pro
 
 function resolveMyVoicing(
   event: ProgressionPracticeEvent,
-  selection: "source-midi" | "custom",
+  selection: "saved" | "source-midi" | "custom",
 ): ProgressionPracticeVoicingResolution {
   if (!event.voicing || event.voicing.kind !== selection) {
     return freezeResolution({
@@ -206,7 +222,7 @@ function resolveMyVoicing(
       addedColorDegrees: Object.freeze([]),
       notes: noteFacts(event.chord, midiNotes, [], event.voicing.bassNote),
       explanation: Object.freeze({
-        source: selection,
+        source: selection === "saved" ? event.voicing.savedSource ?? "custom" : selection,
         omittedDegrees: Object.freeze([]),
         addedDegrees: Object.freeze([]),
       }),
@@ -524,7 +540,7 @@ function basicLessonLabels(
 
 function supportedLessonResolution(
   event: ProgressionPracticeEvent,
-  selection: Exclude<ProgressionVoicingSelection, "source-midi" | "custom">,
+  selection: Exclude<ProgressionVoicingSelection, "saved" | "source-midi" | "custom">,
   candidate: StyleVoicingCandidate,
   facts: CandidateFacts,
 ): ProgressionPracticeVoicingResolution {
@@ -681,6 +697,7 @@ function applyOctaveShift(
       return freezeResolution({
         eventId: resolution.eventId,
         status: "SUPPORTED" as const,
+        ...(resolution.fallbackFrom ? { fallbackFrom: resolution.fallbackFrom } : {}),
         voicing: freezeVoicing({
           ...voicing,
           midiNotes: shiftNotes(voicing.midiNotes, semitones),

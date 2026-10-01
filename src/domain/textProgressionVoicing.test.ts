@@ -28,7 +28,7 @@ describe("textProgressionVoicing", () => {
     expect(textProgressionVoicingNotes(parseChordLabel("C")!, "rootless-ab")).toBeUndefined();
   });
 
-  it("recognizes only exact verified text-style snapshots", () => {
+  it("classifies valid Text snapshots by persisted provenance rather than rerunning a generator", () => {
     const chord = parseChordLabel("Dm7")!;
     const snapshot = createTextProgressionStyleSnapshot(chord, "open-17")!;
 
@@ -43,7 +43,7 @@ describe("textProgressionVoicing", () => {
     expect(isTextProgressionStyleSnapshot({
       ...snapshot,
       midiNotes: [...snapshot.midiNotes.slice(0, -1), snapshot.midiNotes[snapshot.midiNotes.length - 1]! + 1],
-    }, chord)).toBe(false);
+    }, chord)).toBe(true);
     expect(isTextProgressionStyleSnapshot({ ...snapshot, extractorVersion: "unknown" }, chord))
       .toBe(false);
     expect(isTextProgressionStyleSnapshot({
@@ -51,6 +51,7 @@ describe("textProgressionVoicing", () => {
       sourcePath: "private-source.mid",
     } as typeof snapshot, chord)).toBe(false);
     expect(isTextProgressionStyleSnapshot({ ...snapshot, bassNote: snapshot.midiNotes[1] }, chord))
-      .toBe(false);
+      .toBe(true);
+    expect(isTextProgressionStyleSnapshot({ ...snapshot, midiNotes: [60, 60] }, chord)).toBe(false);
   });
 });

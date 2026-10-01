@@ -6,6 +6,7 @@ import {
   hasProgressionEdits,
   replaceEditableChord,
   setEditableVoicingMemory,
+  replaceEditableChords,
   splitEditableChord,
   undoProgressionEdit,
 } from "./index";
@@ -54,6 +55,21 @@ describe("voicing event identity", () => {
     );
     expect(merged.slots[0]?.id).toBe(withMemory.slots[1]?.id);
     expect(merged.slots[0]?.voicingMemory?.practiceVoicingOverride).toEqual(memory);
+  });
+
+  it("preserves human notes and explicit intent through single/batch rename and undo", () => {
+    for (const source of ["manual", "live-played"] as const) {
+      const base = createEditableProgression(makeCandidate());
+      const human = { ...memory, source, userVerified: true };
+      const withMemory = setEditableVoicingMemory(base, base.slots[0]!.id, { practiceVoicingOverride: human, playbackChoice: "CUSTOM" });
+      for (const replaced of [
+        replaceEditableChord(withMemory, withMemory.slots[0]!.id, gMajor, "manual-label"),
+        replaceEditableChords(withMemory, [withMemory.slots[0]!.id], gMajor, "propagation"),
+      ]) {
+        expect(replaced.slots[0]?.voicingMemory).toEqual({ practiceVoicingOverride: human, playbackChoice: "CUSTOM" });
+        expect(undoProgressionEdit(replaced).slots).toEqual(withMemory.slots);
+      }
+    }
   });
 
   it("drops a voicing when a chord replacement makes it stale", () => {

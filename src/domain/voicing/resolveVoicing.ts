@@ -2,7 +2,7 @@ import type { ChordSymbol, ChordVoicingMemory } from "../types";
 import type { ChordTimelineItem } from "../types";
 import { voiceChordForPreview } from "../chordVoicing";
 import { voiceTextChordForAudition } from "../textChordTones";
-import { voicingCompatibility } from "./compatibility";
+import { isUsablePracticeVoicing, voicingCompatibility } from "./compatibility";
 import { VOICING_AUTO_USE_CONFIDENCE } from "./extractionConfig";
 import type { ResolvedVoicing, VoicingResolveOptions } from "./types";
 
@@ -18,7 +18,7 @@ export function resolveVoicingForUse(
     return { midiNotes: [...generatedFallback], origin: "generated" };
   }
   if (memory?.playbackChoice === "CUSTOM") {
-    return practice && voicingCompatibility(practice, chord) === "compatible"
+    return practice && isUsablePracticeVoicing(practice, chord)
       ? { midiNotes: [...practice.midiNotes], origin: "practice-override", representation: practice.representation }
       : { midiNotes: [...generatedFallback], origin: "generated" };
   }
@@ -27,7 +27,7 @@ export function resolveVoicingForUse(
       ? { midiNotes: [...source.midiNotes], origin: "source-explicit", representation: source.representation }
       : { midiNotes: [...generatedFallback], origin: "generated" };
   }
-  if (practice && voicingCompatibility(practice, chord) === "compatible") {
+  if (practice && isUsablePracticeVoicing(practice, chord)) {
     return {
       midiNotes: [...practice.midiNotes],
       origin: "practice-override",

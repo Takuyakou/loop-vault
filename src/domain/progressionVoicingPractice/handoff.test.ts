@@ -30,9 +30,9 @@ describe("P5.27 saved Vault handoff", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.handoff.initialSelection).toBe("source-midi");
+    expect(result.handoff.initialSelection).toBe("saved");
     expect(Object.keys(result.handoff.snapshots).sort()).toEqual([
-      "basic-full", "basic-shell", "custom", "full-shell", "left-hand", "rootless-shell", "source-midi",
+      "basic-full", "basic-shell", "custom", "full-shell", "left-hand", "rootless-shell", "saved", "source-midi",
     ]);
     expect(result.handoff.snapshots["source-midi"]?.events.map((item) => item.voicing?.midiNotes))
       .toEqual([[48, 55, 59], [43, 50, 53]]);
@@ -56,7 +56,7 @@ describe("P5.27 saved Vault handoff", () => {
       [makeIdea({ id: "idea-custom", progressionBlocks: [complete] })],
       { ideaId: "idea-custom", blockId: complete.id },
     );
-    expect(customResult.ok && customResult.handoff.initialSelection).toBe("custom");
+    expect(customResult.ok && customResult.handoff.initialSelection).toBe("saved");
 
     const partial = progression([
       event(1, 1, 2, 0, "custom"),

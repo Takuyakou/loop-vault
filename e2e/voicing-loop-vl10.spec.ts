@@ -66,7 +66,7 @@ test("VL-10 Follow changes only on manual input and navigation restores page tur
   await expect(follow).toHaveAttribute("aria-pressed", "true");
 });
 
-test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports", async ({ page }) => {
+test("P11 compact Next Move and Next Shape stays fixed at different cards and viewports", async ({ page }) => {
   test.setTimeout(90_000);
   for (const { width, height, zoom } of [
     { width: 1920, height: 1080, zoom: 1 },
@@ -80,8 +80,9 @@ test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports
     const move = workspace.getByTestId("voicing-loop-next-move");
     const shape = workspace.getByTestId("voicing-loop-next-shape");
     await expect(move).toBeVisible();
+    await expect(move.getByTestId("voicing-loop-finger-slot")).toHaveCount(10);
     await expect(shape).toBeVisible();
-    await expect(move).toContainText("次への動き");
+    await expect(workspace.getByTestId("voicing-loop-current-voicing")).toBeVisible();
     await expect(shape.getByTestId("voicing-loop-next-shape-keyboard")).toHaveCount(1);
     const before = await geometry(page);
     for (const index of [1, 4, 8, 12]) {
@@ -100,7 +101,8 @@ test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports
       await page.screenshot({ path: ".local-evaluation/vl10/next-move.png", fullPage: true });
       await page.screenshot({ path: ".local-evaluation/vl10/next-shape.png", fullPage: true });
       const keepWorkspace = await openLoop(page, "vl10-keep");
-      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toContainText("そのまま");
+      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toBeVisible();
+      await expect(keepWorkspace.getByTestId("voicing-loop-current-voicing")).toBeVisible();
       await page.screenshot({ path: ".local-evaluation/vl10/keep-transition.png", fullPage: true });
     }
     if (width === 1280 && zoom === 1) await page.screenshot({ path: ".local-evaluation/vl10/medium-window.png", fullPage: true });
@@ -109,7 +111,7 @@ test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports
   await expect(workspace.getByTestId("voicing-loop-next-shape")).toBeVisible();
   await page.keyboard.press("End");
   await expect(workspace.getByTestId("voicing-loop-next-shape-keyboard")).toHaveCount(2);
-  await expect(workspace.getByTestId("voicing-loop-next-move")).toContainText("次への動き");
+  await expect(workspace.getByTestId("voicing-loop-next-move")).toBeVisible();
   await page.screenshot({ path: ".local-evaluation/vl10/distant-hands.png", fullPage: true });
 });
 

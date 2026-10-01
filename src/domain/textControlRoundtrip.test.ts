@@ -116,7 +116,7 @@ describe("P5.31 control timing across public save and practice boundaries", () =
     expect(savedTiming(block.chords)).toEqual(expected);
     expect(block.lengthBars).toBe(2);
     expect(block.chords.map(event => event.chord.label)).toEqual(["E7", "E7", "Am7", "G"]);
-    expect(Object.keys(handoff.snapshots)).toHaveLength(7);
+    expect(Object.keys(handoff.snapshots)).toHaveLength(8);
     for (const snapshot of Object.values(handoff.snapshots)) {
       expect(snapshot.lengthBeats).toBe(8);
       expect(snapshot.bpm).toBe(108);
@@ -167,7 +167,7 @@ describe("P5.31 control timing across public save and practice boundaries", () =
     expect(result).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
   });
 
-  it("keeps exact Source and Custom event associations across silence without fallback", () => {
+  it("keeps exact Source and Custom associations across silence with explicit missing-card fallback", () => {
     const first = timeline("Cmaj7", 0, 1);
     const second = timeline("G7", 3, 1);
     first.voicingMemory = { sourceVoicing: exact(first, [48, 52, 59], "midi-extracted"), practiceVoicingOverride: exact(first, [60, 64, 71], "live-played") };
@@ -184,7 +184,8 @@ describe("P5.31 control timing across public save and practice boundaries", () =
     expect(source.events.map(event => event.startBeat)).toEqual([0, 3]);
     expect(source.events.map(event => event.voicing?.midiNotes)).toEqual([[48, 52, 59], [43, 53, 59]]);
     expect(custom.events.map(event => event.voicing?.midiNotes)).toEqual([[60, 64, 71], undefined]);
-    expect(resolveProgressionPracticeVoicings(custom).events.map(event => event.status)).toEqual(["SUPPORTED", "UNAVAILABLE"]);
+    expect(resolveProgressionPracticeVoicings(custom).events.map(event => event.status)).toEqual(["SUPPORTED", "SUPPORTED"]);
+    expect(resolveProgressionPracticeVoicings(custom).events[1]).toMatchObject({ fallbackFrom: "custom" });
     first.voicingMemory.sourceVoicing!.midiNotes[0] = 1;
     expect(source.events[0]!.voicing!.midiNotes).toEqual([48, 52, 59]);
   });

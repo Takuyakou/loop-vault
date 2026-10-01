@@ -142,12 +142,12 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await expect(workspace.locator("[data-testid='voicing-loop-event'][aria-current='step']")).toHaveCount(1);
   await page.getByRole("button", { name: "停止", exact: true }).click();
 
-  await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+  await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
-  await workspace.getByRole("button", { name: "Core", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: "Core", exact: true }))
-    .toHaveAttribute("aria-pressed", "true");
+  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
+    .toHaveValue("core");
   await expect(workspace.getByTestId("voicing-loop-shell-type")).toHaveCount(0);
   await expect(workspace.getByText("SHELL TYPE", { exact: true })).toHaveCount(0);
   await expect(workspace.getByTestId("voicing-loop-current-explanation"))

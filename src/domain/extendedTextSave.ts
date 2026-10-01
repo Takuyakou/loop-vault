@@ -1,6 +1,7 @@
 import type { ChordTimelineItem } from "./types";
 import type { ExtendedTextResult } from "./extendedTextProgression";
 import { buildSavedTextSource, type SavedTextSourceV1 } from "./textSource";
+import { createTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 
 export interface ExtendedTextSaveData {
   readonly title: string;
@@ -26,6 +27,7 @@ export function extendedTextSaveData(result: ExtendedTextResult): ExtendedTextSa
     confidence: 0,
     alternatives: [],
     warnings: [],
+    voicingMemory: { practiceVoicingOverride: createTextProgressionStyleSnapshot(span.chord, "generated-close") },
   }));
   const labels = chords.slice(0, 4).map(item => item.chord.label);
   const summaryText = `| ${result.bars.map(bar => bar.join(" ")).join(" | ")} |`;
