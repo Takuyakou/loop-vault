@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import {
-  enableLegacyCaptureScreen,
   createSavedProgression,
   loadMidiForPreAnalysis,
   openApp,
@@ -53,9 +52,7 @@ test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ�
   await expect(opener).toBeFocused();
 });
 
-test("Voice選択、プリセット、Solo、解析、候補選択をキーボード操作できる", async ({ page }) => {
-  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
-  await enableLegacyCaptureScreen(page);
+test("Voice選択、プリセット、Solo、解析、保存する範囲の選択をキーボード操作できる", async ({ page }) => {
   await openApp(page);
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 4 }), "keyboard-flow.mid");
 
@@ -85,10 +82,17 @@ test("Voice選択、プリセット、Solo、解析、候補選択をキーボ�
   await page.keyboard.press("Enter");
   await analyzeCurrentMidiResult(page);
 
-  const candidate = page.locator("[data-candidate-toggle]").first();
-  await candidate.focus();
+  // P10.0-07: the workspace — a recommended range by keyboard opens the save form; → moves the card.
+  const workspace = page.getByTestId("correction-workspace");
+  const recommended = workspace.getByTestId("correction-recommended").getByRole("button").first();
+  await recommended.focus();
   await page.keyboard.press("Enter");
-  await expect(candidate).toHaveAttribute("aria-expanded", "true");
+  await expect(workspace.getByTestId("correction-save-form")).toBeVisible();
+  const selected = workspace.locator('[data-testid="correction-card"][aria-pressed="true"]');
+  const before = await selected.getAttribute("data-card-id");
+  await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(selected).not.toHaveAttribute("data-card-id", before ?? "");
 });
 
 test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる", async ({ page }) => {
@@ -128,5 +132,5 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
 
 async function analyzeCurrentMidiResult(page: import("@playwright/test").Page) {
   await expect(page.locator('[data-capture-stage="result"]')).toBeVisible();
-  await expect(page.locator("[data-candidate-toggle]").first()).toBeVisible();
+  await expect(page.getByTestId("correction-workspace")).toBeVisible();
 }

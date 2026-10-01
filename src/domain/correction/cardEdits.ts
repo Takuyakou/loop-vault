@@ -10,7 +10,7 @@ import {
   type CorrectionModel,
   type CorrectionNote,
 } from "./correctionModel";
-import type { EditResult } from "./edits";
+import type { EditKind, EditResult } from "./edits";
 
 /**
  * Card edits of the correction workspace (spec v2.3 §7.1, §8.3, §12): merge, split,
@@ -23,8 +23,8 @@ export const MIN_CARD_BEATS = 0.25;
 
 const unchanged = (model: CorrectionModel, message?: string): EditResult => ({ model, changed: false, label: "", ...(message ? { message } : {}) });
 
-function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, seq = model.seq): EditResult {
-  return { model: refreshModel({ ...model, cards, notes, seq }, new Set(touched), false), changed: true, label };
+function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, kind: EditKind, seq = model.seq): EditResult {
+  return { model: refreshModel({ ...model, cards, notes, seq }, new Set(touched), false), changed: true, label, kind };
 }
 
 /** 「5.3」, with quarter beats as 「5.3¼」. */
@@ -116,7 +116,7 @@ function mergedCard(group: readonly CorrectionCard[]): CorrectionCard {
   };
 }
 
-function mergeGroups(model: CorrectionModel, groups: readonly (readonly string[])[], label: string): EditResult {
+function mergeGroups(model: CorrectionModel, groups: readonly (readonly string[])[], label: string, kind: EditKind): EditResult {
   const replaced = new Set(groups.flat());
   const firstOf = new Map(groups.map((group) => [group[0]!, group]));
   const byId = new Map(model.cards.map((card) => [card.id, card]));
@@ -136,7 +136,7 @@ function mergeGroups(model: CorrectionModel, groups: readonly (readonly string[]
     ...recut(model, replaced, merged),
     ...merged.flatMap((card) => manualOnto(firstOf.get(card.id)!.flatMap((id) => manual.get(id) ?? []), card, () => "")),
   ];
-  return done(model, cards, notes, merged.map((card) => card.id), label);
+  return done(model, cards, notes, merged.map((card) => card.id), label, kind);
 }
 
 /** M / 「つなぐ」: this card and the next become one; attacks add up (×n). */
@@ -145,7 +145,7 @@ export function mergeWithNext(model: CorrectionModel, cardId: string): EditResul
   const next = model.cards[index + 1];
   if (index < 0 || !next) return unchanged(model);
   const card = model.cards[index]!;
-  return mergeGroups(model, [[card.id, next.id]], `${positionLabel(card.start, model.context.meter)} と次をつないだ`);
+  return mergeGroups(model, [[card.id, next.id]], `${positionLabel(card.start, model.context.meter)} と次をつないだ`, "merge");
 }
 
 /** Groups Shift+M would merge: neighbours with exactly the same used notes. */
@@ -157,7 +157,7 @@ export function sameNotesGroups(model: CorrectionModel): string[][] {
 export function mergeSameNotes(model: CorrectionModel): EditResult {
   const groups = sameNotesGroups(model);
   if (!groups.length) return unchanged(model, "同じ音が続く所はありません");
-  return mergeGroups(model, groups, `同じ音が続く${groups.length}か所をつないだ`);
+  return mergeGroups(model, groups, `同じ音が続く${groups.length}か所をつないだ`, "merge-all");
 }
 
 /** S: halves on a beat; not when either half would be one beat or less. */
@@ -180,7 +180,7 @@ export function splitCard(model: CorrectionModel, cardId: string): EditResult {
     ...manualOnto(manual, second, () => `manual-${(seq += 1)}`, false),
   ];
   const cards = [...model.cards.slice(0, index), first, second, ...model.cards.slice(index + 1)];
-  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, seq);
+  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, "split", seq);
 }
 
 /**
@@ -206,7 +206,7 @@ export function moveBoundary(model: CorrectionModel, leftCardId: string, beat: n
     ...manualOnto(manual.get(right.id) ?? [], nextRight, () => ""),
   ];
   const cards = model.cards.map((card) => card.id === left.id ? nextLeft : card.id === right.id ? nextRight : card);
-  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`);
+  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`, "boundary");
 }
 
 /** Candidates, 1–4, F2: the name only; the notes stay. A person's name is never replaced by note edits. */
@@ -216,7 +216,7 @@ export function chooseName(model: CorrectionModel, cardIds: string | readonly st
   if (!hit.length) return unchanged(model);
   const cards = model.cards.map((card) => hit.includes(card) ? { ...card, name, nameSource: source } : card);
   const label = hit.length === 1 ? `名前を ${name.label} に` : `${hit.length}か所の名前を ${name.label} に`;
-  return done(model, cards, model.notes, hit.map((card) => card.id), label);
+  return done(model, cards, model.notes, hit.map((card) => card.id), label, "name");
 }
 
 /**
@@ -237,5 +237,5 @@ export function markReviewed(model: CorrectionModel, cardId: string): EditResult
   const card = model.cards.find((entry) => entry.id === cardId);
   if (!card || card.reviewed) return unchanged(model);
   const cards = model.cards.map((entry) => entry === card ? { ...entry, reviewed: true } : entry);
-  return done(model, cards, model.notes, [cardId], `${positionLabel(card.start, model.context.meter)} をこのままでよいに`);
+  return done(model, cards, model.notes, [cardId], `${positionLabel(card.start, model.context.meter)} をこのままでよいに`, "reviewed");
 }

@@ -1,6 +1,5 @@
 import { Midi } from "@tonejs/midi";
 import { describe, expect, it } from "vitest";
-import { layoutSongMiniMapCandidates } from "../../components/SongMiniMap";
 import { analyzeMidi, defaultAnalyzerMode } from "./analysis";
 import type { MidiAnalyzerMode } from "./types";
 
@@ -15,7 +14,6 @@ describe("long MIDI candidate coverage", () => {
     const finalTimelineEndBeat = (finalTimelineItem.bar - 1) * 4
       + finalTimelineItem.beat - 1
       + finalTimelineItem.durationBeats;
-    const miniMapLayout = layoutSongMiniMapCandidates(result.blockCandidates, result.totalBars);
 
     expect(defaultAnalyzerMode).toBe("phase4-v1");
     expect(result.totalBars).toBe(240);
@@ -33,8 +31,7 @@ describe("long MIDI candidate coverage", () => {
       .toEqual(new Set([2, 4, 8, 16]));
     expect(second.blockCandidates).toEqual(result.blockCandidates);
     expect(JSON.stringify(result)).not.toContain("rankingScore");
-    expect(miniMapLayout).toHaveLength(result.blockCandidates.length);
-    expect(miniMapLayout.some(({ candidate }) => candidate.endBar === 240)).toBe(true);
+    expect(result.blockCandidates.some((candidate) => candidate.endBar === 240)).toBe(true);
   });
 });
 

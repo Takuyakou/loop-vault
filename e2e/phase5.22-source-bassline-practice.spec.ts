@@ -1,10 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
-  enableLegacyCaptureScreen,
   analyzeCurrentMidi,
   assertNoHorizontalOverflow,
   chooseFirstCandidate,
+  saveChosenRange,
   loadMidiForPreAnalysis,
   openApp,
   openVault,
@@ -34,8 +34,6 @@ async function expectNoSeriousViolations(page: Page): Promise<void> {
 }
 
 test("Source Bassline levels and reference-only History stay overflow-safe at 320px and effective 200% scale", async ({ page }) => {
-  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
-  await enableLegacyCaptureScreen(page);
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
@@ -124,8 +122,6 @@ test("Source Bassline levels and reference-only History stay overflow-safe at 32
 });
 
 test("Source Bassline is axe-clean and honors reduced motion at effective 200% scale", async ({ page }) => {
-  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
-  await enableLegacyCaptureScreen(page);
   test.setTimeout(60_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 640, height: 812 });
@@ -152,21 +148,19 @@ test("Source Bassline is axe-clean and honors reduced motion at effective 200% s
   await expectNoSeriousViolations(page);
 });
 
+/** P10.0-07: saved from the correction workspace, the bassline under the save form's 「詳しい設定」. */
 async function saveSyntheticSourceBassline(page: Page): Promise<void> {
   await loadMidiForPreAnalysis(page, createMidiFixture({ bars: 16, voiceCount: 3 }), "synthetic-source-practice.mid");
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
-  const selected = page.locator('[data-candidate-state="selected"]');
-  const panel = selected.getByTestId("source-bassline-capture-panel");
+  const form = page.getByTestId("correction-save-form");
+  await form.locator("summary", { hasText: "詳しい設定" }).click();
+  const panel = form.getByTestId("source-bassline-capture-panel");
   const voice = panel.getByLabel(/Bass Voiceを選択/);
   const range = panel.getByLabel(/保存する範囲/);
   await voice.selectOption({ index: 1 });
   await expect(range).toBeEnabled();
   await range.selectOption({ index: 1 });
   await panel.getByRole("checkbox", { name: /元ベースラインを練習用に保存/ }).check();
-  await selected.getByRole("button", { name: /Vaultに保存/, exact: true }).click();
-  const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
-  await form.locator('input[name="progression-title"]').fill("Synthetic source practice");
-  await form.getByRole("button", { name: /保存/, exact: true }).click();
-  await expect(form).toBeHidden();
+  await saveChosenRange(page, "Synthetic source practice");
 }

@@ -24,6 +24,8 @@ export interface CorrectionInspectorProps {
   onMergePrevious?: () => void;
   onMergeNext?: () => void;
   onSplit: () => void;
+  canUndo: boolean;
+  onUndo: () => void;
   /** Spec §12: other cards with the same notes that still have the old name. */
   sameFix?: { count: number; onApply: () => void };
 }
@@ -74,13 +76,14 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
             <button type="button" className="lv-cw-btn" onClick={props.onReviewed} data-testid="correction-reviewed">このままでよい</button>
           </div>
         </div>
-      )) : <div className="lv-cw-ok">{card.reviewed ? "「このままでよい」にしたカードです。" : "このカードに要確認の印はありません。"}</div>}
+      )) : card.noteWarning ? null : <div className="lv-cw-ok">{card.reviewed ? "「このままでよい」にしたカードです。" : "このカードに要確認の印はありません。"}</div>}
 
       <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
         <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
         <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
         <button type="button" className="lv-cw-btn" onClick={props.onSplit}>分ける <kbd>S</kbd></button>
         <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onUndo} disabled={!props.canUndo} data-testid="correction-inspector-undo">元に戻す <kbd>Ctrl+Z</kbd></button>
       </div>
 
       <section>

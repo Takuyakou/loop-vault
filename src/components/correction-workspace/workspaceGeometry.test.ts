@@ -3,7 +3,7 @@ import { buildScenarioMidi, p10Scenario } from "../../testing/p10SyntheticSongs"
 import { analyzeScenario } from "../../testing/p10SyntheticCapture";
 import { buildCorrectionModel } from "../../domain/correction/correctionModel";
 import { reviewThresholds } from "../../domain/correction/reviewThresholds";
-import { cardLabel, cardSize, followScrollLeft, overlaps, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 
 describe("workspace geometry (P10.0-05)", () => {
   it("draws the visible beats plus one view each side, clamped at both ends", () => {
@@ -24,6 +24,16 @@ describe("workspace geometry (P10.0-05)", () => {
     expect(followScrollLeft(50, 0, 640, 10)).toBeUndefined(); // x = 500 ≤ 512
     expect(followScrollLeft(52, 0, 640, 10)).toBe(392); // x = 520 > 512 → 520 − 128
     expect(followScrollLeft(10, 400, 640, 10)).toBe(0); // behind the view: jump back
+  });
+
+  it("puts the playhead on the beat the song has reached (P10.0-07)", () => {
+    expect(playheadBeatAt(1000, 1000, 120, 0)).toBe(0);
+    expect(playheadBeatAt(1500, 1000, 120, 0)).toBe(1); // half a second at 120 BPM
+    expect(playheadBeatAt(3000, 1000, 90, 4)).toBe(7); // starts at the first card
+    expect(playheadBeatAt(900, 1000, 120, 2)).toBe(2); // never before the start
+    // Every frame is a new position: 60 frames in a second give 60 different values.
+    const positions = new Set(Array.from({ length: 60 }, (_, frame) => playheadBeatAt(1000 + frame * 16.7, 1000, 96, 0)));
+    expect(positions.size).toBe(60);
   });
 
   it("keeps the beat under the pointer when zooming", () => {

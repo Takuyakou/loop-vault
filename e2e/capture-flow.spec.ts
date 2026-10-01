@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import {
-  enableLegacyCaptureScreen,
   analyzeCurrentMidi,
   capturePageErrors,
   chooseFirstCandidate,
@@ -12,8 +11,6 @@ import {
 import { createMidiFixture } from "./helpers/midiFixture";
 
 test("MIDIをドロップし、Voice確認から解析結果へ進める", async ({ page }) => {
-  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
-  await enableLegacyCaptureScreen(page);
   const pageErrors = await capturePageErrors(page);
   await openApp(page);
   await loadMidiForPreAnalysis(
@@ -50,14 +47,10 @@ test("MIDIをドロップし、Voice確認から解析結果へ進める", async
   ).click();
   await expect(pianoRoll).toHaveAttribute("data-contribution-preset", "standard");
 
+  // P10.0-07: the result opens in the correction workspace; the first recommended range is ready to save.
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
-
-  await expect(page.locator("[data-candidate-toggle]").first()).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
-  await expect(page.getByText(/選択中・編集対象/)).toBeVisible();
+  await expect(page.getByTestId("correction-save-form").getByTestId("correction-save-range")).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 
@@ -107,50 +100,4 @@ test("Web版のファイル選択はデスクトップ操作が必要と通知�
   await expect(page.locator('[data-toast-tone="info"]')).toContainText(
     /デスクトップ/i,
   );
-});
-
-test("未保存のコード修正を残した候補切替では確認し、キャンセルで編集へ戻れる", async ({ page }) => {
-  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
-  await enableLegacyCaptureScreen(page);
-  await openApp(page);
-  await loadMidiForPreAnalysis(
-    page,
-    createMidiFixture({ bars: 16, voiceCount: 3 }),
-    "unsaved-correction.mid",
-  );
-  await analyzeCurrentMidi(page);
-  await chooseFirstCandidate(page);
-  const analysisProgress = page.getByTestId("capture-analysis-progress");
-  await expect(analysisProgress).toBeVisible();
-  await expect(analysisProgress).toHaveAttribute("data-analysis-progress", "finalizing");
-  const selectedCandidate = page.locator('[data-candidate-state="selected"]');
-  const selectedCandidateId = await selectedCandidate.locator("[data-candidate-toggle]").getAttribute("data-candidate-id");
-
-  await page.getByRole("button", { name: /展開/, exact: true }).click();
-  const chordLabel = page.locator("[data-chord-inspector]").locator('input[id^="chord-label-"]');
-  await chordLabel.fill("Dm7");
-  await chordLabel.press("Enter");
-  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中/);
-  await expect(analysisProgress).toBeHidden();
-  await expect(selectedCandidate).toContainText("Dm7");
-  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中/);
-
-  const secondCandidate = page.locator("[data-candidate-toggle]").filter({
-    hasNotText: /選択中・編集対象/,
-  }).first();
-  await secondCandidate.click();
-  const dialog = page.getByRole("dialog", { name: /未保存/i });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: /キャンセル/i }).click();
-
-  await expect(dialog).toBeHidden();
-  await expect(selectedCandidate.locator("[data-candidate-toggle]")).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
-  await expect(selectedCandidate.locator("[data-candidate-toggle]")).toHaveAttribute(
-    "data-candidate-id",
-    selectedCandidateId!,
-  );
-  await expect(chordLabel).toHaveValue("Dm7");
 });

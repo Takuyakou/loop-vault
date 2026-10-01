@@ -15,7 +15,10 @@ import {
   sameShortPitchIds,
   type EditResult,
 } from "../../domain/correction/edits";
-import { commitEdit, editCount, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { commitEdit, editCount, editKindCounts, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { buildMetricsRecord, type CorrectionMetricsSession } from "../../domain/correction/metrics";
+import { appendCorrectionMetrics } from "../../storage/correctionMetricsStorage";
+import { registerClosePreparation } from "../../store/closePreparation";
 import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
@@ -31,7 +34,9 @@ import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
 import { RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
-import { cardLabel, cardSize, followScrollLeft, overlaps, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
+import { UNSAVED_TITLE, unsavedMessage } from "./unsavedText";
 
 /**
  * The correction workspace (spec v2.3): display (P10.0-02), note editing with one
@@ -47,6 +52,8 @@ export interface CorrectionWorkspaceProps {
   timeline: readonly ChordTimelineItem[];
   fileName: string;
   analysisTargetLabel?: string;
+  /** 「標準モードで解析済み」「和声コアで解析済み」 (the old screen's header, now in the file bar). */
+  analysisModeLabel?: string;
   previewSound: PreviewSound;
   controller: PlaybackController;
   /** The capture full-timeline source, shared with the current screen. */
@@ -58,8 +65,8 @@ export interface CorrectionWorkspaceProps {
   save: WorkspaceSaveActions;
   /** 「おすすめの範囲」 (analysis.result.blockCandidates). */
   blockCandidates: readonly ProgressionBlockCandidate[];
-  /** True while there are edits not yet saved (leave guard). */
-  onDirtyChange?: (dirty: boolean) => void;
+  /** Operations not yet saved (0 = nothing to lose); the leave guard and its text use it. */
+  onDirtyChange?: (unsavedCount: number) => void;
 }
 
 export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
@@ -71,6 +78,39 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const meter = beatsPerBarFor(present.timeSignature);
   const totalBars = Math.round(present.totalBeats / meter);
   const reviewCards = useMemo(() => present.cards.filter((card) => card.reviewReasons.length > 0), [present.cards]);
+  // Local edit metrics (spec v2.5 §13): counts and times only, one row when this import's workspace goes away.
+  const metricsRef = useRef<CorrectionMetricsSession>({
+    startedAtMs: Date.now(),
+    bars: Math.round(props.model.totalBeats / beatsPerBarFor(props.model.timeSignature)),
+    cards: props.model.cards.length,
+    reviewAtStart: props.model.cards.filter((card) => card.reviewReasons.length > 0).length,
+    saves: [],
+    undos: 0,
+  });
+  const historyRef = useRef(history);
+  historyRef.current = history;
+  const undoOnce = useCallback(() => {
+    if (historyRef.current.past.length) metricsRef.current.undos += 1;
+    setHistory(undo);
+    setPreview(undefined);
+  }, []);
+  useEffect(() => {
+    let written = false;
+    const write = () => {
+      if (written) return;
+      written = true;
+      const session = metricsRef.current;
+      // ponytail: React StrictMode (dev) unmounts once right away; a session under 1s is not an import someone worked on.
+      if (Date.now() - session.startedAtMs < 1000) return;
+      const current = historyRef.current;
+      void appendCorrectionMetrics(buildMetricsRecord(session, { ms: Date.now(), iso: new Date().toISOString() }, {
+        reviewedCards: current.present.cards.filter((card) => card.reviewed).length,
+        edits: editKindCounts(current),
+      }));
+    };
+    const unregister = registerClosePreparation(write);
+    return () => { unregister(); write(); };
+  }, []);
   const [selectedId, setSelectedId] = useState(() => (reviewCards[0] ?? present.cards[0])?.id);
   const [selectedNotes, setSelectedNotes] = useState<ReadonlySet<string>>(() => new Set());
   const [mode, setMode] = useState<Mode>("check");
@@ -93,10 +133,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [saveRange, setSaveRange] = useState<SaveRange>();
   const [savedRanges, setSavedRanges] = useState<ReadonlySet<string>>(() => new Set());
   const [savedPresent, setSavedPresent] = useState<CorrectionModel>();
+  const [savedCount, setSavedCount] = useState(0);
   const [pendingLeave, setPendingLeave] = useState<() => void>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const playback = usePlaybackState(controller);
-  const [, tick] = useState(0);
+  const [clickAudition, setClickAudition] = useState(getCardClickAudition);
 
   const minPx = viewportWidth > 0 ? viewportWidth / Math.max(meter, present.totalBeats) : 8;
   const maxPx = viewportWidth > 0 ? viewportWidth / 8 : 60;
@@ -154,15 +195,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const playingRef = useRef(songPlaying);
   playingRef.current = songPlaying;
   const stopFollow = useCallback(() => { if (playingRef.current) setFollow(false); }, []);
-  useEffect(() => {
-    if (!songPlaying || playback.status !== "playing") return undefined;
-    const interval = window.setInterval(() => tick((value) => value + 1), 100);
-    return () => window.clearInterval(interval);
-  }, [playback.status, songPlaying]);
   const firstBeat = present.cards[0]?.start ?? 0;
-  const playheadBeat = songPlaying && playback.status === "playing" && playback.startedAt !== undefined
-    ? firstBeat + Math.max(0, (performance.now() - playback.startedAt) / 1000) * (present.bpm ?? 96) / 60
-    : undefined;
+  const playheadRef = useRef<HTMLSpanElement>(null);
+  const overviewPlayheadRef = useRef<HTMLSpanElement>(null);
+  const timeRef = useRef<HTMLSpanElement>(null);
+  const followRef = useRef(follow);
+  followRef.current = follow;
 
   const scrollToBeat = useCallback((beat: number, align: "center" | "left" = "center") => {
     const element = scrollRef.current;
@@ -172,11 +210,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     else element.scrollLeft = Math.max(0, target);
   }, [pxPerBeat]);
 
-  useEffect(() => {
-    if (!follow || playheadBeat === undefined || !scrollRef.current) return;
-    const next = followScrollLeft(playheadBeat, scrollRef.current.scrollLeft, scrollRef.current.clientWidth, pxPerBeat);
-    if (next !== undefined) scrollRef.current.scrollLeft = next;
-  });
 
   const selectCard = useCallback((card: CorrectionCard | undefined, reveal = true) => {
     if (!card) return;
@@ -215,6 +248,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     void controller.toggle(sourceId(kind, card), { type: "chord", chord: card.name, sound: previewSound, explicitMidiNotes: [...notes] })
       .catch(onPlaybackError);
   }, [controller, fullSource.id, onPlaybackError, previewSound]);
+  const auditionCard = (card: CorrectionCard) => {
+    void controller.play(sourceId("card", card), { type: "chord", chord: card.name, sound: previewSound, explicitMidiNotes: cardAuditionNotes(present, card, timeline) })
+      .catch(onPlaybackError);
+  };
   const cardNotesOf = (card: CorrectionCard) => byCard.get(card.id) ?? [];
   const playCard = useCallback((kind: "source" | "card") => {
     if (!selected) return;
@@ -302,10 +339,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         return;
       }
       if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || isEditable(event.target)) return;
+      // Enter and Space on a focused button, link or summary press that control (keyboard users).
+      if ((key === "Enter" || key === " ") && isPressable(event.target)) return;
       const ids = [...selectedNotes];
       if (event.ctrlKey) {
         const lower = key.toLowerCase();
-        if (lower === "z" && !event.shiftKey) { handled(); setHistory(undo); setPreview(undefined); }
+        if (lower === "z" && !event.shiftKey) { handled(); undoOnce(); }
         else if ((lower === "z" && event.shiftKey) || lower === "y") { handled(); setHistory(redo); setPreview(undefined); }
         else if (lower === "a" && selected) { handled(); selectNotes(cardNoteIds(present, selected.id), "replace"); }
         else if ((key === "ArrowUp" || key === "ArrowDown") && ids.length) { handled(); edit((model) => movePitch(model, ids, key === "ArrowUp" ? 12 : -12)); }
@@ -347,7 +386,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -394,25 +433,55 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const viewStart = scrollLeft / pxPerBeat;
   const viewEnd = (scrollLeft + viewportWidth) / pxPerBeat;
   const cardAt = (beat: number) => present.cards.find((card) => beat >= card.start && beat < card.start + card.duration);
-  const position = (() => {
-    const beat = playheadBeat ?? selected?.start ?? 0;
+  const positionOf = (beat: number) => {
     const card = cardAt(beat);
     return card ? `${card.bar}.${card.beat}` : `${Math.floor(beat / meter) + 1}.1`;
-  })();
-  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisTargetLabel]
+  };
+  const position = positionOf(selected?.start ?? 0);
+  // Spec v2.5 §7.3: the playhead moves every frame (transform only; the workspace is not
+  // re-rendered), and following scrolls in the same frame. Reduced motion keeps it moving:
+  // it is position information, and following never scrolls smoothly.
+  const startedAt = songPlaying && playback.status === "playing" ? playback.startedAt : undefined;
+  const bpm = present.bpm ?? 96;
+  const positionRef = useRef(positionOf);
+  positionRef.current = positionOf;
+  useEffect(() => {
+    if (startedAt === undefined) return undefined;
+    let frame = 0;
+    let lastLabel = "";
+    const step = () => {
+      const beat = playheadBeatAt(performance.now(), startedAt, bpm, firstBeat);
+      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${beat * pxPerBeat}px)`;
+      const overview = overviewPlayheadRef.current;
+      const overviewWidth = overview?.parentElement?.clientWidth ?? 0;
+      if (overview) overview.style.transform = `translateX(${(Math.min(beat, present.totalBeats) / Math.max(1, present.totalBeats)) * overviewWidth}px)`;
+      const label = positionRef.current(beat);
+      if (timeRef.current && label !== lastLabel) { timeRef.current.textContent = label; lastLabel = label; }
+      const element = scrollRef.current;
+      if (followRef.current && element) {
+        const next = followScrollLeft(beat, element.scrollLeft, element.clientWidth, pxPerBeat);
+        if (next !== undefined) element.scrollLeft = next;
+      }
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [bpm, firstBeat, pxPerBeat, present.totalBeats, startedAt]);
+  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
   const dirty = count > 0 && history.present !== savedPresent;
+  const unsavedCount = dirty ? Math.max(1, count - savedCount) : 0;
   const { onDirtyChange } = props;
-  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
-  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
-  useEffect(() => dirty ? registerCloseBlocker({
-    title: "未保存の変更を破棄しますか？",
-    message: "修正作業場に保存していない直しがあります。破棄すると元に戻せません。",
-    confirmLabel: "破棄して閉じる",
-    cancelLabel: "キャンセル",
-  }) : undefined, [dirty]);
+  useEffect(() => { onDirtyChange?.(unsavedCount); }, [unsavedCount, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(0), [onDirtyChange]);
+  useEffect(() => unsavedCount ? registerCloseBlocker({
+    title: UNSAVED_TITLE,
+    message: unsavedMessage(unsavedCount, "閉じる"),
+    confirmLabel: "保存せずに閉じる",
+    cancelLabel: "戻る",
+  }) : undefined, [unsavedCount]);
   const guarded = (action: () => void) => () => { if (dirty) setPendingLeave(() => action); else action(); };
   const lastBarOf = (card: CorrectionCard) => Math.floor((card.start + card.duration - 1e-6) / meter) + 1;
   const inSaveRange = (card: CorrectionCard) => !saveRange || (card.start < saveRange.endBar * meter - 1e-6 && card.start + card.duration > (saveRange.startBar - 1) * meter + 1e-6);
@@ -423,13 +492,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     <section className="lv-cw" data-testid="correction-workspace" data-mode={mode} aria-label="修正作業場（試作）">
       <div className="lv-cw-file">
         <span className="lv-cw-file-name">{props.fileName}</span>
-        <span className="lv-cw-file-meta" title={fileMeta}>{fileMeta}</span>
+        <span className="lv-cw-file-meta" title={fileMeta} data-testid="capture-analysis-preset-summary">{fileMeta}</span>
         <span className="lv-cw-spacer" />
         <button type="button" className="lv-cw-stat" data-kind="warn" onClick={() => nextReview(1)} disabled={!reviewCards.length} data-testid="correction-review-count">
           要確認 <b>{reviewCards.length}</b>
         </button>
         <span className="lv-cw-stat" data-testid="correction-edit-count">直した回数 <b>{count}</b></span>
-        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)}>パートの設定</button> : null}
+        {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)} data-testid="capture-change-part-selection">パートの設定</button> : null}
         <button type="button" className="lv-cw-btn" onClick={guarded(props.onChooseAnotherMidi)} data-testid="correction-another-midi">別の MIDI</button>
       </div>
 
@@ -475,7 +544,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 <span key={card.id} className="lv-cw-ov-mark" style={{ left: pct(card.start + card.duration / 2, present.totalBeats) }} />
               ))}
               <span className="lv-cw-ov-view" style={{ left: pct(viewStart, present.totalBeats), width: pct(Math.min(present.totalBeats, viewEnd) - viewStart, present.totalBeats) }} />
-              {playheadBeat !== undefined ? <span className="lv-cw-ov-ph" style={{ left: pct(playheadBeat, present.totalBeats) }} /> : null}
+              {startedAt !== undefined ? <span ref={overviewPlayheadRef} className="lv-cw-ov-ph" data-testid="correction-overview-playhead" /> : null}
             </div>
           </div>
 
@@ -484,6 +553,15 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             {([["all", "全体"], ["16", "16小節"], ["4", "4小節"]] as const).map(([value, label]) => (
               <button key={value} type="button" className="lv-cw-btn" aria-pressed={zoom === value} onClick={() => setZoom(value)}>{label}</button>
             ))}
+            <label className="lv-cw-check">
+              <input
+                type="checkbox"
+                checked={clickAudition}
+                data-testid="correction-click-audition"
+                onChange={(event) => { setClickAudition(event.target.checked); setCardClickAudition(event.target.checked); }}
+              />
+              押して鳴らす
+            </label>
             <span className="lv-cw-sep" />
             <button type="button" className="lv-cw-btn" onClick={() => nextReview(-1)} disabled={!reviewCards.length} aria-label="前の要確認">◀ 前の要確認</button>
             <span className="lv-cw-nav-count" data-testid="correction-review-position">{reviewIndex >= 0 ? reviewIndex + 1 : "–"} / {reviewCards.length}</span>
@@ -576,6 +654,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                           // Shift+click: the range from the selected card to this one, in whole bars.
                           if (event.shiftKey && selected) setSaveRange({ startBar: Math.min(selected.bar, card.bar), endBar: Math.max(lastBarOf(selected), lastBarOf(card)) });
                           selectCard(card, false);
+                          // 「押して鳴らす」: only a plain click, never while the song plays; the last audition stops.
+                          if (clickAudition && !event.shiftKey && !songPlaying) auditionCard(card);
                         }}
                         onDoubleClick={() => openNameEditor(card.id)}
                       >
@@ -635,7 +715,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   selectedNoteIds={selectedNotes}
                   warnNoteIds={warnNoteIds}
                   {...(melodyLine !== undefined ? { melodyLine } : {})}
-                  {...(playheadBeat !== undefined ? { playheadBeat } : {})}
+                  playing={startedAt !== undefined}
+                  playheadRef={playheadRef}
                   onPreview={setPreview}
                   onCommit={apply}
                   onSelectNotes={selectNotes}
@@ -663,8 +744,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               {songPlaying ? "■ 停止" : "▶ 再生"}
             </button>
             <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)}>追従</button>
-            <span className="lv-cw-time">{position} / {totalBars}小節</span>
-            <button type="button" className="lv-cw-btn" onClick={() => setHistory(undo)} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
+            <span className="lv-cw-time">{startedAt !== undefined ? <span ref={timeRef} /> : position} / {totalBars}小節</span>
+            <button type="button" className="lv-cw-btn" onClick={undoOnce} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
             <button type="button" className="lv-cw-btn" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label="やり直す（Ctrl+Y）">やり直す</button>
             <span className="lv-cw-history" data-testid="correction-history">操作 {count}{last ? `・最後：${last}` : ""}</span>
             {notice ? <span className="lv-cw-notice" role="status" data-testid="correction-notice">{notice}</span> : null}
@@ -687,6 +768,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               onSaved={() => {
                 setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
                 setSavedPresent(history.present);
+                setSavedCount(editCount(history));
+                metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
               }}
             />
           ) : <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />}
@@ -703,6 +786,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               onSelectShortSame={(noteId) => selectNotes(sameShortPitchIds(present, noteId), "replace")}
               shortSameCount={(noteId) => sameShortPitchIds(present, noteId).length}
               onEditNotes={enterEdit}
+              canUndo={count > 0}
+              onUndo={undoOnce}
               onChooseName={(name) => pickName(name, selected.id)}
               onTypeName={() => openNameEditor(selected.id)}
               onReviewed={markAndNext}
@@ -746,10 +831,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       {helpOpen ? <ShortcutSheet onClose={() => setHelpOpen(false)} /> : null}
       <ConfirmDialog
         open={Boolean(pendingLeave)}
-        title="未保存の変更を破棄しますか？"
-        description="修正作業場に保存していない直しがあります。破棄すると元に戻せません。"
-        confirmLabel="破棄して進む"
-        cancelLabel="キャンセル"
+        title={UNSAVED_TITLE}
+        description={unsavedMessage(unsavedCount, "開く")}
+        confirmLabel="保存せずに開く"
+        cancelLabel="戻る"
         tone="danger"
         onCancel={() => setPendingLeave(undefined)}
         onConfirm={() => { const action = pendingLeave; setPendingLeave(undefined); action?.(); }}
@@ -849,6 +934,10 @@ function verticalScroller(from: HTMLElement): Element {
     if ((overflow === "auto" || overflow === "scroll") && element.scrollHeight > element.clientHeight) return element;
   }
   return document.scrollingElement ?? document.documentElement;
+}
+
+function isPressable(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("button, a[href], summary, [role='button'], [role='menuitem']"));
 }
 
 function isEditable(target: EventTarget | null): boolean {

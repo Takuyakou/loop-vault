@@ -6,6 +6,7 @@ import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeMidi } from "../domain/midi/analysis";
+import { annotateVoiceRolesV2, buildVoices, normalizeNotes, parseMidi } from "../domain/midi";
 import type { AnalyzeMidiOptions } from "../domain/midi/types";
 import { appCopy } from "../i18n";
 import { setPreAnalysisSourceSelectionSettings } from "../storage/preAnalysisSettings";
@@ -148,9 +149,8 @@ describe("Phase 5.12 Capture product path", () => {
     const summary = mounted.container.querySelector(
       "[data-testid='capture-analysis-preset-summary']",
     );
-    expect(summary?.textContent).toContain(
-      "候補が同じでも内部の重み付けには反映されています。",
-    );
+    // P10.0-07: the workspace's file bar names the analysis mode (the old header's description is gone).
+    expect(summary?.getAttribute("title")).toContain("和声コアで解析済み");
 
     await act(async () => {
       mounted.container.querySelector<HTMLButtonElement>(
@@ -299,15 +299,14 @@ describe("Phase 5.12 Capture product path", () => {
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='result']") !== null);
 
+    // P10.0-07: the workspace has no 「クリア」; 「別の MIDI」 opens a fresh file instead.
+    Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
+    tauriMocks.openFileDialog.mockResolvedValue("C:/fixtures/piano.mid");
+    tauriMocks.readFile.mockResolvedValue(bytes);
+    tauriMocks.stat.mockResolvedValue({ size: bytes.byteLength });
     await act(async () => {
-      [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === appCopy.ja.capture.clear)
-        ?.click();
+      mounted.container.querySelector<HTMLButtonElement>("[data-testid='correction-another-midi']")?.click();
     });
-    await waitFor(() =>
-      mounted.container.querySelector("[data-capture-stage='empty']") !== null);
-
-    await dropMidi(mounted.container, "piano.mid", bytes);
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
@@ -504,7 +503,10 @@ async function renderCaptureProduct(
         analyzeMidiBytes={(bytes, options = {}) => {
           analyzerCalls.push(options);
           const result = analyzeMidi(bytes, options);
-          setAnalysis({ status: "done", result });
+          // As the store does: the source notes come with the result, so the workspace opens (P10.0-07).
+          const sourceData = parseMidi(bytes);
+          const sourceVoices = annotateVoiceRolesV2(buildVoices(sourceData), normalizeNotes(sourceData));
+          setAnalysis({ status: "done", result, sourceData, sourceVoices });
           return result;
         }}
         clearAnalysis={() => setAnalysis({ status: "idle" })}

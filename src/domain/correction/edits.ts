@@ -15,9 +15,13 @@ import {
  * note whose pitch moves keeps its first pitch in originalPitch.
  */
 
+/** What kind of operation an edit was, for the local metrics (spec v2.5 §13). */
+export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed";
+
 export interface EditResult {
   model: CorrectionModel;
   changed: boolean;
+  kind?: EditKind;
   /** For the history and the status line: 「D5 を外した」「3音を外した」. */
   label: string;
   /** A notice for the person (the 10-note limit, …). */
@@ -54,7 +58,7 @@ export function deleteNotes(model: CorrectionModel, ids: Iterable<string>): Edit
     .map((note) => wanted.has(note.id) && note.used ? { ...note, used: false } : note);
   const added = hit.filter((note) => note.provenance === "MANUAL_ADDED");
   const label = added.length === hit.length ? describe(hit, "消した") : describe(hit, "外した");
-  return finish(model, notes, touched, label);
+  return { ...finish(model, notes, touched, label), kind: added.length === hit.length ? "delete" : "exclude" };
 }
 
 /**
@@ -81,7 +85,7 @@ export function restoreNotes(model: CorrectionModel, ids: Iterable<string>): Edi
   if (!allowed.size) return unchanged(model, message);
   const notes = model.notes.map((note) => allowed.has(note.id) ? { ...note, used: true } : note);
   const restored = candidates.filter((note) => allowed.has(note.id));
-  return finish(model, notes, new Set(restored.map((note) => note.cardId)), describe(restored, "戻した"), {}, message);
+  return { ...finish(model, notes, new Set(restored.map((note) => note.cardId)), describe(restored, "戻した"), {}, message), kind: "restore" };
 }
 
 /** A note the source MIDI does not have, across the whole card. Not added when the card already uses the pitch. */
@@ -103,7 +107,7 @@ export function addNote(model: CorrectionModel, cardId: string, pitch: number): 
     continuesFromBefore: false,
     used: true,
   };
-  return finish(model, [...model.notes, note], new Set([cardId]), `${noteLabel(pitch)} を足した`, { seq });
+  return { ...finish(model, [...model.notes, note], new Set([cardId]), `${noteLabel(pitch)} を足した`, { seq }), kind: "add" };
 }
 
 /**
@@ -125,7 +129,7 @@ export function movePitch(model: CorrectionModel, ids: Iterable<string>, semiton
   const label = hit.length === 1
     ? `${noteLabel(hit[0]!.pitch)} → ${noteLabel(hit[0]!.pitch + semitones)}`
     : `${hit.length}音の高さを直した`;
-  return finish(model, notes, new Set(hit.map((note) => note.cardId)), label);
+  return { ...finish(model, notes, new Set(hit.map((note) => note.cardId)), label), kind: "pitch" };
 }
 
 // ---- selections (they select; a person decides what to do with them) -------------------

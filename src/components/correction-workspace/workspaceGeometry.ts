@@ -55,3 +55,11 @@ export function followScrollLeft(playheadBeat: number, scrollLeft: number, viewp
 export function zoomScrollLeft(beatAtPointer: number, pointerX: number, nextPxPerBeat: number): number {
   return Math.max(0, beatAtPointer * nextPxPerBeat - pointerX);
 }
+
+/**
+ * The playhead in beats (spec v2.5 §7.3), from the controller's start time on the
+ * same clock (performance.now()). Drawn every frame, not in 100ms steps.
+ */
+export function playheadBeatAt(nowMs: number, startedAtMs: number, bpm: number, firstBeat: number): number {
+  return firstBeat + Math.max(0, (nowMs - startedAtMs) / 1000) * bpm / 60;
+}
