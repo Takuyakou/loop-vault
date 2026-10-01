@@ -4,7 +4,7 @@
 
 ## Status
 
-- Status: completed / READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Status: completed / LOCAL MASTER MERGED / READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
 - Completed stages: P11.0-00 through P11.0-08; verified commits/gates in execution-state.json.
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
 - Historical P11-06 tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 final tested HEAD: `2377448a`; fresh FULL 3,668 Vitest / 174 Playwright PASS, updated runnable EXE. Stop for Human Product Acceptance; no master merge.
@@ -14,6 +14,10 @@
 [P11-07](P11-07.md) combines the authorized Range shortcuts/Space/timeline fix with the current chord panel mock. Evidence: [acceptance report](reports/P11-07-human-acceptance.md).
 
 [P11-08](P11-08.md) restores compact Next Move and fixes native details dismissal. Previous hiding decision is superseded by the latest human request. Latest tested / EXE HEAD: `55aa6c67`; fresh FULL 3,670 Vitest / 177 Playwright PASS. Current evidence: [follow-up report](reports/P11-08-details-next-move.md).
+
+## Local master integration
+
+User-authorized merge completed at `52159ae6`. Fresh FULL on that merge HEAD: 3,670 Vitest / 177 Playwright PASS, 0 FAIL / 0 UNRUN. [Integration report](reports/P11-master-merge.md) is the current Git/verification record; earlier no-merge notes describe the implementation run.
 
 ## Required Reading Order
 
