@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "11.0",
   "status": "in-progress",
-  "activeStage": "P11.0-02",
+  "activeStage": "P11.0-03",
   "completedStages": [
     "P11.0-00",
-    "P11.0-01"
+    "P11.0-01",
+    "P11.0-02"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "a1b75252efc5f1f040764e0c2fec3e61342efc86",
+  "lastVerifiedCommit": "5d7089c2a92c2b0ae962947a51f3aa0d3aef35ea",
   "currentBranch": "feat/phase11-voicing-loop-v4",
   "requiredGates": {
     "P11.0-00": [
@@ -44,6 +45,6 @@
     "p11-02-fast": "pass",
     "p11-02-phase-docs": "pass"
   },
-  "nextAction": "Finish P11.0-02 saved-voicing gates, then continue P11.0-03 through P11.0-06 in order.",
+  "nextAction": "Implement P11.0-03 partial source fallback; continue in order through P11.0-06.",
   "updatedAt": "2026-10-01"
 }

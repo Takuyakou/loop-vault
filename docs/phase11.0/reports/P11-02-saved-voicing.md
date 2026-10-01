@@ -20,6 +20,8 @@ Human Gateの承認を受け、`保存した音` の独立したsession選択を
 
 ## Gate
 
+- Verified code commit: `5d7089c2a92c2b0ae962947a51f3aa0d3aef35ea`。
+
 - Focused Standard/Extended/Vault/Voicing Loop: 追加round-tripテストを含め PASS。
 - TypeScriptと変更ファイルESLint: PASS。
 - Text関連のfocused Playwright: 10/10 PASS。
