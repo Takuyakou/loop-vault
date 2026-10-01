@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "2fbfd8a",
-  "lastVerifiedCommit": "612436a",
+  "lastVerifiedCommit": "45ecea7",
   "currentBranch": "feat/p10.0-06-save",
   "requiredGates": {
     "P10.0-00": [
@@ -135,6 +135,6 @@
     "p10-06-data-retention": "pass",
     "p10-06-playback-match": "pass"
   },
-  "nextAction": "P10.0-06: checkpoint 1 done (save candidate); continue with checkpoint 2 (save flow) on feat/p10.0-06-save.",
+  "nextAction": "P10.0-06: checkpoints 1-2 done; continue with checkpoint 3 (default switch) on feat/p10.0-06-save.",
   "updatedAt": "2026-10-01"
 }
