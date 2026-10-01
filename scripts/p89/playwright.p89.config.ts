@@ -10,7 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 240_000,
+  timeout: 420_000,
   reporter: [["list"]],
   outputDir: "../../test-results/p89-screens",
   use: {

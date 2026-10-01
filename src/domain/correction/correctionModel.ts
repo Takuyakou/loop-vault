@@ -3,14 +3,16 @@ import { chordPitchClasses } from "../chordVoicing";
 import { beatsPerBar } from "../midi/timing";
 import { segmentSections } from "../midi/sections";
 import type { MidiSongData, TimedNote, Voice, VoiceRole } from "../midi/types";
-import type { ChordSymbol, ChordTimelineItem, MidiProgressionAnalysis } from "../types";
+import type { ChordSymbol, MidiProgressionAnalysis } from "../types";
 import type { ReviewThresholds } from "./reviewThresholds";
-import { nameAfterRemoving } from "./nameCandidates";
+import { detectedName, nameAfterRemoving } from "./nameCandidates";
 
 /**
- * P10.0-02 CorrectionModel (spec v2.2 §8): the working data of the correction
- * workspace, built from an analysis without changing it. Display only for now;
- * editing arrives in P10.0-03. Pure: no React, inputs are never mutated.
+ * CorrectionModel (spec v2.3 §8): the working data of the correction workspace,
+ * built from an analysis without changing it (P10.0-02) and edited by the pure
+ * functions in edits.ts / cardEdits.ts (P10.0-03/04). Inputs are never mutated;
+ * every edit returns a new model and refreshModel() recomputes what depends on
+ * the notes (review reasons, suggestions, automatic names).
  */
 
 export type RoleHint = "harmony" | "bass" | "melody" | "percussion" | "ornament";
@@ -21,6 +23,7 @@ export interface CorrectionNote {
   sourceNoteId: string | null;
   cardId: string;
   pitch: number;
+  /** Only on a source note whose pitch was changed: the pitch before the change. */
   originalPitch?: number;
   /** Beats from the song start, clipped to the card. */
   start: number;
@@ -47,12 +50,19 @@ export interface CorrectionCard {
   bar: number;
   beat: number;
   name: ChordSymbol;
-  nameSource: "auto";
+  nameSource: "auto" | "user";
   alternatives: ChordSymbol[];
+  /** The fullTimeline item this card came from (the first one for merged cards). */
   timelineIndex: number;
   reviewReasons: ReviewReason[];
+  /** 「このままでよい」: no review marks for the rest of this import. */
   reviewed: boolean;
+  /** Re-attacks kept when cards are merged (×n). Never saved. */
   attacks: number;
+  /** A note of this card was changed by a person (its notes, not the analysis voicing, will be saved). */
+  edited: boolean;
+  /** 「2音以上にしてください」 when an edited card plays fewer than two pitches. */
+  noteWarning?: string;
 }
 
 export interface CorrectionSegment {
@@ -60,16 +70,34 @@ export interface CorrectionSegment {
   startBar: number;
   endBar: number;
   label: string;
-  /** 2 for the second time the same chords appear, 3 for the third …; undefined the first time. */
-  repeatGroup?: number;
+  /** How many segments have the same chords (2 or more); set on every one of them. */
+  repeatCount?: number;
   source: "segmentSections" | "fallback-8bar";
 }
 
-export interface SongSuggestion {
-  kind: "melody-voice";
-  voiceLabel: string;
-  cardCount: number;
-  noteIds: string[];
+export type SongSuggestion =
+  | { kind: "melody-voice"; voiceLabel: string; cardCount: number; noteIds: string[] }
+  | { kind: "same-notes-run"; count: number; cardIds: string[] };
+
+/** A source note in beats; kept so notes can be re-cut when card boundaries move. */
+export interface SourceNoteRef {
+  id: string;
+  pitch: number;
+  start: number;
+  end: number;
+  voiceId?: string;
+  roleHint?: RoleHint;
+}
+
+export interface CorrectionContext {
+  thresholds: ReviewThresholds;
+  meter: number;
+  sourceNotes: readonly SourceNoteRef[];
+  melodyVoiceIds: readonly string[];
+  melodyVoiceLabel: string;
+  percussionPitches: readonly number[];
+  /** Source notes per pitch (for the percussion text). */
+  pitchCounts: Readonly<Record<number, number>>;
 }
 
 export interface CorrectionModel {
@@ -82,6 +110,9 @@ export interface CorrectionModel {
   bpm: number | undefined;
   timeSignature: string | undefined;
   thresholdsVersion: string;
+  context: CorrectionContext;
+  /** Counter for ids of added notes and new cards. */
+  seq: number;
 }
 
 export interface CorrectionModelInput {
@@ -91,7 +122,9 @@ export interface CorrectionModelInput {
   roleOverrides?: Readonly<Record<string, VoiceRole>>;
 }
 
-const EPSILON = 1e-6;
+export const EPSILON = 1e-6;
+export const MAX_CARD_PITCHES = 10;
+export const TOO_FEW_NOTES = "2音以上にしてください";
 
 export function noteLabel(pitch: number): string {
   return `${noteNameFromPitchClass(pitch)}${Math.floor(pitch / 12) - 1}`;
@@ -101,14 +134,14 @@ export function buildCorrectionModel(input: CorrectionModelInput, thresholds: Re
   const { result, sourceData } = input;
   const meter = beatsPerBar(result.timeSignature);
   const tpb = sourceData.ticksPerBeat;
-  const voiceById = new Map(input.sourceVoices.map((voice) => [voiceKey(voice.trackIndex, voice.channel), voice]));
+  const voiceByKey = new Map(input.sourceVoices.map((voice) => [voiceKey(voice.trackIndex, voice.channel), voice]));
   const roleOf = (voice: Voice | undefined): VoiceRole | undefined => voice
     ? input.roleOverrides?.[voice.id] ?? voice.inferredRole
     : undefined;
 
   // Source notes (GM drums on channel 10 are never analyzed, so they are left out).
   const seen = new Map<string, number>();
-  const sourceNotes = sourceData.notes
+  const raw = sourceData.notes
     .filter((note) => note.channel !== 9)
     .map((note) => {
       const base = `${note.trackIndex}:${note.channel ?? "-"}:${note.startTick}:${note.pitch}`;
@@ -116,110 +149,213 @@ export function buildCorrectionModel(input: CorrectionModelInput, thresholds: Re
       seen.set(base, count);
       return {
         note,
-        sourceNoteId: count === 1 ? base : `${base}#${count}`,
+        id: count === 1 ? base : `${base}#${count}`,
         start: note.startTick / tpb,
         end: (note.startTick + note.durationTick) / tpb,
-        voice: voiceById.get(voiceKey(note.trackIndex, note.channel)),
+        voice: voiceByKey.get(voiceKey(note.trackIndex, note.channel)),
       };
     });
-
-  const percussionPitches = percussionSuspectPitches(sourceNotes, thresholds);
-
-  const cards: CorrectionCard[] = result.fullTimeline.map((item, index) => {
-    const start = (item.bar - 1) * meter + item.beat - 1;
+  const percussion = percussionSuspectPitches(raw, thresholds);
+  const sourceNotes: SourceNoteRef[] = raw.map((source) => {
+    const hint = percussion.has(source.note.pitch) ? "percussion" : roleHintOf(roleOf(source.voice));
     return {
-      id: `card-${index}`,
-      start,
-      duration: item.durationBeats,
-      bar: item.bar,
-      beat: item.beat,
-      name: item.chord,
-      nameSource: "auto",
-      alternatives: item.alternatives.map((alternative) => alternative.chord),
-      timelineIndex: index,
-      reviewReasons: [],
-      reviewed: false,
-      attacks: 1,
+      id: source.id,
+      pitch: source.note.pitch,
+      start: source.start,
+      end: source.end,
+      ...(source.voice ? { voiceId: source.voice.id } : {}),
+      ...(hint ? { roleHint: hint } : {}),
     };
   });
-
-  const notes: CorrectionNote[] = [];
-  const notesByCard = new Map<string, CorrectionNote[]>();
-  cards.forEach((card, index) => {
-    const end = card.start + card.duration;
-    const used = new Set(result.fullTimeline[index]!.voicingMemory?.sourceVoicing?.midiNotes ?? []);
-    const fragments = sourceNotes
-      .filter((source) => source.start < end - EPSILON && source.end > card.start + EPSILON)
-      .map((source): CorrectionNote => {
-        const start = Math.max(source.start, card.start);
-        const role = roleOf(source.voice);
-        return {
-          id: `${source.sourceNoteId}@${card.id}`,
-          provenance: "SOURCE",
-          sourceNoteId: source.sourceNoteId,
-          cardId: card.id,
-          pitch: source.note.pitch,
-          start,
-          duration: Math.min(source.end, end) - start,
-          continuesFromBefore: source.start < card.start - thresholds.melody.continuedToleranceBeats,
-          used: used.has(source.note.pitch),
-          roleHint: percussionPitches.has(source.note.pitch) ? "percussion" : roleHintOf(role),
-          ...(source.voice ? { voiceId: source.voice.id } : {}),
-        };
-      });
-    notesByCard.set(card.id, fragments);
-    notes.push(...fragments);
-  });
-
+  const pitchCounts: Record<number, number> = {};
+  for (const source of sourceNotes) pitchCounts[source.pitch] = (pitchCounts[source.pitch] ?? 0) + 1;
   const melodyVoices = input.sourceVoices.filter((voice) => thresholds.melody.melodyRoles.includes(roleOf(voice) ?? ""));
-  const melodyVoiceIds = new Set(melodyVoices.map((voice) => voice.id));
-  const suggestionNotes = notes.filter((note) => note.used && note.voiceId !== undefined && melodyVoiceIds.has(note.voiceId));
-  const suggestions: SongSuggestion[] = suggestionNotes.length ? [{
-    kind: "melody-voice",
-    voiceLabel: melodyVoices.map((voice) => voice.trackName?.trim() || `トラック${voice.trackIndex + 1}`).join("・"),
-    cardCount: new Set(suggestionNotes.map((note) => note.cardId)).size,
-    noteIds: suggestionNotes.map((note) => note.id),
-  }] : [];
+  const context: CorrectionContext = {
+    thresholds,
+    meter,
+    sourceNotes,
+    melodyVoiceIds: melodyVoices.map((voice) => voice.id),
+    melodyVoiceLabel: melodyVoices.map((voice) => voice.trackName?.trim() || `トラック${voice.trackIndex + 1}`).join("・"),
+    percussionPitches: [...percussion],
+    pitchCounts,
+  };
 
-  // Review reasons (spec 6.3). With a song-wide melody suggestion, the melody-role
-  // reason is left to the suggestion; the held-over top note still flags its card.
-  const melodyRule = suggestions.length ? "continued-top" : thresholds.melody.rule;
-  cards.forEach((card, index) => {
-    const here = notesByCard.get(card.id)!;
-    const melody = melodyReason(card, here, melodyRule, thresholds, melodyVoiceIds);
-    if (melody) card.reviewReasons.push(melody);
-    const drums = here.filter((note) => note.used && percussionPitches.has(note.pitch));
-    if (drums.length) {
-      const pitch = drums[0]!.pitch;
-      const count = sourceNotes.filter((source) => source.note.pitch === pitch).length;
-      card.reviewReasons.push({
-        kind: "percussion",
-        noteIds: drums.map((note) => note.id),
-        text: `${noteLabel(pitch)} の短い音が拍ごとに繰り返しています（曲全体で${count}個）。ドラムの可能性があります。`,
-      });
-    }
-    const next = cards[index + 1];
-    if (next && sameShape(here, notesByCard.get(next.id)!)) {
-      card.reviewReasons.push({
-        kind: "same-chord-split",
-        noteIds: here.filter((note) => note.used).map((note) => note.id),
-        text: "次のカードと同じ和音です。打ち直しで分かれた可能性があります。",
-      });
-    }
+  const cards: CorrectionCard[] = result.fullTimeline.map((item, index) => ({
+    id: `card-${index}`,
+    start: (item.bar - 1) * meter + item.beat - 1,
+    duration: item.durationBeats,
+    bar: item.bar,
+    beat: item.beat,
+    name: item.chord,
+    nameSource: "auto",
+    alternatives: item.alternatives.map((alternative) => alternative.chord),
+    timelineIndex: index,
+    reviewReasons: [],
+    reviewed: false,
+    attacks: 1,
+    edited: false,
+  }));
+
+  const notes: CorrectionNote[] = cards.flatMap((card, index) => {
+    const used = new Set(result.fullTimeline[index]!.voicingMemory?.sourceVoicing?.midiNotes ?? []);
+    return cutFragments(card, context).map((note) => ({ ...note, used: used.has(note.pitch) }));
   });
 
   const totalBars = Math.max(1, result.totalBars, ...cards.map((card) => Math.ceil((card.start + card.duration) / meter - EPSILON)));
-  return {
+  const model = refreshModel({
     cards,
     notes,
-    segments: buildSegments(sourceData, result.fullTimeline, cards, totalBars, meter),
-    suggestions,
+    segments: [],
+    suggestions: [],
     pitchRange: pitchRangeOf(notes),
     totalBeats: totalBars * meter,
     bpm: result.bpm,
     timeSignature: result.timeSignature,
     thresholdsVersion: `v${thresholds.schemaVersion}`,
-  };
+    context,
+    seq: 0,
+  }, "all", false);
+  return { ...model, segments: buildSegments(sourceData, result.fullTimeline, model.cards, totalBars, meter) };
+}
+
+/**
+ * The source-note fragments of one card's span, all unused. Card edits pass the
+ * previous fragments so a re-cut piece keeps the state of the piece it came from.
+ */
+export function cutFragments(card: Pick<CorrectionCard, "id" | "start" | "duration">, context: CorrectionContext): CorrectionNote[] {
+  const end = card.start + card.duration;
+  return context.sourceNotes
+    .filter((source) => source.start < end - EPSILON && source.end > card.start + EPSILON)
+    .map((source): CorrectionNote => {
+      const start = Math.max(source.start, card.start);
+      return {
+        id: `${source.id}@${card.id}`,
+        provenance: "SOURCE",
+        sourceNoteId: source.id,
+        cardId: card.id,
+        pitch: source.pitch,
+        start,
+        duration: Math.min(source.end, end) - start,
+        continuesFromBefore: source.start < card.start - context.thresholds.melody.continuedToleranceBeats,
+        used: false,
+        ...(source.roleHint ? { roleHint: source.roleHint } : {}),
+        ...(source.voiceId ? { voiceId: source.voiceId } : {}),
+      };
+    });
+}
+
+export function notesByCard(notes: readonly CorrectionNote[]): Map<string, CorrectionNote[]> {
+  const map = new Map<string, CorrectionNote[]>();
+  for (const note of notes) {
+    const list = map.get(note.cardId);
+    if (list) list.push(note);
+    else map.set(note.cardId, [note]);
+  }
+  return map;
+}
+
+export function usedPitchCount(notes: readonly CorrectionNote[]): number {
+  return new Set(notes.filter((note) => note.used).map((note) => note.pitch)).size;
+}
+
+/**
+ * Recomputes everything that depends on the notes: the song-wide suggestions, the
+ * review reasons of the touched cards (and their neighbours; all cards when the
+ * melody suggestion appears or goes), the too-few-notes warning, and, when asked,
+ * the automatic names of the touched cards. A person's name is never replaced.
+ */
+export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string> | "all", updateNames: boolean): CorrectionModel {
+  const { context } = model;
+  const byCard = notesByCard(model.notes);
+  const melodyIds = new Set(context.melodyVoiceIds);
+  const melodyNotes = model.notes.filter((note) => note.used && note.voiceId !== undefined && melodyIds.has(note.voiceId));
+  const melodySuggestion: SongSuggestion | undefined = melodyNotes.length ? {
+    kind: "melody-voice",
+    voiceLabel: context.melodyVoiceLabel,
+    cardCount: new Set(melodyNotes.map((note) => note.cardId)).size,
+    noteIds: melodyNotes.map((note) => note.id),
+  } : undefined;
+  const hadMelody = model.suggestions.some((suggestion) => suggestion.kind === "melody-voice");
+  const all = touched === "all" || hadMelody !== Boolean(melodySuggestion);
+
+  const touchedSet = touched === "all" ? undefined : touched;
+  const recompute = new Set<string>();
+  model.cards.forEach((card, index) => {
+    if (all || !touchedSet || touchedSet.has(card.id) || touchedSet.has(model.cards[index + 1]?.id ?? "")) recompute.add(card.id);
+  });
+  const nameTouched = touchedSet ?? new Set(model.cards.map((card) => card.id));
+  const melodyRule = melodySuggestion ? "continued-top" : context.thresholds.melody.rule;
+
+  const cards = model.cards.map((card, index) => {
+    if (!recompute.has(card.id)) return card;
+    const here = byCard.get(card.id) ?? [];
+    let name = card.name;
+    if (updateNames && card.nameSource === "auto" && nameTouched.has(card.id)) name = detectedName(here) ?? card.name;
+    const next = { ...card, name };
+    const reasons = card.reviewed ? [] : reviewReasonsFor(next, here, byCard.get(model.cards[index + 1]?.id ?? "") ?? [], melodyRule, context, melodyIds);
+    const warning = card.edited && usedPitchCount(here) < 2 ? TOO_FEW_NOTES : undefined;
+    const { noteWarning: _dropped, ...rest } = next;
+    return { ...rest, reviewReasons: reasons, ...(warning ? { noteWarning: warning } : {}) };
+  });
+  // Spec 6.5 (2): only once an edit has made neighbours sound the same.
+  const runs = sameNotesRuns(cards, byCard);
+  const edited = new Set(cards.filter((card) => card.edited).map((card) => card.id));
+  const suggestions: SongSuggestion[] = [
+    ...(melodySuggestion ? [melodySuggestion] : []),
+    ...(runs.some((group) => group.some((id) => edited.has(id))) ? [{ kind: "same-notes-run" as const, count: runs.length, cardIds: runs.flat() }] : []),
+  ];
+  return { ...model, cards, suggestions };
+}
+
+/**
+ * Runs of neighbouring cards whose used notes (pitch classes + lowest pitch) are
+ * exactly the same (spec 7.1 Shift+M). Same name with different notes is not a run.
+ */
+export function sameNotesRuns(cards: readonly CorrectionCard[], byCard: ReadonlyMap<string, readonly CorrectionNote[]>): string[][] {
+  const runs: string[][] = [];
+  let run: string[] = [];
+  let shape = "";
+  for (const card of cards) {
+    const next = usedShape(byCard.get(card.id) ?? []);
+    if (next !== "" && next === shape) run.push(card.id);
+    else {
+      if (run.length > 1) runs.push(run);
+      run = [card.id];
+    }
+    shape = next;
+  }
+  if (run.length > 1) runs.push(run);
+  return runs;
+}
+
+function reviewReasonsFor(
+  card: CorrectionCard,
+  here: readonly CorrectionNote[],
+  next: readonly CorrectionNote[],
+  melodyRule: ReviewThresholds["melody"]["rule"],
+  context: CorrectionContext,
+  melodyVoiceIds: ReadonlySet<string>,
+): ReviewReason[] {
+  const reasons: ReviewReason[] = [];
+  const melody = melodyReason(card, here, melodyRule, context.thresholds, melodyVoiceIds);
+  if (melody) reasons.push(melody);
+  const drums = here.filter((note) => note.used && context.percussionPitches.includes(note.pitch));
+  if (drums.length) {
+    const pitch = drums[0]!.pitch;
+    reasons.push({
+      kind: "percussion",
+      noteIds: drums.map((note) => note.id),
+      text: `${noteLabel(pitch)} の短い音が拍ごとに繰り返しています（曲全体で${context.pitchCounts[pitch] ?? 0}個）。ドラムの可能性があります。`,
+    });
+  }
+  if (next.length && sameShape(here, next)) {
+    reasons.push({
+      kind: "same-chord-split",
+      noteIds: here.filter((note) => note.used).map((note) => note.id),
+      text: "次のカードと同じ和音です。打ち直しで分かれた可能性があります。",
+    });
+  }
+  return reasons;
 }
 
 /** Pitches whose short, on-grid notes repeat often enough to look like a drum part. */
@@ -268,18 +404,20 @@ function melodyReason(
   return { kind: "melody", noteIds: used.filter((note) => note.pitch === hit.note.pitch).map((note) => note.id), text };
 }
 
+/** Pitch classes + lowest pitch of the used notes; "" when nothing is used. */
+export function usedShape(notes: readonly CorrectionNote[]): string {
+  const pitches = notes.filter((note) => note.used).map((note) => note.pitch);
+  return pitches.length ? `${[...new Set(pitches.map((pitch) => pitch % 12))].sort((a, b) => a - b).join(",")}/${Math.min(...pitches)}` : "";
+}
+
 function sameShape(left: readonly CorrectionNote[], right: readonly CorrectionNote[]): boolean {
-  const shape = (notes: readonly CorrectionNote[]) => {
-    const pitches = notes.filter((note) => note.used).map((note) => note.pitch);
-    return pitches.length ? `${[...new Set(pitches.map((pitch) => pitch % 12))].sort((a, b) => a - b).join(",")}/${Math.min(...pitches)}` : "";
-  };
-  const a = shape(left);
-  return a !== "" && a === shape(right);
+  const a = usedShape(left);
+  return a !== "" && a === usedShape(right);
 }
 
 function buildSegments(
   sourceData: MidiSongData,
-  timeline: readonly ChordTimelineItem[],
+  timeline: Parameters<typeof segmentSections>[1],
   cards: readonly CorrectionCard[],
   totalBars: number,
   meter: number,
@@ -290,18 +428,25 @@ function buildSegments(
     : Array.from({ length: Math.ceil(totalBars / 8) }, (_, index) => {
         const startBar = index * 8 + 1;
         const endBar = Math.min(startBar + 7, totalBars);
-        return { startBar, endBar, label: `${startBar}〜${endBar}小節`, source: "fallback-8bar" as const };
+        return { startBar, endBar, label: barRangeLabel(startBar, endBar), source: "fallback-8bar" as const };
       });
-  const seen = new Map<string, number>();
-  return ranges.map((range, index) => {
+  const contents = ranges.map((range) => {
     const from = (range.startBar - 1) * meter;
     const to = range.endBar * meter;
-    const content = cards.filter((card) => card.start >= from - EPSILON && card.start < to - EPSILON)
+    return cards.filter((card) => card.start >= from - EPSILON && card.start < to - EPSILON)
       .map((card) => `${card.start - from}:${card.name.label}`).join("|");
-    const times = content ? (seen.get(content) ?? 0) + 1 : 1;
-    if (content) seen.set(content, times);
-    return { id: `segment-${index}`, ...range, ...(times > 1 ? { repeatGroup: times } : {}) };
   });
+  const counts = new Map<string, number>();
+  for (const content of contents) if (content) counts.set(content, (counts.get(content) ?? 0) + 1);
+  return ranges.map((range, index) => {
+    const count = counts.get(contents[index]!) ?? 1;
+    return { id: `segment-${index}`, ...range, ...(count > 1 ? { repeatCount: count } : {}) };
+  });
+}
+
+/** 「1〜8小節」, or 「9小節」 for a one-bar range (spec v2.3 4.3). */
+export function barRangeLabel(startBar: number, endBar: number): string {
+  return startBar === endBar ? `${startBar}小節` : `${startBar}〜${endBar}小節`;
 }
 
 function pitchRangeOf(notes: readonly CorrectionNote[]): { low: number; high: number } {

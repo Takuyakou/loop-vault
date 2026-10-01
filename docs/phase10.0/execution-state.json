@@ -2,16 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "10.0",
   "status": "in-progress",
-  "activeStage": "P10.0-03",
+  "activeStage": "P10.0-06",
   "completedStages": [
     "P10.0-00",
-    "P10.0-02"
+    "P10.0-02",
+    "P10.0-03",
+    "P10.0-04",
+    "P10.0-05"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "692e794",
-  "lastVerifiedCommit": "3c0f2c1",
-  "currentBranch": "feat/p10.0-02-display",
+  "baseCommit": "42633cd",
+  "lastVerifiedCommit": "47a5181",
+  "currentBranch": "feat/p10.0-03-editing",
   "requiredGates": {
     "P10.0-00": [
       "p10-00-phase-docs",
@@ -42,20 +45,28 @@
       "p10-02-report"
     ],
     "P10.0-03": [
-      "p10-03-full-fresh",
-      "p10-03-screens",
-      "p10-03-exe",
-      "p10-03-report"
+      "p10-03-phase-docs",
+      "p10-03-unit",
+      "p10-03-fast-feature",
+      "p10-03-ui",
+      "p10-03-e2e",
+      "p10-03-checkpoint"
     ],
     "P10.0-04": [
-      "p10-04-full-fresh",
-      "p10-04-screens",
-      "p10-04-exe",
-      "p10-04-report"
+      "p10-04-unit",
+      "p10-04-fast-feature",
+      "p10-04-ui",
+      "p10-04-e2e",
+      "p10-04-checkpoint"
     ],
     "P10.0-05": [
-      "p10-05-full-fresh",
+      "p10-05-unit",
+      "p10-05-ui",
+      "p10-05-e2e",
+      "p10-05-perf",
+      "p10-05-data-retention",
       "p10-05-screens",
+      "p10-05-full-fresh",
       "p10-05-exe",
       "p10-05-report"
     ],
@@ -92,8 +103,28 @@
     "p10-02-screens": "pass",
     "p10-02-full-fresh": "pass",
     "p10-02-exe": "pass",
-    "p10-02-report": "pass"
+    "p10-02-report": "pass",
+    "p10-03-phase-docs": "pass",
+    "p10-03-unit": "pass",
+    "p10-03-fast-feature": "pass",
+    "p10-03-ui": "pass",
+    "p10-03-e2e": "pass",
+    "p10-03-checkpoint": "pass",
+    "p10-04-unit": "pass",
+    "p10-04-fast-feature": "pass",
+    "p10-04-ui": "pass",
+    "p10-04-e2e": "pass",
+    "p10-04-checkpoint": "pass",
+    "p10-05-unit": "pass",
+    "p10-05-ui": "pass",
+    "p10-05-e2e": "pass",
+    "p10-05-perf": "pass",
+    "p10-05-data-retention": "pass",
+    "p10-05-screens": "pass",
+    "p10-05-full-fresh": "pass",
+    "p10-05-exe": "pass",
+    "p10-05-report": "pass"
   },
-  "nextAction": "P10.0-03 の zip を待つ。P10.0-02 は merge 候補 feat/p10.0-02-display で停止（fresh FULL PASS @ 3c0f2c1、EXE 作成済み）。P10.0-01 は行わない。",
-  "updatedAt": "2026-09-30"
+  "nextAction": "B（P10.0-06）の zip を待つ。Bundle A (P10.0-03..05) is the merge candidate feat/p10.0-03-editing (fresh FULL PASS and EXE @ 47a5181); merge it into local master first.",
+  "updatedAt": "2026-10-01"
 }

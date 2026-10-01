@@ -286,9 +286,46 @@ for (const [width, height] of SIZES) {
         await page.locator("body").press("]");
         await expect(page.locator('[data-testid="correction-card"][data-review][aria-pressed="true"]')).toHaveCount(1);
       });
+      // P10.0-03: editing — melody notes excluded, ② with a manual note and a moved, selected note.
+      await shot("capture-workspace-edit", async () => {
+        await openWorkspace("melody-track-8");
+        await page.getByTestId("correction-select-melody").click();
+        await page.keyboard.press("Delete");
+        const note = page.locator('[data-testid="correction-piano-roll"] .lv-cw-note[data-kind="harmony"]').first();
+        await note.click();
+        await page.keyboard.press("ArrowUp");
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible()) await toggle.click();
+        await page.getByTestId("correction-add-note").click();
+        await page.getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(9).click();
+        await page.keyboard.press("n");
+        await expect(page.getByTestId("correction-history")).toContainText("操作 3");
+      });
+      // P10.0-04: Shift+M lists the places with the same notes before merging.
+      await shot("capture-workspace-merge-confirm", async () => {
+        await openWorkspace("plain-8");
+        await page.getByTestId("correction-review-count").focus();
+        await page.keyboard.press("s");
+        await page.keyboard.press("End");
+        await page.keyboard.press("s");
+        await page.keyboard.press("Shift+M");
+        await expect(page.getByRole("dialog", { name: "同じ音が続く所をつなぐ" })).toContainText("2 か所");
+      });
       await shot("capture-workspace-long", async () => {
         await openWorkspace("long-64");
       });
+      // P10.0-05: 64 bars at the 4-bar zoom; the narrow window with the panel closed (one line under the timeline).
+      await shot("capture-workspace-long-zoom", async () => {
+        await page.getByRole("button", { name: "4小節", exact: true }).click();
+        await page.getByTestId("correction-review-count").focus();
+        await page.keyboard.press("]");
+      });
+      if (size === "768x640") {
+        await shot("capture-workspace-narrow", async () => {
+          await openWorkspace("long-64");
+          await page.getByTestId("correction-piano-roll").scrollIntoViewIfNeeded();
+        });
+      }
       await page.evaluate(() => localStorage.removeItem("loop-vault:p10-workspace:v1"));
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);

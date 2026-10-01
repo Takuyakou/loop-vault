@@ -1164,6 +1164,7 @@ export function CaptureView(props: CaptureViewProps) {
         <div className="lv-capture-content grid gap-5" data-capture-midi-drop-zone {...dropHandlers}>
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <CorrectionWorkspace
+            key={workspaceDatasetKey}
             model={correctionModel}
             timeline={result.fullTimeline}
             fileName={result.fileName ?? "MIDI"}
