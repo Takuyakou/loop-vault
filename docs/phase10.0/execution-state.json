@@ -14,7 +14,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "327b2c1",
-  "lastVerifiedCommit": "b0b788e",
+  "lastVerifiedCommit": "376acfc",
   "currentBranch": "feat/p10.0-07-finish",
   "requiredGates": {
     "P10.0-00": [
@@ -151,8 +151,9 @@
     "p10-06-report": "pass",
     "p10-07-phase-docs": "pass",
     "p10-07-fixes": "pass",
-    "p10-07-metrics": "pass"
+    "p10-07-metrics": "pass",
+    "p10-07-removal": "pass"
   },
-  "nextAction": "P10.0-07: checkpoints 1-2 done; continue with checkpoint 3 (remove the legacy capture screen and parts) on feat/p10.0-07-finish.",
+  "nextAction": "P10.0-07: checkpoints 1-3 done; continue with checkpoint 4 (screens, fresh FULL, EXE, reports, close Phase 10) on feat/p10.0-07-finish.",
   "updatedAt": "2026-10-01"
 }
