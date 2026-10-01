@@ -4,8 +4,8 @@
 
 ## Status
 
-- Status: in-progress
-- Active stage: P11.0-00 then P11.0-01
+- Status: blocked at HUMAN_GATE_AFTER_P11_01
+- Completed stages: P11.0-00 (`c1d2aa5b`), P11.0-01 (`a1b75252`).
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
 - Stop: HUMAN_GATE_AFTER_P11_01. No P11.0-02 or later in this run.
 

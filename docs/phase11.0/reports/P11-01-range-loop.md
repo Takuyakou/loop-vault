@@ -20,6 +20,8 @@ Session-only の A–B Range Loop を元の full snapshot / full Voicing plan �
 
 ## Gateと証跡
 
+- Verified code commit: `a1b75252efc5f1f040764e0c2fec3e61342efc86`。
+
 - Range domain / Transport / View focused: 117/117 PASS。最終 candidate は fresh FEATURE 内で全 Vitest 3638/3638 PASS。
 - App / E2E TypeScript、変更ファイル ESLint: PASS。
 - Playwright P11-01: 5/5 PASS。1920 / 1444 / 1280 / 960px における no-range / pending A / A–B / one-card の16画像を Git 管理外の `test-results/p11-range/` に生成した。960px のマーカーとコード名の重なりを視覚確認して修正済み。
