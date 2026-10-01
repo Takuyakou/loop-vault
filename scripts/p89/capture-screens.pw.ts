@@ -331,9 +331,10 @@ for (const [width, height] of SIZES) {
       // P10.0-06: a range chosen with its save form open; a save refused for a one-note card.
       await shot("capture-workspace-save", async () => {
         await openWorkspace("melody-track-8");
-        await page.getByTestId("correction-segment").first().click();
+        // おすすめの範囲 works at every size (the segment row starts closed below 960px).
         const toggle = page.getByTestId("correction-panel-toggle");
         if (await toggle.isVisible()) await toggle.click();
+        await page.getByTestId("correction-recommended").getByRole("button").first().click();
         await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         await expect(page.locator('form[role="dialog"]:has(input[name="progression-title"])')).toBeVisible();
       });
@@ -344,7 +345,7 @@ for (const [width, height] of SIZES) {
         if (await toggle.isVisible()) await toggle.click();
         const used = page.getByTestId("correction-note-list").getByRole("button", { name: "外す" });
         while (await used.count() > 1) await used.first().click();
-        await page.getByTestId("correction-segment").first().click();
+        await page.getByTestId("correction-recommended").getByRole("button").first().click();
         await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         await expect(page.getByTestId("correction-save-problems")).toBeVisible();
       });
