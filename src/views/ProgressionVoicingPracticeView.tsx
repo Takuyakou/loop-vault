@@ -370,7 +370,7 @@ export function ProgressionVoicingPracticeView({
     [effectiveResolutionOptions, snapshot],
   );
   const cardAuditionPlans = useMemo(() => {
-    const fromSelection = (family: "source-midi" | "custom" | "basic-full") => {
+    const fromSelection = (family: "saved" | "source-midi" | "custom" | "basic-full") => {
       const original = snapshots?.[family];
       if (!original) return undefined;
       const transposed = targetTonicPitchClass === undefined
@@ -378,7 +378,8 @@ export function ProgressionVoicingPracticeView({
       const prepared = transposed ? (transposed.ok ? transposed.snapshot : undefined) : original;
       return prepared ? resolveProgressionPracticeVoicings(prepared, { octaveShift }) : undefined;
     };
-    return { source: fromSelection("source-midi"), custom: fromSelection("custom"), generated: fromSelection("basic-full") };
+    return { saved: fromSelection("saved"), source: fromSelection("source-midi"),
+      custom: fromSelection("custom"), generated: fromSelection("basic-full") };
   }, [snapshots, targetTonicPitchClass, octaveShift]);
   const [countInBars, setCountInBars] = useState<0 | 1 | 2>(1);
   const [seekAnchorIndex, setSeekAnchorIndex] = useState(0);

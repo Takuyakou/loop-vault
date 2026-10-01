@@ -16,7 +16,7 @@ Human Gateの承認を受け、`保存した音` の独立したsession選択を
 - Extended Textでは、実際のPreviewと共通の`voiceTextChordForAudition`による音を保存する。既存のattack/hold/restタイミングは変えない。
 - Vault v2 readerと既存snapshot妥当性検査を通し、音番号一致をStandard/Extended双方で確認した。
 - `CUSTOM` / `SOURCE` / `GENERATED` / legacy missing choiceは共有resolverの現行precedenceを維持。保存済みexplicit notesだけが`保存した音`へ入る。
-- Text originはrepoで確認した実際の`text-style-v1:` markerを使用。旧提案の`text-style:`表記は採用しない。
+- Text originはrepoで確認した実際の`text-style-v1:` markerを使用。旧提案の`text-style:`表記は採用しない。`r`n- 追加監査でVoicing Loop内のカード▶が旧legacy順序でText保存音を飛ばす経路を確認し、saved planを優先するよう修正。専用4/4テストPASS。
 
 ## Gate
 

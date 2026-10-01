@@ -5,6 +5,7 @@ import type {
 } from "../domain/progressionVoicingPractice";
 
 export interface CardAuditionPlans {
+  readonly saved?: ProgressionPracticeVoicingPlan;
   readonly source?: ProgressionPracticeVoicingPlan;
   readonly custom?: ProgressionPracticeVoicingPlan;
   readonly generated?: ProgressionPracticeVoicingPlan;
@@ -25,5 +26,6 @@ export function cardAuditionResolution(
   if (event.playbackChoice === "SOURCE") return at(plans.source) ?? at(plans.generated);
   if (event.playbackChoice === "CUSTOM") return at(plans.custom) ?? at(plans.generated);
   if (event.playbackChoice === "GENERATED") return at(plans.generated);
-  return at(plans.custom) ?? (event.sourceNeedsReview ? undefined : at(plans.source)) ?? at(plans.generated) ?? at(plans.current);
+  return at(plans.saved) ?? at(plans.custom)
+    ?? (event.sourceNeedsReview ? undefined : at(plans.source)) ?? at(plans.generated) ?? at(plans.current);
 }
