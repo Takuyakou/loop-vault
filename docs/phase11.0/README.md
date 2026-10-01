@@ -4,10 +4,10 @@
 
 ## Status
 
-- Status: acceptance-fix-in-progress; P11-00〜06 completed; HUMAN_GATE_AFTER_P11_01 approved by the user.
-- Completed stages: P11.0-00 through P11.0-06; verified commits/gates in execution-state.json.
+- Status: completed / READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; P11-07 fixes complete; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Completed stages: P11.0-00 through P11.0-07; verified commits/gates in execution-state.json.
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
-- Final tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 acceptance fix is now active; no master merge.
+- Historical P11-06 tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 final tested HEAD: `2377448a`; fresh FULL 3,668 Vitest / 174 Playwright PASS, updated runnable EXE. Stop for Human Product Acceptance; no master merge.
 
 ## Human Acceptance follow-up
 

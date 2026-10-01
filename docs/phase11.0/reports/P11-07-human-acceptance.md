@@ -2,7 +2,7 @@
 
 ## 状態
 
-実装済み、最終fresh FULL / 更新EXEはPENDING。P11-00〜06の結果は歴史的な検証HEADのまま保持する。今回の検証HEADは最終Gate後に追記する。master未merge。
+修正・検証・runnable EXE更新完了。READY_FOR_HUMAN_PRODUCT_ACCEPTANCE。P11-00〜06の結果は歴史的な検証HEADのまま保持する。今回のtested / EXE code HEAD: `2377448a620173951c6b65001ae28807afcbaa4d`。master未merge。
 
 ## 1. SpaceのROOT CAUSEと再現
 
@@ -74,9 +74,26 @@
 1. 新しい常設buttonにより、960px Transport scrollWidth 876 > clientWidth 846。既存1000/720px container条件のgapとneutral button padding、BPM control間gapをcompact化した。区間解除の文字は保持、BPM input幅/3桁表示、既存touch controlの最小幅は維持。768もhorizontal scrollなしに収まる。
 2. 旧geometry testがfocusする現在本文のtabIndexをUI変更時に外していた。本文はscrollしないままtabIndex=0と正確なaria-labelを戻し、keyboard navigationを維持。
 
-切り分け後のP5.27 / VL09 / VL12 / Range / current-panel Playwright **25/25 PASS**（20.5秒）。既存geometry/overflow thresholdは変更せず、skip/retry/snapshot更新なし。底部geometry assertionには新しい区間解除buttonも追加する。
+切り分け後のP5.27 / VL09 / VL12 / Range / current-panel Playwright **25/25 PASS**（20.5秒）。既存geometry/overflow thresholdは変更せず、skip/retry/snapshot更新なし。底部geometry assertionには新しい区間解除buttonも追加し、最終FULLでPASSを確認した。
 
-修正後report-inclusive code HEADで最終fresh FULLを1回実行し、更新runnable EXEをD-driveで生成して追記する（PENDING）。失敗した旧HEADの結果は成功扱いにせず保存する。
+修正後report-inclusive HEAD `2377448a620173951c6b65001ae28807afcbaa4d` で `npm run test:full -- --fresh` を1回実行し、全Gate **PASS / 0 FAIL / 0 UNRUN**。失敗した旧HEADの結果は成功扱いにせず上記へ保存した。FULLのPASS cacheは使用していない。
+
+| 最終Gate | 結果 |
+|---|---|
+| repository ESLint / class lint / source contracts | PASS |
+| App / E2E TypeScript | PASS |
+| phase-doc / AI-handoff / privacy-security scan | PASS |
+| production build / gallery excluded | PASS |
+| runner contracts | 27/27 PASS |
+| Full Vitest（Range / transport / preserved Next Move domain含む） | 3,668/3,668 PASS |
+| repository-wide Playwright（4解像度 / accessibility含む） | 174/174 PASS |
+| git diff check | PASS |
+
+最終FULL wall time **249.0秒**、runner raw logs **30,653 B**。4解像度の最終画像とgeometryを自動更新し、current panelに内部縦scrollなし。
+
+`npm run tauri build -- --no-bundle` **PASS**。Rust/Tauri release compile 47.07秒。EXE: `src-tauri/target/release/loop-vault.exe`、24,708,608 B。D-driveの既存targetを使用し、E2E/gallery flagsなしのproduction build、installerなし。実Vaultを開いて変更する操作はしていない。
+
+結果追記はdocumentation-only commit。最終HEADとtested code HEADを混同せず、追記文書にもphase-doc / AI-handoff / privacy / diff checkを別途実行し、すべてPASS。local masterは `73507e87` のまま、保存済みorigin/masterより689 commit ahead / 0 behind（fetchなし）。merge / push / tag / releaseは行っていない。
 
 ## 9. 残る制約
 

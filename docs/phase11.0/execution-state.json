@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-07",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -10,12 +10,13 @@
     "P11.0-03",
     "P11.0-04",
     "P11.0-05",
-    "P11.0-06"
+    "P11.0-06",
+    "P11.0-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "266b24a27d442fabc2cd268967fb6914163657ba",
+  "lastVerifiedCommit": "2377448a620173951c6b65001ae28807afcbaa4d",
   "currentBranch": "feat/phase11-voicing-loop-v4",
   "requiredGates": {
     "P11.0-00": [
@@ -98,8 +99,11 @@
     "p11-06-exe": "pass",
     "p11-06-phase-docs": "pass",
     "p11-07-focused": "pass",
-    "p11-07-ui": "pass"
+    "p11-07-ui": "pass",
+    "p11-07-full": "pass",
+    "p11-07-exe": "pass",
+    "p11-07-docs": "pass"
   },
-  "nextAction": "P11-07: freeze candidate, fresh FULL once and runnable EXE; stop for acceptance without merge.",
+  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. P11-07 fixes and runnable Windows EXE complete; stop without master merge/push/tag/release.",
   "updatedAt": "2026-10-01"
 }
