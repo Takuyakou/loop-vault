@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "11.0",
+  "status": "in-progress",
+  "activeStage": "P11.0-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
+  "lastVerifiedCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
+  "currentBranch": "feat/phase11-voicing-loop-v4",
+  "requiredGates": {
+    "P11.0-00": [
+      "p11-00-audit",
+      "p11-00-phase-docs",
+      "p11-00-hook"
+    ],
+    "P11.0-01": [
+      "p11-01-focused",
+      "p11-01-feature",
+      "p11-01-ui",
+      "p11-01-screens",
+      "p11-01-phase-docs"
+    ]
+  },
+  "gateResults": {
+    "p11-00-audit": "pass",
+    "p11-00-phase-docs": "pass",
+    "p11-00-hook": "pass"
+  },
+  "nextAction": "P11.0-00 audit and docs gate, then P11.0-01 Range Loop; stop at Human Gate.",
+  "updatedAt": "2026-10-01"
+}
