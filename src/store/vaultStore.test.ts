@@ -980,7 +980,7 @@ describe("vault store", () => {
     expect(practice.meter).toEqual({ numerator: 3, denominator: 4 });
     expect(practice.events.map(event => event.attackBeats)).toEqual([[0, 1], [4], [5]]);
     expect(practice.spans.map(span => span.kind)).toEqual(["chord", "rest", "chord", "chord"]);
-    expect(handoff.handoff.initialSelection).toBe("basic-full");
+    expect(handoff.handoff.initialSelection).toBe("saved");
   });
 
   it("retains written alias and slash spelling in a saved Extended card", async () => {

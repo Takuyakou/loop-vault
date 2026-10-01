@@ -10,7 +10,7 @@ import type { EditableProgression } from "./progressionEditing";
 import type { ChordVoicingMemory, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { confirmedTextProgressionKeyState, TEXT_PROGRESSION_MAX_BARS } from "./textProgression";
 import type { TextProgressionEvent, TextProgressionParseResult } from "./textProgression";
-import { isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
+import { createTextProgressionStyleSnapshot, isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 import { isValidVoicingSnapshot, voicingCompatibility } from "./voicing";
 
 /**
@@ -155,7 +155,12 @@ export function textProgressionDraftSavePayload(
   draft: ManualCandidateDraft,
   input: CreateTextProgressionDraftSavePayloadInput,
 ): TextProgressionDraftSavePayload {
-  const chords = textProgressionDraftTimeline(draft);
+  const chords = textProgressionDraftTimeline(draft).map((item) => ({
+    ...item,
+    voicingMemory: item.voicingMemory ?? {
+      practiceVoicingOverride: createTextProgressionStyleSnapshot(item.chord, "generated-close"),
+    },
+  }));
   const canonicalTitle = textProgressionDraftTitleFromChords(chords, input.confirmedKey);
   const editedTitle = input.title.trim().slice(0, 80);
   return {

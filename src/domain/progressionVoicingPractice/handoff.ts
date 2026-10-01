@@ -14,6 +14,7 @@ import type {
 } from "./types";
 
 const HANDOFF_SELECTIONS: readonly ProgressionVoicingSelection[] = Object.freeze([
+  "saved",
   "source-midi",
   "custom",
   "basic-shell",
@@ -105,6 +106,7 @@ function preferredInitialSelection(
   snapshots: ProgressionVoicingPracticeSnapshots,
   block: SavedProgressionBlock,
 ): ProgressionVoicingSelection {
+  if (hasCompleteExactVoicing(snapshots.saved, "saved")) return "saved";
   if (hasCompleteExactVoicing(snapshots["source-midi"], "source-midi")
     && block.chords.every((event) => voicingSourceStatus(event.chord, event.voicingMemory).status === "source")) {
     return "source-midi";
@@ -115,7 +117,7 @@ function preferredInitialSelection(
 
 function hasCompleteExactVoicing(
   snapshot: ProgressionVoicingPracticeSnapshot | undefined,
-  kind: "source-midi" | "custom",
+  kind: "saved" | "source-midi" | "custom",
 ): boolean {
   return Boolean(snapshot?.events.length)
     && snapshot!.events.every((event) => event.voicing?.kind === kind);

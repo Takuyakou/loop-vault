@@ -4,6 +4,7 @@ import type { VoicingRuleExplanation } from "../voicingRules";
 export const PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION = 1 as const;
 
 export type ProgressionVoicingSelection =
+  | "saved"
   | "source-midi"
   | "custom"
   | "basic-shell"
@@ -18,7 +19,8 @@ export interface ProgressionPracticeSourceReference {
 }
 
 export interface DetachedPracticeVoicing {
-  readonly kind: "source-midi" | "custom";
+  readonly kind: "saved" | "source-midi" | "custom";
+  readonly savedSource?: "source-midi" | "custom";
   readonly midiNotes: readonly number[];
   readonly bassNote?: number;
 }

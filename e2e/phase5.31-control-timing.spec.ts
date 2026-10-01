@@ -49,6 +49,7 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats")))).toEqual(expectedDurations);
     observed.push(await cards.evaluateAll(items => items.map(item => item.getAttribute("aria-label") ?? "")));
     await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
+    await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
     await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
     await workspace.getByRole("button", { name: "Core", exact: true }).click();
@@ -118,6 +119,7 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
 test("P5.31 slash identity remains playable through promoted Core upper-structure rules", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 812 });
   const workspace = await saveTextToLoop(page, "| Am9/C | Am11/B | Am9/C |");
+  await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
   await workspace.getByRole("button", { name: "Core", exact: true }).click();

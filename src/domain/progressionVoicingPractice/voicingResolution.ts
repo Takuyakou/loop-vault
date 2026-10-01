@@ -68,7 +68,7 @@ export function resolveProgressionPracticeVoicings(
   };
 
   const selection = snapshot.selection;
-  if (selection === "source-midi" || selection === "custom") {
+  if (selection === "saved" || selection === "source-midi" || selection === "custom") {
     return applyOctaveShift(
       freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection))),
       options.octaveShift ?? 0,
@@ -186,7 +186,7 @@ function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): Pro
 
 function resolveMyVoicing(
   event: ProgressionPracticeEvent,
-  selection: "source-midi" | "custom",
+  selection: "saved" | "source-midi" | "custom",
 ): ProgressionPracticeVoicingResolution {
   if (!event.voicing || event.voicing.kind !== selection) {
     return freezeResolution({
@@ -206,7 +206,7 @@ function resolveMyVoicing(
       addedColorDegrees: Object.freeze([]),
       notes: noteFacts(event.chord, midiNotes, [], event.voicing.bassNote),
       explanation: Object.freeze({
-        source: selection,
+        source: selection === "saved" ? event.voicing.savedSource ?? "custom" : selection,
         omittedDegrees: Object.freeze([]),
         addedDegrees: Object.freeze([]),
       }),
@@ -524,7 +524,7 @@ function basicLessonLabels(
 
 function supportedLessonResolution(
   event: ProgressionPracticeEvent,
-  selection: Exclude<ProgressionVoicingSelection, "source-midi" | "custom">,
+  selection: Exclude<ProgressionVoicingSelection, "saved" | "source-midi" | "custom">,
   candidate: StyleVoicingCandidate,
   facts: CandidateFacts,
 ): ProgressionPracticeVoicingResolution {

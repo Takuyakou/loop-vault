@@ -268,7 +268,7 @@ export function ProgressionVoicingPracticeView({
   const [colorEnabled, setColorEnabled] = useState(false);
   const [openEnabled, setOpenEnabled] = useState(false);
   const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(true);
-  const lessonRulesSelected = selection !== "source-midi" && selection !== "custom";
+  const lessonRulesSelected = selection !== "saved" && selection !== "source-midi" && selection !== "custom";
   const sourceMidiEvents = snapshots?.["source-midi"]?.events ?? [];
   const sourceMidiTotal = snapshots?.["source-midi"]?.events.length
     ?? Object.values(snapshots ?? {}).find((candidate) => candidate !== undefined)?.events.length ?? 0;

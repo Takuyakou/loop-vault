@@ -77,7 +77,7 @@ describe("P8.8.1 authored full-chart acceptance", () => {
     const idea = loaded.vault.ideas.find(value => value.id === ideaId)!;
     const block = idea.progressionBlocks![0]!;
     expect(block.chords).toHaveLength(2);
-    expect(block.chords.every(event => event.voicingMemory === undefined)).toBe(true);
+    expect(block.chords.every(event => event.voicingMemory?.practiceVoicingOverride?.extractorVersion === "text-style-v1:generated-close")).toBe(true);
     const handoff = buildProgressionVoicingPracticeHandoffFromVault([idea], {
       ideaId: idea.id, blockId: block.id,
     });

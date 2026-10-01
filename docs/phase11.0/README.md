@@ -4,10 +4,10 @@
 
 ## Status
 
-- Status: blocked at HUMAN_GATE_AFTER_P11_01
+- Status: in-progress; HUMAN_GATE_AFTER_P11_01 approved by the user.
 - Completed stages: P11.0-00 (`c1d2aa5b`), P11.0-01 (`a1b75252`).
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
-- Stop: HUMAN_GATE_AFTER_P11_01. No P11.0-02 or later in this run.
+- Continue: P11.0-02 through P11.0-06 in order; finish with fresh FULL and Windows EXE.
 
 ## Required Reading Order
 
@@ -23,7 +23,7 @@
 - P11.0-00: Audit and freeze without product behavior change.
 - P11.0-01: Session-only A–B range loop, focused validation, screenshots.
 - HUMAN_GATE_AFTER_P11_01: approval of generated migration/naming and range result.
-- P11.0-02 through P11.0-06: blocked by the Human Gate.
+- P11.0-02 through P11.0-06: authorized in order. Generated primary types: 基本 / 骨組み; preserve other controls in 詳しい設定.
 
 ## Safety
 

@@ -1,3 +1,5 @@
+import { resolveVoicingForUse } from "../voicing/resolveVoicing";
+import { isTextProgressionStyleSnapshot } from "../textProgressionVoicing";
 import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
 import { parseTextChordLabel } from "../chords";
 import { TEXT_GENERATED_VOICING_POLICY } from "../textSource";
@@ -23,7 +25,7 @@ const supportedQualities = new Set<ChordQuality>([
 ]);
 const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 const supportedSelections = new Set<ProgressionVoicingSelection>([
-  "source-midi", "custom", "basic-shell", "basic-full", "rootless-shell", "full-shell", "left-hand",
+  "saved", "source-midi", "custom", "basic-shell", "basic-full", "rootless-shell", "full-shell", "left-hand",
 ]);
 const TIMING_EPSILON = 1e-6;
 /** Prelocked after the public 3/5/10-minute and 2,400-event benchmark. */
@@ -275,13 +277,22 @@ function selectVoicing(
   event: ChordTimelineItem,
   selection: ProgressionVoicingSelection,
 ): DetachedPracticeVoicing | undefined {
+  if (selection === "saved") {
+    const resolved = resolveVoicingForUse(event.chord, event.voicingMemory, []);
+    if (resolved.origin === "generated") return undefined;
+    const explicit = resolved.origin === "practice-override"
+      ? event.voicingMemory?.practiceVoicingOverride : event.voicingMemory?.sourceVoicing;
+    return explicit ? cloneSelectedVoicing(explicit, "saved",
+      resolved.origin === "practice-override" ? "custom" : "source-midi") : undefined;
+  }
   if (selection === "source-midi") {
     if (!isExplicitSourceMidiVoicingAvailable(event.chord, event.voicingMemory)) return undefined;
     return cloneSelectedVoicing(event.voicingMemory!.sourceVoicing!, "source-midi");
   }
   if (selection === "custom") {
     const custom = event.voicingMemory?.practiceVoicingOverride;
-    if (!custom || voicingCompatibility(custom, event.chord) !== "compatible") return undefined;
+    if (!custom || isTextProgressionStyleSnapshot(custom, event.chord)
+      || voicingCompatibility(custom, event.chord) !== "compatible") return undefined;
     return cloneSelectedVoicing(custom, "custom");
   }
   return undefined;
@@ -290,9 +301,11 @@ function selectVoicing(
 function cloneSelectedVoicing(
   snapshot: VoicingSnapshot,
   kind: DetachedPracticeVoicing["kind"],
+  savedSource?: "source-midi" | "custom",
 ): DetachedPracticeVoicing {
   return Object.freeze({
     kind,
+    ...(savedSource ? { savedSource } : {}),
     midiNotes: Object.freeze([...snapshot.midiNotes]),
     ...(snapshot.bassNote === undefined ? {} : { bassNote: snapshot.bassNote }),
   });
