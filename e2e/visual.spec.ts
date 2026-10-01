@@ -44,18 +44,17 @@ test.describe("Phase 5.13 visual evidence", () => {
     await expect(page.getByTestId("capture-analysis-progress")).toBeVisible();
     await evidence(page, testInfo, "analyzing");
     await expect(page.locator('[data-capture-stage="result"]')).toBeVisible();
-    await expect(page.locator("[data-candidate-toggle]").first()).toBeVisible();
+    // P10.0-06: the correction workspace is the screen after analysis.
+    await expect(page.getByTestId("correction-workspace")).toBeVisible();
     await expect(page.getByTestId("capture-analysis-progress")).toBeHidden();
     await evidence(page, testInfo, "capture-analysis-results");
     await expect(page).toHaveScreenshot("capture-analysis-results.png", { fullPage: true });
 
     await chooseFirstCandidate(page);
     await evidence(page, testInfo, "correction-editor");
-    // The retired full-page image masks the current candidate-header width regression.
-    // Keep an explicit browser geometry contract until the product layout is fixed.
-    const selectedCandidate = page.locator('[data-candidate-state="selected"] [data-candidate-toggle]').first();
-    const candidateBounds = await selectedCandidate.boundingBox();
-    expect(candidateBounds?.width, "selected candidate header must remain readable").toBeGreaterThanOrEqual(160);
+    // The save form for the chosen range stays readable beside the timeline.
+    const saveFormBounds = await page.getByTestId("correction-save-form").boundingBox();
+    expect(saveFormBounds?.width, "the save form must remain readable").toBeGreaterThanOrEqual(240);
   });
 
   test("all-instruments pre-analysis state", async ({ page }, testInfo) => {

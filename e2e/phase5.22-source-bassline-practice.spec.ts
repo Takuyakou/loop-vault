@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
+  enableLegacyCaptureScreen,
   analyzeCurrentMidi,
   assertNoHorizontalOverflow,
   chooseFirstCandidate,
@@ -33,6 +34,8 @@ async function expectNoSeriousViolations(page: Page): Promise<void> {
 }
 
 test("Source Bassline levels and reference-only History stay overflow-safe at 320px and effective 200% scale", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
@@ -121,6 +124,8 @@ test("Source Bassline levels and reference-only History stay overflow-safe at 32
 });
 
 test("Source Bassline is axe-clean and honors reduced motion at effective 200% scale", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   test.setTimeout(60_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 640, height: 812 });

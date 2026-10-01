@@ -157,7 +157,7 @@ import { useCapturePlayback } from "./capture/useCapturePlayback";
 import { CorrectionWorkspace } from "../components/correction-workspace/CorrectionWorkspace";
 import { buildCorrectionModel } from "../domain/correction/correctionModel";
 import { reviewThresholds } from "../domain/correction/reviewThresholds";
-import { getCorrectionWorkspaceEnabled } from "../storage/correctionWorkspaceSettings";
+import { getLegacyCaptureEnabled } from "../storage/correctionWorkspaceSettings";
 import {
   captureAnalysisIdentity,
   captureCandidateSource,
@@ -408,12 +408,12 @@ export function CaptureView(props: CaptureViewProps) {
     previewCandidateChord,
     previewSourceDraft,
   } = useCapturePlayback({ controller, result, previewSound, setToast, copy });
-  // P10.0-02: the new correction workspace, display only, behind a developer switch.
-  const [correctionWorkspaceEnabled] = useState(getCorrectionWorkspaceEnabled);
-  const [currentScreenDatasetKey, setCurrentScreenDatasetKey] = useState<string>();
+  // P10.0-06: the correction workspace is the default; the old screen is behind a
+  // temporary developer switch until P10.0-07.
+  const [legacyCapture] = useState(getLegacyCaptureEnabled);
   const workspaceDatasetKey = result ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}` : undefined;
   const correctionModel = useMemo(() => (
-    correctionWorkspaceEnabled && result && analysis.sourceData && analysis.sourceVoices
+    !legacyCapture && result && analysis.sourceData && analysis.sourceVoices
       ? buildCorrectionModel({
           result,
           sourceData: analysis.sourceData,
@@ -421,8 +421,8 @@ export function CaptureView(props: CaptureViewProps) {
           ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
         }, reviewThresholds)
       : undefined
-  ), [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, correctionWorkspaceEnabled, result]);
-  const workspaceShown = correctionModel !== undefined && currentScreenDatasetKey !== workspaceDatasetKey;
+  ), [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, legacyCapture, result]);
+  const workspaceShown = correctionModel !== undefined;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -1177,10 +1177,6 @@ export function CaptureView(props: CaptureViewProps) {
             controller={controller}
             fullSource={captureFullTimelineSource(result)}
             onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
-            onUseCurrentScreen={() => {
-              stopCapturePlayback(controller);
-              setCurrentScreenDatasetKey(workspaceDatasetKey);
-            }}
             onChooseAnotherMidi={() => void chooseMidi(false)}
             blockCandidates={result.blockCandidates}
             {...(props.onWorkspaceDirtyChange ? { onDirtyChange: props.onWorkspaceDirtyChange } : {})}

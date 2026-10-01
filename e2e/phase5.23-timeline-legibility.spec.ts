@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import {
+  enableLegacyCaptureScreen,
   analyzeCurrentMidi,
   assertNoHorizontalOverflow,
   chooseFirstCandidate,
@@ -36,6 +37,8 @@ async function expectNoSeriousViolations(page: Page): Promise<void> {
 }
 
 test("P5.23 Full Timeline remains stable, keyboard-operable, responsive, and axe-clean", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   test.setTimeout(120_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 320, height: 812 });
@@ -110,6 +113,8 @@ test("P5.23 Full Timeline remains stable, keyboard-operable, responsive, and axe
 });
 
 test("Vault save form stays visible with the sidebar expanded at the reported narrow size", async ({ page }) => {
+  // The old capture screen itself (P10.0-06: behind the legacy setting until P10.0-07 removes it).
+  await enableLegacyCaptureScreen(page);
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 786, height: 836 });
   await openApp(page);

@@ -52,7 +52,6 @@ export interface CorrectionWorkspaceProps {
   /** The capture full-timeline source, shared with the current screen. */
   fullSource: PlayingSource;
   onPlaybackError: (error: unknown) => void;
-  onUseCurrentScreen?: () => void;
   onChooseAnotherMidi: () => void;
   onPartSettings?: () => void;
   /** P10.0-06: saving from the workspace. */
@@ -433,7 +432,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         <span className="lv-cw-stat" data-testid="correction-edit-count">直した回数 <b>{count}</b></span>
         {props.onPartSettings ? <button type="button" className="lv-cw-btn" onClick={guarded(props.onPartSettings)}>パートの設定</button> : null}
         <button type="button" className="lv-cw-btn" onClick={guarded(props.onChooseAnotherMidi)} data-testid="correction-another-midi">別の MIDI</button>
-        {props.onUseCurrentScreen ? <button type="button" className="lv-cw-btn" onClick={props.onUseCurrentScreen} data-testid="correction-use-current-screen">今の画面で保存する</button> : null}
       </div>
 
       {suggestion?.kind === "melody-voice" ? (

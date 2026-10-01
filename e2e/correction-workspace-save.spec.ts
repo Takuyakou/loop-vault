@@ -5,7 +5,6 @@ import { dropMidi, openApp, openCapture, openVault } from "./helpers/app";
 /** P10.0-06: saving from the correction workspace (spec v2.4 §10.1). */
 
 async function importScenario(page: Page, id: string) {
-  await page.addInitScript(() => localStorage.setItem("loop-vault:p10-workspace:v1", "on"));
   await openApp(page);
   await openCapture(page);
   await dropMidi(page, buildScenarioMidi(p10Scenario(id)), `${id}.mid`);

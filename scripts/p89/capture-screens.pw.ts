@@ -152,8 +152,9 @@ for (const [width, height] of SIZES) {
       });
       // Save one synthetic progression so Vault / progression / Idea / practice screens have content.
       try {
+        // P10.0-06: the workspace is the default; its first recommended range is saved.
         await chooseFirstCandidate(page);
-        await page.locator('[data-candidate-state="selected"]').getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+        await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
         await form.locator('input[name="progression-title"]').fill("P89 合成進行");
         await form.getByRole("button", { name: /保存/, exact: true }).click();
@@ -267,10 +268,11 @@ for (const [width, height] of SIZES) {
         result.unreachable.push({ screen: "gallery", reason: String(error).split("\n")[0].slice(0, 160) });
       }
 
-      // P10.0-02: the correction workspace (developer switch on, display only), on a fresh page each.
+      // P10.0-02: the correction workspace (the default since P10.0-06), on a fresh page each.
+      // An edited workspace asks before the page unloads; the next shot discards it.
+      page.on("dialog", (dialog) => void dialog.accept());
       async function openWorkspace(id: string) {
         await page.goto("/");
-        await page.evaluate(() => localStorage.setItem("loop-vault:p10-workspace:v1", "on"));
         await openApp(page);
         await loadMidiForPreAnalysis(page, buildScenarioMidi(p10Scenario(id)), `p10-${id}.mid`);
         await page.getByTestId("pre-analysis-analyze").click();
@@ -326,7 +328,26 @@ for (const [width, height] of SIZES) {
           await page.getByTestId("correction-piano-roll").scrollIntoViewIfNeeded();
         });
       }
-      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-workspace:v1"));
+      // P10.0-06: a range chosen with its save form open; a save refused for a one-note card.
+      await shot("capture-workspace-save", async () => {
+        await openWorkspace("melody-track-8");
+        await page.getByTestId("correction-segment").first().click();
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible()) await toggle.click();
+        await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+        await expect(page.locator('form[role="dialog"]:has(input[name="progression-title"])')).toBeVisible();
+      });
+      await shot("capture-workspace-save-blocked", async () => {
+        await openWorkspace("plain-8");
+        await page.getByTestId("correction-card").nth(2).click();
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible()) await toggle.click();
+        const used = page.getByTestId("correction-note-list").getByRole("button", { name: "外す" });
+        while (await used.count() > 1) await used.first().click();
+        await page.getByTestId("correction-segment").first().click();
+        await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+        await expect(page.getByTestId("correction-save-problems")).toBeVisible();
+      });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });
