@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { PreviewSound } from "../../audio/chordPreview";
 import { samePlaybackSource, type PlaybackController, type PlayingSource } from "../../audio/playbackController";
+import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
 import type { CorrectionCard, CorrectionModel, CorrectionNote } from "../../domain/correction/correctionModel";
 import { noteLabel, notesByCard } from "../../domain/correction/correctionModel";
 import {
@@ -15,18 +16,22 @@ import {
   type EditResult,
 } from "../../domain/correction/edits";
 import { commitEdit, editCount, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
-import type { ChordTimelineItem } from "../../domain/types";
+import type { EditableChordSlot } from "../../domain/progressionEditing";
+import type { ChordSymbol, ChordTimelineItem } from "../../domain/types";
 import { createTimelineVoicingPlaybackPlan, resolveTimelineItemVoicing } from "../../domain/voicing";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
+import { ConfirmDialog } from "../ConfirmDialog";
+import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
 import { cardLabel, cardSize, followScrollLeft, overlaps, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 
 /**
  * The correction workspace (spec v2.3): display (P10.0-02), note editing with one
- * undo history (P10.0-03). Only the visible beats are drawn. Saving still happens
+ * undo history (P10.0-03), card editing (P10.0-04). Only the visible beats are drawn. Saving still happens
  * on the current screen until P10.0-06.
  */
 
@@ -68,7 +73,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [follow, setFollow] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [suggestionClosed, setSuggestionClosed] = useState(false);
+  const [closedSuggestions, setClosedSuggestions] = useState<ReadonlySet<string>>(() => new Set());
+  const [confirm, setConfirm] = useState<"runs" | "same-fix">();
+  const [nameEditor, setNameEditor] = useState<{ cardId: string; anchor: HTMLElement }>();
+  const [rename, setRename] = useState<{ cardId: string; before: string }>();
+  const [boundaryTip, setBoundaryTip] = useState<{ x: number; text: string }>();
+  const boundaryDrag = useRef<{ leftId: string; pointerId: number; result?: EditResult }>();
   const [segmentsOpen, setSegmentsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia?.("(max-width: 959px)").matches);
   const [panelOpen, setPanelOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -85,6 +95,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const { low, high } = present.pitchRange;
   const rollHeight = (high - low + 1) * ROW_PX;
   const selected = present.cards.find((card) => card.id === selectedId) ?? present.cards[0];
+  const editorCard = nameEditor ? present.cards.find((card) => card.id === nameEditor.cardId) : undefined;
   const byCard = useMemo(() => notesByCard(shown.notes), [shown.notes]);
   const warnNoteIds = useMemo(() => new Set(present.cards.flatMap((card) => card.reviewReasons.flatMap((reason) => reason.noteIds))), [present.cards]);
   const range = visibleBeatRange(scrollLeft, viewportWidth, pxPerBeat, present.totalBeats);
@@ -211,12 +222,71 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     }
   }, [low, present.notes, selected]);
 
-  // ---- keys (spec 7.2–7.5) ---------------------------------------------------------------
+  // ---- card edits (P10.0-04) -------------------------------------------------------------
+  const pickName = useCallback((name: ChordSymbol, cardId: string) => {
+    const before = present.cards.find((card) => card.id === cardId)?.name.label;
+    const result = edit((model) => chooseName(model, cardId, name));
+    if (result.changed && before) setRename({ cardId, before });
+  }, [edit, present.cards]);
+  const markAndNext = useCallback(() => {
+    if (!selected) return;
+    const result = edit((model) => markReviewed(model, selected.id));
+    selectCard(result.model.cards.find((card) => card.start > selected.start && card.reviewReasons.length > 0));
+  }, [edit, selectCard, selected]);
+  const openNameEditor = useCallback((cardId: string) => {
+    const anchor = scrollRef.current?.querySelector<HTMLElement>(`[data-card-id="${cardId}"]`);
+    if (anchor) setNameEditor({ cardId, anchor });
+  }, []);
+  const askMergeRuns = useCallback(() => {
+    if (sameNotesGroups(present).length) setConfirm("runs");
+    else setNotice("同じ音が続く所はありません");
+  }, [present]);
+  const sameFix = useMemo(
+    () => rename && selected && rename.cardId === selected.id ? sameFixTargets(present, selected.id, rename.before) : [],
+    [present, rename, selected],
+  );
+  const runConfirm = useCallback(() => {
+    if (confirm === "runs") apply(mergeSameNotes(present));
+    else if (confirm === "same-fix" && selected) { apply(chooseName(present, sameFix, selected.name)); setRename(undefined); }
+    setConfirm(undefined);
+  }, [apply, confirm, present, sameFix, selected]);
+
+  function startBoundary(event: ReactPointerEvent<HTMLSpanElement>, leftId: string) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    boundaryDrag.current = { leftId, pointerId: event.pointerId };
+  }
+  function dragBoundary(event: ReactPointerEvent<HTMLSpanElement>) {
+    const drag = boundaryDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const box = event.currentTarget.parentElement!.getBoundingClientRect();
+    const step = event.altKey ? 0.25 : 1;
+    const beat = Math.round((event.clientX - box.left) / pxPerBeat / step) * step;
+    const result = moveBoundary(present, drag.leftId, beat);
+    drag.result = result.changed ? result : undefined;
+    setPreview(drag.result?.model);
+    setBoundaryTip(drag.result ? { x: beat * pxPerBeat, text: positionLabel(beat, meter) } : undefined);
+  }
+  function endBoundary(event: ReactPointerEvent<HTMLSpanElement>) {
+    const drag = boundaryDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    boundaryDrag.current = undefined;
+    setPreview(undefined);
+    setBoundaryTip(undefined);
+    if (drag.result) apply(drag.result);
+  }
+
+  // ---- keys (spec 7.1–7.5) ---------------------------------------------------------------
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || isEditable(event.target)) return;
       const key = event.key;
       const handled = () => event.preventDefault();
+      if (confirm) {
+        if (key === "Enter") { handled(); runConfirm(); }
+        return;
+      }
+      if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || isEditable(event.target)) return;
       const ids = [...selectedNotes];
       if (event.ctrlKey) {
         const lower = key.toLowerCase();
@@ -242,6 +312,15 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if ((key === "Delete" || key === "Backspace") && ids.length) { handled(); edit((model) => deleteNotes(model, ids)); }
       else if ((key === "r" || key === "R") && ids.length) { handled(); edit((model) => restoreNotes(model, ids)); }
       else if (key === "n" || key === "N") { handled(); enterEdit(); }
+      else if ((key === "m" || key === "M") && event.shiftKey) { handled(); askMergeRuns(); }
+      else if ((key === "m" || key === "M") && selected) { handled(); edit((model) => mergeWithNext(model, selected.id)); }
+      else if ((key === "s" || key === "S") && selected) { handled(); edit((model) => splitCard(model, selected.id)); }
+      else if (key === "y" || key === "Y") { handled(); markAndNext(); }
+      else if (key === "F2" && selected) { handled(); openNameEditor(selected.id); }
+      else if (/^[1-4]$/.test(key) && selected) {
+        const name = nameCandidatesFor(selected, present.notes.filter((note) => note.cardId === selected.id))[Number(key) - 1];
+        if (name) { handled(); pickName(name, selected.id); }
+      }
       else if (key === "a" || key === "A") { handled(); playCard("source"); }
       else if (key === "b" || key === "B") { handled(); playCard("card"); }
       else if (key === "Enter") { handled(); setMode("check"); setSelectedNotes(new Set()); }
@@ -252,7 +331,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [edit, enterEdit, helpOpen, nextReview, playCard, present, selectCard, selectNotes, selected, selectedIndex, selectedNotes, toggleSong]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, selectNotes, selected, selectedIndex, selectedNotes, toggleSong]);
 
   // Ctrl + wheel zooms around the pointer (a native listener, so preventDefault works).
   useEffect(() => {
@@ -280,8 +359,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     scrollToBeat(((event.clientX - box.left) / box.width) * present.totalBeats);
   };
 
-  const melodySuggestion = present.suggestions.find((entry) => entry.kind === "melody-voice");
-  const suggestion = suggestionClosed ? undefined : melodySuggestion;
+  const suggestion = present.suggestions.find((entry) => !closedSuggestions.has(entry.kind));
+  const closeSuggestion = (kind: string) => setClosedSuggestions((current) => new Set([...current, kind]));
   const barStep = pxPerBeat * meter < 18 ? 8 : pxPerBeat * meter < 36 ? 4 : 1;
   const viewStart = scrollLeft / pxPerBeat;
   const viewEnd = (scrollLeft + viewportWidth) / pxPerBeat;
@@ -315,11 +394,19 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       </div>
 
       {suggestion?.kind === "melody-voice" ? (
-        <div className="lv-cw-suggestion" role="status" data-testid="correction-suggestion">
+        <div className="lv-cw-suggestion" role="status" data-testid="correction-suggestion" data-kind={suggestion.kind}>
           <span>メロディの Voice（{suggestion.voiceLabel}）の音が {suggestion.cardCount} 枚のカードに入っています。まとめて選んで、外すかどうかを決められます（外すのは <kbd>Delete</kbd> か右の欄）。</span>
           <span className="lv-cw-actions">
             <button type="button" className="lv-cw-btn" data-kind="accent" onClick={() => selectNotes(suggestion.noteIds, "replace")} data-testid="correction-select-melody">まとめて選ぶ（{suggestion.noteIds.length}）</button>
-            <button type="button" className="lv-cw-btn" onClick={() => setSuggestionClosed(true)}>閉じる</button>
+            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>閉じる</button>
+          </span>
+        </div>
+      ) : suggestion?.kind === "same-notes-run" ? (
+        <div className="lv-cw-suggestion" role="status" data-testid="correction-suggestion" data-kind={suggestion.kind}>
+          <span>同じ音が続く所が {suggestion.count} か所あります。つなぐと1枚のカードになります（打ち直しは ×n で残ります）。</span>
+          <span className="lv-cw-actions">
+            <button type="button" className="lv-cw-btn" data-kind="accent" onClick={askMergeRuns} data-testid="correction-confirm-runs">確認してつなぐ</button>
+            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>閉じる</button>
           </span>
         </div>
       ) : null}
@@ -372,6 +459,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               <span className="lv-cw-label" style={{ height: 26 }}>小節</span>
               <button type="button" className="lv-cw-label lv-cw-seg-toggle" style={{ height: segmentsOpen ? 30 : 20 }} aria-expanded={segmentsOpen} onClick={() => setSegmentsOpen((value) => !value)}>区切り</button>
               <span className="lv-cw-label" style={{ height: 98 }}>コード</span>
+              <span className="lv-cw-label" style={{ height: 20 }} aria-hidden="true" />
               <div className="lv-cw-keys" style={{ height: rollHeight }}>
                 {Array.from({ length: high - low + 1 }, (_, index) => {
                   const pitch = high - index;
@@ -432,7 +520,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         aria-label={`${card.bar}小節${card.beat}拍 ${card.name.label}${review ? "（要確認）" : ""}`}
                         title={card.name.label}
                         style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
+                        data-card-id={card.id}
                         onClick={() => selectCard(card, false)}
+                        onDoubleClick={() => openNameEditor(card.id)}
                       >
                         <span className="lv-cw-card-name" data-full-name={card.name.label}>{cardLabel(card.name.label, width)}</span>
                         <span className="lv-cw-card-sub">
@@ -443,6 +533,40 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                       </button>
                     );
                   })}
+                  {shown.cards.map((card, index) => {
+                    const next = shown.cards[index + 1];
+                    if (!next || Math.abs(card.start + card.duration - next.start) > 1e-6 || next.start < range.from || next.start > range.to) return null;
+                    return (
+                      <span
+                        key={`edge-${card.id}`}
+                        className="lv-cw-handle"
+                        role="separator"
+                        aria-label={`${positionLabel(next.start, meter)} の境目（ドラッグで動かす・Alt で ¼拍）`}
+                        data-testid="correction-boundary"
+                        data-left-card={card.id}
+                        style={{ left: next.start * pxPerBeat - 4 }}
+                        onPointerDown={(event) => startBoundary(event, card.id)}
+                        onPointerMove={dragBoundary}
+                        onPointerUp={endBoundary}
+                        onPointerCancel={endBoundary}
+                      />
+                    );
+                  })}
+                  {boundaryTip ? <span className="lv-cw-pitch-tip" style={{ left: boundaryTip.x, top: 12 }}>{boundaryTip.text}</span> : null}
+                </div>
+                <div className="lv-cw-chips">
+                  {present.cards.filter((card) => overlaps(card.start, card.duration, range) && card.reviewReasons.some((reason) => reason.kind === "same-chord-split")).map((card) => (
+                    <button
+                      key={card.id}
+                      type="button"
+                      className="lv-cw-chip"
+                      data-testid="correction-merge-chip"
+                      style={{ left: (card.start + card.duration) * pxPerBeat }}
+                      onClick={() => { setSelectedId(card.id); edit((model) => mergeWithNext(model, card.id)); }}
+                    >
+                      つなぐ
+                    </button>
+                  ))}
                 </div>
                 <PianoRoll
                   present={present}
@@ -509,6 +633,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               onSelectShortSame={(noteId) => selectNotes(sameShortPitchIds(present, noteId), "replace")}
               shortSameCount={(noteId) => sameShortPitchIds(present, noteId).length}
               onEditNotes={enterEdit}
+              onChooseName={(name) => pickName(name, selected.id)}
+              onTypeName={() => openNameEditor(selected.id)}
+              onReviewed={markAndNext}
+              {...(selectedIndex > 0 ? { onMergePrevious: () => { const previous = present.cards[selectedIndex - 1]!; setSelectedId(previous.id); edit((model) => mergeWithNext(model, previous.id)); } } : {})}
+              {...(selectedIndex < present.cards.length - 1 ? { onMergeNext: () => edit((model) => mergeWithNext(model, selected.id)) } : {})}
+              onSplit={() => edit((model) => splitCard(model, selected.id))}
+              {...(sameFix.length ? { sameFix: { count: sameFix.length, onApply: () => setConfirm("same-fix") } } : {})}
             />
           ) : <p className="lv-cw-muted">カードがありません。</p>}
         </aside>
@@ -531,6 +662,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span><kbd>←</kbd><kbd>→</kbd> 前後のカード</span>
             <span><kbd>[</kbd><kbd>]</kbd> 前後の要確認</span>
             <span><kbd>N</kbd> 音を直す</span>
+            <span><kbd>M</kbd> つなぐ・<kbd>S</kbd> 分ける</span>
+            <span><kbd>1</kbd>〜<kbd>4</kbd> 名前・<kbd>Y</kbd> このままでよい</span>
             <span>右クリック：外す・ダブルクリック：足す</span>
             <span><kbd>A</kbd><kbd>B</kbd> 聴き比べ</span>
             <span><kbd>Space</kbd> 再生・停止</span>
@@ -541,6 +674,37 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       </div>
 
       {helpOpen ? <ShortcutSheet onClose={() => setHelpOpen(false)} /> : null}
+      <ConfirmDialog
+        open={confirm === "runs"}
+        title="同じ音が続く所をつなぐ"
+        description={confirm === "runs" ? runsDescription(present) : ""}
+        confirmLabel="つなぐ（Enter）"
+        cancelLabel="やめる（Esc）"
+        onConfirm={runConfirm}
+        onCancel={() => setConfirm(undefined)}
+      />
+      <ConfirmDialog
+        open={confirm === "same-fix" && Boolean(selected && rename)}
+        title="同じ直しを他にも反映"
+        description={selected && rename ? `同じ音で名前が「${rename.before}」の他の ${sameFix.length} か所も「${selected.name.label}」にします。` : ""}
+        confirmLabel="反映する（Enter）"
+        cancelLabel="やめる（Esc）"
+        onConfirm={runConfirm}
+        onCancel={() => setConfirm(undefined)}
+      />
+      {nameEditor && editorCard ? (
+        <QuickChordEditor
+          key={editorCard.id}
+          slot={slotFor(editorCard, timeline)}
+          anchorElement={nameEditor.anchor}
+          resetLabel="自動の名前に戻す"
+          onPreview={() => undefined}
+          onApply={(chord) => { pickName(chord, editorCard.id); setNameEditor(undefined); }}
+          onReset={() => { edit((model) => chooseName(model, editorCard.id, timeline[editorCard.timelineIndex]!.chord, "auto")); setNameEditor(undefined); }}
+          onOpenInspector={() => setNameEditor(undefined)}
+          onClose={() => setNameEditor(undefined)}
+        />
+      ) : null}
     </section>
   );
 }
@@ -548,7 +712,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 function ShortcutSheet({ onClose }: { onClose: () => void }) {
   const rows: [string, string][] = [
     ["← →", "前後のカード"], ["[ ]", "前後の要確認"], ["Space", "曲全体の再生・停止"], ["F", "再生位置に追従する／しない"],
-    ["Home End", "最初／最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"], ["N", "② 音を直す"], ["Enter", "直し終わる（①へ）"],
+    ["Home End", "最初／最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"],
+    ["M", "次のカードとつなぐ"], ["Shift＋M", "同じ音が続く所を確認してつなぐ"], ["S", "カードを半分に分ける"],
+    ["境目の取っ手", "ドラッグで1拍ずつ（Alt で ¼拍）"], ["1〜4", "名前の候補を選ぶ"], ["F2・名前をダブルクリック", "名前を文字で入れる"], ["Y", "このままでよい（次の要確認へ）"], ["N", "② 音を直す"], ["Enter", "直し終わる（①へ）"],
     ["右クリック・右ドラッグ", "元の音を外す／足した音を消す"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],
     ["上下ドラッグ・↑↓", "半音ずつ高さを直す"], ["Ctrl＋↑↓", "1オクターブ"], ["Delete", "外す・消す"], ["R", "戻す"],
     ["Ctrl＋A", "選んだカードの音を全部選ぶ"], ["Ctrl＋クリック（鍵盤）", "その高さの音を曲全体で選ぶ"], ["A B", "元の音／カードの音を鳴らす"],
@@ -563,6 +729,30 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
+}
+
+function runsDescription(model: CorrectionModel): string {
+  const groups = sameNotesGroups(model);
+  const byId = new Map(model.cards.map((card) => [card.id, card]));
+  const places = groups.map((group) => {
+    const first = byId.get(group[0]!)!;
+    return `${positionLabel(first.start, model.context.meter)} ${first.name.label} ×${group.length}`;
+  });
+  const listed = places.slice(0, 12).join("、");
+  return `同じ音が続く所を ${groups.length} か所つなぎます：${listed}${places.length > 12 ? ` ほか ${places.length - 12} か所` : ""}。名前が同じでも音が違う所はつなぎません。`;
+}
+
+function slotFor(card: CorrectionCard, timeline: readonly ChordTimelineItem[]): EditableChordSlot {
+  const item = timeline[card.timelineIndex]!;
+  return {
+    id: card.id,
+    position: { bar: card.bar, beat: card.beat, durationBeats: card.duration },
+    originalChord: item.chord,
+    currentChord: card.name,
+    alternatives: item.alternatives,
+    warnings: [],
+    edited: card.nameSource === "user",
+  };
 }
 
 function pct(value: number, total: number): string {

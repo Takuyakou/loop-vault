@@ -167,10 +167,12 @@ test("P10.0-03 the melody suggestion selects every melody-voice note and Delete 
   await workspace.getByTestId("correction-select-melody").click();
   expect(await page.locator("[data-testid=correction-piano-roll] .lv-cw-note[data-selected]").count()).toBeGreaterThan(1);
   await page.keyboard.press("Delete");
-  await expect(workspace.getByTestId("correction-suggestion")).toHaveCount(0);
+  // The melody suggestion goes; neighbours that now sound the same bring the next one (spec 6.5).
+  const melody = workspace.locator('[data-testid="correction-suggestion"][data-kind="melody-voice"]');
+  await expect(melody).toHaveCount(0);
   await expect(workspace.getByTestId("correction-history")).toContainText("操作 1");
   await page.keyboard.press("Control+z");
-  await expect(workspace.getByTestId("correction-suggestion")).toBeVisible();
+  await expect(melody).toBeVisible();
 });
 
 test("P10.0-03 「＋ 音を足す」 and keyboard-only exclude and restore", async ({ page }) => {
@@ -200,4 +202,119 @@ test("P10.0-03 「＋ 音を足す」 and keyboard-only exclude and restore", as
   await page.keyboard.press("Control+z");
   await expect(list.getByRole("button", { name: "戻す" })).toHaveCount(0);
   await expect(history).toContainText("操作 1");
+});
+
+// ---- P10.0-04 card editing -------------------------------------------------------------
+
+const cards = (page: Page) => page.getByTestId("correction-workspace").getByTestId("correction-card");
+
+test("P10.0-04 M merges with ×2 and Ctrl+Z undoes it; S splits; Shift+M asks first (Esc / Enter)", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  await expect(cards(page)).toHaveCount(8);
+  await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("m");
+  await expect(cards(page)).toHaveCount(7);
+  await expect(cards(page).first().locator(".lv-cw-x")).toHaveText("×2");
+  await expect(workspace.getByTestId("correction-history")).toContainText("と次をつないだ");
+  await page.keyboard.press("Control+z");
+  await expect(cards(page)).toHaveCount(8);
+
+  await page.keyboard.press("s");
+  await expect(cards(page)).toHaveCount(9);
+  await expect(cards(page).first()).toContainText("2拍");
+  // The two halves play the same notes: Shift+M lists 1 place; Esc cancels, Enter merges.
+  await page.keyboard.press("Shift+M");
+  const dialog = page.getByRole("dialog", { name: "同じ音が続く所をつなぐ" });
+  await expect(dialog).toContainText("1 か所つなぎます");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(cards(page)).toHaveCount(9);
+  await page.keyboard.press("Shift+M");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toHaveCount(0);
+  await expect(cards(page)).toHaveCount(8);
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 2");
+});
+
+test("P10.0-04 boundary handle moves by a beat, and by ¼ beat with Alt", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const first = cards(page).first();
+  const box = (await first.boundingBox())!;
+  const beatPx = (box.width + 2) / 4;
+  const handle = page.getByTestId("correction-boundary").first();
+  const start = await (async () => { await handle.scrollIntoViewIfNeeded(); const h = (await handle.boundingBox())!; return { x: h.x + h.width / 2, y: h.y + h.height / 2 }; })();
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  for (let step = 1; step <= 5; step += 1) await page.mouse.move(start.x - (beatPx * step) / 5, start.y);
+  await page.mouse.up();
+  await expect(first).toContainText("3拍");
+  await expect(page.getByTestId("correction-history")).toContainText("境目を 1.4 へ");
+
+  const moved = (await page.getByTestId("correction-boundary").first().boundingBox())!;
+  const from = { x: moved.x + moved.width / 2, y: moved.y + moved.height / 2 };
+  await page.keyboard.down("Alt");
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  for (let step = 1; step <= 4; step += 1) await page.mouse.move(from.x - (beatPx * 0.25 * step) / 4, from.y);
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+  await expect(first).toContainText("2.75拍");
+  await expect(page.getByTestId("correction-history")).toContainText("操作 2");
+});
+
+test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name stays", async ({ page }) => {
+  await importScenario(page, "plain-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  const inspector = workspace.getByTestId("correction-inspector");
+  const candidates = workspace.getByTestId("correction-name-candidates").getByRole("button");
+  const second = (await candidates.nth(1).locator(".lv-cw-alt-name").textContent())!;
+  await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("2");
+  await expect(workspace.getByTestId("correction-inspector-name")).toHaveText(second);
+  await expect(inspector).toContainText("あなたが決めた名前");
+  // Bar 5 plays the same notes under the old name: offer the same fix, confirm, one step.
+  await workspace.getByTestId("correction-same-fix").click();
+  await page.getByRole("dialog", { name: "同じ直しを他にも反映" }).getByRole("button", { name: /反映する/ }).click();
+  await expect(cards(page).nth(4).locator(".lv-cw-card-name")).toHaveAttribute("data-full-name", second);
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 2");
+
+  await page.keyboard.press("F2");
+  const editor = page.locator("[data-quick-chord-editor]");
+  await expect(editor).toBeVisible();
+  await editor.press("ArrowRight");
+  await editor.press("Enter");
+  await expect(editor).toHaveCount(0);
+  await expect(workspace.getByTestId("correction-inspector-name")).not.toHaveText(second);
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 3");
+});
+
+test("P10.0-04 Y moves to the next review card; the run suggestion merges after a confirm", async ({ page }) => {
+  await importScenario(page, "melody-track-8", true);
+  const workspace = page.getByTestId("correction-workspace");
+  await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
+  const count = workspace.getByTestId("correction-review-count");
+  const before = Number(await count.locator("b").textContent());
+  const selected = () => workspace.locator('[data-testid="correction-card"][aria-pressed="true"]').getAttribute("data-card-id");
+  const firstId = await selected();
+  await count.focus();
+  await page.keyboard.press("y");
+  await expect(count.locator("b")).toHaveText(String(before - 1));
+  expect(await selected()).not.toBe(firstId);
+
+  // plain-8: split, then touch a note of the second half → 「同じ音が続く所が 1 か所」.
+  await importScenario(page, "plain-8", true);
+  await page.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("s");
+  await page.keyboard.press("ArrowRight");
+  const list = page.getByTestId("correction-note-list");
+  await list.getByRole("button", { name: "外す" }).first().click();
+  await list.getByRole("button", { name: "戻す" }).first().click();
+  const suggestion = page.getByTestId("correction-suggestion");
+  await expect(suggestion).toContainText("同じ音が続く所が 1 か所");
+  await suggestion.getByTestId("correction-confirm-runs").click();
+  await page.getByRole("dialog", { name: "同じ音が続く所をつなぐ" }).getByRole("button", { name: /つなぐ/ }).click();
+  await expect(cards(page)).toHaveCount(8);
+  await expect(suggestion).toHaveCount(0);
 });

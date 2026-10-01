@@ -297,11 +297,35 @@ export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string
     const { noteWarning: _dropped, ...rest } = next;
     return { ...rest, reviewReasons: reasons, ...(warning ? { noteWarning: warning } : {}) };
   });
+  // Spec 6.5 (2): only once an edit has made neighbours sound the same.
+  const runs = sameNotesRuns(cards, byCard);
+  const edited = new Set(cards.filter((card) => card.edited).map((card) => card.id));
   const suggestions: SongSuggestion[] = [
     ...(melodySuggestion ? [melodySuggestion] : []),
-    ...model.suggestions.filter((suggestion) => suggestion.kind !== "melody-voice"),
+    ...(runs.some((group) => group.some((id) => edited.has(id))) ? [{ kind: "same-notes-run" as const, count: runs.length, cardIds: runs.flat() }] : []),
   ];
   return { ...model, cards, suggestions };
+}
+
+/**
+ * Runs of neighbouring cards whose used notes (pitch classes + lowest pitch) are
+ * exactly the same (spec 7.1 Shift+M). Same name with different notes is not a run.
+ */
+export function sameNotesRuns(cards: readonly CorrectionCard[], byCard: ReadonlyMap<string, readonly CorrectionNote[]>): string[][] {
+  const runs: string[][] = [];
+  let run: string[] = [];
+  let shape = "";
+  for (const card of cards) {
+    const next = usedShape(byCard.get(card.id) ?? []);
+    if (next !== "" && next === shape) run.push(card.id);
+    else {
+      if (run.length > 1) runs.push(run);
+      run = [card.id];
+    }
+    shape = next;
+  }
+  if (run.length > 1) runs.push(run);
+  return runs;
 }
 
 function reviewReasonsFor(

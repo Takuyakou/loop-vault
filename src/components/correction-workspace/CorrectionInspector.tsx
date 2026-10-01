@@ -18,9 +18,14 @@ export interface CorrectionInspectorProps {
   onSelectShortSame: (noteId: string) => void;
   shortSameCount: (noteId: string) => number;
   onEditNotes: () => void;
-  /** P10.0-04: choosing a candidate; the buttons are shown but disabled without it. */
-  onChooseName?: (name: ChordSymbol) => void;
-  extraActions?: React.ReactNode;
+  onChooseName: (name: ChordSymbol) => void;
+  onTypeName: () => void;
+  onReviewed: () => void;
+  onMergePrevious?: () => void;
+  onMergeNext?: () => void;
+  onSplit: () => void;
+  /** Spec §12: other cards with the same notes that still have the old name. */
+  sameFix?: { count: number; onApply: () => void };
 }
 
 export function CorrectionInspector(props: CorrectionInspectorProps) {
@@ -59,11 +64,20 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
                 同じ高さの短い音を選ぶ（{props.shortSameCount(reason.noteIds[0])}個）
               </button>
             ) : null}
-            <button type="button" className="lv-cw-btn" onClick={props.onEditNotes}>音を直す</button>
-            {props.extraActions}
+            {reason.kind === "same-chord-split" && props.onMergeNext ? (
+              <button type="button" className="lv-cw-btn" data-kind="accent" onClick={props.onMergeNext}>次とつなぐ</button>
+            ) : <button type="button" className="lv-cw-btn" onClick={props.onEditNotes}>音を直す</button>}
+            <button type="button" className="lv-cw-btn" onClick={props.onReviewed} data-testid="correction-reviewed">このままでよい</button>
           </div>
         </div>
-      )) : <div className="lv-cw-ok">このカードに要確認の印はありません。{props.extraActions ? <div className="lv-cw-actions">{props.extraActions}</div> : null}</div>}
+      )) : <div className="lv-cw-ok">{card.reviewed ? "「このままでよい」にしたカードです。" : "このカードに要確認の印はありません。"}</div>}
+
+      <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
+        <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
+        <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onSplit}>分ける <kbd>S</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
+      </div>
 
       <section>
         <div className="lv-cw-row-between">
@@ -121,8 +135,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
               type="button"
               className="lv-cw-alt"
               aria-pressed={name.label === card.name.label}
-              disabled={!props.onChooseName}
-              onClick={() => props.onChooseName?.(name)}
+              onClick={() => props.onChooseName(name)}
               title={`${index + 1} を押しても選べます`}
             >
               <span className="lv-cw-alt-no">{index + 1}</span>
@@ -130,6 +143,11 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
             </button>
           ))}
         </div>
+        {props.sameFix ? (
+          <button type="button" className="lv-cw-btn" data-kind="accent" onClick={props.sameFix.onApply} data-testid="correction-same-fix">
+            同じ音の他の {props.sameFix.count} か所にも反映
+          </button>
+        ) : null}
       </section>
 
       <section>

@@ -301,6 +301,16 @@ for (const [width, height] of SIZES) {
         await page.keyboard.press("n");
         await expect(page.getByTestId("correction-history")).toContainText("操作 3");
       });
+      // P10.0-04: Shift+M lists the places with the same notes before merging.
+      await shot("capture-workspace-merge-confirm", async () => {
+        await openWorkspace("plain-8");
+        await page.getByTestId("correction-review-count").focus();
+        await page.keyboard.press("s");
+        await page.keyboard.press("End");
+        await page.keyboard.press("s");
+        await page.keyboard.press("Shift+M");
+        await expect(page.getByRole("dialog", { name: "同じ音が続く所をつなぐ" })).toContainText("2 か所");
+      });
       await shot("capture-workspace-long", async () => {
         await openWorkspace("long-64");
       });

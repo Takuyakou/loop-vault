@@ -327,6 +327,15 @@
   .lv-cw-alt[aria-pressed="true"] { border-color: var(--lv-accent); }
   .lv-cw-alt:disabled { cursor: default; opacity: 0.8; }
 
+  /* P10.0-04 card editing */
+  .lv-cw-handle { position: absolute; top: 4px; bottom: 4px; z-index: 2; width: 8px; cursor: ew-resize; touch-action: none; }
+  .lv-cw-handle::after { position: absolute; top: 20%; bottom: 20%; left: 3px; width: 2px; border-radius: 1px; background: var(--lv-border-strong); content: ""; opacity: 0; }
+  .lv-cw-cards:hover .lv-cw-handle::after, .lv-cw-handle:active::after { opacity: 1; }
+  .lv-cw-handle:hover::after, .lv-cw-handle:active::after { background: var(--lv-accent); }
+  .lv-cw-chips { position: relative; height: 20px; }
+  .lv-cw-chip { position: absolute; top: 2px; height: 16px; padding: 0 7px; transform: translateX(-50%); border: 1px solid var(--lv-warning); border-radius: 999px; background: var(--lv-surface); color: var(--lv-warning); font-size: var(--lv-text-11); line-height: 14px; white-space: nowrap; }
+  .lv-cw-chip:hover { background: var(--lv-warning-soft); }
+
   .lv-cw-keys-help {
     display: flex;
     flex-wrap: wrap;
