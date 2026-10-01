@@ -401,7 +401,7 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(sections[index - 1]!.compareDocumentPosition(sections[index]!)
         & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
-    expect(sections[1]!.querySelectorAll("[data-testid='voicing-loop-next-move-hand-group']")).toHaveLength(2);
+    expect(sections[1]!.querySelector("[data-testid='voicing-loop-next-move']")).toBeNull();
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     expect(playhead.style.transform).toBe("translateX(0px)");
     expect(playhead.style.transitionTimingFunction).toBe("");
@@ -1399,6 +1399,139 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
   });
 
+  it("current panel hides Next Move only at composition, preserving hand facts and generated explanation", async () => {
+    const container = await renderView(new SeekingTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
+    const panel = container.querySelector("[data-testid='voicing-loop-current-panel']")!;
+    expect(panel.querySelector("[data-testid='voicing-loop-next-move']")).toBeNull();
+    expect(panel.textContent).not.toContain("次への動き");
+    for (const hand of ["left", "right"]) {
+      const card = panel.querySelector(`[data-testid='voicing-loop-${hand}-hand']`)!;
+      expect(card).not.toBeNull();
+      for (const label of ["指", "音名", "構成音", "おすすめ"]) expect(card.textContent).toContain(label);
+    }
+    const info = panel.querySelector("[data-testid='voicing-loop-current-explanation']")!;
+    for (const label of ["Teacher Style", "Literal", "候補", "ルール", "省略", "トップ"]) expect(info.textContent).toContain(label);
+    expect(button(container, "運指を編集").disabled).toBe(false);
+  });
+
+  it.each(["none", "both", "one"] as const)("Space shares transport start/pause/resume/stop commands for %s range", async mode => {
+    const runtime = new SeekingTransport();
+    const value = snapshot("source-midi");
+    const original = JSON.stringify(value);
+    const container = await renderView(runtime, { "source-midi": value }, "source-midi");
+    const viewport = container.querySelector<HTMLElement>("[data-testid='voicing-loop-timeline-viewport']")!;
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    if (mode !== "none") {
+      await contextRange(cards[mode === "both" ? 0 : 1]!);
+      if (mode === "both") await contextRange(cards[1]!);
+      else await contextRange(cards[1]!);
+    } else viewport.focus();
+    const space = async () => act(async () => {
+      const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+      viewport.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    });
+    await space();
+    expect(runtime.start).toHaveBeenCalledOnce();
+    expect(runtime.options?.startBeat).toBe(mode === "one" ? 2 : 0);
+    expect(runtime.options?.loopBounds).toEqual(mode === "none" ? undefined
+      : { startBeat: mode === "one" ? 2 : 0, endBeat: 4 });
+    expect(runtime.options?.countInBars).toBe(1);
+    await act(async () => runtime.options?.onTransportBeat(4.5));
+    await space();
+    expect(runtime.pause).toHaveBeenCalledOnce();
+    await space();
+    expect(runtime.resume).toHaveBeenCalledOnce();
+    expect(runtime.start).toHaveBeenCalledOnce();
+    await act(async () => button(container, "停止").click());
+    await space();
+    expect(runtime.start).toHaveBeenCalledTimes(2);
+    expect(runtime.options?.startBeat).toBe(mode === "one" ? 2 : 0);
+    expect(JSON.stringify(value)).toBe(original);
+  });
+
+  it("range contextmenu releases card focus, but unrelated native buttons and input Space remain untouched", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    cards[0]!.scrollIntoView = vi.fn();
+    cards[0]!.focus();
+    await contextRange(cards[0]!);
+    await contextRange(cards[1]!);
+    const viewport = container.querySelector<HTMLElement>("[data-testid='voicing-loop-timeline-viewport']")!;
+    expect(document.activeElement).toBe(viewport);
+    for (const target of [button(container, "元MIDI"), container.querySelector<HTMLInputElement>("#voicing-loop-bpm")!, cards[0]!]) {
+      target.focus();
+      const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+      await act(async () => target.dispatchEvent(event));
+      expect(event.defaultPrevented).toBe(false);
+      expect(runtime.start).not.toHaveBeenCalled();
+    }
+    viewport.focus();
+    await act(async () => viewport.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true })));
+    expect(runtime.start).toHaveBeenCalledOnce();
+  });
+
+  it("transport clear is always present; clears pending/active/highlights and returns to full playback with reset count", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const clear = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-clear']")!;
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    expect(clear.disabled).toBe(true);
+    await contextRange(cards[1]!);
+    expect(clear.disabled).toBe(false);
+    await act(async () => clear.click());
+    expect(clear.disabled).toBe(true);
+    expect(cards[1]!.dataset.range).toBe("none");
+    await contextRange(cards[0]!, true);
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(8));
+    expect(container.textContent).toContain("2 周完了");
+    await contextRange(cards[1]!);
+    expect(cards[0]!.dataset.range).toBe("a-b");
+    await act(async () => clear.click());
+    expect(runtime.setLoopBounds).toHaveBeenLastCalledWith(undefined);
+    expect(clear.disabled).toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-range-pending']")).toBeNull();
+    expect(cards[0]!.dataset.range).toBe("none");
+    await act(async () => runtime.activateRange());
+    expect(container.textContent).not.toContain("2 周完了");
+    await act(async () => button(container, "停止").click());
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.loopBounds).toBeUndefined();
+    expect(runtime.options?.startBeat).toBe(0);
+  });
+
+  it("overview/ruler pointer snaps to cards including scroll, preserves old pending range and keeps left seek independent", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const overview = container.querySelector<HTMLElement>("[data-testid='voicing-loop-overview']")!;
+    const ruler = container.querySelector<HTMLElement>("[data-testid='voicing-loop-ruler']")!;
+    const viewport = container.querySelector<HTMLElement>("[data-testid='voicing-loop-timeline-viewport']")!;
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    overview.getBoundingClientRect = () => ({ left: 100, width: 400 }) as DOMRect;
+    viewport.getBoundingClientRect = () => ({ left: 100 }) as DOMRect;
+    const ppb = parseFloat(cards[0]!.style.width) / 2;
+    viewport.scrollLeft = 2 * ppb;
+    await contextRange(ruler, false, 100 + ppb / 2);
+    expect(cards[1]!.dataset.range).toBe("pending-a");
+    await contextRange(overview, false, 150);
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("1〜2");
+    await contextRange(overview, true, 450);
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
+    await contextRange(overview, false, 100);
+    expect(cards[0]!.dataset.range).toBe("pending-a");
+    expect(cards[1]!.dataset.range).toBe("a-b");
+    await act(async () => viewport.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
+    expect(cards[1]!.dataset.range).toBe("a-b");
+    expect(cards[0]!.dataset.range).toBe("outside");
+    await act(async () => button(container, "区間解除").click());
+    await act(async () => button(container, "開始").click());
+    await act(async () => ruler.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 100 + ppb / 2 })));
+    expect(runtime.seek).toHaveBeenLastCalledWith(1);
+  });
+
   it("v2 card click seeks, preview stays separate, and keyboard moves by chord", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
@@ -1608,4 +1741,10 @@ class PendingTransport extends FakeTransport {
 
 class RejectingAuditionTransport extends FakeTransport {
   override audition = vi.fn(async () => { throw new Error("private runtime detail"); });
+}
+
+async function contextRange(target: HTMLElement, shiftKey = false, clientX = 0) {
+  const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, shiftKey, clientX });
+  await act(async () => target.dispatchEvent(event));
+  expect(event.defaultPrevented).toBe(true);
 }

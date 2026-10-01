@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-07",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -59,6 +59,13 @@
       "p11-06-full",
       "p11-06-exe",
       "p11-06-phase-docs"
+    ],
+    "P11.0-07": [
+      "p11-07-focused",
+      "p11-07-ui",
+      "p11-07-full",
+      "p11-07-exe",
+      "p11-07-docs"
     ]
   },
   "gateResults": {
@@ -89,8 +96,10 @@
     "p11-06-screens": "pass",
     "p11-06-full": "pass",
     "p11-06-exe": "pass",
-    "p11-06-phase-docs": "pass"
+    "p11-06-phase-docs": "pass",
+    "p11-07-focused": "pass",
+    "p11-07-ui": "pass"
   },
-  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. Completed P11-00 through P11-06; runnable Windows EXE built. Stop without master merge/push/tag/release.",
+  "nextAction": "P11-07: freeze candidate, fresh FULL once and runnable EXE; stop for acceptance without merge.",
   "updatedAt": "2026-10-01"
 }

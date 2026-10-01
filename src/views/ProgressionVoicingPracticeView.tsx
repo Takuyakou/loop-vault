@@ -37,7 +37,7 @@ import {
 } from "../domain/progressionVoicingPractice";
 import { cancelVoicingLoopRangePending, emptyVoicingLoopRangeSelection, rangeBeatBounds,
   rangeContainsCard, selectVoicingLoopRangeCard, type VoicingLoopRangeSelection } from "../domain/progressionVoicingPractice/rangeLoop";
-import { chordIndexAtTimelineBeat } from "../domain/progressionVoicingPractice/timelineNavigation";
+import { chordIndexAtTimelineBeat, timelineBeatAtPointer } from "../domain/progressionVoicingPractice/timelineNavigation";
 import { clampTimelineScale, compactTimelineCard, remainingBeatsLabel, visualTransportBeat, timelinePixelsPerBeat as pixelsPerBeatForTimeline } from "../domain/progressionVoicingPractice/timelineLayout";
 import type {
   VoicingCoverage,
@@ -78,7 +78,7 @@ import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable,
 import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
 import { preferenceId, rememberVoicingSource, restoreVoicingSource, sourceCoverage } from "../voicingPractice/sourcePreference";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
-import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
+import { fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
@@ -577,12 +577,6 @@ export function ProgressionVoicingPracticeView({
     () => effectiveFingering(nextRightSuggested, fingeringPreferences),
     [nextRightSuggested, fingeringPreferences],
   );
-  const nextMoves = useMemo(() => currentVoicing && nextVoicing
-    ? computeNextMoves(currentHandTargets, nextHandTargets,
-      { left: currentLeftFingering, right: currentRightFingering },
-      { left: nextLeftFingering, right: nextRightFingering }) : [],
-    [currentVoicing, nextVoicing, currentHandTargets, nextHandTargets,
-      currentLeftFingering, currentRightFingering, nextLeftFingering, nextRightFingering]);
   const keyboardEventIndex = currentIndex;
   const keyboardEvent = snapshot?.events[keyboardEventIndex];
   const keyboardResolution = plan?.events[keyboardEventIndex];
@@ -901,6 +895,9 @@ export function ProgressionVoicingPracticeView({
     if (!snapshot || !transportRef.current?.supportsSeek) return;
     const next = selectVoicingLoopRangeCard(rangeSelection, cardIndex, snapshot.events.length, immediate);
     setRangeSelection(next);
+    // Range editing hands focus to the timeline, where Space is a transport command.
+    // Ordinary focused buttons retain their native Space activation contract.
+    timelineViewportRef.current?.focus({ preventScroll: true });
     if (next.active === rangeSelection.active) return;
     const bounds = rangeBeatBounds(snapshot.events, next.active);
     const status = clockStateRef.current?.status;
@@ -921,6 +918,21 @@ export function ProgressionVoicingPracticeView({
     setSeekAnchorIndex(0);
     setClockState(state => state ? reduceProgressionPracticeClock(snapshot, state,
       { type: "SET_LOOP_BOUNDS" }) : state);
+  }
+
+  function markRangeFromTimeline(event: MouseEvent<HTMLElement>, surface: "overview" | "ruler") {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!snapshot || !timelineViewportRef.current) return;
+    const viewport = timelineViewportRef.current;
+    const rect = surface === "overview" ? event.currentTarget.getBoundingClientRect() : viewport.getBoundingClientRect();
+    const beat = timelineBeatAtPointer(event.clientX,
+      rect.left - (surface === "ruler" ? viewport.scrollLeft : 0),
+      surface === "overview" ? rect.width / snapshot.lengthBeats : timelinePixelsPerBeat,
+      snapshot.lengthBeats);
+    if (beat === undefined) return;
+    const cardIndex = chordIndexAtTimelineBeat(snapshot, beat);
+    if (cardIndex !== undefined) markRangeCard(cardIndex, event.shiftKey);
   }
 
   function seekToBeat(beat: number, origin: TimelineSeekOrigin) {
@@ -966,6 +978,12 @@ export function ProgressionVoicingPracticeView({
       if (runtimeRequestRef.current !== request) return;
       handleRuntimeFailure();
     }
+  }
+
+  function togglePlayback() {
+    if (active) pause();
+    else if (paused) void resume();
+    else void start();
   }
 
   async function restart() {
@@ -1145,9 +1163,7 @@ export function ProgressionVoicingPracticeView({
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
       event.preventDefault();
       if (key === " ") {
-        if (active) pause();
-        else if (paused) void resume();
-        else void start();
+        togglePlayback();
       } else if (key === "escape") {
         if (rangeSelection.pendingStart !== undefined) setRangeSelection(cancelVoicingLoopRangePending(rangeSelection));
         else stop();
@@ -1377,11 +1393,10 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
-            <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
-              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" aria-label={"現在のコード詳細"}>
-                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
-                  aria-label={"現在のコードの詳細をスクロール"}>
+          <div className="min-h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)] lg:min-h-0" data-testid="voicing-loop-current-next">
+            <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_auto] gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
+              <Surface variant="primary" className="flex min-w-0 flex-col p-3 lg:h-full" data-testid="voicing-loop-current-panel" aria-label={"現在のコード詳細"}>
+                <div className="flex min-w-0 flex-1 flex-col" data-testid="voicing-loop-current-content">
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
@@ -1414,7 +1429,7 @@ export function ProgressionVoicingPracticeView({
                   <div ref={currentProgressRef} data-testid="voicing-loop-current-progress" className="h-full bg-[var(--lv-accent)]" style={{ width: `${Math.round((projection?.chordProgress ?? 0) * 100)}%` }} />
                 </div>
                 {displayMode === "learn" && currentVoicing ? (
-                  <div className="mt-2 grid min-w-0 grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] gap-2" data-testid="voicing-loop-current-voicing">
+                  <div className="mt-2 grid min-w-0 grid-cols-2 gap-2" data-testid="voicing-loop-current-voicing">
                     <HandVoicingSummary accidentalStyle={accidentalStyle} fingering={currentLeftFingering}
                       hand="left" isPersonal={Boolean(currentLeftPersonal)} pitches={currentHandTargets.left}
                       text={text} voicing={currentVoicing} showFingering={showFingering} />
@@ -1433,8 +1448,7 @@ export function ProgressionVoicingPracticeView({
                     onNextCandidate={() => changeCurrentCandidate(1)} onPreviousCandidate={() => changeCurrentCandidate(-1)} text={text} />
                 ) : null}
                 </div>
-                <NextMovePreview moves={nextMoves} loopWrap={currentIndex === snapshot.events.length - 1}
-                  hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} />
+                {/* NextMovePreview and its domain/standalone tests are retained; acceptance hides this UI row. */}
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
                 <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" aria-label={"次のコード詳細"}>
@@ -1522,14 +1536,14 @@ export function ProgressionVoicingPracticeView({
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
                 <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
               role="button" tabIndex={0} aria-label={"進行の全体図から移動"}
-              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0), "overview"); } }}>
+              onClick={seekFromOverviewClick} onContextMenu={(event) => markRangeFromTimeline(event, "overview")} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0), "overview"); } }}>
               {Array.from({ length: totalGroups }, (_, index) => (
                 <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
               ))}
                 </div>
                 <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
                   role="button" tabIndex={0} aria-label={"目盛りから移動"}
-                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0, "ruler"); } }}>
+                  onClick={seekFromTimelineClick} onContextMenu={(event) => markRangeFromTimeline(event, "ruler")} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0, "ruler"); } }}>
                   {Array.from({ length: totalGroups }, (_, index) => (
                     <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${Math.min(practiceGroupBeats, snapshot.lengthBeats - index * practiceGroupBeats) * timelinePixelsPerBeat}px` }}>{index + 1}</span>
                   ))}
@@ -1570,7 +1584,7 @@ export function ProgressionVoicingPracticeView({
                       data-span-kind={span.kind}
                       data-compact={compact}
                       data-auto-fallback={autoFallback ? "true" : "false"}
-                      data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard ? "inside" : rangeSelection.active ? "outside" : "none"}
+                      data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard && rangeSelection.active ? "inside" : rangeSelection.active ? "outside" : "none"}
                       title={event?.chord.label ?? restLabel}
                       style={{ width: `${cardWidth}px` }}
                       className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${rangeCard && rangeSelection.active ? "ring-1 ring-inset ring-[var(--lv-accent)]" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
@@ -1578,7 +1592,10 @@ export function ProgressionVoicingPracticeView({
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${autoFallback ? " 自動生成で補完" : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
-                      onMouseDown={(event) => event.preventDefault()}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        if (event.button === 2) keyboardRangeMenuRef.current = undefined;
+                      }}
                       onContextMenu={(event) => {
                         if (span.kind !== "chord") return;
                         event.preventDefault();
@@ -1793,11 +1810,11 @@ export function ProgressionVoicingPracticeView({
                 </select>
               </label>
               {!active && !paused ? (
-                <TransportButton variant="primary" fixedPrimary disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</TransportButton>
+                <TransportButton variant="primary" fixedPrimary disabled={!allEventsPlayable} onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.start}</TransportButton>
               ) : active ? (
-                <TransportButton variant="primary" fixedPrimary onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</TransportButton>
+                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Pause aria-hidden="true" size={16} />{text.pause}</TransportButton>
               ) : (
-                <TransportButton variant="primary" fixedPrimary onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
+                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
               )}
               <TransportButton variant="neutral" title={text.restart} disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.restart}</span></TransportButton>
               <TransportButton variant="neutral" title={text.stop} disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.stop}</span></TransportButton>
@@ -1809,6 +1826,9 @@ export function ProgressionVoicingPracticeView({
                 />
                 <span className="lv-vl-button-text">{text.referenceSound}</span>
               </label>
+              <TransportButton variant="neutral" data-testid="voicing-loop-range-clear"
+                disabled={!rangeSelection.active && rangeSelection.pendingStart === undefined}
+                onClick={clearRange}>区間解除</TransportButton>
               </div>
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">
               <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
@@ -2045,7 +2065,7 @@ function HandVoicingSummary({
       <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>{hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}</p>
       <dl className="mt-2 space-y-1.5">
         {showFingering ? (
-          <div className="grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-2">
+          <div className="grid min-w-0 grid-cols-[3rem_minmax(0,1fr)] items-center gap-2">
             <dt className="text-[11px] font-bold tracking-[0.12em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
             <dd className="flex min-w-0 items-baseline gap-1 overflow-hidden whitespace-nowrap">
               <strong className={`min-w-0 truncate whitespace-nowrap text-2xl leading-tight ${handText}`} title={fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}>
@@ -2309,7 +2329,7 @@ function CurrentRuleExplanation({
     : undefined;
 
   return (
-    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-current-explanation">
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-current-explanation">
       <span className="rounded-full border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-2 py-0.5 font-semibold text-[var(--lv-text)]">{family}</span>
       {coverage ? <span className="rounded-full border border-[var(--lv-border)] px-2 py-0.5">{coverage}</span> : null}
       {candidate ? (
@@ -2341,7 +2361,7 @@ function CurrentRuleExplanation({
       ) : null}
       {explanation.identity ? (
         <>
-          <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.rule}</strong>{explanation.identity.ruleId} · {explanation.identity.variantId}</span>
+          <span className="min-w-0 flex-1 truncate" title={`${text.rule} ${explanation.identity.ruleId} · ${explanation.identity.variantId}`}><strong className="mr-1 text-[var(--lv-text-muted)]">{text.rule}</strong>{explanation.identity.ruleId} · {explanation.identity.variantId}</span>
           <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.omit}</strong>{explanation.omittedDegrees.length ? explanation.omittedDegrees.join(" · ") : text.none}</span>
           <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.top}</strong>{topRoleLabel(explanation.topRole)}</span>
         </>

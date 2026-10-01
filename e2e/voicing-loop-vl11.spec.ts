@@ -54,7 +54,7 @@ test("VL-11 mouse card seek stays beneath the pointer; ruler, overview and keybo
   expect(focused!.x).toBeLessThan(visible!.x + visible!.width);
 });
 
-test("VL-11 fixed ten fingers, interval labels and hand surfaces remain within the strip", async ({ page }) => {
+test("P11 hides the movement strip and retains current and next hand surfaces at scaling samples", async ({ page }) => {
   test.setTimeout(90_000);
   for (const { width, height, zoom } of [
     { width: 1920, height: 1080, zoom: 1 },
@@ -66,16 +66,11 @@ test("VL-11 fixed ten fingers, interval labels and hand surfaces remain within t
     const workspace = await openLoop(page);
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
     const strip = workspace.getByTestId("voicing-loop-next-move");
-    const slots = strip.getByTestId("voicing-loop-finger-slot");
-    await expect(slots).toHaveCount(10);
-    expect(await slots.evaluateAll((elements) => elements.map((element) => element.getAttribute("data-finger"))))
-      .toEqual(["L5", "L4", "L3", "L2", "L1", "R1", "R2", "R3", "R4", "R5"]);
-    const bounds = await strip.boundingBox();
-    const last = await slots.last().boundingBox();
-    expect(bounds!.height).toBeCloseTo(68 * zoom, 0);
-    expect(last!.x + last!.width).toBeLessThanOrEqual(bounds!.x + bounds!.width + 1);
-    await expect(strip).not.toContainText(/\+\d+$/);
-    await expect(slots.first()).toHaveAttribute("aria-label", /L5:/);
+    await expect(strip).toHaveCount(0);
+    const facts = workspace.getByTestId("voicing-loop-current-voicing");
+    await expect(facts).toContainText("指");
+    await expect(facts).toContainText("音名");
+    await expect(facts).toContainText("構成音");
     const left = workspace.getByTestId("voicing-loop-left-hand");
     const nextLeft = workspace.getByTestId("voicing-loop-next-left-hand");
     await expect(left).toBeVisible();
