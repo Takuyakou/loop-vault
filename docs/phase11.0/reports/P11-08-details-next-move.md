@@ -57,7 +57,9 @@ Browser追加: Source変更close/reopen、outside、Esc、toggle、内部Open保
 
 ## 7. 最終Gate / EXE
 
-最終report-inclusive code HEADでfresh FULL予定。PASS cacheは使わない。結果/件数/実行HEADは実測後追記。修正後relevant Playwright **32/32 PASS**（33.9秒）、4解像度＋popover＋Range＋VL09/10/11/12＋P8.8.4。
+初回report-inclusive HEAD `34964e2d0566e4b45daa5b55a60fedf3de98b305`でfresh FULLを実行。Vitest3,670 PASS、Playwright173 PASS / 4 FAIL / 0 UNRUN。4件はP5.33既存testの操作手順が、detailsはSource/type変更・外側Start後も開いたままと仮定し、閉じた詳細内checkboxへ操作/role lookupしていたため。ROOT CAUSEは新しく承認されたdismiss契約に対する旧操作手順。実ユーザー操作でsummaryを再クリックするhelperを当該testに追加。disabled / eight chords × eight modifiers / 88-key geometry / playback継続assertionは維持し、type変更closeのassertionも追加。Product修正やassertion弱化で逃げない。初回FAILはPASS扱いにしない。
+
+当該P5.33＋popover focused **12/12 PASS**（13.6秒）確認後、修正後のreport-inclusive code HEADでfresh FULL予定。PASS cacheは使わない。結果/件数/実行HEADは実測後追記。修正後relevant Playwright **32/32 PASS**（33.9秒）、4解像度＋popover＋Range＋VL09/10/11/12＋P8.8.4。
 
 Windows EXEはD-drive既存targetでno-bundle、fixture/gallery flagなし。実Vaultを起動/変更しない。
 

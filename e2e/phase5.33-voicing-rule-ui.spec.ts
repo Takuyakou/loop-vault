@@ -26,6 +26,13 @@ async function openExtendedReductionFixture(page: Page): Promise<Locator> {
   return page.getByTestId("voicing-loop-workspace");
 }
 
+// Source/type changes and outside operations dismiss details. Reopen through the real UI.
+async function openDetails(workspace: Locator) {
+  const details = workspace.getByTestId("voicing-loop-generated-details");
+  if (await details.getAttribute("open") === null) await details.locator("summary").click();
+  await expect(details).toHaveAttribute("open", "");
+}
+
 async function keyboardGeometry(workspace: Locator): Promise<KeyboardGeometry> {
   const region = workspace.getByRole("region", { name: "ピアノ鍵盤" });
   const svg = region.locator("svg");
@@ -86,6 +93,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await controls.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
   await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
+  await openDetails(workspace);
   for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
     await expect(controls.getByRole("checkbox", { name: label, exact: true })).toBeDisabled();
   }
@@ -152,6 +160,8 @@ test("P5.33 supports all eight acceptance chords in every base/modifier combinat
     ["Core", false, false], ["Core", true, false], ["Core", false, true], ["Core", true, true],
   ] as const) {
     await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
+    await expect(workspace.getByTestId("voicing-loop-generated-details")).not.toHaveAttribute("open", "");
+    await openDetails(workspace);
     await controls.getByRole("checkbox", { name: "Colorを加える", exact: true }).setChecked(color);
     await controls.getByRole("checkbox", { name: "Open配置", exact: true }).setChecked(open);
     await expect(workspace.getByText(/個のコードを再生できません/)).toHaveCount(0);
@@ -180,6 +190,7 @@ test("P5.33 keeps one 88-key A0-C8 geometry across source and study changes", as
     await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
     expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   }
+  await openDetails(workspace);
   await controls.getByRole("checkbox", { name: "Colorを加える", exact: true }).check();
   expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   await controls.getByRole("checkbox", { name: "Open配置", exact: true }).check();
@@ -231,6 +242,7 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   const pause = transport.getByRole("button", { name: "一時停止", exact: true });
   await expect(pause).toBeVisible();
 
+  await openDetails(workspace);
   for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
     await controls.getByRole("checkbox", { name: label, exact: true }).check();
     await expect(pause).toBeVisible();
