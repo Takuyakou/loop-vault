@@ -1,12 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture, enableLegacyCaptureScreen } from "./helpers/app";
+import { dropMidi, openApp, openCapture } from "./helpers/app";
 
 /** P10.0-02..06: the correction workspace, the default screen after a MIDI analysis since P10.0-06. */
 
-/** `workspace: false` opens the old screen through 「古い取り込み画面を使う（一時）」. */
-async function importScenario(page: Page, id: string, workspace: boolean) {
-  if (!workspace) await enableLegacyCaptureScreen(page);
+async function importScenario(page: Page, id: string) {
   await openApp(page);
   await openCapture(page);
   await dropMidi(page, buildScenarioMidi(p10Scenario(id)), `${id}.mid`);
@@ -15,20 +13,8 @@ async function importScenario(page: Page, id: string, workspace: boolean) {
   await expect(page.locator('[data-capture-stage="result"]')).toBeVisible();
 }
 
-async function currentScreenChordNames(page: Page): Promise<string[]> {
-  const details = page.locator("details").filter({ has: page.locator('[aria-label="コード進行"]') }).first();
-  if (!(await details.getAttribute("open"))) await details.locator("summary").click();
-  return details.locator('[aria-label="コード進行"] button strong').allTextContents();
-}
-
-test("P10.0-06 the workspace is the default; the temporary legacy setting brings the old screen back", async ({ page }) => {
-  await importScenario(page, "melody-track-8", false);
-  await expect(page.getByTestId("correction-workspace")).toHaveCount(0);
-  await expect(page.locator("[data-candidate-toggle]").first()).toBeVisible();
-});
-
-test("P10.0-02 shows the same cards as the old screen and moves between them", async ({ page }) => {
-  await importScenario(page, "melody-track-8", true);
+test("P10.0-02 shows the analysis cards and moves between them", async ({ page }) => {
+  await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
   await expect(workspace).toBeVisible();
   const workspaceNames = await workspace.getByTestId("correction-card").locator(".lv-cw-card-name").evaluateAll((items) => items.map((item) => item.getAttribute("data-full-name") ?? ""));
@@ -61,17 +47,14 @@ test("P10.0-02 shows the same cards as the old screen and moves between them", a
     await expect(position).toHaveText(before ?? "");
   }
 
-  // The old screen (legacy setting) shows the same chords for the same file.
-  await page.evaluate(() => localStorage.setItem("loop-vault:p10-legacy-capture:v1", "on"));
-  await page.reload();
-  await importScenario(page, "melody-track-8", false);
-  await expect(page.getByTestId("correction-workspace")).toHaveCount(0);
-  expect(await currentScreenChordNames(page)).toEqual(workspaceNames);
+  // The cards are the analysis's chords in order (the old screen to compare with went in P10.0-07).
+  expect(workspaceNames.length).toBeGreaterThan(0);
+  expect(workspaceNames.every((name) => name.length > 0)).toBe(true);
 });
 
 test("P10.0-02 a long song opens at 16 bars and the page never scrolls sideways at 768x640", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 640 });
-  await importScenario(page, "long-64", true);
+  await importScenario(page, "long-64");
   const workspace = page.getByTestId("correction-workspace");
   await expect(workspace).toBeVisible();
   await expect(workspace.getByRole("button", { name: "16小節", exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -105,7 +88,7 @@ async function firstNoteId(page: Page, kind: string): Promise<string> {
 }
 
 test("P10.0-03 right-click excludes a note and Ctrl+Z brings it back", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const id = await firstNoteId(page, "harmony");
   const point = await center(rollNote(page, id));
@@ -123,7 +106,7 @@ test("P10.0-03 right-click excludes a note and Ctrl+Z brings it back", async ({ 
 });
 
 test("P10.0-03 ② adds a note with one click, and a drag moves the pitch in one step", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const history = workspace.getByTestId("correction-history");
 
@@ -162,7 +145,7 @@ test("P10.0-03 ② adds a note with one click, and a drag moves the pitch in one
 });
 
 test("P10.0-03 the melody suggestion selects every melody-voice note and Delete excludes them at once", async ({ page }) => {
-  await importScenario(page, "melody-track-8", true);
+  await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
   await workspace.getByTestId("correction-select-melody").click();
   expect(await page.locator("[data-testid=correction-piano-roll] .lv-cw-note[data-selected]").count()).toBeGreaterThan(1);
@@ -176,7 +159,7 @@ test("P10.0-03 the melody suggestion selects every melody-voice note and Delete 
 });
 
 test("P10.0-03 「＋ 音を足す」 and keyboard-only exclude and restore", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const list = workspace.getByTestId("correction-note-list");
   const history = workspace.getByTestId("correction-history");
@@ -209,7 +192,7 @@ test("P10.0-03 「＋ 音を足す」 and keyboard-only exclude and restore", as
 const cards = (page: Page) => page.getByTestId("correction-workspace").getByTestId("correction-card");
 
 test("P10.0-04 M merges with ×2 and Ctrl+Z undoes it; S splits; Shift+M asks first (Esc / Enter)", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   await expect(cards(page)).toHaveCount(8);
   await workspace.getByTestId("correction-review-count").focus();
@@ -239,7 +222,7 @@ test("P10.0-04 M merges with ×2 and Ctrl+Z undoes it; S splits; Shift+M asks fi
 });
 
 test("P10.0-04 boundary handle moves by a beat, and by ¼ beat with Alt", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const first = cards(page).first();
   const box = (await first.boundingBox())!;
   const beatPx = (box.width + 2) / 4;
@@ -265,7 +248,7 @@ test("P10.0-04 boundary handle moves by a beat, and by ¼ beat with Alt", async 
 });
 
 test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name stays", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const inspector = workspace.getByTestId("correction-inspector");
   const candidates = workspace.getByTestId("correction-name-candidates").getByRole("button");
@@ -291,7 +274,7 @@ test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name
 });
 
 test("P10.0-04 Y moves to the next review card; the run suggestion merges after a confirm", async ({ page }) => {
-  await importScenario(page, "melody-track-8", true);
+  await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
   await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
   const count = workspace.getByTestId("correction-review-count");
@@ -304,7 +287,7 @@ test("P10.0-04 Y moves to the next review card; the run suggestion merges after 
   expect(await selected()).not.toBe(firstId);
 
   // plain-8: split, then touch a note of the second half → 「同じ音が続く所が 1 か所」.
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   await page.getByTestId("correction-review-count").focus();
   await page.keyboard.press("s");
   await page.keyboard.press("ArrowRight");
@@ -345,7 +328,7 @@ for (const id of ["long-300", "long-300-5k"]) {
   test(`P10.0-05 ${id}: scrolling, → , zoom and End stay quick and draw only the visible part`, async ({ page }) => {
     test.setTimeout(120_000);
     const started = Date.now();
-    await importScenario(page, id, true);
+    await importScenario(page, id);
     const workspace = page.getByTestId("correction-workspace");
     await expect(workspace).toBeVisible();
     const openMs = Date.now() - started;
@@ -369,7 +352,7 @@ for (const id of ["long-300", "long-300-5k"]) {
 }
 
 test("P10.0-05 Ctrl+wheel keeps the beat under the pointer; the wheel scrolls sideways and stops following", async ({ page }) => {
-  await importScenario(page, "long-64", true);
+  await importScenario(page, "long-64");
   const workspace = page.getByTestId("correction-workspace");
   const scroller = workspace.getByTestId("correction-timeline-scroll");
   await scroller.scrollIntoViewIfNeeded();
@@ -407,7 +390,7 @@ test("P10.0-05 Ctrl+wheel keeps the beat under the pointer; the wheel scrolls si
 
 test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is one line below it", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 640 });
-  await importScenario(page, "long-64", true);
+  await importScenario(page, "long-64");
   const workspace = page.getByTestId("correction-workspace");
   const roll = workspace.getByTestId("correction-piano-roll");
   await roll.scrollIntoViewIfNeeded();
@@ -444,7 +427,7 @@ test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is o
 
 test("P10.0-06 root letters from 14px, segment names stay in view, one row per pitch, file bar on one line", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await importScenario(page, "long-64", true);
+  await importScenario(page, "long-64");
   const workspace = page.getByTestId("correction-workspace");
   const fileBar = workspace.locator(".lv-cw-file");
   expect((await fileBar.boundingBox())!.height).toBeLessThan(56);
@@ -472,7 +455,7 @@ test("P10.0-06 root letters from 14px, segment names stay in view, one row per p
 // ---- P10.0-07 fixes from the EXE check -------------------------------------------------
 
 test("P10.0-07 「押して鳴らす」: off by default, a plain click plays the card, Shift+click does not, and it is remembered", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const cards = workspace.getByTestId("correction-card");
   const playingB = workspace.getByTestId("correction-play-card");
@@ -489,12 +472,12 @@ test("P10.0-07 「押して鳴らす」: off by default, a plain click plays the
   await expect(playingB).toHaveAttribute("aria-pressed", "false");
 
   await page.reload();
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   await expect(page.getByTestId("correction-click-audition")).toBeChecked();
 });
 
 test("P10.0-07 the playhead moves every frame while the song plays", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   await workspace.getByTestId("correction-play-song").click();
   const playhead = workspace.getByTestId("correction-playhead");
@@ -514,7 +497,7 @@ test("P10.0-07 the playhead moves every frame while the song plays", async ({ pa
 });
 
 test("P10.0-07 元に戻す in the right panel, and no 「印はありません」 while a card has a warning", async ({ page }) => {
-  await importScenario(page, "plain-8", true);
+  await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const undoButton = workspace.getByTestId("correction-inspector-undo");
   await expect(undoButton).toBeDisabled();

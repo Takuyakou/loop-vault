@@ -63,44 +63,25 @@ export async function loadMidiForPreAnalysis(
   await expect(page.locator('[data-capture-stage="pre-analysis"]')).toBeVisible();
 }
 
-/**
- * P10.0-06: after analysis the correction workspace is the default screen. The old
- * screen is behind 「古い取り込み画面を使う（一時）」 until P10.0-07.
- */
-export const LEGACY_CAPTURE_KEY = "loop-vault:p10-legacy-capture:v1";
-
-/** For specs that test the old capture screen itself (removed in P10.0-07). */
-export async function enableLegacyCaptureScreen(page: Page): Promise<void> {
-  await page.addInitScript((key) => localStorage.setItem(key, "on"), LEGACY_CAPTURE_KEY);
-}
-
+/** After analysis the correction workspace is the screen (P10.0-06; the old one went in P10.0-07). */
 export async function analyzeCurrentMidi(page: Page): Promise<void> {
   await page.getByTestId("pre-analysis-analyze").click();
   await expect(page.locator('[data-capture-stage="result"]')).toBeVisible();
-  // The workspace by default; the old screen's candidates when the legacy setting is on.
-  await expect(page.getByTestId("correction-workspace").or(page.locator("[data-candidate-toggle]").first())).toBeVisible();
+  await expect(page.getByTestId("correction-workspace")).toBeVisible();
 }
 
-/**
- * The first recommended range (おすすめの範囲) becomes the save range. On the old
- * screen (legacy setting) the first candidate opens, as before P10.0-06.
- */
+/** The first recommended range (おすすめの範囲) becomes the save range; a closed narrow panel is opened first. */
 export async function chooseFirstCandidate(page: Page): Promise<void> {
   const workspace = page.getByTestId("correction-workspace");
-  if (await workspace.count() === 0) {
-    const candidate = page.locator("[data-candidate-toggle]").first();
-    if (await candidate.getAttribute("aria-expanded") !== "true") await candidate.click();
-    await expect(candidate).toHaveAttribute("aria-expanded", "true");
-    return;
-  }
+  const toggle = workspace.getByTestId("correction-panel-toggle");
+  if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") !== "true") await toggle.click();
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
   await expect(workspace.getByTestId("correction-save-form")).toBeVisible();
 }
 
-async function saveChosenRange(page: Page, title: string): Promise<void> {
-  const legacy = await page.getByTestId("correction-workspace").count() === 0;
-  await (legacy ? page.locator('[data-candidate-state="selected"]') : page.getByTestId("correction-save-form"))
-    .getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+/** 「Vaultに保存」 in the save form, then the title, then 保存. */
+export async function saveChosenRange(page: Page, title: string): Promise<void> {
+  await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
   await form.locator('input[name="progression-title"]').fill(title);
