@@ -20,7 +20,8 @@ import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
 import type { ChordSymbol, ChordTimelineItem } from "../../domain/types";
-import { createTimelineVoicingPlaybackPlan, resolveTimelineItemVoicing } from "../../domain/voicing";
+import { createTimelineVoicingPlaybackPlan } from "../../domain/voicing";
+import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
@@ -208,11 +209,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const mine = present.notes.filter((note) => note.cardId === selected.id);
     const notes = kind === "source"
       ? [...new Set(mine.filter((note) => note.provenance === "SOURCE").map((note) => note.originalPitch ?? note.pitch))].sort((a, b) => a - b)
-      : selected.edited
-        ? [...new Set(mine.filter((note) => note.used).map((note) => note.pitch))].sort((a, b) => a - b)
-        : resolveTimelineItemVoicing(timeline[selected.timelineIndex]!).midiNotes;
+      : cardAuditionNotes(present, selected, timeline); // exactly what saving writes (P10.0-06)
     playNotes(kind, selected, notes);
-  }, [playNotes, present.notes, selected, timeline]);
+  }, [playNotes, present, selected, timeline]);
   const cardPlaying = selected && playback.status !== "idle"
     ? samePlaybackSource(playback.source, sourceId("source", selected)) ? "source"
       : samePlaybackSource(playback.source, sourceId("card", selected)) ? "card" : null
