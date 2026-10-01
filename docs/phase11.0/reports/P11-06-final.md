@@ -2,7 +2,7 @@
 
 ## 結論 / 状態
 
-P11-00/01のHuman Gateを受け、承認済みP11-02→06を継続した。Sourceの意味、Text Preview保存、部分Source補完、header、手入力音のrename整合性を実装した。最終fresh FULL / EXE Gateは未実行（実行後この節へtested HEADと実測結果を追記する）。masterへ未merge。
+P11-00/01のHuman Gateを受け、承認済みP11-02→06を継続した。Sourceの意味、Text Preview保存、部分Source補完、header、手入力音のrename整合性を実装した。最終fresh FULLは全Gate PASS、Windows runnable EXE生成もPASS。P11-00〜06完了、READY_FOR_HUMAN_PRODUCT_ACCEPTANCE。masterへ未merge。
 
 ## 各Stage
 
@@ -14,7 +14,7 @@ P11-00/01のHuman Gateを受け、承認済みP11-02→06を継続した。Sourc
 | P11-03 | X/Nだけ固定基本による明示補完 | 06b6b2d8 |
 | P11-04 | 4 Source、基本/骨組み selector、availability、前回Source復元 | 88c4bd8d |
 | P11-05 | manual/live音をrename後も保持、shared resolver統一 | 7a21e01a |
-| P11-06 | 移行監査、deterministic補完transport回帰、最終screens/FULL/EXE | 最終tested HEADを下記へ記録 |
+| P11-06 | 移行監査、deterministic補完transport回帰、最終screens/FULL/EXE | 266b24a2 |
 
 Stage別の詳細と失敗切り分けは各報告へ記録している。
 
@@ -66,7 +66,29 @@ P11-06では部分Source補完を含むStart/Stop/Restartとcount-in 0/1/2を既
 
 ## 最終fresh FULL / EXE
 
-PENDING — stabilised report-inclusive HEADをcommitしてからFULLを1回実行し、結果と実行HEADを追記する。FULLでPASS cacheは使用しない。EXEはD-driveの既存Tauri targetへ `--no-bundle` で作成する。
+- tested / EXE code HEAD: `266b24a27d442fabc2cd268967fb6914163657ba`。
+- 実行: `npm run test:full -- --fresh`。report-inclusive candidateで1回のみ実行、FULLのPASS cache使用なし（runnerもFULLではcache無効）。
+- fresh FULL: **PASS / 0 FAIL / 0 UNRUN**。
+
+| Gate | 実測結果 |
+|---|---|
+| Repository ESLint / Class lint / Source contracts | PASS |
+| App / E2E TypeScript | PASS |
+| phase-doc / AI-handoff validation | PASS |
+| privacy/security tracked scan | PASS |
+| production build / gallery excluded | PASS |
+| Test DX runner contracts | 27/27 PASS |
+| Full Vitest | 3,657/3,657 PASS |
+| repository-wide Playwright（accessibility含む） | 168/168 PASS |
+| git diff check | PASS |
+
+FULL wall time: **234.7秒**。runner報告のraw logs: **25,774 B**（terminal summary bytesとは別）。各テストは再実行したもので過去HEADの結果を流用していない。
+
+Windows EXE: `npm run tauri build -- --no-bundle` **PASS**。Rust/Tauri release compile 52.10秒、raw EXE 24,708,608 B。出力: `src-tauri/target/release/loop-vault.exe`。D-drive内の既存targetを使用し、installerは作成していない。E2E fixture/galleryフラグを外したproduction buildである。実Vaultを開いて変更する操作は行っておらず、実機の聴取・表示確認はHuman Product Acceptanceに残す。
+
+この結果追記後はdocumentation-only commit。FULLを実行したHEADは上記で固定し、結果追記commitへ検証HEADを付け替えない。最終文書はphase-doc / AI-handoff / privacy / diff checkを別途実行する。
+
+Git reality: local masterは `73507e87` のまま。保存済みorigin/masterとの差はlocal masterが689 commit ahead / 0 behind（fetchなし）。今回merge / push / tag / releaseは実行していない。
 
 ## 制約 / acceptance
 

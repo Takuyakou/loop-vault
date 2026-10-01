@@ -1,20 +1,21 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-06",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
     "P11.0-02",
     "P11.0-03",
     "P11.0-04",
-    "P11.0-05"
+    "P11.0-05",
+    "P11.0-06"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "7a21e01a43cd07992b4f5987509f23810cb38746",
+  "lastVerifiedCommit": "266b24a27d442fabc2cd268967fb6914163657ba",
   "currentBranch": "feat/phase11-voicing-loop-v4",
   "requiredGates": {
     "P11.0-00": [
@@ -50,6 +51,14 @@
       "p11-05-fast",
       "p11-05-phase-docs",
       "p11-05-privacy"
+    ],
+    "P11.0-06": [
+      "p11-06-focused",
+      "p11-06-ui",
+      "p11-06-screens",
+      "p11-06-full",
+      "p11-06-exe",
+      "p11-06-phase-docs"
     ]
   },
   "gateResults": {
@@ -74,8 +83,14 @@
     "p11-05-focused": "pass",
     "p11-05-fast": "pass",
     "p11-05-phase-docs": "pass",
-    "p11-05-privacy": "pass"
+    "p11-05-privacy": "pass",
+    "p11-06-focused": "pass",
+    "p11-06-ui": "pass",
+    "p11-06-screens": "pass",
+    "p11-06-full": "pass",
+    "p11-06-exe": "pass",
+    "p11-06-phase-docs": "pass"
   },
-  "nextAction": "Final migration audit/screens/focused regression, one fresh FULL, Windows EXE; no merge.",
+  "nextAction": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE. Completed P11-00 through P11-06; runnable Windows EXE built. Stop without master merge/push/tag/release.",
   "updatedAt": "2026-10-01"
 }

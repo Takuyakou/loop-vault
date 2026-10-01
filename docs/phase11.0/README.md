@@ -4,10 +4,10 @@
 
 ## Status
 
-- Status: in-progress; HUMAN_GATE_AFTER_P11_01 approved by the user.
-- Completed stages: P11.0-00 through P11.0-05; verified commits/gates in execution-state.json.
+- Status: completed / READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Completed stages: P11.0-00 through P11.0-06; verified commits/gates in execution-state.json.
 - Base: local master 73507e87. Phase 10 finish is an ancestor.
-- Continue: P11.0-06 final regression, fresh FULL and Windows EXE. No master merge.
+- Final tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Stop for Human Product Acceptance. No master merge.
 
 ## Required Reading Order
 
