@@ -128,6 +128,8 @@ export type ProgressionPracticeVoicingResolution =
       readonly eventId: string;
       readonly status: "SUPPORTED";
       readonly voicing: ResolvedProgressionPracticeVoicing;
+      /** Explicit selected source was absent; this event uses visible generated coverage. */
+      readonly fallbackFrom?: "saved" | "source-midi" | "custom";
       readonly reason?: never;
     }
   | {

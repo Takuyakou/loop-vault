@@ -1007,7 +1007,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.start).toHaveBeenCalledOnce();
   });
 
-  it("shows a partial Source MIDI count before selection and retains per-event unavailability", async () => {
+  it("shows partial coverage and explicitly fills only missing cards", async () => {
     const runtime = new FakeTransport();
     const partial = snapshot("source-midi");
     delete (partial.events[1] as { voicing?: unknown }).voicing;
@@ -1018,8 +1018,12 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "Source MIDI").disabled).toBe(false);
     expect(container.querySelector("[data-testid='voicing-loop-source-availability']")?.textContent).toContain("1/2");
     await act(async () => button(container, "Source MIDI").click());
-    expect(container.textContent).toContain("Dm7: 利用不可");
-    expect(button(container, "開始").disabled).toBe(true);
+    expect(container.querySelectorAll("[data-testid='voicing-loop-auto-fallback']")).toHaveLength(1);
+    expect(button(container, "開始").disabled).toBe(false);
+    await act(async () => button(container, "開始").click());
+    const started = runtime.start.mock.calls[0]![0].plan;
+    expect(started.events[0]?.voicing?.midiNotes).toEqual(partial.events[0]?.voicing?.midiNotes);
+    expect(started.events[1]).toMatchObject({ status: "SUPPORTED", fallbackFrom: "source-midi" });
   });
 
   it("keeps complete Source MIDI available without a partial-count warning", async () => {
@@ -1034,8 +1038,9 @@ describe("ProgressionVoicingPracticeView", () => {
     const runtime = new FakeTransport();
     const partial = snapshot("source-midi");
     delete (partial.events[1] as { voicing?: unknown }).voicing;
+    delete (partial.events[0] as { voicing?: unknown }).voicing;
     const container = await renderView(runtime, { "source-midi": partial }, "source-midi");
-    expect(container.textContent).toContain("1個のコードを再生できません");
+    expect(container.textContent).toContain("2個のコードを再生できません");
     expect(container.textContent).toContain("Dm7: 利用不可");
     expect(button(container, "開始").disabled).toBe(true);
   });

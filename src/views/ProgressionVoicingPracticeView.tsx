@@ -1539,6 +1539,8 @@ export function ProgressionVoicingPracticeView({
                   const eventIndex = span.kind === "chord" ? span.eventIndex : -1;
                   const event = snapshot.events[eventIndex];
                   const playable = cardAuditionResolution(event, eventIndex, { ...cardAuditionPlans, current: plan })?.status === "SUPPORTED";
+                  const resolution = plan?.events[eventIndex];
+                  const autoFallback = resolution?.status === "SUPPORTED" && Boolean(resolution.fallbackFrom);
                   const selected = index === transportCurrentSpanIndex;
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
@@ -1558,13 +1560,14 @@ export function ProgressionVoicingPracticeView({
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
                       data-compact={compact}
+                      data-auto-fallback={autoFallback ? "true" : "false"}
                       data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard ? "inside" : rangeSelection.active ? "outside" : "none"}
                       title={event?.chord.label ?? restLabel}
                       style={{ width: `${cardWidth}px` }}
                       className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${rangeCard && rangeSelection.active ? "ring-1 ring-inset ring-[var(--lv-accent)]" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${autoFallback ? " 自動生成で補完" : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onMouseDown={(event) => event.preventDefault()}
                       onContextMenu={(event) => {
@@ -1597,6 +1600,8 @@ export function ProgressionVoicingPracticeView({
                         else selectTimelineCard(eventIndex, origin);
                       }}
                     >
+                      {autoFallback ? <span className="absolute right-1 top-0.5 rounded bg-amber-400/20 px-1 text-[9px] text-amber-200"
+                        data-testid="voicing-loop-auto-fallback" title="自動生成で補完" aria-label="自動生成で補完">A</span> : null}
                       {pendingStart || rangeStart || rangeEnd ? <span aria-hidden="true"
                         className="absolute bottom-0.5 right-1 text-[10px] text-[var(--lv-accent)]">
                         {pendingStart ? "A?" : rangeStart && rangeEnd ? "A/B" : rangeStart ? "A" : "B"}

@@ -69,10 +69,26 @@ export function resolveProgressionPracticeVoicings(
 
   const selection = snapshot.selection;
   if (selection === "saved" || selection === "source-midi" || selection === "custom") {
-    return applyOctaveShift(
-      freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection))),
-      options.octaveShift ?? 0,
+    const exact = snapshot.events.map((event) => resolveMyVoicing(event, selection));
+    // A 0/N source stays unavailable. For X/N, generate only missing cards
+    // with a fixed, chord-local Teacher policy. Exact notes never enter the
+    // optimizer and cannot be moved by neighboring fallback candidates.
+    if (!exact.some((resolution) => resolution.status === "SUPPORTED")
+      || exact.every((resolution) => resolution.status === "SUPPORTED")) {
+      return applyOctaveShift(freezePlan(snapshot, exact), options.octaveShift ?? 0);
+    }
+    const generated = resolveStudyVoicings(
+      { ...snapshot, selection: "basic-full" }, "teacher",
+      { bass: "self-played", top: "normal-voicing-top" },
+      { ...candidateOptions, color: false, open: false, optimize: false },
     );
+    const mixed = exact.map((resolution, index): ProgressionPracticeVoicingResolution => {
+      if (resolution.status === "SUPPORTED") return resolution;
+      const fallback = generated.events[index];
+      return fallback?.status === "SUPPORTED"
+        ? freezeResolution({ ...fallback, fallbackFrom: selection }) : resolution;
+    });
+    return applyOctaveShift(freezePlan(snapshot, mixed), options.octaveShift ?? 0);
   }
 
   if (options.lessonStudyCategory && selection !== "left-hand") {
@@ -681,6 +697,7 @@ function applyOctaveShift(
       return freezeResolution({
         eventId: resolution.eventId,
         status: "SUPPORTED" as const,
+        ...(resolution.fallbackFrom ? { fallbackFrom: resolution.fallbackFrom } : {}),
         voicing: freezeVoicing({
           ...voicing,
           midiNotes: shiftNotes(voicing.midiNotes, semitones),
