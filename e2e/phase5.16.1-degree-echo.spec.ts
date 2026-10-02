@@ -115,9 +115,9 @@ for (const viewport of [
   });
 }
 
-test("Degree Echo remains operable at Windows 200% scale", async ({ browser }) => {
+test("Degree Echo remains operable at Windows 200% scale", async ({ browser }, testInfo) => {
   const context = await browser.newContext({
-    baseURL: "http://127.0.0.1:4174",
+    baseURL: testInfo.project.use.baseURL,
     colorScheme: "dark",
     deviceScaleFactor: 2,
     locale: "ja-JP",

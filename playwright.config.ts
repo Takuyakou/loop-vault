@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 import { shouldReusePlaywrightWebServer } from "./scripts/playwright-web-server.js";
 
-const baseURL = "http://127.0.0.1:4174";
+const port = Number(process.env.LOOP_VAULT_PLAYWRIGHT_PORT ?? 4174);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error("LOOP_VAULT_PLAYWRIGHT_PORT must be a valid TCP port");
+}
+const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -62,7 +66,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run preview -- --host 127.0.0.1 --port 4174 --strictPort",
+    command: `npm run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: shouldReusePlaywrightWebServer(),
     timeout: 30_000,

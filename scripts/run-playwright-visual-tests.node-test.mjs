@@ -14,6 +14,7 @@ import {
 test("visual Playwright builds replace only dynamic build metadata", () => {
   const environment = visualTestEnvironment({
     KEEP_ME: "yes",
+    LOOP_VAULT_PLAYWRIGHT_PORT: "4183",
     VITE_BUILD_COMMIT: "developer-commit",
     VITE_BUILD_DATE: "2099-01-01T00:00:00.000Z",
   });
@@ -23,6 +24,7 @@ test("visual Playwright builds replace only dynamic build metadata", () => {
     VITE_BUILD_DATE: "2026-01-01T00:00:00.000Z",
   });
   assert.equal(environment.KEEP_ME, "yes");
+  assert.equal(environment.LOOP_VAULT_PLAYWRIGHT_PORT, "4183");
   assert.equal(environment.VITE_BUILD_COMMIT, "visual-test");
   assert.equal(environment.VITE_BUILD_DATE, "2026-01-01T00:00:00.000Z");
   assert.equal(environment[visualPlaywrightTestEnvironmentKey], "1");
