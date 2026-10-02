@@ -24,8 +24,8 @@ export function syntheticSnapshots() {
 export function project(snapshot:ProgressionVoicingPracticeSnapshot,preferences=emptyPreferences,options:ResolveProgressionPracticeVoicingsOptions={}) {
   const plan=resolveProgressionPracticeVoicings(snapshot,options);
   const voicings=plan.events.map(e=>e.status==="SUPPORTED"?e.voicing:undefined);
-  const hands=assignPracticeHandsAcrossProgression(snapshot.selection,voicings,preferences);
-  const ranked={left:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"left"),right:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"right")};
+  const hands=assignPracticeHandsAcrossProgression(snapshot.selection,voicings);
+  const ranked={left:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"left",preferences),right:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"right",preferences)};
   const frames=snapshot.events.map((event,i)=>{
     const suggested=Object.fromEntries((["left","right"] as const).map(hand=>[hand,ranked[hand].find(r=>r.id===event.id)])) as {left:typeof ranked.left[number]|undefined;right:typeof ranked.right[number]|undefined};
     const effective={left:viewFunctions.effectiveFingering(suggested.left,preferences),right:viewFunctions.effectiveFingering(suggested.right,preferences)};

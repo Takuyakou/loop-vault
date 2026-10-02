@@ -21,9 +21,9 @@ describe("P11-12 diagnostic accounting (not Gold fingering)",()=>{
       expect(r.notesUnchanged).toBe(true);
     }
   });
-  it("uses physical-signature persistence and the real effective override body",()=>{
+  it("uses physical-signature persistence and the real effective anchored result",()=>{
     const r=personalAudit();expect(r.reloaded).toEqual(r.saved);expect(r.after).toEqual(r.before);
-    const entry=r.reloaded.entries[0]!;const value=rankCyclicFingerings([{id:"public",hand:entry.hand,midiPitches:entry.pitches}])[0];
+    const entry=r.reloaded.entries[0]!;const value=rankCyclicFingerings([{id:"public",hand:entry.hand,midiPitches:entry.pitches}],{anchors:new Map([["public",entry]])})[0];
     expect(viewFunctions.effectiveFingering(value,r.reloaded)?.fingers).toEqual(entry.fingers);
   });
 });

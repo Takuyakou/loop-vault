@@ -1,3 +1,4 @@
+import { rankPracticeHandFingerings } from "../../src/voicingPractice/rankPracticeFingerings";
 /** Diagnostic-only access to exact private function bodies. Never edits or substitutes product code. */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -32,9 +33,9 @@ export const costs = privateRanker as unknown as {
   preferredFingers(input: product.FingeringInput, pitches: number[]): { fingers: product.FingerNumber[]; reason: string };
 };
 export const viewFunctions = extract(viewPath, ["rankFingeringsForHand", "effectiveFingering", "addKeyboardFingerLabels", "fingerSummary"], {
-  rankCyclicFingerings: product.rankCyclicFingerings, findPersonalFingering, EMPTY_NOTES: [],
+  rankPracticeHandFingerings, rankCyclicFingerings: product.rankCyclicFingerings, findPersonalFingering, EMPTY_NOTES: [],
 }) as unknown as {
-  rankFingeringsForHand(snapshot: ProgressionVoicingPracticeSnapshot | undefined, hands: readonly ProgressionFingeringHandTargets[], selection: ProgressionVoicingSelection, hand: product.FingeringHand): readonly Ranked[];
+  rankFingeringsForHand(snapshot: ProgressionVoicingPracticeSnapshot | undefined, hands: readonly ProgressionFingeringHandTargets[], selection: ProgressionVoicingSelection, hand: product.FingeringHand, preferences?: FingeringPreferenceCollection): readonly Ranked[];
   effectiveFingering(value: Ranked | undefined, preferences: FingeringPreferenceCollection): product.RankedFingering | undefined;
   addKeyboardFingerLabels(labels: Map<number, string>, value: product.RankedFingering | undefined, prefix: "L" | "R"): void;
   fingerSummary(value: product.RankedFingering | undefined, prefix: "L" | "R", count: number, unavailable: string): string;
