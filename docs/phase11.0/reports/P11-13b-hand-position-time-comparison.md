@@ -128,12 +128,12 @@ Browser focused12件PASS。1920×1080 /1440×900 /960×1032 /768×640はcurrent 
 
 |Arm|128 event median ms|p95 ms|
 |---|---:|---:|
-|CURRENT|145.45|197.53|
-|E1-raw|90.01|118.60|
-|E1-T-zero-prior|66.34|77.63|
-|E1-T|84.52|109.94|
+|CURRENT|96.27|120.38|
+|E1-raw|54.45|58.36|
+|E1-T-zero-prior|58.09|61.53|
+|E1-T|57.50|84.23|
 
-同じprocess内warmup後12回の計算時間。browser/他process負荷で変わるため最終HEADでも測定する。別の旧commit94dae5b6との128-event spot比較は旧195.22ms /13a182.46ms（median、8回）。この環境で顕著な悪化は観測していない。hard realtime保証ではない。
+同じprocess内warmup後12回の計算時間。最終tested HEAD `2d29ac97`で再測定した。browser/他process負荷で変わるため絶対値を一般化しない。別の旧commit94dae5b6との128-event spot比較は旧195.22ms /13a182.46ms（median、8回）。この環境で顕著な悪化は観測していない。hard realtime保証ではない。
 
 ## F. Remaining Problems
 
@@ -173,7 +173,7 @@ E方式全体の採否、またはE2-Aだけ続行するかはHuman Decisionに�
 
 人間に専門的正解finger作成は要求しない。見る点は「明らかな退行」「ゆっくりBassの不自然な指送り」「実曲で旧方式より弾きにくくならないか」。確認結果を自動Goldへしない。
 
-Windows比較EXEは最終fresh FULL PASS後に生成し、パスを結果記録へ追記する。E1-Tは試験切替のみ、default CURRENT。
+Windows比較EXEは最終fresh FULL PASS後に生成する。E1-Tは試験切替のみ、default CURRENT。
 
 ## 実行・成果物
 
@@ -189,3 +189,37 @@ Windows比較EXEは最終fresh FULL PASS後に生成し、パスを結果記録�
 **P11-13a FOUNDATION / P11-13b COMPARISON = IMPLEMENTED。E1-T PRODUCTION ADOPTION = NOT DECIDED。COMMON-TONE CASEWISE NON-REGRESSION = NOT MET。**
 
 集計Propertyの成立を全caseの安全性と混同しない。比較資料・切替EXE・最終Gateが揃った時点で **READY_FOR_HUMAN_DECISION** として停止する。E2/E3/default switch/master merge/push/tag/releaseは行わない。
+
+
+## 最終fresh Gate / 検証環境
+
+- tested code HEAD: `2d29ac97c7277beac8779d644f957a12faba3a00`。後続の完了記録commitは文書のみ。
+- policy: `E1-T / inverse / lambda=0.5`。`--verify-frozen`でpolicy不変を確認し、同HEADで比較を再測定した。
+- corpus manifest SHA: `a77bff81e044a70778dff87700747d81f676c03ee223573ff5ccf402fe31be9d`。code commitとsource file SHAはlocal比較JSONに保存。
+- 実行: `LOOP_VAULT_PLAYWRIGHT_PORT=4183 node scripts/test-dx/run.mjs full --fresh`。通常のFULL runner、同じ全テスト・worker=2、PASS cache未使用、server reuseなし。
+- FULL wall time: **274.4秒**、raw tool logs **28,622 B**、terminal summary **576 B**。
+
+|Gate|最終HEADでのfresh結果|
+|---|---|
+|Repository ESLint / class / source-contract lint|PASS|
+|App / E2E TypeScript|PASS|
+|Phase docs / AI handoff|PASS|
+|Privacy/security tracked scan|PASS|
+|Production build / gallery excluded|PASS|
+|Runner contracts|27/27 PASS|
+|Full Vitest|3,736/3,736 PASS|
+|Repository-wide Playwright（accessibilityを含む）|192/192 PASS / 0 FAIL / 0 UNRUN|
+|git diff --check（master...HEAD / HEAD）|PASS|
+
+FULLの初期3試行は別checkoutのpreview serverとport 4174が競合し、Playwright開始前に中断した。製品不具合/テスト失敗とは分類しないが、FULL PASSにも数えない。別作業のprocessを停止せず、独立chore `2d29ac97`でテストサーバーportを環境変数化した。Degree Echoの明示contextと320px Voicing LoopのCSP routeは同じ設定originへ接続する。既定port 4174、assertion、timeout、worker、retry、snapshot、CSP自体は維持。変更箇所focused2/2、Node contracts4/4、E2E型/対象lintを先に確認した。最終FULLは一時config adapterを使わず既存runnerから実行した。
+
+初期試行のVitest/static結果を最終HEADのPASSとして流用していない。最終FULL logは `.local-evaluation/test-logs/2026-10-02T09-45-18-027Z-full.log`。private MIDI/Vault/外部運指datasetは未使用。
+
+### Windows比較EXE / 停止状態
+
+- EXE build HEAD: `2d29ac97`、`npm run tauri build -- --no-bundle` PASS。本番frontend再build、Tauri release compile PASS、installer無し。ソースbuild/temp/outputはD drive。
+- EXE: `src-tauri/target/release/loop-vault.exe`、24716800 B、MZ header確認。SHA-256 `ba39d8c3912935106576365ada0a5c36cb1cfa46e55ca0db3ac3bc1083f46be2`。実Vaultを開く自動起動はしていない。
+- Settings → 開発者向け → 運指方式からCURRENT / Hand Position + Time（試験）を切替。セッションのみ、起動/reloadでCURRENTへ戻る。保存音と手配分を比較中に変更しない。
+- UI screenshotsは `.local-evaluation/p11-13/screenshots/`。公開合成fixtureによる4解像度検証のみ。
+- **P11-13 = READY_FOR_HUMAN_DECISION**。13a基盤と13b比較を完了。E1-Tのcasewise common-tone非悪化は未達で、採用は保留。次にCommon Tone単独比較を検討するかを人間が決める。E2/E3は開始していない。
+- masterは未変更。merge/push/tag/release無し。tracked working treeを文書commit後に確認し、作業開始前からあった無関係な未追跡3箇所は維持する。

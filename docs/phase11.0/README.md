@@ -6,7 +6,7 @@
 
 ### P11-13 current candidate
 
-`feat/p11-13-fingering-hand-position`: 13a Saved Anchor / segment foundation and 13b E1-T bounded comparison. [13a report](reports/P11-13a-fingering-foundation.md) / [13b comparison](reports/P11-13b-hand-position-time-comparison.md). CURRENT stays default; E2/E3/default adoption await Human Decision. No integration in this stage. Final fresh FULL and comparison EXE are being verified.
+`feat/p11-13-fingering-hand-position`: 13a Saved Anchor / segment foundation and 13b E1-T bounded comparison. [13a report](reports/P11-13a-fingering-foundation.md) / [13b comparison](reports/P11-13b-hand-position-time-comparison.md). CURRENT stays default; E2/E3/default adoption await Human Decision. No integration in this stage. READY_FOR_HUMAN_DECISION. Tested / EXE HEAD `2d29ac97`: fresh FULL 3,736 Vitest / 192 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. Raw Windows comparison EXE built. E1-T aggregate improvement has per-case common-tone regressions; adoption remains undecided.
 
 ### P11-12 Baseline Audit
 

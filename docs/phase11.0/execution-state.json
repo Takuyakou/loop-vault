@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-13",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -16,12 +16,13 @@
     "P11.0-09",
     "P11.0-10",
     "P11.0-11",
-    "P11.0-12"
+    "P11.0-12",
+    "P11.0-13"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "97679040",
+  "lastVerifiedCommit": "2d29ac97c7277beac8779d644f957a12faba3a00",
   "currentBranch": "feat/p11-13-fingering-hand-position",
   "requiredGates": {
     "P11.0-00": [
@@ -177,8 +178,12 @@
     "p11-12-diagnostic-types": "pass",
     "p11-12-diagnostic-lint": "pass",
     "p11-12-product-unchanged": "pass",
-    "p11-13a-focused": "pass"
+    "p11-13a-focused": "pass",
+    "p11-13b-comparison": "pass",
+    "p11-13b-full": "pass",
+    "p11-13b-exe": "pass",
+    "p11-13b-docs": "pass"
   },
-  "nextAction": "Finalize P11-13a/b at stable candidate: fresh FULL then developer comparison EXE; stop READY_FOR_HUMAN_DECISION. No E2/E3/default switch/merge.",
+  "nextAction": "STOP READY_FOR_HUMAN_DECISION. CURRENT remains default; E1-T adoption undecided with per-case common-tone regressions. Do not start E2/E3 or merge/push/tag/release.",
   "updatedAt": "2026-10-02"
 }
