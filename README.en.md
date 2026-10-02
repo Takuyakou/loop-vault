@@ -8,12 +8,14 @@
 
 ## Download
 
-**Latest Release: v1.1.0**
+**Release target: v2.0.0 (preparing for publication)**
 
 Loop Vault supports Windows. Releases include both an **NSIS** setup executable and an **MSI**
 Windows Installer package.
 
-[Download the latest version from GitHub Releases](https://github.com/Takuyakou/loop-vault/releases/latest)
+[Download the published release](https://github.com/Takuyakou/loop-vault/releases/latest) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
+
+Distribution includes a direct `loop-vault.exe` as well as installers. Windows WebView2 Runtime is required. v2.0.0 will be published after verification.
 
 ## What is Loop Vault?
 
@@ -25,8 +27,7 @@ practice, and production.
 - **Save and use it** — Edit and audition progressions in the Vault, practice them, export MIDI, or drag them into a DAW.
 
 Analysis and editing never modify the source MIDI. Vault data, settings, and practice history are stored
-locally and are not uploaded automatically. Only Progression Advisor makes an explicit request using the
-OpenAI API key supplied by the user.
+locally and are not uploaded automatically. The former AI Advisor UI is no longer provided. Settings can remove an API key previously saved for that feature.
 
 ## Features
 
@@ -37,7 +38,7 @@ OpenAI API key supplied by the user.
   High / Medium / Low confidence results
 - Standard, automatic, and custom analysis presets, plus the opt-in **Harmonic Core** mode
 - Reduce the chord-detection contribution of melody-like notes when harmony and melody share one Voice
-- Inspect the result as compact cards, a piano roll, timelines, and candidate blocks, then refine it in a Draft
+- Inspect cards, piano rolls and timelines; split/merge intervals and refine chords or notes in the Correction Workspace
 
 #### Harmonic Core
 
@@ -53,10 +54,10 @@ Create and save a progression from the Text tab in Capture without supplying a M
 | Dm7 G7 | Cmaj7 | Am7 |
 ```
 
-- Parse bar separators and chord names into compact code cards with clear diagnostics
+- Standard / Extended text intake parses bar separators and chord names with clear diagnostics
 - Set a key and BPM, choose an automatically generated voicing style, and audition each chord
 - Play a voicing on a MIDI keyboard and explicitly mark those notes for the selected chord
-- Continue through the existing Capture Draft, Quick Editor, Preview, and Vault save flow
+- Continue through the shared MIDI / Text Capture and Correction Workspace to preview and Vault save
 
 ### Progression Detail & Vault
 
@@ -88,10 +89,19 @@ A practice workspace built around listening, singing, thinking, playing, and rev
 - **Record & Compare** your performance against the reference or an earlier take
 - Review results in Practice History
 
-### Progression Advisor
+### Voicing Loop
 
-Ask AI for possible continuations or substitutions based on a Vault progression. The OpenAI API key is
-kept in the OS keychain, and suggestions can be reviewed before they are saved.
+- Current / next chord, timeline, 88-key keyboard and transport in one practice workspace
+- Distinct saved, source MIDI, custom and generated voicings; unavailable sources are disabled and partial availability is counted
+- Basic / Core generated choices and detailed shape, left-hand, Color and Open settings
+- Session-only, chord-snapped A–B Range Loop through right-click or keyboard controls
+- Recommended fingerings, fixed personal Saved fingerings and Next Move; ranking does not change pitches or hand assignment
+
+### Limitations
+
+MIDI analysis can require manual correction. Unpromoted Core v2 research does not replace the current Product analyzer.
+Recommended fingerings use a relative proxy, not a guarantee of ergonomic suitability or hand-size fit.
+Text intake does not invent source MIDI notes. Practice supports its constant-meter scope; changing tempo/meter or unsupported data remains limited. Vault stays on fileVersion 2 and valid practice-incompatible records are preserved.
 
 ### Data and localization
 
@@ -101,7 +111,7 @@ kept in the OS keychain, and suggestions can be reviewed before they are saved.
 
 ## Screenshots
 
-All screenshots show the v1.1.0 production UI with anonymous deterministic data.
+The screenshots below show the earlier v1.1.0 production UI with anonymous deterministic data. The v2.0.0 Correction Workspace and Voicing Loop have changed.
 
 | MIDI Capture / Harmonic Core | Text Progression Entry |
 | --- | --- |
@@ -113,16 +123,15 @@ All screenshots show the v1.1.0 production UI with anonymous deterministic data.
 
 ![Bass Practice — Root Motion Echo](docs/images/bass-practice.png)
 
-## v1.1.0 highlights
+## v2.0.0 highlights
 
-- Create progressions from chord names without a MIDI file through Text Progression Entry
-- Expanded Bass Practice with Root Motion Echo, Chord Context, Record & Compare, and Vault sources
-- Expanded Chord Dojo levels, transposition, voicing, and Mix practice
-- Improved the analysis flow with MIDI Voice-role inference, Harmonic Core, and melody-like note weighting within a Voice
-- Improved Voicing Memory, MIDI export, DAW drag, history, UI consistency, and accessibility
+- Shared MIDI / Text Correction Workspace with clearer interval editing, save and audition controls
+- Extended Text intake, source-first playback and default 120 BPM for SMFs without a tempo event
+- Timeline-integrated Voicing Loop, four sources, A–B looping, saved fingerings and Next Move
+- Preserved Vault v2, explicitly saved pitches and original MIDI source timing
+- Improved restart/first-chord playback, responsive layout, accessibility and test runner reliability
 
-v1.1.0 has no known breaking changes. Existing Vault and practice data remain compatible without an
-additional migration. See the [v1.1.0 Release Notes](docs/releases/v1.1.0.md) for details.
+See [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md) for details and limitations. SemVer is 2.0.0; Vault fileVersion remains 2.
 
 ## Tech Stack
 

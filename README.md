@@ -8,12 +8,14 @@
 
 ## Download
 
-**Latest Release: v1.1.0**
+**Release target: v2.0.0（公開準備中）**
 
 Loop Vault は Windows に対応しています。インストーラーは、一般的なセットアップ形式の
 **NSIS** と、Windows Installer 形式の **MSI** を用意しています。
 
-[GitHub Releases から最新版をダウンロード](https://github.com/Takuyakou/loop-vault/releases/latest)
+[公開済みの最新版をダウンロード](https://github.com/Takuyakou/loop-vault/releases/latest) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
+
+配布時にはインストーラーに加え、インストールせず起動できる `loop-vault.exe` を用意します。Windows WebView2 Runtime が必要です。v2.0.0 は検証後に公開予定です。
 
 ## Loop Vault とは
 
@@ -25,8 +27,7 @@ Loop Vault は、コード進行を「見つける」だけでなく、その後
 - **保存して活用する** — Vault に集めた進行を編集・試聴し、練習や MIDI 書き出し、DAW へのドラッグ＆ドロップにつなげます。
 
 解析や編集は元の MIDI ファイルを変更しません。Vault、設定、練習履歴などのデータは
-ローカルに保存され、外部へ自動送信されません。Progression Advisor を使う場合だけ、
-ユーザー自身の OpenAI API キーで明示的に問い合わせます。
+ローカルに保存され、外部へ自動送信されません。AI 展開案の画面は現在提供していません。以前保存した API キーは設定画面から削除できます。
 
 ## 主な機能
 
@@ -37,7 +38,7 @@ Loop Vault は、コード進行を「見つける」だけでなく、その後
   信頼度を「高・中・低」と要確認表示で確認・修正
 - 標準、自動、カスタムなどの解析プリセットと、伴奏の和声を優先する **和声コア**
 - 同じ Voice に和音とメロディが混在する場合、melody-like な音のコード検出への寄与を抑える処理
-- 解析結果を Compact Cards、ピアノロール、タイムライン、候補ブロックとして確認し、Draft で修正
+- 解析結果をカード、ピアノロール、タイムラインで確認し、修正作業場で区間の分割・結合、コードや音の修正を行う
 
 #### 和声コア
 
@@ -53,10 +54,10 @@ MIDI ファイルがなくても、Capture の「テキスト」からコード�
 | Dm7 G7 | Cmaj7 | Am7 |
 ```
 
-- 小節区切りとコードネームを解析し、Compact Code Cards と明確な診断を表示
+- 標準 / 拡張のテキスト入力を用意し、小節区切りとコードネームを解析、診断を表示
 - Key と BPM を設定し、自動生成ボイシングのスタイルを選んで試聴
 - MIDI 鍵盤から弾いたボイシングを、選択中のコードへ明示的に保存予定として記録
-- 変換後は既存の Capture Draft、Quick Editor、Preview、Vault 保存へそのまま接続
+- MIDI / Text 共通の Capture と修正作業場から、試聴・Vault 保存へ接続
 
 ### Progression Detail & Vault
 
@@ -88,10 +89,19 @@ MIDI ファイルがなくても、Capture の「テキスト」からコード�
 - **Record & Compare** で自分の演奏を録音し、お手本や過去テイクと聴き比べ
 - Practice History で練習結果と履歴を振り返り
 
-### Progression Advisor
+### Voicing Loop
 
-Vault の進行をもとに、次の展開や置き換え候補を AI に相談できます。OpenAI API キーは
-OS のキーチェーンで管理し、保存前に提案内容を確認できます。
+- 現在 / 次のコード、タイムライン、88鍵の鍵盤、Transport をまとめた練習画面
+- **保存した音 / 元MIDI / カスタム / 自動生成**を区別。Source が0件の選択肢は無効化し、部分利用可能な場合は件数を表示
+- 自動生成の基本 / 骨組みと、形・左手・Color・Open の詳しい設定
+- 右クリックまたはキーボードでコード単位の A–B 区間を指定する session-only Range Loop
+- おすすめ運指、保存した個人運指の固定、次への動き。元の音と左右手配分は運指の選択で変更しない
+
+### 制約
+
+MIDI の解析結果には修正が必要な場合があります。Core v2 の未採用研究を本番の解析器へ切り替えていません。
+Voicing Loop の推奨運指は相対的な計算指標であり、手サイズや身体的な弾きやすさを保証しません。
+Text 入力は元MIDIを持たないため、元MIDI Voicing を作りません。固定の対応拍子で練習できますが、拍子・tempo の変化や未対応データでは利用制限を表示します。Vault v2 は維持し、練習に使えない正常なrecordも保存から削除しません。
 
 ### データ管理と言語
 
@@ -101,7 +111,7 @@ OS のキーチェーンで管理し、保存前に提案内容を確認でき�
 
 ## Screenshots
 
-すべて匿名の固定データを使った v1.1.0 の production UI です。
+以下は匿名の固定データを使った v1.1.0 時点の production UI です。v2.0.0 の修正作業場・Voicing Loop は更新されています。
 
 | MIDI Capture / 和声コア | Text Progression Entry |
 | --- | --- |
@@ -113,16 +123,15 @@ OS のキーチェーンで管理し、保存前に提案内容を確認でき�
 
 ![Bass Practice — Root Motion Echo](docs/images/bass-practice.png)
 
-## v1.1.0 highlights
+## v2.0.0 highlights
 
-- Text Progression Entry により、MIDI がなくてもコードネームから進行を作成
-- Bass Practice に Root Motion Echo、Chord Context、Record & Compare、Vault 連携を追加
-- Chord Dojo の段階練習、移調、ボイシング、Mix 練習を拡張
-- MIDI Voice role 推定、和声コア、同一 Voice 内の melody-like note weighting で解析フローを改善
-- Voicing Memory、MIDI 書き出し、DAW ドラッグ、履歴・UI・アクセシビリティを改善
+- MIDI / Text 共通の修正作業場、区間編集、保存・再生の操作を整理
+- 拡張Text入力、source-first再生、tempo event のないSMFの120 BPM既定を改善
+- Voicing Loop のタイムライン統合レイアウト、4つのSource、A–B区間ループ、運指と次への動きを更新
+- Vault v2、保存済みの明示的な音、元MIDIのsource timingを維持
+- 再生再開・初回発音・レスポンシブ・アクセシビリティ・テストrunnerを改善
 
-v1.1.0 に既知の破壊的変更はなく、既存の Vault / 練習データは追加 migration なしで互換性を
-維持します。詳細は [v1.1.0 Release Notes](docs/releases/v1.1.0.md) を参照してください。
+詳細と既知の制約は [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md) を参照してください。SemVer は2.0.0ですが、Vault fileVersionは2のままです。
 
 ## 技術スタック
 
