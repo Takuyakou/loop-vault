@@ -32,7 +32,7 @@ import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
-import { RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
+import { NoSaveRange, RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
 import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, timelineFrom, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
@@ -137,6 +137,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [savedCount, setSavedCount] = useState(0);
   const [pendingLeave, setPendingLeave] = useState<() => void>();
   const scrollRef = useRef<HTMLDivElement>(null);
+  // P10.1 §6: the workspace takes focus back (no ring) after a mouse press and a shortcut.
+  const rootRef = useRef<HTMLElement>(null);
+  const pointerUsedRef = useRef(false);
   const playback = usePlaybackState(controller);
   const [clickAudition, setClickAudition] = useState(getCardClickAudition);
 
@@ -347,14 +350,25 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const key = event.key;
-      const handled = () => event.preventDefault();
+      if (key === "Tab") { pointerUsedRef.current = false; return; }
+      // P10.1 §6: after a mouse press, a handled shortcut (and Esc) moves focus to the workspace, so no ring appears.
+      const releaseFocus = () => {
+        const root = rootRef.current;
+        const active = document.activeElement;
+        if (pointerUsedRef.current && root && active instanceof HTMLElement && active !== root && root.contains(active) && !isEditable(active)) root.focus({ preventScroll: true });
+      };
+      const handled = () => { event.preventDefault(); if (key !== "Enter") releaseFocus(); };
       if (confirm) {
         if (key === "Enter") { handled(); runConfirm(); }
         return;
       }
-      if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || isEditable(event.target)) return;
-      // Enter and Space on a focused button, link or summary press that control (keyboard users).
-      if ((key === "Enter" || key === " ") && isPressable(event.target)) return;
+      if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey) return;
+      // P10.1 §5: Space plays and stops everywhere except where text is typed, in a select and in dialogs.
+      if (key === " " && !event.ctrlKey && !isEditable(event.target) && !inDialog(event.target)) { handled(); toggleSong(); return; }
+      if (isEditable(event.target)) return;
+      if (key === "Escape") releaseFocus();
+      // Enter on a focused button, link or summary presses that control (keyboard users).
+      if (key === "Enter" && isPressable(event.target)) return;
       const ids = [...selectedNotes];
       if (event.ctrlKey) {
         const lower = key.toLowerCase();
@@ -372,7 +386,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if (key === "ArrowLeft") { handled(); stopFollow(); selectCard(present.cards[Math.max(0, selectedIndex - 1)]); }
       else if (key === "]") { handled(); stopFollow(); nextReview(1); }
       else if (key === "[") { handled(); stopFollow(); nextReview(-1); }
-      else if (key === " ") { handled(); toggleSong(); }
       else if (key === "f" || key === "F") { handled(); setFollow((value) => !value); }
       else if (key === "Home") { handled(); stopFollow(); selectCard(present.cards[0]); }
       else if (key === "End") { handled(); stopFollow(); selectCard(present.cards[present.cards.length - 1]); }
@@ -399,8 +412,16 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         else if (selectedId !== undefined) { handled(); setSelectedId(undefined); }
       }
     }
+    // The key up of a Space that played must not press the focused button or tick the box.
+    function onKeyUp(event: KeyboardEvent) {
+      if (event.key === " " && !confirm && !nameEditor && !isEditable(event.target) && !inDialog(event.target)) event.preventDefault();
+    }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
@@ -503,11 +524,30 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const guarded = (action: () => void) => () => { if (dirty) setPendingLeave(() => action); else action(); };
   const lastBarOf = (card: CorrectionCard) => Math.floor((card.start + card.duration - 1e-6) / meter) + 1;
   const inSaveRange = (card: CorrectionCard) => !saveRange || (card.start < saveRange.endBar * meter - 1e-6 && card.start + card.duration > (saveRange.startBar - 1) * meter + 1e-6);
+  const selectedNoteList = present.notes.filter((note) => selectedNotes.has(note.id));
+  const selectionBar = selectedNoteList.length ? (
+    <>
+      <span>{selectedNoteList.length}音を選択中</span>
+      {selectedNoteList.some((note) => note.used || note.provenance === "MANUAL_ADDED")
+        ? <button type="button" className="lv-cw-btn" onClick={() => edit((model) => deleteNotes(model, selectedNoteList.map((note) => note.id)))}>外す <kbd>Delete</kbd></button> : null}
+      {selectedNoteList.some((note) => !note.used && note.provenance === "SOURCE")
+        ? <button type="button" className="lv-cw-btn" onClick={() => edit((model) => restoreNotes(model, selectedNoteList.map((note) => note.id)))}>戻す <kbd>R</kbd></button> : null}
+      <button type="button" className="lv-cw-btn" onClick={() => setSelectedNotes(new Set())} data-testid="correction-selection-clear">選択をやめる <kbd>Esc</kbd></button>
+    </>
+  ) : undefined;
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
 
   return (
-    <section className="lv-cw" data-testid="correction-workspace" data-mode={mode} aria-label="修正作業場（試作）">
+    <section
+      ref={rootRef}
+      className="lv-cw"
+      tabIndex={-1}
+      data-testid="correction-workspace"
+      data-mode={mode}
+      aria-label="修正作業場"
+      onPointerDownCapture={() => { pointerUsedRef.current = true; }}
+    >
       <div className="lv-cw-file">
         <span className="lv-cw-file-name">{props.fileName}</span>
         <span className="lv-cw-file-meta" title={fileMeta} data-testid="capture-analysis-preset-summary">{fileMeta}</span>
@@ -768,6 +808,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   warnNoteIds={warnNoteIds}
                   {...(melodyLine !== undefined ? { melodyLine } : {})}
                   onClearCard={() => { if (mode === "check") setSelectedId(undefined); }}
+                  selectionBar={selectionBar}
+                  leftEdge={scrollLeft}
                   onPreview={setPreview}
                   onCommit={apply}
                   onSelectNotes={selectNotes}
@@ -812,7 +854,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
               }}
             />
-          ) : <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />}
+          ) : <NoSaveRange />}
+          <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />
           {selected ? (
             <CorrectionInspector
               card={selected}
@@ -866,7 +909,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span><kbd>1</kbd>〜<kbd>4</kbd> 名前・<kbd>Y</kbd> このままでよい</span>
             <span>右クリック：外す・ダブルクリック：足す</span>
             <span><kbd>A</kbd><kbd>B</kbd> 聴き比べ</span>
-            <span><kbd>Space</kbd> 再生・停止</span>
+            <span><kbd>Space</kbd> 再生・停止（どこでも）</span>
+            <span><kbd>Enter</kbd> フォーカスのあるボタンを押す</span>
             <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
             <span><kbd>?</kbd> ショートカット一覧</span>
           </>
@@ -921,14 +965,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 
 function ShortcutSheet({ onClose }: { onClose: () => void }) {
   const rows: [string, string][] = [
-    ["← →", "前後のカード"], ["[ ]", "前後の要確認"], ["Space", "曲全体の再生・停止"], ["F", "再生位置に追従する／しない"],
+    ["← →", "前後のカード"], ["[ ]", "前後の要確認"], ["Space", "再生・停止（どこでも。選んだカードから／選んでいなければ最初から）"], ["Enter", "フォーカスのあるボタンを押す"], ["F", "再生位置に追従する／しない"],
     ["Home End", "最初／最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"],
     ["M", "次のカードとつなぐ"], ["Shift＋M", "同じ音が続く所を確認してつなぐ"], ["S", "カードを半分に分ける"],
     ["境目の取っ手", "ドラッグで1拍ずつ（Alt で ¼拍）"], ["1〜4", "名前の候補を選ぶ"], ["F2・名前をダブルクリック", "名前を文字で入れる"], ["Y", "このままでよい（次の要確認へ）"], ["N", "② 音を直す"], ["Enter", "直し終わる（①へ）"],
     ["右クリック・右ドラッグ", "元の音を外す／足した音を消す"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],
     ["上下ドラッグ・↑↓", "半音ずつ高さを直す"], ["Ctrl＋↑↓", "1オクターブ"], ["Delete", "外す・消す"], ["R", "戻す"],
     ["Ctrl＋A", "選んだカードの音を全部選ぶ"], ["Ctrl＋クリック（鍵盤）", "その高さの音を曲全体で選ぶ"], ["A B", "元の音／カードの音を鳴らす"],
-    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["Esc", "選択を外す・閉じる"],
+    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["Esc", "閉じる → 音の選択 → 保存する範囲 → カードの選択の順に外す"],
   ];
   return (
     <div className="lv-cw-cheat" role="dialog" aria-modal="true" aria-label="ショートカット一覧" onClick={onClose}>
@@ -985,9 +1029,18 @@ function isPressable(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && Boolean(target.closest("button, a[href], summary, [role='button'], [role='menuitem']"));
 }
 
+const NOT_TEXT_INPUTS = new Set(["checkbox", "radio", "button", "submit", "reset", "range", "color", "file", "image"]);
+
+/** Where keys type text or pick an option (P10.1 §5: a checkbox is not one). */
 function isEditable(target: EventTarget | null): boolean {
   const element = target instanceof HTMLElement ? target : null;
-  return Boolean(element && (element.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element.tagName)));
+  if (!element) return false;
+  if (element.isContentEditable || element.tagName === "TEXTAREA" || element.tagName === "SELECT") return true;
+  return element instanceof HTMLInputElement && !NOT_TEXT_INPUTS.has(element.type);
+}
+
+function inDialog(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("[role='dialog'], [aria-modal='true'], [data-quick-chord-editor]"));
 }
 
 export type { CorrectionNote };

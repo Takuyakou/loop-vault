@@ -351,6 +351,13 @@
   .lv-cw-recommend-item:hover { border-color: var(--lv-accent); }
   .lv-cw-recommend-item span { overflow: hidden; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
 
+  /* P10.1 */
+  .lv-cw:focus { outline: none; }
+  .lv-cw-selbar { position: absolute; top: 6px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-surface); box-shadow: var(--lv-shadow-overlay); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-recommend-section { display: grid; gap: 6px; margin-bottom: 14px; }
+  .lv-cw-recommend-toggle { justify-self: start; padding: 2px 0; color: var(--lv-text); font-size: var(--lv-text-13); font-weight: 700; }
+  .lv-cw-save[data-empty] { border-color: var(--lv-border); }
+
   .lv-cw-keys-help {
     display: flex;
     flex-wrap: wrap;

@@ -593,3 +593,105 @@ test("P10.1 plays from the selected card or from the start; following turns on w
   await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"]')).toHaveCount(0);
   await expect(position).toHaveText("1.1 から ／ 8小節");
 });
+
+// ---- P10.1 keys and selection ----------------------------------------------------------
+
+test("P10.1 Space plays and stops after any button or checkbox, without pressing it; text keeps its spaces", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const play = workspace.getByTestId("correction-play-song");
+  const zoom16 = workspace.getByRole("button", { name: "16小節", exact: true });
+  await workspace.getByRole("button", { name: "全体", exact: true }).click();
+  await zoom16.click();
+  await workspace.getByRole("button", { name: "全体", exact: true }).click(); // focus stays on 全体
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await expect(zoom16).toHaveAttribute("aria-pressed", "false"); // the focused button was not pressed again
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+
+  const box = workspace.getByTestId("correction-click-audition");
+  await box.click(); // off
+  await expect(box).not.toBeChecked();
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await expect(box).not.toBeChecked(); // not ticked by the Space
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+
+  // In a text field Space is a space.
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  const title = page.locator('form[role="dialog"] input[name="progression-title"]');
+  await title.fill("a");
+  await title.press("Space");
+  await expect(title).toHaveValue("a ");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+});
+
+test("P10.1 no focus ring after a mouse press and Esc; Tab still shows it", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  // A ring is a focus-visible element that draws an outline (the workspace itself takes focus without one).
+  const ring = () => page.evaluate(() => {
+    const active = document.activeElement;
+    if (!active || !active.matches(":focus-visible")) return false;
+    const style = getComputedStyle(active);
+    return style.outlineStyle !== "none" && style.outlineWidth !== "0px";
+  });
+  await workspace.getByTestId("correction-card").first().click();
+  await page.keyboard.press("n");
+  await workspace.getByTestId("correction-select-above-line").click();
+  await page.keyboard.press("Escape");
+  expect(await ring()).toBe(false);
+  await workspace.getByRole("button", { name: "16小節", exact: true }).click();
+  await page.keyboard.press("Escape");
+  expect(await ring()).toBe(false);
+  await page.keyboard.press("Tab");
+  expect(await ring()).toBe(true);
+});
+
+test("P10.1 selected notes have a bar to act on or stop; the line button turns into 選択をやめる", async ({ page }) => {
+  await importScenario(page, "melody-track-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await workspace.getByTestId("correction-card").first().click();
+  await page.keyboard.press("n");
+  const lineButton = workspace.getByTestId("correction-select-above-line");
+  await expect(lineButton).toContainText("線より上の音を選ぶ");
+  await lineButton.click();
+  const bar = workspace.getByTestId("correction-selection-bar");
+  await expect(bar).toContainText(/\d+音を選択中/);
+  await expect(bar.getByRole("button", { name: /外す/ })).toBeVisible();
+  await expect(lineButton).toHaveText("選択をやめる（Esc）");
+  await bar.getByTestId("correction-selection-clear").click();
+  await expect(bar).toHaveCount(0);
+  await expect(lineButton).toContainText("線より上の音を選ぶ");
+  // The line button stops its own selection too.
+  await lineButton.click();
+  await lineButton.click();
+  await expect(bar).toHaveCount(0);
+});
+
+test("P10.1 the save range panel is always there; 範囲を外す is off without a range; recommended ranges fold and stay folded", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const form = workspace.getByTestId("correction-save-form");
+  const clear = form.getByRole("button", { name: "範囲を外す" });
+  await expect(form).toContainText("まだ選んでいません");
+  await expect(clear).toBeDisabled();
+  await expect(clear).toHaveAttribute("title", "範囲を選んでいません");
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await expect(clear).toBeEnabled();
+  await expect(workspace.getByTestId("correction-recommended")).toBeVisible(); // still offered with a range
+  await clear.click();
+  await expect(clear).toBeDisabled();
+
+  const toggle = workspace.getByTestId("correction-recommended-toggle");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(workspace.getByTestId("correction-recommended")).toHaveCount(0);
+  await page.reload();
+  await importScenario(page, "plain-8");
+  await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
+});

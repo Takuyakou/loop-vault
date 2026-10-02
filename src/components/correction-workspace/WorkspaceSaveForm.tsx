@@ -96,21 +96,63 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
   );
 }
 
-/** 「おすすめの範囲」: the analysis block candidates as bar ranges with their names. */
-export function RecommendedRanges({ candidates, onPick }: { candidates: readonly ProgressionBlockCandidate[]; onPick: (range: SaveRange) => void }) {
-  if (!candidates.length) return null;
+/** P10.1 §8: the save range panel when no range is chosen yet. */
+export function NoSaveRange() {
   return (
-    <section aria-label="おすすめの範囲">
-      <h4 className="lv-cw-h4">おすすめの範囲</h4>
-      <div className="lv-cw-recommend" data-testid="correction-recommended">
-        {candidates.slice(0, 6).map((candidate) => (
-          <button key={candidate.id} type="button" className="lv-cw-recommend-item" onClick={() => onPick({ startBar: candidate.startBar, endBar: candidate.endBar })}>
-            <b>{rangeLabel(candidate)}</b>
-            <span>{candidate.chords.slice(0, 6).map((item) => item.chord.label).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
-          </button>
-        ))}
+    <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-empty>
+      <div className="lv-cw-row-between">
+        <h4 className="lv-cw-h4">保存する範囲</h4>
+        <button type="button" className="lv-cw-btn" disabled title="範囲を選んでいません">範囲を外す</button>
       </div>
-      <p className="lv-cw-muted">区切りの帯を押す・カードを押してから別のカードを Shift＋クリックでも選べます。</p>
+      <p className="lv-cw-muted" data-testid="correction-save-range">まだ選んでいません。区切りの帯・おすすめの範囲・カードを押してから別のカードを Shift＋クリックで選べます。</p>
+    </section>
+  );
+}
+
+const RECOMMENDED_OPEN_KEY = "loop-vault:p10-recommended-ranges-open:v1";
+
+function readRecommendedOpen(): boolean {
+  try {
+    return typeof localStorage === "undefined" || localStorage.getItem(RECOMMENDED_OPEN_KEY) !== "closed";
+  } catch {
+    return true;
+  }
+}
+
+function writeRecommendedOpen(open: boolean) {
+  try {
+    localStorage.setItem(RECOMMENDED_OPEN_KEY, open ? "open" : "closed");
+  } catch {
+    // Device-local only; without storage it simply opens next time.
+  }
+}
+
+/** 「おすすめの範囲」: the analysis block candidates as bar ranges with their names; open or closed, remembered (P10.1 §8). */
+export function RecommendedRanges({ candidates, onPick }: { candidates: readonly ProgressionBlockCandidate[]; onPick: (range: SaveRange) => void }) {
+  const [open, setOpen] = useState(readRecommendedOpen);
+  if (!candidates.length) return null;
+  const shown = candidates.slice(0, 6);
+  return (
+    <section aria-label="おすすめの範囲" className="lv-cw-recommend-section">
+      <button
+        type="button"
+        className="lv-cw-recommend-toggle"
+        aria-expanded={open}
+        data-testid="correction-recommended-toggle"
+        onClick={() => { setOpen(!open); writeRecommendedOpen(!open); }}
+      >
+        <span aria-hidden="true">{open ? "▾" : "▸"}</span> おすすめの範囲（{shown.length}）
+      </button>
+      {open ? (
+        <div className="lv-cw-recommend" data-testid="correction-recommended">
+          {shown.map((candidate) => (
+            <button key={candidate.id} type="button" className="lv-cw-recommend-item" onClick={() => onPick({ startBar: candidate.startBar, endBar: candidate.endBar })}>
+              <b>{rangeLabel(candidate)}</b>
+              <span>{candidate.chords.slice(0, 6).map((item) => item.chord.label).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
