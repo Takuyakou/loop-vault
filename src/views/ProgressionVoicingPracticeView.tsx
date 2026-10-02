@@ -1,5 +1,5 @@
 import { useFingeringRankerMode } from "../voicingPractice/fingeringRankerMode";
-import { handPositionCostModel, EXPERIMENTAL_HAND_POSITION_POLICY } from "../domain/handPositionFingering";
+import { eRankerCostModel } from "../domain/eRankerFingering";
 import { rankPracticeHandFingerings } from "../voicingPractice/rankPracticeFingerings";
 import { GeneratedTypeSelector } from "../voicingPractice/GeneratedTypeSelector";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
@@ -425,7 +425,7 @@ export function ProgressionVoicingPracticeView({
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
   const fingeringRankerMode = useFingeringRankerMode();
   const fingeringOptions = useMemo(() => fingeringRankerMode === "E1-T"
-    ? { costModel: handPositionCostModel(EXPERIMENTAL_HAND_POSITION_POLICY) } : {}, [fingeringRankerMode]);
+    ? { costModel: eRankerCostModel() } : {}, [fingeringRankerMode]);
   const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string; plan: ProgressionPracticeVoicingPlan | undefined; values: Map<string, string> }>();
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
     left: [],

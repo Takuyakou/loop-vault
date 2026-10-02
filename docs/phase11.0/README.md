@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-13e production candidate integration
+
+[Production candidate](reports/P11-13e-production-candidate.md): authorized frozen E1-T/inverse/lambda2/gamma1 integration. Latest local master `ccf85c69` incorporated into candidate at `c54b360d`, without conflicts. Normal Voicing Loop default is the new candidate with Developer-only session CURRENT fallback. Focused/FEATURE/UI/fresh FULL/EXE verification in progress; stop READY_FOR_HUMAN_PRODUCT_ACCEPTANCE, no master merge or E3. The CURRENT-default/no-adoption statements below describe earlier stages. Workflow ID `P11.13-05` identifies P11-13e.
+
 ### P11-13d frozen reserved confirmation
 
 [Reserved final evaluation](reports/P11-13d-reserved-final-evaluation.md): `HOLDOUT_CONFIRMED` / `READY_FOR_HUMAN_DECISION`. CURRENT/lambda2/lambda2+gamma1 only, one run at `90ff4549`, focused17/17 and diagnostic types/lint PASS. Reserved1,080 cases: reassignment2086→2004, regression cases18→18, new0; structural/time/anchor/Range maintained. Earlier lambda0.5 reserved exposure and absent named families limit the interpretation; no unused-new-holdout or ergonomic promotion claim. No policy changes, adoption, merge, FULL/EXE or further components. Workflow ID `P11.13-04` identifies P11-13d.

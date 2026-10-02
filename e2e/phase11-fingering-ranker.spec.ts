@@ -14,12 +14,18 @@ async function notesAndHands(page:Page) {
     note:node.closest('[data-midi-note]')?.getAttribute('data-midi-note'),hand:node.getAttribute('data-finger-label')?.slice(0,1),
   })));
 }
-test("P11-13 developer comparison preserves notes, hands and Range; resets to CURRENT on reload",async({page})=>{
+test("P11-13e defaults to frozen candidate; CURRENT fallback preserves notes, hands and Range",async({page})=>{
   await page.setViewportSize({width:1440,height:900});
   await page.goto('/?p527Status=p533-rules');await page.locator('[data-nav="voicing-loop"]').click();
   await page.getByRole('button',{name:'元MIDI',exact:true}).click();
+  await page.locator('[data-nav="settings"]').click();
+  const initialDeveloper=page.locator('#settings-developer button[aria-expanded]');
+  if(await initialDeveloper.getAttribute('aria-expanded')!=="true")await initialDeveloper.click();
+  await expect(page.getByLabel('運指方式',{exact:true})).toHaveValue('E1-T');
+  await page.locator('[data-nav="voicing-loop"]').click();
   const before=await notesAndHands(page);expect(before.length).toBeGreaterThan(0);
   const current=page.getByTestId('voicing-loop-current-panel');mkdirSync(output,{recursive:true});
+  await setMode(page,"CURRENT");
   await current.screenshot({path:`${output}/current-1440.png`});
   await setMode(page,"E1-T");
   await expect(page.getByRole('button',{name:'元MIDI',exact:true})).toHaveAttribute('aria-pressed','true');
@@ -38,5 +44,5 @@ test("P11-13 developer comparison preserves notes, hands and Range; resets to CU
   await setMode(page,"CURRENT");expect(await notesAndHands(page)).toEqual(before);
   await page.reload();await page.locator('[data-nav="settings"]').click();
   const developer=page.locator('#settings-developer button[aria-expanded]');if(await developer.getAttribute('aria-expanded')!=="true")await developer.click();
-  await expect(page.getByLabel('運指方式',{exact:true})).toHaveValue('CURRENT');
+  await expect(page.getByLabel('運指方式',{exact:true})).toHaveValue('E1-T');
 });

@@ -12,12 +12,12 @@ import { generateFingeringCandidates } from "../domain/progressionFingering";
 import { rankPracticeHandFingerings } from "../voicingPractice/rankPracticeFingerings";
 import { assignPracticeHandsAcrossProgression } from "../voicingPractice/fingeringDisplay";
 import { resolveProgressionPracticeVoicings } from "../domain/progressionVoicingPractice";
-import { handPositionCostModel, EXPERIMENTAL_HAND_POSITION_POLICY } from "../domain/handPositionFingering";
+import { eRankerCostModel } from "../domain/eRankerFingering";
 import type { ProgressionVoicingTransportPort } from "../practice/ProgressionVoicingTransport";
 import { syntheticSnapshots } from "../../scripts/p11-12/integration";
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 let root:Root|undefined;
-afterEach(async()=>{await act(async()=>root?.unmount());root=undefined;document.body.replaceChildren();window.localStorage.clear();setFingeringRankerMode("CURRENT");});
+afterEach(async()=>{await act(async()=>root?.unmount());root=undefined;document.body.replaceChildren();window.localStorage.clear();setFingeringRankerMode("E1-T");});
 async function mount(snapshots=syntheticSnapshots()) {
   const container=document.createElement("div");document.body.append(container);root=createRoot(container);
   const audition=vi.fn(async()=>{});
@@ -26,14 +26,27 @@ async function mount(snapshots=syntheticSnapshots()) {
   return {container,snapshots,audition};
 }
 const handLabels=(c:HTMLElement)=>[...c.querySelectorAll("[data-testid='voicing-loop-left-hand'],[data-testid='voicing-loop-right-hand']")].map(n=>n.textContent);
+it("normal candidate default reaches timing-aware Bass and CURRENT fallback without changing the source",async()=>{
+  const snapshots=syntheticSnapshots(),base=snapshots["source-midi"]!;
+  snapshots["source-midi"]={...base,lengthBeats:1,spans:base.spans.map((s,i)=>({...s,startBeat:i*0.25,durationBeats:0.25})),events:base.events.map((e,i)=>({...e,startBeat:i*0.25,durationBeats:0.25,voicing:{kind:"source-midi",midiNotes:[48+[0,2,4,5][i]!],bassNote:48+[0,2,4,5][i]!}}))};
+  const before=JSON.stringify(snapshots),{container}=await mount(snapshots);
+  await act(async()=>container.querySelectorAll<HTMLButtonElement>('[data-testid="voicing-loop-event"]')[1]!.click());
+  expect(container.querySelector('[data-testid="voicing-loop-left-hand"]')!.textContent).toContain("L4");
+  await act(async()=>setFingeringRankerMode("CURRENT"));
+  expect(container.querySelector('[data-testid="voicing-loop-left-hand"]')!.textContent).toContain("L5");
+  await act(async()=>setFingeringRankerMode("E1-T"));
+  expect(container.querySelector('[data-testid="voicing-loop-left-hand"]')!.textContent).toContain("L4");
+  expect(JSON.stringify(snapshots)).toBe(before);
+});
 it("developer toggle keeps Source notes and hand assignment; Range does not rerank",async()=>{
   const {container,snapshots}=await mount();const selector=container.querySelector<HTMLSelectElement>('[aria-label="運指方式"]')!;
-  expect(selector.value).toBe("CURRENT");
+  expect(selector.value).toBe("E1-T");
   const source=JSON.stringify(snapshots);const cards=()=>container.querySelectorAll<HTMLButtonElement>('[data-testid="voicing-loop-event"]');
   const currentNotes=[...container.querySelectorAll<HTMLElement>('[data-midi-note] [data-finger-label]')].map(n=>n.closest('[data-midi-note]')!.getAttribute('data-midi-note'));
-  await act(async()=>{selector.value="E1-T";selector.dispatchEvent(new Event("change",{bubbles:true}));});
-  expect(selector.value).toBe("E1-T");expect(JSON.stringify(snapshots)).toBe(source);
+  await act(async()=>{selector.value="CURRENT";selector.dispatchEvent(new Event("change",{bubbles:true}));});
+  expect(selector.value).toBe("CURRENT");expect(JSON.stringify(snapshots)).toBe(source);
   expect([...container.querySelectorAll<HTMLElement>('[data-midi-note] [data-finger-label]')].map(n=>n.closest('[data-midi-note]')!.getAttribute('data-midi-note'))).toEqual(currentNotes);
+  await act(async()=>setFingeringRankerMode("E1-T"));
   const labels=handLabels(container);
   await act(async()=>{cards()[1]!.dispatchEvent(new MouseEvent("contextmenu",{bubbles:true,cancelable:true}));});
   await act(async()=>{cards()[2]!.dispatchEvent(new MouseEvent("contextmenu",{bubbles:true,cancelable:true}));});
@@ -42,7 +55,7 @@ it("developer toggle keeps Source notes and hand assignment; Range does not rera
   expect(handLabels(container)).toEqual(labels);
   const snapshot=snapshots["source-midi"]!,plan=resolveProgressionPracticeVoicings(snapshot),hands=assignPracticeHandsAcrossProgression("source-midi",plan.events.map(e=>e.status==="SUPPORTED"?e.voicing:undefined));
   const before=JSON.stringify(hands);
-  rankPracticeHandFingerings(snapshot,hands,"source-midi","left",undefined,{costModel:handPositionCostModel(EXPERIMENTAL_HAND_POSITION_POLICY)});
+  rankPracticeHandFingerings(snapshot,hands,"source-midi","left",undefined,{costModel:eRankerCostModel()});
   expect(JSON.stringify(hands)).toBe(before);
 });
 it("Saved survives switching rankers and personal persistence; partial movement preserves known IDs",async()=>{
