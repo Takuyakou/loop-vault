@@ -30,8 +30,8 @@ jobs:
       - run: npm run lint
       - run: npx tsc --noEmit
       - run: npm run typecheck:e2e
-      # Match the approved FULL Vitest invocation in scripts/test-dx/run.mjs.
-      - run: npm test -- --maxWorkers=4 --testTimeout=30000 --reporter=dot
+      # Keep FULL budgets and assertions; avoid concurrent files contaminating timing tests.
+      - run: npm test -- --maxWorkers=4 --testTimeout=30000 --reporter=dot --no-file-parallelism
       - run: npm run build
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
 
