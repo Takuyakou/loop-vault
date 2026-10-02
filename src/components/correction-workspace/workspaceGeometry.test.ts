@@ -3,7 +3,7 @@ import { buildScenarioMidi, p10Scenario } from "../../testing/p10SyntheticSongs"
 import { analyzeScenario } from "../../testing/p10SyntheticCapture";
 import { buildCorrectionModel } from "../../domain/correction/correctionModel";
 import { reviewThresholds } from "../../domain/correction/reviewThresholds";
-import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 
 describe("workspace geometry (P10.0-05)", () => {
   it("draws the visible beats plus one view each side, clamped at both ends", () => {
@@ -48,16 +48,23 @@ describe("workspace geometry (P10.0-05)", () => {
     expect(cardSize(14)).toBe("tiny");
     expect(cardSize(39)).toBe("tiny");
     expect(cardSize(71)).toBe("narrow");
-    expect(cardLabel("Fmaj7", 200)).toBe("Fmaj7");
-    expect(cardLabel("Fmaj7", 30)).toBe("F");
-    expect(cardLabel("Bbm7b5", 50)).toBe("Bb");
-    expect(cardLabel("C#dim7", 30)).toBe("C#");
-    expect(cardLabel("Fmaj7", 10)).toBe("");
-    // From 14px a root letter shows (P10.0-06); a root with an accidental needs more.
-    expect(cardLabel("Fmaj7", 14)).toBe("F");
-    expect(cardLabel("F#m7", 14)).toBe("");
-    expect(cardLabel("F#m7", 22)).toBe("F#");
-    expect(cardLabel("Fmaj7", 60)).not.toContain("·");
+    expect(cardLabel("Fmaj7", 200)).toEqual({ text: "Fmaj7" });
+    // Tiny cards (under 40px) keep the root, or nothing (P10.0-06: a root letter from 14px).
+    expect(cardLabel("Fmaj7", 30)).toEqual({ text: "F" });
+    expect(cardLabel("C#dim7", 30)).toEqual({ text: "C#" });
+    expect(cardLabel("Fmaj7", 10)).toEqual({ text: "" });
+    expect(cardLabel("Fmaj7", 14)).toEqual({ text: "F" });
+    expect(cardLabel("F#m7", 14)).toEqual({ text: "" });
+    expect(cardLabel("F#m7", 22)).toEqual({ text: "F#" });
+  });
+
+  it("never cuts a name to its bare root on a wider card: smaller letters, then 「B…」 (P10.2 §10.4)", () => {
+    expect(cardLabel("Bmaj9", 80)).toEqual({ text: "Bmaj9" }); // 16px fits
+    expect(cardLabel("Bmaj9", 74)).toEqual({ text: "Bmaj9", small: true }); // 13px fits
+    expect(cardLabel("Bbm7b5", 74)).toEqual({ text: "Bbm7b5", small: true });
+    expect(cardLabel("Bmaj9", 50)).toEqual({ text: "B…" }); // a narrow card at 13px
+    expect(cardLabel("Bbm7b5", 50)).toEqual({ text: "Bb…" });
+    expect(cardLabel("C#m7b5(9)", 74)).toEqual({ text: "C#…" });
   });
 
   it("builds the 300-bar, 5,000-note song in well under a second", () => {
@@ -70,5 +77,22 @@ describe("workspace geometry (P10.0-05)", () => {
     console.log(`P10.0-05 CorrectionModel 300 bars / 5,000 notes: ${model.cards.length} cards, ${model.notes.length} fragments, ${ms.toFixed(1)}ms`);
     expect(model.cards.length).toBeGreaterThan(250);
     expect(ms).toBeLessThan(1000);
+  });
+});
+
+describe("where the song starts with no card selected (P10.2 §3)", () => {
+  const cards = [{ id: "a", start: 0, duration: 4 }, { id: "b", start: 4, duration: 6 }, { id: "c", start: 12, duration: 4 }];
+
+  it("is the first card whose head is in view; a card starting left of the view does not count", () => {
+    expect(leftCardInView(cards, 0, 16)?.id).toBe("a");
+    expect(leftCardInView(cards, 2, 16)?.id).toBe("b");
+    expect(leftCardInView(cards, 4, 8)?.id).toBe("b");
+  });
+
+  it("is the card sounding at the left edge when no head is in view, else the next card", () => {
+    expect(leftCardInView(cards, 5, 9)?.id).toBe("b");
+    expect(leftCardInView(cards, 10.5, 11.5)?.id).toBe("c"); // a rest at the left edge
+    expect(leftCardInView(cards, 17, 20)).toBeUndefined();
+    expect(leftCardInView(cards, 0, 0)?.id).toBe("a"); // before the view is measured
   });
 });

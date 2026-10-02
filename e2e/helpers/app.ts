@@ -70,11 +70,19 @@ export async function analyzeCurrentMidi(page: Page): Promise<void> {
   await expect(page.getByTestId("correction-workspace")).toBeVisible();
 }
 
+/** P10.2 addendum 1 §2: 「おすすめの範囲」 starts closed at the top of the panel; open it. */
+export async function openRecommendedRanges(page: Page): Promise<void> {
+  const toggle = page.getByTestId("correction-workspace").getByTestId("correction-recommended-toggle");
+  if (await toggle.getAttribute("aria-expanded") !== "true") await toggle.click();
+  await expect(page.getByTestId("correction-workspace").getByTestId("correction-recommended")).toBeVisible();
+}
+
 /** The first recommended range (おすすめの範囲) becomes the save range; a closed narrow panel is opened first. */
 export async function chooseFirstCandidate(page: Page): Promise<void> {
   const workspace = page.getByTestId("correction-workspace");
   const toggle = workspace.getByTestId("correction-panel-toggle");
   if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") !== "true") await toggle.click();
+  await openRecommendedRanges(page);
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
   await expect(workspace.getByTestId("correction-save-form")).toBeVisible();
 }

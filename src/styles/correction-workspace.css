@@ -57,6 +57,7 @@
   .lv-cw-btn:disabled { opacity: 0.45; }
   .lv-cw-btn[aria-pressed="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-accent); }
   .lv-cw-btn[data-kind="accent"] { border-color: var(--lv-accent); color: var(--lv-accent); }
+  .lv-cw-btn[data-kind="primary"] { border-color: var(--lv-accent); background: var(--lv-accent); color: var(--lv-text-on-accent); font-weight: 600; }
 
   .lv-cw-suggestion {
     display: flex;
@@ -117,20 +118,44 @@
   .lv-cw-ov-card { position: absolute; bottom: 5px; height: 6px; border-radius: 1px; background: rgb(66 216 198 / 45%); box-shadow: inset -1px 0 0 var(--lv-bg-subtle); }
   .lv-cw-ov-mark { position: absolute; top: 15px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--lv-warning); }
   .lv-cw-ov-view { position: absolute; top: 1px; bottom: 1px; border: 2px solid var(--lv-accent); border-radius: 4px; background: rgb(66 216 198 / 8%); pointer-events: none; }
-  .lv-cw-ov-ph, .lv-cw-playhead { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; will-change: transform; }
+  .lv-cw-ov-ph { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; will-change: transform; }
+  /* P10.1 §3.2: one line from the bar row to the bottom of the piano roll, with the position on top. */
+  .lv-cw-playline { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; width: 1px; background: var(--lv-text); opacity: 0.75; pointer-events: none; will-change: transform; }
+  .lv-cw-playline-tag { position: absolute; top: 3px; left: 3px; padding: 0 4px; border-radius: 3px; background: var(--lv-surface); color: var(--lv-text); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; line-height: 16px; white-space: nowrap; }
   .lv-cw-check { display: inline-flex; align-items: center; gap: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
 
-  .lv-cw-tools {
+  /* P10.1 §1: one control bar on top; groups never break inside, they wrap whole. */
+  .lv-cw-bar {
+    position: sticky;
+    top: 0;
+    z-index: var(--lv-z-sticky);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    padding: 0 16px 0 calc(var(--lv-cw-keys) + 16px);
+    gap: 6px 0;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--lv-border);
+    background: var(--lv-bg-subtle);
   }
-
-  .lv-cw-tools-label { color: var(--lv-text-muted); font-size: var(--lv-text-11); }
-  .lv-cw-sep { width: 1px; height: 20px; margin: 0 4px; background: var(--lv-border); }
-  .lv-cw-nav-count { min-width: 52px; color: var(--lv-warning); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-align: center; }
+  .lv-cw-group { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid var(--lv-border); }
+  .lv-cw-group:first-child, .lv-cw-bar-lead:first-child > .lv-cw-group:first-child { padding-left: 0; border-left: 0; }
+  .lv-cw-bar-lead { display: inline-flex; flex: none; flex-wrap: nowrap; align-items: center; }
+  .lv-cw-bar .lv-cw-btn { padding-inline: 8px; }
+  .lv-cw-bar .lv-cw-notice { flex: 1 1 40px; min-width: 0; height: 20px; padding-left: 10px; overflow: hidden; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
+  .lv-cw-nav-count { color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-nav-count span { color: var(--lv-warning); font-family: var(--font-mono, ui-monospace, monospace); }
+  /* P10.2 §1: one switch for 表示 and one for the mode. */
+  .lv-cw-seg { display: inline-flex; height: 30px; overflow: hidden; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); }
+  .lv-cw-seg button { padding: 0 9px; border-right: 1px solid var(--lv-border-strong); color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-seg button:last-of-type { border-right: 0; }
+  .lv-cw-seg button:hover { background: var(--lv-surface-raised); color: var(--lv-text); }
+  .lv-cw-seg button[aria-pressed="true"] { background: var(--lv-accent-soft); color: var(--lv-accent); }
+  .lv-cw-seg small { display: inline-flex; align-items: center; padding: 0 8px 0 2px; color: var(--lv-text-muted); font-size: var(--lv-text-11); }
+  .lv-cw-settings { position: relative; margin-left: auto; padding-right: 0; }
+  .lv-cw-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: var(--lv-z-popover); display: grid; width: 200px; gap: 8px; padding: 10px 12px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-md); background: var(--lv-surface-overlay); box-shadow: var(--lv-shadow-overlay); }
+  .lv-cw-menu hr { border: 0; border-top: 1px solid var(--lv-border-strong); }
+  .lv-cw-menu-danger { justify-self: start; color: var(--lv-danger); font-size: var(--lv-text-12); }
+  .lv-cw-menu-danger:disabled { opacity: 0.45; }
 
   .lv-cw-body {
     display: grid;
@@ -152,7 +177,9 @@
   .lv-cw-canvas { position: relative; }
 
   .lv-cw-ruler, .lv-cw-segments, .lv-cw-cards, .lv-cw-roll { position: relative; }
-  .lv-cw-ruler { height: 26px; border-bottom: 1px solid var(--lv-border); }
+  .lv-cw-ruler { height: 26px; border-bottom: 1px solid var(--lv-border); cursor: pointer; }
+  /* P10.2 §8: the bar under the pointer. */
+  .lv-cw-bar-hover { position: absolute; top: 0; bottom: 0; background: var(--lv-surface-raised); box-shadow: inset 2px 0 0 var(--lv-accent); pointer-events: none; }
   .lv-cw-bar-no { position: absolute; top: 4px; padding-left: 5px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-11); white-space: nowrap; }
   .lv-cw-segments { height: 20px; }
   .lv-cw-segments[data-open] { height: 30px; }
@@ -172,12 +199,12 @@
     white-space: nowrap;
   }
 
-  .lv-cw-cards { height: 98px; }
+  .lv-cw-cards { height: 80px; }
 
   .lv-cw-card {
     position: absolute;
     top: 6px;
-    bottom: 26px;
+    height: 56px;
     display: grid;
     align-content: space-between;
     overflow: hidden;
@@ -190,10 +217,41 @@
 
   .lv-cw-card:hover { background: var(--lv-surface-raised); }
   .lv-cw-card-name { overflow: hidden; font-size: var(--lv-text-16); font-weight: 700; text-overflow: clip; white-space: nowrap; }
+  /* P10.2 §10.4: a name that does not fit at 16px is shown whole at 13px before it is cut to 「B…」. */
+  .lv-cw-card-name[data-small] { font-size: var(--lv-text-13); line-height: 1.6; }
   .lv-cw-card-sub { display: flex; align-items: center; gap: 6px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-11); white-space: nowrap; }
   .lv-cw-flag { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--lv-warning); }
   .lv-cw-card[data-review] { border-color: rgb(242 193 78 / 60%); }
-  .lv-cw-card[aria-pressed="true"] { border: 2px solid var(--lv-accent); background: #10262a; box-shadow: 0 0 0 3px rgb(66 216 198 / 12%); }
+  /* P10.2 §5: the selected card is the frame only; the sounding card looks like Voicing Loop's current card. */
+  .lv-cw-card[aria-pressed="true"] { border: 2px solid var(--lv-accent); }
+  /* P10.2 addendum 1 §1.2: the cards inside the decided range are a little lighter. */
+  .lv-cw-card[data-in-range] { background: var(--lv-surface-raised); }
+  .lv-cw-card[data-in-range] .lv-cw-card-name { color: var(--lv-text); }
+  .lv-cw-card[data-playing] { border-color: var(--lv-accent); background: var(--lv-accent-soft); }
+  .lv-cw-card[data-playing] .lv-cw-card-name { color: var(--lv-accent); }
+  .lv-cw-card[data-playing]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0 0 6px 6px; background: var(--lv-accent); transform-origin: left; transform: scaleX(0); }
+  .lv-cw-note[data-playing] { z-index: 2; filter: brightness(1.35); box-shadow: 0 0 6px rgb(66 216 198 / 55%); }
+  .lv-cw-card[data-start-cue], .lv-cw-card[data-range-from] { overflow: visible; }
+  /* P10.2 §9: 「ここから」 and the pending range under the cards (yellow, dashed). */
+  .lv-cw-card[data-range-from] { border: 2px dashed var(--lv-warning); }
+  .lv-cw-card[data-range-from]::before { content: "ここから"; position: absolute; top: -9px; right: 6px; z-index: 2; padding: 0 5px; border-radius: 3px; background: var(--lv-warning-soft); color: var(--lv-warning); font-size: 10px; line-height: 1.6; white-space: nowrap; pointer-events: none; }
+  .lv-cw-range-brace { position: absolute; top: 64px; height: 9px; border: 1.5px dashed var(--lv-warning); border-top: 0; border-radius: 0 0 6px 6px; pointer-events: none; }
+  .lv-cw-range-brace span { position: absolute; top: 1px; left: 50%; padding: 0 4px; transform: translateX(-50%); background: var(--lv-bg); color: var(--lv-warning); font-size: 10px; white-space: nowrap; }
+  .lv-cw-range-brace[data-second] { top: 78px; }
+  /* The decided range: solid teal, A and B at the ends, the words from the left. */
+  .lv-cw-range-brace[data-confirmed] { border: 1.5px solid var(--lv-accent); border-top: 0; }
+  .lv-cw-range-brace[data-confirmed] > span { left: 14px; color: var(--lv-accent); transform: none; }
+  .lv-cw-range-brace i { position: absolute; top: -3px; padding: 0 3px; border-radius: 3px; background: var(--lv-accent); color: var(--lv-text-on-accent); font-size: 9px; font-style: normal; font-weight: 700; line-height: 12px; }
+  .lv-cw-range-brace i[data-end="a"] { left: -2px; }
+  .lv-cw-range-brace i[data-end="b"] { right: -2px; }
+  .lv-cw-ov-range { position: absolute; top: 0; bottom: 0; background: rgb(66 216 198 / 18%); pointer-events: none; }
+  /* P10.2 §11: the segment edges. */
+  .lv-cw-seg-edge { position: absolute; top: 3px; bottom: 3px; z-index: 2; width: 6px; border-radius: 2px; cursor: ew-resize; touch-action: none; }
+  .lv-cw-segments:hover .lv-cw-seg-edge { background: var(--lv-border-strong); }
+  .lv-cw-seg-edge:hover, .lv-cw-seg-edge:active { background: var(--lv-accent); }
+  .lv-cw-icon { display: inline-flex; min-width: 30px; align-items: center; justify-content: center; padding-inline: 6px; font-size: var(--lv-text-14); line-height: 1; }
+  .lv-cw-mirror { transform: scaleX(-1); }
+  .lv-cw-card[data-start-cue]::before { content: "▶ ここから"; position: absolute; top: -9px; left: 6px; z-index: 2; padding: 0 5px; border-radius: 3px; background: var(--lv-bg); color: var(--lv-accent); font-size: 10px; line-height: 1.6; white-space: nowrap; pointer-events: none; }
   .lv-cw-card[data-size="narrow"] { padding: 8px 5px; }
   .lv-cw-card[data-size="narrow"] .lv-cw-card-name { font-size: var(--lv-text-13); }
   .lv-cw-card[data-size="tiny"] { padding: 8px 2px; border-radius: 5px; }
@@ -240,18 +298,13 @@
   .lv-cw-legend i[data-kind="melody"] { outline: 1px solid rgb(116 109 244 / 85%); outline-offset: -1px; }
   .lv-cw-legend i[data-kind="off"] { outline: 1px dashed var(--lv-text-muted); outline-offset: -1px; }
 
-  .lv-cw-transport {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 0 16px 0 calc(var(--lv-cw-keys) + 16px);
-  }
+  /* Fixed width so the numbers changing never move the buttons beside it. */
+  .lv-cw-time { display: inline-block; min-width: 9.5em; color: var(--lv-text-secondary); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lv-cw-insp-empty { display: grid; gap: 8px; justify-items: start; margin-bottom: 14px; }
 
-  .lv-cw-time { min-width: 90px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
-  .lv-cw-history { color: var(--lv-text-muted); font-size: var(--lv-text-12); }
-
-  .lv-cw-insp { min-width: 0; padding: 16px; background: var(--lv-bg-subtle); }
+  .lv-cw-insp { display: flex; min-width: 0; flex-direction: column; background: var(--lv-bg-subtle); }
+  .lv-cw-insp-scroll { padding: 16px; }
+  .lv-cw-insp-foot { padding: 12px 16px 14px; border-top: 1px solid var(--lv-border-strong); background: var(--lv-surface); }
   .lv-cw-panel-toggle { display: none; }
   .lv-cw-insp-body { display: grid; align-content: start; gap: 14px; }
   .lv-cw-eyebrow { color: var(--lv-text-muted); font-size: var(--lv-text-11); font-weight: 600; letter-spacing: 0.12em; }
@@ -259,7 +312,7 @@
   .lv-cw-h4 { margin-bottom: 8px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); font-weight: 600; }
   .lv-cw-muted { color: var(--lv-text-muted); font-size: var(--lv-text-12); }
 
-  .lv-cw-reason, .lv-cw-ok {
+  .lv-cw-reason {
     display: grid;
     gap: 6px;
     padding: 10px 12px;
@@ -268,13 +321,10 @@
 
   .lv-cw-reason { border: 1px solid rgb(242 193 78 / 45%); background: var(--lv-warning-soft); color: #f7dc9c; }
   .lv-cw-reason b { color: var(--lv-warning); }
-  .lv-cw-ok { border: 1px solid rgb(66 216 198 / 40%); background: var(--lv-accent-soft); color: #bff3ec; }
 
 
   .lv-cw-ab { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .lv-cw-ab button { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
-  .lv-cw-ab button span { color: var(--lv-text-muted); font-size: var(--lv-text-11); }
-  .lv-cw-ab button[aria-pressed="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); }
+
 
   .lv-cw-alts { display: grid; gap: 6px; }
   .lv-cw-alt { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-surface); }
@@ -339,14 +389,52 @@
   .lv-cw-segment[aria-pressed="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-text); }
   .lv-cw-card[data-out-of-range] { opacity: 0.4; }
   .lv-cw-saved { margin-left: 6px; padding: 0 6px; border: 1px solid var(--lv-accent); border-radius: 999px; color: var(--lv-accent); font-size: var(--lv-text-11); }
-  .lv-cw-save { display: grid; gap: 8px; margin-bottom: 14px; padding: 12px; border: 1px solid var(--lv-accent); border-radius: var(--lv-radius-sm); background: var(--lv-surface); }
-  .lv-cw-save-range { font-weight: 700; }
-  .lv-cw-save-names { overflow-wrap: anywhere; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
+  .lv-cw-save { display: grid; gap: 8px; }
+  .lv-cw-save .lv-cw-row-between { margin-bottom: 0; }
+  .lv-cw-save .lv-cw-h4 { margin-bottom: 0; }
+  .lv-cw-save-range { color: var(--lv-text); font-weight: 700; }
+  .lv-cw-save-names { overflow: hidden; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-overflow: ellipsis; white-space: nowrap; }
+  .lv-cw-save-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
   .lv-cw-details summary { cursor: pointer; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
-  .lv-cw-recommend { display: grid; gap: 6px; }
-  .lv-cw-recommend-item { display: grid; gap: 2px; padding: 6px 10px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
+  /* P10.2 addendum 1 §2: 「おすすめの範囲」 on top of the panel; the heading row opens it. */
+  .lv-cw-reco { display: flex; flex: none; flex-direction: column; border-bottom: 1px solid var(--lv-border-strong); }
+  .lv-cw-reco-head { display: flex; width: 100%; align-items: center; gap: 6px; padding: 10px 16px; color: var(--lv-text); font-size: var(--lv-text-13); font-weight: 600; text-align: left; }
+  .lv-cw-reco-head:hover { background: var(--lv-surface-raised); }
+  .lv-cw-recommend { display: grid; max-height: 40vh; gap: 4px; overflow-y: auto; padding: 0 12px 10px; }
+  .lv-cw-recommend-item[aria-current="true"] { border-color: var(--lv-accent); background: var(--lv-accent-soft); }
+  .lv-cw-recommend-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: baseline; gap: 10px; padding: 5px 10px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
   .lv-cw-recommend-item:hover { border-color: var(--lv-accent); }
-  .lv-cw-recommend-item span { overflow: hidden; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-recommend-item .lv-cw-reco-names { overflow: hidden; text-overflow: ellipsis; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
+
+  /* P10.1 */
+  .lv-cw:focus { outline: none; }
+  .lv-cw-selbar { position: absolute; top: 6px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-surface); box-shadow: var(--lv-shadow-overlay); font-size: var(--lv-text-12); white-space: nowrap; }
+  /* P10.2 addendum 2 §2.2: 区切りごとに保存. */
+  .lv-cw-section-list { display: grid; max-height: 50vh; gap: 4px; overflow-y: auto; margin: 14px 0; }
+  .lv-cw-section-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 4px 10px; padding: 6px 8px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); }
+  .lv-cw-section-row label { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .lv-cw-section-row[data-disabled] { opacity: 0.75; }
+  .lv-cw-section-names { overflow: hidden; flex: 1 1 100%; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-overflow: ellipsis; white-space: nowrap; }
+  .lv-cw-section-problem { display: flex; grid-column: 2; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--lv-warning); font-size: var(--lv-text-12); }
+  .lv-cw-section-dest { display: grid; gap: 6px; margin-bottom: 8px; font-size: var(--lv-text-13); }
+  .lv-cw-section-dest select { margin-left: 8px; padding: 2px 6px; border: 1px solid var(--lv-border-strong); border-radius: 4px; background: var(--lv-bg); color: var(--lv-text); }
+  /* P10.2 addendum 1 §3: the chord tones as chips; the missing ones dashed. */
+  .lv-cw-chips-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .lv-cw-chips-row + .lv-cw-chips-row { margin-top: 8px; }
+  .lv-cw-tone { display: inline-flex; min-width: 30px; height: 24px; align-items: center; justify-content: center; padding: 0 8px; border: 1px solid var(--lv-border-strong); border-radius: 6px; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
+  .lv-cw-tone[data-add] { border-style: dashed; border-color: var(--lv-accent); color: var(--lv-accent); }
+  .lv-cw-tone[data-add]:hover { background: var(--lv-accent-soft); }
+  .lv-cw-tone[data-extra] { color: var(--lv-text-muted); }
+
+  .lv-cw-tempo { display: inline-flex; align-items: center; gap: 4px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-tempo-box { display: inline-flex; align-items: center; gap: 2px; height: 26px; padding: 0 5px; border: 1px solid var(--lv-border-strong); border-radius: 6px; background: var(--lv-surface); cursor: ns-resize; }
+  .lv-cw-tempo-box[data-editing] { border-color: var(--lv-accent); cursor: text; }
+  .lv-cw-tempo-box i { color: var(--lv-text-muted); font-size: var(--lv-text-11); font-style: normal; }
+  .lv-cw-tempo input { width: 3.2ch; padding: 0; border: 0; background: transparent; color: var(--lv-text); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-13); text-align: right; cursor: inherit; }
+  .lv-cw-tempo input:focus { outline: none; }
+  .lv-cw-tempo-midi { min-height: 24px; padding: 0 6px !important; font-size: var(--lv-text-11); }
+  .lv-cw-card[data-name-unreadable] .lv-cw-card-name { opacity: 0.55; }
+  .lv-cw-name-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
 
   .lv-cw-keys-help {
     display: flex;
@@ -378,6 +466,27 @@
     .lv-cw { --lv-cw-insp: 300px; }
   }
 
+  /* P10.2 §10.1: where the panel sits beside the timeline, the workspace fills the window's
+     height; the piano roll takes what is left and the panel scrolls inside. When the window
+     is too short, the roll keeps its minimum and the page scrolls (the workspace grows). */
+  @media (min-width: 1220px) {
+    #main-content:has(.lv-cw) > div { height: 100%; min-height: 0; }
+    [data-capture-stage="result"].lv-capture-mode-content:has(.lv-cw) { display: flex; height: 100%; min-height: 0; flex-direction: column; }
+    [data-capture-stage="result"] .lv-capture-content:has(> .lv-cw) { min-height: 0; flex: 1 1 auto; grid-template-rows: minmax(0, 1fr); }
+    .lv-cw { display: flex; min-height: 100%; flex-direction: column; align-self: start; }
+    /* Sized from the free room, never from the roll inside (the roll adds rows to fill it). */
+    .lv-cw-work { min-height: 500px; flex: 1 1 0; }
+    .lv-cw-timeline { display: flex; flex-direction: column; padding-bottom: 8px; }
+    .lv-cw-body { min-height: 340px; flex: 1 1 0; overflow-y: auto; }
+    .lv-cw-insp { min-height: 0; overflow: hidden; }
+    .lv-cw-insp-scroll { min-height: 200px; flex: 1 1 0; overflow-y: auto; }
+    /* The pinned save panel keeps its own height; an open 「おすすめの範囲」 list gives way and scrolls. */
+    .lv-cw-insp-foot { flex: none; }
+    /* The open list takes at most 35% of the panel and scrolls inside. */
+    .lv-cw-reco { max-height: 35%; min-height: 0; }
+    .lv-cw-reco .lv-cw-recommend { min-height: 0; max-height: none; flex: 0 1 auto; }
+  }
+
   @media (max-width: 1219px) {
     .lv-cw-work { grid-template-columns: minmax(0, 1fr); }
     .lv-cw-timeline { border-right: 0; border-bottom: 1px solid var(--lv-border); }
@@ -385,6 +494,8 @@
 
   @media (max-width: 959px) {
     .lv-cw { --lv-cw-keys: 56px; }
+    /* Narrow windows: 再生 and 表示 may take a line each, never a sideways scroll. */
+    .lv-cw-bar-lead { display: contents; }
     .lv-cw-key { left: 18px; }
     .lv-cw-oct { display: none; }
     .lv-cw-label { padding-left: 8px; }
@@ -402,6 +513,12 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .lv-cw-card[data-playing]::after { animation: lv-cw-card-progress var(--lv-cw-play-ms, 2s) linear var(--lv-cw-play-at, 0ms) forwards; }
     .lv-cw-card, .lv-cw-btn { transition: background-color var(--lv-motion-fast) var(--lv-ease-standard), border-color var(--lv-motion-fast) var(--lv-ease-standard); }
   }
+}
+
+@keyframes lv-cw-card-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }

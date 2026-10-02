@@ -79,23 +79,25 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
-    options?: { stayOnCapture?: boolean },
-  ): boolean {
+    options?: { stayOnCapture?: boolean; bpm?: number },
+  ): string | undefined {
+    // The new idea's id (P10.2 addendum 2: saving by section adds the rest to it), or undefined.
     setPersistenceError(undefined);
     const corrections = correctionEvents(original, candidate, editable);
     const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
     // The workspace stays on the capture screen after saving; the old screen's call is unchanged.
-    const create = (draft: Parameters<CreateIdeaFromDraft>[0]) => options ? createIdeaFromDraft(draft, options) : createIdeaFromDraft(draft);
+    const navigation = options?.stayOnCapture ? { stayOnCapture: true } : undefined;
+    const create = (draft: Parameters<CreateIdeaFromDraft>[0]) => navigation ? createIdeaFromDraft(draft, navigation) : createIdeaFromDraft(draft);
     const id = create({
       title,
       status: "idea",
-      bpm: analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
-        ? undefined : analysis.result?.bpm,
+      bpm: options?.bpm ?? (analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
+        ? undefined : analysis.result?.bpm),
       key: analysis.result?.detectedKey,
       chordMemo: candidate.summaryText,
       nextAction,
       progressionBlock: candidate,
-      progressionAnalysis: analysis.result,
+      progressionAnalysis: withTempo(analysis.result, options?.bpm),
       progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
     });
     if (id) {
@@ -112,10 +114,10 @@ export function useCaptureSave({
       ]);
       persistLabelCorrectionLogs(original, editable);
       setToast(copy.capture.savedToVault, "success");
-      return true;
+      return id;
     }
     setToast(copy.capture.createFailed, "error");
-    return false;
+    return undefined;
   }
 
   function correctionEvents(
@@ -187,6 +189,7 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
+    options?: { bpm?: number },
   ): boolean {
     setPersistenceError(undefined);
     if (!ideaId) {
@@ -194,7 +197,7 @@ export function useCaptureSave({
       return false;
     }
 
-    const appended = appendBlockToIdea(ideaId, candidate, analysis.result, {
+    const appended = appendBlockToIdea(ideaId, candidate, withTempo(analysis.result, options?.bpm), {
       sourcePath,
       userEdited: userEditedOverride ?? hasProgressionEdits(editable),
       userVerified,
@@ -223,4 +226,15 @@ export function useCaptureSave({
   }
 
   return { persistenceError, saveNew, appendExisting };
+}
+
+/**
+ * P10.1 §12.4: a tempo a person set in the workspace goes with the saved progression.
+ * The store keeps an analysis bpm unless its runtime-only diagnostics say the MIDI had
+ * no tempo, so the copy carries the set tempo without those diagnostics.
+ */
+export function withTempo(result: MidiProgressionAnalysis | undefined, bpm: number | undefined): MidiProgressionAnalysis | undefined {
+  if (!result || bpm === undefined) return result;
+  const { tempoDiagnostics: _diagnostics, ...rest } = result;
+  return { ...rest, bpm };
 }

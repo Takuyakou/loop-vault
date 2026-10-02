@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "10.1",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P10.1-01"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "1f18e880",
+  "lastVerifiedCommit": "980be255",
+  "currentBranch": "feat/p10.1-workspace-fixes",
+  "requiredGates": {
+    "P10.1-01": [
+      "p10.1-01-phase-docs",
+      "p10.1-01-layout-playback",
+      "p10.1-01-keys-selection",
+      "p10.1-01-name-tempo",
+      "p10.1-01-fast-feature",
+      "p10.1-01-ui",
+      "p10.1-01-data-retention",
+      "p10.1-01-screens",
+      "p10.1-01-full-fresh",
+      "p10.1-01-exe",
+      "p10.1-01-report"
+    ]
+  },
+  "gateResults": {
+    "p10.1-01-phase-docs": "pass",
+    "p10.1-01-layout-playback": "pass",
+    "p10.1-01-keys-selection": "pass",
+    "p10.1-01-name-tempo": "pass",
+    "p10.1-01-fast-feature": "pass",
+    "p10.1-01-ui": "pass",
+    "p10.1-01-data-retention": "pass",
+    "p10.1-01-screens": "pass",
+    "p10.1-01-full-fresh": "pass",
+    "p10.1-01-exe": "pass",
+    "p10.1-01-report": "pass"
+  },
+  "nextAction": "Phase 10.1 完了。merge 候補の取り込みは人間の判断",
+  "updatedAt": "2026-10-02"
+}

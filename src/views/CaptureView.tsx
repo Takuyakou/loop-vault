@@ -701,6 +701,7 @@ export function CaptureView(props: CaptureViewProps) {
             onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
             onChooseAnotherMidi={() => void chooseMidi(false)}
             blockCandidates={result.blockCandidates}
+            tempoMissing={result.tempoDiagnostics?.provenance === "SMF_DEFAULT" || !result.bpm}
             {...(props.onWorkspaceDirtyChange ? { onDirtyChange: props.onWorkspaceDirtyChange } : {})}
             save={{
               ideas,
@@ -709,13 +710,13 @@ export function CaptureView(props: CaptureViewProps) {
               titleFor: (candidate) => captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
               onCreate: (ready, title, nextAction, userVerified) => {
                 const sourceBassline = workspaceBassline.forSave(ready.candidate);
-                if (sourceBassline === null) return false;
-                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true });
+                if (sourceBassline === null) return undefined;
+                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}) });
               },
               onAppend: (ready, ideaId, userVerified) => {
                 const sourceBassline = workspaceBassline.forSave(ready.candidate);
                 if (sourceBassline === null) return false;
-                return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline);
+                return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline, ready.bpm !== undefined ? { bpm: ready.bpm } : undefined);
               },
               onCopyMemo: copyMemo,
               renderBassline: (ready) => workspaceBassline.panel(ready.candidate),
