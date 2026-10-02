@@ -36,7 +36,8 @@ test("P11 generated type switches close details without disabling later dismissa
   const trigger = details.locator("summary");
   for (const type of ["core", "teacher"]) {
     await trigger.click();
-    await page.getByLabel("生成タイプ", { exact: true }).selectOption(type);
+    await page.getByLabel("生成タイプ", { exact: true }).click();
+    await page.getByRole("option", { name: (type === "core" ? "骨組み" : "基本"), exact: true }).click();
     await expect(details).not.toHaveAttribute("open", "");
     await trigger.click();
     await expect(details).toHaveAttribute("open", "");

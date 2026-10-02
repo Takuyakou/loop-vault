@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { preferenceId, rememberVoicingSource, restoreVoicingSource, sourceCoverage, VOICING_SOURCE_PREFERENCE_KEY } from "./sourcePreference";
+import { preferenceId, rememberVoicingSource, restoreVoicingSource, savedDuplicatesSource, sourceCoverage, VOICING_SOURCE_PREFERENCE_KEY } from "./sourcePreference";
 import type { ProgressionVoicingPracticeSnapshots } from "../domain/progressionVoicingPractice/types";
 
 function snapshots(available = true): ProgressionVoicingPracticeSnapshots {
@@ -33,5 +33,48 @@ describe("P11 source preferences", () => {
     const blocked = { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("blocked"); } };
     expect(restoreVoicingSource(snapshots(), "basic-full", blocked)).toBe("basic-full");
     expect(() => rememberVoicingSource(snapshots(), "source-midi", blocked)).not.toThrow();
+  });
+});
+
+
+describe("P11 effective saved/source deduplication", () => {
+  function matching(): ProgressionVoicingPracticeSnapshots {
+    const original = snapshots()["source-midi"]!;
+    return { ...snapshots(), saved: { ...original, selection: "saved", events: original.events.map(event => ({
+      ...event, playbackChoice: "SOURCE", voicing: { kind: "saved", savedSource: "source-midi", midiNotes: [59, 48, 52] },
+    })) } };
+  }
+  it("collapses complete exact source provenance, restores old saved preference to source without changing data", () => {
+    const source = matching(); const before = JSON.stringify(source); const store = storage();
+    expect(savedDuplicatesSource(source)).toBe(true);
+    expect(restoreVoicingSource(source, "saved", store)).toBe("source-midi");
+    rememberVoicingSource(source, "saved", store);
+    expect(restoreVoicingSource(source, "basic-full", store)).toBe("source-midi");
+    expect(JSON.stringify(source)).toBe(before);
+  });
+  it.each(["corrected", "partial", "generated", "unknown", "text", "octave", "timing"])("does not collapse %s", reason => {
+    const source = matching(); const saved = source.saved!; const event = saved.events[0]!;
+    const changed = { ...event, ...(reason === "custom" ? { playbackChoice: "CUSTOM" as const } : {}),
+      ...(reason === "generated" ? { playbackChoice: "GENERATED" as const } : {}),
+      ...(reason === "timing" ? { startBeat: 1 } : {}),
+      voicing: reason === "partial" ? undefined : { ...event.voicing!,
+        ...(reason === "unknown" ? { savedSource: undefined } : {}),
+        ...(reason === "corrected" ? { midiNotes: [48, 52, 60] } : {}),
+        ...(reason === "octave" ? { midiNotes: [60, 64, 71] } : {}) },
+    };
+    expect(savedDuplicatesSource({ ...source, saved: { ...saved, ...(reason === "text" ? { textDerivedPolicyId: "text-defining-basic-full-v1" as const } : {}), events: [changed] } })).toBe(false);
+  });
+  it("compares effective custom notes too, without rewriting CUSTOM intent", () => {
+    const source = matching(); const event = source.saved!.events[0]!;
+    const changed = { ...event, playbackChoice: "CUSTOM" as const, voicing: { ...event.voicing!, savedSource: "custom" as const } };
+    expect(savedDuplicatesSource({ ...source, saved: { ...source.saved!, events: [changed] } })).toBe(true);
+    expect(changed.playbackChoice).toBe("CUSTOM");
+  });
+  it("retains saved if even one later card is changed or missing", () => {
+    const source = matching(); const event = source["source-midi"]!.events[0]!;
+    const saved = source.saved!.events[0]!;
+    const two = { ...source, "source-midi": { ...source["source-midi"]!, events: [event, { ...event, id: "2" }] },
+      saved: { ...source.saved!, events: [saved, { ...saved, id: "2", voicing: { ...saved.voicing!, midiNotes: [48, 52, 60] } }] } };
+    expect(savedDuplicatesSource(two)).toBe(false);
   });
 });

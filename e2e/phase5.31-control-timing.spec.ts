@@ -52,9 +52,10 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
     await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
-    await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+    await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
+    await page.getByRole("option", { name: "骨組み", exact: true }).click();
     await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
-      .toHaveValue("core");
+      .toHaveAttribute("value", "core");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
     await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
@@ -122,9 +123,10 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
-  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
+    await page.getByRole("option", { name: "骨組み", exact: true }).click();
   await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
-    .toHaveValue("core");
+    .toHaveAttribute("value", "core");
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
   await expect(workspace.getByTestId("voicing-loop-current-explanation"))
     .toContainText("Family Core");

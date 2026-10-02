@@ -82,3 +82,20 @@
     }
   }
 }
+
+@layer components {
+  /* Content budget, not viewport-proportional height: readable hands fill spare space.
+     Long content grows naturally rather than scrolling or clipping the current panel. */
+  .lv-vl-current-next { container-type: inline-size; }
+  .lv-vl-current-next-grid { grid-template-columns: minmax(0, 1fr); }
+  .lv-vl-current-panel { min-height: 400px; }
+  .lv-vl-next-column { min-height: 360px; }
+
+  @container (min-width: 900px) {
+    .lv-vl-current-next-grid { grid-template-columns: minmax(0, 1fr) minmax(22rem, 440px); }
+    .lv-vl-next-column { min-height: 0; }
+  }
+  @container (max-width: 600px) {
+    .lv-vl-current-panel { min-height: 460px; }
+  }
+}

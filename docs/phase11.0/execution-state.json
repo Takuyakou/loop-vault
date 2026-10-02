@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-09",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -16,9 +16,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
+  "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
   "lastVerifiedCommit": "52159ae626e56f79c420b194a4c15ca0e4d81117",
-  "currentBranch": "master",
+  "currentBranch": "fix/phase11-acceptance-layout-source-hands",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -75,6 +75,13 @@
       "p11-08-full",
       "p11-08-exe",
       "p11-08-docs"
+    ],
+    "P11.0-09": [
+      "p11-09-focused",
+      "p11-09-ui",
+      "p11-09-full",
+      "p11-09-exe",
+      "p11-09-docs"
     ]
   },
   "gateResults": {
@@ -115,8 +122,13 @@
     "p11-08-ui": "pass",
     "p11-08-full": "pass",
     "p11-08-exe": "pass",
-    "p11-08-docs": "pass"
+    "p11-08-docs": "pass",
+    "p11-09-focused": "pending",
+    "p11-09-ui": "pending",
+    "p11-09-full": "pending",
+    "p11-09-exe": "pending",
+    "p11-09-docs": "pending"
   },
-  "nextAction": "LOCAL MASTER MERGED at 52159ae6 by explicit human authorization; fresh FULL 3670 Vitest / 177 Playwright PASS. Await Human Product Acceptance; no next phase/push/tag/release.",
-  "updatedAt": "2026-10-01"
+  "nextAction": "P11-09 scoped candidate: record fresh FULL and Windows EXE after focused/UI stabilization; no master merge/push/tag/release.",
+  "updatedAt": "2026-10-02"
 }

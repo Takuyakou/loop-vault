@@ -201,3 +201,7 @@ Product-level invariants to never break without explicit authorization:
 
 Do not preload all phase docs. Use the standing local merge and EXE
 authorization in root `AGENTS.md`; never push automatically.
+
+## Active P11-09 acceptance follow-up
+
+Branch `fix/phase11-acceptance-layout-source-hands`, based on local master `8b6480b4`. Scope: current-panel/root geometry, complete exact Saved/Source deduplication, Saved fixed hand assignment and generated-type menu. No master merge/push/tag/release. [Current evidence](../phase11.0/reports/P11-09-acceptance-layout-source-hands.md). P11-00–08 integration above remains historical. Native WebView selector symptom was not reproduced in Chromium; distinguish that limitation from measured fixes.

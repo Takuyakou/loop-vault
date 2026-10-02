@@ -123,3 +123,26 @@ describe("VL-09 assignment validity", () => {
     expect(isPracticeHandAssignmentPlayable(source, { left: [48, 52], right: [55, 59, 64] })).toBe(false);
   });
 });
+
+
+describe("P11 saved fixed hand parity", () => {
+  it.each([
+    [[48, 67, 70, 74, 75], 48],
+    [[45, 67, 71, 74, 78], 45],
+    [[60, 64, 67], undefined],
+    [[59, 62, 65, 69], undefined],
+    [[40, 43, 47, 60, 64, 67, 71], 40],
+  ] as const)("uses the existing fixed-source partition for %j, bass %s", (notes, bassNote) => {
+    const resolved = voicing(notes, { bassNote });
+    const before = JSON.stringify(resolved);
+    const source = assignPracticeHandsAcrossProgression("source-midi", [resolved]);
+    expect(assignPracticeHandsAcrossProgression("saved", [resolved])).toEqual(source);
+    expect(assignPracticeHandsAcrossProgression("custom", [resolved])).toEqual(source);
+    expect(isPracticeHandAssignmentPlayable(notes, source[0]!)).toBe(true);
+    expect(JSON.stringify(resolved)).toBe(before);
+  });
+  it("preserves explicit generated fallback hand context even under saved selection", () => {
+    const resolved = voicing([48, 52, 55, 59], { leftHandNotes: [48, 52], rightHandNotes: [55, 59] });
+    expect(assignPracticeHandsAcrossProgression("saved", [resolved])).toEqual([{ left: [48, 52], right: [55, 59] }]);
+  });
+});

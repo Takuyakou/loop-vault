@@ -582,15 +582,15 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(toolbar.textContent).toContain("進行に合わせて最適化");
     expect(toolbar.textContent).not.toContain("SHELL TYPE");
     expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
     const sourceCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
       expect(sourceCheckboxes.find((input) => input.parentElement?.textContent?.includes(label))?.disabled).toBe(true);
     }
 
     await act(async () => button(container, "自動生成").click());
-    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.value).toBe("teacher");
-    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(false);
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.value).toBe("teacher");
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(false);
     const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
@@ -602,7 +602,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(explanation.textContent).toContain("トップトップ候補");
 
     await act(async () => button(container, "カスタム").click());
-    expect(container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
+    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")).toBeNull();
   });
 
@@ -1668,11 +1668,11 @@ function vaultCandidate(index: number): VoicingLoopVaultCandidate {
 }
 
 async function selectStudy(container: HTMLElement, value: "teacher" | "core") {
-  const select = container.querySelector<HTMLSelectElement>("[aria-label='生成タイプ']")!;
+  const select = container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")!;
   await act(async () => {
-    select.value = value;
-    select.dispatchEvent(new Event("change", { bubbles: true }));
+    select.click();
   });
+  await act(async () => Array.from(container.querySelectorAll<HTMLButtonElement>("[role=option]")).find(option => option.textContent === (value === "teacher" ? "基本" : "骨組み"))!.click());
 }
 
 function button(container: HTMLElement, label: string): HTMLButtonElement {

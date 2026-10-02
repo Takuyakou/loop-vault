@@ -10,15 +10,35 @@ export function sourceCoverage(snapshots: ProgressionVoicingPracticeSnapshots | 
   return { available: events.filter(event => event.voicing?.kind === selection).length, total };
 }
 
+/** Collapse only fully covered, source-backed saved pitches, never generated fallback or Text previews. */
+export function savedDuplicatesSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined): boolean {
+  const saved = snapshots?.saved;
+  const source = snapshots?.["source-midi"];
+  if (!saved || !source || !saved.events.length || saved.events.length !== source.events.length
+    || saved.textDerivedPolicyId || source.textDerivedPolicyId) return false;
+  return saved.events.every((event, index) => {
+    const original = source.events[index]!;
+    const pitches = event.voicing;
+    const sourcePitches = original.voicing;
+    if (event.id !== original.id || event.startBeat !== original.startBeat || event.durationBeats !== original.durationBeats
+      || pitches?.kind !== "saved" || (pitches.savedSource !== "source-midi" && pitches.savedSource !== "custom") || sourcePitches?.kind !== "source-midi"
+      || event.playbackChoice === "GENERATED"
+      || !pitches.midiNotes.length || pitches.midiNotes.length !== sourcePitches.midiNotes.length) return false;
+    const left = [...pitches.midiNotes].sort((a, b) => a - b);
+    const right = [...sourcePitches.midiNotes].sort((a, b) => a - b);
+    return left.every((pitch, i) => pitch === right[i]);
+  });
+}
+
 export function restoreVoicingSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined, initial: ProgressionVoicingSelection, storage?: RecentProgressionStorage): ProgressionVoicingSelection {
   try {
     const id = preferenceId(snapshots);
     const entry = readEntries(storage).find(([key]) => key === id);
     const selected = entry?.[1];
     if (selected && snapshots?.[selected] && (selected !== "saved" && selected !== "source-midi" && selected !== "custom"
-      || sourceCoverage(snapshots, selected).available > 0)) return selected;
+      || sourceCoverage(snapshots, selected).available > 0)) return selected === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : selected;
   } catch { /* Preference storage is optional. */ }
-  return initial;
+  return initial === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : initial;
 }
 
 export function rememberVoicingSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined, selected: ProgressionVoicingSelection, storage?: RecentProgressionStorage): void {

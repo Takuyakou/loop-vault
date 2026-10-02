@@ -76,7 +76,7 @@ function handCandidates(
   if (voicing.leftHandNotes || voicing.rightHandNotes) {
     return [{ left: voicing.leftHandNotes ?? EMPTY_NOTES, right: voicing.rightHandNotes ?? EMPTY_NOTES }];
   }
-  if (selection !== "source-midi" && selection !== "custom") return [{ left: EMPTY_NOTES, right: voicing.midiNotes }];
+  if (selection !== "saved" && selection !== "source-midi" && selection !== "custom") return [{ left: EMPTY_NOTES, right: voicing.midiNotes }];
   const notes = [...voicing.midiNotes].sort((a, b) => a - b);
   if (new Set(notes).size !== notes.length || notes.some((note) => !Number.isInteger(note) || note < 0 || note > 127)) return [];
   const result: ProgressionFingeringHandTargets[] = [];
