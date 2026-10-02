@@ -7,7 +7,8 @@ import { chordToneDiff, nameCandidatesFor } from "../../domain/correction/nameCa
 
 /**
  * The right-hand panel for the selected card (spec v2.3 §4.4, §6.3, §6.4, §7.5), in the P10.2
- * §10.3 order: name, review reasons, name candidates, A/B, notes, chord tones, card actions.
+ * §10.3 order: name, review reasons, name candidates, A/B, notes, chord tones (only when they
+ * differ, addendum 1 §3), card actions.
  */
 export interface CorrectionInspectorProps {
   card: CorrectionCard;
@@ -41,6 +42,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
   const warnIds = new Set(card.reviewReasons.flatMap((reason) => reason.noteIds));
   const names = nameCandidatesFor(card, notes);
   const diff = chordToneDiff(card.name, notes);
+  const extraTones = diff.currentTones.filter((tone) => !diff.chordTones.includes(tone));
   // One row per pitch (spec v2.4 §4.4): a held-over note and a new one of the same pitch are one row.
   const rows = [...new Set(notes.map((note) => note.pitch))].sort((a, b) => b - a).map((pitch) => {
     const same = notes.filter((note) => note.pitch === pitch);
@@ -160,22 +162,23 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
         </ul>
       </section>
 
-      <section>
-        <h4 className="lv-cw-h4">構成音との違い（参考）</h4>
-        <dl className="lv-cw-tones">
-          <dt>{card.name.label} の構成音</dt>
-          <dd>{diff.chordTones.join(" ")}</dd>
-          <dt>今の音</dt>
-          <dd>{diff.currentTones.join(" ") || "なし"}</dd>
-          <dt>追加候補（参考）</dt>
-          <dd data-testid="correction-addable">
-            {diff.addable.length ? diff.addable.map((tone) => (
-              <button key={tone} type="button" className="lv-cw-addable" onClick={() => props.onAddPitchClass(pitchClassOf(tone))}>＋{tone}</button>
-            )) : "なし"}
-          </dd>
-        </dl>
-        <p className="lv-cw-muted" title="名前の構成音にあって、今の音に無い音です。省くのが普通の音もあるので、足すかどうかは耳で決めてください。">名前にあって今の音に無い音（足すかは耳で）</p>
-      </section>
+      {diff.addable.length || extraTones.length ? (
+        // P10.2 addendum 1 §3: the name's tones from the root; the missing ones dashed (press to add).
+        <section data-testid="correction-tones">
+          <h4 className="lv-cw-h4" title="点線の音は、名前の構成音にあって今の音に無い音です。押すと足せます。省くのが普通の音もあるので、足すかどうかは耳で決めてください。">構成音との違い（参考）</h4>
+          <div className="lv-cw-chips-row" data-testid="correction-addable">
+            {diff.chordTones.map((tone) => diff.addable.includes(tone) ? (
+              <button key={tone} type="button" className="lv-cw-tone" data-add onClick={() => props.onAddPitchClass(pitchClassOf(tone))}>＋{tone}</button>
+            ) : <span key={tone} className="lv-cw-tone">{tone}</span>)}
+          </div>
+          {extraTones.length ? (
+            <div className="lv-cw-chips-row" data-testid="correction-extra-tones">
+              <span className="lv-cw-muted">名前に無い音</span>
+              {extraTones.map((tone) => <span key={tone} className="lv-cw-tone" data-extra>{tone}</span>)}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <section>
       <h4 className="lv-cw-h4">カードの操作</h4>

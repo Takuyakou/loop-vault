@@ -109,6 +109,10 @@ const buttons = (scope: ParentNode, text: string) => [...scope.querySelectorAll<
 
 /** A range (the first recommended one, or the first segment band), then 「Vaultに保存」 in the save form. */
 async function openSaveForRecommendedRange(container: HTMLElement, from: "recommended" | "segment" = "recommended") {
+  // P10.2 addendum 1: 「おすすめの範囲」 starts closed.
+  if (from === "recommended" && !container.querySelector('[data-testid="correction-recommended"]')) {
+    await act(async () => container.querySelector<HTMLButtonElement>('[data-testid="correction-recommended-toggle"]')?.click());
+  }
   const picker = container.querySelector<HTMLButtonElement>(from === "recommended" ? '[data-testid="correction-recommended"] button' : '[data-testid="correction-segment"]');
   await act(async () => picker?.click());
   const saveForm = container.querySelector<HTMLElement>('[data-testid="correction-save-form"]')!;

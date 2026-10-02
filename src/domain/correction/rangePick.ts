@@ -1,4 +1,4 @@
-import type { CorrectionCard } from "./correctionModel";
+import { barRangeLabel, type CorrectionCard } from "./correctionModel";
 import type { SaveRange } from "./saveCandidate";
 
 /**
@@ -33,4 +33,13 @@ export function cardForBar<T extends { start: number; duration: number }>(cards:
   const head = (bar - 1) * meter;
   return cards.find((card) => card.start <= head + 1e-6 && card.start + card.duration > head + 1e-6)
     ?? cards.find((card) => card.start > head && card.start < head + meter - 1e-6);
+}
+
+/**
+ * The words on the frame under the cards: the decided range (P10.2 addendum 1 §1.2,
+ * 「保存する範囲 25〜28小節・4コード」) or the pending one (§9, 「…（右クリックで決める）」).
+ */
+export function rangeCaption(range: SaveRange, chords: number, pending = false): string {
+  const bars = barRangeLabel(range.startBar, range.endBar);
+  return pending ? `${bars}・${chords}コード（右クリックで決める）` : `保存する範囲 ${bars}・${chords}コード`;
 }

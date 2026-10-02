@@ -335,6 +335,7 @@ for (const [width, height] of SIZES) {
         // おすすめの範囲 works at every size (the segment row starts closed below 960px).
         const toggle = page.getByTestId("correction-panel-toggle");
         if (await toggle.isVisible()) await toggle.click();
+        if (await page.getByTestId("correction-recommended-toggle").getAttribute("aria-expanded") !== "true") await page.getByTestId("correction-recommended-toggle").click();
         await page.getByTestId("correction-recommended").getByRole("button").first().click();
         await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         await expect(page.locator('form[role="dialog"]:has(input[name="progression-title"])')).toBeVisible();
@@ -346,6 +347,7 @@ for (const [width, height] of SIZES) {
         if (await toggle.isVisible()) await toggle.click();
         const used = page.getByTestId("correction-note-list").getByRole("button", { name: "外す" });
         while (await used.count() > 1) await used.first().click();
+        if (await page.getByTestId("correction-recommended-toggle").getAttribute("aria-expanded") !== "true") await page.getByTestId("correction-recommended-toggle").click();
         await page.getByTestId("correction-recommended").getByRole("button").first().click();
         await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
         await expect(page.getByTestId("correction-save-problems")).toBeVisible();
@@ -400,6 +402,7 @@ for (const [width, height] of SIZES) {
         await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-empty", /.*/);
       });
       await shot("p101-workspace-save-range", async () => {
+        if (await page.getByTestId("correction-recommended-toggle").getAttribute("aria-expanded") !== "true") await page.getByTestId("correction-recommended-toggle").click();
         await page.getByTestId("correction-recommended").getByRole("button").first().click();
         await expect(page.getByTestId("correction-save-form")).not.toHaveAttribute("data-empty", /.*/);
       });
@@ -407,7 +410,7 @@ for (const [width, height] of SIZES) {
         await page.getByTestId("correction-recommended-toggle").click();
         await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
       });
-      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-recommended-ranges-open:v1"));
+      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-recommended-ranges-open:v2"));
       // P10.2-01: the whole screen — stopped (「▶ ここから」), a card selected, playing, a right-click
       // range pending, the settings menu open, a song with review marks, no save range.
       const cards = page.getByTestId("correction-card");

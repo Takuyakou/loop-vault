@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture, openVault } from "./helpers/app";
+import { dropMidi, openApp, openCapture, openVault, openRecommendedRanges } from "./helpers/app";
 
 /** P10.0-06: saving from the correction workspace (spec v2.4 §10.1). */
 
@@ -61,6 +61,7 @@ test("P10.0-06 a segment band picks the range, saves to the Vault and stays on t
 
 test("P10.0-06 recommended ranges, Shift+click and adding to an existing idea", async ({ page }) => {
   await importScenario(page, "plain-8");
+  await openRecommendedRanges(page); // P10.2 addendum 1: closed at first, at the top of the panel
   const recommended = workspace(page).getByTestId("correction-recommended").getByRole("button");
   await expect(recommended.first()).toBeVisible();
   const label = (await recommended.first().locator("b").textContent())!;

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture } from "./helpers/app";
+import { dropMidi, openApp, openCapture, openRecommendedRanges } from "./helpers/app";
 
 /** P10.0-02..06: the correction workspace, the default screen after a MIDI analysis since P10.0-06. */
 
@@ -637,6 +637,8 @@ test("P10.1 Space plays and stops after any button or checkbox, without pressing
   await expect(play).toHaveAttribute("aria-pressed", "false");
 
   // In a text field Space is a space.
+  await page.keyboard.press("Escape"); // the settings menu, still open, covers the panel's top
+  await openRecommendedRanges(page);
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
   await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
   const title = page.locator('form[role="dialog"] input[name="progression-title"]');
@@ -697,17 +699,20 @@ test("P10.1 the save range panel is always there; 範囲を外す is off without
   await expect(form).toContainText("まだ選んでいません");
   await expect(clear).toBeDisabled();
   await expect(clear).toHaveAttribute("title", "範囲を選んでいません");
+  // P10.2 addendum 1 §2: 「おすすめの範囲」 starts closed; open and closed are remembered.
+  const toggle = workspace.getByTestId("correction-recommended-toggle");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(workspace.getByTestId("correction-recommended")).toHaveCount(0);
+  await toggle.click();
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
   await expect(clear).toBeEnabled();
   await expect(workspace.getByTestId("correction-recommended")).toBeVisible(); // still offered with a range
   await clear.click();
   await expect(clear).toBeDisabled();
-
-  const toggle = workspace.getByTestId("correction-recommended-toggle");
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  await expect(workspace.getByTestId("correction-recommended")).toHaveCount(0);
+  await page.reload();
+  await importScenario(page, "plain-8");
+  await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "true");
+  await page.getByTestId("correction-recommended-toggle").click();
   await page.reload();
   await importScenario(page, "plain-8");
   await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
@@ -794,6 +799,7 @@ test("P10.1 BPM sets the speed of the sound and the playhead together, can be un
   await lastEdit(page, "テンポを 120 → 60");
 
   // Saved with the progression.
+  await openRecommendedRanges(page);
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
   await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
@@ -1165,4 +1171,77 @@ test("P10.2 at 1440x900 the piano roll reaches the bottom; the panel scrolls ins
   await expect(workspace.getByTestId("correction-save-form")).toBeInViewport({ ratio: 1 });
   await expect(workspace.getByTestId("correction-inspector")).not.toContainText("要確認の印はありません");
   await expect(workspace.getByTestId("capture-analysis-preset-summary")).not.toContainText(/BPM|小節/);
+});
+
+// ---- P10.2 addendum 1: the decided range, the panel order, the chord tones -------------------
+
+test("P10.2 addendum 1: the decided save range stays framed (solid, A and B) whichever way it was chosen", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const cards = workspace.getByTestId("correction-card");
+  const confirmed = workspace.getByTestId("correction-range-confirmed");
+  await expect(confirmed).toHaveCount(0);
+  await cards.nth(1).click({ button: "right" });
+  await cards.nth(4).click({ button: "right" });
+  await expect(confirmed).toHaveText("AB保存する範囲 2〜5小節・4コード");
+  await expect(workspace.getByTestId("correction-range-pending")).toHaveCount(0);
+  await expect(workspace.getByTestId("correction-overview-range")).toBeVisible();
+  await expect(cards.nth(2)).toHaveAttribute("data-in-range", "true");
+  await expect(cards.nth(6)).toHaveAttribute("data-out-of-range", "true");
+
+  // A new 「ここから」 with a range: both frames, the pending one under the decided one.
+  await cards.nth(6).click({ button: "right" });
+  await cards.nth(7).hover();
+  const pending = workspace.getByTestId("correction-range-pending");
+  await expect(pending).toBeVisible();
+  await expect(confirmed).toBeVisible();
+  expect((await pending.boundingBox())!.y).toBeGreaterThan((await confirmed.boundingBox())!.y + 4);
+  await page.keyboard.press("Escape");
+
+  // The segment band, a recommended range, Shift+click: the same frame. 範囲を外す takes it away.
+  await workspace.getByTestId("correction-segment").first().click();
+  await expect(confirmed).toContainText("保存する範囲 1〜8小節・8コード");
+  await openRecommendedRanges(page);
+  const first = workspace.getByTestId("correction-recommended").getByRole("button").first();
+  const label = (await first.locator("b").textContent())!;
+  await first.click();
+  await expect(confirmed).toContainText(`保存する範囲 ${label}`);
+  await expect(first).toHaveAttribute("aria-current", "true");
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: "範囲を外す" }).click();
+  await expect(confirmed).toHaveCount(0);
+});
+
+test("P10.2 addendum 1: the panel is おすすめ on top, the card in the middle, 保存する範囲 at the bottom", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await selectCard(page, 2);
+  const toggle = workspace.getByTestId("correction-recommended-toggle");
+  const y = async (locator: ReturnType<Page["locator"]>) => (await locator.boundingBox())!.y;
+  expect(await y(toggle)).toBeLessThan(await y(workspace.getByTestId("correction-inspector")));
+  expect(await y(workspace.getByTestId("correction-inspector"))).toBeLessThan(await y(workspace.getByTestId("correction-save-form")));
+  await expect(toggle).toHaveText("▸ おすすめの範囲（6）");
+  await expect(workspace.getByTestId("correction-save-form").getByTestId("correction-recommended-toggle")).toHaveCount(0);
+  await toggle.click();
+  const list = workspace.getByTestId("correction-recommended");
+  expect(await y(list)).toBeLessThan(await y(workspace.getByTestId("correction-inspector")));
+  // At most 35% of the panel; the card stays below it.
+  const panel = (await workspace.locator(".lv-cw-insp").boundingBox())!;
+  expect((await workspace.locator(".lv-cw-reco").boundingBox())!.height).toBeLessThanOrEqual(panel.height * 0.35 + 1);
+});
+
+test("P10.2 addendum 1: chord tones only when they differ; the missing ones are dashed 「＋音」 chips that add the note", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await selectCard(page, 0); // C: C E G, all there
+  await expect(workspace.getByTestId("correction-tones")).toHaveCount(0);
+  await workspace.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click(); // the top note goes
+  const tones = workspace.getByTestId("correction-tones");
+  const missing = tones.locator('[data-testid="correction-addable"] button');
+  await expect(missing).toHaveCount(1);
+  await expect(missing).toHaveText(/^＋[A-G]/);
+  await expect(tones.getByRole("heading")).toHaveAttribute("title", /点線の音は、名前の構成音にあって今の音に無い音です。/);
+  await expect(workspace.getByTestId("correction-inspector")).not.toContainText("足すかは耳で");
+  await missing.click();
+  await expect(workspace.getByTestId("correction-tones")).toHaveCount(0); // added back: no difference
 });

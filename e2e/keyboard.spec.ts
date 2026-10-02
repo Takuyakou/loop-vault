@@ -4,6 +4,7 @@ import {
   loadMidiForPreAnalysis,
   openApp,
   openVault,
+  openRecommendedRanges,
 } from "./helpers/app";
 import { createMidiFixture } from "./helpers/midiFixture";
 
@@ -84,6 +85,7 @@ test("Voice選択、プリセット、Solo、解析、保存する範囲の選�
 
   // P10.0-07: the workspace — a recommended range by keyboard opens the save form; → moves the card.
   const workspace = page.getByTestId("correction-workspace");
+  await openRecommendedRanges(page); // P10.2 addendum 1: closed at first
   const recommended = workspace.getByTestId("correction-recommended").getByRole("button").first();
   await recommended.focus();
   await page.keyboard.press("Enter");

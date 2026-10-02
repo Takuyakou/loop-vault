@@ -30,7 +30,7 @@ export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar 
  * Spec v2.4 §10.1: the save form for the chosen range, pinned to the bottom of the right
  * panel (P10.2 §10.3): the range and 範囲を外す, the names, Vaultに保存 and 「おすすめの範囲」.
  */
-export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onClear, onGoToCard, onSaved, recommended }: {
+export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onClear, onGoToCard, onSaved }: {
   model: CorrectionModel;
   timeline: readonly ChordTimelineItem[];
   range: SaveRange;
@@ -39,8 +39,6 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
   onClear: () => void;
   onGoToCard: (cardId: string) => void;
   onSaved: () => void;
-  /** The 「▸ おすすめの範囲（n）」 toggle, beside the save button. */
-  recommended?: ReactNode;
 }) {
   const [problems, setProblems] = useState<SaveProblem[]>();
   const cards = cardsInRange(model, range);
@@ -105,14 +103,13 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
         note={SAVE_NOTE}
       />
       </span>
-      {recommended}
       </div>
     </section>
   );
 }
 
 /** P10.1 §8 / P10.2 §10.3: the save range panel when no range is chosen yet. */
-export function NoSaveRange({ recommended }: { recommended?: ReactNode }) {
+export function NoSaveRange() {
   return (
     <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-empty>
       <div className="lv-cw-row-between">
@@ -122,19 +119,22 @@ export function NoSaveRange({ recommended }: { recommended?: ReactNode }) {
       <p className="lv-cw-muted" data-testid="correction-save-range">まだ選んでいません。カードを右クリック→右クリック、区切りの帯、おすすめの範囲で選べます。</p>
       <div className="lv-cw-save-actions">
         <button type="button" className="lv-cw-btn" data-kind="primary" disabled title="範囲を選んでいません">Vaultに保存</button>
-        {recommended}
       </div>
     </section>
   );
 }
 
-const RECOMMENDED_OPEN_KEY = "loop-vault:p10-recommended-ranges-open:v1";
+/**
+ * Open or closed, remembered on this device. P10.2 addendum 1 §2: closed at first, so the
+ * key moved to v2 (the P10.1 key, which opened at first, is not read).
+ */
+const RECOMMENDED_OPEN_KEY = "loop-vault:p10-recommended-ranges-open:v2";
 
 function readRecommendedOpen(): boolean {
   try {
-    return typeof localStorage === "undefined" || localStorage.getItem(RECOMMENDED_OPEN_KEY) !== "closed";
+    return typeof localStorage !== "undefined" && localStorage.getItem(RECOMMENDED_OPEN_KEY) === "open";
   } catch {
-    return true;
+    return false;
   }
 }
 
@@ -142,39 +142,51 @@ function writeRecommendedOpen(open: boolean) {
   try {
     localStorage.setItem(RECOMMENDED_OPEN_KEY, open ? "open" : "closed");
   } catch {
-    // Device-local only; without storage it simply opens next time.
+    // Device-local only; without storage it simply starts closed next time.
   }
 }
 
-/** Open or closed, remembered on this device (P10.1 §8). */
 export function useRecommendedOpen(): [boolean, () => void] {
   const [open, setOpen] = useState(readRecommendedOpen);
   return [open, () => { setOpen(!open); writeRecommendedOpen(!open); }];
 }
 
-/** 「▸ おすすめの範囲（n）」 in the save panel; the list opens above the panel (P10.2 §10.3). */
-export function RecommendedToggle({ count, open, onToggle }: { count: number; open: boolean; onToggle: () => void }) {
-  if (!count) return null;
-  return (
-    <button type="button" className="lv-cw-recommend-toggle" aria-expanded={open} data-testid="correction-recommended-toggle" onClick={onToggle}>
-      <span aria-hidden="true">{open ? "▾" : "▸"}</span> おすすめの範囲（{count}）
-    </button>
-  );
-}
+export const RECOMMENDED_SHOWN = 6;
 
-/** 「おすすめの範囲」: the analysis block candidates as bar ranges with their names. */
-export function RecommendedRanges({ candidates, onPick }: { candidates: readonly ProgressionBlockCandidate[]; onPick: (range: SaveRange) => void }) {
+/**
+ * 「おすすめの範囲」 at the top of the right panel (P10.2 addendum 1 §2): the whole heading
+ * row opens and closes it (▸／▾ on its left); the list opens right under it. The range being
+ * saved is framed (aria-current); saved ones say so.
+ */
+export function RecommendedRanges({ candidates, open, onToggle, current, saved, onPick }: {
+  candidates: readonly ProgressionBlockCandidate[];
+  open: boolean;
+  onToggle: () => void;
+  current?: SaveRange;
+  saved: ReadonlySet<string>;
+  onPick: (range: SaveRange) => void;
+}) {
   if (!candidates.length) return null;
+  const shown = candidates.slice(0, RECOMMENDED_SHOWN);
   return (
-    <section aria-label="おすすめの範囲" className="lv-cw-recommend" data-testid="correction-recommended">
-      {candidates.slice(0, RECOMMENDED_SHOWN).map((candidate) => (
-        <button key={candidate.id} type="button" className="lv-cw-recommend-item" onClick={() => onPick({ startBar: candidate.startBar, endBar: candidate.endBar })}>
-          <b>{rangeLabel(candidate)}</b>
-          <span>{candidate.chords.slice(0, 6).map((item) => item.chord.label).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
-        </button>
-      ))}
+    <section aria-label="おすすめの範囲" className="lv-cw-reco" data-open={open || undefined}>
+      <button type="button" className="lv-cw-reco-head" aria-expanded={open} data-testid="correction-recommended-toggle" onClick={onToggle}>
+        <span aria-hidden="true">{open ? "▾" : "▸"}</span> おすすめの範囲（{shown.length}）
+      </button>
+      {open ? (
+        <div className="lv-cw-recommend" data-testid="correction-recommended">
+          {shown.map((candidate) => {
+            const range = { startBar: candidate.startBar, endBar: candidate.endBar };
+            return (
+              <button key={candidate.id} type="button" className="lv-cw-recommend-item" aria-current={(current && rangeKey(current) === rangeKey(range)) || undefined} onClick={() => onPick(range)}>
+                <b>{rangeLabel(candidate)}</b>
+                <span className="lv-cw-reco-names">{candidate.chords.slice(0, 6).map((item) => item.chord.label).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
+                {saved.has(rangeKey(range)) ? <span className="lv-cw-saved">保存済み</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }
-
-export const RECOMMENDED_SHOWN = 6;

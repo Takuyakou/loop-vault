@@ -4,7 +4,7 @@ import { samePlaybackSource, type PlaybackController, type PlaybackRequest, type
 import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
 import type { CorrectionCard, CorrectionModel, CorrectionNote, CorrectionSegment, NameSource } from "../../domain/correction/correctionModel";
 import { barRangeLabel, noteLabel, notesByCard } from "../../domain/correction/correctionModel";
-import { cardForBar, cardsBarRange, pickRangeCard } from "../../domain/correction/rangePick";
+import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption } from "../../domain/correction/rangePick";
 import { moveSegmentEdge, type SegmentEdge } from "../../domain/correction/segmentEdits";
 import {
   addNote,
@@ -41,7 +41,7 @@ import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
-import { NoSaveRange, RECOMMENDED_SHOWN, RecommendedRanges, RecommendedToggle, rangeKey, useRecommendedOpen, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
+import { NoSaveRange, RecommendedRanges, rangeKey, useRecommendedOpen, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
 import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
@@ -727,7 +727,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     if (!drag.moved) setSaveRange({ startBar: drag.segment.startBar, endBar: drag.segment.endBar });
     else if (drag.result) applySegment(drag.result, drag.segment);
   }
-  const recommendedToggle = <RecommendedToggle count={Math.min(RECOMMENDED_SHOWN, props.blockCandidates.length)} open={recommendedOpen} onToggle={toggleRecommended} />;
+  // P10.2 addendum 1 §1.2: with a pending range as well, its frame goes under the decided one.
+  const cardsRowHeight = saveRange && pendingRange ? 94 : 80;
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
 
@@ -883,6 +884,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               {reviewCards.map((card) => (
                 <span key={card.id} className="lv-cw-ov-mark" style={{ left: pct(card.start + card.duration / 2, present.totalBeats) }} />
               ))}
+              {saveRange ? <span className="lv-cw-ov-range" data-testid="correction-overview-range" style={{ left: pct((saveRange.startBar - 1) * meter, present.totalBeats), width: pct((saveRange.endBar - saveRange.startBar + 1) * meter, present.totalBeats) }} /> : null}
               <span className="lv-cw-ov-view" style={{ left: pct(viewStart, present.totalBeats), width: pct(Math.min(present.totalBeats, viewEnd) - viewStart, present.totalBeats) }} />
               {startedAt !== undefined ? <span ref={overviewPlayheadRef} className="lv-cw-ov-ph" data-testid="correction-overview-playhead" /> : null}
             </div>
@@ -892,7 +894,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <div className="lv-cw-left">
               <span className="lv-cw-label" style={{ height: 26 }}>小節</span>
               <button type="button" className="lv-cw-label lv-cw-seg-toggle" style={{ height: segmentsOpen ? 30 : 20 }} aria-expanded={segmentsOpen} onClick={() => setSegmentsOpen((value) => !value)}>区切り</button>
-              <span className="lv-cw-label" style={{ height: 80 }}>コード</span>
+              <span className="lv-cw-label" style={{ height: cardsRowHeight }}>コード</span>
               <span className="lv-cw-label" style={{ height: 20 }} aria-hidden="true" />
               <div className="lv-cw-keys" style={{ height: rollHeight }}>
                 {Array.from({ length: high - low + 1 }, (_, index) => {
@@ -992,7 +994,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   }) : null}
                   {segmentTip ? <span className="lv-cw-pitch-tip" style={{ left: segmentTip.x, top: 12 }} data-testid="correction-segment-tip">{segmentTip.text}</span> : null}
                 </div>
-                <div className="lv-cw-cards">
+                <div className="lv-cw-cards" style={{ height: cardsRowHeight }}>
                   {shown.cards.filter((card) => overlaps(card.start, card.duration, range)).map((card) => {
                     const width = card.duration * pxPerBeat - 2;
                     const size = cardSize(width);
@@ -1014,6 +1016,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
                         data-card-id={card.id}
                         data-out-of-range={!inSaveRange(card) || undefined}
+                        data-in-range={(saveRange && inSaveRange(card)) || undefined}
                         data-start-cue={(!songPlaying && !rangeFrom && card.id === cueCard?.id) || undefined}
                         data-range-from={card.id === rangeFrom || undefined}
                         onPointerEnter={() => { if (rangeFrom) setRangeHover(card.id); }}
@@ -1072,9 +1075,21 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                     );
                   })}
                   {boundaryTip ? <span className="lv-cw-pitch-tip" style={{ left: boundaryTip.x, top: 12 }}>{boundaryTip.text}</span> : null}
+                  {saveRange ? (() => {
+                    // P10.2 addendum 1 §1.2: the decided range stays framed (solid, A and B), its words in view.
+                    const left = (saveRange.startBar - 1) * meter * pxPerBeat + 1;
+                    const width = (saveRange.endBar - saveRange.startBar + 1) * meter * pxPerBeat - 2;
+                    const shift = Math.max(0, Math.min(scrollLeft - left, width - 260));
+                    return (
+                      <span className="lv-cw-range-brace" data-confirmed data-testid="correction-range-confirmed" style={{ left, width }}>
+                        <i data-end="a">A</i><i data-end="b">B</i>
+                        <span style={shift > 0 ? { transform: `translateX(${shift}px)` } : undefined}>{rangeCaption(saveRange, cardsInRange(present, saveRange).length)}</span>
+                      </span>
+                    );
+                  })() : null}
                   {pendingRange ? (
-                    <span className="lv-cw-range-brace" data-testid="correction-range-pending" style={{ left: (pendingRange.startBar - 1) * meter * pxPerBeat + 1, width: (pendingRange.endBar - pendingRange.startBar + 1) * meter * pxPerBeat - 2 }}>
-                      <span>{barRangeLabel(pendingRange.startBar, pendingRange.endBar)}・{cardsInRange(present, pendingRange).length}コード（右クリックで決める）</span>
+                    <span className="lv-cw-range-brace" data-second={saveRange ? true : undefined} data-testid="correction-range-pending" style={{ left: (pendingRange.startBar - 1) * meter * pxPerBeat + 1, width: (pendingRange.endBar - pendingRange.startBar + 1) * meter * pxPerBeat - 2 }}>
+                      <span>{rangeCaption(pendingRange, cardsInRange(present, pendingRange).length, true)}</span>
                     </span>
                   ) : null}
                 </div>
@@ -1140,6 +1155,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           <button type="button" className="lv-cw-panel-toggle" aria-expanded={panelOpen} onClick={() => setPanelOpen((value) => !value)} data-testid="correction-panel-toggle">
             {selected ? `${selected.name.label}${selected.reviewReasons.length ? "・要確認" : ""}` : "カード"}（{panelOpen ? "閉じる" : "開く"}）
           </button>
+          <RecommendedRanges
+            candidates={props.blockCandidates}
+            open={recommendedOpen}
+            onToggle={toggleRecommended}
+            {...(saveRange ? { current: saveRange } : {})}
+            saved={savedRanges}
+            onPick={setSaveRange}
+          />
           <div className="lv-cw-insp-scroll">
             {selected ? (
               <CorrectionInspector
@@ -1172,9 +1195,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               </div>
             )}
           </div>
-          {/* P10.2 §10.3: 保存する範囲 pinned to the bottom of the panel; 「おすすめの範囲」 opens above it. */}
+          {/* P10.2 §10.3: 保存する範囲 pinned to the bottom of the panel (おすすめ is on top, addendum 1 §2). */}
           <div className="lv-cw-insp-foot">
-            {recommendedOpen ? <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} /> : null}
             {saveRange ? (
               <WorkspaceSaveForm
                 model={present}
@@ -1190,9 +1212,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   setSavedCount(editCount(history));
                   metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
                 }}
-                recommended={recommendedToggle}
               />
-            ) : <NoSaveRange recommended={recommendedToggle} />}
+            ) : <NoSaveRange />}
           </div>
         </aside>
       </div>

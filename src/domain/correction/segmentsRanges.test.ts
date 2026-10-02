@@ -4,7 +4,7 @@ import { buildCorrectionModel, type CorrectionCard, type CorrectionModel, type C
 import { addNote, setTempo } from "./edits";
 import { buildMetricsRecord } from "./metrics";
 import { commitEdit, editCount, editKindCounts, savedContentDiffers, startHistory, undo } from "./history";
-import { cardForBar, cardsBarRange, pickRangeCard } from "./rangePick";
+import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption } from "./rangePick";
 import { reviewThresholds } from "./reviewThresholds";
 import { moveSegmentEdge } from "./segmentEdits";
 
@@ -119,5 +119,13 @@ describe("「最初からやり直す」 (P10.2 §12)", () => {
     const now = { ms: 1000, iso: "2026-10-02T00:00:01.000Z" };
     expect(buildMetricsRecord({ ...session, restarts: 2 }, now, { reviewedCards: 0, edits: {} }).restarts).toBe(2);
     expect(buildMetricsRecord(session, now, { reviewedCards: 0, edits: {} })).not.toHaveProperty("restarts");
+  });
+});
+
+describe("the words on the range frames (P10.2 addendum 1 §1.2)", () => {
+  it("say the bars and the chords, decided or pending", () => {
+    expect(rangeCaption({ startBar: 25, endBar: 28 }, 4)).toBe("保存する範囲 25〜28小節・4コード");
+    expect(rangeCaption({ startBar: 25, endBar: 25 }, 1)).toBe("保存する範囲 25小節・1コード");
+    expect(rangeCaption({ startBar: 18, endBar: 21 }, 4, true)).toBe("18〜21小節・4コード（右クリックで決める）");
   });
 });
