@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "10.1",
+  "status": "in-progress",
+  "activeStage": "P10.1-01",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "1f18e880",
+  "lastVerifiedCommit": "1f18e880",
+  "currentBranch": "feat/p10.1-workspace-fixes",
+  "requiredGates": {
+    "P10.1-01": [
+      "p10.1-01-phase-docs",
+      "p10.1-01-layout-playback",
+      "p10.1-01-keys-selection",
+      "p10.1-01-name-tempo",
+      "p10.1-01-fast-feature",
+      "p10.1-01-ui",
+      "p10.1-01-data-retention",
+      "p10.1-01-screens",
+      "p10.1-01-full-fresh",
+      "p10.1-01-exe",
+      "p10.1-01-report"
+    ]
+  },
+  "gateResults": {
+    "p10.1-01-phase-docs": "pass"
+  },
+  "nextAction": "P10.1-01: 区切り1（並びと再生）から進める（ブランチ feat/p10.1-workspace-fixes）。",
+  "updatedAt": "2026-10-02"
+}
