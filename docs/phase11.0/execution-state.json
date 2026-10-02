@@ -15,13 +15,14 @@
     "P11.0-08",
     "P11.0-09",
     "P11.0-10",
-    "P11.0-11"
+    "P11.0-11",
+    "P11.0-12"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "d7d10838f265c84ed70fcaa5be83933b4f965c9e",
-  "currentBranch": "master",
+  "lastVerifiedCommit": "7ee3ccd86ce77cb0b44faff0f4a0a6bed04fc7c9",
+  "currentBranch": "audit/p11-12-fingering-ranker",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -100,6 +101,13 @@
       "p11-11-full",
       "p11-11-exe",
       "p11-11-docs"
+    ],
+    "P11.0-12": [
+      "p11-12-diagnostics",
+      "p11-12-focused",
+      "p11-12-diagnostic-types",
+      "p11-12-diagnostic-lint",
+      "p11-12-product-unchanged"
     ]
   },
   "gateResults": {
@@ -156,8 +164,13 @@
     "p11-11-ui": "pass",
     "p11-11-full": "pass",
     "p11-11-exe": "pass",
-    "p11-11-docs": "pass"
+    "p11-11-docs": "pass",
+    "p11-12-diagnostics": "pass",
+    "p11-12-focused": "pass",
+    "p11-12-diagnostic-types": "pass",
+    "p11-12-diagnostic-lint": "pass",
+    "p11-12-product-unchanged": "pass"
   },
-  "nextAction": "P11-11 human-authorized local master merge f86846bc completed; exact candidate tree match; fresh merged-HEAD focused 293/293 and docs/privacy/diff PASS. Full verification remains at d7d10838. Stop; no push/tag/release.",
+  "nextAction": "P11-12 baseline audit complete; product logic unchanged. Stop before implementation. No merge/push/tag/release/EXE. See P11-12 report; diagnostics and 146 focused tests fresh at 7ee3ccd8.",
   "updatedAt": "2026-10-02"
 }

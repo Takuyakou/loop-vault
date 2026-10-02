@@ -17,3 +17,5 @@ Latest integration: [P11-09/10 local master / fresh FULL](P11-09-10-master-merge
 Current implementation: [P11-11 generated fallback / slash bass / retrigger / fingering](P11-11-generated-bass-audio-fingering.md).
 
 Latest P11-11 integration: [local master merge / scoped fresh verification](P11-11-master-merge.md).
+
+Latest audit-only stage: [P11-12 fingering ranker baseline](P11-12-fingering-ranker-baseline-audit.md). Product logic unchanged; implementation deferred.

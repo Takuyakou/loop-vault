@@ -425,4 +425,21 @@ UIはjsdomなのでnative WebView・可聴結果・実寸geometryは測定して
 
 ## 検証記録
 
-候補codeのcommit後にdiagnostics / relevant focused / added-code lint・typecheckをfresh確認し、結果を追記する。最初の実行でも既存139 + 追加diagnostic6 = 145 focusedはPASS。片側emptyの追加diagnostic後は最終測定を別記する。
+**tested diagnostic code HEAD = `7ee3ccd86ce77cb0b44faff0f4a0a6bed04fc7c9`**。ここでfresh実行。製品src treeは基準`94dae5b6`から不変。以下の結果記録・README・execution-stateは後続documentation-only更新であり、その後続HEADへテスト結果を付け替えていない。
+
+| Gate | fresh結果 |
+| --- | --- |
+| diagnostics | PASS: 2,160進行 / 8,640イベント / 53,568候補、66候補fixture、68named case、360手配分、64Source比較 |
+| diagnostic unit + actual View audit | 7/7 PASS（3 accounting + 4 UI） |
+| relevant existing focused | 139/139 PASS |
+| 合計 | **146/146 PASS / 0 FAIL / 0 pending、8ファイル** |
+| added-code TypeScript | PASS: `tsc --project scripts/p11-12/tsconfig.json --pretty false` |
+| added-code ESLint | PASS: `eslint scripts/p11-12` |
+| source/diagnostic manifest照合 | PASS: 保存したSHAと実ファイル一致 |
+| 製品無変更 | PASS: `git diff 94dae5b6 -- src src-tauri e2e package.json package-lock.json vite.config.ts playwright.config.ts` は空 |
+| docs / privacy / diff | phase-doc / AI-handoff、staged guard、個人path/media scan、diff checkを結果記録時にも実行 |
+| FULL / native EXE / WebView / physical comfort | NOT RUN / NOT MEASURED（本AuditのGate外） |
+
+focused対象: `progressionFingering`、`fingeringDisplay`、`fingeringPreferences`、`nextMove`、`ProgressionVoicingPracticeView`、`rangeLoop`、追加diagnostic2ファイル。既存期待値変更無し。UI診断は正常/Source/shape/wrap/personal/Range/一側emptyの観測を保存した。
+
+**P11-12 = BASELINE AUDIT COMPLETE。改善実装は行わず、ここで停止。** 既存未追跡3領域は未変更。merge / push / tag / release / EXE無し。

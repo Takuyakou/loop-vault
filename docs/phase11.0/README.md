@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-12 Baseline Audit
+
+[P11-12 fingering ranker baseline audit](reports/P11-12-fingering-ranker-baseline-audit.md): audit complete on `audit/p11-12-fingering-ranker`, tested diagnostic code `7ee3ccd8`. Public synthetic only; production ranker / weights / candidates / UI / schema unchanged. 2,160 progressions; focused 146/146 PASS, added-code lint/typecheck PASS. Diagnostic outputs are local-only. No FULL/EXE or integration in this audit. Stop before implementation; P11-00–11 integration below remains unchanged.
+
 P11-11 implementation verification: tested code HEAD `d7d10838`, fresh FULL 3,717 Vitest / 191 Playwright PASS, raw Windows EXE built. See [P11-11 report](reports/P11-11-generated-bass-audio-fingering.md). Human listening remains; candidate-only/no-merge notes are historical after the authorized integration below.
 
 - Status: completed / P11-00–11 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
