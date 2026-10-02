@@ -23,3 +23,11 @@ Focused preparation: domain/security/view10 tests, runner6 tests, Settings visua
 - smoke of production main route and JS errors, with no real Vault mutation
 
 No final PASS or publication is claimed until executed.
+
+## Rust advisory isolation / revised candidate
+
+The first fresh FULL at `e219d42a` passed (Vitest 3,792/3,792; Playwright225/225; 0 FAIL / 0 UNRUN;359.6s), and Rust42/42 passed. These are results of that HEAD, not the forthcoming dependency-patched HEAD.
+
+A separate fresh RustSec audit using database commit `117edb3bed98e9be112f277b7615eea3252e7c43` failed on `RUSTSEC-2026-0285`: rustls0.23.42, reachable through reqwest on Windows. [RustSec](https://rustsec.org/advisories/RUSTSEC-2026-0285.html) specifies the patched0.23.45 line. The isolated lockfile update is rustls0.23.42→0.23.45 and its required rustls-webpki0.103.13→0.103.15; no other dependencies or Product logic changed. A new committed candidate will receive the final fresh FULL, Rust tests, production artifacts and smoke; first-build artifacts will not be distributed.
+
+Informational audit warnings are retained rather than suppressed: six unmaintained packages, event-listener/glib unsound notices and one yanked chacha20 version. The two unsound-notice packages and the yanked package are absent from the x86_64-pc-windows-msvc dependency tree; framework-wide or cross-platform major migrations are outside this Windows release. No advisory ignore flag or weakened gate is used.
