@@ -258,3 +258,24 @@ test("P10.3 on a long progression's page the cards' review words stay on one lin
   const first = reviews.first();
   await expect(first).toHaveAttribute("title", /^要確認/);
 });
+
+test("P10.3 §7: in Voicing Loop with 「保存した音」, the one chord without saved notes is filled by generated notes and marked", async ({ page }) => {
+  test.setTimeout(90_000);
+  await importScenario(page, "long-64");
+  await saveForm(page).getByRole("button", { name: /曲全体を保存/ }).click();
+  const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+  await form.locator('input[name="progression-title"]').fill("長い進行");
+  await form.getByRole("button", { name: /保存/, exact: true }).click();
+  await expect(form).toBeHidden();
+  await openVault(page);
+  await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
+  await page.getByTestId("voicing-loop-handoff").click();
+  const loop = page.getByTestId("voicing-loop-workspace");
+  await expect(page.getByTestId("voicing-loop-saved-availability")).toHaveText("96/97");
+  await loop.getByRole("button", { name: "保存した音" }).click();
+  const events = loop.getByTestId("voicing-loop-event");
+  await expect(events).toHaveCount(97);
+  await expect(events.nth(96)).toHaveAttribute("aria-label", /自動生成で補完/);
+  const filled = await events.evaluateAll((items) => items.filter((item) => item.getAttribute("aria-label")?.includes("自動生成で補完")).length);
+  expect(filled).toBe(1);
+});
