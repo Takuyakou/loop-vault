@@ -426,7 +426,7 @@ export function ProgressionVoicingPracticeView({
   const fingeringRankerMode = useFingeringRankerMode();
   const fingeringOptions = useMemo(() => fingeringRankerMode === "E1-T"
     ? { costModel: handPositionCostModel(EXPERIMENTAL_HAND_POSITION_POLICY) } : {}, [fingeringRankerMode]);
-  const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string | undefined; values: Map<string, string> }>();
+  const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string; plan: ProgressionPracticeVoicingPlan | undefined; values: Map<string, string> }>();
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
     left: [],
     right: [],
@@ -596,7 +596,7 @@ export function ProgressionVoicingPracticeView({
     [fingeringBpm, fingeringOptions, fingeringPreferences, handAssignments, plan, selection, snapshot],
   );
   const adjustedFingeringIds = new Set<string>();
-  if (fingeringChangeBaseline?.key === `${candidateSessionKey}:${fingeringRankerMode}`) {
+  if (fingeringChangeBaseline?.key === `${candidateSessionKey}:${fingeringRankerMode}:${fingeringBpm}` && fingeringChangeBaseline.plan === plan) {
     for (const [hand, entries] of [["left", leftFingeringById], ["right", rightFingeringById]] as const) {
       for (const [id, entry] of entries) {
         if (entry.status !== "supported" || findPersonalFingering(fingeringPreferences, entry.signature)) continue;
@@ -606,7 +606,7 @@ export function ProgressionVoicingPracticeView({
     }
   }
   function captureFingeringBaseline() {
-    setFingeringChangeBaseline({ key: `${candidateSessionKey}:${fingeringRankerMode}`, values: new Map(
+    setFingeringChangeBaseline({ key: `${candidateSessionKey}:${fingeringRankerMode}:${fingeringBpm}`, plan, values: new Map(
       [...[...leftFingeringById.values()].map(entry => ["left", entry] as const),
         ...[...rightFingeringById.values()].map(entry => ["right", entry] as const)]
         .flatMap(([hand, entry]) => entry.status === "supported" ? [[`${hand}:${entry.id}`, entry.fingers.join()] as const] : []),
