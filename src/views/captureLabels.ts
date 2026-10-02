@@ -57,13 +57,15 @@ export function describeWarnings(warnings: readonly string[]): string[] {
 }
 
 /**
- * A saved block memo written by the analyzer is its warning ids joined by "; " (stored as is).
- * Show it as reasons only when every part is a known warning id; a memo with any other word
- * (for example a hand-written "verse-2") is shown unchanged.
+ * A saved block memo is the analyzer's warning ids joined by "; ", and since P10.3 §4 may also
+ * hold other words (the section a progression was saved from, 「区切り3（9〜12小節）」).
+ * Known warning ids read as their reasons; other words stay as they are and come first
+ * (「区切り3（9〜12小節）、候補が僅差」). A memo without known ids is shown unchanged.
  */
 export function describeBlockMemo(memo: string): string {
   const parts = memo.split(/;\s*/).filter(Boolean);
-  return parts.length && parts.every((part) => Object.prototype.hasOwnProperty.call(warningLabels.ja, part))
-    ? describeWarnings(parts).join("、")
-    : memo;
+  const known = parts.filter((part) => Object.prototype.hasOwnProperty.call(warningLabels.ja, part));
+  if (!known.length) return memo;
+  const words = parts.filter((part) => !known.includes(part));
+  return [...words, ...describeWarnings(known)].join("、");
 }

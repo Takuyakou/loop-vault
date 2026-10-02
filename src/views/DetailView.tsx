@@ -95,7 +95,7 @@ function ProgressionBlockCard({
           playingChordIndex={null}
         />
       </div>
-      {block.memo ? <p className="mt-3 text-xs text-amber-200">{describeBlockMemo(block.memo)}</p> : null}
+      {block.memo ? <p className="mt-3 text-xs text-amber-200" data-testid="block-memo">{describeBlockMemo(block.memo)}</p> : null}
     </div>
   );
 }

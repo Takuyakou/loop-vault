@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
 import { ChevronDown, Save } from "lucide-react";
@@ -17,6 +17,16 @@ interface SaveProgressionPopoverProps {
   onAppend: (ideaId: string, userVerified: boolean) => boolean;
   onCopyMemo: (ideaId: string) => boolean;
   onSaved: () => void;
+  /** A line under the dialog's title (the correction workspace: what saving makes final). */
+  note?: string;
+  /** The primary button's words (default 「Vaultに保存」). */
+  primaryLabel?: string;
+  /** The ▾ menu also offers 「新しいIdeaとして保存」 first (the correction workspace). */
+  menuIncludesNew?: boolean;
+  /** Extra items at the end of the ▾ menu, after a rule (the correction workspace: 区切りごとに保存…). */
+  menuExtras?: readonly { label: ReactNode; onSelect: () => void; testId?: string }[];
+  /** Whether the ▾ menu may open (default: `requestOpen`). */
+  requestMenu?: () => boolean;
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
@@ -51,6 +61,11 @@ export function SaveProgressionPopover({
   onAppend,
   onCopyMemo,
   onSaved,
+  note,
+  primaryLabel,
+  menuIncludesNew = false,
+  menuExtras = [],
+  requestMenu = requestOpen,
 }: SaveProgressionPopoverProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [panel, setPanel] = useState<SavePanel>();
@@ -157,7 +172,7 @@ export function SaveProgressionPopover({
   }
 
   function toggleMenu() {
-    if (!menuOpen && requestOpen && !requestOpen()) return;
+    if (!menuOpen && requestMenu && !requestMenu()) return;
     restoreFocusRef.current = menuButtonRef.current ?? undefined;
     setPanel(undefined);
     setMenuOpen((open) => !open);
@@ -221,7 +236,7 @@ export function SaveProgressionPopover({
         onClick={openNew}
       >
         <Save aria-hidden="true" size={16} />
-        {copy.capture.saveToVault}
+        {primaryLabel ?? copy.capture.saveToVault}
       </Button>
       <Button
         ref={menuButtonRef}
@@ -262,6 +277,16 @@ export function SaveProgressionPopover({
             }
           }}
         >
+          {menuIncludesNew ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)] focus:bg-[var(--lv-surface-raised)]"
+              onClick={openNew}
+            >
+              {copy.capture.createIdea}
+            </button>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -278,6 +303,19 @@ export function SaveProgressionPopover({
           >
             {copy.capture.copyMemo}
           </button>
+          {menuExtras.length ? <div role="separator" className="my-1 border-t border-[var(--lv-border-strong)]" /> : null}
+          {menuExtras.map((item, index) => (
+            <button
+              key={index}
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)] focus:bg-[var(--lv-surface-raised)]"
+              data-testid={item.testId}
+              onClick={() => { setMenuOpen(false); item.onSelect(); }}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       ) : null}
 
@@ -297,6 +335,7 @@ export function SaveProgressionPopover({
           onKeyDown={handleFormKeyDown}
         >
           <h3 id={panelTitleId} className="text-base font-semibold">{panelTitle}</h3>
+          {note ? <p className="mt-1 text-xs text-[var(--lv-text-muted)]" data-testid="save-progression-note">{note}</p> : null}
 
           {panel === "new" ? (
             <div className="mt-4 grid gap-3">

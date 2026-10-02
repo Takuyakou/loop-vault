@@ -6,7 +6,7 @@ import type { EditKind } from "./edits";
  */
 
 export const METRICS_SCHEMA_VERSION = 1;
-export const EDIT_KINDS: readonly EditKind[] = ["exclude", "restore", "add", "delete", "pitch", "merge", "merge-all", "split", "boundary", "name", "reviewed"];
+export const EDIT_KINDS: readonly EditKind[] = ["exclude", "restore", "add", "delete", "pitch", "merge", "merge-all", "split", "boundary", "name", "reviewed", "tempo", "segment"];
 
 export interface CorrectionMetricsRecord {
   schemaVersion: typeof METRICS_SCHEMA_VERSION;
@@ -26,15 +26,22 @@ export interface CorrectionMetricsRecord {
   secondsToLastSave: number | null;
   /** Left (another MIDI, another screen, closed) without any save. */
   leftWithoutSave: boolean;
+  /** P10.2 §12: times 「最初からやり直す」 was used (written only when used). */
+  restarts?: number;
+  /** P10.2 addendum 2 §3: saves by kind — a chosen range, the whole song, by section (written when something was saved). */
+  savesByKind?: Record<SaveKind, number>;
 }
+
+export type SaveKind = "range" | "whole" | "section";
 
 export interface CorrectionMetricsSession {
   startedAtMs: number;
   bars: number;
   cards: number;
   reviewAtStart: number;
-  saves: { atMs: number; reviewMarks: number }[];
+  saves: { atMs: number; reviewMarks: number; kind?: SaveKind }[];
   undos: number;
+  restarts?: number;
 }
 
 export function buildMetricsRecord(session: CorrectionMetricsSession, now: { ms: number; iso: string }, state: {
@@ -58,7 +65,15 @@ export function buildMetricsRecord(session: CorrectionMetricsSession, now: { ms:
     secondsToFirstSave: first ? seconds(first.atMs) : null,
     secondsToLastSave: last ? seconds(last.atMs) : null,
     leftWithoutSave: session.saves.length === 0,
+    ...(session.restarts ? { restarts: session.restarts } : {}),
+    ...(session.saves.length ? { savesByKind: { range: 0, whole: 0, section: 0, ...countKinds(session.saves) } } : {}),
   };
+}
+
+function countKinds(saves: CorrectionMetricsSession["saves"]): Partial<Record<SaveKind, number>> {
+  const counts: Partial<Record<SaveKind, number>> = {};
+  for (const save of saves) counts[save.kind ?? "range"] = (counts[save.kind ?? "range"] ?? 0) + 1;
+  return counts;
 }
 
 export const totalEdits = (record: Pick<CorrectionMetricsRecord, "edits">) => EDIT_KINDS.reduce((sum, kind) => sum + (record.edits[kind] ?? 0), 0);
