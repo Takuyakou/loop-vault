@@ -98,12 +98,16 @@ export function EditableChordCard({
             </span>
           ) : null}
         </span>
-        {needsReview ? (
-          <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-amber-200">
-            <TriangleAlert aria-hidden="true" size={16} />
-            {text.review}{slot.warnings.length > 0 ? ` · ${describeWarnings(slot.warnings).join("、")}` : ""}
-          </span>
-        ) : null}
+        {needsReview ? (() => {
+          // P10.3 §5: one line, cut with 「…」 (the whole words in the title); a narrow card keeps only the mark.
+          const words = `${text.review}${slot.warnings.length > 0 ? ` · ${describeWarnings(slot.warnings).join("、")}` : ""}`;
+          return (
+            <span className="lv-chord-card-review mt-2 flex min-w-0 items-center gap-1.5 text-xs text-amber-200" title={words} data-testid="chord-card-review">
+              <TriangleAlert aria-hidden="true" size={16} className="shrink-0" />
+              <span className="lv-chord-card-review-text truncate">{words}</span>
+            </span>
+          );
+        })() : null}
         {playing && playingProgress !== null && playingProgress !== undefined ? (
           <span
             className="absolute inset-x-0 bottom-0 h-1 origin-left bg-cyan-300 transition-transform"

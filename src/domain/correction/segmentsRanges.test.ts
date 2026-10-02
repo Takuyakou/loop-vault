@@ -130,6 +130,19 @@ describe("the words on the range frames (P10.2 addendum 1 §1.2)", () => {
   });
 });
 
+describe("stand-in sections are named again after an edge moves (P10.3 §6)", () => {
+  it("names an 8-bar stand-in by its new bars; analysed sections keep their names; undo brings the name back", () => {
+    const fallback = (id: string, startBar: number, endBar: number): CorrectionSegment => ({ id, startBar, endBar, label: `${startBar}〜${endBar}小節`, source: "fallback-8bar" });
+    const start = { ...model(), segments: [fallback("a", 1, 4), fallback("b", 5, 8)] };
+    const out = moveSegmentEdge(start, "a", "end", 6).model;
+    expect(out.segments.map((entry) => entry.label)).toEqual(["1〜6小節", "7〜8小節"]);
+    expect(moveSegmentEdge(start, "b", "start", 8).model.segments.map((entry) => entry.label)).toEqual(["1〜7小節", "8小節"]);
+    expect(moveSegmentEdge(model(), "2", "end", 5).model.segments.map((entry) => entry.label)).toEqual(["区切り1", "区切り2", "区切り3"]);
+    const history = undo(commitEdit(startHistory(start), moveSegmentEdge(start, "a", "end", 6)));
+    expect(history.present.segments.map((entry) => entry.label)).toEqual(["1〜4小節", "5〜8小節"]);
+  });
+});
+
 describe("the range chip in the control bar (P10.3 §3)", () => {
   it("says the bars and the chords, and only the bars when narrow", () => {
     expect(rangeChipText({ startBar: 6, endBar: 7 }, 2)).toBe("保存する範囲 6〜7小節・2コード");

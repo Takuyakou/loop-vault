@@ -1303,8 +1303,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           rows={sectionRows}
           ideas={props.save.ideas}
           ideaTitle={props.fileName.replace(/\.midi?$/i, "")}
-          onCreate={(ready, title) => props.save.onCreate(ready, title, props.save.defaultNextAction, false)}
-          onAppend={(ready, ideaId) => props.save.onAppend(ready, ideaId, false)}
+          onCreate={(ready, title, memoNote) => props.save.onCreate(ready, title, props.save.defaultNextAction, false, { memoNote })}
+          onAppend={(ready, ideaId, memoNote) => props.save.onAppend(ready, ideaId, false, { memoNote })}
           onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
           onClose={() => setSectionRows(undefined)}
           onDone={(saved, failed) => {

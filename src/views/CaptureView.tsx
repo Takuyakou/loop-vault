@@ -708,15 +708,16 @@ export function CaptureView(props: CaptureViewProps) {
               defaultNextAction: copy.capture.defaultNextAction,
               copy,
               titleFor: (candidate) => captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
-              onCreate: (ready, title, nextAction, userVerified) => {
+              onCreate: (ready, title, nextAction, userVerified, extra) => {
                 const sourceBassline = workspaceBassline.forSave(ready.candidate);
                 if (sourceBassline === null) return undefined;
-                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}) });
+                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}) });
               },
-              onAppend: (ready, ideaId, userVerified) => {
+              onAppend: (ready, ideaId, userVerified, extra) => {
                 const sourceBassline = workspaceBassline.forSave(ready.candidate);
                 if (sourceBassline === null) return false;
-                return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline, ready.bpm !== undefined ? { bpm: ready.bpm } : undefined);
+                const options = { ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}) };
+                return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline, Object.keys(options).length ? options : undefined);
               },
               onCopyMemo: copyMemo,
               renderBassline: (ready) => workspaceBassline.panel(ready.candidate),

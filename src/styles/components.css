@@ -395,4 +395,10 @@
   :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
     transform: none;
   }
+
+  /* P10.3 §5: a chord card's review words stay on one line, cut with 「…」. The line is one row high
+     and wraps: when not even 4em of words fit beside the mark, they go to the hidden second row and
+     only the mark shows. */
+  .lv-chord-card-review { flex-wrap: wrap; height: 16px; overflow: hidden; }
+  .lv-chord-card-review-text { flex: 1 1 4em; min-width: 4em; line-height: 16px; }
 }

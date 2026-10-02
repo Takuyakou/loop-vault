@@ -14,8 +14,8 @@ export interface WorkspaceSaveActions {
   copy: AppCopy;
   titleFor: (candidate: ProgressionBlockCandidate) => string;
   /** The new idea's id, or undefined when it was not saved. */
-  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean) => string | undefined;
-  onAppend: (ready: SaveReady, ideaId: string, userVerified: boolean) => boolean;
+  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean, extra?: SaveExtra) => string | undefined;
+  onAppend: (ready: SaveReady, ideaId: string, userVerified: boolean, extra?: SaveExtra) => boolean;
   onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => boolean;
   /** 「詳しい設定」: the source-bassline panel for this range, or null when the song has no bass to keep. */
   renderBassline?: (ready: SaveReady) => ReactNode;
@@ -23,6 +23,11 @@ export interface WorkspaceSaveActions {
 
 /** P10.2 §10.3: on the save button's title and in the save dialog, no longer a line of its own. */
 const SAVE_NOTE = "保存すると、外した音は戻せなくなります";
+
+/** P10.3 §4: what a save by section adds (the section's name in the progression's memo). */
+export interface SaveExtra {
+  memoNote?: string;
+}
 
 export const rangeKey = (range: SaveRange) => `${range.startBar}-${range.endBar}`;
 export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar ? `${range.startBar}小節` : `${range.startBar}〜${range.endBar}小節`;

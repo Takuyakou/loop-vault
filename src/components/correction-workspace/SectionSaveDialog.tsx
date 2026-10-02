@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import type { SectionSaveRow } from "../../domain/correction/sectionSave";
+import { sectionMemo, type SectionSaveRow } from "../../domain/correction/sectionSave";
 import type { SongIdea } from "../../domain/types";
 import { Modal } from "../Modal";
 import { Button } from "../ui";
@@ -9,15 +9,16 @@ import { rangeLabel } from "./WorkspaceSaveForm";
 /**
  * P10.2 addendum 2 §2.2: 「区切りごとに保存」 — one progression a segment (the same chords
  * once), into a new idea or one that exists. Looks like the app's ConfirmDialog. A progression
- * has no title of its own in the Vault (the idea has), so the segment names are not stored.
+ * has no title of its own in the Vault (the idea has); its memo keeps the section's name (P10.3 §4).
  */
 export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, onGoToCard, onClose, onDone }: {
   rows: readonly SectionSaveRow[];
   ideas: readonly SongIdea[];
   /** The new idea's title (from the file name). */
   ideaTitle: string;
-  onCreate: (ready: SaveReady, title: string) => string | undefined;
-  onAppend: (ready: SaveReady, ideaId: string) => boolean;
+  /** `memoNote`: the section's name for the progression's memo (P10.3 §4). */
+  onCreate: (ready: SaveReady, title: string, memoNote: string) => string | undefined;
+  onAppend: (ready: SaveReady, ideaId: string, memoNote: string) => boolean;
   onGoToCard: (cardId: string) => void;
   onClose: () => void;
   /** The rows saved, and the first one that failed (the rest were not tried). */
@@ -38,8 +39,8 @@ export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, 
       if (!row.result.ok) continue;
       // A new idea is made by the first one; the rest are added to it.
       const ok = target === undefined
-        ? Boolean(target = onCreate(row.result, ideaTitle))
-        : onAppend(row.result, target);
+        ? Boolean(target = onCreate(row.result, ideaTitle, sectionMemo(row.segment)))
+        : onAppend(row.result, target, sectionMemo(row.segment));
       if (!ok) { onDone(saved, row); return; }
       saved.push(row);
     }
