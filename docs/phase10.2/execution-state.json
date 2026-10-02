@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "10.2",
+  "status": "in-progress",
+  "activeStage": "P10.2-01",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "94dae5b6",
+  "lastVerifiedCommit": "87c121f5",
+  "currentBranch": "feat/p10.2-workspace-polish",
+  "requiredGates": {
+    "P10.2-01": [
+      "p10.2-01-phase-docs",
+      "p10.2-01-playback",
+      "p10.2-01-select-range",
+      "p10.2-01-bar-tempo",
+      "p10.2-01-fast-feature",
+      "p10.2-01-ui",
+      "p10.2-01-data-retention",
+      "p10.2-01-screens",
+      "p10.2-01-full-fresh",
+      "p10.2-01-exe",
+      "p10.2-01-report"
+    ]
+  },
+  "gateResults": {
+    "p10.2-01-phase-docs": "pass"
+  },
+  "nextAction": "P10.2-01: 手順0 済み。区切り1（再生）へ。",
+  "updatedAt": "2026-10-02"
+}
