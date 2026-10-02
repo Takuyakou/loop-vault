@@ -8,11 +8,11 @@ Phase 10 で作った MIDI の「取り込む」の修正作業場を、人間�
 
 ## Status
 
-- **Status:** in-progress
-- **Active stage:** P10.1-01（修正作業場の使い心地の直し）
-- **Completed stages:** なし
+- **Status:** completed
+- **Active stage:** なし（Phase 10.1 完了。唯一の段階は P10.1-01）
+- **Completed stages:** P10.1-01（修正作業場の使い心地の直し — [reports/P10.1-01-fixes.md](reports/P10.1-01-fixes.md)、fresh FULL PASS @ `980be255`、EXE 作成済み。merge 候補 `feat/p10.1-workspace-fixes`、未取り込み）
 - **Base:** local `master` `1f18e880`（Phase 10 の `feat/p10.0-07-finish` は `73507e87` で取り込み済み。Phase 11 の P11-09・P11-10 も取り込み済みの master）
-- **Next action:** [stages/P10.1-01.md](stages/P10.1-01.md) の区切り1〜4を最後まで実行する（ブランチ `feat/p10.1-workspace-fixes`）
+- **Next action:** Phase 10.1 完了。merge 候補 `feat/p10.1-workspace-fixes` の取り込みは人間の判断
 
 段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
