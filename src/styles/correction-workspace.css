@@ -141,6 +141,22 @@
   .lv-cw-group:first-child, .lv-cw-bar-lead:first-child > .lv-cw-group:first-child { padding-left: 0; border-left: 0; }
   .lv-cw-bar-lead { display: inline-flex; flex: none; flex-wrap: nowrap; align-items: center; }
   .lv-cw-bar .lv-cw-btn { padding-inline: 8px; }
+  /* P10.3 §3: the range chip (the decided range's teal); narrow bars keep only the bars. */
+  .lv-cw-bar { container-type: inline-size; }
+  .lv-cw-range-chip { display: inline-flex; flex: none; align-items: center; gap: 4px; height: 28px; margin-left: 10px; padding: 0 4px 0 10px; border: 1px solid var(--lv-accent); border-radius: 14px; background: var(--lv-accent-soft); color: var(--lv-accent); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-range-chip-text:hover { text-decoration: underline; }
+  .lv-cw-range-chip-clear { display: inline-flex; width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 10px; background: rgb(66 216 198 / 20%); color: var(--lv-text); }
+  .lv-cw-range-chip-clear:hover { background: rgb(66 216 198 / 35%); }
+  .lv-cw-chip-short { display: none; }
+  /* The long words need about 1080px inside the bar, or about 1240px with the review buttons. */
+  @container (max-width: 1095px) {
+    .lv-cw-chip-long { display: none; }
+    .lv-cw-chip-short { display: inline; }
+  }
+  @container (max-width: 1255px) {
+    .lv-cw-bar[data-review] .lv-cw-chip-long { display: none; }
+    .lv-cw-bar[data-review] .lv-cw-chip-short { display: inline; }
+  }
   .lv-cw-bar .lv-cw-notice { flex: 1 1 40px; min-width: 0; height: 20px; padding-left: 10px; overflow: hidden; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
   .lv-cw-nav-count { color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
   .lv-cw-nav-count span { color: var(--lv-warning); font-family: var(--font-mono, ui-monospace, monospace); }

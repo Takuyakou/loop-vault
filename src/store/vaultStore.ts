@@ -123,6 +123,15 @@ export interface TextProgressionIdeaDraft {
   /** Exact extended source and structurally validated attack intent. */
   textSource?: SavedTextSourceV1;
 }
+/**
+ * A saved block's memo: the analyzer's warning ids joined by "; ", then (P10.3 §4) a note
+ * such as the section it was saved from. Undefined when there is nothing to keep.
+ */
+export function savedBlockMemo(warnings: readonly string[], note?: string): string | undefined {
+  const parts = [...warnings, ...(note?.trim() ? [note.trim()] : [])];
+  return parts.length ? parts.join("; ") : undefined;
+}
+
 export interface ProgressionSaveMetadata {
   sourcePath?: string;
   userEdited?: boolean;
@@ -133,6 +142,8 @@ export interface ProgressionSaveMetadata {
   confirmSourceBasslineOmission?: () => boolean;
   /** Transient localized rejection announcer; never persisted. */
   onPersistenceError?: (message: string) => void;
+  /** P10.3 §4: words added to the saved block's memo after the analyzer's warnings (the section it was saved from). */
+  memoNote?: string;
 }
 
 export type VaultMutationResult = boolean | "pending";
@@ -1330,7 +1341,7 @@ function toSavedProgressionBlock(
     ...(analysis?.bpm && analysis.tempoDiagnostics?.provenance !== "SMF_DEFAULT"
       ? { bpm: analysis.bpm } : {}),
     ...(analysis?.timeSignature ? { timeSignature: analysis.timeSignature } : {}),
-    memo: block.warnings.length > 0 ? block.warnings.join("; ") : undefined,
+    memo: savedBlockMemo(block.warnings, metadata.memoNote),
     tags: [],
     capturedAt: context.now().toISOString(),
     analyzerVersion: analysis?.analyzerVersion ?? "unknown",

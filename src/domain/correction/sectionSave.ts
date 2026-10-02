@@ -1,4 +1,4 @@
-import { segmentContent, type CorrectionModel, type CorrectionSegment } from "./correctionModel";
+import { barRangeLabel, segmentContent, type CorrectionModel, type CorrectionSegment } from "./correctionModel";
 import { buildSaveCandidate, cardsInRange, type SaveCandidateResult, type SaveRange } from "./saveCandidate";
 import type { ChordTimelineItem } from "../types";
 
@@ -13,6 +13,15 @@ export function wholeSongRange(model: CorrectionModel): SaveRange | undefined {
   if (!first || !last) return undefined;
   const meter = model.context.meter;
   return { startBar: Math.floor(first.start / meter + 1e-6) + 1, endBar: Math.floor((last.start + last.duration - 1e-6) / meter) + 1 };
+}
+
+/**
+ * P10.3 §4: the section a progression was saved from, for its memo — 「区切り3（9〜12小節）」, or
+ * just the bars for an 8-bar stand-in section (its name is its bars).
+ */
+export function sectionMemo(segment: CorrectionSegment): string {
+  const bars = barRangeLabel(segment.startBar, segment.endBar);
+  return segment.source === "fallback-8bar" || segment.label === bars ? bars : `${segment.label}（${bars}）`;
 }
 
 export interface SectionSaveRow {

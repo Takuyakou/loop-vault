@@ -4,7 +4,7 @@ import { samePlaybackSource, type PlaybackController, type PlaybackRequest, type
 import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
 import type { CorrectionCard, CorrectionModel, CorrectionNote, CorrectionSegment, NameSource } from "../../domain/correction/correctionModel";
 import { barRangeLabel, noteLabel, notesByCard } from "../../domain/correction/correctionModel";
-import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption } from "../../domain/correction/rangePick";
+import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption, rangeChipText } from "../../domain/correction/rangePick";
 import { moveSegmentEdge, type SegmentEdge } from "../../domain/correction/segmentEdits";
 import {
   addNote,
@@ -38,7 +38,8 @@ import { sectionSaveRows, wholeSongRange, type SectionSaveRow } from "../../doma
 import type { SaveKind } from "../../domain/correction/metrics";
 import { SectionSaveDialog } from "./SectionSaveDialog";
 import { useMetronome } from "../MetronomeProvider";
-import { SettingsIcon, UndoIcon } from "../icons";
+import { GearIcon, UndoIcon } from "../icons";
+import { useFadingNotice } from "./useFadingNotice";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
@@ -132,7 +133,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [selectedNotes, setSelectedNotes] = useState<ReadonlySet<string>>(() => new Set());
   const [mode, setMode] = useState<Mode>("check");
   const [melodyLine, setMelodyLine] = useState<number>();
-  const [notice, setNotice] = useState<string>();
+  // P10.3 §1: notices go after 5 s (they stay while the pointer is on them).
+  const { notice, say: setNotice, hold: holdNotice } = useFadingNotice();
+  // P10.3 §1: deciding and dropping the save range is said to screen readers only.
+  const [announcement, setAnnouncement] = useState("");
   const [zoom, setZoom] = useState<Zoom>(() => totalBars <= 16 ? "all" : "16");
   const [customPx, setCustomPx] = useState(24);
   const [viewportWidth, setViewportWidth] = useState(0);
@@ -645,6 +649,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     metricsRef.current.restarts = (metricsRef.current.restarts ?? 0) + 1;
     setNotice("最初からやり直しました");
   };
+  // P10.3 §1: whichever way the range is set or dropped, it is announced (not shown: the frame and the chip show it).
+  const announcedRange = useRef<SaveRange>();
+  useEffect(() => {
+    const before = announcedRange.current;
+    announcedRange.current = saveRange;
+    if (saveRange) setAnnouncement(`保存する範囲を ${barRangeLabel(saveRange.startBar, saveRange.endBar)}（${cardsInRange(historyRef.current.present, saveRange).length}コード）にしました`);
+    else if (before) setAnnouncement("保存する範囲を外しました");
+  }, [saveRange]);
   // The settings menu closes on a press outside it.
   useEffect(() => {
     if (!settingsOpen) return undefined;
@@ -685,11 +697,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     setSavedCount(editCount(history));
     for (let index = 0; index < ranges.length; index += 1) metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length, kind });
   };
-  /** P10.2 §9: the range decided by right-clicks, said in the status line. */
-  const chooseRange = (next: SaveRange) => {
-    setSaveRange(next);
-    setNotice(`保存する範囲を ${barRangeLabel(next.startBar, next.endBar)}（${cardsInRange(present, next).length}コード）にしました`);
-  };
+  /** P10.2 §9 / P10.3 §1: the range decided by right-clicks (the decided range is announced below). */
+  const chooseRange = (next: SaveRange) => setSaveRange(next);
   const markRange = (card: CorrectionCard, immediate: boolean) => {
     const pending = rangeFrom ? present.cards.find((entry) => entry.id === rangeFrom) : undefined;
     const next = pickRangeCard(pending, card, meter, immediate);
@@ -786,7 +795,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         </div>
       ) : null}
 
-        <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar">
+        <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar" data-review={reviewCards.length ? true : undefined}>
           {/* P10.1 §1: 再生 and 表示 always share the first line. P10.2: the bar spans the workspace (one line from 1280). */}
           <div className="lv-cw-bar-lead">
           <div className="lv-cw-group" role="group" aria-label="再生">
@@ -843,11 +852,25 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <button type="button" className="lv-cw-btn lv-cw-icon" onClick={undoOnce} disabled={!history.past.length} aria-label={last ? `元に戻す：${last}（Ctrl+Z）` : "元に戻す（Ctrl+Z）"} title={last ? `元に戻す：${last}（Ctrl+Z）` : "元に戻す（Ctrl+Z）"} data-testid="correction-undo"><UndoIcon size={15} /></button>
             <button type="button" className="lv-cw-btn lv-cw-icon" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label={next ? `やり直す：${next}（Ctrl+Y）` : "やり直す（Ctrl+Y）"} title={next ? `やり直す：${next}（Ctrl+Y）` : "やり直す（Ctrl+Y）"} data-testid="correction-redo"><UndoIcon size={15} className="lv-cw-mirror" /></button>
           </div>
-          <span className="lv-cw-notice" role="status" data-testid="correction-notice" title={notice}>{notice}</span>
+          {saveRange ? (() => {
+            // P10.3 §3: the decided range as a chip (like Voicing Loop's 区間 chip); × drops it, the words show its start.
+            const chords = cardsInRange(present, saveRange).length;
+            return (
+              <span className="lv-cw-range-chip" data-testid="correction-range-chip" title={rangeChipText(saveRange, chords)}>
+                <button type="button" className="lv-cw-range-chip-text" onClick={() => { stopFollow(); scrollToBeat((saveRange.startBar - 1) * meter, "left"); }}>
+                  <span className="lv-cw-chip-long">{rangeChipText(saveRange, chords)}</span>
+                  <span className="lv-cw-chip-short" aria-hidden="true">{rangeChipText(saveRange, chords, true)}</span>
+                </button>
+                <button type="button" className="lv-cw-range-chip-clear" aria-label="範囲を外す（Esc）" title="範囲を外す（Esc）" onClick={() => setSaveRange(undefined)} data-testid="correction-range-chip-clear">×</button>
+              </span>
+            );
+          })() : null}
+          <span className="lv-cw-notice" role="status" data-testid="correction-notice" title={notice} onMouseEnter={() => holdNotice(true)} onMouseLeave={() => holdNotice(false)}>{notice}</span>
+          <span className="sr-only" aria-live="polite" data-testid="correction-announce">{announcement}</span>
           <div className="lv-cw-group lv-cw-settings" ref={settingsRef}>
-            <button type="button" className="lv-cw-btn lv-cw-icon" aria-haspopup="true" aria-expanded={settingsOpen} aria-label="表示の設定" title="表示の設定" onClick={() => setSettingsOpen((value) => !value)} data-testid="correction-settings"><SettingsIcon size={15} /></button>
+            <button type="button" className="lv-cw-btn lv-cw-icon" aria-haspopup="true" aria-expanded={settingsOpen} aria-label="この画面の設定" title="この画面の設定" onClick={() => setSettingsOpen((value) => !value)} data-testid="correction-settings"><GearIcon size={15} /></button>
             {settingsOpen ? (
-              <div className="lv-cw-menu" role="group" aria-label="表示の設定" data-testid="correction-settings-menu">
+              <div className="lv-cw-menu" role="group" aria-label="この画面の設定" data-testid="correction-settings-menu">
                 <label className="lv-cw-check">
                   <input
                     type="checkbox"
@@ -1220,7 +1243,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               whole={!saveRange}
               saved={savedRanges.has(rangeKey(formRange))}
               actions={props.save}
-              onClear={() => setSaveRange(undefined)}
               onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
               onSaved={() => markSaved([formRange], saveRange ? "range" : "whole")}
               {...(present.segments.length ? { menuExtras: [{
@@ -1281,8 +1303,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           rows={sectionRows}
           ideas={props.save.ideas}
           ideaTitle={props.fileName.replace(/\.midi?$/i, "")}
-          onCreate={(ready, title) => props.save.onCreate(ready, title, props.save.defaultNextAction, false)}
-          onAppend={(ready, ideaId) => props.save.onAppend(ready, ideaId, false)}
+          onCreate={(ready, title, memoNote) => props.save.onCreate(ready, title, props.save.defaultNextAction, false, { memoNote })}
+          onAppend={(ready, ideaId, memoNote) => props.save.onAppend(ready, ideaId, false, { memoNote })}
           onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
           onClose={() => setSectionRows(undefined)}
           onDone={(saved, failed) => {

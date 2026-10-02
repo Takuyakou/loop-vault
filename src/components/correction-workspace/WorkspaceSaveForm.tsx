@@ -14,8 +14,8 @@ export interface WorkspaceSaveActions {
   copy: AppCopy;
   titleFor: (candidate: ProgressionBlockCandidate) => string;
   /** The new idea's id, or undefined when it was not saved. */
-  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean) => string | undefined;
-  onAppend: (ready: SaveReady, ideaId: string, userVerified: boolean) => boolean;
+  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean, extra?: SaveExtra) => string | undefined;
+  onAppend: (ready: SaveReady, ideaId: string, userVerified: boolean, extra?: SaveExtra) => boolean;
   onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => boolean;
   /** 「詳しい設定」: the source-bassline panel for this range, or null when the song has no bass to keep. */
   renderBassline?: (ready: SaveReady) => ReactNode;
@@ -24,6 +24,11 @@ export interface WorkspaceSaveActions {
 /** P10.2 §10.3: on the save button's title and in the save dialog, no longer a line of its own. */
 const SAVE_NOTE = "保存すると、外した音は戻せなくなります";
 
+/** P10.3 §4: what a save by section adds (the section's name in the progression's memo). */
+export interface SaveExtra {
+  memoNote?: string;
+}
+
 export const rangeKey = (range: SaveRange) => `${range.startBar}-${range.endBar}`;
 export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar ? `${range.startBar}小節` : `${range.startBar}〜${range.endBar}小節`;
 
@@ -31,13 +36,12 @@ export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar 
  * Spec v2.4 §10.1: the save form for the chosen range, pinned to the bottom of the right
  * panel (P10.2 §10.3): the range and 範囲を外す, the names, Vaultに保存 and 「おすすめの範囲」.
  */
-export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onClear, onGoToCard, onSaved, whole = false, menuExtras }: {
+export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onGoToCard, onSaved, whole = false, menuExtras }: {
   model: CorrectionModel;
   timeline: readonly ChordTimelineItem[];
   range: SaveRange;
   saved: boolean;
   actions: WorkspaceSaveActions;
-  onClear: () => void;
   onGoToCard: (cardId: string) => void;
   onSaved: () => void;
   /** P10.2 addendum 2 §1: no range chosen — the whole song is saved (「曲全体を保存」). */
@@ -63,9 +67,7 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
             {whole ? `曲全体（${rangeLabel(range)}）` : `${rangeLabel(range)}・${cards.length}枚`}{saved ? <span className="lv-cw-saved">保存済み</span> : null}
           </span>
         </h4>
-        {whole
-          ? <button type="button" className="lv-cw-btn" disabled title="範囲を選んでいません">範囲を外す</button>
-          : <button type="button" className="lv-cw-btn" onClick={onClear}>範囲を外す</button>}
+        {/* P10.3 §3: 範囲を外す is the × on the range chip in the control bar. */}
       </div>
       {whole ? null : <p className="lv-cw-save-names" title={cards.map((card) => card.name.label).join("  ")}>{cards.map((card) => card.name.label).join("  ")}</p>}
       {problems?.length ? (
@@ -124,7 +126,6 @@ export function NoSaveRange() {
     <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-empty>
       <div className="lv-cw-row-between">
         <h4 className="lv-cw-h4">保存する範囲</h4>
-        <button type="button" className="lv-cw-btn" disabled title="範囲を選んでいません">範囲を外す</button>
       </div>
       <p className="lv-cw-muted" data-testid="correction-save-range">保存できるカードがありません。</p>
       <div className="lv-cw-save-actions">

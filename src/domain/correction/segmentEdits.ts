@@ -1,4 +1,4 @@
-import { withRepeatCounts, type CorrectionModel } from "./correctionModel";
+import { barRangeLabel, withRepeatCounts, type CorrectionModel } from "./correctionModel";
 import { unchanged, type EditResult } from "./edits";
 
 export type SegmentEdge = "start" | "end";
@@ -39,5 +39,7 @@ export function moveSegmentEdge(model: CorrectionModel, segmentId: string, edge:
 }
 
 function done(model: CorrectionModel, segments: CorrectionModel["segments"], label: string): EditResult {
-  return { model: { ...model, segments: withRepeatCounts(segments, model.cards, model.context.meter) }, changed: true, label, kind: "segment" };
+  // P10.3 §6: an 8-bar stand-in section is named by its bars, so it is named again; analysed sections keep their names.
+  const named = segments.map((segment) => segment.source === "fallback-8bar" ? { ...segment, label: barRangeLabel(segment.startBar, segment.endBar) } : segment);
+  return { model: { ...model, segments: withRepeatCounts(named, model.cards, model.context.meter) }, changed: true, label, kind: "segment" };
 }

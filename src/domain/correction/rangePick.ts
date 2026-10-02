@@ -43,3 +43,9 @@ export function rangeCaption(range: SaveRange, chords: number, pending = false):
   const bars = barRangeLabel(range.startBar, range.endBar);
   return pending ? `${bars}・${chords}コード（右クリックで決める）` : `保存する範囲 ${bars}・${chords}コード`;
 }
+
+/** P10.3 §3: the range chip in the control bar — 「保存する範囲 6〜7小節・2コード」, or 「6〜7小節」 when narrow. */
+export function rangeChipText(range: SaveRange, chords: number, short = false): string {
+  const bars = barRangeLabel(range.startBar, range.endBar);
+  return short ? bars : `保存する範囲 ${bars}・${chords}コード`;
+}

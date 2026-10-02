@@ -79,7 +79,7 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
-    options?: { stayOnCapture?: boolean; bpm?: number },
+    options?: { stayOnCapture?: boolean; bpm?: number; memoNote?: string },
   ): string | undefined {
     // The new idea's id (P10.2 addendum 2: saving by section adds the rest to it), or undefined.
     setPersistenceError(undefined);
@@ -98,7 +98,7 @@ export function useCaptureSave({
       nextAction,
       progressionBlock: candidate,
       progressionAnalysis: withTempo(analysis.result, options?.bpm),
-      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
+      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(options?.memoNote ? { memoNote: options.memoNote } : {}), ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
     });
     if (id) {
       persistCorrectionEvents([
@@ -189,7 +189,7 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
-    options?: { bpm?: number },
+    options?: { bpm?: number; memoNote?: string },
   ): boolean {
     setPersistenceError(undefined);
     if (!ideaId) {
@@ -202,6 +202,7 @@ export function useCaptureSave({
       userEdited: userEditedOverride ?? hasProgressionEdits(editable),
       userVerified,
       onPersistenceError: announcePersistenceError,
+      ...(options?.memoNote ? { memoNote: options.memoNote } : {}),
       ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}),
     });
     if (appended) {

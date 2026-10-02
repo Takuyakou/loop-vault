@@ -11,7 +11,8 @@ import { chooseName } from "./cardEdits";
 import { deleteNotes } from "./edits";
 import { reviewThresholds } from "./reviewThresholds";
 import { buildSaveCandidate, cardAuditionNotes } from "./saveCandidate";
-import { sectionSaveRows, wholeSongRange } from "./sectionSave";
+import { sectionMemo, sectionSaveRows, wholeSongRange } from "./sectionSave";
+import { savedBlockMemo } from "../../store/vaultStore";
 
 /** P10.2 addendum 2: save the whole song when no range is chosen; save by section. */
 
@@ -27,6 +28,20 @@ describe("the whole song (addendum 2 §1)", () => {
     const inner = { ...base, cards: base.cards.slice(1, -1) }; // the first and the last bar are rests now
     expect(wholeSongRange(inner)).toEqual({ startBar: 2, endBar: 7 });
     expect(wholeSongRange({ ...base, cards: [] })).toBeUndefined();
+  });
+});
+
+describe("the section's name in the saved memo (P10.3 §4)", () => {
+  it("is 「区切り3（9〜12小節）」, or the bars for a stand-in section", () => {
+    expect(sectionMemo(segment("3", 9, 12))).toBe("区切り3（9〜12小節）");
+    expect(sectionMemo({ id: "s", startBar: 9, endBar: 16, label: "9〜16小節", source: "fallback-8bar" })).toBe("9〜16小節");
+  });
+
+  it("goes after the analyzer's warnings, which stay", () => {
+    expect(savedBlockMemo(["ambiguous-bass"], "区切り3（9〜12小節）")).toBe("ambiguous-bass; 区切り3（9〜12小節）");
+    expect(savedBlockMemo([], "区切り3（9〜12小節）")).toBe("区切り3（9〜12小節）");
+    expect(savedBlockMemo(["ambiguous-bass"])).toBe("ambiguous-bass");
+    expect(savedBlockMemo([])).toBeUndefined();
   });
 });
 
@@ -110,11 +125,11 @@ describe("saving the whole song and by section through the store (addendum 2 §4
       chordMemo: ready[0]!.candidate.summaryText,
       progressionBlock: ready[0]!.candidate,
       progressionAnalysis: long.result,
-      progressionMetadata: { userEdited: ready[0]!.userEdited, userVerified: false },
+      progressionMetadata: { userEdited: ready[0]!.userEdited, userVerified: false, memoNote: sectionMemo(rows[0]!.segment) },
     })!;
-    for (const next of ready.slice(1)) {
-      expect(store.getState().appendBlockToIdea(id, next.candidate, long.result, { userEdited: next.userEdited, userVerified: false })).toBeTruthy();
-    }
+    ready.slice(1).forEach((next, index) => {
+      expect(store.getState().appendBlockToIdea(id, next.candidate, long.result, { userEdited: next.userEdited, userVerified: false, memoNote: sectionMemo(rows[index + 1]!.segment) })).toBeTruthy();
+    });
     await store.getState().flush();
     const written = repository.saved[repository.saved.length - 1]!;
     const before = store.getState().ideas.find((idea) => idea.id === id)!.progressionBlocks!;
@@ -122,5 +137,8 @@ describe("saving the whole song and by section through the store (addendum 2 §4
     expect(after).toHaveLength(ready.length);
     expect(after.map((block) => block.chords)).toEqual(before.map((block) => block.chords));
     expect(after.map((block) => [block.startBar, block.endBar])).toEqual(rows.map((row) => [row.range.startBar, row.range.endBar]));
+    // P10.3 §4: each progression's memo keeps its section's name, after any warnings, through save and reload.
+    expect(after.map((block) => block.memo)).toEqual(before.map((block) => block.memo));
+    after.forEach((block, index) => expect(block.memo?.endsWith(sectionMemo(rows[index]!.segment))).toBe(true));
   });
 });

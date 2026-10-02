@@ -495,6 +495,35 @@ for (const [width, height] of SIZES) {
         await page.getByTestId("voicing-loop-handoff").click();
         await expect(page.getByTestId("voicing-loop-workspace").getByTestId("voicing-loop-event").first()).toBeVisible();
       });
+      // P10.3-01: the range chip (a range) and the whole song (no range), the gear menu, a long progression's page.
+      await shot("p103-workspace-range-chip", async () => {
+        await openWorkspace("plain-8");
+        await cards.nth(5).click({ button: "right" });
+        await cards.nth(6).click({ button: "right" });
+        await expect(page.getByTestId("correction-range-chip")).toBeVisible();
+        await openPanel();
+      });
+      await shot("p103-workspace-whole", async () => {
+        await page.getByTestId("correction-range-chip-clear").click();
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-whole");
+      });
+      await shot("p103-workspace-gear-menu", async () => {
+        await page.getByTestId("correction-settings").click();
+        await expect(page.getByTestId("correction-settings-menu")).toBeVisible();
+      });
+      await shot("p103-long-progression-page", async () => {
+        await page.keyboard.press("Escape");
+        await openWorkspace("long-64");
+        await openPanel();
+        await page.getByTestId("correction-save-form").getByRole("button", { name: /曲全体を保存/ }).click();
+        const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+        await form.locator('input[name="progression-title"]').fill(`P10.3 長い進行 ${size}`);
+        await form.getByRole("button", { name: /保存/, exact: true }).click();
+        await expect(form).toBeHidden();
+        await nav(page, "vault");
+        await page.locator(".lv-vault-row").filter({ hasText: `P10.3 長い進行 ${size}` }).first().getByRole("button", { name: /進行を開く/ }).click();
+        await expect(page.locator("[data-progression-card-stage] [data-testid='chord-card-review']").first()).toBeVisible();
+      });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });

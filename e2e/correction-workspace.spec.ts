@@ -691,24 +691,24 @@ test("P10.1 selected notes have a bar to act on or stop; the line button turns i
   await expect(bar).toHaveCount(0);
 });
 
-test("P10.1 the save range panel is always there; 範囲を外す is off without a range; recommended ranges fold and stay folded", async ({ page }) => {
+test("P10.1 the save range panel is always there; 範囲を外す is the range chip's × (P10.3); recommended ranges fold and stay folded", async ({ page }) => {
   await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const form = workspace.getByTestId("correction-save-form");
-  const clear = form.getByRole("button", { name: "範囲を外す" });
+  const chip = workspace.getByTestId("correction-range-chip");
   await expect(form.getByTestId("correction-save-range")).toHaveText("曲全体（1〜8小節）"); // P10.2 addendum 2: no range = the whole song
-  await expect(clear).toBeDisabled();
-  await expect(clear).toHaveAttribute("title", "範囲を選んでいません");
+  await expect(form.getByRole("button", { name: "範囲を外す" })).toHaveCount(0);
+  await expect(chip).toHaveCount(0);
   // P10.2 addendum 1 §2: 「おすすめの範囲」 starts closed; open and closed are remembered.
   const toggle = workspace.getByTestId("correction-recommended-toggle");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(workspace.getByTestId("correction-recommended")).toHaveCount(0);
   await toggle.click();
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
-  await expect(clear).toBeEnabled();
+  await expect(chip).toBeVisible();
   await expect(workspace.getByTestId("correction-recommended")).toBeVisible(); // still offered with a range
-  await clear.click();
-  await expect(clear).toBeDisabled();
+  await chip.getByRole("button", { name: "範囲を外す（Esc）" }).click();
+  await expect(chip).toHaveCount(0);
   await page.reload();
   await importScenario(page, "plain-8");
   await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "true");
@@ -974,7 +974,9 @@ test("P10.2 right-click a card, then another: the save range, with a pending fra
   await expect(workspace.getByTestId("correction-range-pending")).toHaveText("2〜5小節・4コード（右クリックで決める）");
   await cards.nth(4).click({ button: "right" });
   await expect(workspace.getByTestId("correction-save-range")).toContainText("2〜5小節・4枚");
-  await expect(workspace.getByTestId("correction-notice")).toHaveText("保存する範囲を 2〜5小節（4コード）にしました");
+  // P10.3 §1: said to screen readers only; the bar shows the chip, not a sentence.
+  await expect(workspace.getByTestId("correction-announce")).toHaveText("保存する範囲を 2〜5小節（4コード）にしました");
+  await expect(workspace.getByTestId("correction-notice")).toHaveText("");
   await expect(workspace.getByTestId("correction-range-pending")).toHaveCount(0);
 
   // Backwards, then Esc: only 「ここから」 goes; the range stays.
@@ -1198,7 +1200,7 @@ test("P10.2 addendum 1: the decided save range stays framed (solid, A and B) whi
   expect((await pending.boundingBox())!.y).toBeGreaterThan((await confirmed.boundingBox())!.y + 4);
   await page.keyboard.press("Escape");
 
-  // The segment band, a recommended range, Shift+click: the same frame. 範囲を外す takes it away.
+  // The segment band, a recommended range, Shift+click: the same frame. The chip's × takes it away.
   await workspace.getByTestId("correction-segment").first().click();
   await expect(confirmed).toContainText("保存する範囲 1〜8小節・8コード");
   await openRecommendedRanges(page);
@@ -1207,7 +1209,7 @@ test("P10.2 addendum 1: the decided save range stays framed (solid, A and B) whi
   await first.click();
   await expect(confirmed).toContainText(`保存する範囲 ${label}`);
   await expect(first).toHaveAttribute("aria-current", "true");
-  await workspace.getByTestId("correction-save-form").getByRole("button", { name: "範囲を外す" }).click();
+  await workspace.getByTestId("correction-range-chip-clear").click();
   await expect(confirmed).toHaveCount(0);
 });
 
@@ -1244,4 +1246,68 @@ test("P10.2 addendum 1: chord tones only when they differ; the missing ones are 
   await expect(workspace.getByTestId("correction-inspector")).not.toContainText("足すかは耳で");
   await missing.click();
   await expect(workspace.getByTestId("correction-tones")).toHaveCount(0); // added back: no difference
+});
+
+// ---- P10.3 checkpoint 1: notices, the gear, the range chip --------------------------------------
+
+test("P10.3 a decided range is a chip in the control bar, not a sentence; × or Esc drops it and that is announced", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const cards = workspace.getByTestId("correction-card");
+  const chip = workspace.getByTestId("correction-range-chip");
+  const announce = workspace.getByTestId("correction-announce");
+  await cards.nth(5).click({ button: "right" });
+  await cards.nth(6).click({ button: "right" });
+  await expect(chip.locator(".lv-cw-chip-long")).toBeVisible();
+  await expect(chip.locator(".lv-cw-chip-long")).toHaveText("保存する範囲 6〜7小節・2コード");
+  await expect(chip).toHaveAttribute("title", "保存する範囲 6〜7小節・2コード");
+  await expect(workspace.getByTestId("correction-notice")).toHaveText(""); // nothing written in the bar
+  await expect(announce).toHaveText("保存する範囲を 6〜7小節（2コード）にしました");
+  await expect(announce).toHaveClass(/sr-only/); // read out, not shown
+  await expect(workspace.getByTestId("correction-save-form").getByRole("button", { name: "範囲を外す" })).toHaveCount(0);
+
+  await chip.getByRole("button", { name: "範囲を外す（Esc）" }).click();
+  await expect(chip).toHaveCount(0);
+  await expect(workspace.getByTestId("correction-range-confirmed")).toHaveCount(0);
+  await expect(announce).toHaveText("保存する範囲を外しました");
+  await expect(workspace.getByTestId("correction-notice")).toHaveText("");
+
+  // Esc drops it too.
+  await workspace.getByTestId("correction-segment").first().click();
+  await expect(chip).toBeVisible();
+  await page.locator("body").press("Escape");
+  await expect(chip).toHaveCount(0);
+
+  // A narrow bar keeps only the bars.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await workspace.getByTestId("correction-segment").first().click();
+  await expect(chip.locator(".lv-cw-chip-short")).toBeVisible();
+  await expect(chip.locator(".lv-cw-chip-long")).toBeHidden();
+  await expect(chip.locator(".lv-cw-chip-short")).toHaveText("1〜8小節");
+});
+
+test("P10.3 other notices go after 5 seconds", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await selectCard(page, 0);
+  await workspace.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
+  await openSettings(page);
+  await workspace.getByTestId("correction-restart").click();
+  await page.getByRole("dialog", { name: "最初からやり直しますか？" }).getByRole("button", { name: "最初からやり直す" }).click();
+  const notice = workspace.getByTestId("correction-notice");
+  await expect(notice).toHaveText("最初からやり直しました");
+  await expect(notice).toHaveText("", { timeout: 7000 });
+});
+
+test("P10.3 the workspace menu is a gear named 「この画面の設定」; the sidebar's 設定 keeps its icon", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const gear = page.getByTestId("correction-settings");
+  await expect(gear).toHaveAttribute("aria-label", "この画面の設定");
+  expect(await gear.locator("svg").innerHTML()).toContain("<circle");
+  await gear.click();
+  await expect(page.getByTestId("correction-settings-menu")).toBeVisible();
+  const sidebar = await page.locator('[data-nav="settings"] svg').innerHTML();
+  expect(sidebar).toContain("M4 7h10M18 7h2M4 17h4M12 17h8"); // SettingsIcon, unchanged
+  expect(sidebar).not.toContain("M12.22 2h");
 });
