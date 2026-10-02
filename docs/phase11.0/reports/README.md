@@ -11,3 +11,5 @@ Current integration evidence: [local master merge / fresh FULL](P11-master-merge
 Active follow-up: [P11-09 geometry / sources / fixed hands / generated selector](P11-09-acceptance-layout-source-hands.md).
 
 Current follow-up: [P11-10 Source availability / Generated controls](P11-10-source-availability-generated-controls.md).
+
+Latest integration: [P11-09/10 local master / fresh FULL](P11-09-10-master-merge.md).

@@ -4,12 +4,16 @@
 
 ## Status
 
-- Status: completed / P11-10 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; P11-09 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Status: completed / P11-00–10 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
 - Completed stages: P11.0-00 through P11.0-10; verified commits/gates in execution-state.json.
 - Phase starting base: local master 73507e87. P11-09 acceptance base: 8b6480b4. Phase 10 finish is an ancestor.
 - Historical P11-06 tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 final tested HEAD: `2377448a`; fresh FULL 3,668 Vitest / 174 Playwright PASS, updated runnable EXE. Stop for Human Product Acceptance; no master merge.
 
-## Current follow-up
+## Current integration (P11-09/10)
+
+Human-authorized merge / fresh-tested HEAD `f7768617`: 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, cache unused. [Integration report](reports/P11-09-10-master-merge.md). P11-09/10 candidate stop-before-merge notes below are historical. No push/tag/release or new stage.
+
+## Completed follow-up
 
 [P11-10](P11-10.md): completed, Source availability banner removal and fixed-source generated-controls gating. [Evidence](reports/P11-10-source-availability-generated-controls.md). Preserve completed P11-09. Final fresh FULL at `b0fe8076`: 3,694 Vitest / 189 Playwright PASS, raw EXE built. Stop for acceptance; no master merge.
 

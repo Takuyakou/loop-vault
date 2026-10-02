@@ -8,7 +8,7 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: b0fe80769ed907f420d5da244df34e0f0c7dd13d
+- commit: f7768617f01bf61c342b9cbb991c139681d70a22
 - date: 2026-10-02
 
 Freshness note: the verified commit is the code/docs state this handoff was
@@ -213,3 +213,7 @@ P11-09 final tested code / EXE HEAD `53682f69`: fresh FULL 3,687 Vitest / 186 Pl
 Same branch/worktree as P11-09. Unavailable 0/N Source controls are native disabled with on-demand title/accessibility reasons; the old availability info banner is removed. Stale unavailable Source preferences recover through existing complete-source priority, partial AUTO fallback stays unchanged. Generated type/details remain visible but disabled for fixed Saved/Source/Custom. Source changes close details and returning Generated preserves the session's prior family, Basic/Core, left-hand variant, Color/Open.
 
 Final tested code / EXE HEAD `b0fe80769ed907f420d5da244df34e0f0c7dd13d`: fresh FULL 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. First failed FULL and bounded isolation are recorded in [P11-10 report](../phase11.0/reports/P11-10-source-availability-generated-controls.md). Result follow-up is documentation-only. No master merge/push/tag/release; local master remains `8b6480b4`. Stop for Human Product Acceptance.
+
+## P11-09/10 integrated into local master
+
+The human explicitly authorized the merge. Candidate `29918fef` was merged into local master at `f7768617f01bf61c342b9cbb991c139681d70a22`; merge tree equals candidate. Fresh FULL on that merge HEAD: 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. [Integration evidence](../phase11.0/reports/P11-09-10-master-merge.md). Earlier candidate stop-before-merge statements are historical. Result follow-up is documentation-only; tracked state clean, pre-existing untracked reports/assets/Claude outputs untouched. No push/tag/release, new implementation stage or EXE rebuild in this merge task.
