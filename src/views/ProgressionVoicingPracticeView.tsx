@@ -1324,7 +1324,7 @@ export function ProgressionVoicingPracticeView({
           <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help">
             <legend className="lv-section-kicker mr-1 float-left">生成タイプ</legend>
             <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
-            <GeneratedTypeSelector key={selection} value={selection === "basic-full" || !lessonRulesSelected ? studyCategory : "advanced"}
+            <GeneratedTypeSelector key={lessonRulesSelected ? "generated" : selection} value={selection === "basic-full" || !lessonRulesSelected ? studyCategory : "advanced"}
               disabled={!lessonRulesSelected} onChange={changeStudyCategory} onOpen={closeGeneratedDetails} />
             <details ref={generatedDetailsRef} className="relative" data-testid="voicing-loop-generated-details">
               <summary className="cursor-pointer rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs">詳しい設定</summary>

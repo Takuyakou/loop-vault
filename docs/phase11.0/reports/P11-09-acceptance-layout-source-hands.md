@@ -100,6 +100,14 @@ selector openは詳しい設定を閉じる。details triggerへのpointerはsel
 
 公開fixtureのPNG/JSONはGit外`test-results/p11-09-geometry/`と`test-results/p11-current-panel/`。closed/open/source-change/current-panel/workspace、selector openを4サイズで取得。1440/768の現在パネルと1920全画面を目視確認し、全10指/音/左右card/補足情報が可視。原本baselineはGit外local評価領域。
 
+### 最終レビューで検出したfocus境界
+
+最初のreport-inclusive HEAD `16c688ee41ac6044d00a9094b370f203157345e2`でfresh FULLは3,687 Vitest / 185 Playwright PASS（284.4秒、raw28,373B）、EXE release build55.74秒PASS。ただしその後の最終code reviewでgeneratedの詳細形→基本のfocus境界を追加検証し、1件FAILを再現した。既存FULLのPASSを新しいcode HEADへ流用しない。
+
+原因はselectorのReact keyがselectionそのもので、basic-shell→basic-full時にtrigger DOMが再mountされ、選択時に戻したfocusも失われたこと。Generated内では同じkeyを維持し、固定Source/Generatedの境界のみkeyを切り替える1行修正。Source変更のoutside close/key resetは保持する。追加testは詳細形→基本→focus→Space open→Esc focusを実ユーザー操作で保証する。これは新たに確認した製品DOMのfocus問題であり、旧native popup不具合の原因と混同しない。
+
+修正後のview Unit 69/69、Source/selector/details browser 8/8 PASS（6.6秒）。最終report-inclusive HEADへfresh FULLを1回、EXEを再生成する。上記初回成果物は最終成果物として扱わない。
+
 ## 7. remaining limitations
 
 - 旧native selectorのWindows固有の直接原因は未確定。新DOM selectorの自動testとEXEは実機Human Acceptanceに渡す。

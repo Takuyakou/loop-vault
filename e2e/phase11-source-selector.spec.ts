@@ -84,3 +84,21 @@ test("P11 generated selector pointer/keyboard dismissal is independent of detail
   await page.getByTestId("voicing-loop-current-panel").locator("h2").click();
   await expect(selector).toHaveAttribute("aria-expanded", "false");
 });
+
+
+test("P11 advanced shape to primary type retains selector keyboard focus", async ({ page }) => {
+  await page.goto("/?p527Status=p533-rules");
+  await page.locator('[data-nav="voicing-loop"]').click();
+  const details = page.getByTestId("voicing-loop-generated-details");
+  await details.locator("summary").click();
+  await details.getByLabel("既存の形", { exact: true }).selectOption("basic-shell");
+  const selector = page.getByRole("combobox", { name: "生成タイプ", exact: true });
+  await selector.click();
+  await page.getByRole("option", { name: "基本", exact: true }).click();
+  await expect(selector).toBeFocused();
+  await expect(selector).toHaveAttribute("aria-expanded", "false");
+  await selector.press("Space");
+  await expect(selector).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(selector).toBeFocused();
+});
