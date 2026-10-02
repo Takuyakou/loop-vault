@@ -1,3 +1,6 @@
+import { useFingeringRankerMode } from "../voicingPractice/fingeringRankerMode";
+import { eRankerCostModel } from "../domain/eRankerFingering";
+import { rankPracticeHandFingerings } from "../voicingPractice/rankPracticeFingerings";
 import { GeneratedTypeSelector } from "../voicingPractice/GeneratedTypeSelector";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useReserveBottomSpace } from "../components/notifications";
@@ -420,6 +423,10 @@ export function ProgressionVoicingPracticeView({
   const [followResumeRevision, setFollowResumeRevision] = useState(0);
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
+  const fingeringRankerMode = useFingeringRankerMode();
+  const fingeringOptions = useMemo(() => fingeringRankerMode === "E1-T"
+    ? { costModel: eRankerCostModel() } : {}, [fingeringRankerMode]);
+  const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string; plan: ProgressionPracticeVoicingPlan | undefined; values: Map<string, string> }>();
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
     left: [],
     right: [],
@@ -572,21 +579,39 @@ export function ProgressionVoicingPracticeView({
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const handAssignments = useMemo(
     () => assignPracticeHandsAcrossProgression(selection, plan?.events.map((resolution) =>
-      resolution.status === "SUPPORTED" ? resolution.voicing : undefined) ?? [], fingeringPreferences),
-    [fingeringPreferences, plan, selection],
+      resolution.status === "SUPPORTED" ? resolution.voicing : undefined) ?? []),
+    [plan, selection],
   );
   const emptyHandTargets = { left: EMPTY_NOTES, right: EMPTY_NOTES };
   const currentHandTargets = handAssignments[currentIndex] ?? emptyHandTargets;
   const nextHandTargets = handAssignments[nextIndex] ?? emptyHandTargets;
   const thenNextHandTargets = handAssignments[thenNextIndex] ?? emptyHandTargets;
+  const fingeringBpm = clockState?.bpm ?? snapshot?.bpm;
   const leftFingeringById = useMemo(
-    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "left").map((entry) => [entry.id, entry])),
-    [handAssignments, selection, snapshot],
+    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "left", fingeringPreferences, fingeringOptions, plan?.events.map(event => event.status !== "SUPPORTED"), fingeringBpm).map((entry) => [entry.id, entry])),
+    [fingeringBpm, fingeringOptions, fingeringPreferences, handAssignments, plan, selection, snapshot],
   );
   const rightFingeringById = useMemo(
-    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "right").map((entry) => [entry.id, entry])),
-    [handAssignments, selection, snapshot],
+    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "right", fingeringPreferences, fingeringOptions, plan?.events.map(event => event.status !== "SUPPORTED"), fingeringBpm).map((entry) => [entry.id, entry])),
+    [fingeringBpm, fingeringOptions, fingeringPreferences, handAssignments, plan, selection, snapshot],
   );
+  const adjustedFingeringIds = new Set<string>();
+  if (fingeringChangeBaseline?.key === `${candidateSessionKey}:${fingeringRankerMode}:${fingeringBpm}` && fingeringChangeBaseline.plan === plan) {
+    for (const [hand, entries] of [["left", leftFingeringById], ["right", rightFingeringById]] as const) {
+      for (const [id, entry] of entries) {
+        if (entry.status !== "supported" || findPersonalFingering(fingeringPreferences, entry.signature)) continue;
+        const prior = fingeringChangeBaseline?.values.get(`${hand}:${id}`);
+        if (prior !== undefined && prior !== entry.fingers.join()) adjustedFingeringIds.add(id);
+      }
+    }
+  }
+  function captureFingeringBaseline() {
+    setFingeringChangeBaseline({ key: `${candidateSessionKey}:${fingeringRankerMode}:${fingeringBpm}`, plan, values: new Map(
+      [...[...leftFingeringById.values()].map(entry => ["left", entry] as const),
+        ...[...rightFingeringById.values()].map(entry => ["right", entry] as const)]
+        .flatMap(([hand, entry]) => entry.status === "supported" ? [[`${hand}:${entry.id}`, entry.fingers.join()] as const] : []),
+    ) });
+  }
   const currentLeftSuggested = currentEvent ? leftFingeringById.get(currentEvent.id) : undefined;
   const currentRightSuggested = currentEvent ? rightFingeringById.get(currentEvent.id) : undefined;
   const nextLeftSuggested = nextEvent ? leftFingeringById.get(nextEvent.id) : undefined;
@@ -1171,6 +1196,7 @@ export function ProgressionVoicingPracticeView({
     if (!entries.length || entries.some(({ hand, fingering }) => (
       !isValidFingering(hand, fingering.pitches, draftFingers[hand])
     ))) return;
+    captureFingeringBaseline();
     setFingeringPreferences((collection) => entries.reduce(
       (next, { hand, fingering }) => savePersonalFingering(next, {
         hand,
@@ -1185,6 +1211,7 @@ export function ProgressionVoicingPracticeView({
   function resetCurrentFingering() {
     const signatures = [currentLeftFingering?.signature, currentRightFingering?.signature]
       .filter((signature): signature is string => Boolean(signature));
+    captureFingeringBaseline();
     setFingeringPreferences((collection) => signatures.reduce(
       (next, signature) => resetPersonalFingering(next, signature),
       collection,
@@ -1636,7 +1663,8 @@ export function ProgressionVoicingPracticeView({
                       data-compact={compact}
                       data-auto-fallback={autoFallback ? "true" : "false"}
                       data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard && rangeSelection.active ? "inside" : rangeSelection.active ? "outside" : "none"}
-                      title={event?.chord.label ?? restLabel}
+                      data-fingering-adjusted={event && adjustedFingeringIds.has(event.id) ? "true" : "false"}
+                      title={`${event?.chord.label ?? restLabel}${event && adjustedFingeringIds.has(event.id) ? " — 前後に合わせて変化" : ""}`}
                       style={{ width: `${cardWidth}px` }}
                       className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${rangeCard && rangeSelection.active ? "ring-1 ring-inset ring-[var(--lv-accent)]" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
@@ -1689,6 +1717,7 @@ export function ProgressionVoicingPracticeView({
                       </span>
                       {!compact ? (
                         <>
+                          {event && adjustedFingeringIds.has(event.id) ? <span className="absolute right-1 top-1 text-[9px] text-teal-200" title="前後に合わせて変化" aria-label="前後に合わせて変化">●</span> : null}
                           <span data-testid="voicing-loop-event-timing" className={`absolute bottom-1 left-2 text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}>
                             {compactDurationLabel(span.durationBeats)}
                           </span>
@@ -1922,20 +1951,12 @@ function rankFingeringsForHand(
   handAssignments: readonly ProgressionFingeringHandTargets[],
   selection: ProgressionVoicingSelection,
   hand: FingeringHand,
+  preferences?: FingeringPreferenceCollection,
+  options: Parameters<typeof rankPracticeHandFingerings>[5] = {},
+  unresolved: readonly boolean[] = [],
+  practiceBpm?: number,
 ): ReturnType<typeof rankCyclicFingerings> {
-  if (!snapshot) return [];
-  const events = snapshot.events.flatMap((event, index) => {
-    const pitches = handAssignments[index]?.[hand] ?? EMPTY_NOTES;
-    if (!pitches.length) return [];
-    return [{
-      id: event.id,
-      hand,
-      midiPitches: pitches,
-      chord: event.chord,
-      family: selection,
-    }];
-  });
-  return rankCyclicFingerings(events);
+  return rankPracticeHandFingerings(snapshot, handAssignments, selection, hand, preferences, options, unresolved, practiceBpm);
 }
 
 function effectiveFingering(
@@ -1943,8 +1964,9 @@ function effectiveFingering(
   preferences: FingeringPreferenceCollection,
 ): RankedFingering | undefined {
   if (!suggestion || suggestion.status !== "supported") return undefined;
-  const personal = findPersonalFingering(preferences, suggestion.signature);
-  return personal ? { ...suggestion, fingers: personal.fingers } : suggestion;
+  // Saved notes are fixed inside the solver, rather than projected over an Auto result.
+  void preferences;
+  return suggestion;
 }
 
 function addKeyboardFingerLabels(
@@ -1999,7 +2021,7 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
               <span>{hand === "left" ? ("左手") : ("右手")}</span>
               <span className="min-w-0 truncate font-extrabold">{handMoveSummary(moves.filter((move) => move.hand === hand))}</span>
               {loopWrap && hand === "right" ? <span className="truncate text-[var(--lv-text-muted)]">{"ループ先"}</span> : null}
-              {moves.some((move) => move.hand === hand && move.estimated) ? <span className="sr-only">{"推定"}</span> : null}
+              <span data-testid="voicing-loop-movement-certainty" className="text-[9px] text-[var(--lv-text-muted)]">{moves.some(move => move.hand === hand && move.certainty === "partial") ? "一部推定" : moves.some(move => move.hand === hand && move.estimated) ? "推定" : "確定"}</span>
             </div>
             <div className="mt-px grid min-w-0 grid-cols-5 gap-0.5" role="list">
               {slots.filter((slot) => slot.hand === hand).map((slot) => {
@@ -2025,7 +2047,8 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
                   {strongest === "KEEP" ? (
                     <span aria-hidden="true" className="my-0.5 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
                   ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full truncate px-0.5 text-center text-[11px]">{action}</span> : null}
-                  {strongest !== "EMPTY" && next !== undefined ? <span className="mt-0.5 text-[11px]">{note(next)}</span> : null}
+                  {strongest !== "EMPTY" && next !== undefined ? <span className={`mt-0.5 text-[11px] ${slot.moves.some(move => move.toEstimated) ? "rounded border border-dashed opacity-60" : ""}`}>{note(next)}{slot.moves.some(move => move.toEstimated) ? " 推定" : ""}</span> : null}
+                  {slot.moves.some(move => move.fromEstimated) ? <span className="rounded border border-dashed text-[8px] opacity-60">元音 推定</span> : null}
                 </div>;
               })}
             </div>

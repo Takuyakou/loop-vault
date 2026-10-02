@@ -4,6 +4,26 @@
 
 ## Status
 
+### P11-13e production candidate integration
+
+[Production candidate](reports/P11-13e-production-candidate.md): authorized frozen E1-T/inverse/lambda2/gamma1 integration. Latest local master `ccf85c69` incorporated into candidate at `c54b360d`, without conflicts. Normal Voicing Loop default is the new candidate with Developer-only session CURRENT fallback. Tested / EXE HEAD `4406d5b8`: focused99, FEATURE120 + browser11, relevant UI22, fresh FULL Vitest3,792 / Playwright225 PASS, 0 FAIL / 0 UNRUN, cache unused. Raw Windows EXE built. Stop READY_FOR_HUMAN_PRODUCT_ACCEPTANCE, no master merge or E3. The CURRENT-default/no-adoption statements below describe earlier stages. Workflow ID `P11.13-05` identifies P11-13e.
+
+### P11-13d frozen reserved confirmation
+
+[Reserved final evaluation](reports/P11-13d-reserved-final-evaluation.md): `HOLDOUT_CONFIRMED` / `READY_FOR_HUMAN_DECISION`. CURRENT/lambda2/lambda2+gamma1 only, one run at `90ff4549`, focused17/17 and diagnostic types/lint PASS. Reserved1,080 cases: reassignment2086→2004, regression cases18→18, new0; structural/time/anchor/Range maintained. Earlier lambda0.5 reserved exposure and absent named families limit the interpretation; no unused-new-holdout or ergonomic promotion claim. No policy changes, adoption, merge, FULL/EXE or further components. Workflow ID `P11.13-04` identifies P11-13d.
+
+### P11-13c diagnostic follow-up
+
+[Common Tone soft preference ablation](reports/P11-13c-common-tone-ablation.md): `COMMON_TONE_USEFUL`, diagnostic candidate gamma1 with E1-T/inverse/lambda2 fixed. Dev-only original24 regressions become18, new0; no production adoption. Tested diagnostic HEAD `da0b3266`, focused17/17 and diagnostic types/lint PASS. No fresh FULL/EXE in this follow-up; earlier FULL/EXE remains tied to `2d29ac97`. Stop `READY_FOR_HUMAN_DECISION` before further components/integration. Workflow stage ID `P11.13-03` identifies human-named P11-13c.
+
+### P11-13 current candidate
+
+`feat/p11-13-fingering-hand-position`: 13a Saved Anchor / segment foundation and 13b E1-T bounded comparison. [13a report](reports/P11-13a-fingering-foundation.md) / [13b comparison](reports/P11-13b-hand-position-time-comparison.md). CURRENT stays default; E2/E3/default adoption await Human Decision. No integration in this stage. READY_FOR_HUMAN_DECISION. Tested / EXE HEAD `2d29ac97`: fresh FULL 3,736 Vitest / 192 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. Raw Windows comparison EXE built. E1-T aggregate improvement has per-case common-tone regressions; adoption remains undecided.
+
+### P11-12 Baseline Audit
+
+[P11-12 fingering ranker baseline audit](reports/P11-12-fingering-ranker-baseline-audit.md): audit complete on `audit/p11-12-fingering-ranker`, tested diagnostic code `7ee3ccd8`. Public synthetic only; production ranker / weights / candidates / UI / schema unchanged. 2,160 progressions; focused 146/146 PASS, added-code lint/typecheck PASS. Diagnostic outputs are local-only. No FULL/EXE or integration in this audit. Stop before implementation; P11-00–11 integration below remains unchanged.
+
 P11-11 implementation verification: tested code HEAD `d7d10838`, fresh FULL 3,717 Vitest / 191 Playwright PASS, raw Windows EXE built. See [P11-11 report](reports/P11-11-generated-bass-audio-fingering.md). Human listening remains; candidate-only/no-merge notes are historical after the authorized integration below.
 
 - Status: completed / P11-00–11 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.

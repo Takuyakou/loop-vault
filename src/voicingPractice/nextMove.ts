@@ -10,6 +10,9 @@ export interface FingerMovement {
   readonly semitones?: number;
   readonly kind: MovementKind;
   readonly estimated: boolean;
+  readonly certainty?: "confirmed" | "partial" | "estimated";
+  readonly fromEstimated?: boolean;
+  readonly toEstimated?: boolean;
 }
 
 function classify(from: number | undefined, to: number | undefined): MovementKind {
@@ -72,10 +75,20 @@ function sameNotes(first: readonly number[], second: readonly number[]): boolean
 export function computeNextMoves(current: ProgressionFingeringHandTargets, next: ProgressionFingeringHandTargets,
   currentFingers: Readonly<Partial<Record<FingeringHand, RankedFingering>>> = {},
   nextFingers: Readonly<Partial<Record<FingeringHand, RankedFingering>>> = {}): readonly FingerMovement[] {
-  return (["left", "right"] as const).flatMap((hand) => {
+  return (["left", "right"] as const).flatMap<FingerMovement>((hand) => {
     const before = currentFingers[hand]; const after = nextFingers[hand];
-    return before && after && sameNotes(before.pitches, current[hand]) && sameNotes(after.pitches, next[hand])
-      ? formalHandMoves(hand, before, after) : estimatedHandMoves(hand, current[hand], next[hand]);
+    const knownBefore = before && sameNotes(before.pitches, current[hand]) ? before : undefined;
+    const knownAfter = after && sameNotes(after.pitches, next[hand]) ? after : undefined;
+    if (knownBefore && knownAfter) return formalHandMoves(hand, knownBefore, knownAfter).map(move => ({ ...move, certainty: "confirmed" as const }));
+    return estimatedHandMoves(hand, current[hand], next[hand]).map(move => {
+      const known = knownBefore ?? knownAfter;
+      const pitch = knownBefore ? move.from : move.to;
+      const index = pitch === undefined ? -1 : known?.pitches.indexOf(pitch) ?? -1;
+      return { ...move, finger: index >= 0 ? known!.fingers[index] : undefined,
+        certainty: known ? "partial" as const : "estimated" as const,
+        fromEstimated: !knownBefore && move.from !== undefined,
+        toEstimated: !knownAfter && move.to !== undefined };
+    });
   });
 }
 

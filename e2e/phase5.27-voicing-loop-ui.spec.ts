@@ -8,8 +8,10 @@ const tauriCsp = (JSON.parse(readFileSync(
   "utf8",
 )) as { app: { security: { csp: string } } }).app.security.csp;
 
-async function applyTauriDocumentCsp(page: import("@playwright/test").Page) {
-  await page.route(/http:\/\/127\.0\.0\.1:4174\/(?:\?.*)?$/, async (route) => {
+async function applyTauriDocumentCsp(page: import("@playwright/test").Page, baseURL: string | undefined) {
+  if (!baseURL) throw new Error("The CSP test requires the configured application origin");
+  const origin = new URL(baseURL).origin;
+  await page.route((url) => url.origin === origin && url.pathname === "/", async (route) => {
     const response = await route.fetch();
     await route.fulfill({
       response,
@@ -28,8 +30,8 @@ async function chooseVoicingLoop(page: Page) {
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 }
 
-test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px", async ({ page }) => {
-  await applyTauriDocumentCsp(page);
+test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px", async ({ page, baseURL }) => {
+  await applyTauriDocumentCsp(page, baseURL);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
   await page.locator('[data-nav="chord-dojo"]').click();

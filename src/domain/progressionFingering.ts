@@ -6,7 +6,13 @@ export type FingeringReasonCode = "guide-triad-root" | "guide-triad-first" | "gu
 export interface FingeringCandidate { readonly fingers: readonly FingerNumber[]; readonly localCost: number; readonly reasons: readonly FingeringReasonCode[] }
 export interface FingeringInput { readonly hand: FingeringHand; readonly midiPitches: readonly number[]; readonly chord?: ProgressionPracticeChord; readonly family?: ProgressionVoicingSelection }
 export type FingeringCandidateResult = { readonly status: "supported"; readonly pitches: readonly number[]; readonly signature: string; readonly candidates: readonly FingeringCandidate[] } | { readonly status: "unavailable"; readonly reason: "invalid-pitches" | "too-many-keys" | "no-keys" };
-export interface ProgressionFingeringEvent extends FingeringInput { readonly id: string }
+export interface ProgressionFingeringEvent extends FingeringInput {
+  readonly id: string;
+  readonly startSeconds?: number;
+  readonly durationSeconds?: number;
+  /** A missing voicing is a barrier; an empty hand in a valid voicing is not. */
+  readonly unresolved?: boolean;
+}
 export interface RankedFingering { readonly id: string; readonly status: "supported"; readonly signature: string; readonly pitches: readonly number[]; readonly fingers: readonly FingerNumber[] }
 export interface UnavailableFingering { readonly id: string; readonly status: "unavailable" }
 
@@ -29,62 +35,88 @@ export function generateFingeringCandidates(input: FingeringInput): FingeringCan
   return { status: "supported", pitches: Object.freeze(pitches), signature: physicalVoicingSignature(input.hand, pitches)!, candidates: Object.freeze(candidates) };
 }
 
-type SupportedCandidates = Extract<FingeringCandidateResult, { status: "supported" }>;
-interface RankingState { readonly cost: number; readonly indexes: readonly number[] }
+export type SupportedCandidates = Extract<FingeringCandidateResult, { status: "supported" }>;
+export interface FingeringAnchor { readonly signature: string; readonly fingers: readonly FingerNumber[] }
+export interface FingeringCostModel {
+  local(event: ProgressionFingeringEvent, group: SupportedCandidates, index: number): number;
+  transition(previous: SupportedCandidates, previousIndex: number, current: SupportedCandidates, currentIndex: number, seconds: number): number;
+}
+export interface FingeringRankingOptions {
+  readonly anchors?: ReadonlyMap<string, FingeringAnchor>;
+  readonly costModel?: FingeringCostModel;
+  readonly loopDurationSeconds?: number;
+  readonly cyclic?: boolean;
+}
+interface RankingState { readonly cost: number; readonly prior: number; readonly indexes: readonly number[] }
 
+/** Unresolved barriers isolate open segments. Empty hands preserve the elapsed onset interval. */
 export function rankCyclicFingerings(
   events: readonly ProgressionFingeringEvent[],
+  options: FingeringRankingOptions = {},
 ): readonly (RankedFingering | UnavailableFingering)[] {
-  if (!events.length) return [];
-
   const generated = events.map(generateFingeringCandidates);
-  if (generated.some((result) => result.status !== "supported")) {
-    return events.map((event, index) => {
-      const result = generated[index]!;
-      return result.status === "supported"
-        ? toRankedFingering(event.id, result, 0)
-        : { id: event.id, status: "unavailable" };
+  const results: (RankedFingering | UnavailableFingering)[] = events.map(event => ({ id: event.id, status: "unavailable" }));
+  const model = options.costModel ?? {
+    local: (_event: ProgressionFingeringEvent, group: SupportedCandidates, index: number) => group.candidates[index]!.localCost,
+    transition: transitionCost,
+  };
+  const barrier = (i: number) => events[i]!.unresolved
+    || (generated[i]!.status === "unavailable" && generated[i]!.reason !== "no-keys");
+  const complete = !events.some((_event, i) => barrier(i));
+  const segments: number[][] = [[]];
+  events.forEach((_event, i) => {
+    if (barrier(i)) { if (segments[segments.length - 1]!.length) segments.push([]); }
+    else if (generated[i]!.status === "supported") segments[segments.length - 1]!.push(i);
+  });
+  for (const indices of segments) {
+    if (!indices.length) continue;
+    const groups = indices.map(i => generated[i] as SupportedCandidates);
+    const choices = groups.map((group, i) => {
+      const anchor = options.anchors?.get(events[indices[i]!]!.id);
+      const match = anchor?.signature === group.signature
+        ? group.candidates.findIndex(candidate => compareArrays(candidate.fingers, anchor.fingers) === 0 && candidate.fingers.length === anchor.fingers.length) : -1;
+      return match >= 0 ? [match] : group.candidates.map((_candidate, index) => index);
     });
-  }
-
-  const groups = generated as SupportedCandidates[];
-  let best: RankingState | undefined;
-
-  for (let firstIndex = 0; firstIndex < groups[0]!.candidates.length; firstIndex += 1) {
-    let states: RankingState[] = [{
-      cost: groups[0]!.candidates[firstIndex]!.localCost,
-      indexes: [firstIndex],
-    }];
-
-    for (let eventIndex = 1; eventIndex < groups.length; eventIndex += 1) {
-      const previous = groups[eventIndex - 1]!;
-      const current = groups[eventIndex]!;
-      states = current.candidates.map((candidate, candidateIndex) => {
-        const options = states.map((state) => ({
-          cost: state.cost
-            + candidate.localCost
-            + transitionCost(previous, state.indexes[eventIndex - 1]!, current, candidateIndex),
-          indexes: [...state.indexes, candidateIndex],
-        }));
-        options.sort(compareStates);
-        return options[0]!;
-      });
+    const cyclic = complete && options.cyclic !== false;
+    const duration = options.loopDurationSeconds ?? Math.max(0, ...events.map(event => (event.startSeconds ?? 0) + (event.durationSeconds ?? 0)));
+    const seconds = (from: number, to: number, wrap: boolean) => {
+      const previous = events[indices[from]!]!;
+      const next = events[indices[to]!]!;
+      const value = (next.startSeconds ?? to) - (previous.startSeconds ?? from) + (wrap ? duration : 0);
+      return value > 0 && Number.isFinite(value) ? value : previous.durationSeconds ?? 1;
+    };
+    const local = (i: number, index: number) => ({
+      cost: model.local(events[indices[i]!]!, groups[i]!, index),
+      prior: preferredFingeringDistance(events[indices[i]!]!, groups[i]!.candidates[index]!.fingers),
+    });
+    let best: RankingState | undefined;
+    for (const first of choices[0]!) {
+      const initial = local(0, first);
+      let states: RankingState[] = [{ ...initial, indexes: [first] }];
+      for (let i = 1; i < groups.length; i++) {
+        states = choices[i]!.map(index => {
+          const eventCost = local(i, index);
+          return states.map(state => ({
+            cost: state.cost + eventCost.cost + model.transition(groups[i - 1]!, state.indexes[i - 1]!, groups[i]!, index, seconds(i - 1, i, false)),
+            prior: state.prior + eventCost.prior,
+            indexes: [...state.indexes, index],
+          })).sort(compareStates)[0]!;
+        });
+      }
+      const candidate = states.map(state => ({ ...state,
+        cost: state.cost + (cyclic ? model.transition(groups[groups.length - 1]!, state.indexes[state.indexes.length - 1]!, groups[0]!, first, seconds(groups.length - 1, 0, true)) : 0),
+      })).sort(compareStates)[0]!;
+      if (!best || compareStates(candidate, best) < 0) best = candidate;
     }
-
-    const last = groups[groups.length - 1]!;
-    const completed = states.map((state) => ({
-      cost: state.cost
-        + transitionCost(last, state.indexes[state.indexes.length - 1]!, groups[0]!, firstIndex),
-      indexes: state.indexes,
-    }));
-    completed.sort(compareStates);
-    const candidate = completed[0]!;
-    if (!best || compareStates(candidate, best) < 0) best = candidate;
+    indices.forEach((eventIndex, i) => { results[eventIndex] = toRankedFingering(events[eventIndex]!.id, groups[i]!, best!.indexes[i]!); });
   }
+  return results;
+}
 
-  return events.map((event, index) =>
-    toRankedFingering(event.id, groups[index]!, best!.indexes[index]!),
-  );
+/** Uses the existing preferred rule without changing candidate generation or its local score. */
+export function preferredFingeringDistance(input: FingeringInput, fingers: readonly FingerNumber[]): number {
+  const pitches = normalizePitches(input.midiPitches);
+  return pitches ? priorCost(fingers, preferredFingers(input, pitches).fingers) / 10 : 0;
 }
 
 function toRankedFingering(
@@ -131,7 +163,7 @@ function transitionCost(
 }
 
 function compareStates(a: RankingState, b: RankingState): number {
-  return a.cost - b.cost || compareArrays(a.indexes, b.indexes);
+  return a.cost - b.cost || a.prior - b.prior || compareArrays(a.indexes, b.indexes);
 }
 
 function normalizePitches(source: readonly number[]): number[] | undefined {
