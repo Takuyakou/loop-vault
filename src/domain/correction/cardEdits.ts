@@ -9,6 +9,7 @@ import {
   type CorrectionCard,
   type CorrectionModel,
   type CorrectionNote,
+  type NameSource,
 } from "./correctionModel";
 import type { EditKind, EditResult } from "./edits";
 
@@ -23,8 +24,9 @@ export const MIN_CARD_BEATS = 0.25;
 
 const unchanged = (model: CorrectionModel, message?: string): EditResult => ({ model, changed: false, label: "", ...(message ? { message } : {}) });
 
-function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, kind: EditKind, seq = model.seq): EditResult {
-  return { model: refreshModel({ ...model, cards, notes, seq }, new Set(touched), false), changed: true, label, kind };
+/** `renames`: the cards' notes or spans changed, so names follow the notes (P10.1 §11.2). */
+function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, kind: EditKind, seq = model.seq, renames = false): EditResult {
+  return { model: refreshModel({ ...model, cards, notes, seq }, new Set(touched), renames), changed: true, label, kind };
 }
 
 /** 「5.3」, with quarter beats as 「5.3¼」. */
@@ -104,12 +106,13 @@ function manualOnto(notes: readonly CorrectionNote[], card: CorrectionCard, next
 function mergedCard(group: readonly CorrectionCard[]): CorrectionCard {
   const first = group[0]!;
   const last = group[group.length - 1]!;
-  const named = group.find((card) => card.nameSource === "user") ?? first;
+  // A typed name survives the merge (P10.1 §11.2); otherwise the notes decide (refreshModel).
+  const typed = group.find((card) => card.nameSource === "typed");
   return {
     ...first,
     duration: last.start + last.duration - first.start,
-    name: named.name,
-    nameSource: named.nameSource,
+    name: (typed ?? first).name,
+    nameSource: typed ? "typed" : "auto",
     attacks: group.reduce((sum, card) => sum + card.attacks, 0),
     reviewed: group.every((card) => card.reviewed),
     edited: group.some((card) => card.edited),
@@ -136,7 +139,7 @@ function mergeGroups(model: CorrectionModel, groups: readonly (readonly string[]
     ...recut(model, replaced, merged),
     ...merged.flatMap((card) => manualOnto(firstOf.get(card.id)!.flatMap((id) => manual.get(id) ?? []), card, () => "")),
   ];
-  return done(model, cards, notes, merged.map((card) => card.id), label, kind);
+  return done(model, cards, notes, merged.map((card) => card.id), label, kind, model.seq, true);
 }
 
 /** M / 「つなぐ」: this card and the next become one; attacks add up (×n). */
@@ -180,7 +183,7 @@ export function splitCard(model: CorrectionModel, cardId: string): EditResult {
     ...manualOnto(manual, second, () => `manual-${(seq += 1)}`, false),
   ];
   const cards = [...model.cards.slice(0, index), first, second, ...model.cards.slice(index + 1)];
-  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, "split", seq);
+  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, "split", seq, true);
 }
 
 /**
@@ -206,15 +209,22 @@ export function moveBoundary(model: CorrectionModel, leftCardId: string, beat: n
     ...manualOnto(manual.get(right.id) ?? [], nextRight, () => ""),
   ];
   const cards = model.cards.map((card) => card.id === left.id ? nextLeft : card.id === right.id ? nextRight : card);
-  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`, "boundary");
+  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`, "boundary", model.seq, true);
 }
 
-/** Candidates, 1–4, F2: the name only; the notes stay. A person's name is never replaced by note edits. */
-export function chooseName(model: CorrectionModel, cardIds: string | readonly string[], name: ChordSymbol, source: "user" | "auto" = "user"): EditResult {
+/**
+ * Candidates and 1–4 (`chosen`), F2 typing (`typed`), back to the analysis (`auto`): the name
+ * only; the notes stay. P10.1 §11.2: a chosen name follows later note edits, a typed one stays.
+ */
+export function chooseName(model: CorrectionModel, cardIds: string | readonly string[], name: ChordSymbol, source: NameSource = "chosen"): EditResult {
   const ids = new Set(typeof cardIds === "string" ? [cardIds] : cardIds);
   const hit = model.cards.filter((card) => ids.has(card.id) && (card.name.label !== name.label || card.nameSource !== source));
   if (!hit.length) return unchanged(model);
-  const cards = model.cards.map((card) => hit.includes(card) ? { ...card, name, nameSource: source } : card);
+  const cards = model.cards.map((card) => {
+    if (!hit.includes(card)) return card;
+    const { nameUnreadable: _unreadable, suggestedName: _suggested, ...rest } = card;
+    return { ...rest, name, nameSource: source };
+  });
   const label = hit.length === 1 ? `名前を ${name.label} に` : `${hit.length}か所の名前を ${name.label} に`;
   return done(model, cards, model.notes, hit.map((card) => card.id), label, "name");
 }

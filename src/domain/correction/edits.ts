@@ -16,7 +16,7 @@ import {
  */
 
 /** What kind of operation an edit was, for the local metrics (spec v2.5 §13). */
-export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed";
+export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed" | "tempo";
 
 export interface EditResult {
   model: CorrectionModel;
@@ -158,4 +158,28 @@ export function cardNoteIds(model: CorrectionModel, cardId: string): string[] {
 /** Chord-register octave for 「＋ 音を足す」: G3 (55) to F#4 (66). */
 export function chordRegisterPitch(pitchClass: number): number {
   return 55 + ((pitchClass - 7 + 12) % 12);
+}
+
+export const TEMPO_MIN = 40;
+export const TEMPO_MAX = 240;
+/** What the player uses when a song has no tempo (previewChordTimeline's default). */
+export const PLAYER_DEFAULT_BPM = 96;
+
+/** The tempo the workspace plays and saves at (P10.1 §12). */
+export function effectiveTempo(model: Pick<CorrectionModel, "tempo" | "bpm">): number {
+  return model.tempo ?? (model.bpm ? Math.round(model.bpm) : PLAYER_DEFAULT_BPM);
+}
+
+/** P10.1 §12.3: a whole-number tempo, 40–240, as one undoable edit (「テンポを 120 → 100」). */
+export function setTempo(model: CorrectionModel, bpm: number): EditResult {
+  const before = effectiveTempo(model);
+  if (!Number.isInteger(bpm) || bpm < TEMPO_MIN || bpm > TEMPO_MAX || bpm === before) return unchanged(model);
+  const sourceBpm = model.bpm ? Math.round(model.bpm) : undefined;
+  const { tempo: _old, ...rest } = model;
+  return {
+    model: bpm === sourceBpm ? rest : { ...rest, tempo: bpm },
+    changed: true,
+    label: `テンポを ${before} → ${bpm}`,
+    kind: "tempo",
+  };
 }

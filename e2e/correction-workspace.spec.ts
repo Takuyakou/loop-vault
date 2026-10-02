@@ -4,6 +4,11 @@ import { dropMidi, openApp, openCapture } from "./helpers/app";
 
 /** P10.0-02..06: the correction workspace, the default screen after a MIDI analysis since P10.0-06. */
 
+/** P10.1 §2: the workspace opens with no card selected. */
+async function selectCard(page: Page, index: number) {
+  await page.getByTestId("correction-workspace").getByTestId("correction-card").nth(index).click();
+}
+
 async function importScenario(page: Page, id: string) {
   await openApp(page);
   await openCapture(page);
@@ -27,9 +32,9 @@ test("P10.0-02 shows the analysis cards and moves between them", async ({ page }
 
   // ] / [ walk the review cards; ← / → walk all cards; the inspector follows.
   const name = workspace.getByTestId("correction-inspector-name");
-  const selectedName = () => workspace.locator('[data-testid="correction-card"][aria-pressed="true"] .lv-cw-card-name').textContent();
+  const selectedName = () => workspace.locator('[data-testid="correction-card"][aria-pressed="true"] .lv-cw-card-name').getAttribute("data-full-name");
+  await selectCard(page, 0);
   await workspace.getByTestId("correction-review-count").focus();
-  await page.keyboard.press("Escape");
   const first = await name.textContent();
   expect(await selectedName()).toBe(first);
   await page.locator("body").press("ArrowRight");
@@ -40,6 +45,7 @@ test("P10.0-02 shows the analysis cards and moves between them", async ({ page }
   const position = workspace.getByTestId("correction-review-position");
   const total = Number((await position.textContent())!.split("/")[1]!.trim());
   if (total > 1) {
+    await workspace.getByTestId("correction-review-count").click(); // start on the first review card
     const before = await position.textContent();
     await page.locator("body").press("]");
     await expect(position).not.toHaveText(before ?? "");
@@ -107,6 +113,8 @@ test("P10.0-03 right-click excludes a note and Ctrl+Z brings it back", async ({ 
 
 test("P10.0-03 ② adds a note with one click, and a drag moves the pitch in one step", async ({ page }) => {
   await importScenario(page, "plain-8");
+  // P10.1: nothing is selected when the workspace opens; pick the first card.
+  await selectCard(page, 0);
   const workspace = page.getByTestId("correction-workspace");
   const history = workspace.getByTestId("correction-history");
 
@@ -160,6 +168,8 @@ test("P10.0-03 the melody suggestion selects every melody-voice note and Delete 
 
 test("P10.0-03 「＋ 音を足す」 and keyboard-only exclude and restore", async ({ page }) => {
   await importScenario(page, "plain-8");
+  // P10.1: nothing is selected when the workspace opens; pick the first card.
+  await selectCard(page, 0);
   const workspace = page.getByTestId("correction-workspace");
   const list = workspace.getByTestId("correction-note-list");
   const history = workspace.getByTestId("correction-history");
@@ -193,6 +203,8 @@ const cards = (page: Page) => page.getByTestId("correction-workspace").getByTest
 
 test("P10.0-04 M merges with ×2 and Ctrl+Z undoes it; S splits; Shift+M asks first (Esc / Enter)", async ({ page }) => {
   await importScenario(page, "plain-8");
+  // P10.1: nothing is selected when the workspace opens; pick the first card.
+  await selectCard(page, 0);
   const workspace = page.getByTestId("correction-workspace");
   await expect(cards(page)).toHaveCount(8);
   await workspace.getByTestId("correction-review-count").focus();
@@ -247,8 +259,10 @@ test("P10.0-04 boundary handle moves by a beat, and by ¼ beat with Alt", async 
   await expect(page.getByTestId("correction-history")).toContainText("操作 2");
 });
 
-test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name stays", async ({ page }) => {
+test("P10.0-04 names: 1–4 picks a candidate, F2 types one", async ({ page }) => {
   await importScenario(page, "plain-8");
+  // P10.1: nothing is selected when the workspace opens; pick the first card.
+  await selectCard(page, 0);
   const workspace = page.getByTestId("correction-workspace");
   const inspector = workspace.getByTestId("correction-inspector");
   const candidates = workspace.getByTestId("correction-name-candidates").getByRole("button");
@@ -256,7 +270,7 @@ test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name
   await workspace.getByTestId("correction-review-count").focus();
   await page.keyboard.press("2");
   await expect(workspace.getByTestId("correction-inspector-name")).toHaveText(second);
-  await expect(inspector).toContainText("あなたが決めた名前");
+  await expect(inspector).toContainText("候補から選んだ名前（音を直すと自動に戻る）"); // P10.1 §11: chosen
   // Bar 5 plays the same notes under the old name: offer the same fix, confirm, one step.
   await workspace.getByTestId("correction-same-fix").click();
   await page.getByRole("dialog", { name: "同じ直しを他にも反映" }).getByRole("button", { name: /反映する/ }).click();
@@ -280,14 +294,15 @@ test("P10.0-04 Y moves to the next review card; the run suggestion merges after 
   const count = workspace.getByTestId("correction-review-count");
   const before = Number(await count.locator("b").textContent());
   const selected = () => workspace.locator('[data-testid="correction-card"][aria-pressed="true"]').getAttribute("data-card-id");
+  await count.click(); // P10.1: nothing is selected on open; the count walks to the first review card
   const firstId = await selected();
-  await count.focus();
   await page.keyboard.press("y");
   await expect(count.locator("b")).toHaveText(String(before - 1));
   expect(await selected()).not.toBe(firstId);
 
   // plain-8: split, then touch a note of the second half → 「同じ音が続く所が 1 か所」.
   await importScenario(page, "plain-8");
+  await selectCard(page, 0);
   await page.getByTestId("correction-review-count").focus();
   await page.keyboard.press("s");
   await page.keyboard.press("ArrowRight");
@@ -309,7 +324,7 @@ async function timeIt(page: Page, action: "scroll" | "right" | "zoom" | "end"): 
   return page.evaluate(async (kind) => {
     const scroller = document.querySelector<HTMLElement>('[data-testid="correction-timeline-scroll"]')!;
     const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const zoomButtons = [...document.querySelectorAll<HTMLButtonElement>(".lv-cw-tools .lv-cw-btn")].filter((button) => ["16小節", "4小節"].includes(button.textContent ?? ""));
+    const zoomButtons = [...document.querySelectorAll<HTMLButtonElement>(".lv-cw-bar .lv-cw-btn")].filter((button) => ["16小節", "4小節"].includes(button.textContent ?? ""));
     const runs: number[] = [];
     for (let run = 0; run < 5; run += 1) {
       const t0 = performance.now();
@@ -410,6 +425,7 @@ test("P10.0-05 at 768x640 the roll shows 160px or more and the closed panel is o
   expect(toggleBox.y).toBeGreaterThanOrEqual(rollBox.y + rollBox.height);
   expect(toggleBox.height).toBeLessThan(60);
   // Opened: a sheet from the bottom, at most 60% of the window.
+  await selectCard(page, 0);
   await toggle.click();
   const panel = workspace.locator(".lv-cw-insp");
   await expect(workspace.getByTestId("correction-inspector")).toBeVisible();
@@ -454,26 +470,26 @@ test("P10.0-06 root letters from 14px, segment names stay in view, one row per p
 
 // ---- P10.0-07 fixes from the EXE check -------------------------------------------------
 
-test("P10.0-07 「押して鳴らす」: off by default, a plain click plays the card, Shift+click does not, and it is remembered", async ({ page }) => {
+test("P10.1 「押して鳴らす」: on by default, a plain click plays the card, Shift+click does not, and off is remembered", async ({ page }) => {
   await importScenario(page, "plain-8");
   const workspace = page.getByTestId("correction-workspace");
   const cards = workspace.getByTestId("correction-card");
   const playingB = workspace.getByTestId("correction-play-card");
   const toggle = workspace.getByTestId("correction-click-audition");
-  await expect(toggle).not.toBeChecked();
-  await cards.nth(1).click();
-  await expect(playingB).toHaveAttribute("aria-pressed", "false");
-
-  await toggle.check();
+  await expect(toggle).toBeChecked();
   await cards.nth(2).click();
   await expect(playingB).toHaveAttribute("aria-pressed", "true");
   await cards.nth(4).click({ modifiers: ["Shift"] });
   await expect(cards.nth(4)).toHaveAttribute("aria-pressed", "true");
   await expect(playingB).toHaveAttribute("aria-pressed", "false");
 
+  // Off is remembered, and then a click only selects.
+  await toggle.uncheck();
   await page.reload();
   await importScenario(page, "plain-8");
-  await expect(page.getByTestId("correction-click-audition")).toBeChecked();
+  await expect(page.getByTestId("correction-click-audition")).not.toBeChecked();
+  await page.getByTestId("correction-card").nth(1).click();
+  await expect(page.getByTestId("correction-play-card")).toHaveAttribute("aria-pressed", "false");
 });
 
 test("P10.0-07 the playhead moves every frame while the song plays", async ({ page }) => {
@@ -498,6 +514,8 @@ test("P10.0-07 the playhead moves every frame while the song plays", async ({ pa
 
 test("P10.0-07 元に戻す in the right panel, and no 「印はありません」 while a card has a warning", async ({ page }) => {
   await importScenario(page, "plain-8");
+  // P10.1: nothing is selected when the workspace opens; pick the first card.
+  await selectCard(page, 0);
   const workspace = page.getByTestId("correction-workspace");
   const undoButton = workspace.getByTestId("correction-inspector-undo");
   await expect(undoButton).toBeDisabled();
@@ -509,4 +527,264 @@ test("P10.0-07 元に戻す in the right panel, and no 「印はありません�
   const before = await workspace.getByTestId("correction-history").textContent();
   await undoButton.click();
   await expect(workspace.getByTestId("correction-history")).not.toHaveText(before ?? "");
+});
+
+// ---- P10.1 layout and playback --------------------------------------------------------
+
+test("P10.1 the control bar is on top, then 曲全体・小節・区切り・コード・ピアノロール; no bottom play row", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const top = async (locator: ReturnType<Page["locator"]>) => (await locator.boundingBox())!.y;
+  const order = [
+    await top(workspace.getByTestId("correction-control-bar")),
+    await top(workspace.getByTestId("correction-overview")),
+    await top(workspace.locator(".lv-cw-ruler")),
+    await top(workspace.locator(".lv-cw-segments")),
+    await top(workspace.locator(".lv-cw-cards")),
+    await top(workspace.getByTestId("correction-piano-roll")),
+  ];
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  await expect(workspace.locator(".lv-cw-transport, .lv-cw-tools")).toHaveCount(0);
+  // 再生 and 表示 always share the first line of the bar.
+  const playY = (await workspace.getByRole("group", { name: "再生" }).boundingBox())!.y;
+  const viewY = (await workspace.getByRole("group", { name: "表示" }).boundingBox())!.y;
+  expect(Math.abs(playY - viewY)).toBeLessThan(4);
+  // 8 bars sits between 16 and 4.
+  const zooms = await workspace.getByRole("group", { name: "表示" }).getByRole("button").allTextContents();
+  expect(zooms).toEqual(["全体", "16小節", "8小節", "4小節"]);
+  await workspace.getByRole("button", { name: "8小節", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "8小節", exact: true })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("P10.1 plays from the selected card or from the start; following turns on with every play", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const play = workspace.getByTestId("correction-play-song");
+  const position = workspace.getByTestId("correction-position");
+  const follow = workspace.getByTestId("correction-follow");
+
+  // Nothing selected on open: from the start.
+  await expect(workspace.getByTestId("correction-inspector-empty")).toContainText("カードを押すと、ここに音と名前が出ます。");
+  await expect(position).toHaveText("1.1 から ／ 8小節");
+  await expect(play).toHaveAttribute("aria-label", "最初から再生（Space）");
+  await play.click();
+  const tag = workspace.locator(".lv-cw-playline-tag");
+  await expect(tag).toHaveText(/^1\.\d/);
+  await expect(position).toHaveText(/^1\.\d ／ 8小節$/);
+  await play.click();
+
+  // A card selected: from that card; following was turned off by hand and comes back on.
+  await workspace.getByTestId("correction-card").nth(3).click();
+  await expect(position).toHaveText("4.1 から ／ 8小節");
+  await expect(play).toHaveAttribute("aria-label", "4.1 から再生（Space）");
+  await follow.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await play.click();
+  await expect(follow).toHaveAttribute("aria-pressed", "true");
+  await expect(tag).toHaveText(/^4\.\d/);
+  await play.click();
+
+  // ① an empty click (no notes selected) clears the card: back to the start.
+  const roll = workspace.getByTestId("correction-piano-roll");
+  const box = (await roll.boundingBox())!;
+  const empty = await page.evaluate(({ x, top, bottom }) => {
+    for (let y = top + 3; y < bottom - 3; y += 6) {
+      if (!document.elementsFromPoint(x, y).some((element) => element.closest("[data-note-id]"))) return y;
+    }
+    return undefined;
+  }, { x: box.x + box.width - 8, top: box.y, bottom: Math.min(box.y + box.height, 900) });
+  await page.mouse.click(box.x + box.width - 8, empty!);
+  await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"]')).toHaveCount(0);
+  await expect(position).toHaveText("1.1 から ／ 8小節");
+});
+
+// ---- P10.1 keys and selection ----------------------------------------------------------
+
+test("P10.1 Space plays and stops after any button or checkbox, without pressing it; text keeps its spaces", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const play = workspace.getByTestId("correction-play-song");
+  const zoom16 = workspace.getByRole("button", { name: "16小節", exact: true });
+  await workspace.getByRole("button", { name: "全体", exact: true }).click();
+  await zoom16.click();
+  await workspace.getByRole("button", { name: "全体", exact: true }).click(); // focus stays on 全体
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await expect(zoom16).toHaveAttribute("aria-pressed", "false"); // the focused button was not pressed again
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+
+  const box = workspace.getByTestId("correction-click-audition");
+  await box.click(); // off
+  await expect(box).not.toBeChecked();
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await expect(box).not.toBeChecked(); // not ticked by the Space
+  await page.keyboard.press("Space");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+
+  // In a text field Space is a space.
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  const title = page.locator('form[role="dialog"] input[name="progression-title"]');
+  await title.fill("a");
+  await title.press("Space");
+  await expect(title).toHaveValue("a ");
+  await expect(play).toHaveAttribute("aria-pressed", "false");
+});
+
+test("P10.1 no focus ring after a mouse press and Esc; Tab still shows it", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  // A ring is a focus-visible element that draws an outline (the workspace itself takes focus without one).
+  const ring = () => page.evaluate(() => {
+    const active = document.activeElement;
+    if (!active || !active.matches(":focus-visible")) return false;
+    const style = getComputedStyle(active);
+    return style.outlineStyle !== "none" && style.outlineWidth !== "0px";
+  });
+  await workspace.getByTestId("correction-card").first().click();
+  await page.keyboard.press("n");
+  await workspace.getByTestId("correction-select-above-line").click();
+  await page.keyboard.press("Escape");
+  expect(await ring()).toBe(false);
+  await workspace.getByRole("button", { name: "16小節", exact: true }).click();
+  await page.keyboard.press("Escape");
+  expect(await ring()).toBe(false);
+  await page.keyboard.press("Tab");
+  expect(await ring()).toBe(true);
+});
+
+test("P10.1 selected notes have a bar to act on or stop; the line button turns into 選択をやめる", async ({ page }) => {
+  await importScenario(page, "melody-track-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await workspace.getByTestId("correction-card").first().click();
+  await page.keyboard.press("n");
+  const lineButton = workspace.getByTestId("correction-select-above-line");
+  await expect(lineButton).toContainText("線より上の音を選ぶ");
+  await lineButton.click();
+  const bar = workspace.getByTestId("correction-selection-bar");
+  await expect(bar).toContainText(/\d+音を選択中/);
+  await expect(bar.getByRole("button", { name: /外す/ })).toBeVisible();
+  await expect(lineButton).toHaveText("選択をやめる（Esc）");
+  await bar.getByTestId("correction-selection-clear").click();
+  await expect(bar).toHaveCount(0);
+  await expect(lineButton).toContainText("線より上の音を選ぶ");
+  // The line button stops its own selection too.
+  await lineButton.click();
+  await lineButton.click();
+  await expect(bar).toHaveCount(0);
+});
+
+test("P10.1 the save range panel is always there; 範囲を外す is off without a range; recommended ranges fold and stay folded", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const form = workspace.getByTestId("correction-save-form");
+  const clear = form.getByRole("button", { name: "範囲を外す" });
+  await expect(form).toContainText("まだ選んでいません");
+  await expect(clear).toBeDisabled();
+  await expect(clear).toHaveAttribute("title", "範囲を選んでいません");
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await expect(clear).toBeEnabled();
+  await expect(workspace.getByTestId("correction-recommended")).toBeVisible(); // still offered with a range
+  await clear.click();
+  await expect(clear).toBeDisabled();
+
+  const toggle = workspace.getByTestId("correction-recommended-toggle");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(workspace.getByTestId("correction-recommended")).toHaveCount(0);
+  await page.reload();
+  await importScenario(page, "plain-8");
+  await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
+});
+
+// ---- P10.1 names and tempo ---------------------------------------------------------------
+
+test("P10.1 names follow the notes: automatic changes with a notice, a typed name stays with a suggestion", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await selectCard(page, 0); // C
+  const name = workspace.getByTestId("correction-inspector-name");
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("自動の名前（音を直すと変わる）");
+  await workspace.getByTestId("correction-add-note").click();
+  await workspace.getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(10).click(); // B♭
+  await expect(name).toHaveText(/^C7/);
+  await expect(workspace.getByTestId("correction-notice")).toContainText(/名前を C7.* にしました（音から）/);
+  await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"] .lv-cw-card-name')).toHaveAttribute("data-full-name", /^C7/);
+
+  // Typed with F2: stays after a note edit; the notes' reading is offered.
+  await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("F2");
+  const editor = page.locator("[data-quick-chord-editor]");
+  await editor.press("ArrowRight");
+  await editor.press("Enter");
+  const typed = (await name.textContent())!;
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("手で打った名前");
+  await workspace.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
+  await expect(name).toHaveText(typed);
+  const suggestion = workspace.getByTestId("correction-name-suggestion");
+  await expect(suggestion).toContainText("音からの判別：");
+  await suggestion.getByRole("button", { name: "この名前にする" }).click();
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("自動の名前（音を直すと変わる）");
+});
+
+test("P10.1 BPM sets the speed of the sound and the playhead together, can be undone, and is saved", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const tempo = workspace.getByTestId("correction-tempo");
+  await expect(tempo).toHaveValue("120");
+  await workspace.getByRole("button", { name: "4小節", exact: true }).click();
+
+  /** Beats the playhead moves in about 600 ms. */
+  const beatsPerSlice = async () => {
+    await workspace.getByTestId("correction-play-song").click();
+    const line = workspace.getByTestId("correction-playhead");
+    await expect(line).toBeAttached();
+    const moved = await line.evaluate((element) => new Promise<number>((resolve) => {
+      const x = () => new DOMMatrixReadOnly(getComputedStyle(element).transform).m41;
+      const px = Number.parseFloat(getComputedStyle(element.parentElement!).getPropertyValue("--lv-cw-beat"));
+      requestAnimationFrame(() => {
+        const start = x();
+        const t0 = performance.now();
+        setTimeout(() => resolve(((x() - start) / px) / ((performance.now() - t0) / 600)), 600);
+      });
+    }));
+    await workspace.getByTestId("correction-play-song").click();
+    return moved;
+  };
+  const at120 = await beatsPerSlice();
+  await tempo.fill("60");
+  await tempo.press("Enter");
+  await expect(tempo).toHaveValue("60");
+  await expect(workspace.getByTestId("capture-analysis-preset-summary")).toContainText("60BPM（MIDI 120）");
+  await expect(workspace.getByTestId("correction-history")).toContainText("テンポを 120 → 60");
+  const at60 = await beatsPerSlice();
+  expect(at120 / at60).toBeGreaterThan(1.6);
+  expect(at120 / at60).toBeLessThan(2.5);
+
+  // Out of range goes back; ↑ adds one; Ctrl+Z undoes.
+  await tempo.fill("999");
+  await tempo.press("Enter");
+  await expect(tempo).toHaveValue("60");
+  await tempo.focus();
+  await tempo.press("ArrowUp");
+  await expect(tempo).toHaveValue("61");
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 2・最後：テンポを 60 → 61");
+  await tempo.blur(); // in the field Ctrl+Z is the field's own text undo
+  await page.keyboard.press("Control+z");
+  await expect(tempo).toHaveValue("60");
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 1・最後：テンポを 120 → 60");
+
+  // Saved with the progression.
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+  await form.locator('input[name="progression-title"]').fill("テンポ 60");
+  await form.getByRole("button", { name: /保存/, exact: true }).click();
+  await expect(form).toBeHidden();
+  await page.locator('[data-nav="vault"]').click();
+  await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
+  await expect(page.locator("[data-progression-detail-view]")).toContainText(/BPM\s*60/);
 });

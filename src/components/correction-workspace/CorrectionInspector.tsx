@@ -19,6 +19,8 @@ export interface CorrectionInspectorProps {
   shortSameCount: (noteId: string) => number;
   onEditNotes: () => void;
   onChooseName: (name: ChordSymbol) => void;
+  /** P10.1 §11.2: take what the notes read as (a typed name's suggestion). */
+  onUseSuggestedName: (name: ChordSymbol) => void;
   onTypeName: () => void;
   onReviewed: () => void;
   onMergePrevious?: () => void;
@@ -49,9 +51,16 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
         <p className="lv-cw-muted">
           {card.bar}小節{card.beat}拍から・{formatBeats(card.duration)}拍{card.attacks > 1 ? `・打ち直し ×${card.attacks}` : ""}
         </p>
-        <span className="lv-cw-name-tag" data-user={card.nameSource === "user" || undefined}>
-          {card.nameSource === "user" ? "あなたが決めた名前" : "自動の名前（音を変えると候補から更新）"}
+        <span className="lv-cw-name-tag" data-user={card.nameSource !== "auto" || undefined} data-testid="correction-name-tag">
+          {card.nameSource === "typed" ? "手で打った名前" : card.nameSource === "chosen" ? "候補から選んだ名前（音を直すと自動に戻る）" : "自動の名前（音を直すと変わる）"}
         </span>
+        {card.nameUnreadable ? <p className="lv-cw-name-note" data-testid="correction-name-unreadable">音から名前を決められません（前の名前のまま）</p> : null}
+        {card.suggestedName ? (
+          <p className="lv-cw-name-note" data-testid="correction-name-suggestion">
+            音からの判別：<b>{card.suggestedName.label}</b>
+            <button type="button" className="lv-cw-btn" onClick={() => props.onUseSuggestedName(card.suggestedName!)}>この名前にする</button>
+          </p>
+        ) : null}
       </div>
 
       {card.noteWarning ? <div className="lv-cw-reason" role="status"><b>{card.noteWarning}</b></div> : null}

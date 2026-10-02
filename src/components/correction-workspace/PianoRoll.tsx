@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import type { CorrectionCard, CorrectionModel, CorrectionNote } from "../../domain/correction/correctionModel";
 import { noteLabel } from "../../domain/correction/correctionModel";
 import { aboveLineIds, deleteNotes, movePitch, restoreNotes, type EditResult } from "../../domain/correction/edits";
@@ -23,9 +23,12 @@ export interface PianoRollProps {
   selectedNoteIds: ReadonlySet<string>;
   warnNoteIds: ReadonlySet<string>;
   melodyLine?: number;
-  /** The song is playing: the playhead line is drawn and moved by the workspace every frame. */
-  playing: boolean;
-  playheadRef: RefObject<HTMLSpanElement>;
+  /** ① a click on empty space with no notes selected also clears the card selection (P10.1 §2). */
+  onClearCard?: () => void;
+  /** P10.1 §7: while notes are selected, a bar at the left edge of the view to act on them or stop. */
+  selectionBar?: ReactNode;
+  /** The view's scroll position in px, to keep the bar at the left edge. */
+  leftEdge?: number;
   onPreview: (model: CorrectionModel | undefined) => void;
   onCommit: (result: EditResult) => void;
   onSelectNotes: (ids: string[], how: "replace" | "add" | "toggle") => void;
@@ -157,7 +160,10 @@ export function PianoRoll(props: PianoRollProps) {
       }
     } else if (current.kind === "marquee") {
       if (!current.moved) {
-        if (!current.add) props.onSelectNotes([], "replace");
+        if (!current.add) {
+          if (props.selectedNoteIds.size === 0) props.onClearCard?.();
+          props.onSelectNotes([], "replace");
+        }
         return;
       }
       const from = Math.min(current.from.beat, current.to.beat);
@@ -180,6 +186,8 @@ export function PianoRoll(props: PianoRollProps) {
 
   const visible = shown.notes.filter((note) => overlaps(note.start, note.duration, range));
   const lineIds = props.melodyLine !== undefined ? aboveLineIds(props.present, props.melodyLine) : [];
+  // The line's own selection is on: its button stops it (P10.1 §7).
+  const lineSelected = lineIds.length > 0 && props.selectedNoteIds.size === lineIds.length && lineIds.every((id) => props.selectedNoteIds.has(id));
   return (
     <div
       ref={rollRef}
@@ -222,14 +230,24 @@ export function PianoRoll(props: PianoRollProps) {
       })}
       {mode === "edit" && selectedCard && props.melodyLine !== undefined ? (
         <span className="lv-cw-mel-line" data-melody-line style={{ left: selectedCard.start * pxPerBeat, width: selectedCard.duration * pxPerBeat, top: (high - props.melodyLine) * ROW_PX }}>
-          <button type="button" className="lv-cw-mel-button" data-roll-control onClick={() => props.onSelectNotes(lineIds, "replace")} data-testid="correction-select-above-line">
-            線より上の音を選ぶ（{lineIds.length}）
-          </button>
+          {lineSelected ? (
+            <button type="button" className="lv-cw-mel-button" data-roll-control onClick={() => props.onSelectNotes([], "replace")} data-testid="correction-select-above-line">
+              選択をやめる（Esc）
+            </button>
+          ) : (
+            <button type="button" className="lv-cw-mel-button" data-roll-control onClick={() => props.onSelectNotes(lineIds, "replace")} data-testid="correction-select-above-line">
+              線より上の音を選ぶ（{lineIds.length}）
+            </button>
+          )}
         </span>
+      ) : null}
+      {props.selectionBar ? (
+        <div className="lv-cw-selbar" data-roll-control role="group" aria-label="選んだ音" data-testid="correction-selection-bar" style={{ left: (props.leftEdge ?? 0) + 8 }}>
+          {props.selectionBar}
+        </div>
       ) : null}
       {marquee ? <span className="lv-cw-marquee" style={marquee} /> : null}
       {tip ? <span className="lv-cw-pitch-tip" style={{ left: tip.x, top: tip.y }}>{tip.text}</span> : null}
-      {props.playing ? <span ref={props.playheadRef} className="lv-cw-playhead" data-testid="correction-playhead" /> : null}
     </div>
   );
 }

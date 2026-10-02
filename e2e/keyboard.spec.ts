@@ -88,9 +88,11 @@ test("Voice選択、プリセット、Solo、解析、保存する範囲の選�
   await recommended.focus();
   await page.keyboard.press("Enter");
   await expect(workspace.getByTestId("correction-save-form")).toBeVisible();
+  // P10.1: nothing is selected on open; → selects the first card, → again the next one.
   const selected = workspace.locator('[data-testid="correction-card"][aria-pressed="true"]');
-  const before = await selected.getAttribute("data-card-id");
   await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("ArrowRight");
+  const before = await selected.getAttribute("data-card-id");
   await page.keyboard.press("ArrowRight");
   await expect(selected).not.toHaveAttribute("data-card-id", before ?? "");
 });

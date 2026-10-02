@@ -117,19 +117,30 @@
   .lv-cw-ov-card { position: absolute; bottom: 5px; height: 6px; border-radius: 1px; background: rgb(66 216 198 / 45%); box-shadow: inset -1px 0 0 var(--lv-bg-subtle); }
   .lv-cw-ov-mark { position: absolute; top: 15px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--lv-warning); }
   .lv-cw-ov-view { position: absolute; top: 1px; bottom: 1px; border: 2px solid var(--lv-accent); border-radius: 4px; background: rgb(66 216 198 / 8%); pointer-events: none; }
-  .lv-cw-ov-ph, .lv-cw-playhead { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; will-change: transform; }
+  .lv-cw-ov-ph { position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: var(--lv-text); opacity: 0.6; pointer-events: none; will-change: transform; }
+  /* P10.1 §3.2: one line from the bar row to the bottom of the piano roll, with the position on top. */
+  .lv-cw-playline { position: absolute; top: 0; bottom: 0; left: 0; z-index: 5; width: 1px; background: var(--lv-text); opacity: 0.75; pointer-events: none; will-change: transform; }
+  .lv-cw-playline-tag { position: absolute; top: 3px; left: 3px; padding: 0 4px; border-radius: 3px; background: var(--lv-surface); color: var(--lv-text); font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; line-height: 16px; white-space: nowrap; }
   .lv-cw-check { display: inline-flex; align-items: center; gap: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
 
-  .lv-cw-tools {
+  /* P10.1 §1: one control bar on top; groups never break inside, they wrap whole. */
+  .lv-cw-bar {
+    position: sticky;
+    top: 0;
+    z-index: var(--lv-z-sticky);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    padding: 0 16px 0 calc(var(--lv-cw-keys) + 16px);
+    gap: 6px 0;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--lv-border);
+    background: var(--lv-bg-subtle);
   }
-
-  .lv-cw-tools-label { color: var(--lv-text-muted); font-size: var(--lv-text-11); }
-  .lv-cw-sep { width: 1px; height: 20px; margin: 0 4px; background: var(--lv-border); }
+  .lv-cw-group { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid var(--lv-border); }
+  .lv-cw-group:first-child, .lv-cw-bar-lead:first-child > .lv-cw-group:first-child { padding-left: 0; border-left: 0; }
+  .lv-cw-bar-lead { display: inline-flex; flex: none; flex-wrap: nowrap; align-items: center; }
+  .lv-cw-bar .lv-cw-btn { padding-inline: 8px; }
+  .lv-cw-bar .lv-cw-notice { flex: 1 1 160px; min-width: 0; height: 20px; padding-left: 10px; overflow: hidden; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
   .lv-cw-nav-count { min-width: 52px; color: var(--lv-warning); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-align: center; }
 
   .lv-cw-body {
@@ -240,15 +251,9 @@
   .lv-cw-legend i[data-kind="melody"] { outline: 1px solid rgb(116 109 244 / 85%); outline-offset: -1px; }
   .lv-cw-legend i[data-kind="off"] { outline: 1px dashed var(--lv-text-muted); outline-offset: -1px; }
 
-  .lv-cw-transport {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    padding: 0 16px 0 calc(var(--lv-cw-keys) + 16px);
-  }
-
-  .lv-cw-time { min-width: 90px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); }
+  /* Fixed width so the numbers changing never move the buttons beside it. */
+  .lv-cw-time { display: inline-block; min-width: 10em; color: var(--lv-text-secondary); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lv-cw-insp-empty { display: grid; gap: 8px; justify-items: start; margin-bottom: 14px; }
   .lv-cw-history { color: var(--lv-text-muted); font-size: var(--lv-text-12); }
 
   .lv-cw-insp { min-width: 0; padding: 16px; background: var(--lv-bg-subtle); }
@@ -348,6 +353,18 @@
   .lv-cw-recommend-item:hover { border-color: var(--lv-accent); }
   .lv-cw-recommend-item span { overflow: hidden; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
 
+  /* P10.1 */
+  .lv-cw:focus { outline: none; }
+  .lv-cw-selbar { position: absolute; top: 6px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-surface); box-shadow: var(--lv-shadow-overlay); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-recommend-section { display: grid; gap: 6px; margin-bottom: 14px; }
+  .lv-cw-recommend-toggle { justify-self: start; padding: 2px 0; color: var(--lv-text); font-size: var(--lv-text-13); font-weight: 700; }
+  .lv-cw-save[data-empty] { border-color: var(--lv-border); }
+
+  .lv-cw-tempo { display: inline-flex; align-items: center; gap: 4px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); white-space: nowrap; }
+  .lv-cw-tempo input { width: 4.5ch; padding: 2px 4px; border: 1px solid var(--lv-border-strong); border-radius: 4px; background: var(--lv-bg); color: var(--lv-text); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-align: right; }
+  .lv-cw-card[data-name-unreadable] .lv-cw-card-name { opacity: 0.55; }
+  .lv-cw-name-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
+
   .lv-cw-keys-help {
     display: flex;
     flex-wrap: wrap;
@@ -385,6 +402,7 @@
 
   @media (max-width: 959px) {
     .lv-cw { --lv-cw-keys: 56px; }
+    .lv-cw-history-last { display: none; }
     .lv-cw-key { left: 18px; }
     .lv-cw-oct { display: none; }
     .lv-cw-label { padding-left: 8px; }
