@@ -6,3 +6,5 @@ Typecheck: `node node_modules/typescript/bin/tsc -p scripts/p11-13/tsconfig.json
 Final report: `docs/phase11.0/reports/P11-13b-hand-position-time-comparison.md`.
 
 Lambda follow-up: `node node_modules/vite-node/vite-node.mjs scripts/p11-13/lambdaComparison.ts`. Dev only; verifies original dev aggregates and preserves both original JSON artifacts. Results: `docs/phase11.0/reports/P11-13-lambda-comparison.md`. The original comparator still runs through `comparison.ts`. Shared measurement function bodies are unchanged.
+
+Common Tone follow-up: `node node_modules/vite-node/vite-node.mjs scripts/p11-13/commonToneComparison.ts`. Dev only, lambda2/inverse fixed, four precommitted gamma weights. Uses the existing injected costModel seam; no src changes or UI registration. Shared metrics accept a diagnostic custom model and verify original CURRENT/lambda2 dev aggregates. Contract: `COMMON-TONE-EXPERIMENT-CONTRACT.md`. Results: `docs/phase11.0/reports/P11-13c-common-tone-ablation.md`. Local-only outputs: `.local-evaluation/p11-13/common-tone/comparison.json` and `original-24-cases.json`. No adoption or further components.

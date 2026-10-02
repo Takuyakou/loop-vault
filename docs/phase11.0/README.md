@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-13c diagnostic follow-up
+
+[Common Tone soft preference ablation](reports/P11-13c-common-tone-ablation.md): `COMMON_TONE_USEFUL`, diagnostic candidate gamma1 with E1-T/inverse/lambda2 fixed. Dev-only original24 regressions become18, new0; no production adoption. Tested diagnostic HEAD `da0b3266`, focused17/17 and diagnostic types/lint PASS. No fresh FULL/EXE in this follow-up; earlier FULL/EXE remains tied to `2d29ac97`. Stop `READY_FOR_HUMAN_DECISION` before further components/integration. Workflow stage ID `P11.13-03` identifies human-named P11-13c.
+
 ### P11-13 current candidate
 
 `feat/p11-13-fingering-hand-position`: 13a Saved Anchor / segment foundation and 13b E1-T bounded comparison. [13a report](reports/P11-13a-fingering-foundation.md) / [13b comparison](reports/P11-13b-hand-position-time-comparison.md). CURRENT stays default; E2/E3/default adoption await Human Decision. No integration in this stage. READY_FOR_HUMAN_DECISION. Tested / EXE HEAD `2d29ac97`: fresh FULL 3,736 Vitest / 192 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. Raw Windows comparison EXE built. E1-T aggregate improvement has per-case common-tone regressions; adoption remains undecided.

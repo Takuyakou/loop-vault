@@ -23,3 +23,5 @@ Latest audit-only stage: [P11-12 fingering ranker baseline](P11-12-fingering-ran
 Current candidate: [P11-13a foundation](P11-13a-fingering-foundation.md) / [P11-13b E1-T comparison](P11-13b-hand-position-time-comparison.md). Stop before E2/adoption/integration.
 
 Authorized follow-up: [P11-13 matched dev lambda comparison](P11-13-lambda-comparison.md). Shortlist 2 /4; original policy and EXE unchanged.
+
+Latest diagnostic follow-up: [P11-13c Common Tone ablation](P11-13c-common-tone-ablation.md). Gamma1 shortlisted with lambda2/inverse fixed; COMMON_TONE_USEFUL / READY_FOR_HUMAN_DECISION. No adoption/FULL/EXE or new components.
