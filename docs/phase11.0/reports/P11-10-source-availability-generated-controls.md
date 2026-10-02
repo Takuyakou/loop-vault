@@ -31,6 +31,16 @@
 
 生成設定の保持は同じ開いた進行のsession内。Vaultへの新しい保存fieldは追加しない。診断fixture等で利用可能なsnapshotが一つもない場合は再生を可能と偽装せず既存のUNAVAILABLE状態を維持し、0/N Sourceをselected表示にしない。実Vault/private witnessは使用・変更しない。既存D-drive checkoutを再使用。
 
-## 5. 最終fresh Gate / EXE
+## 5. 初回FULL failure isolation
+
+初回tested HEAD `b8bd9fc8c3d0933fb6fcfdad3497f3037fc2be25`: Vitest 3,694/3,694 PASS、静的Gate PASS。Playwrightは185 PASS / 3 FAIL / 1 UNRUNでFULL FAIL。成功として扱わない。
+
+1. `phase11-header.spec.ts`に、削除済みbannerをactivation後に要求する旧仕様testが残っていた。新しいdisabled/title/0/8/banner不存在/選択不変の契約へ更新。
+2. 変更対象外のDojo scroll確認は75pxで失敗。該当コード・testは今回変更していない。
+3. 長いtimeline testはpreview server接続で`ERR_CONNECTION_FAILED`。直接原因は未確定。Dojoのserial suiteの後続1件がUNRUN。
+
+修正済みheaderと上記2件を同じworker設定で各3回独立再実行: **9/9 PASS**。skip / retry追加 / timeout緩和 / unrelated product変更なし。この結果だけでFULL PASSとはしない。更新したreport-inclusive HEADで全Gateをfresh再実行する。
+
+## 6. 最終fresh Gate / EXE
 
 PENDING。最終tested HEAD、FULL件数、raw Windows EXEを検証後に追記する。master merge / push / tag / releaseなし。

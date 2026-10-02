@@ -31,17 +31,19 @@ for (const width of [1920, 1600, 1444, 1366, 1280, 960]) {
   });
 }
 
-test("P11 unavailable source explains on activation and closes without switching", async ({ page }) => {
+test("P11 unavailable source stays disabled with on-demand reason and no banner", async ({ page }) => {
   await page.goto("/?p527Status=p533-rules");
   await page.locator('[data-nav="voicing-loop"]').click();
   // The saved fixture has no adopted saved snapshot; source/custom exist independently.
   const unavailable = page.getByRole("button", { name: "保存した音", exact: true });
   await expect(unavailable).toHaveAttribute("aria-disabled", "true");
   await expect(page.getByTestId("voicing-loop-source-info")).toHaveCount(0);
-  await unavailable.focus(); await page.keyboard.press("Enter");
-  await expect(page.getByTestId("voicing-loop-source-info")).toContainText("保存した音のVoicingがありません");
+  await expect(unavailable).toBeDisabled();
+  await expect(unavailable).toHaveAttribute("title", "この進行には保存した音のVoicingがありません。");
+  await expect(page.getByTestId("voicing-loop-saved-availability")).toHaveText("0/8");
+  await unavailable.dispatchEvent("click");
+  await unavailable.dispatchEvent("keydown", { key: "Enter" });
   await expect(page.getByRole("button", { name: "自動生成", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "説明を閉じる", exact: true }).click();
   await expect(page.getByTestId("voicing-loop-source-info")).toHaveCount(0);
   await expect(unavailable).toHaveAttribute("aria-disabled", "true");
 });

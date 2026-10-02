@@ -137,12 +137,9 @@ Availability comes from actual persisted data, not intake labels.
 ### 0/N
 Example `元MIDI 0/16`:
 - do not switch source;
-- prefer explainable/focusable `aria-disabled` behavior over unreachable native `disabled` where practical;
-- only on activation show neutral info: `この進行には元MIDIのVoicingがありません。`;
-- ordinary Text does not show an automatic warning on open;
-- info can be closed with ×;
-- close state lasts only while that progression remains open;
-- closing does not change availability.
+- P11-10 Human Acceptance supersedes the prior activation-banner policy: native disabled, visible 0/N, visually unavailable;
+- no ordinary-screen availability banner; explain through title / accessible description;
+- stale unavailable Source selection recovers through existing available-source priority; partial X/N selection stays usable.
 
 ### X/N
 Example `元MIDI 5/8`:
@@ -207,6 +204,8 @@ Direction only; generated labels are not frozen before the gate:
 ```
 
 Use one generated-type selector, not four permanent buttons.
+
+P11-10 Human Acceptance: generated-type and details triggers stay visible but disabled for 保存した音 / 元MIDI / カスタム. Source changes close details. 自動生成 enables them again and restores the session's previous generated family, Basic/Core, left-hand variant, Color and Open; no schema change.
 
 Unsupported generated type for a chord: `このコードにはこの生成タイプの形がありません。`
 No silent substitution.
