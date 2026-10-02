@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1f18e880",
-  "lastVerifiedCommit": "272d5d06",
+  "lastVerifiedCommit": "74388f0e",
   "currentBranch": "feat/p10.1-workspace-fixes",
   "requiredGates": {
     "P10.1-01": [
@@ -27,8 +27,9 @@
   "gateResults": {
     "p10.1-01-phase-docs": "pass",
     "p10.1-01-layout-playback": "pass",
-    "p10.1-01-keys-selection": "pass"
+    "p10.1-01-keys-selection": "pass",
+    "p10.1-01-name-tempo": "pass"
   },
-  "nextAction": "P10.1-01: 区切り1・2 済み。区切り3（コード名と BPM）へ。",
+  "nextAction": "P10.1-01: 区切り1〜3 済み。区切り4（スクリーンショット・UI・データ保持・fresh FULL・EXE・報告）へ。",
   "updatedAt": "2026-10-02"
 }
