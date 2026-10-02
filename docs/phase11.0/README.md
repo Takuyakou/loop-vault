@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-13e integrated into local master
+
+Human-authorized merge `e8e35e0a` from candidate `4b275435` into local master `ccf85c69`: no conflicts, tracked candidate tree identical. Fresh post-merge focused99 / phase-doc / AI-handoff / privacy / diff PASS. [Integration report](reports/P11-13e-master-merge.md). Candidate FULL/EXE results remain tied to `4406d5b8`; FULL was not rerun on merge HEAD. Frozen E1-T/inverse/lambda2/gamma1 default with Developer CURRENT fallback is now on local master. Earlier candidate/no-merge statements below are historical. No retuning/E3/push/tag/release or next stage.
+
 ### P11-13e production candidate integration
 
 [Production candidate](reports/P11-13e-production-candidate.md): authorized frozen E1-T/inverse/lambda2/gamma1 integration. Latest local master `ccf85c69` incorporated into candidate at `c54b360d`, without conflicts. Normal Voicing Loop default is the new candidate with Developer-only session CURRENT fallback. Tested / EXE HEAD `4406d5b8`: focused99, FEATURE120 + browser11, relevant UI22, fresh FULL Vitest3,792 / Playwright225 PASS, 0 FAIL / 0 UNRUN, cache unused. Raw Windows EXE built. Stop READY_FOR_HUMAN_PRODUCT_ACCEPTANCE, no master merge or E3. The CURRENT-default/no-adoption statements below describe earlier stages. Workflow ID `P11.13-05` identifies P11-13e.
