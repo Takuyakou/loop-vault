@@ -353,9 +353,9 @@ for (const [width, height] of SIZES) {
       // P10.0-07: 「押して鳴らす」 on with a card just clicked; the in-app confirm when leaving with unsaved changes.
       await shot("capture-workspace-click-audition", async () => {
         await openWorkspace("plain-8");
-        await page.getByTestId("correction-settings").click();
-        await page.getByTestId("correction-click-audition").check();
+        // P10.2: 押して鳴らす is in the settings menu (on by default); a card click closes the menu.
         await page.getByTestId("correction-card").nth(2).click();
+        await page.getByTestId("correction-settings").click();
         await expect(page.getByTestId("correction-click-audition")).toBeChecked();
       });
       await page.evaluate(() => localStorage.removeItem("loop-vault:p10-card-click-audition:v1"));
@@ -408,6 +408,43 @@ for (const [width, height] of SIZES) {
         await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
       });
       await page.evaluate(() => localStorage.removeItem("loop-vault:p10-recommended-ranges-open:v1"));
+      // P10.2-01: the whole screen — stopped (「▶ ここから」), a card selected, playing, a right-click
+      // range pending, the settings menu open, a song with review marks, no save range.
+      const cards = page.getByTestId("correction-card");
+      await shot("p102-workspace-stopped", async () => {
+        await openWorkspace("plain-8");
+        await expect(page.locator("[data-start-cue]")).toHaveCount(1);
+      });
+      await shot("p102-workspace-selected", async () => {
+        await cards.nth(2).click();
+        await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
+      });
+      await shot("p102-workspace-playing", async () => {
+        await page.getByTestId("correction-play-song").click();
+        await expect(page.locator(".lv-cw-card[data-playing]")).toHaveCount(1);
+        await page.waitForTimeout(400);
+      });
+      await shot("p102-workspace-range-pending", async () => {
+        await openWorkspace("plain-8");
+        await cards.nth(1).click({ button: "right" });
+        await cards.nth(4).hover();
+        await expect(page.getByTestId("correction-range-pending")).toBeVisible();
+      });
+      await shot("p102-workspace-settings", async () => {
+        await page.keyboard.press("Escape");
+        await page.getByTestId("correction-settings").click();
+        await expect(page.getByTestId("correction-settings-menu")).toBeVisible();
+      });
+      await shot("p102-workspace-review", async () => {
+        await openWorkspace("melody-track-8");
+        await page.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
+        await page.getByTestId("correction-control-bar").getByRole("button", { name: "次の要確認" }).click();
+        await expect(page.locator('[data-testid="correction-card"][data-review][aria-pressed="true"]')).toHaveCount(1);
+      });
+      await shot("p102-workspace-save-none", async () => {
+        await openWorkspace("long-64");
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-empty");
+      });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });

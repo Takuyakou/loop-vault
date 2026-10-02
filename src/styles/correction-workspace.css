@@ -388,6 +388,9 @@
   .lv-cw-recommend { display: grid; max-height: 30vh; gap: 6px; overflow-y: auto; margin-bottom: 10px; }
   .lv-cw-recommend-item { display: grid; gap: 2px; padding: 6px 10px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-surface); text-align: left; }
   .lv-cw-recommend-item:hover { border-color: var(--lv-accent); }
+  /* In the pinned panel: one line a range, so the card above keeps its room. */
+  .lv-cw-insp-foot .lv-cw-recommend { gap: 4px; }
+  .lv-cw-insp-foot .lv-cw-recommend-item { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 10px; padding: 4px 10px; }
   .lv-cw-recommend-item span { overflow: hidden; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); white-space: nowrap; }
 
   /* P10.1 */
@@ -449,10 +452,10 @@
     .lv-cw-timeline { display: flex; flex-direction: column; padding-bottom: 8px; }
     .lv-cw-body { min-height: 340px; flex: 1 1 0; overflow-y: auto; }
     .lv-cw-insp { min-height: 0; overflow: hidden; }
-    .lv-cw-insp-scroll { min-height: 120px; flex: 1 1 0; overflow-y: auto; }
+    .lv-cw-insp-scroll { min-height: 200px; flex: 1 1 0; overflow-y: auto; }
     /* The pinned save panel keeps its own height; an open 「おすすめの範囲」 list gives way and scrolls. */
     .lv-cw-insp-foot { display: flex; min-height: 0; flex: 0 1 auto; flex-direction: column; }
-    .lv-cw-insp-foot .lv-cw-recommend { min-height: 96px; max-height: none; flex: 0 1 auto; }
+    .lv-cw-insp-foot .lv-cw-recommend { min-height: 72px; max-height: 180px; flex: 0 1 auto; }
     .lv-cw-insp-foot .lv-cw-save { flex: none; }
   }
 
