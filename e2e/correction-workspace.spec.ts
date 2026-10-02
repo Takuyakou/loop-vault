@@ -696,7 +696,7 @@ test("P10.1 the save range panel is always there; 範囲を外す is off without
   const workspace = page.getByTestId("correction-workspace");
   const form = workspace.getByTestId("correction-save-form");
   const clear = form.getByRole("button", { name: "範囲を外す" });
-  await expect(form).toContainText("まだ選んでいません");
+  await expect(form.getByTestId("correction-save-range")).toHaveText("曲全体（1〜8小節）"); // P10.2 addendum 2: no range = the whole song
   await expect(clear).toBeDisabled();
   await expect(clear).toHaveAttribute("title", "範囲を選んでいません");
   // P10.2 addendum 1 §2: 「おすすめの範囲」 starts closed; open and closed are remembered.
@@ -1145,7 +1145,7 @@ test("P10.2 「最初からやり直す」 asks first; 戻る keeps everything, 
   await page.getByRole("dialog", { name: "最初からやり直しますか？" }).getByRole("button", { name: "最初からやり直す" }).click();
   await editCount(page, 0);
   await expect(workspace.getByTestId("correction-tempo")).toHaveValue("120");
-  await expect(workspace.getByTestId("correction-save-form")).toHaveAttribute("data-empty");
+  await expect(workspace.getByTestId("correction-save-form")).toHaveAttribute("data-whole"); // no range: the whole song (addendum 2)
   await expect(workspace.getByTestId("correction-inspector-empty")).toBeVisible();
   await expect(workspace.getByTestId("correction-undo")).toBeDisabled(); // the history is empty too
   // Nothing to lose: leaving asks nothing.

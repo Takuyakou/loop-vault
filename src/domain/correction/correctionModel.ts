@@ -457,14 +457,17 @@ function buildSegments(
   return withRepeatCounts(ranges.map((range, index) => ({ id: `segment-${index}`, ...range })), cards, meter);
 }
 
+/** What makes two segments "the same chords": each card's offset in the segment and its name ("" = no cards). */
+export function segmentContent(range: { startBar: number; endBar: number }, cards: readonly CorrectionCard[], meter: number): string {
+  const from = (range.startBar - 1) * meter;
+  const to = range.endBar * meter;
+  return cards.filter((card) => card.start >= from - EPSILON && card.start < to - EPSILON)
+    .map((card) => `${card.start - from}:${card.name.label}`).join("|");
+}
+
 /** 「n回出てくる」: segments with the same chords at the same places (P10.2 §11 recounts after an edge moves). */
 export function withRepeatCounts(segments: readonly Omit<CorrectionSegment, "repeatCount">[], cards: readonly CorrectionCard[], meter: number): CorrectionSegment[] {
-  const contents = segments.map((range) => {
-    const from = (range.startBar - 1) * meter;
-    const to = range.endBar * meter;
-    return cards.filter((card) => card.start >= from - EPSILON && card.start < to - EPSILON)
-      .map((card) => `${card.start - from}:${card.name.label}`).join("|");
-  });
+  const contents = segments.map((range) => segmentContent(range, cards, meter));
   const counts = new Map<string, number>();
   for (const content of contents) if (content) counts.set(content, (counts.get(content) ?? 0) + 1);
   return segments.map((segment, index) => {

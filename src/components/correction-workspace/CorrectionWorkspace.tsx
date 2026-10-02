@@ -34,6 +34,9 @@ import { cardsInRange, type SaveRange } from "../../domain/correction/saveCandid
 import { registerCloseBlocker } from "../../store/closeBlocker";
 import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
 import { songPlaybackNotes } from "../../domain/correction/songPlayback";
+import { sectionSaveRows, wholeSongRange, type SectionSaveRow } from "../../domain/correction/sectionSave";
+import type { SaveKind } from "../../domain/correction/metrics";
+import { SectionSaveDialog } from "./SectionSaveDialog";
 import { useMetronome } from "../MetronomeProvider";
 import { SettingsIcon, UndoIcon } from "../icons";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
@@ -145,6 +148,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [segmentsOpen, setSegmentsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia?.("(max-width: 959px)").matches);
   const [panelOpen, setPanelOpen] = useState(false);
   const [saveRange, setSaveRange] = useState<SaveRange>();
+  // P10.2 addendum 2 §2: the rows of 「区切りごとに保存」 while its dialog is open.
+  const [sectionRows, setSectionRows] = useState<SectionSaveRow[]>();
   // P10.2 §9: 「ここから」 after a first right-click on a card, and the card the pointer is on.
   const [rangeFrom, setRangeFrom] = useState<string>();
   const [rangeHover, setRangeHover] = useState<string>();
@@ -671,6 +676,15 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       <button type="button" className="lv-cw-btn" onClick={() => setSelectedNotes(new Set())} data-testid="correction-selection-clear">選択をやめる <kbd>Esc</kbd></button>
     </>
   ) : undefined;
+  // P10.2 addendum 2 §1: with no range chosen, the whole song (first card's bar to last card's bar).
+  const formRange = saveRange ?? wholeSongRange(present);
+  /** Saved ranges get 「保存済み」; what is saved now is the last saved state (unsaved changes). */
+  const markSaved = (ranges: readonly SaveRange[], kind: SaveKind) => {
+    setSavedRanges((current) => new Set([...current, ...ranges.map(rangeKey)]));
+    setSavedPresent(history.present);
+    setSavedCount(editCount(history));
+    for (let index = 0; index < ranges.length; index += 1) metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length, kind });
+  };
   /** P10.2 §9: the range decided by right-clicks, said in the status line. */
   const chooseRange = (next: SaveRange) => {
     setSaveRange(next);
@@ -1197,23 +1211,25 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           </div>
           {/* P10.2 §10.3: 保存する範囲 pinned to the bottom of the panel (おすすめ is on top, addendum 1 §2). */}
           <div className="lv-cw-insp-foot">
-            {saveRange ? (
-              <WorkspaceSaveForm
-                model={present}
-                timeline={timeline}
-                range={saveRange}
-                saved={savedRanges.has(rangeKey(saveRange))}
-                actions={props.save}
-                onClear={() => setSaveRange(undefined)}
-                onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
-                onSaved={() => {
-                  setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
-                  setSavedPresent(history.present);
-                  setSavedCount(editCount(history));
-                  metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
-                }}
-              />
-            ) : <NoSaveRange />}
+          {formRange ? (
+            <WorkspaceSaveForm
+              key={saveRange ? "range" : "whole"}
+              model={present}
+              timeline={timeline}
+              range={formRange}
+              whole={!saveRange}
+              saved={savedRanges.has(rangeKey(formRange))}
+              actions={props.save}
+              onClear={() => setSaveRange(undefined)}
+              onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
+              onSaved={() => markSaved([formRange], saveRange ? "range" : "whole")}
+              {...(present.segments.length ? { menuExtras: [{
+                label: <>区切りごとに保存… <small className="lv-cw-muted">{present.segments.length}個・同じものは1つに</small></>,
+                onSelect: () => setSectionRows(sectionSaveRows(present, timeline, savedRanges)),
+                testId: "correction-save-by-section",
+              }] } : {})}
+            />
+          ) : <NoSaveRange />}
           </div>
         </aside>
       </div>
@@ -1260,6 +1276,24 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         onCancel={() => setPendingLeave(undefined)}
         onConfirm={() => { const action = pendingLeave; setPendingLeave(undefined); action?.(); }}
       />
+      {sectionRows ? (
+        <SectionSaveDialog
+          rows={sectionRows}
+          ideas={props.save.ideas}
+          ideaTitle={props.fileName.replace(/\.midi?$/i, "")}
+          onCreate={(ready, title) => props.save.onCreate(ready, title, props.save.defaultNextAction, false)}
+          onAppend={(ready, ideaId) => props.save.onAppend(ready, ideaId, false)}
+          onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
+          onClose={() => setSectionRows(undefined)}
+          onDone={(saved, failed) => {
+            setSectionRows(undefined);
+            if (saved.length) markSaved(saved.map((row) => row.range), "section");
+            setNotice(failed
+              ? `${saved.length}個を保存しました。${failed.segment.label}で止まりました（${failed.segment.label}から後は保存していません）`
+              : `${saved.length}個の進行を保存しました`);
+          }}
+        />
+      ) : null}
       <ConfirmDialog
         open={confirm === "restart"}
         title="最初からやり直しますか？"

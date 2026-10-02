@@ -80,7 +80,8 @@ export function useCaptureSave({
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
     options?: { stayOnCapture?: boolean; bpm?: number },
-  ): boolean {
+  ): string | undefined {
+    // The new idea's id (P10.2 addendum 2: saving by section adds the rest to it), or undefined.
     setPersistenceError(undefined);
     const corrections = correctionEvents(original, candidate, editable);
     const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
@@ -113,10 +114,10 @@ export function useCaptureSave({
       ]);
       persistLabelCorrectionLogs(original, editable);
       setToast(copy.capture.savedToVault, "success");
-      return true;
+      return id;
     }
     setToast(copy.capture.createFailed, "error");
-    return false;
+    return undefined;
   }
 
   function correctionEvents(

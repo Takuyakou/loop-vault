@@ -710,7 +710,7 @@ export function CaptureView(props: CaptureViewProps) {
               titleFor: (candidate) => captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
               onCreate: (ready, title, nextAction, userVerified) => {
                 const sourceBassline = workspaceBassline.forSave(ready.candidate);
-                if (sourceBassline === null) return false;
+                if (sourceBassline === null) return undefined;
                 return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}) });
               },
               onAppend: (ready, ideaId, userVerified) => {

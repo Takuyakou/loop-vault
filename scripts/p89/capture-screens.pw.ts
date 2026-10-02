@@ -399,12 +399,12 @@ for (const [width, height] of SIZES) {
       await shot("p101-workspace-save-none", async () => {
         await openWorkspace("plain-8");
         await openPanel();
-        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-empty", /.*/);
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-whole", /.*/);
       });
       await shot("p101-workspace-save-range", async () => {
         if (await page.getByTestId("correction-recommended-toggle").getAttribute("aria-expanded") !== "true") await page.getByTestId("correction-recommended-toggle").click();
         await page.getByTestId("correction-recommended").getByRole("button").first().click();
-        await expect(page.getByTestId("correction-save-form")).not.toHaveAttribute("data-empty", /.*/);
+        await expect(page.getByTestId("correction-save-form")).not.toHaveAttribute("data-whole", /.*/);
       });
       await shot("p101-workspace-recommended-closed", async () => {
         await page.getByTestId("correction-recommended-toggle").click();
@@ -446,7 +446,7 @@ for (const [width, height] of SIZES) {
       });
       await shot("p102-workspace-save-none", async () => {
         await openWorkspace("long-64");
-        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-empty");
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-whole");
       });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);

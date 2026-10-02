@@ -13,7 +13,8 @@ export interface WorkspaceSaveActions {
   defaultNextAction: string;
   copy: AppCopy;
   titleFor: (candidate: ProgressionBlockCandidate) => string;
-  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean) => boolean;
+  /** The new idea's id, or undefined when it was not saved. */
+  onCreate: (ready: SaveReady, title: string, nextAction: string, userVerified: boolean) => string | undefined;
   onAppend: (ready: SaveReady, ideaId: string, userVerified: boolean) => boolean;
   onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => boolean;
   /** 「詳しい設定」: the source-bassline panel for this range, or null when the song has no bass to keep. */
@@ -30,7 +31,7 @@ export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar 
  * Spec v2.4 §10.1: the save form for the chosen range, pinned to the bottom of the right
  * panel (P10.2 §10.3): the range and 範囲を外す, the names, Vaultに保存 and 「おすすめの範囲」.
  */
-export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onClear, onGoToCard, onSaved }: {
+export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onClear, onGoToCard, onSaved, whole = false, menuExtras }: {
   model: CorrectionModel;
   timeline: readonly ChordTimelineItem[];
   range: SaveRange;
@@ -39,6 +40,10 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
   onClear: () => void;
   onGoToCard: (cardId: string) => void;
   onSaved: () => void;
+  /** P10.2 addendum 2 §1: no range chosen — the whole song is saved (「曲全体を保存」). */
+  whole?: boolean;
+  /** P10.2 addendum 2 §2.1: more ▾ items (区切りごとに保存…). */
+  menuExtras?: readonly { label: ReactNode; onSelect: () => void; testId?: string }[];
 }) {
   const [problems, setProblems] = useState<SaveProblem[]>();
   const cards = cardsInRange(model, range);
@@ -50,17 +55,19 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
   };
   const preview = buildSaveCandidate(model, range, timeline);
   return (
-    <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form">
+    <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-whole={whole || undefined}>
       <div className="lv-cw-row-between">
         <h4 className="lv-cw-h4">
           保存する範囲{" "}
           <span className="lv-cw-save-range" data-testid="correction-save-range">
-            {rangeLabel(range)}・{cards.length}枚{saved ? <span className="lv-cw-saved">保存済み</span> : null}
+            {whole ? `曲全体（${rangeLabel(range)}）` : `${rangeLabel(range)}・${cards.length}枚`}{saved ? <span className="lv-cw-saved">保存済み</span> : null}
           </span>
         </h4>
-        <button type="button" className="lv-cw-btn" onClick={onClear}>範囲を外す</button>
+        {whole
+          ? <button type="button" className="lv-cw-btn" disabled title="範囲を選んでいません">範囲を外す</button>
+          : <button type="button" className="lv-cw-btn" onClick={onClear}>範囲を外す</button>}
       </div>
-      <p className="lv-cw-save-names" title={cards.map((card) => card.name.label).join("  ")}>{cards.map((card) => card.name.label).join("  ")}</p>
+      {whole ? null : <p className="lv-cw-save-names" title={cards.map((card) => card.name.label).join("  ")}>{cards.map((card) => card.name.label).join("  ")}</p>}
       {problems?.length ? (
         <div className="lv-cw-reason" role="alert" data-testid="correction-save-problems">
           <b>保存できません</b>
@@ -89,7 +96,7 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
         requestOpen={() => Boolean(check())}
         onCreate={(title, nextAction, userVerified) => {
           const ready = check();
-          return ready ? actions.onCreate(ready, title, nextAction, userVerified) : false;
+          return ready ? Boolean(actions.onCreate(ready, title, nextAction, userVerified)) : false;
         }}
         onAppend={(ideaId, userVerified) => {
           const ready = check();
@@ -101,6 +108,9 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
         }}
         onSaved={onSaved}
         note={SAVE_NOTE}
+        {...(whole ? { primaryLabel: "曲全体を保存" } : {})}
+        menuIncludesNew
+        {...(menuExtras?.length ? { menuExtras, requestMenu: () => true } : {})}
       />
       </span>
       </div>
@@ -108,7 +118,7 @@ export function WorkspaceSaveForm({ model, timeline, range, saved, actions, onCl
   );
 }
 
-/** P10.1 §8 / P10.2 §10.3: the save range panel when no range is chosen yet. */
+/** P10.1 §8 / P10.2 §10.3: the save panel when there is nothing to save (no cards at all). */
 export function NoSaveRange() {
   return (
     <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-empty>
@@ -116,7 +126,7 @@ export function NoSaveRange() {
         <h4 className="lv-cw-h4">保存する範囲</h4>
         <button type="button" className="lv-cw-btn" disabled title="範囲を選んでいません">範囲を外す</button>
       </div>
-      <p className="lv-cw-muted" data-testid="correction-save-range">まだ選んでいません。カードを右クリック→右クリック、区切りの帯、おすすめの範囲で選べます。</p>
+      <p className="lv-cw-muted" data-testid="correction-save-range">保存できるカードがありません。</p>
       <div className="lv-cw-save-actions">
         <button type="button" className="lv-cw-btn" data-kind="primary" disabled title="範囲を選んでいません">Vaultに保存</button>
       </div>
