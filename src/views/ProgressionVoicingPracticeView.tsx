@@ -1,3 +1,5 @@
+import { useFingeringRankerMode } from "../voicingPractice/fingeringRankerMode";
+import { handPositionCostModel, EXPERIMENTAL_HAND_POSITION_POLICY } from "../domain/handPositionFingering";
 import { rankPracticeHandFingerings } from "../voicingPractice/rankPracticeFingerings";
 import { GeneratedTypeSelector } from "../voicingPractice/GeneratedTypeSelector";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
@@ -421,6 +423,9 @@ export function ProgressionVoicingPracticeView({
   const [followResumeRevision, setFollowResumeRevision] = useState(0);
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
+  const fingeringRankerMode = useFingeringRankerMode();
+  const fingeringOptions = useMemo(() => fingeringRankerMode === "E1-T"
+    ? { costModel: handPositionCostModel(EXPERIMENTAL_HAND_POSITION_POLICY) } : {}, [fingeringRankerMode]);
   const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string | undefined; values: Map<string, string> }>();
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
     left: [],
@@ -581,16 +586,17 @@ export function ProgressionVoicingPracticeView({
   const currentHandTargets = handAssignments[currentIndex] ?? emptyHandTargets;
   const nextHandTargets = handAssignments[nextIndex] ?? emptyHandTargets;
   const thenNextHandTargets = handAssignments[thenNextIndex] ?? emptyHandTargets;
+  const fingeringBpm = clockState?.bpm ?? snapshot?.bpm;
   const leftFingeringById = useMemo(
-    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "left", fingeringPreferences, {}, plan?.events.map(event => event.status !== "SUPPORTED")).map((entry) => [entry.id, entry])),
-    [fingeringPreferences, handAssignments, plan, selection, snapshot],
+    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "left", fingeringPreferences, fingeringOptions, plan?.events.map(event => event.status !== "SUPPORTED"), fingeringBpm).map((entry) => [entry.id, entry])),
+    [fingeringBpm, fingeringOptions, fingeringPreferences, handAssignments, plan, selection, snapshot],
   );
   const rightFingeringById = useMemo(
-    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "right", fingeringPreferences, {}, plan?.events.map(event => event.status !== "SUPPORTED")).map((entry) => [entry.id, entry])),
-    [fingeringPreferences, handAssignments, plan, selection, snapshot],
+    () => new Map(rankFingeringsForHand(snapshot, handAssignments, selection, "right", fingeringPreferences, fingeringOptions, plan?.events.map(event => event.status !== "SUPPORTED"), fingeringBpm).map((entry) => [entry.id, entry])),
+    [fingeringBpm, fingeringOptions, fingeringPreferences, handAssignments, plan, selection, snapshot],
   );
   const adjustedFingeringIds = new Set<string>();
-  if (fingeringChangeBaseline?.key === candidateSessionKey) {
+  if (fingeringChangeBaseline?.key === `${candidateSessionKey}:${fingeringRankerMode}`) {
     for (const [hand, entries] of [["left", leftFingeringById], ["right", rightFingeringById]] as const) {
       for (const [id, entry] of entries) {
         if (entry.status !== "supported" || findPersonalFingering(fingeringPreferences, entry.signature)) continue;
@@ -600,7 +606,7 @@ export function ProgressionVoicingPracticeView({
     }
   }
   function captureFingeringBaseline() {
-    setFingeringChangeBaseline({ key: candidateSessionKey, values: new Map(
+    setFingeringChangeBaseline({ key: `${candidateSessionKey}:${fingeringRankerMode}`, values: new Map(
       [...[...leftFingeringById.values()].map(entry => ["left", entry] as const),
         ...[...rightFingeringById.values()].map(entry => ["right", entry] as const)]
         .flatMap(([hand, entry]) => entry.status === "supported" ? [[`${hand}:${entry.id}`, entry.fingers.join()] as const] : []),
@@ -1948,8 +1954,9 @@ function rankFingeringsForHand(
   preferences?: FingeringPreferenceCollection,
   options: Parameters<typeof rankPracticeHandFingerings>[5] = {},
   unresolved: readonly boolean[] = [],
+  practiceBpm?: number,
 ): ReturnType<typeof rankCyclicFingerings> {
-  return rankPracticeHandFingerings(snapshot, handAssignments, selection, hand, preferences, options, unresolved);
+  return rankPracticeHandFingerings(snapshot, handAssignments, selection, hand, preferences, options, unresolved, practiceBpm);
 }
 
 function effectiveFingering(

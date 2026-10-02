@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-13 current candidate
+
+`feat/p11-13-fingering-hand-position`: 13a Saved Anchor / segment foundation and 13b E1-T bounded comparison. [13a report](reports/P11-13a-fingering-foundation.md) / [13b comparison](reports/P11-13b-hand-position-time-comparison.md). CURRENT stays default; E2/E3/default adoption await Human Decision. No integration in this stage. Final fresh FULL and comparison EXE are being verified.
+
 ### P11-12 Baseline Audit
 
 [P11-12 fingering ranker baseline audit](reports/P11-12-fingering-ranker-baseline-audit.md): audit complete on `audit/p11-12-fingering-ranker`, tested diagnostic code `7ee3ccd8`. Public synthetic only; production ranker / weights / candidates / UI / schema unchanged. 2,160 progressions; focused 146/146 PASS, added-code lint/typecheck PASS. Diagnostic outputs are local-only. No FULL/EXE or integration in this audit. Stop before implementation; P11-00–11 integration below remains unchanged.

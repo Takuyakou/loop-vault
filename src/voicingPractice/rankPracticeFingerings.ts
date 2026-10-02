@@ -13,9 +13,10 @@ export function rankPracticeHandFingerings(
   preferences?: FingeringPreferenceCollection,
   options: FingeringRankingOptions = {},
   unresolved: readonly boolean[] = [],
+  practiceBpm?: number,
 ): ReturnType<typeof rankCyclicFingerings> {
   if (!snapshot) return [];
-  const secondsPerBeat = 60 / snapshot.bpm;
+  const secondsPerBeat = 60 / (practiceBpm ?? snapshot.bpm);
   const events = snapshot.events.map((event, i) => ({
     id: event.id, hand, midiPitches: hands[i]?.[hand] ?? [], chord: event.chord, family: selection,
     startSeconds: event.startBeat * secondsPerBeat,

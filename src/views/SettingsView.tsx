@@ -1,3 +1,4 @@
+import { FingeringRankerComparisonSettings } from "../voicingPractice/FingeringRankerComparisonSettings";
 import { appDataDir } from "@tauri-apps/api/path";
 import { open as openFileDialog, save as saveFileDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
@@ -549,6 +550,7 @@ export function SettingsView({
           <p id="settings-analysis-help" className="lv-settings-help">{ui.analysisHelp}</p>
           {analysisExpanded ? (
             <div id="settings-analysis-content" className="text-sm">
+              <FingeringRankerComparisonSettings />
               <CorrectionMetricsSettings />
               <div className="lv-settings-divider">
                 <h3 className="lv-settings-subtitle">{ui.analysis}</h3>

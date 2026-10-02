@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-13",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -21,8 +21,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "7ee3ccd86ce77cb0b44faff0f4a0a6bed04fc7c9",
-  "currentBranch": "audit/p11-12-fingering-ranker",
+  "lastVerifiedCommit": "97679040",
+  "currentBranch": "feat/p11-13-fingering-hand-position",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -108,6 +108,13 @@
       "p11-12-diagnostic-types",
       "p11-12-diagnostic-lint",
       "p11-12-product-unchanged"
+    ],
+    "P11.0-13": [
+      "p11-13a-focused",
+      "p11-13b-comparison",
+      "p11-13b-full",
+      "p11-13b-exe",
+      "p11-13b-docs"
     ]
   },
   "gateResults": {
@@ -169,8 +176,9 @@
     "p11-12-focused": "pass",
     "p11-12-diagnostic-types": "pass",
     "p11-12-diagnostic-lint": "pass",
-    "p11-12-product-unchanged": "pass"
+    "p11-12-product-unchanged": "pass",
+    "p11-13a-focused": "pass"
   },
-  "nextAction": "P11-12 baseline audit complete; product logic unchanged. Stop before implementation. No merge/push/tag/release/EXE. See P11-12 report; diagnostics and 146 focused tests fresh at 7ee3ccd8.",
+  "nextAction": "Finalize P11-13a/b at stable candidate: fresh FULL then developer comparison EXE; stop READY_FOR_HUMAN_DECISION. No E2/E3/default switch/merge.",
   "updatedAt": "2026-10-02"
 }

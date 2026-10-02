@@ -22,4 +22,4 @@ Total cost → preferred distance合計 → 候補index列。候補indexは既�
 
 Anchor接続/解除、signature mismatch、segment isolation、empty-hand elapsed time、tie determinism、Next Move三状態を検証。P11-12診断のView adapterも新しい公開seamへ接続した。旧後段overrideテストは同じ保存運指保持assertionをDP内Anchorで確認する形へ移行し、historical P11-12報告の数値は更新していない。
 
-focused / 型 / lint結果はこのstage code commitでfresh確認後に記録する。E1-T、E2、E3、default switchはこのcommitに含まない。
+tested stage code HEAD `97679040`でfresh focused150/150 PASS、型検査・changed ESLint・diff check PASS。E1-T、E2、E3、default switchはこのcommitに含まない。
