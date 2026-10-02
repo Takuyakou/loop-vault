@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "10.3",
+  "status": "in-progress",
+  "activeStage": "P10.3-01",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "5ddacd92",
+  "lastVerifiedCommit": "5ddacd92",
+  "currentBranch": "feat/p10.3-workspace-followups",
+  "requiredGates": {
+    "P10.3-01": [
+      "p10.3-01-phase-docs",
+      "p10.3-01-notice-chip",
+      "p10.3-01-memo-sections-long",
+      "p10.3-01-saved-voicing-audit",
+      "p10.3-01-fast-feature",
+      "p10.3-01-ui",
+      "p10.3-01-data-retention",
+      "p10.3-01-screens",
+      "p10.3-01-full-fresh",
+      "p10.3-01-exe",
+      "p10.3-01-report"
+    ]
+  },
+  "gateResults": {
+    "p10.3-01-phase-docs": "pass"
+  },
+  "nextAction": "P10.3-01: 手順0 済み。区切り1（知らせ・歯車・範囲の札）へ。",
+  "updatedAt": "2026-10-02"
+}
