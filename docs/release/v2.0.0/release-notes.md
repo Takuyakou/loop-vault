@@ -20,7 +20,9 @@ Release preparation date: 2026-10-03 (Asia/Tokyo). Status: candidate, not yet pu
 
 ## Reliability
 
-Responsive/accessibility fixes and Test DX runner changes retain full release coverage. Validation numbers and tested HEAD are recorded in [release-validation](release-validation.md), after fresh execution without a PASS cache.
+Responsive/accessibility fixes and Test DX runner changes retain full release coverage. Final fresh validation at `d70623ae`: Vitest 3,792/3,792, Playwright 225/225 and Rust 42/42 PASS, with no PASS cache and 0 FAIL / 0 UNRUN. Details and scope limitations are recorded in [release-validation](release-validation.md).
+
+The release lockfiles include narrow brace-expansion and rustls/rustls-webpki security patches; no framework-wide upgrade or test-contract change.
 
 ## Compatibility / limitations
 
@@ -33,4 +35,4 @@ Responsive/accessibility fixes and Test DX runner changes retain full release co
 
 ## Windows distribution
 
-A direct executable, NSIS setup and MSI installer follow the existing release convention. WebView2 Runtime is required. Assets/checksums are listed in [release-assets](release-assets.md) once built. User Vault/private recordings and local evaluation data are not included.
+A direct executable, NSIS setup and MSI installer follow the existing release convention. WebView2 Runtime is required. Built assets/checksums are listed in [release-assets](release-assets.md). User Vault/private recordings and local evaluation data are not included.
