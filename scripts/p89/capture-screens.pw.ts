@@ -448,6 +448,53 @@ for (const [width, height] of SIZES) {
         await openWorkspace("long-64");
         await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-whole");
       });
+      // P10.2 addenda: the decided range with a new pending one; 「おすすめの範囲」 open on top;
+      // the whole-song save; 「区切りごとに保存」; a long song saved whole, on the progression page and in Voicing Loop.
+      await shot("p102-workspace-range-confirmed", async () => {
+        await openWorkspace("plain-8");
+        await cards.nth(1).click({ button: "right" });
+        await cards.nth(4).click({ button: "right" });
+        await cards.nth(6).click({ button: "right" });
+        await cards.nth(7).hover();
+        await expect(page.getByTestId("correction-range-confirmed")).toBeVisible();
+        await expect(page.getByTestId("correction-range-pending")).toBeVisible();
+      });
+      await shot("p102-panel-recommended-open", async () => {
+        await page.keyboard.press("Escape");
+        await cards.nth(2).click();
+        await openPanel();
+        const reco = page.getByTestId("correction-recommended-toggle");
+        if (await reco.getAttribute("aria-expanded") !== "true") await reco.click();
+        await expect(page.getByTestId("correction-recommended")).toBeVisible();
+        await page.getByTestId("correction-recommended-toggle").scrollIntoViewIfNeeded();
+      });
+      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-recommended-ranges-open:v2"));
+      await shot("p102-save-whole", async () => {
+        await openWorkspace("long-64");
+        await openPanel();
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-whole");
+        await page.getByTestId("correction-save-form").scrollIntoViewIfNeeded();
+      });
+      await shot("p102-save-by-section", async () => {
+        await page.getByTestId("correction-save-form").getByRole("button", { name: "保存先を選ぶ" }).click();
+        await page.getByTestId("correction-save-by-section").click();
+        await expect(page.getByRole("dialog", { name: "区切りごとに保存" })).toBeVisible();
+      });
+      await shot("p102-long-detail", async () => {
+        await page.getByRole("dialog", { name: "区切りごとに保存" }).getByRole("button", { name: "戻る" }).click();
+        await page.getByTestId("correction-save-form").getByRole("button", { name: /曲全体を保存/ }).click();
+        const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+        await form.locator('input[name="progression-title"]').fill(`長い進行 ${size}`);
+        await form.getByRole("button", { name: /保存/, exact: true }).click();
+        await expect(form).toBeHidden();
+        await nav(page, "vault");
+        await page.locator(".lv-vault-row").filter({ hasText: `長い進行 ${size}` }).first().getByRole("button", { name: /進行を開く/ }).click();
+        await expect(page.locator("[data-progression-card-stage] [data-chord-card]").first()).toBeVisible();
+      });
+      await shot("p102-long-voicing-loop", async () => {
+        await page.getByTestId("voicing-loop-handoff").click();
+        await expect(page.getByTestId("voicing-loop-workspace").getByTestId("voicing-loop-event").first()).toBeVisible();
+      });
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });

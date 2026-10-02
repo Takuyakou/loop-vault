@@ -69,7 +69,8 @@ export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, 
                 />
                 <label htmlFor={id}>
                   <b>{row.segment.label}</b>
-                  <span className="lv-cw-muted">{rangeLabel(row.range)}</span>
+                  {/* The 8-bar stand-in segments are named by their bars already. */}
+                  {rangeLabel(row.range) !== row.segment.label ? <span className="lv-cw-muted">{rangeLabel(row.range)}</span> : null}
                   {row.saved ? <span className="lv-cw-saved">保存済み</span> : null}
                   <span className="lv-cw-section-names">{row.names.join(" ")}</span>
                   {row.sameAs.length ? <span className="lv-cw-muted">{row.sameAs.join("・")} と同じ</span> : null}
