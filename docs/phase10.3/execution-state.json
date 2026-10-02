@@ -1,13 +1,15 @@
 {
   "schemaVersion": 1,
   "phaseId": "10.3",
-  "status": "in-progress",
-  "activeStage": "P10.3-01",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P10.3-01"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "5ddacd92",
-  "lastVerifiedCommit": "206afeab",
+  "lastVerifiedCommit": "7607f419",
   "currentBranch": "feat/p10.3-workspace-followups",
   "requiredGates": {
     "P10.3-01": [
@@ -27,8 +29,16 @@
   "gateResults": {
     "p10.3-01-phase-docs": "pass",
     "p10.3-01-notice-chip": "pass",
-    "p10.3-01-memo-sections-long": "pass"
+    "p10.3-01-memo-sections-long": "pass",
+    "p10.3-01-saved-voicing-audit": "pass",
+    "p10.3-01-fast-feature": "pass",
+    "p10.3-01-ui": "pass",
+    "p10.3-01-data-retention": "pass",
+    "p10.3-01-screens": "pass",
+    "p10.3-01-full-fresh": "pass",
+    "p10.3-01-exe": "pass",
+    "p10.3-01-report": "pass"
   },
-  "nextAction": "P10.3-01: 区切り1・2 済み。区切り3（保存した音 96/97 の調べ・締めくくり）へ。",
+  "nextAction": "Phase 10.3 完了。merge 候補の取り込みは人間の判断",
   "updatedAt": "2026-10-02"
 }
