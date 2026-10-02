@@ -1,6 +1,6 @@
 # v2.0.0 Validation
 
-Status: LOCAL RELEASE CANDIDATE VALIDATION PASS / PUBLICATION AUTHORIZED. Upload and public re-download verification are pending.
+Status: LOOP_VAULT_V2_0_0_RELEASED / PUBLIC RE-DOWNLOAD VERIFIED.
 
 ## Scope
 
@@ -69,4 +69,20 @@ Binary scans of the final EXE and both installers found no personal paths, actua
 
 ## Finalization boundary
 
-The candidate contains version/documentation updates and two isolated security patch sets only; no Product algorithm or NO-GO research adoption. The human explicitly authorized exact candidate integration; local master merge is `c2d06e2504d5a1949aa861dc903b4f34ba3fbd2a`, with an identical tree to `d70623ae`. The human then separately authorized master push, v2.0.0 tag/push, public release, asset upload and public download verification. Verification/asset documents were imported via documentation-only `f4badb05`. Publication results will be appended after execution. No Product code or dependency changed after the tested code HEAD.
+The candidate contains version/documentation updates and two isolated security patch sets only; no Product algorithm or NO-GO research adoption. The human explicitly authorized exact candidate integration; local master merge is `c2d06e2504d5a1949aa861dc903b4f34ba3fbd2a`, with an identical tree to `d70623ae`. The human then separately authorized master push, v2.0.0 tag/push, public release, asset upload and public download verification. Verification/asset documents were imported via documentation-only `f4badb05`. Publication results are recorded below. No Product code or dependency changed after the tested code HEAD.
+
+## Authorized publication / public verification
+
+- Local master merged the exact approved candidate at `c2d06e2504d5a1949aa861dc903b4f34ba3fbd2a`; tree equality to d70623ae PASS. Fresh master phase-doc, AI-handoff, privacy and diff checks PASS at that merge.
+- Documentation-only result import: `f4badb05`; final release/download links and authorization: `9b64095fc45d43dfdf2ea277c0ff403a380fa48b`.
+- Normal master push and annotated v2.0.0 tag push: PASS. Tag target is `9b64095fc45d43dfdf2ea277c0ff403a380fa48b`. No force push, history rewrite or tag movement.
+- [Loop Vault v2.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0) published 2026-10-02T16:29:23Z (2026-10-03 Asia/Tokyo); not a draft or prerelease, marked latest.
+- Four assets uploaded, including SHA256SUMS. Published body lists names, sizes and SHA-256. All four were downloaded after publication; every size/SHA-256 matches the local build and GitHub digest. Manifest contents match byte-for-byte. Details: [assets](release-assets.md).
+- Public release page and direct EXE download link: HTTP 200 without authentication. README Japanese/English version 2.0.0 and release/direct-download links checked. CHANGELOG and Release Notes agree with actual approved functionality.
+- The final master publication-record commit is documentation-only. Tested/build code remains d70623ae; no FULL rerun or binary rebuild is represented as having occurred on later documentation HEADs.
+- The first hosted run on tagged commit 9b64095f failed three CPU-heavy public research tests at the bare Vitest default 5000ms budget; 3,789 tests passed, three timed out. Rust advisory/security jobs PASS. [Original hosted run](https://github.com/Takuyakou/loop-vault/actions/runs/37033960111). This is not represented as a remote CI PASS.
+- Existing FULL invocation already fixes `--maxWorkers=4 --testTimeout=30000 --reporter=dot` in scripts/test-dx/run.mjs. CI previously used bare `npm test`, with different execution parameters. Workflow-only commit `569d1a8000d410962b181f4602aafb811a3691ee` makes its full Vitest invocation identical to that approved contract. No assertion, test fixture, skip, retry, Product behavior, asset byte or tag changed.
+- Focused isolation at the frozen parameters: 16/16 PASS across the three affected public test files. [Fresh hosted run of the aligned workflow](https://github.com/Takuyakou/loop-vault/actions/runs/37035166209) records its independent outcome. Hosted results do not replace or relabel the local fresh FULL result at d70623ae.
+- Original unrelated untracked audit/diagnostic files remain untouched. Private inputs, Vault and backup were not uploaded or modified.
+
+Final disposition: `LOOP_VAULT_V2_0_0_RELEASED`.

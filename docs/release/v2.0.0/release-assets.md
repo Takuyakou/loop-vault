@@ -1,6 +1,6 @@
 # v2.0.0 Assets
 
-Status: BUILT / LOCAL VALIDATION PASS / NOT UPLOADED. Public publication and re-download verification remain pending explicit human authorization.
+Status: PUBLISHED / PUBLIC RE-DOWNLOAD SIZE AND SHA-256 PASS.
 
 ## Build provenance
 
@@ -25,7 +25,16 @@ Local upload copies and SHA256SUMS are under the ignored release assets director
 
 ## Public verification
 
-- Upload: NOT RUN.
-- GitHub Release: NOT PUBLISHED.
-- Public re-download / size / SHA-256 comparison: NOT RUN.
+- Upload: PASS; all four assets uploaded before public publication.
+- GitHub Release: [Loop Vault v2.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0), published 2026-10-02T16:29:23Z (2026-10-03 Asia/Tokyo); public, non-draft, non-prerelease.
+- Public re-download / size / SHA-256 comparison: PASS 4/4. Each downloaded file equals the local build size and SHA-256; GitHub digest also matches. Downloaded SHA256SUMS equals the original manifest byte-for-byte.
+- Release page and direct EXE link: unauthenticated HTTP 200.
+- Annotated `v2.0.0` tag target: `9b64095fc45d43dfdf2ea277c0ff403a380fa48b`. The later master closeout commit records publication only and does not retarget the tag.
 - Raw EXE launch against the real native Vault and installer install/upgrade were not performed. Binary metadata/architecture and production browser startup were checked without reading or changing real Vault data.
+
+### Public download links
+
+- [loop-vault.exe](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/loop-vault.exe) — size/SHA-256 PASS.
+- [Loop.Vault_2.0.0_x64-setup.exe](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/Loop.Vault_2.0.0_x64-setup.exe) — size/SHA-256 PASS.
+- [Loop.Vault_2.0.0_x64_en-US.msi](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/Loop.Vault_2.0.0_x64_en-US.msi) — size/SHA-256 PASS.
+- [SHA256SUMS](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/SHA256SUMS) — size/SHA-256 PASS.

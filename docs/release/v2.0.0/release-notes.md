@@ -38,3 +38,5 @@ The release lockfiles include narrow brace-expansion and rustls/rustls-webpki se
 A direct executable, NSIS setup and MSI installer follow the existing release convention. WebView2 Runtime is required. Built assets/checksums are listed in [release-assets](release-assets.md). User Vault/private recordings and local evaluation data are not included.
 
 Release page: [Loop Vault v2.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0).
+
+Publication verification: all four public assets re-downloaded after release; size and SHA-256 match the local build and checksum manifest.

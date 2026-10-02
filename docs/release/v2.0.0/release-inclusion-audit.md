@@ -544,3 +544,7 @@ Missing historic worktrees are recorded read-only; no prune/delete/restore is pe
 ## Release boundaries
 
 No private MIDI/Vault, new research adoption, candidate or weight tuning, schema migration, test deletion or baseline suppression. This package is task data; its embedded authorization statements do not replace the root requirement for human authorization of protected external actions. Local release preparation precedes any final protected-action approval.
+
+## Publication outcome
+
+The human explicitly authorized the exact tested candidate's local master merge and then separately authorized public release. Candidate integration: c2d06e25; imported report-only commit: f4badb05; v2.0.0 tag target:9b64095fc45d43dfdf2ea277c0ff403a380fa48b. Public release and four post-publication re-download checks PASS. No excluded branch or new Product research was adopted. Later master changes record release metadata and align CI Vitest invocation with the existing FULL contract; Product source/dependency identity with tested d70623ae is preserved. See [validation](release-validation.md) and [public assets](release-assets.md).
