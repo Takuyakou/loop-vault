@@ -163,7 +163,9 @@
   .lv-cw-canvas { position: relative; }
 
   .lv-cw-ruler, .lv-cw-segments, .lv-cw-cards, .lv-cw-roll { position: relative; }
-  .lv-cw-ruler { height: 26px; border-bottom: 1px solid var(--lv-border); }
+  .lv-cw-ruler { height: 26px; border-bottom: 1px solid var(--lv-border); cursor: pointer; }
+  /* P10.2 §8: the bar under the pointer. */
+  .lv-cw-bar-hover { position: absolute; top: 0; bottom: 0; background: var(--lv-surface-raised); box-shadow: inset 2px 0 0 var(--lv-accent); pointer-events: none; }
   .lv-cw-bar-no { position: absolute; top: 4px; padding-left: 5px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-11); white-space: nowrap; }
   .lv-cw-segments { height: 20px; }
   .lv-cw-segments[data-open] { height: 30px; }
@@ -210,7 +212,16 @@
   .lv-cw-card[data-playing] .lv-cw-card-name { color: var(--lv-accent); }
   .lv-cw-card[data-playing]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0 0 6px 6px; background: var(--lv-accent); transform-origin: left; transform: scaleX(0); }
   .lv-cw-note[data-playing] { z-index: 2; filter: brightness(1.35); box-shadow: 0 0 6px rgb(66 216 198 / 55%); }
-  .lv-cw-card[data-start-cue] { overflow: visible; }
+  .lv-cw-card[data-start-cue], .lv-cw-card[data-range-from] { overflow: visible; }
+  /* P10.2 §9: 「ここから」 and the pending range under the cards (yellow, dashed). */
+  .lv-cw-card[data-range-from] { border: 2px dashed var(--lv-warning); }
+  .lv-cw-card[data-range-from]::before { content: "ここから"; position: absolute; top: -9px; right: 6px; z-index: 2; padding: 0 5px; border-radius: 3px; background: var(--lv-warning-soft); color: var(--lv-warning); font-size: 10px; line-height: 1.6; white-space: nowrap; pointer-events: none; }
+  .lv-cw-range-brace { position: absolute; bottom: 12px; height: 9px; border: 1.5px dashed var(--lv-warning); border-top: 0; border-radius: 0 0 6px 6px; pointer-events: none; }
+  .lv-cw-range-brace span { position: absolute; top: 1px; left: 50%; padding: 0 4px; transform: translateX(-50%); background: var(--lv-bg); color: var(--lv-warning); font-size: 10px; white-space: nowrap; }
+  /* P10.2 §11: the segment edges. */
+  .lv-cw-seg-edge { position: absolute; top: 3px; bottom: 3px; z-index: 2; width: 6px; border-radius: 2px; cursor: ew-resize; touch-action: none; }
+  .lv-cw-segments:hover .lv-cw-seg-edge { background: var(--lv-border-strong); }
+  .lv-cw-seg-edge:hover, .lv-cw-seg-edge:active { background: var(--lv-accent); }
   .lv-cw-icon { min-width: 30px; justify-content: center; padding-inline: 6px; }
   .lv-cw-card[data-start-cue]::before { content: "▶ ここから"; position: absolute; top: -9px; left: 6px; z-index: 2; padding: 0 5px; border-radius: 3px; background: var(--lv-bg); color: var(--lv-accent); font-size: 10px; line-height: 1.6; white-space: nowrap; pointer-events: none; }
   .lv-cw-card[data-size="narrow"] { padding: 8px 5px; }

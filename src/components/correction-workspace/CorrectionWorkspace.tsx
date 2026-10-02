@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { PreviewSound } from "../../audio/chordPreview";
 import { samePlaybackSource, type PlaybackController, type PlaybackRequest, type PlayingSource } from "../../audio/playbackController";
 import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
-import type { CorrectionCard, CorrectionModel, CorrectionNote, NameSource } from "../../domain/correction/correctionModel";
-import { noteLabel, notesByCard } from "../../domain/correction/correctionModel";
+import type { CorrectionCard, CorrectionModel, CorrectionNote, CorrectionSegment, NameSource } from "../../domain/correction/correctionModel";
+import { barRangeLabel, noteLabel, notesByCard } from "../../domain/correction/correctionModel";
+import { cardForBar, cardsBarRange, pickRangeCard } from "../../domain/correction/rangePick";
+import { moveSegmentEdge, type SegmentEdge } from "../../domain/correction/segmentEdits";
 import {
   addNote,
   cardNoteIds,
@@ -19,7 +21,7 @@ import {
   TEMPO_MIN,
   type EditResult,
 } from "../../domain/correction/edits";
-import { commitEdit, editCount, editKindCounts, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
+import { commitEdit, editCount, editKindCounts, lastEditLabel, redo, savedContentDiffers, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
 import { buildMetricsRecord, type CorrectionMetricsSession } from "../../domain/correction/metrics";
 import { appendCorrectionMetrics } from "../../storage/correctionMetricsStorage";
 import { registerClosePreparation } from "../../store/closePreparation";
@@ -27,7 +29,7 @@ import { nameCandidatesFor } from "../../domain/correction/nameCandidates";
 import { beatsPerBar as beatsPerBarFor } from "../../domain/midi/timing";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
 import type { ChordSymbol, ChordTimelineItem, ProgressionBlockCandidate } from "../../domain/types";
-import type { SaveRange } from "../../domain/correction/saveCandidate";
+import { cardsInRange, type SaveRange } from "../../domain/correction/saveCandidate";
 import { registerCloseBlocker } from "../../store/closeBlocker";
 import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
 import { songPlaybackNotes } from "../../domain/correction/songPlayback";
@@ -140,6 +142,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [segmentsOpen, setSegmentsOpen] = useState(() => typeof window === "undefined" || !window.matchMedia?.("(max-width: 959px)").matches);
   const [panelOpen, setPanelOpen] = useState(false);
   const [saveRange, setSaveRange] = useState<SaveRange>();
+  // P10.2 §9: 「ここから」 after a first right-click on a card, and the card the pointer is on.
+  const [rangeFrom, setRangeFrom] = useState<string>();
+  const [rangeHover, setRangeHover] = useState<string>();
+  const keyboardMenuRef = useRef<{ cardId: string; at: number }>();
+  const [hoverBar, setHoverBar] = useState<number>();
+  const segmentDrag = useRef<{ segment: CorrectionSegment; edge: SegmentEdge; pointerId: number; x: number; moved: boolean; result?: EditResult }>();
+  const [segmentTip, setSegmentTip] = useState<{ x: number; text: string }>();
   const [savedRanges, setSavedRanges] = useState<ReadonlySet<string>>(() => new Set());
   const [savedPresent, setSavedPresent] = useState<CorrectionModel>();
   const [savedCount, setSavedCount] = useState(0);
@@ -443,6 +452,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if (key === "Escape") {
         if (helpOpen) { handled(); setHelpOpen(false); }
         else if (ids.length) { handled(); setSelectedNotes(new Set()); }
+        else if (rangeFrom) { handled(); setRangeFrom(undefined); setRangeHover(undefined); }
         else if (saveRange) { handled(); setSaveRange(undefined); }
         else if (selectedId !== undefined) { handled(); setSelectedId(undefined); }
       }
@@ -457,7 +467,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [askMergeRuns, confirm, edit, enterEdit, goToStart, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
+  }, [askMergeRuns, confirm, edit, enterEdit, goToStart, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, rangeFrom, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -570,7 +580,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
-  const dirty = count > 0 && history.present !== savedPresent;
+  const dirty = count > 0 && savedContentDiffers(history.present, savedPresent);
   const unsavedCount = dirty ? Math.max(1, count - savedCount) : 0;
   const { onDirtyChange } = props;
   useEffect(() => { onDirtyChange?.(unsavedCount); }, [unsavedCount, onDirtyChange]);
@@ -582,7 +592,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     cancelLabel: "戻る",
   }) : undefined, [unsavedCount]);
   const guarded = (action: () => void) => () => { if (dirty) setPendingLeave(() => action); else action(); };
-  const lastBarOf = (card: CorrectionCard) => Math.floor((card.start + card.duration - 1e-6) / meter) + 1;
   const inSaveRange = (card: CorrectionCard) => !saveRange || (card.start < saveRange.endBar * meter - 1e-6 && card.start + card.duration > (saveRange.startBar - 1) * meter + 1e-6);
   const selectedNoteList = present.notes.filter((note) => selectedNotes.has(note.id));
   const selectionBar = selectedNoteList.length ? (
@@ -595,6 +604,62 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       <button type="button" className="lv-cw-btn" onClick={() => setSelectedNotes(new Set())} data-testid="correction-selection-clear">選択をやめる <kbd>Esc</kbd></button>
     </>
   ) : undefined;
+  /** P10.2 §9: the range decided by right-clicks, said in the status line. */
+  const chooseRange = (next: SaveRange) => {
+    setSaveRange(next);
+    setNotice(`保存する範囲を ${barRangeLabel(next.startBar, next.endBar)}（${cardsInRange(present, next).length}コード）にしました`);
+  };
+  const markRange = (card: CorrectionCard, immediate: boolean) => {
+    const pending = rangeFrom ? present.cards.find((entry) => entry.id === rangeFrom) : undefined;
+    const next = pickRangeCard(pending, card, meter, immediate);
+    setRangeFrom(next.pending?.id);
+    setRangeHover(undefined);
+    if (next.range) chooseRange(next.range);
+  };
+  const rangeFromCard = rangeFrom ? present.cards.find((card) => card.id === rangeFrom) : undefined;
+  const rangeHoverCard = rangeHover ? present.cards.find((card) => card.id === rangeHover) : undefined;
+  const pendingRange = rangeFromCard ? cardsBarRange(rangeFromCard, rangeHoverCard ?? rangeFromCard, meter) : undefined;
+  /** P10.2 §8: the bar under the pointer on the bar row. */
+  const barAtPointer = (event: { clientX: number; currentTarget: HTMLElement }) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    return Math.min(totalBars, Math.max(1, Math.floor((event.clientX - box.left) / pxPerBeat / meter) + 1));
+  };
+  /** P10.2 §11: a segment edge moved; a save range that was this segment follows it. */
+  const applySegment = (result: EditResult, segment: CorrectionSegment) => {
+    if (!result.changed) return;
+    apply(result);
+    const moved = result.model.segments.find((entry) => entry.id === segment.id);
+    if (moved && saveRange?.startBar === segment.startBar && saveRange.endBar === segment.endBar) setSaveRange({ startBar: moved.startBar, endBar: moved.endBar });
+  };
+  function startSegmentEdge(event: ReactPointerEvent<HTMLSpanElement>, segment: CorrectionSegment, edge: SegmentEdge) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    segmentDrag.current = { segment, edge, pointerId: event.pointerId, x: event.clientX, moved: false };
+  }
+  function dragSegmentEdge(event: ReactPointerEvent<HTMLSpanElement>) {
+    const drag = segmentDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!drag.moved && Math.abs(event.clientX - drag.x) < 4) return;
+    drag.moved = true;
+    const box = event.currentTarget.parentElement!.getBoundingClientRect();
+    const line = Math.round((event.clientX - box.left) / pxPerBeat / meter); // the bar line nearest the pointer
+    const result = moveSegmentEdge(present, drag.segment.id, drag.edge, drag.edge === "end" ? line : line + 1);
+    drag.result = result.changed ? result : undefined;
+    setPreview(drag.result?.model);
+    const moved = drag.result?.model.segments.find((entry) => entry.id === drag.segment.id);
+    setSegmentTip(moved ? { x: (drag.edge === "end" ? moved.endBar : moved.startBar - 1) * meter * pxPerBeat, text: drag.edge === "end" ? `${moved.endBar}小節まで` : `${moved.startBar}小節から` } : undefined);
+  }
+  function endSegmentEdge(event: ReactPointerEvent<HTMLSpanElement>) {
+    const drag = segmentDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    segmentDrag.current = undefined;
+    setPreview(undefined);
+    setSegmentTip(undefined);
+    // Pressed without moving: the segment becomes the save range, as a click on it does.
+    if (!drag.moved) setSaveRange({ startBar: drag.segment.startBar, endBar: drag.segment.endBar });
+    else if (drag.result) applySegment(drag.result, drag.segment);
+  }
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
 
@@ -718,7 +783,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               onPointerDown={(event) => { event.currentTarget.setPointerCapture?.(event.pointerId); moveFromOverview(event); }}
               onPointerMove={(event) => { if (event.buttons === 1) moveFromOverview(event); }}
             >
-              {present.segments.map((segment, index) => (
+              {shown.segments.map((segment, index) => (
                 <span key={segment.id} className="lv-cw-ov-seg" data-alt={index % 2 === 1 || undefined}
                   style={{ left: pct((segment.startBar - 1) * meter, present.totalBeats), width: pct((segment.endBar - segment.startBar + 1) * meter, present.totalBeats) }}>
                   <span className="lv-cw-ov-seg-name">{segment.label}</span>
@@ -767,31 +832,77 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             </div>
             <div ref={scrollRef} className="lv-cw-scroll" data-testid="correction-timeline-scroll" onScroll={(event) => setScrollLeft(event.currentTarget.scrollLeft)}>
               <div className="lv-cw-canvas" style={{ width: canvasWidth, "--lv-cw-beat": `${pxPerBeat}px`, "--lv-cw-bar": `${pxPerBeat * meter}px` } as CSSProperties}>
-                <div className="lv-cw-ruler">
+                <div
+                  className="lv-cw-ruler"
+                  data-testid="correction-ruler"
+                  title={hoverBar ? `${hoverBar}小節の頭のカードを選ぶ` : undefined}
+                  onPointerMove={(event) => setHoverBar(barAtPointer(event))}
+                  onPointerLeave={() => setHoverBar(undefined)}
+                  onClick={(event) => {
+                    // P10.2 §8: the card sounding on the bar's first beat; Shift = the range from the selected card.
+                    const card = cardForBar(present.cards, barAtPointer(event), meter);
+                    if (!card) return;
+                    if (event.shiftKey && selected) setSaveRange(cardsBarRange(selected, card, meter));
+                    selectCard(card);
+                  }}
+                >
+                  {hoverBar ? <span className="lv-cw-bar-hover" style={{ left: (hoverBar - 1) * meter * pxPerBeat, width: meter * pxPerBeat }} /> : null}
                   {barNumbers.map((bar) => (
                     <span key={bar} className="lv-cw-bar-no" style={{ left: (bar - 1) * meter * pxPerBeat }}>{bar}</span>
                   ))}
                 </div>
                 <div className="lv-cw-segments" data-open={segmentsOpen || undefined}>
-                  {segmentsOpen ? present.segments.map((segment) => {
+                  {segmentsOpen ? shown.segments.map((segment, index, segments) => {
                     const width = (segment.endBar - segment.startBar + 1) * meter * pxPerBeat - 2;
                     const segmentLeft = (segment.startBar - 1) * meter * pxPerBeat + 1;
                     // The name sticks to the left edge of the view (spec v2.4 §4.3), within its band.
                     const shift = Math.max(0, Math.min(scrollLeft - segmentLeft, width - 160));
+                    const previous = segments[index - 1];
+                    const edge = (side: SegmentEdge, x: number) => (
+                      <span
+                        key={`${segment.id}-${side}`}
+                        className="lv-cw-seg-edge"
+                        role="separator"
+                        aria-label={`${segment.label}の${side === "start" ? "始まり" : "終わり"}（ドラッグで小節ずつ）`}
+                        data-testid="correction-segment-edge"
+                        data-edge={side}
+                        data-segment-id={segment.id}
+                        style={{ left: x - 3 }}
+                        onPointerDown={(event) => startSegmentEdge(event, segment, side)}
+                        onPointerMove={dragSegmentEdge}
+                        onPointerUp={endSegmentEdge}
+                        onPointerCancel={endSegmentEdge}
+                      />
+                    );
                     return (
-                      <button key={segment.id} type="button" className="lv-cw-segment" data-testid="correction-segment"
+                      <Fragment key={segment.id}>
+                      {/* A border shared with the segment before is moved from that segment's end. */}
+                      {previous && previous.endBar !== segment.startBar - 1 ? edge("start", segmentLeft - 1) : null}
+                      <button type="button" className="lv-cw-segment" data-testid="correction-segment"
                         aria-pressed={saveRange?.startBar === segment.startBar && saveRange.endBar === segment.endBar}
                         data-saved={savedRanges.has(rangeKey(segment)) || undefined}
-                        title={`${segment.label}を保存する範囲にする`}
+                        title={`${segment.label}を保存する範囲にする（端をドラッグ・Alt＋←→ で範囲を変える）`}
                         style={{ left: segmentLeft, width }}
-                        onClick={() => setSaveRange({ startBar: segment.startBar, endBar: segment.endBar })}>
+                        onClick={() => setSaveRange({ startBar: segment.startBar, endBar: segment.endBar })}
+                        onKeyDown={(event) => {
+                          // P10.2 §11: Alt+←/→ the right edge, Alt+Shift+←/→ the left edge, a bar at a time.
+                          if (!event.altKey || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          const side: SegmentEdge = event.shiftKey ? "start" : "end";
+                          const step = event.key === "ArrowRight" ? 1 : -1;
+                          applySegment(moveSegmentEdge(present, segment.id, side, (side === "end" ? segment.endBar : segment.startBar) + step), segment);
+                        }}>
                         <span className="lv-cw-segment-name" style={shift > 0 ? { transform: `translateX(${shift}px)` } : undefined}>
                           {segment.label}{segment.repeatCount ? (width < 140 ? ` ×${segment.repeatCount}` : ` · ${segment.repeatCount}回出てくる`) : ""}
                           {savedRanges.has(rangeKey(segment)) ? <span className="lv-cw-saved">保存済み</span> : null}
                         </span>
                       </button>
+                      {index < segments.length - 1 ? edge("end", segmentLeft + width + 1) : null}
+                      </Fragment>
                     );
                   }) : null}
+                  {segmentTip ? <span className="lv-cw-pitch-tip" style={{ left: segmentTip.x, top: 12 }} data-testid="correction-segment-tip">{segmentTip.text}</span> : null}
                 </div>
                 <div className="lv-cw-cards">
                   {shown.cards.filter((card) => overlaps(card.start, card.duration, range)).map((card) => {
@@ -814,10 +925,28 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
                         data-card-id={card.id}
                         data-out-of-range={!inSaveRange(card) || undefined}
-                        data-start-cue={(!songPlaying && card.id === cueCard?.id) || undefined}
+                        data-start-cue={(!songPlaying && !rangeFrom && card.id === cueCard?.id) || undefined}
+                        data-range-from={card.id === rangeFrom || undefined}
+                        onPointerEnter={() => { if (rangeFrom) setRangeHover(card.id); }}
+                        onContextMenu={(event) => {
+                          // P10.2 §9: right-click → right-click sets the save range (the piano roll keeps its own).
+                          event.preventDefault();
+                          const keyboard = keyboardMenuRef.current;
+                          keyboardMenuRef.current = undefined;
+                          if (event.detail === 0 && keyboard?.cardId === card.id && performance.now() - keyboard.at < 500) return;
+                          markRange(card, event.shiftKey);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "ContextMenu" || event.key === "Menu" || (event.shiftKey && event.key === "F10")) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            keyboardMenuRef.current = { cardId: card.id, at: performance.now() };
+                            markRange(card, false);
+                          }
+                        }}
                         onClick={(event) => {
                           // Shift+click: the range from the selected card to this one, in whole bars.
-                          if (event.shiftKey && selected) setSaveRange({ startBar: Math.min(selected.bar, card.bar), endBar: Math.max(lastBarOf(selected), lastBarOf(card)) });
+                          if (event.shiftKey && selected) setSaveRange(cardsBarRange(selected, card, meter));
                           selectCard(card, false);
                           // 「押して鳴らす」: only a plain click, never while the song plays; the last audition stops.
                           if (clickAudition && !event.shiftKey && !songPlaying) auditionCard(card);
@@ -853,6 +982,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                     );
                   })}
                   {boundaryTip ? <span className="lv-cw-pitch-tip" style={{ left: boundaryTip.x, top: 12 }}>{boundaryTip.text}</span> : null}
+                  {pendingRange ? (
+                    <span className="lv-cw-range-brace" data-testid="correction-range-pending" style={{ left: (pendingRange.startBar - 1) * meter * pxPerBeat + 1, width: (pendingRange.endBar - pendingRange.startBar + 1) * meter * pxPerBeat - 2 }}>
+                      <span>{barRangeLabel(pendingRange.startBar, pendingRange.endBar)}・{cardsInRange(present, pendingRange).length}コード（右クリックで決める）</span>
+                    </span>
+                  ) : null}
                 </div>
                 <div className="lv-cw-chips">
                   {present.cards.filter((card) => overlaps(card.start, card.duration, range) && card.reviewReasons.some((reason) => reason.kind === "same-chord-split")).map((card) => (
@@ -986,7 +1120,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span><kbd>N</kbd> 音を直す</span>
             <span><kbd>M</kbd> つなぐ・<kbd>S</kbd> 分ける</span>
             <span><kbd>1</kbd>〜<kbd>4</kbd> 名前・<kbd>Y</kbd> このままでよい</span>
-            <span>右クリック：外す・ダブルクリック：足す</span>
+            <span>ロールの右クリック：外す・ダブルクリック：足す</span>
+            <span>カードの右クリック→右クリック：保存する範囲</span>
             <span><kbd>A</kbd><kbd>B</kbd> 聴き比べ</span>
             <span><kbd>Space</kbd> 再生・停止（どこでも）</span>
             <span><kbd>Enter</kbd> フォーカスのあるボタンを押す</span>
@@ -1092,10 +1227,12 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
     ["Home", "曲の先頭へ（再生中なら先頭から鳴らし直す）"], ["End", "最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"],
     ["M", "次のカードとつなぐ"], ["Shift＋M", "同じ音が続く所を確認してつなぐ"], ["S", "カードを半分に分ける"],
     ["境目の取っ手", "ドラッグで1拍ずつ（Alt で ¼拍）"], ["1〜4", "名前の候補を選ぶ"], ["F2・名前をダブルクリック", "名前を文字で入れる"], ["Y", "このままでよい（次の要確認へ）"], ["N", "② 音を直す"], ["Enter", "直し終わる（①へ）"],
-    ["右クリック・右ドラッグ", "元の音を外す／足した音を消す"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],
+    ["右クリック・右ドラッグ（ピアノロール）", "元の音を外す／足した音を消す"],
+    ["カードを右クリック→右クリック", "保存する範囲（Shift＋右クリックはそのカードの小節だけ。Shift＋F10・メニューキーでも）"],
+    ["小節の行をクリック", "その小節の頭のカードを選ぶ（Shift で範囲）"], ["区切りの端", "ドラッグで小節ずつ（Alt＋←→ 右端・Alt＋Shift＋←→ 左端）"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],
     ["上下ドラッグ・↑↓", "半音ずつ高さを直す"], ["Ctrl＋↑↓", "1オクターブ"], ["Delete", "外す・消す"], ["R", "戻す"],
     ["Ctrl＋A", "選んだカードの音を全部選ぶ"], ["Ctrl＋クリック（鍵盤）", "その高さの音を曲全体で選ぶ"], ["A B", "元の音／カードの音を鳴らす"],
-    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["Esc", "閉じる → 音の選択 → 保存する範囲 → カードの選択の順に外す"],
+    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["Esc", "閉じる → 音の選択 → ここから → 保存する範囲 → カードの選択の順に外す"],
   ];
   return (
     <div className="lv-cw-cheat" role="dialog" aria-modal="true" aria-label="ショートカット一覧" onClick={onClose}>

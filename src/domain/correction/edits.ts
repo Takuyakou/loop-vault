@@ -16,7 +16,7 @@ import {
  */
 
 /** What kind of operation an edit was, for the local metrics (spec v2.5 §13). */
-export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed" | "tempo";
+export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed" | "tempo" | "segment";
 
 export interface EditResult {
   model: CorrectionModel;
@@ -30,7 +30,7 @@ export interface EditResult {
 
 export const TEN_NOTE_LIMIT = "このカードで鳴らせるのは10音までです";
 
-const unchanged = (model: CorrectionModel, message?: string): EditResult => ({ model, changed: false, label: "", ...(message ? { message } : {}) });
+export const unchanged = (model: CorrectionModel, message?: string): EditResult => ({ model, changed: false, label: "", ...(message ? { message } : {}) });
 
 function finish(model: CorrectionModel, notes: CorrectionNote[], touched: ReadonlySet<string>, label: string, extra: Partial<Pick<CorrectionModel, "seq">> = {}, message?: string): EditResult {
   const cards = model.cards.map((card) => touched.has(card.id) && !card.edited ? { ...card, edited: true } : card);

@@ -6,7 +6,7 @@ import type { EditKind } from "./edits";
  */
 
 export const METRICS_SCHEMA_VERSION = 1;
-export const EDIT_KINDS: readonly EditKind[] = ["exclude", "restore", "add", "delete", "pitch", "merge", "merge-all", "split", "boundary", "name", "reviewed", "tempo"];
+export const EDIT_KINDS: readonly EditKind[] = ["exclude", "restore", "add", "delete", "pitch", "merge", "merge-all", "split", "boundary", "name", "reviewed", "tempo", "segment"];
 
 export interface CorrectionMetricsRecord {
   schemaVersion: typeof METRICS_SCHEMA_VERSION;

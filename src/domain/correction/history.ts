@@ -43,8 +43,19 @@ export function redo(history: CorrectionHistory): CorrectionHistory {
   return { present: entry.model, past: [...history.past, { ...entry, model: history.present }], future: history.future.slice(0, -1) };
 }
 
+/**
+ * 「直した回数」: the entries that change what is saved. Moving a segment's edges is in the
+ * history (undo) but segments are never saved, so it is not counted (P10.2 §11).
+ */
 export function editCount(history: CorrectionHistory): number {
-  return history.past.length;
+  return history.past.filter((entry) => entry.kind !== "segment").length;
+}
+
+/** The model differs from `saved` in something that is saved (segments are not). */
+export function savedContentDiffers(model: CorrectionModel, saved: CorrectionModel | undefined): boolean {
+  if (!saved) return true;
+  return (Object.keys(model) as (keyof CorrectionModel)[]).some((key) => key !== "segments" && model[key] !== saved[key])
+    || (Object.keys(saved) as (keyof CorrectionModel)[]).some((key) => !(key in model));
 }
 
 /** Operations in the history by kind; undone ones are not counted (spec v2.5 §13). */

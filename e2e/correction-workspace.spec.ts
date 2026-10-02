@@ -921,3 +921,100 @@ test("P10.2 the sounding card looks like Voicing Loop's current card, apart from
   await workspace.getByTestId("correction-play-song").click();
   await expect(workspace.locator("[data-playing]")).toHaveCount(0);
 });
+
+// ---- P10.2 choosing, ranges and segments -------------------------------------------------
+
+test("P10.2 a click anywhere on the bar row selects the card on that bar's first beat; Shift makes a range", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const ruler = workspace.getByTestId("correction-ruler");
+  const box = (await ruler.boundingBox())!;
+  const barWidth = box.width / 8;
+  // Not on the number: the right part of bar 3.
+  await page.mouse.move(box.x + barWidth * 2.8, box.y + box.height / 2);
+  await expect(ruler).toHaveAttribute("title", "3小節の頭のカードを選ぶ");
+  await page.mouse.click(box.x + barWidth * 2.8, box.y + box.height / 2);
+  await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"]')).toHaveAttribute("aria-label", /^3小節1拍/);
+  await expect(workspace.getByTestId("correction-play-song")).toHaveAttribute("aria-pressed", "false"); // 押して鳴らす does not play from the bar row
+  await page.keyboard.down("Shift");
+  await page.mouse.click(box.x + barWidth * 5.5, box.y + box.height / 2);
+  await page.keyboard.up("Shift");
+  await expect(workspace.getByTestId("correction-save-range")).toContainText("3〜6小節");
+});
+
+test("P10.2 right-click a card, then another: the save range, with a pending frame; Esc drops only 「ここから」", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const cards = workspace.getByTestId("correction-card");
+  await cards.nth(1).click({ button: "right" });
+  await expect(cards.nth(1)).toHaveAttribute("data-range-from", "true");
+  await cards.nth(4).hover();
+  await expect(workspace.getByTestId("correction-range-pending")).toHaveText("2〜5小節・4コード（右クリックで決める）");
+  await cards.nth(4).click({ button: "right" });
+  await expect(workspace.getByTestId("correction-save-range")).toContainText("2〜5小節・4枚");
+  await expect(workspace.getByTestId("correction-notice")).toHaveText("保存する範囲を 2〜5小節（4コード）にしました");
+  await expect(workspace.getByTestId("correction-range-pending")).toHaveCount(0);
+
+  // Backwards, then Esc: only 「ここから」 goes; the range stays.
+  await cards.nth(6).click({ button: "right" });
+  await cards.nth(5).hover();
+  await expect(workspace.getByTestId("correction-range-pending")).toHaveText("6〜7小節・2コード（右クリックで決める）");
+  await page.keyboard.press("Escape");
+  await expect(workspace.locator("[data-range-from]")).toHaveCount(0);
+  await expect(workspace.getByTestId("correction-save-range")).toContainText("2〜5小節");
+  // Shift+right-click: that card's bars at once; the keyboard's Shift+F10 marks 「ここから」.
+  await cards.nth(7).click({ button: "right", modifiers: ["Shift"] });
+  await expect(workspace.getByTestId("correction-save-range")).toContainText("8小節・1枚");
+  await cards.nth(0).focus();
+  await page.keyboard.press("Shift+F10");
+  await expect(cards.nth(0)).toHaveAttribute("data-range-from", "true");
+  await page.keyboard.press("Escape");
+
+  // The piano roll's right-click still removes a note.
+  const id = await firstNoteId(page, "harmony");
+  const point = await center(rollNote(page, id));
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down({ button: "right" });
+  await page.mouse.up({ button: "right" });
+  await expect(rollNote(page, id)).toHaveAttribute("data-kind", "off");
+});
+
+test("P10.2 dragging a segment edge moves the segment border by bars; a press alone makes it the range; undo, not an unsaved change", async ({ page }) => {
+  await importScenario(page, "long-64"); // segments of 8 bars, touching: 1–8, 9–16, …
+  const workspace = page.getByTestId("correction-workspace");
+  const segments = workspace.getByTestId("correction-segment");
+  const range = workspace.getByTestId("correction-save-range");
+  const edge = workspace.locator('[data-testid="correction-segment-edge"][data-segment-id="segment-0"]');
+  await expect(edge).toHaveAttribute("data-edge", "end");
+  const barWidth = (await segments.nth(0).boundingBox())!.width / 8;
+  const overview = workspace.locator(".lv-cw-ov-seg").first();
+  const overviewBefore = (await overview.boundingBox())!.width;
+
+  // A press without moving: the segment becomes the save range.
+  await edge.click();
+  await expect(range).toContainText("1〜8小節");
+
+  const from = await center(edge);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x - barWidth * 0.7, from.y, { steps: 4 });
+  await expect(workspace.getByTestId("correction-segment-tip")).toHaveText("7小節まで");
+  await page.mouse.move(from.x - barWidth * 1.1, from.y, { steps: 4 });
+  await page.mouse.up();
+  // The first segment is 1–7 now, the second 8–16; the range that was the first followed it; the overview too.
+  await expect(range).toContainText("1〜7小節");
+  await expect.poll(async () => (await overview.boundingBox())!.width).toBeLessThan(overviewBefore - 1);
+  await segments.nth(1).click();
+  await expect(range).toContainText("8〜16小節");
+  await expect(workspace.getByTestId("correction-edit-count")).toContainText("0");
+
+  // Alt+→ on the first segment moves its right edge back; Ctrl+Z undoes it.
+  await segments.nth(0).focus();
+  await page.keyboard.press("Alt+ArrowRight");
+  await segments.nth(1).click();
+  await expect(range).toContainText("9〜16小節");
+  await page.keyboard.press("Control+z");
+  await segments.nth(1).click();
+  await expect(range).toContainText("8〜16小節");
+  await expect(workspace.getByTestId("correction-edit-count")).toContainText("0");
+});

@@ -454,7 +454,12 @@ function buildSegments(
         const endBar = Math.min(startBar + 7, totalBars);
         return { startBar, endBar, label: barRangeLabel(startBar, endBar), source: "fallback-8bar" as const };
       });
-  const contents = ranges.map((range) => {
+  return withRepeatCounts(ranges.map((range, index) => ({ id: `segment-${index}`, ...range })), cards, meter);
+}
+
+/** 「n回出てくる」: segments with the same chords at the same places (P10.2 §11 recounts after an edge moves). */
+export function withRepeatCounts(segments: readonly Omit<CorrectionSegment, "repeatCount">[], cards: readonly CorrectionCard[], meter: number): CorrectionSegment[] {
+  const contents = segments.map((range) => {
     const from = (range.startBar - 1) * meter;
     const to = range.endBar * meter;
     return cards.filter((card) => card.start >= from - EPSILON && card.start < to - EPSILON)
@@ -462,9 +467,10 @@ function buildSegments(
   });
   const counts = new Map<string, number>();
   for (const content of contents) if (content) counts.set(content, (counts.get(content) ?? 0) + 1);
-  return ranges.map((range, index) => {
+  return segments.map((segment, index) => {
+    const { repeatCount: _old, ...rest } = segment as CorrectionSegment;
     const count = counts.get(contents[index]!) ?? 1;
-    return { id: `segment-${index}`, ...range, ...(count > 1 ? { repeatCount: count } : {}) };
+    return { ...rest, ...(count > 1 ? { repeatCount: count } : {}) };
   });
 }
 
