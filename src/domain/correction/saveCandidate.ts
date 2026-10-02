@@ -38,7 +38,7 @@ export interface SaveProblem {
 }
 
 export type SaveCandidateResult =
-  | { ok: true; candidate: ProgressionBlockCandidate; original: ProgressionBlockCandidate; editable: EditableProgression; userEdited: boolean; cardIds: string[] }
+  | { ok: true; candidate: ProgressionBlockCandidate; original: ProgressionBlockCandidate; editable: EditableProgression; userEdited: boolean; cardIds: string[]; /** P10.1 §12.4: the tempo a person set. */ bpm?: number }
   | { ok: false; problems: SaveProblem[] };
 
 type CardItem = { item: ChordTimelineItem; problem?: undefined } | { item?: undefined; problem: string };
@@ -175,14 +175,14 @@ export function buildSaveCandidate(model: CorrectionModel, range: SaveRange, tim
   editable.slots = editable.slots.map((slot, index) => {
     const card = cards.find((entry) => entry.bar === slot.position.bar && Math.abs(entry.beat - slot.position.beat) < EPSILON) ?? cards[index]!;
     const saved = candidate.chords[index]?.chord ?? slot.currentChord;
-    if (card.nameSource !== "user" || saved.label === slot.originalChord.label) return { ...slot, currentChord: saved };
+    if (card.nameSource === "auto" || saved.label === slot.originalChord.label) return { ...slot, currentChord: saved };
     const fromAlternatives = slot.alternatives.some((alternative) => alternative.chord.label === saved.label);
     return { ...slot, currentChord: saved, edited: true, editSource: fromAlternatives ? "alternative" : "manual-label" };
   });
-  const userEdited = cards.some((card) => card.edited || card.nameSource === "user" || card.attacks > 1)
+  const userEdited = model.tempo !== undefined || cards.some((card) => card.edited || card.nameSource !== "auto" || card.attacks > 1)
     || cards.some((card) => {
       const base = timeline[card.timelineIndex]!;
       return Math.abs((base.bar - 1) * meter + base.beat - 1 - card.start) > EPSILON || Math.abs(base.durationBeats - card.duration) > EPSILON;
     });
-  return { ok: true, candidate, original, editable, userEdited, cardIds: cards.map((card) => card.id) };
+  return { ok: true, candidate, original, editable, userEdited, cardIds: cards.map((card) => card.id), ...(model.tempo !== undefined ? { bpm: model.tempo } : {}) };
 }

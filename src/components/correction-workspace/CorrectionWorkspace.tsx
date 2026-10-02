@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import type { PreviewSound } from "../../audio/chordPreview";
 import { samePlaybackSource, type PlaybackController, type PlayingSource } from "../../audio/playbackController";
 import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
-import type { CorrectionCard, CorrectionModel, CorrectionNote } from "../../domain/correction/correctionModel";
+import type { CorrectionCard, CorrectionModel, CorrectionNote, NameSource } from "../../domain/correction/correctionModel";
 import { noteLabel, notesByCard } from "../../domain/correction/correctionModel";
 import {
   addNote,
@@ -13,6 +13,10 @@ import {
   pitchIds,
   restoreNotes,
   sameShortPitchIds,
+  setTempo,
+  effectiveTempo,
+  TEMPO_MAX,
+  TEMPO_MIN,
   type EditResult,
 } from "../../domain/correction/edits";
 import { commitEdit, editCount, editKindCounts, lastEditLabel, redo, startHistory, undo, type CorrectionHistory } from "../../domain/correction/history";
@@ -68,6 +72,8 @@ export interface CorrectionWorkspaceProps {
   blockCandidates: readonly ProgressionBlockCandidate[];
   /** Operations not yet saved (0 = nothing to lose); the leave guard and its text use it. */
   onDirtyChange?: (unsavedCount: number) => void;
+  /** The MIDI has no tempo of its own (P10.1 §12.1). */
+  tempoMissing?: boolean;
 }
 
 export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
@@ -172,8 +178,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 
   // ---- editing ---------------------------------------------------------------------------
   const apply = useCallback((result: EditResult) => {
-    setNotice(result.message);
-    if (!result.changed) return;
+    if (!result.changed) { setNotice(result.message); return; }
+    const before = new Map(historyRef.current.present.cards.map((card) => [card.id, card.name.label]));
+    const renamed = result.kind === "name" ? [] : result.model.cards.filter((card) => before.has(card.id) && before.get(card.id) !== card.name.label);
+    setNotice(result.message ?? (renamed.length === 1 ? `名前を ${renamed[0]!.name.label} にしました（音から）` : renamed.length > 1 ? `${renamed.length}枚の名前を音から変えました` : undefined));
     setHistory((current) => commitEdit(current, result));
   }, []);
   const edit = useCallback((run: (model: CorrectionModel) => EditResult) => {
@@ -202,8 +210,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const songStartBeat = present.cards[0]?.start ?? 0;
   // The beat the current playback started from (the selected card's, or the song's start).
   const [playStartBeat, setPlayStartBeat] = useState(songStartBeat);
-  // One tempo for the sound and the playhead (the player's own default is 96 when a song has none).
-  const songBpm = present.bpm ?? 96;
+  // One tempo for the sound, the playhead and saving (P10.1 §12; 96 = the player's own default).
+  const songBpm = effectiveTempo(present);
   const playheadRef = useRef<HTMLSpanElement>(null);
   const playTagRef = useRef<HTMLSpanElement>(null);
   const overviewPlayheadRef = useRef<HTMLSpanElement>(null);
@@ -242,14 +250,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   }, [reviewCards, selectCard, selected?.start]);
 
   /** P10.1 §2: from `fromBeat` (a card's start) to the end, or the whole song; following turns on (§4). */
-  const playSong = useCallback((fromBeat: number | undefined) => {
+  const playSong = useCallback((fromBeat: number | undefined, bpm = songBpm) => {
     const plan = createTimelineVoicingPlaybackPlan(timelineFrom(timeline, fromBeat, meter), "capture-full");
     setPlayStartBeat(fromBeat ?? songStartBeat);
     setFollow(true);
     void controller.play(fullSource, {
       type: "timeline",
       timeline: plan.timeline,
-      bpm: songBpm,
+      bpm,
       sound: previewSound,
       beatsPerBar: meter,
       explicitMidiNotesByEventId: plan.explicitMidiNotesByEventId,
@@ -292,9 +300,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   }, [low, present.notes, selected]);
 
   // ---- card edits (P10.0-04) -------------------------------------------------------------
-  const pickName = useCallback((name: ChordSymbol, cardId: string) => {
+  const pickName = useCallback((name: ChordSymbol, cardId: string, source: NameSource = "chosen") => {
     const before = present.cards.find((card) => card.id === cardId)?.name.label;
-    const result = edit((model) => chooseName(model, cardId, name));
+    const result = edit((model) => chooseName(model, cardId, name, source));
     if (result.changed && before) setRename({ cardId, before });
   }, [edit, present.cards]);
   const markAndNext = useCallback(() => {
@@ -316,7 +324,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   );
   const runConfirm = useCallback(() => {
     if (confirm === "runs") apply(mergeSameNotes(present));
-    else if (confirm === "same-fix" && selected) { apply(chooseName(present, sameFix, selected.name)); setRename(undefined); }
+    else if (confirm === "same-fix" && selected) { apply(chooseName(present, sameFix, selected.name, selected.nameSource === "typed" ? "typed" : "chosen")); setRename(undefined); }
     setConfirm(undefined);
   }, [apply, confirm, present, sameFix, selected]);
 
@@ -506,7 +514,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
   }, [playStartBeat, pxPerBeat, present.totalBeats, songBpm, startedAt]);
-  const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
+  const tempoText = present.tempo !== undefined
+    ? `${present.tempo}BPM（MIDI ${props.tempoMissing || !present.bpm ? "にテンポなし" : Math.round(present.bpm)}）`
+    : `${songBpm}BPM${props.tempoMissing || !present.bpm ? "（MIDI にテンポなし）" : ""}`;
+  const fileMeta = [`${totalBars}小節`, tempoText, present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
@@ -581,6 +592,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       <div className="lv-cw-work">
         <div className="lv-cw-timeline">
           <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar">
+            {/* P10.1 §1: 再生 and 表示 always share the first line. */}
+            <div className="lv-cw-bar-lead">
             <div className="lv-cw-group" role="group" aria-label="再生">
               <button
                 type="button"
@@ -595,6 +608,20 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 {songPlaying ? "■ 停止" : "▶ 再生"}
               </button>
               <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)} data-testid="correction-follow">追従</button>
+              <TempoField
+                value={songBpm}
+                {...(props.tempoMissing || !present.bpm ? { title: "MIDI にテンポの情報がありません" } : {})}
+                onCommit={(bpm) => {
+                  const result = setTempo(present, bpm);
+                  if (!result.changed) return;
+                  // Playing: carry on from the head of the card sounding now, at the new tempo.
+                  const resumeAt = playingRef.current && startedAt !== undefined
+                    ? cardAt(playheadBeatAt(performance.now(), startedAt, songBpm, playStartBeat))?.start
+                    : undefined;
+                  apply(result);
+                  if (resumeAt !== undefined) playSong(resumeAt, bpm);
+                }}
+              />
               <span className="lv-cw-time" data-testid="correction-position">
                 {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`} ／ {totalBars}小節
               </span>
@@ -612,6 +639,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                 />
                 押して鳴らす
               </label>
+            </div>
             </div>
             <div className="lv-cw-group" role="group" aria-label="要確認">
               <button type="button" className="lv-cw-btn" onClick={() => nextReview(-1)} disabled={!reviewCards.length} aria-label="前の要確認">◀ 前の要確認</button>
@@ -730,6 +758,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         data-size={size === "full" ? undefined : size}
                         data-review={review || undefined}
                         data-edited={card.edited || undefined}
+                        data-name-unreadable={card.nameUnreadable || undefined}
                         data-testid="correction-card"
                         aria-pressed={card.id === selected?.id}
                         aria-label={`${card.bar}小節${card.beat}拍 ${card.name.label}${review ? "（要確認）" : ""}`}
@@ -872,6 +901,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               canUndo={count > 0}
               onUndo={undoOnce}
               onChooseName={(name) => pickName(name, selected.id)}
+              onUseSuggestedName={(name) => pickName(name, selected.id, "auto")}
               onTypeName={() => openNameEditor(selected.id)}
               onReviewed={markAndNext}
               {...(selectedIndex > 0 ? { onMergePrevious: () => { const previous = present.cards[selectedIndex - 1]!; setSelectedId(previous.id); edit((model) => mergeWithNext(model, previous.id)); } } : {})}
@@ -953,13 +983,57 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           anchorElement={nameEditor.anchor}
           resetLabel="自動の名前に戻す"
           onPreview={() => undefined}
-          onApply={(chord) => { pickName(chord, editorCard.id); setNameEditor(undefined); }}
+          onApply={(chord, source) => { pickName(chord, editorCard.id, source === "alternative" ? "chosen" : "typed"); setNameEditor(undefined); }}
           onReset={() => { edit((model) => chooseName(model, editorCard.id, timeline[editorCard.timelineIndex]!.chord, "auto")); setNameEditor(undefined); }}
           onOpenInspector={() => setNameEditor(undefined)}
           onClose={() => setNameEditor(undefined)}
         />
       ) : null}
     </section>
+  );
+}
+
+/**
+ * BPM 40–240 (P10.1 §12.1): Enter or leaving commits, ↑/↓ ±1 (Shift ±10) commit at once,
+ * Esc goes back to the value before typing. Anything else returns to the last value.
+ */
+function TempoField({ value, title, onCommit }: { value: number; title?: string; onCommit: (bpm: number) => void }) {
+  const [text, setText] = useState(String(value));
+  const [editing, setEditing] = useState(false);
+  // Enter and Esc leave the field themselves; the blur that follows must not commit again.
+  const skipBlur = useRef(false);
+  const shown = editing ? text : String(value);
+  const commit = (raw: string) => {
+    setEditing(false);
+    const bpm = Number(raw.trim());
+    if (raw.trim() !== "" && Number.isInteger(bpm) && bpm >= TEMPO_MIN && bpm <= TEMPO_MAX && bpm !== value) onCommit(bpm);
+  };
+  return (
+    <label className="lv-cw-tempo" title={title}>
+      BPM
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label="テンポ（BPM）"
+        data-testid="correction-tempo"
+        value={shown}
+        maxLength={3}
+        onFocus={() => { setText(String(value)); setEditing(true); }}
+        onChange={(event) => { setEditing(true); setText(event.target.value); }}
+        onBlur={() => { if (skipBlur.current) skipBlur.current = false; else commit(text); }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") { event.preventDefault(); commit(text); skipBlur.current = true; event.currentTarget.blur(); }
+          else if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setEditing(false); setText(String(value)); skipBlur.current = true; event.currentTarget.blur(); }
+          else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            event.preventDefault();
+            const step = (event.shiftKey ? 10 : 1) * (event.key === "ArrowUp" ? 1 : -1);
+            const next = Math.min(TEMPO_MAX, Math.max(TEMPO_MIN, (Number(text) || value) + step));
+            setText(String(next));
+            if (next !== value) onCommit(next);
+          }
+        }}
+      />
+    </label>
   );
 }
 
@@ -1005,7 +1079,7 @@ function slotFor(card: CorrectionCard, timeline: readonly ChordTimelineItem[]): 
     currentChord: card.name,
     alternatives: item.alternatives,
     warnings: [],
-    edited: card.nameSource === "user",
+    edited: card.nameSource !== "auto",
   };
 }
 

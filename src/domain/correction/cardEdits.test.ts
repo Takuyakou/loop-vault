@@ -45,14 +45,14 @@ describe("card edits (P10.0-04)", () => {
     expect(out.label).toMatch(/と次をつないだ$/);
   });
 
-  it("keeps a person's name when merging and joins added notes of the same pitch", () => {
+  it("keeps a typed name when merging (P10.1 §11.2) and joins added notes of the same pitch", () => {
     let model = fresh("plain-8");
     const [a, b] = model.cards;
-    model = chooseName(model, b!.id, { ...b!.name, label: "Am7" } as never).model;
     model = addNote(model, a!.id, 71).model;
     model = addNote(model, b!.id, 71).model;
+    model = chooseName(model, b!.id, { ...b!.name, label: "Am7" } as never, "typed").model;
     const out = mergeWithNext(model, a!.id).model;
-    expect(out.cards[0]).toMatchObject({ nameSource: "user" });
+    expect(out.cards[0]).toMatchObject({ nameSource: "typed" });
     expect(out.cards[0]!.name.label).toBe("Am7");
     const manual = out.notes.filter((note) => note.provenance === "MANUAL_ADDED");
     expect(manual).toHaveLength(1);
@@ -100,20 +100,27 @@ describe("card edits (P10.0-04)", () => {
     expect(positionLabel(4 * 4 + 2.25, 4)).toBe("5.3¼");
   });
 
-  it("chooses names as a person's, never replaced by note edits, and finds the same fix elsewhere", () => {
+  it("chooses names (chosen / typed) and finds the same fix elsewhere; note edits follow §11.2", () => {
     const model = fresh("plain-8");
     const card = model.cards[0]!;
     const named = chooseName(model, card.id, model.cards[1]!.name);
-    expect(named.model.cards[0]).toMatchObject({ nameSource: "user", name: model.cards[1]!.name });
-    const afterEdit = addNote(named.model, card.id, 70).model;
-    expect(afterEdit.cards[0]!.name.label).toBe(model.cards[1]!.name.label);
+    expect(named.model.cards[0]).toMatchObject({ nameSource: "chosen", name: model.cards[1]!.name });
+    // P10.1: a chosen name turns automatic on a note edit and follows the notes …
+    const afterEdit = addNote(named.model, card.id, 70).model; // C E G + Bb
+    expect(afterEdit.cards[0]).toMatchObject({ nameSource: "auto" });
+    expect(afterEdit.cards[0]!.name.label).not.toBe(model.cards[1]!.name.label);
+    // … a typed one stays, with the notes' reading offered.
+    const typed = chooseName(model, card.id, model.cards[1]!.name, "typed").model;
+    const afterTyped = addNote(typed, card.id, 70).model;
+    expect(afterTyped.cards[0]).toMatchObject({ nameSource: "typed", name: model.cards[1]!.name });
+    expect(afterTyped.cards[0]!.suggestedName?.label).toBe(afterEdit.cards[0]!.name.label);
     // plain-8 loops C Am F G7: bar 5 plays the same notes with the same name.
     const targets = sameFixTargets(named.model, card.id, card.name.label);
     expect(targets).toContain(model.cards[4]!.id);
     expect(targets.every((id) => shapeOf(model, id) === shapeOf(model, card.id))).toBe(true);
     const all = chooseName(named.model, targets, model.cards[1]!.name);
     expect(all.label).toMatch(/か所の名前を|名前を/);
-    expect(all.model.cards[4]!.nameSource).toBe("user");
+    expect(all.model.cards[4]!.nameSource).toBe("chosen");
   });
 
   it("Y clears the review marks of a card for the rest of the import", () => {

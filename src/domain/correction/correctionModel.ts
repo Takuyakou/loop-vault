@@ -50,7 +50,15 @@ export interface CorrectionCard {
   bar: number;
   beat: number;
   name: ChordSymbol;
-  nameSource: "auto" | "user";
+  /**
+   * Where the name came from (P10.1 §11): automatic, chosen from the candidates,
+   * or typed. Workspace-only; saving treats chosen and typed alike (a person's name).
+   */
+  nameSource: NameSource;
+  /** The used notes do not read as a chord after an edit: the name stayed (P10.1 §11.2). */
+  nameUnreadable?: boolean;
+  /** A typed name keeps; what the notes read as is offered instead (P10.1 §11.2). */
+  suggestedName?: ChordSymbol;
   alternatives: ChordSymbol[];
   /** The fullTimeline item this card came from (the first one for merged cards). */
   timelineIndex: number;
@@ -64,6 +72,8 @@ export interface CorrectionCard {
   /** 「2音以上にしてください」 when an edited card plays fewer than two pitches. */
   noteWarning?: string;
 }
+
+export type NameSource = "auto" | "chosen" | "typed";
 
 export interface CorrectionSegment {
   id: string;
@@ -113,6 +123,8 @@ export interface CorrectionModel {
   context: CorrectionContext;
   /** Counter for ids of added notes and new cards. */
   seq: number;
+  /** P10.1 §12: the tempo a person set in the workspace (undefined = the MIDI's). */
+  tempo?: number;
 }
 
 export interface CorrectionModelInput {
@@ -259,6 +271,20 @@ export function usedPitchCount(notes: readonly CorrectionNote[]): number {
 }
 
 /**
+ * P10.1 §11.2: after an edit that changed a card's notes or span. Automatic and chosen
+ * names follow the notes (a chosen one turns automatic); a typed name stays and the
+ * notes' reading is offered. When the notes read as no chord, the name stays, marked.
+ */
+function renamedFromNotes(card: CorrectionCard, here: readonly CorrectionNote[]): CorrectionCard {
+  const detected = detectedName(here);
+  const { nameUnreadable: _unreadable, suggestedName: _suggested, ...rest } = card;
+  if (card.nameSource === "typed") {
+    return detected && detected.label !== card.name.label ? { ...rest, suggestedName: detected } : rest;
+  }
+  return detected ? { ...rest, name: detected, nameSource: "auto" } : { ...rest, nameSource: "auto", nameUnreadable: true };
+}
+
+/**
  * Recomputes everything that depends on the notes: the song-wide suggestions, the
  * review reasons of the touched cards (and their neighbours; all cards when the
  * melody suggestion appears or goes), the too-few-notes warning, and, when asked,
@@ -289,9 +315,7 @@ export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string
   const cards = model.cards.map((card, index) => {
     if (!recompute.has(card.id)) return card;
     const here = byCard.get(card.id) ?? [];
-    let name = card.name;
-    if (updateNames && card.nameSource === "auto" && nameTouched.has(card.id)) name = detectedName(here) ?? card.name;
-    const next = { ...card, name };
+    const next = updateNames && nameTouched.has(card.id) ? renamedFromNotes(card, here) : card;
     const reasons = card.reviewed ? [] : reviewReasonsFor(next, here, byCard.get(model.cards[index + 1]?.id ?? "") ?? [], melodyRule, context, melodyIds);
     const warning = card.edited && usedPitchCount(here) < 2 ? TOO_FEW_NOTES : undefined;
     const { noteWarning: _dropped, ...rest } = next;

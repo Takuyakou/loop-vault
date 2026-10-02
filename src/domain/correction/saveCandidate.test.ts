@@ -8,7 +8,7 @@ import { normalizedChordKey, resolveTimelineItemVoicing, VOICING_EXTRACTOR_VERSI
 import { createVaultStore } from "../../store/vaultStore";
 import { chooseName, mergeWithNext, splitCard } from "./cardEdits";
 import { buildCorrectionModel, type CorrectionModel } from "./correctionModel";
-import { addNote, deleteNotes, movePitch } from "./edits";
+import { addNote, deleteNotes, movePitch, setTempo } from "./edits";
 import { reviewThresholds } from "./reviewThresholds";
 import { buildSaveCandidate, cardAuditionNotes, CORRECTION_EXTRACTOR_VERSION } from "./saveCandidate";
 
@@ -203,5 +203,40 @@ describe("saved workspace progressions (P10.0-06 round trip and playback)", () =
     // The renamed card plays its corrected notes, not a generated voicing.
     const renamed = after.chords.find((item) => item.chord.label === "Fmaj7")!;
     expect(resolveTimelineItemVoicing(renamed).origin).not.toBe("generated");
+  });
+});
+
+describe("the workspace tempo through the store (P10.1 §12.4)", () => {
+  it("saves a tempo a person set (also for a MIDI without one), and reloads it; leaves it out otherwise", async () => {
+    const { withTempo } = await import("../../views/capture/useCaptureSave");
+    const base = input("plain-8").result;
+    const noTempo = { ...base, tempoDiagnostics: { ...base.tempoDiagnostics, provenance: "SMF_DEFAULT" } } as typeof base;
+    const model = setTempo(buildCorrectionModel({ ...input("plain-8"), result: noTempo }, reviewThresholds), 100).model;
+    const result = buildSaveCandidate(model, { startBar: 1, endBar: 4 }, timelineOf("plain-8"));
+    if (!result.ok) throw new Error("save");
+    expect(result.bpm).toBe(100);
+
+    const save = async (analysis: typeof noTempo, bpm: number | undefined) => {
+      const repository = new FakeRepository();
+      const store = createVaultStore({ repository });
+      await store.getState().initialize();
+      const id = store.getState().createIdeaFromDraft({
+        title: "テンポ",
+        status: "idea",
+        ...(bpm !== undefined ? { bpm } : {}),
+        progressionBlock: result.candidate,
+        progressionAnalysis: withTempo(analysis, bpm),
+        progressionMetadata: { userEdited: true, userVerified: false },
+      });
+      await store.getState().flush();
+      const written = repository.saved[repository.saved.length - 1]!;
+      return vaultFileSchema.parse(JSON.parse(JSON.stringify(written))).ideas.find((idea) => idea.id === id)!;
+    };
+    const changed = await save(noTempo, 100);
+    expect(changed.bpm).toBe(100);
+    expect(changed.progressionBlocks![0]!.bpm).toBe(100);
+    const untouched = await save(noTempo, undefined);
+    expect(untouched.bpm).toBeUndefined();
+    expect(untouched.progressionBlocks![0]!.bpm).toBeUndefined();
   });
 });

@@ -259,7 +259,7 @@ test("P10.0-04 boundary handle moves by a beat, and by ¼ beat with Alt", async 
   await expect(page.getByTestId("correction-history")).toContainText("操作 2");
 });
 
-test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name stays", async ({ page }) => {
+test("P10.0-04 names: 1–4 picks a candidate, F2 types one", async ({ page }) => {
   await importScenario(page, "plain-8");
   // P10.1: nothing is selected when the workspace opens; pick the first card.
   await selectCard(page, 0);
@@ -270,7 +270,7 @@ test("P10.0-04 names: 1–4 picks a candidate, F2 types one, and a person's name
   await workspace.getByTestId("correction-review-count").focus();
   await page.keyboard.press("2");
   await expect(workspace.getByTestId("correction-inspector-name")).toHaveText(second);
-  await expect(inspector).toContainText("あなたが決めた名前");
+  await expect(inspector).toContainText("候補から選んだ名前（音を直すと自動に戻る）"); // P10.1 §11: chosen
   // Bar 5 plays the same notes under the old name: offer the same fix, confirm, one step.
   await workspace.getByTestId("correction-same-fix").click();
   await page.getByRole("dialog", { name: "同じ直しを他にも反映" }).getByRole("button", { name: /反映する/ }).click();
@@ -545,6 +545,10 @@ test("P10.1 the control bar is on top, then 曲全体・小節・区切り・コ
   ];
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   await expect(workspace.locator(".lv-cw-transport, .lv-cw-tools")).toHaveCount(0);
+  // 再生 and 表示 always share the first line of the bar.
+  const playY = (await workspace.getByRole("group", { name: "再生" }).boundingBox())!.y;
+  const viewY = (await workspace.getByRole("group", { name: "表示" }).boundingBox())!.y;
+  expect(Math.abs(playY - viewY)).toBeLessThan(4);
   // 8 bars sits between 16 and 4.
   const zooms = await workspace.getByRole("group", { name: "表示" }).getByRole("button").allTextContents();
   expect(zooms).toEqual(["全体", "16小節", "8小節", "4小節"]);
@@ -694,4 +698,93 @@ test("P10.1 the save range panel is always there; 範囲を外す is off without
   await page.reload();
   await importScenario(page, "plain-8");
   await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
+});
+
+// ---- P10.1 names and tempo ---------------------------------------------------------------
+
+test("P10.1 names follow the notes: automatic changes with a notice, a typed name stays with a suggestion", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  await selectCard(page, 0); // C
+  const name = workspace.getByTestId("correction-inspector-name");
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("自動の名前（音を直すと変わる）");
+  await workspace.getByTestId("correction-add-note").click();
+  await workspace.getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(10).click(); // B♭
+  await expect(name).toHaveText(/^C7/);
+  await expect(workspace.getByTestId("correction-notice")).toContainText(/名前を C7.* にしました（音から）/);
+  await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"] .lv-cw-card-name')).toHaveAttribute("data-full-name", /^C7/);
+
+  // Typed with F2: stays after a note edit; the notes' reading is offered.
+  await workspace.getByTestId("correction-review-count").focus();
+  await page.keyboard.press("F2");
+  const editor = page.locator("[data-quick-chord-editor]");
+  await editor.press("ArrowRight");
+  await editor.press("Enter");
+  const typed = (await name.textContent())!;
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("手で打った名前");
+  await workspace.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
+  await expect(name).toHaveText(typed);
+  const suggestion = workspace.getByTestId("correction-name-suggestion");
+  await expect(suggestion).toContainText("音からの判別：");
+  await suggestion.getByRole("button", { name: "この名前にする" }).click();
+  await expect(workspace.getByTestId("correction-name-tag")).toHaveText("自動の名前（音を直すと変わる）");
+});
+
+test("P10.1 BPM sets the speed of the sound and the playhead together, can be undone, and is saved", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const tempo = workspace.getByTestId("correction-tempo");
+  await expect(tempo).toHaveValue("120");
+  await workspace.getByRole("button", { name: "4小節", exact: true }).click();
+
+  /** Beats the playhead moves in about 600 ms. */
+  const beatsPerSlice = async () => {
+    await workspace.getByTestId("correction-play-song").click();
+    const line = workspace.getByTestId("correction-playhead");
+    await expect(line).toBeAttached();
+    const moved = await line.evaluate((element) => new Promise<number>((resolve) => {
+      const x = () => new DOMMatrixReadOnly(getComputedStyle(element).transform).m41;
+      const px = Number.parseFloat(getComputedStyle(element.parentElement!).getPropertyValue("--lv-cw-beat"));
+      requestAnimationFrame(() => {
+        const start = x();
+        const t0 = performance.now();
+        setTimeout(() => resolve(((x() - start) / px) / ((performance.now() - t0) / 600)), 600);
+      });
+    }));
+    await workspace.getByTestId("correction-play-song").click();
+    return moved;
+  };
+  const at120 = await beatsPerSlice();
+  await tempo.fill("60");
+  await tempo.press("Enter");
+  await expect(tempo).toHaveValue("60");
+  await expect(workspace.getByTestId("capture-analysis-preset-summary")).toContainText("60BPM（MIDI 120）");
+  await expect(workspace.getByTestId("correction-history")).toContainText("テンポを 120 → 60");
+  const at60 = await beatsPerSlice();
+  expect(at120 / at60).toBeGreaterThan(1.6);
+  expect(at120 / at60).toBeLessThan(2.5);
+
+  // Out of range goes back; ↑ adds one; Ctrl+Z undoes.
+  await tempo.fill("999");
+  await tempo.press("Enter");
+  await expect(tempo).toHaveValue("60");
+  await tempo.focus();
+  await tempo.press("ArrowUp");
+  await expect(tempo).toHaveValue("61");
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 2・最後：テンポを 60 → 61");
+  await tempo.blur(); // in the field Ctrl+Z is the field's own text undo
+  await page.keyboard.press("Control+z");
+  await expect(tempo).toHaveValue("60");
+  await expect(workspace.getByTestId("correction-history")).toContainText("操作 1・最後：テンポを 120 → 60");
+
+  // Saved with the progression.
+  await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+  await form.locator('input[name="progression-title"]').fill("テンポ 60");
+  await form.getByRole("button", { name: /保存/, exact: true }).click();
+  await expect(form).toBeHidden();
+  await page.locator('[data-nav="vault"]').click();
+  await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
+  await expect(page.locator("[data-progression-detail-view]")).toContainText(/BPM\s*60/);
 });
