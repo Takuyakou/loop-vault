@@ -1,17 +1,23 @@
-import { generateFingeringCandidates, preferredFingeringDistance, rankCyclicFingerings, type FingeringAnchor, type ProgressionFingeringEvent } from "../../src/domain/progressionFingering";
+import { generateFingeringCandidates, preferredFingeringDistance, rankCyclicFingerings, type FingeringAnchor, type ProgressionFingeringEvent, type FingeringCostModel, type FingeringRankingOptions } from "../../src/domain/progressionFingering";
 import { handPositionProxy, rankHandPositionFingerings, timePressure, type HandPositionPolicy } from "../../src/domain/handPositionFingering";
 import { isValidFingering } from "../../src/voicingPractice/fingeringPreferences";
 import type { Case } from "../p11-12/fixtures";
 export type Arm = "CURRENT" | HandPositionPolicy;
+export type ComparableArm = Arm | { readonly costModel: FingeringCostModel };
+export function solveArm(events: readonly ProgressionFingeringEvent[], arm: ComparableArm, options: FingeringRankingOptions = {}) {
+  return arm === "CURRENT" ? rankCyclicFingerings(events, options)
+    : "costModel" in arm ? rankCyclicFingerings(events, { ...options, costModel: arm.costModel })
+    : rankHandPositionFingerings(events, arm, options);
+}
 export function inputs(c: Case): ProgressionFingeringEvent[] {
   const time = c.ioiBeats * 60 / c.bpm;
   return c.notes.map((midiPitches, i) => ({ id: `${c.id}-${i}`, hand: c.hand, midiPitches, chord: c.chords?.[i], startSeconds: i*time, durationSeconds: time }));
 }
-export function measure(c: Case, arm: Arm, anchors?: ReadonlyMap<string,FingeringAnchor>) {
+export function measure(c: Case, arm: ComparableArm, anchors?: ReadonlyMap<string,FingeringAnchor>) {
   const events = inputs(c); const source = JSON.stringify(events);
   const groups = events.map(generateFingeringCandidates);
   const options = { anchors, loopDurationSeconds: c.notes.length*c.ioiBeats*60/c.bpm };
-  const solve = () => arm === "CURRENT" ? rankCyclicFingerings(events,options) : rankHandPositionFingerings(events,arm,options);
+  const solve = () => solveArm(events, arm, options);
   const result = solve();
   const notesUnchanged = source === JSON.stringify(events);
   const candidatesUnchanged = JSON.stringify(groups) === JSON.stringify(events.map(generateFingeringCandidates));
@@ -51,13 +57,13 @@ export function aggregate(rows: ReturnType<typeof measure>[]) {
     deterministic:rows.filter(r=>r.deterministic).length,notesUnchanged:rows.filter(r=>r.notesUnchanged).length,candidatesUnchanged:rows.filter(r=>r.candidatesUnchanged).length,
     leftL1L2:sum("extreme"),singleEvents:sum("single"),anchorTotal:sum("anchorTotal"),anchorRetained:sum("anchorRetained")};
 }
-export function matchedTime(arm:Arm) {
+export function matchedTime(arm:ComparableArm) {
   const base:Case={id:"time-property",hand:"left",notes:[[48],[50],[52],[53]],bpm:120,ioiBeats:1,shape:"step"};
   const rows=[0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16].map(seconds=>measure({...base,ioiBeats:seconds*2},arm));
   return { rows, changes:rows.slice(1).filter((r,i)=>JSON.stringify(r.selected)!==JSON.stringify(rows[i]!.selected)).length,
     direction:rows.slice(1).every((r,i)=>r.preferred<=rows[i]!.preferred+1e-9&&r.movement>=rows[i]!.movement-1e-9)};
 }
-export function contextSensitivity(arm:Arm) {
+export function contextSensitivity(arm:ComparableArm) {
   let changed=0,total=0;
   for(const hand of ["left","right"] as const)for(let step=1;step<=7;step++) {
     const c:Case={id:"context",hand,notes:[[48],[50],[52]],bpm:120,ioiBeats:0.25,shape:"context"};
@@ -66,7 +72,7 @@ export function contextSensitivity(arm:Arm) {
   }
   return {changed,total};
 }
-export function anchorControls(arm:Arm) {
+export function anchorControls(arm:ComparableArm) {
   const c:Case={id:"anchor",hand:"left",notes:[[48],[50],[52]],bpm:120,ioiBeats:0.25,shape:"anchor"};
   const event=inputs(c)[1]!;const group=generateFingeringCandidates(event);
   if(group.status!=="supported")throw Error("fixture");
@@ -91,9 +97,9 @@ export function switchingDiagnostic(policy:HandPositionPolicy) {
   return {fixture:base,policy,rangeSeconds:[0.01,100],change,
     cost:change?[pair(change.below.selected,change.below.ioiSeconds),pair(change.above.selected,change.below.ioiSeconds),pair(change.below.selected,change.above.ioiSeconds),pair(change.above.selected,change.above.ioiSeconds)]:[]};
 }
-export function runtime(arm:Arm) {
+export function runtime(arm:ComparableArm) {
   const c:Case={id:"runtime-128",hand:"right",notes:Array.from({length:128},(_,i)=>[60+i%7,64+i%7,67+i%7]),bpm:120,ioiBeats:1,shape:"128"};
-  const events=inputs(c); const solve=()=>arm==="CURRENT"?rankCyclicFingerings(events):rankHandPositionFingerings(events,arm);
+  const events=inputs(c); const solve=()=>solveArm(events, arm);
   solve();const times=Array.from({length:12},()=>{const start=performance.now();solve();return performance.now()-start;}).sort((a,b)=>a-b);
   return {events:128,maxCandidates:10,medianMs:times[6],p95Ms:times[11]};
 }

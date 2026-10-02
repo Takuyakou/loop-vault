@@ -34,6 +34,8 @@ Commit before any Common Tone arm execution. Human-authorized diagnostic only.
   fingers, edge common pitches, proxy positions and decomposed costs for every arm.
 - Runtime: same 128-event right-hand fixture, warmup +12 measurements, serial
   arms; report noise and overhead, do not select on noisy runtime alone.
+  Also profile a fixed shared-pitch stress fixture: RH [60,64,67+i%3], 128 events,
+  IOI0.5s. This exercises the added term; the original stress has no shared notes.
 
 ## Eligibility and selection (dev only)
 
