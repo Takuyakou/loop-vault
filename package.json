@@ -138,7 +138,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.63.0",
     "@tauri-apps/cli": "^2.0.0",
     "@types/node": "^24.0.0",
     "@types/react": "^18.3.0",
