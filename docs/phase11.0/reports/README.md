@@ -13,3 +13,5 @@ Active follow-up: [P11-09 geometry / sources / fixed hands / generated selector]
 Current follow-up: [P11-10 Source availability / Generated controls](P11-10-source-availability-generated-controls.md).
 
 Latest integration: [P11-09/10 local master / fresh FULL](P11-09-10-master-merge.md).
+
+Current implementation: [P11-11 generated fallback / slash bass / retrigger / fingering](P11-11-generated-bass-audio-fingering.md).

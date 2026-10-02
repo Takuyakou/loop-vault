@@ -43,6 +43,8 @@ export interface ResolveProgressionPracticeVoicingsOptions {
   readonly maxRightHandSpanSemitones?: number;
   readonly leftHandVariant?: "auto" | "A" | "B";
   readonly lessonStudyCategory?: VoicingBaseStudy;
+  /** One explicit, visible substitute for an unsupported legacy detailed shape. */
+  readonly detailedFallbackStudy?: VoicingBaseStudy;
   readonly lessonColorEnabled?: boolean;
   readonly lessonOpenEnabled?: boolean;
   readonly lessonProgressionOptimization?: boolean;
@@ -148,6 +150,22 @@ export function resolveProgressionPracticeVoicings(
       : generationError(event.id);
   });
 
+  if (options.detailedFallbackStudy) {
+    const failed = snapshot.events.filter((_, index) => resolutions[index]?.status !== "SUPPORTED");
+    if (failed.length) {
+      // Resolve only failed events. Supported legacy shapes never enter this optimizer.
+      const fallback = resolveStudyVoicings({ ...snapshot, events: failed }, options.detailedFallbackStudy,
+        { bass: "self-played", top: "normal-voicing-top" },
+        { ...candidateOptions, color: false, open: false, optimize: false });
+      const byId = new Map(fallback.events.map(event => [event.eventId, event]));
+      resolutions.forEach((original, index) => {
+        if (original.status === "SUPPORTED") return;
+        const substitute = byId.get(original.eventId);
+        if (substitute?.status === "SUPPORTED") resolutions[index] = freezeResolution({ ...substitute,
+          shapeFallback: Object.freeze({ from: selection, study: options.detailedFallbackStudy! }) });
+      });
+    }
+  }
   return applyOctaveShift(freezePlan(snapshot, resolutions), options.octaveShift ?? 0);
 }
 
@@ -394,7 +412,16 @@ function basicCandidates(
   );
   const resolved = candidates.flatMap((candidate) => {
     const facts = candidateFacts(chordSymbol, candidate, leftLabels, rightLabels);
-    return facts ? [{ candidate, facts }] : [];
+    if (!facts) return [];
+    if (chord.bass !== undefined) {
+      const bassVoice = facts.bassNote ?? (selection !== "rootless-shell"
+        ? candidate.leftHandNotes.find(note => pitchClass(note) === pitchClass(chord.bass!)) : undefined);
+      // Choose a feasible placement with the designated bass at the bottom;
+      // never transpose an already selected upper structure or double the bass.
+      if (bassVoice !== undefined && bassVoice !== Math.min(...candidate.allNotes)) return [];
+      if (bassVoice !== undefined) return [{ candidate, facts: { ...facts, bassNote: bassVoice } }];
+    }
+    return [{ candidate, facts }];
   });
   return resolved.length > 0
     ? { status: "SUPPORTED", candidates: resolved }
@@ -547,7 +574,7 @@ function supportedLessonResolution(
   const midiNotes = Object.freeze([...candidate.allNotes]);
   const addedColorDegrees = Object.freeze([...candidate.addedColorIntervals]);
   const bassNote = facts.bassNote;
-  const referenceBassNote = selection === "left-hand" && event.chord.bass !== undefined
+  const referenceBassNote = (selection === "left-hand" || (selection === "rootless-shell" && facts.bassNote === undefined)) && event.chord.bass !== undefined
     ? separateBassRegister(event.chord.bass, midiNotes)
     : undefined;
   return freezeResolution({

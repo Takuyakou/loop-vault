@@ -384,7 +384,7 @@ export function ProgressionVoicingPracticeView({
         bass: "self-played",
         top: "normal-voicing-top",
       },
-    } : { ...resolutionOptions, leftHandVariant, octaveShift },
+    } : { ...resolutionOptions, detailedFallbackStudy: lessonRulesSelected ? studyCategory : undefined, leftHandVariant, octaveShift },
     [colorEnabled, leftHandVariant, lessonCandidateIndexes, lessonRulesSelected, octaveShift, openEnabled, progressionOptimizationEnabled, resolutionOptions, selection, studyCategory],
   );
   const plan = useMemo(
@@ -1422,6 +1422,11 @@ export function ProgressionVoicingPracticeView({
             </label>
           </fieldset>
         </div>
+        {plan?.events.some(event => event.status === "SUPPORTED" && event.shapeFallback) ? (
+          <p className="text-xs text-[var(--lv-text-secondary)]" role="status" data-testid="voicing-loop-shape-fallback-summary">
+            {plan.events.filter(event => event.status === "SUPPORTED" && event.shapeFallback).length}コードは{studyCategory === "teacher" ? "基本" : "骨組み"}で代替
+          </p>
+        ) : null}
       </Surface>
 
       {!snapshot ? (
@@ -1606,7 +1611,10 @@ export function ProgressionVoicingPracticeView({
                   const event = snapshot.events[eventIndex];
                   const playable = cardAuditionResolution(event, eventIndex, { ...cardAuditionPlans, current: plan })?.status === "SUPPORTED";
                   const resolution = plan?.events[eventIndex];
-                  const autoFallback = resolution?.status === "SUPPORTED" && Boolean(resolution.fallbackFrom);
+                  const autoFallback = resolution?.status === "SUPPORTED" && Boolean(resolution.fallbackFrom || resolution.shapeFallback);
+                  const autoFallbackDescription = resolution?.status === "SUPPORTED" && resolution.shapeFallback
+                    ? `この形では作れないため「${resolution.shapeFallback.study === "teacher" ? "基本" : "骨組み"}」で鳴らしています`
+                    : "自動生成で補完";
                   const selected = index === transportCurrentSpanIndex;
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
@@ -1670,7 +1678,7 @@ export function ProgressionVoicingPracticeView({
                       }}
                     >
                       {autoFallback ? <span className="absolute right-1 top-0.5 rounded bg-amber-400/20 px-1 text-[9px] text-amber-200"
-                        data-testid="voicing-loop-auto-fallback" title="自動生成で補完" aria-label="自動生成で補完">A</span> : null}
+                        data-testid="voicing-loop-auto-fallback" title={autoFallbackDescription} aria-label={autoFallbackDescription}>A</span> : null}
                       {pendingStart || rangeStart || rangeEnd ? <span aria-hidden="true"
                         className="absolute bottom-0.5 right-1 text-[10px] text-[var(--lv-accent)]">
                         {pendingStart ? "A?" : rangeStart && rangeEnd ? "A/B" : rangeStart ? "A" : "B"}

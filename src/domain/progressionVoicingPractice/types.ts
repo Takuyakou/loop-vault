@@ -130,6 +130,10 @@ export type ProgressionPracticeVoicingResolution =
       readonly voicing: ResolvedProgressionPracticeVoicing;
       /** Explicit selected source was absent; this event uses visible generated coverage. */
       readonly fallbackFrom?: "saved" | "source-midi" | "custom";
+      readonly shapeFallback?: {
+        readonly from: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell" | "left-hand";
+        readonly study: "teacher" | "core";
+      };
       readonly reason?: never;
     }
   | {

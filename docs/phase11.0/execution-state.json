@@ -14,13 +14,14 @@
     "P11.0-07",
     "P11.0-08",
     "P11.0-09",
-    "P11.0-10"
+    "P11.0-10",
+    "P11.0-11"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "f7768617f01bf61c342b9cbb991c139681d70a22",
-  "currentBranch": "master",
+  "lastVerifiedCommit": "d7d10838f265c84ed70fcaa5be83933b4f965c9e",
+  "currentBranch": "fix/phase11-generated-bass-audio",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -91,6 +92,14 @@
       "p11-10-full",
       "p11-10-exe",
       "p11-10-docs"
+    ],
+    "P11.0-11": [
+      "p11-11-focused",
+      "p11-11-feature",
+      "p11-11-ui",
+      "p11-11-full",
+      "p11-11-exe",
+      "p11-11-docs"
     ]
   },
   "gateResults": {
@@ -141,8 +150,14 @@
     "p11-10-ui": "pass",
     "p11-10-full": "pass",
     "p11-10-exe": "pass",
-    "p11-10-docs": "pass"
+    "p11-10-docs": "pass",
+    "p11-11-focused": "pass",
+    "p11-11-feature": "pass",
+    "p11-11-ui": "pass",
+    "p11-11-full": "pass",
+    "p11-11-exe": "pass",
+    "p11-11-docs": "pass"
   },
-  "nextAction": "P11-00–10 integrated into local master by explicit human authorization. Merge/fresh-tested HEAD f7768617: Vitest 3694 / Playwright 189 PASS, no cache, 0 FAIL / 0 UNRUN. Stop; no push/tag/release or new stage.",
+  "nextAction": "P11-11 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE: fresh FULL 3717 Vitest / 191 Playwright PASS, raw Windows EXE built. Stop; no master merge/push/tag/release.",
   "updatedAt": "2026-10-02"
 }

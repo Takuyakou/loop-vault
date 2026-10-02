@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 
 import { act } from "react";
+import { parseChordLabel } from "../domain/chords";
+import { rankCyclicFingerings } from "../domain/progressionFingering";
+import { assignPracticeHandsAcrossProgression } from "../voicingPractice/fingeringDisplay";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -1071,7 +1074,9 @@ describe("ProgressionVoicingPracticeView", () => {
         chord: { root: 0, quality: "dim" as const, tensions: [], bass: 2, label: "Cdim/D" },
       })),
     };
-    const container = await renderView(runtime, { "left-hand": slash }, "left-hand");
+    // Both the legacy upper rule and the explicit substitute must fail here.
+    const container = await renderView(runtime, { "left-hand": slash }, "left-hand", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [], { maxRightHandSpanSemitones: 0 });
     expect(container.textContent).toContain("2個のコードを再生できません");
     expect(container.textContent).toContain("Cdim/D ×2: 上部コードに対応するLeft-hand規則がありません");
     expect(container.querySelectorAll("li")).toHaveLength(1);
@@ -1625,6 +1630,49 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.audition.mock.calls.length).toBe(beforePausedSeek + 1);
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(button(container, "再開").disabled).toBe(false);
+  });
+});
+
+describe("P11 generated substitute and fingering acceptance", () => {
+  it.each([1, 2, 3, 4])("renders internal recommended note/finger mapping for %i-note public hand fixtures", async count => {
+    const base = snapshot("source-midi");
+    const pitches = [43, 47, 50, 53].slice(0, count);
+    const value = { ...base, events: base.events.map(event => ({ ...event, voicing: { kind: "source-midi" as const, midiNotes: pitches } })) };
+    const plan = resolveProgressionPracticeVoicings(value);
+    const hands = assignPracticeHandsAcrossProgression("source-midi", plan.events.map(e => e.status === "SUPPORTED" ? e.voicing : undefined));
+    const container = await renderView(new FakeTransport(), { "source-midi": value }, "source-midi");
+    for (const hand of ["left", "right"] as const) {
+      const targets = hands[0]![hand];
+      const card = container.querySelector(`[data-testid="voicing-loop-${hand}-hand"]`);
+      if (!targets.length) { expect(card).toBeNull(); continue; }
+      const internal = rankCyclicFingerings(value.events.map(event => ({ id: event.id, hand, midiPitches: targets, chord: event.chord, family: "source-midi" })))[0]!;
+      expect(internal.status).toBe("supported"); if (internal.status !== "supported") continue;
+      const expected = internal.fingers.map(f => `${hand === "left" ? "L" : "R"}${f}`).join(" · ");
+      expect(card?.textContent).toContain(expected);
+      expect(new Set(internal.fingers).size).toBe(targets.length);
+    }
+  });
+
+  it.each(["teacher", "core"] as const)("shows the selected %s substitute on only unsupported detailed cards", async study => {
+    const base = snapshot("basic-full");
+    const chords = ["Ebmaj7", "Cm7", "Ebadd9/G", "Ebadd9/G"].map(label => ({ ...base.events[0]!.chord, ...parseChordLabel(label)! }));
+    const snapshots = Object.fromEntries(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"].map(selection => [selection, {
+      ...base, selection, fingerprint: `public-${selection}`, lengthBeats: 16,
+      events: chords.map((chord, index) => ({ id: `public-${index}`, chord, startBeat: index * 4, durationBeats: 4 })),
+      spans: chords.map((_, index) => ({ kind: "chord", eventIndex: index, startBeat: index * 4, durationBeats: 4 })),
+    }])) as Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>;
+    const container = await renderView(new SeekingTransport(), snapshots, "basic-full");
+    await selectStudy(container, study);
+    const shape = container.querySelector<HTMLSelectElement>('[aria-label="既存の形"]')!;
+    for (const value of ["basic-shell", "full-shell", "rootless-shell", "left-hand"]) {
+      await act(async () => { shape.value = value; shape.dispatchEvent(new Event("change", { bubbles: true })); });
+      const markers = container.querySelectorAll('[data-testid="voicing-loop-auto-fallback"]');
+      expect(markers).toHaveLength(2);
+      const label = study === "teacher" ? "基本" : "骨組み";
+      expect(markers[0]?.getAttribute("title")).toBe(`この形では作れないため「${label}」で鳴らしています`);
+      expect(container.querySelector('[data-testid="voicing-loop-shape-fallback-summary"]')?.textContent).toContain(`2コードは${label}で代替`);
+      expect(container.textContent).not.toContain("個のコードを再生できません");
+    }
   });
 });
 

@@ -146,3 +146,8 @@ describe("P11 saved fixed hand parity", () => {
     expect(assignPracticeHandsAcrossProgression("saved", [resolved])).toEqual([{ left: [48, 52], right: [55, 59] }]);
   });
 });
+
+it("a left-hand legacy selection keeps the substitute generator's actual two-hand partition", () => {
+  const substitute = voicing([43, 63, 65, 70], { origin: "basic-full", leftHandNotes: [43], rightHandNotes: [63, 65, 70] });
+  expect(assignPracticeHandsAcrossProgression("left-hand", [substitute])).toEqual([{ left: [43], right: [63, 65, 70] }]);
+});

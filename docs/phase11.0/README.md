@@ -4,8 +4,10 @@
 
 ## Status
 
-- Status: completed / P11-00–10 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
-- Completed stages: P11.0-00 through P11.0-10; verified commits/gates in execution-state.json.
+Latest P11-11 candidate: tested code HEAD `d7d10838`, fresh FULL 3,717 Vitest / 191 Playwright PASS, raw Windows EXE built. See [P11-11 report](reports/P11-11-generated-bass-audio-fingering.md). Human listening remains; no master merge.
+
+- Status: completed / P11-11 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE (candidate only); P11-00–10 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Completed stages: P11.0-00 through P11.0-11; verified commits/gates in execution-state.json.
 - Phase starting base: local master 73507e87. P11-09 acceptance base: 8b6480b4. Phase 10 finish is an ancestor.
 - Historical P11-06 tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 final tested HEAD: `2377448a`; fresh FULL 3,668 Vitest / 174 Playwright PASS, updated runnable EXE. Stop for Human Product Acceptance; no master merge.
 

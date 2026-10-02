@@ -84,3 +84,17 @@ describe("cyclic progression fingering ranking", () => {
     expect(result.map((entry) => entry.status)).toEqual(["supported", "unavailable", "unavailable"]);
   });
 });
+
+describe("P11 LH/RH per-note recommendation diagnostic", () => {
+  it.each([1, 2, 3, 4])("ranks distinct fingers for %i keys and preserves note order", count => {
+    for (const hand of ["left", "right"] as const) {
+      const pitches = (hand === "left" ? [43, 47, 50, 53] : [60, 64, 67, 71]).slice(0, count);
+      const result = rankCyclicFingerings([{ id: "public", hand, midiPitches: pitches }])[0]!;
+      expect(result.status).toBe("supported"); if (result.status !== "supported") continue;
+      expect(result.pitches).toEqual(pitches);
+      expect(new Set(result.fingers).size).toBe(count);
+      if (count === 1) expect(result.fingers).toEqual(hand === "left" ? [5] : [1]);
+      for (let i = 1; i < count; i++) expect(hand === "left" ? result.fingers[i-1]! > result.fingers[i]! : result.fingers[i-1]! < result.fingers[i]!).toBe(true);
+    }
+  });
+});

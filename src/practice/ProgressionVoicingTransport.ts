@@ -90,6 +90,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private auditionGeneration = 0;
   private readonly retiringAuditions: Array<{ voice: AuditionVoice; timer: ReturnType<typeof globalThis.setTimeout> }> = [];
   private clickSynth?: Tone.Synth;
+  private resumeRequest?: Promise<boolean>;
+  private restartRequest?: Promise<boolean>;
   private generation = 0;
   private projectionEpoch = 0;
   private scheduleEpoch = 0;
@@ -310,13 +312,21 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     return true;
   }
 
-  async resume(): Promise<boolean> {
+  resume(): Promise<boolean> {
+    if (this.resumeRequest) return this.resumeRequest;
+    const request = this.resumeOnce().finally(() => { if (this.resumeRequest === request) this.resumeRequest = undefined; });
+    this.resumeRequest = request;
+    return request;
+  }
+
+  private async resumeOnce(): Promise<boolean> {
     if (!this.running || !this.paused || !this.ownsTransport) return false;
     const generation = this.generation;
     await Tone.start();
     if (generation !== this.generation || !this.running || !this.paused || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
     this.paused = false;
+    this.fadeAuditions(Tone.now());
     if (this.v2) {
       const inCountIn = this.transport.ticks / this.transport.PPQ < this.countInBeats;
       this.resetRollingCursor(inCountIn ? this.originProgressionBeat : this.currentProgressionBeat());
@@ -327,7 +337,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     return true;
   }
 
-  async restart(): Promise<boolean> {
+  restart(): Promise<boolean> {
+    if (this.restartRequest) return this.restartRequest;
+    const request = this.restartOnce().finally(() => { if (this.restartRequest === request) this.restartRequest = undefined; });
+    this.restartRequest = request;
+    return request;
+  }
+
+  private async restartOnce(): Promise<boolean> {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
       this.projectionEpoch += 1;
@@ -346,6 +363,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.pendingLoopChange = undefined;
     if (this.v2) this.clearPending();
     this.closeReferenceOutput(Tone.now(), true);
+    this.fadeAuditions(Tone.now());
     this.releaseVoices();
     if (!this.paused) this.transport.pause();
     for (const id of this.scheduleIds) this.transport.clear(id);
@@ -434,9 +452,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     // The selected bank may still be finishing its fade from two clicks ago.
     // Bring it down smoothly before its new attack instead of snapping gain.
     const gain = voice.output.gain;
-    gain.cancelScheduledValues(now);
-    gain.setValueAtTime(gain.getValueAtTime(now), now);
-    gain.linearRampToValueAtTime(0, now + AUDITION_ATTACK_SECONDS);
+    rampOutputGain(voice.output, 0, now, now + AUDITION_ATTACK_SECONDS, true);
     voice.instrument.releaseAll(now);
     voice.instrument.triggerAttackRelease(
       midiNotes.map(midiToNoteName),
@@ -528,7 +544,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.closeReferenceOutput(Tone.now(), true);
     this.releaseVoices();
     this.auditionGeneration += 1;
-    this.disposeAuditionInstrument();
+    this.fadeAuditions(Tone.now());
     if (wasCountIn) {
       const remainPaused = this.paused;
       this.transport.pause();
@@ -687,11 +703,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   private fadeAuditionVoice(voice: AuditionVoice, time: number): void {
-    const gain = voice.output.gain;
-    gain.cancelScheduledValues(time);
-    gain.setValueAtTime(gain.getValueAtTime(time), time);
-    gain.linearRampToValueAtTime(0, time + AUDITION_FADE_SECONDS);
+    rampOutputGain(voice.output, 0, time, time + AUDITION_FADE_SECONDS, true);
     voice.instrument.releaseAll(time);
+  }
+
+  private fadeAuditions(time: number): void {
+    for (const voice of this.auditionVoices) if (voice) this.fadeAuditionVoice(voice, time);
   }
 
   private retireAuditionVoice(voice: AuditionVoice): void {
@@ -788,11 +805,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (!gain) return;
     const now = Tone.now();
     this.latestScheduledAudioTime = Math.max(this.latestScheduledAudioTime, time);
-    if (value === 0 && time - now >= 0.003) {
-      const rampStart = time - 0.003;
-      gain.setValueAtTime(gain.getValueAtTime(rampStart), rampStart);
-      gain.linearRampToValueAtTime(0, time);
-    } else gain.setValueAtTime(value, time);
+    if (value === 0) {
+      const rampStart = Math.max(now, time - 0.003);
+      rampOutputGain(this.referenceOutput!, 0, rampStart, Math.max(time, rampStart + 0.003));
+    } else {
+      rampOutputGain(this.referenceOutput!, 1, time, time + AUDITION_ATTACK_SECONDS);
+    }
   }
 
   private attackVoicing(eventIndex: number, elapsedBeats: number, time: number): void {
@@ -899,4 +917,13 @@ function assertCompatibleRuntimePpq(runtimePpq: number): void {
 /** Candidate transport with bounded chord scheduling; legacy constructor remains the rollback path. */
 export class ProgressionVoicingTransportV2 extends ProgressionVoicingTransport {
   constructor() { super(true); }
+}
+
+/** Preserve the current value while retriggering; never jump a sounding gain to zero. */
+function rampOutputGain(output: Tone.Gain, value: 0 | 1, start: number, end: number, cancel = false): void {
+  const gain = output.gain;
+  const held = gain.getValueAtTime(start);
+  if (cancel) gain.cancelScheduledValues(start);
+  gain.setValueAtTime(held, start);
+  gain.linearRampToValueAtTime(value, end);
 }
