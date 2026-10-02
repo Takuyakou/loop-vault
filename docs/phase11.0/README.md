@@ -4,6 +4,10 @@
 
 ## Status
 
+### P11-13d frozen reserved confirmation
+
+[Reserved final evaluation](reports/P11-13d-reserved-final-evaluation.md): `HOLDOUT_CONFIRMED` / `READY_FOR_HUMAN_DECISION`. CURRENT/lambda2/lambda2+gamma1 only, one run at `90ff4549`, focused17/17 and diagnostic types/lint PASS. Reserved1,080 cases: reassignment2086→2004, regression cases18→18, new0; structural/time/anchor/Range maintained. Earlier lambda0.5 reserved exposure and absent named families limit the interpretation; no unused-new-holdout or ergonomic promotion claim. No policy changes, adoption, merge, FULL/EXE or further components. Workflow ID `P11.13-04` identifies P11-13d.
+
 ### P11-13c diagnostic follow-up
 
 [Common Tone soft preference ablation](reports/P11-13c-common-tone-ablation.md): `COMMON_TONE_USEFUL`, diagnostic candidate gamma1 with E1-T/inverse/lambda2 fixed. Dev-only original24 regressions become18, new0; no production adoption. Tested diagnostic HEAD `da0b3266`, focused17/17 and diagnostic types/lint PASS. No fresh FULL/EXE in this follow-up; earlier FULL/EXE remains tied to `2d29ac97`. Stop `READY_FOR_HUMAN_DECISION` before further components/integration. Workflow stage ID `P11.13-03` identifies human-named P11-13c.

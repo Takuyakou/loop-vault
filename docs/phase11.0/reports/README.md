@@ -25,3 +25,5 @@ Current candidate: [P11-13a foundation](P11-13a-fingering-foundation.md) / [P11-
 Authorized follow-up: [P11-13 matched dev lambda comparison](P11-13-lambda-comparison.md). Shortlist 2 /4; original policy and EXE unchanged.
 
 Latest diagnostic follow-up: [P11-13c Common Tone ablation](P11-13c-common-tone-ablation.md). Gamma1 shortlisted with lambda2/inverse fixed; COMMON_TONE_USEFUL / READY_FOR_HUMAN_DECISION. No adoption/FULL/EXE or new components.
+
+Frozen confirmation: [P11-13d reserved evaluation](P11-13d-reserved-final-evaluation.md). HOLDOUT_CONFIRMED / READY_FOR_HUMAN_DECISION; one frozen3-arm run, no retuning. Prior exposure and absent named-family limitations recorded. No adoption or integration.
