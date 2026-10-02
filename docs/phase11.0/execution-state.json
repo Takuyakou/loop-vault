@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-09",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -12,12 +12,13 @@
     "P11.0-05",
     "P11.0-06",
     "P11.0-07",
-    "P11.0-08"
+    "P11.0-08",
+    "P11.0-09"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "52159ae626e56f79c420b194a4c15ca0e4d81117",
+  "lastVerifiedCommit": "53682f69449f897796087a335a462bf16a8cd3b6",
   "currentBranch": "fix/phase11-acceptance-layout-source-hands",
   "requiredGates": {
     "P11.0-00": [
@@ -123,12 +124,12 @@
     "p11-08-full": "pass",
     "p11-08-exe": "pass",
     "p11-08-docs": "pass",
-    "p11-09-focused": "pending",
-    "p11-09-ui": "pending",
-    "p11-09-full": "pending",
-    "p11-09-exe": "pending",
-    "p11-09-docs": "pending"
+    "p11-09-focused": "pass",
+    "p11-09-ui": "pass",
+    "p11-09-full": "pass",
+    "p11-09-exe": "pass",
+    "p11-09-docs": "pass"
   },
-  "nextAction": "P11-09 scoped candidate: record fresh FULL and Windows EXE after focused/UI stabilization; no master merge/push/tag/release.",
+  "nextAction": "P11-09 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE: final fresh FULL 3687 Vitest / 186 Playwright PASS at 53682f69; final runnable Windows EXE built. Stop; no master merge/push/tag/release. Native WebView direct cause remains unconfirmed.",
   "updatedAt": "2026-10-02"
 }

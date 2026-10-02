@@ -2,6 +2,8 @@
 
 ## 状態・判断
 
+**P11-09 = READY_FOR_HUMAN_PRODUCT_ACCEPTANCE**。最終tested code / EXE HEAD: `53682f69449f897796087a335a462bf16a8cd3b6`。結果追記はdocumentation-onlyで、後続文書HEADへFULL結果を流用しない。
+
 P11-08までの機能を保持する専用candidate。base `8b6480b4`、branch `fix/phase11-acceptance-layout-source-hands`。master merge / push / tag / releaseなし。公開合成fixtureのみ。実Vault・private witnessは使用していない。
 
 選んだこと: 保存音を変更せず、Source表示とpractice左右手、画面の高さ配分、生成タイプ操作だけを修正する。理由: 実音の保存/再生契約とUIの問題は別。別案: 固定音の再生成・低音threshold・overflow hiddenで隠す案は採用しない。
@@ -96,7 +98,7 @@ selector openは詳しい設定を閉じる。details triggerへのpointerはsel
 - FEATURE fresh: 145 Vitest / 11 Playwright PASS、static checks PASS、51.0秒、cacheなし。
 - Selector/Source/P5.30–33 focused: 21/21 PASS（18.7秒）。初回9 FAILは旧native control assertion5件＋新testのinnerText/textContent差3件＋Coreの既存名称Family Coreとの差1件。該当操作/assertion API・正しい既存名称へ修正し、製品挙動を弱めない。
 - 4解像度geometry＋Range/NextMove/VL09–12/P8.8.4 relevant UI: 40/40 PASS（31.2秒）。
-- Fresh FULLとEXE: final report-inclusive candidate commitで1回実行後に追記する。未実行をPASSと記録しない。
+- Fresh FULLとEXE: 最終report-inclusive code HEADの実測は§8。初回候補と最終候補を区別し、未実行をPASSと記録しない。
 
 公開fixtureのPNG/JSONはGit外`test-results/p11-09-geometry/`と`test-results/p11-current-panel/`。closed/open/source-change/current-panel/workspace、selector openを4サイズで取得。1440/768の現在パネルと1920全画面を目視確認し、全10指/音/左右card/補足情報が可視。原本baselineはGit外local評価領域。
 
@@ -115,3 +117,25 @@ selector openは詳しい設定を閉じる。details triggerへのpointerはsel
 - Saved dedupは完全/既知provenance時だけ。UNKNOWN/partialは保守的に両項目を保持。
 - 元MIDI compatibility・partial fallback・Text style provenance・manual/custom fixed pitches、Vault v2/Core default、session-only Rangeの契約は変更しない。
 - master merge/push/tag/releaseなし。このstageで停止する。
+
+## 8. 最終実測Gate / runnable EXE
+
+最終report-inclusive code HEAD `53682f69449f897796087a335a462bf16a8cd3b6`で `npm run test:full -- --fresh` を1回実行。**FULL PASS / 0 FAIL / 0 UNRUN**。PASS cache未使用。初回candidate `16c688ee` の検証結果とは区別する。
+
+| Gate | 最終結果 |
+|---|---|
+| repository ESLint / class lint / source contracts | PASS |
+| App / E2E TypeScript | PASS |
+| phase-doc / AI-handoff validation | PASS |
+| privacy/security scan | PASS |
+| production build / gallery excluded | PASS |
+| runner contracts | 27/27 PASS |
+| Full Vitest | **3,687/3,687 PASS** |
+| repository-wide Playwright（accessibility / Range / 4サイズ含む） | **186/186 PASS** |
+| git diff check | PASS |
+
+FULL wall time **243.2秒**、raw logs **28,368 B**。Playwright186予定/186実行、skip/fail/unrunなし。4サイズ画像/geometryは最終FULLでも再生成。1920はroot/main/workspace/client=scroll、panel末尾13px、desktop内部scrollなし。1440の自然scroll161pxは上記可読性制約により維持。
+
+`npm run tauri build -- --no-bundle` **PASS**。最終code HEAD同一、Rust/Tauri release compile **42.16秒**。runnable EXE: `src-tauri/target/release/loop-vault.exe`（24,712,704 B）、PE MZ header確認。D-drive既存target/TEMPのみ、fixture/gallery flagなし、インストーラーなし。EXEを自動起動せず実Vaultを変更していない。
+
+local masterはbase `8b6480b4`のまま。保存済みorigin/masterとの比較708 ahead/0 behind（fetchなし）。既存worktreeを再使用し、新しいcheckoutを増やしていない。master merge / push / tag / releaseなし。結果追記はdocumentation-only。phase-doc/AI-handoff/privacy/diffの軽量確認PASS、文書commitで停止。
