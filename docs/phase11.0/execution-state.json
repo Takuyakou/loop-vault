@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "in-progress",
-  "activeStage": "P11.0-10",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -13,12 +13,13 @@
     "P11.0-06",
     "P11.0-07",
     "P11.0-08",
-    "P11.0-09"
+    "P11.0-09",
+    "P11.0-10"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
-  "lastVerifiedCommit": "53682f69449f897796087a335a462bf16a8cd3b6",
+  "lastVerifiedCommit": "b0fe80769ed907f420d5da244df34e0f0c7dd13d",
   "currentBranch": "fix/phase11-acceptance-layout-source-hands",
   "requiredGates": {
     "P11.0-00": [
@@ -136,12 +137,12 @@
     "p11-09-full": "pass",
     "p11-09-exe": "pass",
     "p11-09-docs": "pass",
-    "p11-10-focused": "pending",
-    "p11-10-ui": "pending",
-    "p11-10-full": "pending",
-    "p11-10-exe": "pending",
-    "p11-10-docs": "pending"
+    "p11-10-focused": "pass",
+    "p11-10-ui": "pass",
+    "p11-10-full": "pass",
+    "p11-10-exe": "pass",
+    "p11-10-docs": "pass"
   },
-  "nextAction": "P11-10 scoped Source availability / generated controls implemented; final report-inclusive fresh FULL and EXE pending. No master merge/push/tag/release.",
+  "nextAction": "P11-10 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE: final fresh FULL 3694 Vitest / 189 Playwright PASS at b0fe8076; raw Windows EXE built. Stop; no master merge/push/tag/release.",
   "updatedAt": "2026-10-02"
 }

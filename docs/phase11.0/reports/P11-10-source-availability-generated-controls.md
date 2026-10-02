@@ -2,7 +2,7 @@
 
 ## 状態
 
-実装済み。最終candidateのfresh FULL / EXEは検証待ち。この文書の結果欄へtested commitを記録してから完了とする。P11-09の結果は今回の検証結果として流用しない。
+**P11-10 = READY_FOR_HUMAN_PRODUCT_ACCEPTANCE**。最終tested code / EXE HEAD `b0fe80769ed907f420d5da244df34e0f0c7dd13d`。最終結果追記はdocumentation-only。P11-09および初回FULLの結果とは区別する。
 
 ## 1. ROOT CAUSEと修正
 
@@ -43,4 +43,22 @@
 
 ## 6. 最終fresh Gate / EXE
 
-PENDING。最終tested HEAD、FULL件数、raw Windows EXEを検証後に追記する。master merge / push / tag / releaseなし。
+最終report-inclusive HEAD `b0fe80769ed907f420d5da244df34e0f0c7dd13d`で `npm run test:full -- --fresh` を実行: **FULL PASS / 0 FAIL / 0 UNRUN**。PASS cache未使用。初回失敗後、旧bannerテスト修正・failure isolationを経た最終検証。
+
+| Gate | 結果 |
+|---|---|
+| repository ESLint / class lint / source-contract lint | PASS |
+| App / E2E TypeScript | PASS |
+| phase-doc / AI-handoff | PASS |
+| privacy/security | PASS |
+| production build / gallery excluded | PASS |
+| runner contracts | 27/27 PASS |
+| Full Vitest | **3,694/3,694 PASS** |
+| repository-wide Playwright | **189/189 PASS** |
+| git diff check | PASS |
+
+FULL wall time **270.1秒**、raw logs **28,389 B**。189予定/189実行、skip/fail/unrunなし。既存Range / Transport / keyboard / Source / generated modifier / accessibility / 4-size current-panelと6-width headerの回帰を含む。1920pxの最終Source切替後画像を目視確認: banner行なし、0/Nと固定Sourceの生成controlsはdisabled、内容clipなし。初回のDojo / server接続失敗は最終FULLでは再現しなかったが、直接原因が確定したとは扱わない。
+
+`npm run tauri build -- --no-bundle` **PASS**、Rust/Tauri release compile **50.67秒**。同じtested code HEADのraw Windows EXE: `src-tauri/target/release/loop-vault.exe`、**24,712,704 B**、PE MZ確認。D-drive target/TEMPのみ、fixture/gallery flagなし、インストーラーなし。自動起動せず、実Vault変更なし。
+
+base / local masterは`8b6480b4`のまま。保存済みorigin/masterとの比較708 ahead/0 behind（fetchなし）。master merge / push / tag / releaseなし。最終結果の文書更新後はphase-doc / AI-handoff / privacy / diffのみ軽量再検証し、documentation-only commitで停止する。後続文書HEADにFULLが実行されたとは記録しない。
