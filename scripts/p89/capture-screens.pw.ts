@@ -306,6 +306,7 @@ for (const [width, height] of SIZES) {
       // P10.0-04: Shift+M lists the places with the same notes before merging.
       await shot("capture-workspace-merge-confirm", async () => {
         await openWorkspace("plain-8");
+        await page.getByTestId("correction-card").first().click();
         await page.getByTestId("correction-review-count").focus();
         await page.keyboard.press("s");
         await page.keyboard.press("End");
@@ -359,6 +360,7 @@ for (const [width, height] of SIZES) {
       await page.evaluate(() => localStorage.removeItem("loop-vault:p10-card-click-audition:v1"));
       await shot("capture-workspace-close-confirm", async () => {
         await openWorkspace("plain-8");
+        await page.getByTestId("correction-card").first().click();
         const toggle = page.getByTestId("correction-panel-toggle");
         if (await toggle.isVisible()) await toggle.click();
         await page.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
@@ -366,6 +368,45 @@ for (const [width, height] of SIZES) {
         await nav(page, "vault");
         await expect(page.getByRole("dialog", { name: "保存していない変更があります" })).toBeVisible();
       });
+      // P10.1-01: the control bar on top — nothing selected, a card selected, playing, the
+      // note-selection bar, the save range none / chosen, the recommended ranges closed.
+      async function openPanel() {
+        const toggle = page.getByTestId("correction-panel-toggle");
+        if (await toggle.isVisible() && await toggle.getAttribute("aria-expanded") !== "true") await toggle.click();
+      }
+      await shot("p101-workspace-none-selected", async () => {
+        await openWorkspace("plain-8");
+        await expect(page.getByTestId("correction-inspector-empty")).toBeVisible();
+      });
+      await shot("p101-workspace-card-selected", async () => {
+        await page.getByTestId("correction-card").nth(2).click();
+        await expect(page.getByTestId("correction-play-song")).toHaveAccessibleName(/から再生/);
+      });
+      await shot("p101-workspace-playing", async () => {
+        await page.getByTestId("correction-play-song").click();
+        await expect(page.getByTestId("correction-playhead")).toBeVisible();
+        await page.waitForTimeout(600);
+      });
+      await shot("p101-workspace-note-selection", async () => {
+        await openWorkspace("melody-track-8");
+        await page.getByTestId("correction-select-melody").click();
+        await expect(page.getByTestId("correction-selection-bar")).toBeVisible();
+        await page.getByTestId("correction-selection-bar").scrollIntoViewIfNeeded();
+      });
+      await shot("p101-workspace-save-none", async () => {
+        await openWorkspace("plain-8");
+        await openPanel();
+        await expect(page.getByTestId("correction-save-form")).toHaveAttribute("data-empty", /.*/);
+      });
+      await shot("p101-workspace-save-range", async () => {
+        await page.getByTestId("correction-recommended").getByRole("button").first().click();
+        await expect(page.getByTestId("correction-save-form")).not.toHaveAttribute("data-empty", /.*/);
+      });
+      await shot("p101-workspace-recommended-closed", async () => {
+        await page.getByTestId("correction-recommended-toggle").click();
+        await expect(page.getByTestId("correction-recommended-toggle")).toHaveAttribute("aria-expanded", "false");
+      });
+      await page.evaluate(() => localStorage.removeItem("loop-vault:p10-recommended-ranges-open:v1"));
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });
