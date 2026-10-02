@@ -249,7 +249,8 @@ describe("CaptureView result (the correction workspace, P10.0-07)", () => {
     const setToast = vi.fn();
     const view = await renderCapture(workspaceAnalysis(), { createIdeaFromDraft, setToast });
 
-    // A person picks the second name candidate for the first card.
+    // A person picks the second name candidate for the first card (nothing is selected on open, P10.1).
+    await act(async () => view.container.querySelector<HTMLButtonElement>('[data-testid="correction-card"]')!.click());
     const candidates = view.container.querySelectorAll<HTMLButtonElement>('[data-testid="correction-name-candidates"] button');
     const picked = candidates[1]!.querySelector(".lv-cw-alt-name")!.textContent!;
     await act(async () => candidates[1]!.click());

@@ -27,7 +27,8 @@ async function saveNewIdea(page: Page, title: string) {
 
 test("P10.0-06 a segment band picks the range, saves to the Vault and stays on the workspace", async ({ page }) => {
   await importScenario(page, "plain-8");
-  // Correct one card first: add a note to the first card.
+  // Correct one card first: add a note to the first card (nothing is selected on open, P10.1).
+  await workspace(page).getByTestId("correction-card").first().click();
   await workspace(page).getByTestId("correction-add-note").click();
   await workspace(page).getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(1).click();
 

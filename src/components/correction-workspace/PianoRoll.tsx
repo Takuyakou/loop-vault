@@ -1,4 +1,4 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import type { CorrectionCard, CorrectionModel, CorrectionNote } from "../../domain/correction/correctionModel";
 import { noteLabel } from "../../domain/correction/correctionModel";
 import { aboveLineIds, deleteNotes, movePitch, restoreNotes, type EditResult } from "../../domain/correction/edits";
@@ -23,9 +23,8 @@ export interface PianoRollProps {
   selectedNoteIds: ReadonlySet<string>;
   warnNoteIds: ReadonlySet<string>;
   melodyLine?: number;
-  /** The song is playing: the playhead line is drawn and moved by the workspace every frame. */
-  playing: boolean;
-  playheadRef: RefObject<HTMLSpanElement>;
+  /** ① a click on empty space with no notes selected also clears the card selection (P10.1 §2). */
+  onClearCard?: () => void;
   onPreview: (model: CorrectionModel | undefined) => void;
   onCommit: (result: EditResult) => void;
   onSelectNotes: (ids: string[], how: "replace" | "add" | "toggle") => void;
@@ -157,7 +156,10 @@ export function PianoRoll(props: PianoRollProps) {
       }
     } else if (current.kind === "marquee") {
       if (!current.moved) {
-        if (!current.add) props.onSelectNotes([], "replace");
+        if (!current.add) {
+          if (props.selectedNoteIds.size === 0) props.onClearCard?.();
+          props.onSelectNotes([], "replace");
+        }
         return;
       }
       const from = Math.min(current.from.beat, current.to.beat);
@@ -229,7 +231,6 @@ export function PianoRoll(props: PianoRollProps) {
       ) : null}
       {marquee ? <span className="lv-cw-marquee" style={marquee} /> : null}
       {tip ? <span className="lv-cw-pitch-tip" style={{ left: tip.x, top: tip.y }}>{tip.text}</span> : null}
-      {props.playing ? <span ref={props.playheadRef} className="lv-cw-playhead" data-testid="correction-playhead" /> : null}
     </div>
   );
 }

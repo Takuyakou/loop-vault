@@ -34,17 +34,18 @@ import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
 import { RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
-import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, timelineFrom, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
 import { UNSAVED_TITLE, unsavedMessage } from "./unsavedText";
 
 /**
- * The correction workspace (spec v2.3): display (P10.0-02), note editing with one
- * undo history (P10.0-03), card editing (P10.0-04). Only the visible beats are drawn. Saving still happens
- * on the current screen until P10.0-06.
+ * The correction workspace (spec v2.5 with the P10.1 overrides): display, note and card
+ * editing with one undo history, saving. One control bar on top (P10.1 §1); the song
+ * plays from the selected card, or from the start when none is selected (§2).
+ * Only the visible beats are drawn.
  */
 
-type Zoom = "all" | "16" | "4" | "custom";
+type Zoom = "all" | "16" | "8" | "4" | "custom";
 type Mode = "check" | "edit";
 
 export interface CorrectionWorkspaceProps {
@@ -111,7 +112,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const unregister = registerClosePreparation(write);
     return () => { unregister(); write(); };
   }, []);
-  const [selectedId, setSelectedId] = useState(() => (reviewCards[0] ?? present.cards[0])?.id);
+  const [selectedId, setSelectedId] = useState<string>();
   const [selectedNotes, setSelectedNotes] = useState<ReadonlySet<string>>(() => new Set());
   const [mode, setMode] = useState<Mode>("check");
   const [melodyLine, setMelodyLine] = useState<number>();
@@ -143,12 +144,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const maxPx = viewportWidth > 0 ? viewportWidth / 8 : 60;
   const pxPerBeat = Math.min(maxPx, Math.max(minPx, zoom === "all" ? minPx
     : zoom === "16" ? viewportWidth / (16 * meter)
+      : zoom === "8" ? viewportWidth / (8 * meter)
       : zoom === "4" ? viewportWidth / (4 * meter)
         : customPx)) || 8;
   const canvasWidth = Math.max(viewportWidth, present.totalBeats * pxPerBeat);
   const { low, high } = present.pitchRange;
   const rollHeight = (high - low + 1) * ROW_PX;
-  const selected = present.cards.find((card) => card.id === selectedId) ?? present.cards[0];
+  const selected = selectedId === undefined ? undefined : present.cards.find((card) => card.id === selectedId);
   const editorCard = nameEditor ? present.cards.find((card) => card.id === nameEditor.cardId) : undefined;
   const byCard = useMemo(() => notesByCard(shown.notes), [shown.notes]);
   const warnNoteIds = useMemo(() => new Set(present.cards.flatMap((card) => card.reviewReasons.flatMap((reason) => reason.noteIds))), [present.cards]);
@@ -189,14 +191,18 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   }, []);
 
   // ---- playback --------------------------------------------------------------------------
-  const fullPlan = useMemo(() => createTimelineVoicingPlaybackPlan(timeline, "capture-full"), [timeline]);
   const songPlaying = playback.status !== "idle" && samePlaybackSource(playback.source, fullSource);
   // Moving the view by hand (wheel, overview, keys) while the song plays stops following (spec 7.3).
   const playingRef = useRef(songPlaying);
   playingRef.current = songPlaying;
   const stopFollow = useCallback(() => { if (playingRef.current) setFollow(false); }, []);
-  const firstBeat = present.cards[0]?.start ?? 0;
+  const songStartBeat = present.cards[0]?.start ?? 0;
+  // The beat the current playback started from (the selected card's, or the song's start).
+  const [playStartBeat, setPlayStartBeat] = useState(songStartBeat);
+  // One tempo for the sound and the playhead (the player's own default is 96 when a song has none).
+  const songBpm = present.bpm ?? 96;
   const playheadRef = useRef<HTMLSpanElement>(null);
+  const playTagRef = useRef<HTMLSpanElement>(null);
   const overviewPlayheadRef = useRef<HTMLSpanElement>(null);
   const timeRef = useRef<HTMLSpanElement>(null);
   const followRef = useRef(follow);
@@ -232,16 +238,24 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     selectCard(next);
   }, [reviewCards, selectCard, selected?.start]);
 
-  const toggleSong = useCallback(() => {
-    void controller.toggle(fullSource, {
+  /** P10.1 §2: from `fromBeat` (a card's start) to the end, or the whole song; following turns on (§4). */
+  const playSong = useCallback((fromBeat: number | undefined) => {
+    const plan = createTimelineVoicingPlaybackPlan(timelineFrom(timeline, fromBeat, meter), "capture-full");
+    setPlayStartBeat(fromBeat ?? songStartBeat);
+    setFollow(true);
+    void controller.play(fullSource, {
       type: "timeline",
-      timeline: fullPlan.timeline,
-      bpm: present.bpm,
+      timeline: plan.timeline,
+      bpm: songBpm,
       sound: previewSound,
       beatsPerBar: meter,
-      explicitMidiNotesByEventId: fullPlan.explicitMidiNotesByEventId,
+      explicitMidiNotesByEventId: plan.explicitMidiNotesByEventId,
     }).catch(onPlaybackError);
-  }, [controller, fullPlan, fullSource, meter, present.bpm, onPlaybackError, previewSound]);
+  }, [controller, fullSource, meter, onPlaybackError, previewSound, songBpm, songStartBeat, timeline]);
+  const toggleSong = useCallback(() => {
+    if (playingRef.current) controller.stop();
+    else playSong(selected?.start);
+  }, [controller, playSong, selected?.start]);
 
   const sourceId = (kind: string, card: CorrectionCard): PlayingSource => ({ kind: "capture", id: `${fullSource.id}:workspace-${kind}:${card.id}` });
   const playNotes = useCallback((kind: string, card: CorrectionCard, notes: readonly number[]) => {
@@ -382,11 +396,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         if (helpOpen) { handled(); setHelpOpen(false); }
         else if (ids.length) { handled(); setSelectedNotes(new Set()); }
         else if (saveRange) { handled(); setSaveRange(undefined); }
+        else if (selectedId !== undefined) { handled(); setSelectedId(undefined); }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
+  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -437,12 +452,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const card = cardAt(beat);
     return card ? `${card.bar}.${card.beat}` : `${Math.floor(beat / meter) + 1}.1`;
   };
-  const position = positionOf(selected?.start ?? 0);
+  const position = positionOf(selected?.start ?? songStartBeat);
   // Spec v2.5 §7.3: the playhead moves every frame (transform only; the workspace is not
   // re-rendered), and following scrolls in the same frame. Reduced motion keeps it moving:
   // it is position information, and following never scrolls smoothly.
   const startedAt = songPlaying && playback.status === "playing" ? playback.startedAt : undefined;
-  const bpm = present.bpm ?? 96;
   const positionRef = useRef(positionOf);
   positionRef.current = positionOf;
   useEffect(() => {
@@ -450,13 +464,17 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     let frame = 0;
     let lastLabel = "";
     const step = () => {
-      const beat = playheadBeatAt(performance.now(), startedAt, bpm, firstBeat);
+      const beat = playheadBeatAt(performance.now(), startedAt, songBpm, playStartBeat);
       if (playheadRef.current) playheadRef.current.style.transform = `translateX(${beat * pxPerBeat}px)`;
       const overview = overviewPlayheadRef.current;
       const overviewWidth = overview?.parentElement?.clientWidth ?? 0;
       if (overview) overview.style.transform = `translateX(${(Math.min(beat, present.totalBeats) / Math.max(1, present.totalBeats)) * overviewWidth}px)`;
       const label = positionRef.current(beat);
-      if (timeRef.current && label !== lastLabel) { timeRef.current.textContent = label; lastLabel = label; }
+      if (label !== lastLabel) {
+        if (timeRef.current) timeRef.current.textContent = label;
+        if (playTagRef.current) playTagRef.current.textContent = label;
+        lastLabel = label;
+      }
       const element = scrollRef.current;
       if (followRef.current && element) {
         const next = followScrollLeft(beat, element.scrollLeft, element.clientWidth, pxPerBeat);
@@ -466,7 +484,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [bpm, firstBeat, pxPerBeat, present.totalBeats, startedAt]);
+  }, [playStartBeat, pxPerBeat, present.totalBeats, songBpm, startedAt]);
   const fileMeta = [`${totalBars}小節`, present.bpm ? `${Math.round(present.bpm)}BPM` : "BPM なし", present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
   const count = editCount(history);
@@ -522,6 +540,59 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 
       <div className="lv-cw-work">
         <div className="lv-cw-timeline">
+          <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar">
+            <div className="lv-cw-group" role="group" aria-label="再生">
+              <button
+                type="button"
+                className="lv-cw-btn"
+                data-kind="accent"
+                aria-pressed={songPlaying}
+                aria-label={songPlaying ? "停止（Space）" : selected ? `${position} から再生（Space）` : "最初から再生（Space）"}
+                title={songPlaying ? "停止（Space）" : selected ? `${position} から再生（Space）` : "最初から再生（Space）"}
+                onClick={toggleSong}
+                data-testid="correction-play-song"
+              >
+                {songPlaying ? "■ 停止" : "▶ 再生"}
+              </button>
+              <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)} data-testid="correction-follow">追従</button>
+              <span className="lv-cw-time" data-testid="correction-position">
+                {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`} ／ {totalBars}小節
+              </span>
+            </div>
+            <div className="lv-cw-group" role="group" aria-label="表示">
+              {([["all", "全体"], ["16", "16小節"], ["8", "8小節"], ["4", "4小節"]] as const).map(([value, label]) => (
+                <button key={value} type="button" className="lv-cw-btn" aria-pressed={zoom === value} onClick={() => setZoom(value)}>{label}</button>
+              ))}
+              <label className="lv-cw-check">
+                <input
+                  type="checkbox"
+                  checked={clickAudition}
+                  data-testid="correction-click-audition"
+                  onChange={(event) => { setClickAudition(event.target.checked); setCardClickAudition(event.target.checked); }}
+                />
+                押して鳴らす
+              </label>
+            </div>
+            <div className="lv-cw-group" role="group" aria-label="要確認">
+              <button type="button" className="lv-cw-btn" onClick={() => nextReview(-1)} disabled={!reviewCards.length} aria-label="前の要確認">◀ 前の要確認</button>
+              <span className="lv-cw-nav-count" data-testid="correction-review-position">{reviewIndex >= 0 ? reviewIndex + 1 : "–"} / {reviewCards.length}</span>
+              <button type="button" className="lv-cw-btn" onClick={() => nextReview(1)} disabled={!reviewCards.length} aria-label="次の要確認">次の要確認 ▶</button>
+            </div>
+            <div className="lv-cw-group" role="group" aria-label="モード">
+              <button type="button" className="lv-cw-btn" aria-pressed={mode === "edit"} onClick={() => mode === "edit" ? setMode("check") : enterEdit()} data-testid="correction-mode-edit">
+                {mode === "edit" ? "② 音を直す（Enter で戻る）" : "① 確かめる（N で音を直す）"}
+              </button>
+            </div>
+            <div className="lv-cw-group" role="group" aria-label="履歴">
+              <button type="button" className="lv-cw-btn" onClick={undoOnce} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
+              <button type="button" className="lv-cw-btn" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label="やり直す（Ctrl+Y）">やり直す</button>
+              <span className="lv-cw-history" data-testid="correction-history" title={`操作 ${count}${last ? `・最後：${last}` : ""}`}>
+                操作 {count}{last ? <span className="lv-cw-history-last">・最後：{last}</span> : null}
+              </span>
+            </div>
+            <span className="lv-cw-notice" role="status" data-testid="correction-notice" title={notice}>{notice}</span>
+          </div>
+
           <div className="lv-cw-overview-row">
             <span className="lv-cw-label">曲全体</span>
             <div
@@ -546,30 +617,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               <span className="lv-cw-ov-view" style={{ left: pct(viewStart, present.totalBeats), width: pct(Math.min(present.totalBeats, viewEnd) - viewStart, present.totalBeats) }} />
               {startedAt !== undefined ? <span ref={overviewPlayheadRef} className="lv-cw-ov-ph" data-testid="correction-overview-playhead" /> : null}
             </div>
-          </div>
-
-          <div className="lv-cw-tools">
-            <span className="lv-cw-tools-label">表示</span>
-            {([["all", "全体"], ["16", "16小節"], ["4", "4小節"]] as const).map(([value, label]) => (
-              <button key={value} type="button" className="lv-cw-btn" aria-pressed={zoom === value} onClick={() => setZoom(value)}>{label}</button>
-            ))}
-            <label className="lv-cw-check">
-              <input
-                type="checkbox"
-                checked={clickAudition}
-                data-testid="correction-click-audition"
-                onChange={(event) => { setClickAudition(event.target.checked); setCardClickAudition(event.target.checked); }}
-              />
-              押して鳴らす
-            </label>
-            <span className="lv-cw-sep" />
-            <button type="button" className="lv-cw-btn" onClick={() => nextReview(-1)} disabled={!reviewCards.length} aria-label="前の要確認">◀ 前の要確認</button>
-            <span className="lv-cw-nav-count" data-testid="correction-review-position">{reviewIndex >= 0 ? reviewIndex + 1 : "–"} / {reviewCards.length}</span>
-            <button type="button" className="lv-cw-btn" onClick={() => nextReview(1)} disabled={!reviewCards.length} aria-label="次の要確認">次の要確認 ▶</button>
-            <span className="lv-cw-sep" />
-            <button type="button" className="lv-cw-btn" aria-pressed={mode === "edit"} onClick={() => mode === "edit" ? setMode("check") : enterEdit()} data-testid="correction-mode-edit">
-              {mode === "edit" ? "② 音を直す（Enter で戻る）" : "① 確かめる（N で音を直す）"}
-            </button>
           </div>
 
           <div className="lv-cw-body">
@@ -703,6 +750,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                     </button>
                   ))}
                 </div>
+                {startedAt !== undefined ? (
+                  <span ref={playheadRef} className="lv-cw-playline" data-testid="correction-playhead">
+                    <span ref={playTagRef} className="lv-cw-playline-tag" />
+                  </span>
+                ) : null}
                 <PianoRoll
                   present={present}
                   shown={shown}
@@ -715,8 +767,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   selectedNoteIds={selectedNotes}
                   warnNoteIds={warnNoteIds}
                   {...(melodyLine !== undefined ? { melodyLine } : {})}
-                  playing={startedAt !== undefined}
-                  playheadRef={playheadRef}
+                  onClearCard={() => { if (mode === "check") setSelectedId(undefined); }}
                   onPreview={setPreview}
                   onCommit={apply}
                   onSelectNotes={selectNotes}
@@ -739,17 +790,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span><i data-kind="off" />使っていない音（破線）</span>
           </div>
 
-          <div className="lv-cw-transport">
-            <button type="button" className="lv-cw-btn" data-kind="accent" aria-pressed={songPlaying} onClick={toggleSong} data-testid="correction-play-song">
-              {songPlaying ? "■ 停止" : "▶ 再生"}
-            </button>
-            <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)}>追従</button>
-            <span className="lv-cw-time">{startedAt !== undefined ? <span ref={timeRef} /> : position} / {totalBars}小節</span>
-            <button type="button" className="lv-cw-btn" onClick={undoOnce} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
-            <button type="button" className="lv-cw-btn" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label="やり直す（Ctrl+Y）">やり直す</button>
-            <span className="lv-cw-history" data-testid="correction-history">操作 {count}{last ? `・最後：${last}` : ""}</span>
-            {notice ? <span className="lv-cw-notice" role="status" data-testid="correction-notice">{notice}</span> : null}
-          </div>
         </div>
 
         <aside className="lv-cw-insp" data-open={panelOpen || undefined} aria-label="選んだカード">
@@ -796,7 +836,12 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
               onSplit={() => edit((model) => splitCard(model, selected.id))}
               {...(sameFix.length ? { sameFix: { count: sameFix.length, onApply: () => setConfirm("same-fix") } } : {})}
             />
-          ) : <p className="lv-cw-muted">カードがありません。</p>}
+          ) : (
+            <div className="lv-cw-insp-empty" data-testid="correction-inspector-empty">
+              <p className="lv-cw-muted">{present.cards.length ? "カードを押すと、ここに音と名前が出ます。" : "カードがありません。"}</p>
+              {reviewCards.length ? <button type="button" className="lv-cw-btn" data-kind="warn" onClick={() => nextReview(1)}>要確認 {reviewCards.length}</button> : null}
+            </div>
+          )}
         </aside>
       </div>
 

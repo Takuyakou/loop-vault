@@ -1,3 +1,5 @@
+import type { ChordTimelineItem } from "../../domain/types";
+
 /**
  * Pure geometry of the correction workspace timeline (spec v2.3 §6.2, §9):
  * which beats to draw, what a narrow card says, when following scrolls, and
@@ -62,4 +64,26 @@ export function zoomScrollLeft(beatAtPointer: number, pointerX: number, nextPxPe
  */
 export function playheadBeatAt(nowMs: number, startedAtMs: number, bpm: number, firstBeat: number): number {
   return firstBeat + Math.max(0, (nowMs - startedAtMs) / 1000) * bpm / 60;
+}
+
+/** The beat a timeline item starts on (bar/beat are 1-based). */
+const itemStart = (item: ChordTimelineItem, meter: number) => (item.bar - 1) * meter + item.beat - 1;
+
+/**
+ * P10.1 §2: the song from `startBeat` to the end, for playback from the selected card.
+ * Items ending before it are dropped; one that is sounding at it is clipped to start
+ * there. The player schedules relative to the first item, so the rest keep their
+ * places and the gap closes by itself. Each item keeps its voicing, so the same card
+ * plays the same notes. `startBeat` undefined (nothing selected) = the whole song.
+ */
+export function timelineFrom(timeline: readonly ChordTimelineItem[], startBeat: number | undefined, meter: number): ChordTimelineItem[] {
+  if (startBeat === undefined) return [...timeline];
+  return timeline.flatMap((item) => {
+    const start = itemStart(item, meter);
+    const end = start + item.durationBeats;
+    if (end <= startBeat + 1e-6) return [];
+    if (start >= startBeat - 1e-6) return [item];
+    const bar = Math.floor(startBeat / meter + 1e-6) + 1;
+    return [{ ...item, bar, beat: startBeat - (bar - 1) * meter + 1, durationBeats: end - startBeat }];
+  });
 }
