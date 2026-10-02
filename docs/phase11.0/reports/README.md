@@ -21,3 +21,5 @@ Latest P11-11 integration: [local master merge / scoped fresh verification](P11-
 Latest audit-only stage: [P11-12 fingering ranker baseline](P11-12-fingering-ranker-baseline-audit.md). Product logic unchanged; implementation deferred.
 
 Current candidate: [P11-13a foundation](P11-13a-fingering-foundation.md) / [P11-13b E1-T comparison](P11-13b-hand-position-time-comparison.md). Stop before E2/adoption/integration.
+
+Authorized follow-up: [P11-13 matched dev lambda comparison](P11-13-lambda-comparison.md). Shortlist 2 /4; original policy and EXE unchanged.

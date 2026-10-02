@@ -4,3 +4,5 @@ Run `node node_modules/vite-node/vite-node.mjs scripts/p11-13/comparison.ts` fro
 
 Typecheck: `node node_modules/typescript/bin/tsc -p scripts/p11-13/tsconfig.json`.
 Final report: `docs/phase11.0/reports/P11-13b-hand-position-time-comparison.md`.
+
+Lambda follow-up: `node node_modules/vite-node/vite-node.mjs scripts/p11-13/lambdaComparison.ts`. Dev only; verifies original dev aggregates and preserves both original JSON artifacts. Results: `docs/phase11.0/reports/P11-13-lambda-comparison.md`. The original comparator still runs through `comparison.ts`. Shared measurement function bodies are unchanged.
