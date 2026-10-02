@@ -33,7 +33,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
     return oneSelection("custom", snapshot("custom", "maj7", false));
   }
   if (status === "unsupported") {
-    return oneSelection("left-hand", snapshot("left-hand", "dim", false));
+    return { ...oneSelection("left-hand", snapshot("left-hand", "dim", false)),
+      // The selected substitute must also be impossible: a true terminal unsupported case.
+      resolutionOptions: { maxRightHandSpanSemitones: 0 } };
   }
   if (status === "generation-error") {
     return {
@@ -98,6 +100,16 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
       ...Object.fromEntries((["basic-shell", "rootless-shell", "full-shell", "left-hand"] as const)
         .map(selection => [selection, { ...generated, selection }])),
     }, initialSelection: "basic-full" };
+  }
+  if (status === "p11-generated-fallback") {
+    const base = p533Snapshot("basic-full", false);
+    const labels = ["Ebmaj7", "Cm7", "Ebadd9/G", "Ebadd9/G"];
+    const generated: ProgressionVoicingPracticeSnapshot = { ...base, lengthBeats: 16,
+      spans: labels.map((_, index) => ({ kind: "chord", eventIndex: index, startBeat: index * 4, durationBeats: 4 })),
+      events: labels.map((label, index) => ({ id: `public-fallback-${index}`, startBeat: index * 4, durationBeats: 4, chord: parseChordLabel(label)! })),
+    };
+    return { snapshots: Object.fromEntries((["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"] as const)
+      .map(selection => [selection, { ...generated, selection }])), initialSelection: "basic-full" };
   }
   if (status === "p533-rules") {
     return {

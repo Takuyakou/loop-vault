@@ -71,7 +71,7 @@ function handCandidates(
   voicing: ResolvedProgressionPracticeVoicing,
   preferences?: FingeringPreferenceCollection,
 ): ProgressionFingeringHandTargets[] {
-  if (selection === "left-hand") return [{ left: voicing.midiNotes, right: EMPTY_NOTES }];
+  if (selection === "left-hand" && voicing.origin === "left-hand") return [{ left: voicing.midiNotes, right: EMPTY_NOTES }];
   // An explicit assignment belongs to the chosen voicing and is never rebalanced.
   if (voicing.leftHandNotes || voicing.rightHandNotes) {
     return [{ left: voicing.leftHandNotes ?? EMPTY_NOTES, right: voicing.rightHandNotes ?? EMPTY_NOTES }];

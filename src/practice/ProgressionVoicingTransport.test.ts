@@ -120,6 +120,40 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("keeps paused seek/card retriggers on two reusable audition banks", async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = new ProgressionVoicingTransportV2();
+      await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+      runtime.pause();
+      for (let i = 0; i < 10; i++) { runtime.seek(i % snapshot.events.length); await runtime.audition([48, 55, 59]); }
+      expect(toneMock.instruments).toHaveLength(4); // reference, click, two audition banks
+      expect(toneMock.activeInstruments.size).toBe(4);
+      expect(toneMock.instruments.slice(2).every(v => v.dispose.mock.calls.length === 0)).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+      runtime.stop(); await vi.runAllTimersAsync();
+      expect(toneMock.activeInstruments.size).toBe(0); expect(toneMock.activeScheduleIds.size).toBe(0);
+      expect(toneMock.instruments.every(v => v.dispose.mock.calls.length === 1)).toBe(true);
+    } finally { vi.useRealTimers(); }
+  });
+  it("coalesces concurrent resume and restart without rebuilding or duplicating schedules", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const initialSchedules = toneMock.activeScheduleIds.size;
+    runtime.pause();
+    expect(await Promise.all(Array.from({ length: 10 }, () => runtime.resume()))).toEqual(Array(10).fill(true));
+    const starts = toneMock.transport.start.mock.calls.length;
+    // Resume skips the current attack; restart legitimately schedules the first one again.
+    expect(await Promise.all(Array.from({ length: 10 }, () => runtime.restart()))).toEqual(Array(10).fill(true));
+    expect(toneMock.transport.start.mock.calls.length - starts).toBe(1);
+    expect(toneMock.activeScheduleIds.size).toBe(initialSchedules);
+    for (let i = 0; i < 10; i++) { await runtime.restart(); expect(toneMock.activeScheduleIds.size).toBe(initialSchedules); }
+    expect(toneMock.instruments).toHaveLength(2);
+    expect(toneMock.gains[0]!.gain.setValueAtTime.mock.calls.some(([value, time]) => value === 0 && time === 1)).toBe(false);
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.003);
+    runtime.stop(); expect(toneMock.activeScheduleIds.size).toBe(0);
+  });
+
   it("registers the first no-count-in attack before starting Tone Transport", async () => {
     const runtime = new ProgressionVoicingTransportV2();
     await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0,

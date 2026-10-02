@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-11",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -20,7 +20,7 @@
   "blockerReason": null,
   "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
   "lastVerifiedCommit": "f7768617f01bf61c342b9cbb991c139681d70a22",
-  "currentBranch": "master",
+  "currentBranch": "fix/phase11-generated-bass-audio",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -91,6 +91,14 @@
       "p11-10-full",
       "p11-10-exe",
       "p11-10-docs"
+    ],
+    "P11.0-11": [
+      "p11-11-focused",
+      "p11-11-feature",
+      "p11-11-ui",
+      "p11-11-full",
+      "p11-11-exe",
+      "p11-11-docs"
     ]
   },
   "gateResults": {
@@ -143,6 +151,6 @@
     "p11-10-exe": "pass",
     "p11-10-docs": "pass"
   },
-  "nextAction": "P11-00–10 integrated into local master by explicit human authorization. Merge/fresh-tested HEAD f7768617: Vitest 3694 / Playwright 189 PASS, no cache, 0 FAIL / 0 UNRUN. Stop; no push/tag/release or new stage.",
+  "nextAction": "P11-11 focused and FEATURE passed; stabilize UI, then report-inclusive candidate fresh FULL and raw Windows EXE. No master merge.",
   "updatedAt": "2026-10-02"
 }
