@@ -8,11 +8,11 @@ Phase 10.1 で直した修正作業場を、人間が EXE で使って出た要�
 
 ## Status
 
-- **Status:** in-progress
-- **Active stage:** P10.2-01（修正作業場の再生と見た目の整理）
-- **Completed stages:** なし
+- **Status:** completed
+- **Active stage:** なし（Phase 10.2 完了。唯一の段階は P10.2-01）
+- **Completed stages:** P10.2-01（修正作業場の再生と見た目の整理 — [reports/P10.2-01-polish.md](reports/P10.2-01-polish.md)、fresh FULL PASS @ `54caa5a6`、EXE 作成済み。merge 候補 `feat/p10.2-workspace-polish`（P10.1 の merge 候補を含む）、未取り込み）
 - **Base:** local `master` `94dae5b6` ＋ Phase 10.1 の merge 候補 `feat/p10.1-workspace-fixes`（このブランチに `87c121f5` で取り込み。local `master` は別の worktree で checkout されていて、そこでの取り込みは許可されなかったため、master 自体は変えていない）
-- **Next action:** [stages/P10.2-01.md](stages/P10.2-01.md) の区切り1〜4を最後まで実行する（ブランチ `feat/p10.2-workspace-polish`）
+- **Next action:** Phase 10.2 完了。merge 候補の取り込みは人間の判断
 
 段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
