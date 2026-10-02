@@ -4,7 +4,7 @@
 
 ## 状態
 
-検証中。ユーザーが P11-13d の HOLDOUT_CONFIRMED を受けて、通常のおすすめ運指への候補統合を承認した。master への merge は未承認・未実施。この段階の停止地点は `READY_FOR_HUMAN_PRODUCT_ACCEPTANCE`。
+`READY_FOR_HUMAN_PRODUCT_ACCEPTANCE`。ユーザーが P11-13d の HOLDOUT_CONFIRMED を受けて承認した候補統合を完了。tested / EXE HEAD は `4406d5b8813bc122f85ff13b071e477550cfb436`。master への merge は未実施。最終結果の記録は documentation-only commit とし、FULL をその文書 commit の実行結果とは主張しない。
 
 ## 最新 local master との統合
 
@@ -28,20 +28,54 @@
 
 ## 検証計画と結果
 
-以下の結果は実行後に tested HEAD とともに記録する。過去 HEAD の FULL を今回の PASS として流用しない。
+以下はすべて tested HEAD `4406d5b8` の fresh 実測。過去の P11-13b FULL は今回の結果へ流用していない。
 
 | Gate | 状態 |
 | --- | --- |
-| focused: frozen diagnostic parity / Saved / segment / empty-hand / cyclic / IOI / Range / Source / Next Move / Transport | 未完了 |
-| relevant FEATURE/UI: Developer fallback、Source、Range、first chord、accessibility | 未完了 |
-| fresh FULL: 全 static gates / Vitest / repository Playwright / diff | 未実行 |
-| Windows raw EXE | 未生成 |
+| focused: frozen diagnostic parity / Saved / segment / empty-hand / cyclic / IOI / Range / Source / Next Move / Transport | PASS: 8 files、99/99 |
+| relevant FEATURE/UI: Developer fallback、Source、Range、first chord、accessibility | PASS: FEATURE Vitest 120/120 + Playwright 11/11、追加 relevant UI 22/22 |
+| fresh FULL: 全 static gates / Vitest / repository Playwright / diff | PASS: Vitest 3,792/3,792、Playwright 225/225、0 FAIL / 0 UNRUN |
+| Windows raw EXE | PASS: release build、MZ / size / SHA-256 確認 |
 
 追加テストは frozen objective の production parity、矛盾する Saved Anchor の固定、unsupported による segment、empty-hand available time、slow/fast Bass、全 source の notes/hands/Range/Next Move、通常 UI の default/fallback 運指差を確認する。既存 personal fingering / Next Move / transport の回帰を保持する。
+
+
+### fresh FULL の内訳
+
+実行: `node scripts/test-dx/run.mjs full --fresh`。PASS cache 未使用。
+
+| Gate | 結果 / 秒 |
+| --- | --- |
+| repository ESLint | PASS / 9.2 |
+| class lint / source contracts | PASS / 0.2 / 0.1 |
+| App / E2E TypeScript | PASS / 9.6 / 1.3 |
+| phase-doc / AI-handoff | PASS / 0.5 / 0.2 |
+| privacy/security | PASS / 0.9 |
+| production build / gallery exclusion | PASS / 7.6 / 0.2 |
+| runner contracts | PASS 27/27 / 0.1 |
+| Full Vitest | PASS 3,792/3,792、473 files / 64.3 |
+| repository Playwright | PASS 225/225、2 workers、retry 0 / 239.4 |
+| git diff --check | PASS |
+
+FULL wall time **333.7 秒**、raw local logs **29,358 B**。log: `.local-evaluation/test-logs/2026-10-02T14-30-46-595Z-full.log`。アクセシビリティ、個人運指、Source switching、generated/saved/source/custom、first chord/Transport、Next Move の既存回帰を含む。baseline 更新・skip・fixme・retry の追加なし。
+
+初回 FULL は Vitest の文書 validator 2 件のみ FAIL（3,790 PASS / 2 FAIL、Playwright 未実行）。原因は agent が TEMP/TMP を `.local-evaluation/build-temp` へ設定し、合成 fixture の物理パスが privacy rule に該当したため。TEMP/TMP を D drive 内の `src-tauri/target/test-temp` へ変更し、同じ code HEAD の該当 25/25 PASS を確認。製品・test expectation・validator を変えず、fresh FULL を最初から再実行して上記全 PASS を得た。初回 aborted attempt も記録し、「一度も失敗せず一回だけ実行した」とは主張しない。reserved / weight grid の再実行なし。
+
+### EXE
+
+- `npm run tauri build -- --no-bundle`、release compile PASS（Rust 59.55 秒）。Web build を E2E fixture flag なしで再生成。
+- 原本: `src-tauri/target/release/loop-vault.exe`。
+- Human Acceptance 用の固定 copy: `.local-evaluation/p11-13e/Loop-Vault-P11-13e-4406d5b8.exe`。
+- 24,724,992 B、MZ header、SHA-256 `4b14b516d14a23d686782c027c1124316ca7ccee2d8676be70fe7431d2c8a28a`。
+- source/build/temp/EXE は D drive 内。インストーラー未作成。実 Vault を開く自動起動は行っていないため、Windows desktop 上の実操作は Human Acceptance で確認する。
 
 ## Human Product Acceptance
 
 EXE で Settings → Developer → 運指方式を切り替えて比較する。専門的に正しい finger の判定は要求しない。明らかに不自然な運指が多数ないか、slow Bass の過剰な指送り、fast Bass の文脈反応、単音↔和音、Saved 維持、UI と Next Move の一致を確認する。
+
+## Git / 最終状態
+
+local master `ccf85c69` は候補 HEAD の ancestor。tested HEAD で master 固有 commit 0、candidate 固有 19。FULL/EXE 後に tracked code/test/config 変更なし。最終追記は phase README / execution-state / report index / このレポートのみ。無関係な未追跡 audit/diagnostics は保持し stage しない。merge into master / push / tag / release / 次 stage は行わない。
 
 ## Remaining limitations
 

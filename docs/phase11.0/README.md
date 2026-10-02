@@ -6,7 +6,7 @@
 
 ### P11-13e production candidate integration
 
-[Production candidate](reports/P11-13e-production-candidate.md): authorized frozen E1-T/inverse/lambda2/gamma1 integration. Latest local master `ccf85c69` incorporated into candidate at `c54b360d`, without conflicts. Normal Voicing Loop default is the new candidate with Developer-only session CURRENT fallback. Focused/FEATURE/UI/fresh FULL/EXE verification in progress; stop READY_FOR_HUMAN_PRODUCT_ACCEPTANCE, no master merge or E3. The CURRENT-default/no-adoption statements below describe earlier stages. Workflow ID `P11.13-05` identifies P11-13e.
+[Production candidate](reports/P11-13e-production-candidate.md): authorized frozen E1-T/inverse/lambda2/gamma1 integration. Latest local master `ccf85c69` incorporated into candidate at `c54b360d`, without conflicts. Normal Voicing Loop default is the new candidate with Developer-only session CURRENT fallback. Tested / EXE HEAD `4406d5b8`: focused99, FEATURE120 + browser11, relevant UI22, fresh FULL Vitest3,792 / Playwright225 PASS, 0 FAIL / 0 UNRUN, cache unused. Raw Windows EXE built. Stop READY_FOR_HUMAN_PRODUCT_ACCEPTANCE, no master merge or E3. The CURRENT-default/no-adoption statements below describe earlier stages. Workflow ID `P11.13-05` identifies P11-13e.
 
 ### P11-13d frozen reserved confirmation
 

@@ -28,4 +28,4 @@ Latest diagnostic follow-up: [P11-13c Common Tone ablation](P11-13c-common-tone-
 
 Frozen confirmation: [P11-13d reserved evaluation](P11-13d-reserved-final-evaluation.md). HOLDOUT_CONFIRMED / READY_FOR_HUMAN_DECISION; one frozen3-arm run, no retuning. Prior exposure and absent named-family limitations recorded. No adoption or integration.
 
-Current authorized integration: [P11-13e production candidate](P11-13e-production-candidate.md). Frozen E1-T/inverse/lambda2/gamma1 default with Developer CURRENT fallback; latest master incorporated into candidate only. Verification in progress; no master merge.
+Current authorized integration: [P11-13e production candidate](P11-13e-production-candidate.md). Frozen E1-T/inverse/lambda2/gamma1 default with Developer CURRENT fallback; latest master incorporated into candidate only. Tested / EXE HEAD `4406d5b8`, fresh FULL Vitest3,792 / Playwright225 PASS. READY_FOR_HUMAN_PRODUCT_ACCEPTANCE; no master merge.
