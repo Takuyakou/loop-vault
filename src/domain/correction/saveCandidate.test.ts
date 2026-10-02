@@ -11,6 +11,7 @@ import { buildCorrectionModel, type CorrectionModel } from "./correctionModel";
 import { addNote, deleteNotes, movePitch, setTempo } from "./edits";
 import { reviewThresholds } from "./reviewThresholds";
 import { buildSaveCandidate, cardAuditionNotes, CORRECTION_EXTRACTOR_VERSION } from "./saveCandidate";
+import { songPlaybackNotes } from "./songPlayback";
 
 const inputs = new Map<string, ReturnType<typeof analyzeScenario>>();
 function input(id: string) {
@@ -199,6 +200,12 @@ describe("saved workspace progressions (P10.0-06 round trip and playback)", () =
     after.chords.forEach((item, index) => {
       expect(resolveTimelineItemVoicing(item).midiNotes, `${cards[index]!.bar}.${cards[index]!.beat} ${item.chord.label}`)
         .toEqual(cardAuditionNotes(model, cards[index]!, timelineOf("melody-track-8")));
+    });
+    // P10.2 §2: the workspace's song playback plays the same notes as the saved progression.
+    const song = songPlaybackNotes(model, timelineOf("melody-track-8"), 0, 120);
+    after.chords.forEach((item, index) => {
+      const sounding = song.filter((note) => note.startBeat === cards[index]!.start).map((note) => note.pitch);
+      expect(sounding.sort((x, y) => x - y)).toEqual([...resolveTimelineItemVoicing(item).midiNotes].sort((x, y) => x - y));
     });
     // The renamed card plays its corrected notes, not a generated voicing.
     const renamed = after.chords.find((item) => item.chord.label === "Fmaj7")!;

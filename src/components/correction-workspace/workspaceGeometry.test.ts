@@ -3,9 +3,7 @@ import { buildScenarioMidi, p10Scenario } from "../../testing/p10SyntheticSongs"
 import { analyzeScenario } from "../../testing/p10SyntheticCapture";
 import { buildCorrectionModel } from "../../domain/correction/correctionModel";
 import { reviewThresholds } from "../../domain/correction/reviewThresholds";
-import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, timelineFrom, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
-import { createTimelineVoicingPlaybackPlan } from "../../domain/voicing";
-import type { ChordTimelineItem } from "../../domain/types";
+import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 
 describe("workspace geometry (P10.0-05)", () => {
   it("draws the visible beats plus one view each side, clamped at both ends", () => {
@@ -75,30 +73,19 @@ describe("workspace geometry (P10.0-05)", () => {
   });
 });
 
-describe("playback from the selected card (P10.1)", () => {
-  const { result } = analyzeScenario(p10Scenario("plain-8"));
-  const timeline = result.fullTimeline;
-  const notesOf = (items: readonly ChordTimelineItem[]) => {
-    const plan = createTimelineVoicingPlaybackPlan(items, "capture-full");
-    return plan.timeline.map((item) => ({ chord: item.chord.label, notes: plan.explicitMidiNotesByEventId[item.eventId!] ?? null }));
-  };
+describe("where the song starts with no card selected (P10.2 §3)", () => {
+  const cards = [{ id: "a", start: 0, duration: 4 }, { id: "b", start: 4, duration: 6 }, { id: "c", start: 12, duration: 4 }];
 
-  it("is the whole song when nothing is selected", () => {
-    expect(timelineFrom(timeline, undefined, 4)).toEqual(timeline);
-    expect(notesOf(timelineFrom(timeline, undefined, 4))).toEqual(notesOf(timeline));
+  it("is the first card whose head is in view; a card starting left of the view does not count", () => {
+    expect(leftCardInView(cards, 0, 16)?.id).toBe("a");
+    expect(leftCardInView(cards, 2, 16)?.id).toBe("b");
+    expect(leftCardInView(cards, 4, 8)?.id).toBe("b");
   });
 
-  it("starts at the selected card and plays the same notes, in the same order, as the whole song from there", () => {
-    const from = timelineFrom(timeline, 8, 4); // bar 3
-    expect(from[0]).toMatchObject({ bar: 3, beat: 1 });
-    expect(from).toHaveLength(timeline.length - 2);
-    expect(notesOf(from)).toEqual(notesOf(timeline).slice(2));
-  });
-
-  it("clips a chord sounding at the start beat to begin there (the gap closes)", () => {
-    const from = timelineFrom(timeline, 10, 4); // the middle of bar 3
-    expect(from[0]).toMatchObject({ bar: 3, beat: 3, durationBeats: 2, chord: timeline[2]!.chord });
-    expect(notesOf(from)[0]!.notes).toEqual(notesOf(timeline)[2]!.notes);
-    expect(timelineFrom(timeline, 32, 4)).toEqual([]);
+  it("is the card sounding at the left edge when no head is in view, else the next card", () => {
+    expect(leftCardInView(cards, 5, 9)?.id).toBe("b");
+    expect(leftCardInView(cards, 10.5, 11.5)?.id).toBe("c"); // a rest at the left edge
+    expect(leftCardInView(cards, 17, 20)).toBeUndefined();
+    expect(leftCardInView(cards, 0, 0)?.id).toBe("a"); // before the view is measured
   });
 });

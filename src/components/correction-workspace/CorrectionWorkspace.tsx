@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { PreviewSound } from "../../audio/chordPreview";
-import { samePlaybackSource, type PlaybackController, type PlayingSource } from "../../audio/playbackController";
+import { samePlaybackSource, type PlaybackController, type PlaybackRequest, type PlayingSource } from "../../audio/playbackController";
 import { chooseName, markReviewed, mergeSameNotes, mergeWithNext, moveBoundary, positionLabel, sameFixTargets, sameNotesGroups, splitCard } from "../../domain/correction/cardEdits";
 import type { CorrectionCard, CorrectionModel, CorrectionNote, NameSource } from "../../domain/correction/correctionModel";
 import { noteLabel, notesByCard } from "../../domain/correction/correctionModel";
@@ -29,8 +29,9 @@ import type { EditableChordSlot } from "../../domain/progressionEditing";
 import type { ChordSymbol, ChordTimelineItem, ProgressionBlockCandidate } from "../../domain/types";
 import type { SaveRange } from "../../domain/correction/saveCandidate";
 import { registerCloseBlocker } from "../../store/closeBlocker";
-import { createTimelineVoicingPlaybackPlan } from "../../domain/voicing";
 import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
+import { songPlaybackNotes } from "../../domain/correction/songPlayback";
+import { useMetronome } from "../MetronomeProvider";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
@@ -38,14 +39,15 @@ import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
 import { NoSaveRange, RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
-import { cardLabel, cardSize, followScrollLeft, overlaps, playheadBeatAt, timelineFrom, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
 import { UNSAVED_TITLE, unsavedMessage } from "./unsavedText";
 
 /**
  * The correction workspace (spec v2.5 with the P10.1 overrides): display, note and card
  * editing with one undo history, saving. One control bar on top (P10.1 §1); the song
- * plays from the selected card, or from the start when none is selected (§2).
+ * plays the workspace's notes (P10.2 §2) from the selected card, or from the first card
+ * in view when none is selected (P10.2 §3), with the header's metronome (P10.2 §6).
  * Only the visible beats are drawn.
  */
 
@@ -148,6 +150,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const pointerUsedRef = useRef(false);
   const playback = usePlaybackState(controller);
   const [clickAudition, setClickAudition] = useState(getCardClickAudition);
+  const { enabled: metronome } = useMetronome();
 
   const minPx = viewportWidth > 0 ? viewportWidth / Math.max(meter, present.totalBeats) : 8;
   const maxPx = viewportWidth > 0 ? viewportWidth / 8 : 60;
@@ -249,24 +252,48 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     selectCard(next);
   }, [reviewCards, selectCard, selected?.start]);
 
-  /** P10.1 §2: from `fromBeat` (a card's start) to the end, or the whole song; following turns on (§4). */
-  const playSong = useCallback((fromBeat: number | undefined, bpm = songBpm) => {
-    const plan = createTimelineVoicingPlaybackPlan(timelineFrom(timeline, fromBeat, meter), "capture-full");
-    setPlayStartBeat(fromBeat ?? songStartBeat);
+  // P10.2 §3: with no card selected, the song starts at the first card in view (「▶ ここから」).
+  const cueCard = selected ? undefined : leftCardInView(present.cards, scrollLeft / pxPerBeat, (scrollLeft + viewportWidth) / pxPerBeat);
+  const playFrom = selected?.start ?? cueCard?.start ?? songStartBeat;
+  // Where the playhead is now (the rAF loop keeps it), for carrying on after a tempo or metronome change.
+  const playBeatRef = useRef(songStartBeat);
+
+  /**
+   * P10.2 §2: the workspace's notes (each card's 「B」, what saving writes) from `fromBeat` to
+   * the end, as a notes request; with the header's metronome on, clicks on the song's beats (§6).
+   * Following turns on with every play (P10.1 §4).
+   */
+  const playSong = useCallback((fromBeat: number, bpm = songBpm, clicks = metronome) => {
+    const request: PlaybackRequest = { type: "notes", notes: songPlaybackNotes(present, timeline, fromBeat, bpm, clicks), bpm, sound: previewSound };
+    if (import.meta.env.VITE_P527_E2E_FIXTURE === "1") (window as { __lvWorkspaceSong?: unknown }).__lvWorkspaceSong = { fromBeat, ...request };
+    playBeatRef.current = fromBeat;
+    setPlayStartBeat(fromBeat);
     setFollow(true);
-    void controller.play(fullSource, {
-      type: "timeline",
-      timeline: plan.timeline,
-      bpm,
-      sound: previewSound,
-      beatsPerBar: meter,
-      explicitMidiNotesByEventId: plan.explicitMidiNotesByEventId,
-    }).catch(onPlaybackError);
-  }, [controller, fullSource, meter, onPlaybackError, previewSound, songBpm, songStartBeat, timeline]);
+    void controller.play(fullSource, request).catch(onPlaybackError);
+  }, [controller, fullSource, metronome, onPlaybackError, present, previewSound, songBpm, timeline]);
   const toggleSong = useCallback(() => {
     if (playingRef.current) controller.stop();
-    else playSong(selected?.start);
-  }, [controller, playSong, selected?.start]);
+    else playSong(playFrom);
+  }, [controller, playFrom, playSong]);
+  /** The head of the card sounding now (undefined when stopped): a change while playing carries on from there. */
+  const soundingCardStart = () => playingRef.current ? (present.cards.find((card) => playBeatRef.current >= card.start && playBeatRef.current < card.start + card.duration)?.start ?? playBeatRef.current) : undefined;
+  // P10.2 §6: the header's metronome switched while the song plays → carry on from the sounding card.
+  const metronomeRef = useRef(metronome);
+  const resumeRef = useRef<(clicks: boolean) => void>(() => undefined);
+  resumeRef.current = (clicks) => { const at = soundingCardStart(); if (at !== undefined) playSong(at, songBpm, clicks); };
+  useEffect(() => {
+    if (metronomeRef.current === metronome) return;
+    metronomeRef.current = metronome;
+    resumeRef.current(metronome);
+  }, [metronome]);
+  /** P10.2 §4: ⏮ and Home — no card selected, the view at the start; playing, from the start again. */
+  const goToStart = useCallback(() => {
+    setSelectedId(undefined);
+    const element = scrollRef.current;
+    if (element) element.scrollLeft = 0;
+    setScrollLeft(0);
+    if (playingRef.current) playSong(songStartBeat);
+  }, [playSong, songStartBeat]);
 
   const sourceId = (kind: string, card: CorrectionCard): PlayingSource => ({ kind: "capture", id: `${fullSource.id}:workspace-${kind}:${card.id}` });
   const playNotes = useCallback((kind: string, card: CorrectionCard, notes: readonly number[]) => {
@@ -395,7 +422,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if (key === "]") { handled(); stopFollow(); nextReview(1); }
       else if (key === "[") { handled(); stopFollow(); nextReview(-1); }
       else if (key === "f" || key === "F") { handled(); setFollow((value) => !value); }
-      else if (key === "Home") { handled(); stopFollow(); selectCard(present.cards[0]); }
+      else if (key === "Home") { handled(); goToStart(); }
       else if (key === "End") { handled(); stopFollow(); selectCard(present.cards[present.cards.length - 1]); }
       else if (key === "?") { handled(); setHelpOpen((value) => !value); }
       else if ((key === "Delete" || key === "Backspace") && ids.length) { handled(); edit((model) => deleteNotes(model, ids)); }
@@ -430,7 +457,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [askMergeRuns, confirm, edit, enterEdit, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
+  }, [askMergeRuns, confirm, edit, enterEdit, goToStart, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -481,19 +508,41 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const card = cardAt(beat);
     return card ? `${card.bar}.${card.beat}` : `${Math.floor(beat / meter) + 1}.1`;
   };
-  const position = positionOf(selected?.start ?? songStartBeat);
+  const position = positionOf(playFrom);
   // Spec v2.5 §7.3: the playhead moves every frame (transform only; the workspace is not
   // re-rendered), and following scrolls in the same frame. Reduced motion keeps it moving:
   // it is position information, and following never scrolls smoothly.
   const startedAt = songPlaying && playback.status === "playing" ? playback.startedAt : undefined;
   const positionRef = useRef(positionOf);
   positionRef.current = positionOf;
+  const cardAtRef = useRef(cardAt);
+  cardAtRef.current = cardAt;
   useEffect(() => {
     if (startedAt === undefined) return undefined;
     let frame = 0;
     let lastLabel = "";
+    let lastCard: string | undefined;
+    const canvas = scrollRef.current;
+    const unmark = () => canvas?.querySelectorAll("[data-playing]").forEach((element) => element.removeAttribute("data-playing"));
     const step = () => {
       const beat = playheadBeatAt(performance.now(), startedAt, songBpm, playStartBeat);
+      playBeatRef.current = beat;
+      // P10.2 §5: the sounding card and its notes are marked only when the card changes
+      // (or when its element is drawn again after scrolling), never by re-rendering.
+      const card = cardAtRef.current(beat);
+      const cardElement = card ? canvas?.querySelector<HTMLElement>(`.lv-cw-card[data-card-id="${card.id}"]`) : null;
+      if (card?.id !== lastCard || (cardElement && !cardElement.hasAttribute("data-playing"))) {
+        unmark();
+        lastCard = card?.id;
+        if (card && canvas) {
+          canvas.querySelectorAll(`.lv-cw-note[data-card="${card.id}"]`).forEach((element) => element.setAttribute("data-playing", ""));
+          if (cardElement) {
+            cardElement.style.setProperty("--lv-cw-play-ms", `${card.duration * 60000 / songBpm}ms`);
+            cardElement.style.setProperty("--lv-cw-play-at", `${-(beat - card.start) * 60000 / songBpm}ms`);
+            cardElement.setAttribute("data-playing", "");
+          }
+        }
+      }
       if (playheadRef.current) playheadRef.current.style.transform = `translateX(${beat * pxPerBeat}px)`;
       const overview = overviewPlayheadRef.current;
       const overviewWidth = overview?.parentElement?.clientWidth ?? 0;
@@ -512,7 +561,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); unmark(); };
   }, [playStartBeat, pxPerBeat, present.totalBeats, songBpm, startedAt]);
   const tempoText = present.tempo !== undefined
     ? `${present.tempo}BPM（MIDI ${props.tempoMissing || !present.bpm ? "にテンポなし" : Math.round(present.bpm)}）`
@@ -595,13 +644,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             {/* P10.1 §1: 再生 and 表示 always share the first line. */}
             <div className="lv-cw-bar-lead">
             <div className="lv-cw-group" role="group" aria-label="再生">
+              <button type="button" className="lv-cw-btn lv-cw-icon" onClick={goToStart} aria-label="曲の先頭へ（Home）" title="曲の先頭へ（Home）" data-testid="correction-go-start">⏮</button>
               <button
                 type="button"
                 className="lv-cw-btn"
                 data-kind="accent"
                 aria-pressed={songPlaying}
-                aria-label={songPlaying ? "停止（Space）" : selected ? `${position} から再生（Space）` : "最初から再生（Space）"}
-                title={songPlaying ? "停止（Space）" : selected ? `${position} から再生（Space）` : "最初から再生（Space）"}
+                aria-label={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
+                title={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
                 onClick={toggleSong}
                 data-testid="correction-play-song"
               >
@@ -615,9 +665,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   const result = setTempo(present, bpm);
                   if (!result.changed) return;
                   // Playing: carry on from the head of the card sounding now, at the new tempo.
-                  const resumeAt = playingRef.current && startedAt !== undefined
-                    ? cardAt(playheadBeatAt(performance.now(), startedAt, songBpm, playStartBeat))?.start
-                    : undefined;
+                  const resumeAt = soundingCardStart();
                   apply(result);
                   if (resumeAt !== undefined) playSong(resumeAt, bpm);
                 }}
@@ -766,6 +814,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
                         data-card-id={card.id}
                         data-out-of-range={!inSaveRange(card) || undefined}
+                        data-start-cue={(!songPlaying && card.id === cueCard?.id) || undefined}
                         onClick={(event) => {
                           // Shift+click: the range from the selected card to this one, in whole bars.
                           if (event.shiftKey && selected) setSaveRange({ startBar: Math.min(selected.bar, card.bar), endBar: Math.max(lastBarOf(selected), lastBarOf(card)) });
@@ -1039,8 +1088,8 @@ function TempoField({ value, title, onCommit }: { value: number; title?: string;
 
 function ShortcutSheet({ onClose }: { onClose: () => void }) {
   const rows: [string, string][] = [
-    ["← →", "前後のカード"], ["[ ]", "前後の要確認"], ["Space", "再生・停止（どこでも。選んだカードから／選んでいなければ最初から）"], ["Enter", "フォーカスのあるボタンを押す"], ["F", "再生位置に追従する／しない"],
-    ["Home End", "最初／最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"],
+    ["← →", "前後のカード"], ["[ ]", "前後の要確認"], ["Space", "再生・停止（どこでも。選んだカードから／選んでいなければ見えている一番左のカードから）"], ["Enter", "フォーカスのあるボタンを押す"], ["F", "再生位置に追従する／しない"],
+    ["Home", "曲の先頭へ（再生中なら先頭から鳴らし直す）"], ["End", "最後のカード"], ["Ctrl＋ホイール", "マウスの位置を中心に拡大縮小"],
     ["M", "次のカードとつなぐ"], ["Shift＋M", "同じ音が続く所を確認してつなぐ"], ["S", "カードを半分に分ける"],
     ["境目の取っ手", "ドラッグで1拍ずつ（Alt で ¼拍）"], ["1〜4", "名前の候補を選ぶ"], ["F2・名前をダブルクリック", "名前を文字で入れる"], ["Y", "このままでよい（次の要確認へ）"], ["N", "② 音を直す"], ["Enter", "直し終わる（①へ）"],
     ["右クリック・右ドラッグ", "元の音を外す／足した音を消す"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],

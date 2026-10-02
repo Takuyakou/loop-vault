@@ -219,6 +219,7 @@ export function PianoRoll(props: PianoRollProps) {
             <span
               className="lv-cw-note"
               data-note-id={note.id}
+              data-card={note.cardId}
               data-kind={noteKind(note, props.warnNoteIds)}
               data-moved={note.originalPitch !== undefined || undefined}
               data-selected={props.selectedNoteIds.has(note.id) || undefined}

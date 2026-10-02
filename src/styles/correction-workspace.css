@@ -204,7 +204,15 @@
   .lv-cw-card-sub { display: flex; align-items: center; gap: 6px; color: var(--lv-text-muted); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-11); white-space: nowrap; }
   .lv-cw-flag { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--lv-warning); }
   .lv-cw-card[data-review] { border-color: rgb(242 193 78 / 60%); }
-  .lv-cw-card[aria-pressed="true"] { border: 2px solid var(--lv-accent); background: #10262a; box-shadow: 0 0 0 3px rgb(66 216 198 / 12%); }
+  /* P10.2 §5: the selected card is the frame only; the sounding card looks like Voicing Loop's current card. */
+  .lv-cw-card[aria-pressed="true"] { border: 2px solid var(--lv-accent); }
+  .lv-cw-card[data-playing] { border-color: var(--lv-accent); background: var(--lv-accent-soft); }
+  .lv-cw-card[data-playing] .lv-cw-card-name { color: var(--lv-accent); }
+  .lv-cw-card[data-playing]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0 0 6px 6px; background: var(--lv-accent); transform-origin: left; transform: scaleX(0); }
+  .lv-cw-note[data-playing] { z-index: 2; filter: brightness(1.35); box-shadow: 0 0 6px rgb(66 216 198 / 55%); }
+  .lv-cw-card[data-start-cue] { overflow: visible; }
+  .lv-cw-icon { min-width: 30px; justify-content: center; padding-inline: 6px; }
+  .lv-cw-card[data-start-cue]::before { content: "▶ ここから"; position: absolute; top: -9px; left: 6px; z-index: 2; padding: 0 5px; border-radius: 3px; background: var(--lv-bg); color: var(--lv-accent); font-size: 10px; line-height: 1.6; white-space: nowrap; pointer-events: none; }
   .lv-cw-card[data-size="narrow"] { padding: 8px 5px; }
   .lv-cw-card[data-size="narrow"] .lv-cw-card-name { font-size: var(--lv-text-13); }
   .lv-cw-card[data-size="tiny"] { padding: 8px 2px; border-radius: 5px; }
@@ -403,6 +411,8 @@
   @media (max-width: 959px) {
     .lv-cw { --lv-cw-keys: 56px; }
     .lv-cw-history-last { display: none; }
+    /* Narrow windows: 再生 and 表示 may take a line each, never a sideways scroll. */
+    .lv-cw-bar-lead { display: contents; }
     .lv-cw-key { left: 18px; }
     .lv-cw-oct { display: none; }
     .lv-cw-label { padding-left: 8px; }
@@ -420,6 +430,12 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .lv-cw-card[data-playing]::after { animation: lv-cw-card-progress var(--lv-cw-play-ms, 2s) linear var(--lv-cw-play-at, 0ms) forwards; }
     .lv-cw-card, .lv-cw-btn { transition: background-color var(--lv-motion-fast) var(--lv-ease-standard), border-color var(--lv-motion-fast) var(--lv-ease-standard); }
   }
+}
+
+@keyframes lv-cw-card-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }

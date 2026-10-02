@@ -566,7 +566,7 @@ test("P10.1 plays from the selected card or from the start; following turns on w
   // Nothing selected on open: from the start.
   await expect(workspace.getByTestId("correction-inspector-empty")).toContainText("カードを押すと、ここに音と名前が出ます。");
   await expect(position).toHaveText("1.1 から ／ 8小節");
-  await expect(play).toHaveAttribute("aria-label", "最初から再生（Space）");
+  await expect(play).toHaveAttribute("aria-label", "1.1 から再生（Space）"); // P10.2 §3: the first card in view
   await play.click();
   const tag = workspace.locator(".lv-cw-playline-tag");
   await expect(tag).toHaveText(/^1\.\d/);
@@ -787,4 +787,137 @@ test("P10.1 BPM sets the speed of the sound and the playhead together, can be un
   await page.locator('[data-nav="vault"]').click();
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
   await expect(page.locator("[data-progression-detail-view]")).toContainText(/BPM\s*60/);
+});
+
+// ---- P10.2 playback ----------------------------------------------------------------------
+
+interface SongRequest { type: string; fromBeat: number; bpm: number; notes: { pitch: number; startBeat: number; velocity: number }[] }
+/** The last song request (the E2E build keeps it on window; P10.2 §2). */
+const songRequest = (page: Page) => page.evaluate(() => (window as unknown as { __lvWorkspaceSong?: SongRequest }).__lvWorkspaceSong!);
+const chordAt = (request: SongRequest, beat: number) => request.notes.filter((note) => note.velocity !== 46 && note.startBeat === beat).map((note) => note.pitch).sort((a, b) => a - b);
+const clicksOf = (request: SongRequest) => request.notes.filter((note) => note.velocity === 46);
+
+test("P10.2 the song plays the corrected notes: a removed note is not in the song", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const play = workspace.getByTestId("correction-play-song");
+  await selectCard(page, 0);
+  await play.click();
+  const before = await songRequest(page);
+  expect(before.type).toBe("notes");
+  const chord = chordAt(before, 0);
+  expect(chord.length).toBeGreaterThan(2);
+  await play.click();
+
+  await workspace.getByTestId("correction-note-list").getByRole("button", { name: "外す" }).first().click();
+  await play.click();
+  const after = await songRequest(page);
+  expect(chordAt(after, 0)).toHaveLength(chord.length - 1);
+  // The other cards play as before.
+  expect(chordAt(after, 4)).toEqual(chordAt(before, 4));
+  await play.click();
+});
+
+test("P10.2 the header's metronome clicks in song playback; the workspace has no switch of its own", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const play = workspace.getByTestId("correction-play-song");
+  const metronome = page.getByTestId("global-metronome");
+  await expect(workspace.getByRole("button", { name: /メトロノーム/ })).toHaveCount(0);
+  if (await metronome.getAttribute("aria-pressed") === "true") await metronome.click();
+
+  await play.click();
+  expect(clicksOf(await songRequest(page))).toHaveLength(0);
+  // Switched on while playing: carries on from the sounding card, now with clicks on the song's beats.
+  await metronome.click();
+  await expect.poll(async () => clicksOf(await songRequest(page)).length).toBeGreaterThan(0);
+  const on = await songRequest(page);
+  expect(on.fromBeat % 4).toBe(0); // plain-8: every card starts a bar
+  expect(clicksOf(on).filter((click) => click.pitch === 96).every((click) => (click.startBeat + on.fromBeat) % 4 === 0)).toBe(true);
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await play.click();
+
+  // From the middle: the accents stay on the song's bar heads.
+  await selectCard(page, 5);
+  await play.click();
+  const middle = await songRequest(page);
+  expect(middle.fromBeat).toBe(20);
+  expect(clicksOf(middle)[0]).toMatchObject({ startBeat: 0, pitch: 96 });
+  await play.click();
+  await metronome.click();
+});
+
+test("P10.2 with no card selected the song starts at the first card in view, marked 「▶ ここから」", async ({ page }) => {
+  await importScenario(page, "long-64");
+  const workspace = page.getByTestId("correction-workspace");
+  const scroll = workspace.getByTestId("correction-timeline-scroll");
+  const position = workspace.getByTestId("correction-position");
+  const cue = workspace.locator("[data-start-cue]");
+  await expect(cue).toHaveCount(1);
+  await expect(cue).toHaveAttribute("aria-label", /^1小節1拍/);
+
+  // Scroll so a card's head is just left of the view: the next card is where it starts.
+  const passed = await scroll.evaluate((element) => {
+    const card = [...element.querySelectorAll<HTMLElement>('[data-testid="correction-card"]')][6]!;
+    element.scrollLeft = parseFloat(card.style.left) + 3;
+    return card.getAttribute("data-card-id");
+  });
+  await expect(cue).not.toHaveAttribute("data-card-id", passed!);
+  const label = (await cue.getAttribute("aria-label"))!;
+  const [, bar, beat] = /^(\d+)小節(\d+)拍/.exec(label)!;
+  await expect(position).toHaveText(new RegExp(`^${bar}\\.${beat} から ／ \\d+小節$`));
+  await expect(workspace.getByTestId("correction-play-song")).toHaveAttribute("aria-label", `${bar}.${beat} から再生（Space）`);
+  await page.locator("body").press("Space");
+  await expect(workspace.locator(".lv-cw-playline-tag")).toHaveText(new RegExp(`^${bar}\\.`));
+  await expect(cue).toHaveCount(0);
+  await page.locator("body").press("Space");
+});
+
+test("P10.2 ⏮ and Home go to the start; playing, the song starts over", async ({ page }) => {
+  await importScenario(page, "long-64");
+  const workspace = page.getByTestId("correction-workspace");
+  const scroll = workspace.getByTestId("correction-timeline-scroll");
+  const play = workspace.getByTestId("correction-play-song");
+  await workspace.getByTestId("correction-go-start").evaluate((element) => element.getAttribute("title")).then((title) => expect(title).toBe("曲の先頭へ（Home）"));
+
+  await scroll.evaluate((element) => { element.scrollLeft = 900; });
+  await selectCard(page, 4);
+  await workspace.getByTestId("correction-go-start").click();
+  await expect(workspace.locator('[data-testid="correction-card"][aria-pressed="true"]')).toHaveCount(0);
+  await expect.poll(() => scroll.evaluate((element) => element.scrollLeft)).toBe(0);
+  await expect(workspace.getByTestId("correction-position")).toHaveText(/^1\.1 から ／ \d+小節$/);
+
+  await selectCard(page, 4);
+  await play.click();
+  expect((await songRequest(page)).fromBeat).toBeGreaterThan(0);
+  await page.locator("body").press("Home");
+  await expect.poll(async () => (await songRequest(page)).fromBeat).toBe(0);
+  await expect(play).toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.locator(".lv-cw-playline-tag")).toHaveText(/^1\./);
+  await play.click();
+});
+
+test("P10.2 the sounding card looks like Voicing Loop's current card, apart from the selected one; its notes light up", async ({ page }) => {
+  await importScenario(page, "plain-8");
+  const workspace = page.getByTestId("correction-workspace");
+  const cards = workspace.getByTestId("correction-card");
+  await selectCard(page, 1);
+  const selectedLook = await cards.nth(1).evaluate((element) => getComputedStyle(element).backgroundColor);
+  await workspace.getByTestId("correction-play-song").click();
+  await expect(cards.nth(1)).toHaveAttribute("data-playing", "");
+  await expect(workspace.locator('.lv-cw-note[data-playing]').first()).toBeVisible();
+  // Selecting another card while playing does not jump; the two look different.
+  await cards.nth(6).click();
+  await expect(cards.nth(1)).toHaveAttribute("data-playing", "");
+  await expect(cards.nth(6)).not.toHaveAttribute("data-playing", "");
+  const playingLook = "rgb(18, 59, 58)"; // --lv-accent-soft
+  await expect(cards.nth(1)).toHaveCSS("background-color", playingLook);
+  await expect(cards.nth(1).locator(".lv-cw-card-name")).toHaveCSS("color", "rgb(66, 216, 198)"); // --lv-accent
+  expect(await cards.nth(6).evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(playingLook);
+  expect(selectedLook).not.toBe(playingLook);
+  // The mark moves on with the song, and goes when it stops.
+  await expect(cards.nth(2)).toHaveAttribute("data-playing", "", { timeout: 4000 });
+  await expect(workspace.locator('[data-testid="correction-card"][data-playing]')).toHaveCount(1);
+  await workspace.getByTestId("correction-play-song").click();
+  await expect(workspace.locator("[data-playing]")).toHaveCount(0);
 });
