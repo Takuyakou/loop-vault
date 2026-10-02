@@ -3,7 +3,7 @@
 
 ## 状態 / Git
 
-実装candidate。最終fresh FULL / EXEは実行待ち。基準local master `1f18e880`、専用branch `fix/phase11-generated-bass-audio`。既存P11-09/10を維持し、同じD-drive checkoutを使用。並行するP10.1へ変更なし。保存済みorigin/masterとの差716 ahead / 0 behind（fetchなし）。実Vault/private MIDI未使用。master merge/push/tag/releaseなし。
+実装完了 / READY_FOR_HUMAN_PRODUCT_ACCEPTANCE。検証済みcode HEAD `d7d10838f265c84ed70fcaa5be83933b4f965c9e`。最終fresh FULL / raw Windows EXE PASS。基準local master `1f18e880`、専用branch `fix/phase11-generated-bass-audio`。既存P11-09/10を維持し、同じD-drive checkoutを使用。並行するP10.1へ変更なし。保存済みorigin/masterとの差716 ahead / 0 behind（fetchなし）。実Vault/private MIDI未使用。master merge/push/tag/releaseなし。
 
 ## A. Unsupported shape fallback
 
@@ -28,7 +28,7 @@ ROOT CAUSE: legacy basic-shell/full-shellは左手にBass+anchorを入れて音�
 | basic-shell | 49,55 | 55,61 | 55 (G) |
 | full-shell | 49,55,63,67,70 | 55,61,63,67,70 | 55 (G) |
 | rootless-shell | 43,61,67 | 同じ | 43 (G) |
-| left-hand A/B auto | 31,41,49,67,72 | 同じ | 31 (G reference) |
+| left-hand auto（A/B候補） | 31,41,49,67,72 | 同じ | 31 (G reference) |
 | 基本 | 43,63,70,73 | 同じ | 43 (G) |
 
 選んだこと: candidateFactsでbass担当noteを確認し、そのnoteがallNotes最小値となる候補だけを採用する。選択後の全note移動や上部構成音の削除を行わない。explicit root-bassも担当voiceを保持。rootless-shellのexplicit root-bassは練習targetを変えず低いreference bassを別roleに置く。
@@ -92,9 +92,46 @@ rankFingeringsForHandはhand assignmentの各noteをrankCyclicFingeringsへ渡�
 - FEATURE（View owner、fresh）: Vitest100/100 + Playwright11/11 PASS、62.9秒。
 - UI初回: 23 PASS / 1 FAIL。新規testが製品の「再開」を「再生再開」と呼んだlocatorミス。実DOM/traceで確定し、製品ラベル変更やtimeout延長をせずselectorを修正。
 - 追加UI再確認: 2/2 PASS。関連UI最終確認: 24/24 PASS（Range / Space / 320px / geometry / P8.8.4 / accessibilityを含む）。
-- 最終focused: 6ファイル293/293 PASS。最終FULL / EXE: 実行待ち。
+- 最終focused: 6ファイル293/293 PASS。最終FULL / EXE: PASS（下表）。
 - desktop screenshotを目視し、上部代替集約、カードA marker、左右カード、compact info strip、次への動きを確認。1920/1440のcurrent panel scrollHeight<=clientHeight+1を自動確認。960/768既存geometryもPASS。
 
 主要変更: voicingResolution/types、fingeringDisplay、ProgressionVoicingTransport、ProgressionVoicingPracticeView、および独立domain/View/Transport/fingering tests、公開E2E fixture/spec。Analyzer/Identity/Decoder/Parser/Vault schema/固定notes/Phase10へ変更なし。
 
 remaining limitations: 音切れの最終可聴確認はHuman Acceptance。新しいshape semantics・quality table一般化・音楽理論logicは導入していない。unsupported remains visible。private witnessをtuningや診断に使用していない。
+
+## 最終fresh FULL / EXE / 引渡し
+
+検証対象はreport-inclusive code HEAD `d7d10838f265c84ed70fcaa5be83933b4f965c9e`。このHEAD以降は結果記録・execution-state・READMEのみのdocumentation-only更新。後続文書HEADへFULLを実行したとは扱わない。
+
+| Gate | fresh結果 |
+| --- | --- |
+| Repository ESLint / class lint / source-contract lint | PASS |
+| App / E2E TypeScript | PASS |
+| Phase-doc / AI-handoff | PASS |
+| Privacy/security | PASS |
+| Production build / gallery excluded | PASS |
+| Runner contracts | 27/27 PASS |
+| Full Vitest | **3,717/3,717 PASS** |
+| Repository-wide Playwright | **191/191 PASS / 0 FAIL / 0 UNRUN** |
+| Git diff check | PASS |
+
+最終 `node scripts/test-dx/run.mjs full --fresh`: **270.6秒**、raw logs **28,442 B**、FULL PASS。PASS cache未使用。skip/fixme/retry追加/timeout延長/snapshot更新なし。既存Source、Range、Space、first attack、count-in、運指編集、Color/Open、Next Move、geometry、accessibilityを含む。
+
+途中停止を隠さない:
+
+1. 初回FULLは3,715 PASS / 2 FAIL（文書validator）、Playwright未実行。TEMPを禁止保存場所名の配下に置いたことが原因。正常fixtureの絶対配置まで禁止artifactと判定されていた。D-driveの通常一時領域へ変更した同じテストは25/25 PASS。validator/期待値/製品変更なし。
+2. 続くFULLはVitest3,717 PASS、Playwright起動前にport4174使用中で中断。プロセスの出所は終了後のため確定できない。別作業のプロセスを停止せず、空き状態を確認して通常手順を再実行した。既存サーバー再利用・config変更なし。
+3. その後、上記最終FULLが全項目をfreshで完走。3回とも同じcode HEAD。途中停止をPASSとは扱わない。
+
+`npm run tauri build -- --no-bundle`: **PASS**。Rust/Tauri release compile **54.91秒**。raw EXE `src-tauri/target/release/loop-vault.exe`、24,712,704 B、PE MZ確認。production JSに公開E2E fixture markerなし。D-drive build target/TEMPのみ。インストーラーなし。EXEを自動起動せず実Vaultを変更していない。
+
+Human listeningは未完了: card連打、現在コード試聴連打、一時停止→再開連打、最初から連打を同じSource/コード/音色・音量条件で確認する。現行card saved-intent契約がcurrent Generatedと異なる場合は、同じ保存音を使えるSourceを選び比較する。可聴改善をMockだけから保証しない。
+
+最終decision: **P11-11 = READY_FOR_HUMAN_PRODUCT_ACCEPTANCE**。local master `1f18e880`は変更せず、専用candidate branchで停止。今回のtracked変更のみcommit、以前の未追跡診断report/scriptは保管したまま未変更。master merge / push / tag / releaseなし。
+
+### 関係する実装・独立回帰
+
+- `src/domain/progressionVoicingPractice/voicingResolution.ts`: resolveProgressionPracticeVoicings / basicCandidates / supportedLessonResolution。`generatedFallback.test.ts`: visible single substitute・terminal unsupported・840 bass条件。
+- `src/views/ProgressionVoicingPracticeView.tsx`: effectiveResolutionOptions / selectTimelineCard / auditionResolved / auditionCurrent / launchRuntime。View testと公開E2Eでmarker、aggregate、Source/shape再計算を確認。
+- `src/practice/ProgressionVoicingTransport.ts`: resumeOnce / restartOnce / seek / audition / fadeAuditions / rampOutputGain。Transport testでnode・timer・schedule・dispose lifecycleを確認。
+- `src/voicingPractice/fingeringDisplay.ts`: handCandidates / assignPracticeHandsAcrossProgression。`src/domain/progressionFingering`の既存rankerを維持し、domain・display・View testでinternal/表示対応を確認。
