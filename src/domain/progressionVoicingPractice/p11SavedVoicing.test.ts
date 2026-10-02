@@ -1,4 +1,4 @@
-import { savedDuplicatesSource } from "../../voicingPractice/sourcePreference";
+import { savedDuplicatesSource, sourceCoverage } from "../../voicingPractice/sourcePreference";
 import { describe, expect, it } from "vitest";
 import { BrowserMemoryVaultStorage } from "../../storage/browserMemoryVaultStorage";
 import { createVaultStore } from "../../store/vaultStore";
@@ -61,6 +61,8 @@ describe("P11-02 saved Text preview contract", () => {
     expect(saved.block.chords.map(item => resolveTimelineItemVoicing(item, true).midiNotes)).toEqual(exact);
     expect(saved.handoff.initialSelection).toBe("saved");
     expect(savedDuplicatesSource(saved.handoff.snapshots)).toBe(false);
+    expect(sourceCoverage(saved.handoff.snapshots, "source-midi")).toEqual({ available: 0, total: 2 });
+    expect(sourceCoverage(saved.handoff.snapshots, "saved")).toEqual({ available: 2, total: 2 });
     const plan = resolveProgressionPracticeVoicings(saved.handoff.snapshots.saved!);
     expect(plan.events.map(event => event.status === "SUPPORTED" ? event.voicing.midiNotes : [])).toEqual(exact);
     expect(saved.handoff.snapshots.custom?.events.every(event => event.voicing === undefined)).toBe(true);
@@ -80,6 +82,8 @@ describe("P11-02 saved Text preview contract", () => {
       .toEqual(parsed.harmonicSpans.map(span => voiceTextChordForAudition(span.chord)));
     expect(saved.block.chords.every(item => item.voicingMemory?.sourceVoicing === undefined)).toBe(true);
     expect(savedDuplicatesSource(saved.handoff.snapshots)).toBe(false);
+    expect(sourceCoverage(saved.handoff.snapshots, "source-midi")).toEqual({ available: 0, total: 2 });
+    expect(sourceCoverage(saved.handoff.snapshots, "saved")).toEqual({ available: 2, total: 2 });
     expect(saved.handoff.snapshots.saved?.events.every(event => event.voicing?.kind === "saved")).toBe(true);
     expect(saved.handoff.snapshots.custom?.events.every(event => event.voicing === undefined)).toBe(true);
   });

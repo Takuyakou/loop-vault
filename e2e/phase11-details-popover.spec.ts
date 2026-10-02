@@ -5,12 +5,18 @@ test.beforeEach(async ({ page }) => {
   await page.locator('[data-nav="voicing-loop"]').click();
 });
 
-test("P11 details close after Source change and reopen", async ({ page }) => {
+test("P11 details close and disable after fixed Source change, reopen on generated", async ({ page }) => {
   const details = page.getByTestId("voicing-loop-generated-details");
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");
   await page.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(details).not.toHaveAttribute("open", "");
+  await expect(details.locator("summary")).toHaveAttribute("aria-disabled", "true");
+  await details.locator("summary").dispatchEvent("click");
+  await details.locator("summary").press("Space");
+  await details.locator("summary").press("Enter");
+  await expect(details).not.toHaveAttribute("open", "");
+  await page.getByRole("button", { name: "自動生成", exact: true }).click();
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");
 });

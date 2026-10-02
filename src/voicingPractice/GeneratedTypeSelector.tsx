@@ -41,8 +41,9 @@ export function GeneratedTypeSelector({ value, disabled, onChange, onOpen }: {
     <button ref={trigger} type="button" role="combobox" aria-label="生成タイプ" aria-expanded={open}
       aria-haspopup="listbox" aria-controls={open ? id : undefined} disabled={disabled} value={value}
       className="lv-field-control flex min-h-9 w-20 items-center justify-between px-2 text-xs disabled:opacity-50"
-      onClick={() => { if (open) close(); else { onOpen(); setOpen(true); } }}
+      onClick={() => { if (disabled) return; if (open) close(); else { onOpen(); setOpen(true); } }}
       onKeyDown={event => {
+        if (disabled) return;
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault(); event.stopPropagation();
           if (!open) { onOpen(); setOpen(true); }

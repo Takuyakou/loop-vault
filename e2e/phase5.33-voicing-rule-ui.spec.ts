@@ -94,10 +94,13 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await controls.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
   await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
-  await openDetails(workspace);
-  for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
-    await expect(controls.getByRole("checkbox", { name: label, exact: true })).toBeDisabled();
-  }
+  const details = workspace.getByTestId("voicing-loop-generated-details");
+  await expect(details).not.toHaveAttribute("open", "");
+  await expect(details.locator("summary")).toHaveAttribute("aria-disabled", "true");
+  // Disabled legacy inputs stay in the closed details DOM; fixed sources cannot open it.
+  await expect(details.getByLabel("Colorを加える", { exact: true })).toBeDisabled();
+  await expect(details.getByLabel("Open配置", { exact: true })).toBeDisabled();
+  await expect(controls.getByLabel("進行に合わせて最適化", { exact: true })).toBeDisabled();
   await controls.getByRole("button", { name: "カスタム", exact: true }).click();
   await expect(explanation).toHaveCount(0);
 });

@@ -77,7 +77,7 @@ import {
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
 import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
-import { preferenceId, rememberVoicingSource, restoreVoicingSource, savedDuplicatesSource, sourceCoverage } from "../voicingPractice/sourcePreference";
+import { availableVoicingSource, preferenceId, rememberVoicingSource, restoreVoicingSource, savedDuplicatesSource, sourceCoverage } from "../voicingPractice/sourcePreference";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
 import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
@@ -264,7 +264,7 @@ export function ProgressionVoicingPracticeView({
   const { enabled: metronomeEnabled, toggle: toggleGlobalMetronome } = useMetronome();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(() => restoreVoicingSource(snapshots, initialSelection));
   const duplicateSavedSource = useMemo(() => savedDuplicatesSource(snapshots), [snapshots]);
-  const [sourceInfo, setSourceInfo] = useState<string>();
+  const lastGeneratedSelection = useRef<ProgressionVoicingSelection>(selection === "saved" || selection === "source-midi" || selection === "custom" ? "basic-full" : selection);
   const generatedDetailsRef = useRef<HTMLDetailsElement>(null);
   // The native details.open property is the only open state; no stale React mirror.
   useEffect(() => {
@@ -474,11 +474,17 @@ export function ProgressionVoicingPracticeView({
   const midiStoreError = useStore(defaultLiveMidiStore, (state) => state.error);
 
   useEffect(() => {
-    if (previousPreferenceId.current === progressionPreferenceId) return;
+    const changedProgression = previousPreferenceId.current !== progressionPreferenceId;
     previousPreferenceId.current = progressionPreferenceId;
-    setSelection(restoreVoicingSource(snapshots, initialSelection));
-    setSourceInfo(undefined);
-  }, [initialSelection, progressionPreferenceId, snapshots]);
+    let next = selection;
+    if (changedProgression) next = restoreVoicingSource(snapshots, initialSelection);
+    else if (!lessonRulesSelected) next = availableVoicingSource(snapshots, selection);
+    if (changedProgression) lastGeneratedSelection.current = next === "saved" || next === "source-midi" || next === "custom" ? "basic-full" : next;
+    if (next !== selection) {
+      closeGeneratedDetails();
+      setSelection(next);
+    }
+  }, [initialSelection, lessonRulesSelected, progressionPreferenceId, selection, snapshots]);
 
   useEffect(() => {
     const transport = transportRef.current;
@@ -760,7 +766,7 @@ export function ProgressionVoicingPracticeView({
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
-    setSourceInfo(undefined);
+    if (next !== "saved" && next !== "source-midi" && next !== "custom") lastGeneratedSelection.current = next;
     rememberVoicingSource(snapshots, next);
   }
 
@@ -773,6 +779,7 @@ export function ProgressionVoicingPracticeView({
     setAuditionedIndex(undefined);
     setRuntimeError(undefined);
     setSelection("basic-full");
+    lastGeneratedSelection.current = "basic-full";
     setStudyCategory(next);
     rememberVoicingSource(snapshots, "basic-full");
   }
@@ -1302,18 +1309,17 @@ export function ProgressionVoicingPracticeView({
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
             {sourceSelections.filter(item => item.id !== "saved" || !duplicateSavedSource).map((item) => {
               const generated = item.id === "basic-full";
-              const pressed = generated ? lessonRulesSelected : selection === item.id;
               const coverage = generated ? undefined : sourceCoverage(snapshots, item.id);
               const unavailable = coverage?.available === 0;
+              const pressed = generated ? lessonRulesSelected : selection === item.id && !unavailable;
               return (
                 <Button key={item.id} size="sm" variant="secondary" className={`lv-choice ${unavailable ? "opacity-50" : ""}`}
-                  aria-label={item.ja} aria-pressed={pressed} aria-disabled={unavailable || undefined}
-                  aria-description={coverage ? `${coverage.available}/${coverage.total}コードで利用できます` : undefined}
+                  aria-label={item.ja} aria-pressed={pressed} disabled={unavailable} aria-disabled={unavailable || undefined}
+                  aria-description={unavailable ? `この進行には${item.ja}のVoicingがありません。自動生成または利用可能な音を選んでください。` : coverage ? `${coverage.available}/${coverage.total}コードで利用できます` : undefined}
                   title={unavailable ? `この進行には${item.ja}のVoicingがありません。` : undefined}
                   onClick={() => {
-                    if (unavailable) {
-                      setSourceInfo(`この進行には${item.ja}のVoicingがありません。自動生成または利用可能な音を選んでください。`);
-                    } else changeSelection(item.id);
+                    const generatedSelection = snapshots?.[lastGeneratedSelection.current] ? lastGeneratedSelection.current : "basic-full";
+                    changeSelection(generated ? generatedSelection : item.id);
                   }}>
                   {item.ja}
                   {coverage && coverage.available < coverage.total ? <span className="text-[10px]" data-testid={`voicing-loop-${item.id}-availability`}>{coverage.available}/{coverage.total}</span> : null}
@@ -1326,8 +1332,13 @@ export function ProgressionVoicingPracticeView({
             <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
             <GeneratedTypeSelector key={lessonRulesSelected ? "generated" : selection} value={selection === "basic-full" || !lessonRulesSelected ? studyCategory : "advanced"}
               disabled={!lessonRulesSelected} onChange={changeStudyCategory} onOpen={closeGeneratedDetails} />
-            <details ref={generatedDetailsRef} className="relative" data-testid="voicing-loop-generated-details">
-              <summary className="cursor-pointer rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs">詳しい設定</summary>
+            <details ref={generatedDetailsRef} className="relative" data-testid="voicing-loop-generated-details"
+              onToggle={event => { if (!lessonRulesSelected) event.currentTarget.open = false; }}>
+              <summary aria-disabled={!lessonRulesSelected || undefined} tabIndex={lessonRulesSelected ? 0 : -1}
+                title={!lessonRulesSelected ? "自動生成を選択すると設定できます" : undefined}
+                onClick={event => { if (!lessonRulesSelected) event.preventDefault(); }}
+                onKeyDown={event => { if (!lessonRulesSelected && (event.key === " " || event.key === "Enter")) event.preventDefault(); }}
+                className={`rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs ${lessonRulesSelected ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>詳しい設定</summary>
               <div className="absolute right-0 top-full z-50 mt-1 flex w-60 max-w-[75vw] flex-col gap-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 shadow-xl">
                 <label className="flex flex-col gap-1 text-xs">既存の形
                   <select aria-label="既存の形" className="lv-field-control min-h-9 w-full px-2 text-xs" disabled={!lessonRulesSelected}
@@ -1412,9 +1423,6 @@ export function ProgressionVoicingPracticeView({
           </fieldset>
         </div>
       </Surface>
-      {sourceInfo ? <div role="status" className="flex items-center gap-2 text-xs text-[var(--lv-text-secondary)]" data-testid="voicing-loop-source-info">
-        <span>{sourceInfo}</span><Button size="sm" aria-label="説明を閉じる" onClick={() => setSourceInfo(undefined)}>×</Button>
-      </div> : null}
 
       {!snapshot ? (
         <StatusMessage

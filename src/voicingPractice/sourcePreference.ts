@@ -30,6 +30,19 @@ export function savedDuplicatesSource(snapshots: ProgressionVoicingPracticeSnaps
   });
 }
 
+/** Keep partial sources selectable; automatic recovery prefers complete fixed sources, then generated. */
+export function availableVoicingSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined, preferred: ProgressionVoicingSelection): ProgressionVoicingSelection {
+  const usable = (selection: ProgressionVoicingSelection) => Boolean(snapshots?.[selection])
+    && (selection !== "saved" && selection !== "source-midi" && selection !== "custom" || sourceCoverage(snapshots, selection).available > 0);
+  const fixed = ["saved", "source-midi", "custom"] as const;
+  const selected = usable(preferred) ? preferred : fixed.find(selection => {
+    const coverage = sourceCoverage(snapshots, selection);
+    return coverage.total > 0 && coverage.available === coverage.total;
+  }) ?? (usable("basic-full") ? "basic-full" : fixed.find(usable))
+    ?? selections.find(usable) ?? preferred;
+  return selected === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : selected;
+}
+
 export function restoreVoicingSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined, initial: ProgressionVoicingSelection, storage?: RecentProgressionStorage): ProgressionVoicingSelection {
   try {
     const id = preferenceId(snapshots);
@@ -38,7 +51,7 @@ export function restoreVoicingSource(snapshots: ProgressionVoicingPracticeSnapsh
     if (selected && snapshots?.[selected] && (selected !== "saved" && selected !== "source-midi" && selected !== "custom"
       || sourceCoverage(snapshots, selected).available > 0)) return selected === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : selected;
   } catch { /* Preference storage is optional. */ }
-  return initial === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : initial;
+  return availableVoicingSource(snapshots, initial);
 }
 
 export function rememberVoicingSource(snapshots: ProgressionVoicingPracticeSnapshots | undefined, selected: ProgressionVoicingSelection, storage?: RecentProgressionStorage): void {

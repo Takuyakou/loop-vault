@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "11.0",
-  "status": "completed",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P11.0-10",
   "completedStages": [
     "P11.0-00",
     "P11.0-01",
@@ -83,6 +83,13 @@
       "p11-09-full",
       "p11-09-exe",
       "p11-09-docs"
+    ],
+    "P11.0-10": [
+      "p11-10-focused",
+      "p11-10-ui",
+      "p11-10-full",
+      "p11-10-exe",
+      "p11-10-docs"
     ]
   },
   "gateResults": {
@@ -128,8 +135,13 @@
     "p11-09-ui": "pass",
     "p11-09-full": "pass",
     "p11-09-exe": "pass",
-    "p11-09-docs": "pass"
+    "p11-09-docs": "pass",
+    "p11-10-focused": "pending",
+    "p11-10-ui": "pending",
+    "p11-10-full": "pending",
+    "p11-10-exe": "pending",
+    "p11-10-docs": "pending"
   },
-  "nextAction": "P11-09 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE: final fresh FULL 3687 Vitest / 186 Playwright PASS at 53682f69; final runnable Windows EXE built. Stop; no master merge/push/tag/release. Native WebView direct cause remains unconfirmed.",
+  "nextAction": "P11-10 scoped Source availability / generated controls implemented; final report-inclusive fresh FULL and EXE pending. No master merge/push/tag/release.",
   "updatedAt": "2026-10-02"
 }

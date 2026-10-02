@@ -975,8 +975,8 @@ describe("ProgressionVoicingPracticeView", () => {
       maxLeftHandSpanSemitones: 0,
       maxRightHandSpanSemitones: 0,
     });
-    expect(container.textContent).toContain("選択したVoicingを利用できません");
-    expect(button(container, "開始").disabled).toBe(true);
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "元MIDI").disabled).toBe(true);
 
     await act(async () => button(container, "自動生成").click());
     expect(container.textContent).toContain("このコードにはこの生成タイプの形がありません。");
@@ -984,13 +984,27 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.start).not.toHaveBeenCalled();
   });
 
-  it("shows explicit unavailable when Custom is missing from a loaded Source MIDI progression", async () => {
+  it("keeps missing Custom disabled without a persistent banner", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
     await act(async () => button(container, "カスタム").click());
-    expect(container.textContent).toContain("カスタムのVoicingがありません");
+    expect(button(container, "カスタム").disabled).toBe(true);
+    expect(button(container, "カスタム").title).toContain("カスタムのVoicingがありません");
+    expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
     expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
     expect(container.textContent).not.toContain("練習する進行を選択してください");
+  });
+
+  it.each(["saved", "source-midi", "custom"] as const)("recovers stale unavailable %s and leaves 0/N disabled without a banner", async missing => {
+    const empty = { ...snapshot("source-midi"), selection: missing, events: snapshot("source-midi").events.map(event => ({ ...event, voicing: undefined })) };
+    const container = await renderView(new FakeTransport(), { [missing]: empty, "basic-full": snapshot("basic-full") }, missing);
+    const label = missing === "saved" ? "保存した音" : missing === "source-midi" ? "元MIDI" : "カスタム";
+    expect(button(container, label).disabled).toBe(true);
+    expect(container.querySelector(`[data-testid='voicing-loop-${missing}-availability']`)?.textContent).toBe("0/2");
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button(container, label).click());
+    expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
   });
 
   it("disables absent Source MIDI without affecting a saved Custom progression", async () => {
@@ -999,9 +1013,9 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "元MIDI").getAttribute("aria-disabled")).toBe("true");
     expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
     await act(async () => button(container, "元MIDI").click());
-    expect(container.querySelector("[data-testid='voicing-loop-source-info']")?.textContent).toContain("元MIDIのVoicingがありません");
+    expect(button(container, "元MIDI").disabled).toBe(true);
+    expect(button(container, "元MIDI").title).toContain("元MIDIのVoicingがありません");
     expect(button(container, "カスタム").getAttribute("aria-pressed")).toBe("true");
-    await act(async () => button(container, "説明を閉じる").click());
     expect(container.querySelector("[data-testid='voicing-loop-source-info']")).toBeNull();
     expect(button(container, "カスタム").getAttribute("aria-pressed")).toBe("true");
     expect(button(container, "開始").disabled).toBe(false);
@@ -1406,6 +1420,8 @@ describe("ProgressionVoicingPracticeView", () => {
     details.open = true;
     await act(async () => button(container, "元MIDI").click());
     expect(details.open).toBe(false);
+    expect(details.querySelector("summary")?.getAttribute("aria-disabled")).toBe("true");
+    await act(async () => button(container, "自動生成").click());
     details.open = true;
     await act(async () => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
     expect(details.open).toBe(false);

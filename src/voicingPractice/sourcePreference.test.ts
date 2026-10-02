@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { preferenceId, rememberVoicingSource, restoreVoicingSource, savedDuplicatesSource, sourceCoverage, VOICING_SOURCE_PREFERENCE_KEY } from "./sourcePreference";
+import { availableVoicingSource, preferenceId, rememberVoicingSource, restoreVoicingSource, savedDuplicatesSource, sourceCoverage, VOICING_SOURCE_PREFERENCE_KEY } from "./sourcePreference";
 import type { ProgressionVoicingPracticeSnapshots } from "../domain/progressionVoicingPractice/types";
 
 function snapshots(available = true): ProgressionVoicingPracticeSnapshots {
@@ -76,5 +76,26 @@ describe("P11 effective saved/source deduplication", () => {
     const two = { ...source, "source-midi": { ...source["source-midi"]!, events: [event, { ...event, id: "2" }] },
       saved: { ...source.saved!, events: [saved, { ...saved, id: "2", voicing: { ...saved.voicing!, midiNotes: [48, 52, 60] } }] } };
     expect(savedDuplicatesSource(two)).toBe(false);
+  });
+});
+
+
+describe("P11 unavailable source recovery", () => {
+  it.each(["saved", "source-midi", "custom"] as const)("recovers persisted and initial unavailable %s without changing snapshots", missing => {
+    const source = snapshots(false); const store = storage(); const before = JSON.stringify(source);
+    rememberVoicingSource(source, missing, store);
+    expect(restoreVoicingSource(source, missing, store)).toBe("basic-full");
+    expect(JSON.stringify(source)).toBe(before);
+  });
+  it("prefers complete Saved, Source, Custom, then generated; preserves usable partial choices", () => {
+    const source = snapshots()["source-midi"]!;
+    const saved = { ...source, selection: "saved" as const, events: source.events.map(event => ({ ...event, voicing: { kind: "saved" as const, savedSource: "custom" as const, midiNotes: [60, 64, 67] } })) };
+    const custom = { ...source, selection: "custom" as const, events: source.events.map(event => ({ ...event, voicing: { kind: "custom" as const, midiNotes: [60, 64, 67] } })) };
+    expect(availableVoicingSource({ ...snapshots(), saved, custom }, "left-hand")).toBe("saved");
+    expect(availableVoicingSource({ ...snapshots(), custom }, "left-hand")).toBe("source-midi");
+    expect(availableVoicingSource({ ...snapshots(false), custom }, "left-hand")).toBe("custom");
+    const partial = { ...source, events: [...source.events, { ...source.events[0]!, id: "2", voicing: undefined }] };
+    expect(availableVoicingSource({ ...snapshots(), "source-midi": partial, saved }, "source-midi")).toBe("source-midi");
+    expect(sourceCoverage({ "source-midi": partial }, "source-midi")).toEqual({ available: 1, total: 2 });
   });
 });

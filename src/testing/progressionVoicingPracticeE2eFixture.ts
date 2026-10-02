@@ -83,6 +83,22 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
       custom: { ...original, selection: "custom", events: events.map(event => ({ ...event, voicing: { ...event.voicing, kind: "custom" } })) },
       "basic-full": p533Snapshot("basic-full", false) }, initialSelection: "saved" };
   }
+  if (status === "p11-source-empty" || status === "p11-source-partial" || status === "p11-source-settings") {
+    const generated = p533Snapshot("basic-full", false);
+    const original = p533Snapshot("source-midi", true);
+    if (status === "p11-source-empty") return { snapshots: { "basic-full": generated }, initialSelection: "source-midi" };
+    if (status === "p11-source-partial") return { snapshots: {
+      "source-midi": { ...original, events: original.events.map((event, i) => i === 0 ? event : { ...event, voicing: undefined }) },
+      "basic-full": generated,
+    }, initialSelection: "source-midi" };
+    return { snapshots: {
+      "source-midi": original, custom: p533Snapshot("custom", true), "basic-full": generated,
+      saved: { ...original, selection: "saved", events: original.events.map(event => ({ ...event,
+        voicing: { kind: "saved", savedSource: "custom", midiNotes: [48, 52, 55] } })) },
+      ...Object.fromEntries((["basic-shell", "rootless-shell", "full-shell", "left-hand"] as const)
+        .map(selection => [selection, { ...generated, selection }])),
+    }, initialSelection: "basic-full" };
+  }
   if (status === "p533-rules") {
     return {
       snapshots: {
