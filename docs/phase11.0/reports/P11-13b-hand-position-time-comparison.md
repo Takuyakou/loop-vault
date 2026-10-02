@@ -222,4 +222,8 @@ FULLの初期3試行は別checkoutのpreview serverとport 4174が競合し、Pl
 - Settings → 開発者向け → 運指方式からCURRENT / Hand Position + Time（試験）を切替。セッションのみ、起動/reloadでCURRENTへ戻る。保存音と手配分を比較中に変更しない。
 - UI screenshotsは `.local-evaluation/p11-13/screenshots/`。公開合成fixtureによる4解像度検証のみ。
 - **P11-13 = READY_FOR_HUMAN_DECISION**。13a基盤と13b比較を完了。E1-Tのcasewise common-tone非悪化は未達で、採用は保留。次にCommon Tone単独比較を検討するかを人間が決める。E2/E3は開始していない。
-- masterは未変更。merge/push/tag/release無し。tracked working treeを文書commit後に確認し、作業開始前からあった無関係な未追跡3箇所は維持する。
+- 本taskでmaster統合は未実施。リモート送信・タグ付け・リリースも未実施。tracked working treeを文書commit後に確認し、作業開始前からあった無関係な未追跡3箇所は維持する。
+
+### 並行Git更新の観測
+
+開始baseはlocal master `94dae5b6`。完了時、並行P10.2 integrationでmasterが `5ddacd92`へ進んでいた。今回のbranchへ取り込んでいないため、この報告のFULL/EXEはP10.2統合後masterの検証結果ではない。tested candidate `2d29ac97`と文書記録を独立して保持する。完了時のlocal master対origin/masterは746 ahead /0 behind（既存remote-tracking ref、fetchなし）。rebase/reset/pushは行っていない。
