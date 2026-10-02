@@ -5,7 +5,10 @@ import type { CorrectionCard, CorrectionNote } from "../../domain/correction/cor
 import { noteLabel } from "../../domain/correction/correctionModel";
 import { chordToneDiff, nameCandidatesFor } from "../../domain/correction/nameCandidates";
 
-/** The right-hand panel for the selected card (spec v2.3 §4.4, §6.3, §6.4, §7.5). */
+/**
+ * The right-hand panel for the selected card (spec v2.3 §4.4, §6.3, §6.4, §7.5), in the P10.2
+ * §10.3 order: name, review reasons, name candidates, A/B, notes, chord tones, card actions.
+ */
 export interface CorrectionInspectorProps {
   card: CorrectionCard;
   notes: readonly CorrectionNote[];
@@ -51,6 +54,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
         <p className="lv-cw-muted">
           {card.bar}小節{card.beat}拍から・{formatBeats(card.duration)}拍{card.attacks > 1 ? `・打ち直し ×${card.attacks}` : ""}
         </p>
+        {card.reviewed && !card.reviewReasons.length ? <p className="lv-cw-muted" data-testid="correction-reviewed-note">このままでよい にしたカード</p> : null}
         <span className="lv-cw-name-tag" data-user={card.nameSource !== "auto" || undefined} data-testid="correction-name-tag">
           {card.nameSource === "typed" ? "手で打った名前" : card.nameSource === "chosen" ? "候補から選んだ名前（音を直すと自動に戻る）" : "自動の名前（音を直すと変わる）"}
         </span>
@@ -85,15 +89,39 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
             <button type="button" className="lv-cw-btn" onClick={props.onReviewed} data-testid="correction-reviewed">このままでよい</button>
           </div>
         </div>
-      )) : card.noteWarning ? null : <div className="lv-cw-ok">{card.reviewed ? "「このままでよい」にしたカードです。" : "このカードに要確認の印はありません。"}</div>}
+      )) : null}
 
-      <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
-        <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
-        <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onSplit}>分ける <kbd>S</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onUndo} disabled={!props.canUndo} data-testid="correction-inspector-undo">元に戻す <kbd>Ctrl+Z</kbd></button>
-      </div>
+      <section>
+        <h4 className="lv-cw-h4">名前の候補</h4>
+        <div className="lv-cw-alts" data-testid="correction-name-candidates">
+          {names.map((name, index) => (
+            <button
+              key={name.label}
+              type="button"
+              className="lv-cw-alt"
+              aria-pressed={name.label === card.name.label}
+              onClick={() => props.onChooseName(name)}
+              title={`${index + 1} を押しても選べます`}
+            >
+              <span className="lv-cw-alt-no">{index + 1}</span>
+              <span className="lv-cw-alt-name">{name.label}</span>
+            </button>
+          ))}
+        </div>
+        {props.sameFix ? (
+          <button type="button" className="lv-cw-btn" data-kind="accent" onClick={props.sameFix.onApply} data-testid="correction-same-fix">
+            同じ音の他の {props.sameFix.count} か所にも反映
+          </button>
+        ) : null}
+      </section>
+
+      <section>
+        <h4 className="lv-cw-h4">聴き比べ</h4>
+        <div className="lv-cw-ab">
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "source"} onClick={props.onPlaySource} title="区間に鳴っている音すべて（A）" data-testid="correction-play-source">▶ A 元の音</button>
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "card"} onClick={props.onPlayCard} title="保存すると鳴る音（B）" data-testid="correction-play-card">▶ B カードの音</button>
+        </div>
+      </section>
 
       <section>
         <div className="lv-cw-row-between">
@@ -133,44 +161,6 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
       </section>
 
       <section>
-        <h4 className="lv-cw-h4">聴き比べ</h4>
-        <div className="lv-cw-ab">
-          <button type="button" aria-pressed={props.playing === "source"} onClick={props.onPlaySource} data-testid="correction-play-source">
-            <b>A 元の音</b>
-            <span>区間に鳴っている音すべて</span>
-          </button>
-          <button type="button" aria-pressed={props.playing === "card"} onClick={props.onPlayCard} data-testid="correction-play-card">
-            <b>B カードの音</b>
-            <span>保存すると鳴る音</span>
-          </button>
-        </div>
-      </section>
-
-      <section>
-        <h4 className="lv-cw-h4">名前の候補</h4>
-        <div className="lv-cw-alts" data-testid="correction-name-candidates">
-          {names.map((name, index) => (
-            <button
-              key={name.label}
-              type="button"
-              className="lv-cw-alt"
-              aria-pressed={name.label === card.name.label}
-              onClick={() => props.onChooseName(name)}
-              title={`${index + 1} を押しても選べます`}
-            >
-              <span className="lv-cw-alt-no">{index + 1}</span>
-              <span className="lv-cw-alt-name">{name.label}</span>
-            </button>
-          ))}
-        </div>
-        {props.sameFix ? (
-          <button type="button" className="lv-cw-btn" data-kind="accent" onClick={props.sameFix.onApply} data-testid="correction-same-fix">
-            同じ音の他の {props.sameFix.count} か所にも反映
-          </button>
-        ) : null}
-      </section>
-
-      <section>
         <h4 className="lv-cw-h4">構成音との違い（参考）</h4>
         <dl className="lv-cw-tones">
           <dt>{card.name.label} の構成音</dt>
@@ -184,8 +174,20 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
             )) : "なし"}
           </dd>
         </dl>
-        <p className="lv-cw-muted">名前の構成音にあって、今の音に無い音です。省くのが普通の音もあるので、足すかどうかは耳で決めてください。</p>
+        <p className="lv-cw-muted" title="名前の構成音にあって、今の音に無い音です。省くのが普通の音もあるので、足すかどうかは耳で決めてください。">名前にあって今の音に無い音（足すかは耳で）</p>
       </section>
+
+      <section>
+      <h4 className="lv-cw-h4">カードの操作</h4>
+      <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
+        <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
+        <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onSplit}>分ける <kbd>S</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
+        <button type="button" className="lv-cw-btn" onClick={props.onUndo} disabled={!props.canUndo} data-testid="correction-inspector-undo">元に戻す <kbd>Ctrl+Z</kbd></button>
+      </div>
+      </section>
+
     </div>
   );
 }

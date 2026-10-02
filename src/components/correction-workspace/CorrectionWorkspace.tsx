@@ -17,6 +17,7 @@ import {
   sameShortPitchIds,
   setTempo,
   effectiveTempo,
+  PLAYER_DEFAULT_BPM,
   TEMPO_MAX,
   TEMPO_MIN,
   type EditResult,
@@ -34,15 +35,17 @@ import { registerCloseBlocker } from "../../store/closeBlocker";
 import { cardAuditionNotes } from "../../domain/correction/saveCandidate";
 import { songPlaybackNotes } from "../../domain/correction/songPlayback";
 import { useMetronome } from "../MetronomeProvider";
+import { SettingsIcon, UndoIcon } from "../icons";
 import { usePlaybackState } from "../../hooks/usePlaybackState";
 import { preferredScrollBehavior } from "../../ui/motion";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { QuickChordEditor } from "../progression-editing/QuickChordEditor";
 import { CorrectionInspector } from "./CorrectionInspector";
-import { NoSaveRange, RecommendedRanges, rangeKey, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
+import { NoSaveRange, RECOMMENDED_SHOWN, RecommendedRanges, RecommendedToggle, rangeKey, useRecommendedOpen, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
 import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
+import { getLegendVisible, setLegendVisible as storeLegendVisible } from "../../storage/workspaceLegendSettings";
 import { UNSAVED_TITLE, unsavedMessage } from "./unsavedText";
 
 /**
@@ -134,7 +137,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [follow, setFollow] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
   const [closedSuggestions, setClosedSuggestions] = useState<ReadonlySet<string>>(() => new Set());
-  const [confirm, setConfirm] = useState<"runs" | "same-fix">();
+  const [confirm, setConfirm] = useState<"runs" | "same-fix" | "restart">();
   const [nameEditor, setNameEditor] = useState<{ cardId: string; anchor: HTMLElement }>();
   const [rename, setRename] = useState<{ cardId: string; before: string }>();
   const [boundaryTip, setBoundaryTip] = useState<{ x: number; text: string }>();
@@ -160,6 +163,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const playback = usePlaybackState(controller);
   const [clickAudition, setClickAudition] = useState(getCardClickAudition);
   const { enabled: metronome } = useMetronome();
+  // P10.2 §1: the settings menu (押して鳴らす, 凡例を出す, 最初からやり直す…).
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const [legendVisible, setLegendVisible] = useState(getLegendVisible);
+  const [recommendedOpen, toggleRecommended] = useRecommendedOpen();
+  // P10.2 §10.1: in the full-height layout the piano roll takes the room left, with more pitch rows.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [rollRoom, setRollRoom] = useState(0);
 
   const minPx = viewportWidth > 0 ? viewportWidth / Math.max(meter, present.totalBeats) : 8;
   const maxPx = viewportWidth > 0 ? viewportWidth / 8 : 60;
@@ -169,7 +180,10 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       : zoom === "4" ? viewportWidth / (4 * meter)
         : customPx)) || 8;
   const canvasWidth = Math.max(viewportWidth, present.totalBeats * pxPerBeat);
-  const { low, high } = present.pitchRange;
+  const extraRows = Math.max(0, Math.floor(rollRoom / ROW_PX) - (present.pitchRange.high - present.pitchRange.low + 1));
+  const addLow = Math.min(present.pitchRange.low, Math.floor(extraRows / 2));
+  const low = present.pitchRange.low - addLow;
+  const high = Math.min(127, present.pitchRange.high + extraRows - addLow);
   const rollHeight = (high - low + 1) * ROW_PX;
   const selected = selectedId === undefined ? undefined : present.cards.find((card) => card.id === selectedId);
   const editorCard = nameEditor ? present.cards.find((card) => card.id === nameEditor.cardId) : undefined;
@@ -187,6 +201,24 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!body || typeof ResizeObserver === "undefined") return undefined;
+    const media = window.matchMedia?.("(min-width: 1220px)");
+    const update = () => {
+      const roll = body.querySelector<HTMLElement>(".lv-cw-roll");
+      const scroll = scrollRef.current;
+      // Only where the workspace has a fixed height; elsewhere the page grows with the roll.
+      if (!media?.matches || !roll || !scroll) { setRollRoom(0); return; }
+      setRollRoom(body.clientHeight - roll.offsetTop - (scroll.offsetHeight - scroll.clientHeight));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(body);
+    media?.addEventListener?.("change", update);
+    return () => { observer.disconnect(); media?.removeEventListener?.("change", update); };
+  }, [segmentsOpen]);
 
   // ---- editing ---------------------------------------------------------------------------
   const apply = useCallback((result: EditResult) => {
@@ -403,7 +435,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       };
       const handled = () => { event.preventDefault(); if (key !== "Enter") releaseFocus(); };
       if (confirm) {
-        if (key === "Enter") { handled(); runConfirm(); }
+        if (key === "Enter" && confirm !== "restart") { handled(); runConfirm(); }
         return;
       }
       if (nameEditor || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey) return;
@@ -451,6 +483,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       else if (key === "Enter") { handled(); setMode("check"); setSelectedNotes(new Set()); }
       else if (key === "Escape") {
         if (helpOpen) { handled(); setHelpOpen(false); }
+        else if (settingsOpen) { handled(); setSettingsOpen(false); }
         else if (ids.length) { handled(); setSelectedNotes(new Set()); }
         else if (rangeFrom) { handled(); setRangeFrom(undefined); setRangeHover(undefined); }
         else if (saveRange) { handled(); setSaveRange(undefined); }
@@ -467,7 +500,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [askMergeRuns, confirm, edit, enterEdit, goToStart, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, rangeFrom, runConfirm, selectCard, saveRange, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
+  }, [askMergeRuns, confirm, edit, enterEdit, goToStart, helpOpen, markAndNext, nameEditor, nextReview, openNameEditor, pickName, playCard, present, rangeFrom, runConfirm, selectCard, saveRange, settingsOpen, selectNotes, selected, selectedId, selectedIndex, selectedNotes, stopFollow, toggleSong, undoOnce]);
 
   // Wheel on the timeline (spec 9): sideways; Shift = up/down (the page, keys included);
   // Ctrl = zoom around the pointer. A native listener, so preventDefault works.
@@ -573,13 +606,47 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     frame = requestAnimationFrame(step);
     return () => { cancelAnimationFrame(frame); unmark(); };
   }, [playStartBeat, pxPerBeat, present.totalBeats, songBpm, startedAt]);
-  const tempoText = present.tempo !== undefined
-    ? `${present.tempo}BPM（MIDI ${props.tempoMissing || !present.bpm ? "にテンポなし" : Math.round(present.bpm)}）`
-    : `${songBpm}BPM${props.tempoMissing || !present.bpm ? "（MIDI にテンポなし）" : ""}`;
-  const fileMeta = [`${totalBars}小節`, tempoText, present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
+  // P10.2 §10.2: the bars and the tempo are in the control bar, not repeated here.
+  const fileMeta = [present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
   const count = editCount(history);
   const last = lastEditLabel(history);
+  const next = history.future[history.future.length - 1]?.label;
+  const midiBpm = present.bpm ? Math.round(present.bpm) : PLAYER_DEFAULT_BPM;
+  const tempoMissing = props.tempoMissing || !present.bpm;
+  /** A tempo from the field, the drag, the wheel or ↺ MIDI: one edit; playing, it carries on from the sounding card. */
+  const commitTempo = (bpm: number) => {
+    const result = setTempo(present, bpm);
+    if (!result.changed) return;
+    const resumeAt = soundingCardStart();
+    apply(result);
+    if (resumeAt !== undefined) playSong(resumeAt, bpm);
+  };
+  /** P10.2 §12: back to the workspace as it was right after the import; the history goes too. */
+  const restart = () => {
+    if (playingRef.current) controller.stop();
+    setHistory(startHistory(props.model));
+    setPreview(undefined);
+    setSelectedId(undefined);
+    setSelectedNotes(new Set());
+    setSaveRange(undefined);
+    setRangeFrom(undefined);
+    setRangeHover(undefined);
+    setMode("check");
+    setMelodyLine(undefined);
+    setRename(undefined);
+    if (scrollRef.current) scrollRef.current.scrollLeft = 0;
+    setScrollLeft(0);
+    metricsRef.current.restarts = (metricsRef.current.restarts ?? 0) + 1;
+    setNotice("最初からやり直しました");
+  };
+  // The settings menu closes on a press outside it.
+  useEffect(() => {
+    if (!settingsOpen) return undefined;
+    const close = (event: PointerEvent) => { if (!settingsRef.current?.contains(event.target as Node)) setSettingsOpen(false); };
+    document.addEventListener("pointerdown", close, true);
+    return () => document.removeEventListener("pointerdown", close, true);
+  }, [settingsOpen]);
   const dirty = count > 0 && savedContentDiffers(history.present, savedPresent);
   const unsavedCount = dirty ? Math.max(1, count - savedCount) : 0;
   const { onDirtyChange } = props;
@@ -660,6 +727,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     if (!drag.moved) setSaveRange({ startBar: drag.segment.startBar, endBar: drag.segment.endBar });
     else if (drag.result) applySegment(drag.result, drag.segment);
   }
+  const recommendedToggle = <RecommendedToggle count={Math.min(RECOMMENDED_SHOWN, props.blockCandidates.length)} open={recommendedOpen} onToggle={toggleRecommended} />;
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
 
@@ -703,77 +771,97 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         </div>
       ) : null}
 
+        <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar">
+          {/* P10.1 §1: 再生 and 表示 always share the first line. P10.2: the bar spans the workspace (one line from 1280). */}
+          <div className="lv-cw-bar-lead">
+          <div className="lv-cw-group" role="group" aria-label="再生">
+            <button type="button" className="lv-cw-btn lv-cw-icon" onClick={goToStart} aria-label="曲の先頭へ（Home）" title="曲の先頭へ（Home）" data-testid="correction-go-start">⏮</button>
+            <button
+              type="button"
+              className="lv-cw-btn"
+              data-kind="accent"
+              aria-pressed={songPlaying}
+              aria-label={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
+              title={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
+              onClick={toggleSong}
+              data-testid="correction-play-song"
+            >
+              {songPlaying ? "■ 停止" : "▶ 再生"}
+            </button>
+            <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)} data-testid="correction-follow">追従</button>
+            <TempoField
+              value={songBpm}
+              title={`テンポ（BPM）。上下にドラッグ・ホイールで変える。ダブルクリックで入力${tempoMissing ? "。MIDI にテンポの情報がありません" : ""}`}
+              onCommit={commitTempo}
+            />
+            {present.tempo !== undefined ? (
+              <button type="button" className="lv-cw-btn lv-cw-tempo-midi" onClick={() => commitTempo(midiBpm)} title={`MIDI の値（${midiBpm}${tempoMissing ? "・MIDI にテンポなし" : ""}）に戻す`} data-testid="correction-tempo-midi">↺ MIDI</button>
+            ) : null}
+            <span className="lv-cw-time" data-testid="correction-position">
+              {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`} ／ {totalBars}小節
+            </span>
+          </div>
+          <div className="lv-cw-group" role="group" aria-label="表示">
+            <span className="lv-cw-seg">
+              {([["all", "全体", "全体"], ["16", "16", "16小節"], ["8", "8", "8小節"], ["4", "4", "4小節"]] as const).map(([value, text, label]) => (
+                <button key={value} type="button" aria-pressed={zoom === value} aria-label={label} onClick={() => setZoom(value)}>{text}</button>
+              ))}
+              <small aria-hidden="true">小節</small>
+            </span>
+          </div>
+          </div>
+          {/* P10.2 §1: no review buttons when there is nothing to review (the file bar still says 0). */}
+          {reviewCards.length ? (
+            <div className="lv-cw-group" role="group" aria-label="要確認">
+              <button type="button" className="lv-cw-btn lv-cw-icon" onClick={() => nextReview(-1)} aria-label="前の要確認" title="前の要確認（[）">◀</button>
+              <span className="lv-cw-nav-count">要確認 <span data-testid="correction-review-position">{reviewIndex >= 0 ? reviewIndex + 1 : "–"} / {reviewCards.length}</span></span>
+              <button type="button" className="lv-cw-btn lv-cw-icon" onClick={() => nextReview(1)} aria-label="次の要確認" title="次の要確認（]）">▶</button>
+            </div>
+          ) : null}
+          <div className="lv-cw-group" role="group" aria-label="モード">
+            <span className="lv-cw-seg" title="N で音を直す・Enter で確かめるに戻る">
+              <button type="button" aria-pressed={mode === "check"} onClick={() => setMode("check")} data-testid="correction-mode-check">確かめる</button>
+              <button type="button" aria-pressed={mode === "edit"} onClick={() => { if (mode !== "edit") enterEdit(); }} data-testid="correction-mode-edit">音を直す</button>
+            </span>
+          </div>
+          <div className="lv-cw-group" role="group" aria-label="履歴">
+            <button type="button" className="lv-cw-btn lv-cw-icon" onClick={undoOnce} disabled={!history.past.length} aria-label={last ? `元に戻す：${last}（Ctrl+Z）` : "元に戻す（Ctrl+Z）"} title={last ? `元に戻す：${last}（Ctrl+Z）` : "元に戻す（Ctrl+Z）"} data-testid="correction-undo"><UndoIcon size={15} /></button>
+            <button type="button" className="lv-cw-btn lv-cw-icon" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label={next ? `やり直す：${next}（Ctrl+Y）` : "やり直す（Ctrl+Y）"} title={next ? `やり直す：${next}（Ctrl+Y）` : "やり直す（Ctrl+Y）"} data-testid="correction-redo"><UndoIcon size={15} className="lv-cw-mirror" /></button>
+          </div>
+          <span className="lv-cw-notice" role="status" data-testid="correction-notice" title={notice}>{notice}</span>
+          <div className="lv-cw-group lv-cw-settings" ref={settingsRef}>
+            <button type="button" className="lv-cw-btn lv-cw-icon" aria-haspopup="true" aria-expanded={settingsOpen} aria-label="表示の設定" title="表示の設定" onClick={() => setSettingsOpen((value) => !value)} data-testid="correction-settings"><SettingsIcon size={15} /></button>
+            {settingsOpen ? (
+              <div className="lv-cw-menu" role="group" aria-label="表示の設定" data-testid="correction-settings-menu">
+                <label className="lv-cw-check">
+                  <input
+                    type="checkbox"
+                    checked={clickAudition}
+                    data-testid="correction-click-audition"
+                    onChange={(event) => { setClickAudition(event.target.checked); setCardClickAudition(event.target.checked); }}
+                  />
+                  押して鳴らす
+                </label>
+                <label className="lv-cw-check">
+                  <input
+                    type="checkbox"
+                    checked={legendVisible}
+                    data-testid="correction-legend-toggle"
+                    onChange={(event) => { setLegendVisible(event.target.checked); storeLegendVisible(event.target.checked); }}
+                  />
+                  凡例を出す
+                </label>
+                <hr />
+                <button type="button" className="lv-cw-menu-danger" disabled={history.present === props.model} onClick={() => { setSettingsOpen(false); setConfirm("restart"); }} data-testid="correction-restart">
+                  最初からやり直す…
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
       <div className="lv-cw-work">
         <div className="lv-cw-timeline">
-          <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar">
-            {/* P10.1 §1: 再生 and 表示 always share the first line. */}
-            <div className="lv-cw-bar-lead">
-            <div className="lv-cw-group" role="group" aria-label="再生">
-              <button type="button" className="lv-cw-btn lv-cw-icon" onClick={goToStart} aria-label="曲の先頭へ（Home）" title="曲の先頭へ（Home）" data-testid="correction-go-start">⏮</button>
-              <button
-                type="button"
-                className="lv-cw-btn"
-                data-kind="accent"
-                aria-pressed={songPlaying}
-                aria-label={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
-                title={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
-                onClick={toggleSong}
-                data-testid="correction-play-song"
-              >
-                {songPlaying ? "■ 停止" : "▶ 再生"}
-              </button>
-              <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)} data-testid="correction-follow">追従</button>
-              <TempoField
-                value={songBpm}
-                {...(props.tempoMissing || !present.bpm ? { title: "MIDI にテンポの情報がありません" } : {})}
-                onCommit={(bpm) => {
-                  const result = setTempo(present, bpm);
-                  if (!result.changed) return;
-                  // Playing: carry on from the head of the card sounding now, at the new tempo.
-                  const resumeAt = soundingCardStart();
-                  apply(result);
-                  if (resumeAt !== undefined) playSong(resumeAt, bpm);
-                }}
-              />
-              <span className="lv-cw-time" data-testid="correction-position">
-                {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`} ／ {totalBars}小節
-              </span>
-            </div>
-            <div className="lv-cw-group" role="group" aria-label="表示">
-              {([["all", "全体"], ["16", "16小節"], ["8", "8小節"], ["4", "4小節"]] as const).map(([value, label]) => (
-                <button key={value} type="button" className="lv-cw-btn" aria-pressed={zoom === value} onClick={() => setZoom(value)}>{label}</button>
-              ))}
-              <label className="lv-cw-check">
-                <input
-                  type="checkbox"
-                  checked={clickAudition}
-                  data-testid="correction-click-audition"
-                  onChange={(event) => { setClickAudition(event.target.checked); setCardClickAudition(event.target.checked); }}
-                />
-                押して鳴らす
-              </label>
-            </div>
-            </div>
-            <div className="lv-cw-group" role="group" aria-label="要確認">
-              <button type="button" className="lv-cw-btn" onClick={() => nextReview(-1)} disabled={!reviewCards.length} aria-label="前の要確認">◀ 前の要確認</button>
-              <span className="lv-cw-nav-count" data-testid="correction-review-position">{reviewIndex >= 0 ? reviewIndex + 1 : "–"} / {reviewCards.length}</span>
-              <button type="button" className="lv-cw-btn" onClick={() => nextReview(1)} disabled={!reviewCards.length} aria-label="次の要確認">次の要確認 ▶</button>
-            </div>
-            <div className="lv-cw-group" role="group" aria-label="モード">
-              <button type="button" className="lv-cw-btn" aria-pressed={mode === "edit"} onClick={() => mode === "edit" ? setMode("check") : enterEdit()} data-testid="correction-mode-edit">
-                {mode === "edit" ? "② 音を直す（Enter で戻る）" : "① 確かめる（N で音を直す）"}
-              </button>
-            </div>
-            <div className="lv-cw-group" role="group" aria-label="履歴">
-              <button type="button" className="lv-cw-btn" onClick={undoOnce} disabled={!count} aria-label="元に戻す（Ctrl+Z）">元に戻す</button>
-              <button type="button" className="lv-cw-btn" onClick={() => setHistory(redo)} disabled={!history.future.length} aria-label="やり直す（Ctrl+Y）">やり直す</button>
-              <span className="lv-cw-history" data-testid="correction-history" title={`操作 ${count}${last ? `・最後：${last}` : ""}`}>
-                操作 {count}{last ? <span className="lv-cw-history-last">・最後：{last}</span> : null}
-              </span>
-            </div>
-            <span className="lv-cw-notice" role="status" data-testid="correction-notice" title={notice}>{notice}</span>
-          </div>
-
           <div className="lv-cw-overview-row">
             <span className="lv-cw-label">曲全体</span>
             <div
@@ -800,11 +888,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             </div>
           </div>
 
-          <div className="lv-cw-body">
+          <div ref={bodyRef} className="lv-cw-body">
             <div className="lv-cw-left">
               <span className="lv-cw-label" style={{ height: 26 }}>小節</span>
               <button type="button" className="lv-cw-label lv-cw-seg-toggle" style={{ height: segmentsOpen ? 30 : 20 }} aria-expanded={segmentsOpen} onClick={() => setSegmentsOpen((value) => !value)}>区切り</button>
-              <span className="lv-cw-label" style={{ height: 98 }}>コード</span>
+              <span className="lv-cw-label" style={{ height: 80 }}>コード</span>
               <span className="lv-cw-label" style={{ height: 20 }} aria-hidden="true" />
               <div className="lv-cw-keys" style={{ height: rollHeight }}>
                 {Array.from({ length: high - low + 1 }, (_, index) => {
@@ -908,6 +996,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   {shown.cards.filter((card) => overlaps(card.start, card.duration, range)).map((card) => {
                     const width = card.duration * pxPerBeat - 2;
                     const size = cardSize(width);
+                    const label = cardLabel(card.name.label, width);
                     const review = card.reviewReasons.length > 0;
                     return (
                       <button
@@ -953,10 +1042,11 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         }}
                         onDoubleClick={() => openNameEditor(card.id)}
                       >
-                        <span className="lv-cw-card-name" data-full-name={card.name.label}>{cardLabel(card.name.label, width)}</span>
+                        <span className="lv-cw-card-name" data-full-name={card.name.label} data-small={label.small}>{label.text}</span>
                         <span className="lv-cw-card-sub">
                           {review ? <span className="lv-cw-flag" aria-hidden="true" /> : null}
-                          <span>{formatBeats(card.duration)}拍</span>
+                          {/* P10.2 §1.1: a card exactly one bar long does not say 「4拍」. */}
+                          {Math.abs(card.duration - meter) > 1e-6 ? <span>{formatBeats(card.duration)}拍</span> : null}
                           {card.attacks > 1 ? <span className="lv-cw-x">×{card.attacks}</span> : null}
                         </span>
                       </button>
@@ -1034,7 +1124,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             </div>
           </div>
 
-          <div className="lv-cw-legend" aria-label="凡例">
+          {legendVisible ? <div className="lv-cw-legend" aria-label="凡例" data-testid="correction-legend">
             <span><i data-kind="harmony" />使っている和音の音</span>
             <span><i data-kind="bass" />使っているベース</span>
             <span><i data-kind="warn" />要確認の原因</span>
@@ -1042,7 +1132,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span><i data-kind="moved" />高さを直した音</span>
             <span><i data-kind="melody" />メロディとして使っていない音</span>
             <span><i data-kind="off" />使っていない音（破線）</span>
-          </div>
+          </div> : null}
 
         </div>
 
@@ -1050,54 +1140,60 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           <button type="button" className="lv-cw-panel-toggle" aria-expanded={panelOpen} onClick={() => setPanelOpen((value) => !value)} data-testid="correction-panel-toggle">
             {selected ? `${selected.name.label}${selected.reviewReasons.length ? "・要確認" : ""}` : "カード"}（{panelOpen ? "閉じる" : "開く"}）
           </button>
-          {saveRange ? (
-            <WorkspaceSaveForm
-              model={present}
-              timeline={timeline}
-              range={saveRange}
-              saved={savedRanges.has(rangeKey(saveRange))}
-              actions={props.save}
-              onClear={() => setSaveRange(undefined)}
-              onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
-              onSaved={() => {
-                setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
-                setSavedPresent(history.present);
-                setSavedCount(editCount(history));
-                metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
-              }}
-            />
-          ) : <NoSaveRange />}
-          <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} />
-          {selected ? (
-            <CorrectionInspector
-              card={selected}
-              notes={cardNotesOf(selected)}
-              playing={cardPlaying}
-              onPlaySource={() => playCard("source")}
-              onPlayCard={() => playCard("card")}
-              onDelete={(ids) => edit((model) => deleteNotes(model, ids))}
-              onRestore={(ids) => edit((model) => restoreNotes(model, ids))}
-              onAddPitchClass={(pc) => edit((model) => addNote(model, selected.id, chordRegisterPitch(pc)))}
-              onSelectShortSame={(noteId) => selectNotes(sameShortPitchIds(present, noteId), "replace")}
-              shortSameCount={(noteId) => sameShortPitchIds(present, noteId).length}
-              onEditNotes={enterEdit}
-              canUndo={count > 0}
-              onUndo={undoOnce}
-              onChooseName={(name) => pickName(name, selected.id)}
-              onUseSuggestedName={(name) => pickName(name, selected.id, "auto")}
-              onTypeName={() => openNameEditor(selected.id)}
-              onReviewed={markAndNext}
-              {...(selectedIndex > 0 ? { onMergePrevious: () => { const previous = present.cards[selectedIndex - 1]!; setSelectedId(previous.id); edit((model) => mergeWithNext(model, previous.id)); } } : {})}
-              {...(selectedIndex < present.cards.length - 1 ? { onMergeNext: () => edit((model) => mergeWithNext(model, selected.id)) } : {})}
-              onSplit={() => edit((model) => splitCard(model, selected.id))}
-              {...(sameFix.length ? { sameFix: { count: sameFix.length, onApply: () => setConfirm("same-fix") } } : {})}
-            />
-          ) : (
-            <div className="lv-cw-insp-empty" data-testid="correction-inspector-empty">
-              <p className="lv-cw-muted">{present.cards.length ? "カードを押すと、ここに音と名前が出ます。" : "カードがありません。"}</p>
-              {reviewCards.length ? <button type="button" className="lv-cw-btn" data-kind="warn" onClick={() => nextReview(1)}>要確認 {reviewCards.length}</button> : null}
-            </div>
-          )}
+          <div className="lv-cw-insp-scroll">
+            {selected ? (
+              <CorrectionInspector
+                card={selected}
+                notes={cardNotesOf(selected)}
+                playing={cardPlaying}
+                onPlaySource={() => playCard("source")}
+                onPlayCard={() => playCard("card")}
+                onDelete={(ids) => edit((model) => deleteNotes(model, ids))}
+                onRestore={(ids) => edit((model) => restoreNotes(model, ids))}
+                onAddPitchClass={(pc) => edit((model) => addNote(model, selected.id, chordRegisterPitch(pc)))}
+                onSelectShortSame={(noteId) => selectNotes(sameShortPitchIds(present, noteId), "replace")}
+                shortSameCount={(noteId) => sameShortPitchIds(present, noteId).length}
+                onEditNotes={enterEdit}
+                canUndo={history.past.length > 0}
+                onUndo={undoOnce}
+                onChooseName={(name) => pickName(name, selected.id)}
+                onUseSuggestedName={(name) => pickName(name, selected.id, "auto")}
+                onTypeName={() => openNameEditor(selected.id)}
+                onReviewed={markAndNext}
+                {...(selectedIndex > 0 ? { onMergePrevious: () => { const previous = present.cards[selectedIndex - 1]!; setSelectedId(previous.id); edit((model) => mergeWithNext(model, previous.id)); } } : {})}
+                {...(selectedIndex < present.cards.length - 1 ? { onMergeNext: () => edit((model) => mergeWithNext(model, selected.id)) } : {})}
+                onSplit={() => edit((model) => splitCard(model, selected.id))}
+                {...(sameFix.length ? { sameFix: { count: sameFix.length, onApply: () => setConfirm("same-fix") } } : {})}
+              />
+            ) : (
+              <div className="lv-cw-insp-empty" data-testid="correction-inspector-empty">
+                <p className="lv-cw-muted">{present.cards.length ? "カードを押すと、ここに音と名前が出ます。小節の番号を押すと、その小節の頭のカードを選べます。" : "カードがありません。"}</p>
+                {reviewCards.length ? <button type="button" className="lv-cw-btn" data-kind="warn" onClick={() => nextReview(1)}>要確認 {reviewCards.length}</button> : null}
+              </div>
+            )}
+          </div>
+          {/* P10.2 §10.3: 保存する範囲 pinned to the bottom of the panel; 「おすすめの範囲」 opens above it. */}
+          <div className="lv-cw-insp-foot">
+            {recommendedOpen ? <RecommendedRanges candidates={props.blockCandidates} onPick={setSaveRange} /> : null}
+            {saveRange ? (
+              <WorkspaceSaveForm
+                model={present}
+                timeline={timeline}
+                range={saveRange}
+                saved={savedRanges.has(rangeKey(saveRange))}
+                actions={props.save}
+                onClear={() => setSaveRange(undefined)}
+                onGoToCard={(cardId) => selectCard(present.cards.find((card) => card.id === cardId))}
+                onSaved={() => {
+                  setSavedRanges((current) => new Set([...current, rangeKey(saveRange)]));
+                  setSavedPresent(history.present);
+                  setSavedCount(editCount(history));
+                  metricsRef.current.saves.push({ atMs: Date.now(), reviewMarks: reviewCards.length });
+                }}
+                recommended={recommendedToggle}
+              />
+            ) : <NoSaveRange recommended={recommendedToggle} />}
+          </div>
         </aside>
       </div>
 
@@ -1124,6 +1220,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             <span>カードの右クリック→右クリック：保存する範囲</span>
             <span><kbd>A</kbd><kbd>B</kbd> 聴き比べ</span>
             <span><kbd>Space</kbd> 再生・停止（どこでも）</span>
+            <span><kbd>Home</kbd> 曲の先頭へ</span>
             <span><kbd>Enter</kbd> フォーカスのあるボタンを押す</span>
             <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
             <span><kbd>?</kbd> ショートカット一覧</span>
@@ -1141,6 +1238,16 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         tone="danger"
         onCancel={() => setPendingLeave(undefined)}
         onConfirm={() => { const action = pendingLeave; setPendingLeave(undefined); action?.(); }}
+      />
+      <ConfirmDialog
+        open={confirm === "restart"}
+        title="最初からやり直しますか？"
+        description="この曲で直した内容をすべて消して、MIDI を取り込んだ直後の状態に戻します。Vault に保存した進行は消えません。"
+        confirmLabel="最初からやり直す"
+        cancelLabel="戻る"
+        tone="danger"
+        onConfirm={() => { setConfirm(undefined); restart(); }}
+        onCancel={() => setConfirm(undefined)}
       />
       <ConfirmDialog
         open={confirm === "runs"}
@@ -1178,45 +1285,111 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 }
 
 /**
- * BPM 40–240 (P10.1 §12.1): Enter or leaving commits, ↑/↓ ±1 (Shift ±10) commit at once,
- * Esc goes back to the value before typing. Anything else returns to the last value.
+ * BPM 40–240 (P10.1 §12.1, P10.2 §7). Drag up/down (4px a step, Shift 12px) or the wheel
+ * (±1, Shift ±10) changes the number; the value is committed once — when the drag ends,
+ * or when the wheel has been still for 400ms. A double-click (or reaching it by keyboard)
+ * types: Enter or leaving commits, ↑/↓ ±1 (Shift ±10) commit at once, Esc goes back.
  */
-function TempoField({ value, title, onCommit }: { value: number; title?: string; onCommit: (bpm: number) => void }) {
+function TempoField({ value, title, onCommit }: { value: number; title: string; onCommit: (bpm: number) => void }) {
   const [text, setText] = useState(String(value));
   const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<number>();
+  const draftRef = useRef<number>();
+  draftRef.current = draft;
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const commitRef = useRef(onCommit);
+  commitRef.current = onCommit;
   // Enter and Esc leave the field themselves; the blur that follows must not commit again.
   const skipBlur = useRef(false);
-  const shown = editing ? text : String(value);
+  const drag = useRef<{ y: number; from: number; pointerId: number; moved: boolean }>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const shown = editing ? text : String(draft ?? value);
+  const clamp = (bpm: number) => Math.min(TEMPO_MAX, Math.max(TEMPO_MIN, bpm));
   const commit = (raw: string) => {
     setEditing(false);
     const bpm = Number(raw.trim());
     if (raw.trim() !== "" && Number.isInteger(bpm) && bpm >= TEMPO_MIN && bpm <= TEMPO_MAX && bpm !== value) onCommit(bpm);
   };
+  // The wheel: a native listener so the page does not scroll.
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onWheel = (event: WheelEvent) => {
+      if (document.activeElement === input) return;
+      const delta = event.deltaY || event.deltaX;
+      if (!delta) return;
+      event.preventDefault();
+      const next = clamp((draftRef.current ?? valueRef.current) + (event.shiftKey ? 10 : 1) * (delta < 0 ? 1 : -1));
+      draftRef.current = next;
+      setDraft(next);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const bpm = draftRef.current;
+        setDraft(undefined);
+        if (bpm !== undefined && bpm !== valueRef.current) commitRef.current(bpm);
+      }, 400);
+    };
+    input.addEventListener("wheel", onWheel, { passive: false });
+    return () => { input.removeEventListener("wheel", onWheel); clearTimeout(timer); };
+  }, []);
+  const endDrag = (event: ReactPointerEvent<HTMLInputElement>) => {
+    const current = drag.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    drag.current = undefined;
+    const bpm = draftRef.current;
+    setDraft(undefined);
+    if (current.moved && bpm !== undefined && bpm !== value) onCommit(bpm);
+  };
   return (
     <label className="lv-cw-tempo" title={title}>
       BPM
-      <input
-        type="text"
-        inputMode="numeric"
-        aria-label="テンポ（BPM）"
-        data-testid="correction-tempo"
-        value={shown}
-        maxLength={3}
-        onFocus={() => { setText(String(value)); setEditing(true); }}
-        onChange={(event) => { setEditing(true); setText(event.target.value); }}
-        onBlur={() => { if (skipBlur.current) skipBlur.current = false; else commit(text); }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") { event.preventDefault(); commit(text); skipBlur.current = true; event.currentTarget.blur(); }
-          else if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setEditing(false); setText(String(value)); skipBlur.current = true; event.currentTarget.blur(); }
-          else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      <span className="lv-cw-tempo-box" data-editing={editing || undefined}>
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="numeric"
+          aria-label="テンポ（BPM）"
+          data-testid="correction-tempo"
+          value={shown}
+          maxLength={3}
+          onMouseDown={(event) => { if (!editing) event.preventDefault(); }}
+          onPointerDown={(event) => {
+            // A press is for dragging (no caret); a double-click types.
+            if (editing || event.button !== 0) return;
             event.preventDefault();
-            const step = (event.shiftKey ? 10 : 1) * (event.key === "ArrowUp" ? 1 : -1);
-            const next = Math.min(TEMPO_MAX, Math.max(TEMPO_MIN, (Number(text) || value) + step));
-            setText(String(next));
-            if (next !== value) onCommit(next);
-          }
-        }}
-      />
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            drag.current = { y: event.clientY, from: value, pointerId: event.pointerId, moved: false };
+          }}
+          onPointerMove={(event) => {
+            const current = drag.current;
+            if (!current || current.pointerId !== event.pointerId) return;
+            const steps = Math.trunc((current.y - event.clientY) / (event.shiftKey ? 12 : 4));
+            if (!steps && !current.moved) return;
+            current.moved = true;
+            setDraft(clamp(current.from + steps));
+          }}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onDoubleClick={(event) => { const input = event.currentTarget; input.focus(); input.select(); }}
+          onFocus={() => { setText(String(value)); setEditing(true); }}
+          onChange={(event) => { setEditing(true); setText(event.target.value); }}
+          onBlur={() => { if (skipBlur.current) skipBlur.current = false; else commit(text); }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") { event.preventDefault(); commit(text); skipBlur.current = true; event.currentTarget.blur(); }
+            else if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setEditing(false); setText(String(value)); skipBlur.current = true; event.currentTarget.blur(); }
+            else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              event.preventDefault();
+              const step = (event.shiftKey ? 10 : 1) * (event.key === "ArrowUp" ? 1 : -1);
+              const next = clamp((Number(text) || value) + step);
+              setText(String(next));
+              if (next !== value) onCommit(next);
+            }
+          }}
+        />
+        <i aria-hidden="true">↕</i>
+      </span>
     </label>
   );
 }
@@ -1232,7 +1405,8 @@ function ShortcutSheet({ onClose }: { onClose: () => void }) {
     ["小節の行をクリック", "その小節の頭のカードを選ぶ（Shift で範囲）"], ["区切りの端", "ドラッグで小節ずつ（Alt＋←→ 右端・Alt＋Shift＋←→ 左端）"], ["左クリック・ドラッグ（外した音）", "戻す"], ["空いた所", "①ダブルクリック／②クリックで足す"],
     ["上下ドラッグ・↑↓", "半音ずつ高さを直す"], ["Ctrl＋↑↓", "1オクターブ"], ["Delete", "外す・消す"], ["R", "戻す"],
     ["Ctrl＋A", "選んだカードの音を全部選ぶ"], ["Ctrl＋クリック（鍵盤）", "その高さの音を曲全体で選ぶ"], ["A B", "元の音／カードの音を鳴らす"],
-    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["Esc", "閉じる → 音の選択 → ここから → 保存する範囲 → カードの選択の順に外す"],
+    ["Ctrl＋Z", "元に戻す"], ["Ctrl＋Shift＋Z・Ctrl＋Y", "やり直す"], ["?", "この一覧"], ["BPM の欄", "上下にドラッグ・ホイールで変える（Shift で細かく／大きく）。ダブルクリックで入力"],
+    ["Esc", "閉じる → 音の選択 → ここから → 保存する範囲 → カードの選択の順に外す"],
   ];
   return (
     <div className="lv-cw-cheat" role="dialog" aria-modal="true" aria-label="ショートカット一覧" onClick={onClose}>

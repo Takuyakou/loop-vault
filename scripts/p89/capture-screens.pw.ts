@@ -301,7 +301,7 @@ for (const [width, height] of SIZES) {
         await page.getByTestId("correction-add-note").click();
         await page.getByRole("group", { name: "足す音を選ぶ" }).getByRole("button").nth(9).click();
         await page.keyboard.press("n");
-        await expect(page.getByTestId("correction-history")).toContainText("操作 3");
+        await expect(page.getByTestId("correction-edit-count")).toHaveText("直した回数 3");
       });
       // P10.0-04: Shift+M lists the places with the same notes before merging.
       await shot("capture-workspace-merge-confirm", async () => {
@@ -353,6 +353,7 @@ for (const [width, height] of SIZES) {
       // P10.0-07: 「押して鳴らす」 on with a card just clicked; the in-app confirm when leaving with unsaved changes.
       await shot("capture-workspace-click-audition", async () => {
         await openWorkspace("plain-8");
+        await page.getByTestId("correction-settings").click();
         await page.getByTestId("correction-click-audition").check();
         await page.getByTestId("correction-card").nth(2).click();
         await expect(page.getByTestId("correction-click-audition")).toBeChecked();

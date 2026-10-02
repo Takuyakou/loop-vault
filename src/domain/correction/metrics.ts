@@ -26,6 +26,8 @@ export interface CorrectionMetricsRecord {
   secondsToLastSave: number | null;
   /** Left (another MIDI, another screen, closed) without any save. */
   leftWithoutSave: boolean;
+  /** P10.2 §12: times 「最初からやり直す」 was used (written only when used). */
+  restarts?: number;
 }
 
 export interface CorrectionMetricsSession {
@@ -35,6 +37,7 @@ export interface CorrectionMetricsSession {
   reviewAtStart: number;
   saves: { atMs: number; reviewMarks: number }[];
   undos: number;
+  restarts?: number;
 }
 
 export function buildMetricsRecord(session: CorrectionMetricsSession, now: { ms: number; iso: string }, state: {
@@ -58,6 +61,7 @@ export function buildMetricsRecord(session: CorrectionMetricsSession, now: { ms:
     secondsToFirstSave: first ? seconds(first.atMs) : null,
     secondsToLastSave: last ? seconds(last.atMs) : null,
     leftWithoutSave: session.saves.length === 0,
+    ...(session.restarts ? { restarts: session.restarts } : {}),
   };
 }
 

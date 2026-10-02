@@ -20,6 +20,7 @@ async function saveNewIdea(page: Page, title: string) {
   await saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
+  await expect(form.getByTestId("save-progression-note")).toHaveText("保存すると、外した音は戻せなくなります");
   await form.locator('input[name="progression-title"]').fill(title);
   await form.getByRole("button", { name: /保存/, exact: true }).click();
   await expect(form).toBeHidden();
@@ -34,11 +35,18 @@ test("P10.0-06 a segment band picks the range, saves to the Vault and stays on t
 
   await workspace(page).getByTestId("correction-segment").first().click();
   await expect(saveForm(page).getByTestId("correction-save-range")).toContainText("1〜8小節・8枚");
-  await expect(saveForm(page)).toContainText("保存すると、外した音は戻せなくなります");
+  // P10.2 §10.3: on the save button's title, and in the save dialog.
+  await expect(saveForm(page).locator('[title="保存すると、外した音は戻せなくなります"]')).toHaveCount(1);
   const names = await saveForm(page).locator(".lv-cw-save-names").textContent();
   await saveNewIdea(page, "P10 作業場から保存");
   await expect(workspace(page)).toBeVisible();
   await expect(saveForm(page).getByTestId("correction-save-range")).toContainText("保存済み");
+  await expect(workspace(page).getByTestId("correction-segment").first()).toContainText("保存済み");
+  // P10.2 §12: 「最初からやり直す」 keeps the 保存済み marks (they are in the Vault).
+  await workspace(page).getByTestId("correction-settings").click();
+  await workspace(page).getByTestId("correction-restart").click();
+  await page.getByRole("dialog", { name: "最初からやり直しますか？" }).getByRole("button", { name: "最初からやり直す" }).click();
+  await expect(workspace(page).getByTestId("correction-edit-count")).toHaveText("直した回数 0");
   await expect(workspace(page).getByTestId("correction-segment").first()).toContainText("保存済み");
 
   await openVault(page);

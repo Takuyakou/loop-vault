@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { analyzeScenario, p10Scenario } from "../../testing/p10SyntheticCapture";
 import { buildCorrectionModel, type CorrectionCard, type CorrectionModel, type CorrectionSegment } from "./correctionModel";
-import { addNote } from "./edits";
+import { addNote, setTempo } from "./edits";
+import { buildMetricsRecord } from "./metrics";
 import { commitEdit, editCount, editKindCounts, savedContentDiffers, startHistory, undo } from "./history";
 import { cardForBar, cardsBarRange, pickRangeCard } from "./rangePick";
 import { reviewThresholds } from "./reviewThresholds";
@@ -93,5 +94,30 @@ describe("a click on the bar row (P10.2 §8)", () => {
     expect(cardForBar(cards, 4, 4)?.id).toBe("c"); // beat 12 is a rest, c starts at 13
     expect(cardForBar(cards, 3, 4)).toBeUndefined();
     expect(cardForBar(cards, 5, 4)).toBeUndefined();
+  });
+});
+
+describe("「最初からやり直す」 (P10.2 §12)", () => {
+  it("is the workspace right after the import again, with an empty history and nothing unsaved", () => {
+    const imported = model();
+    let history = startHistory(imported);
+    history = commitEdit(history, addNote(history.present, history.present.cards[0]!.id, 70));
+    history = commitEdit(history, setTempo(history.present, 100));
+    history = commitEdit(history, moveSegmentEdge(history.present, "2", "end", 5));
+    expect(editCount(history)).toBe(2);
+    // The workspace restarts from the model it was opened with (the analysis is not run again).
+    const restarted = startHistory(imported);
+    expect(restarted.present).toEqual({ ...buildCorrectionModel(input, reviewThresholds), segments: imported.segments });
+    expect(restarted.past).toEqual([]);
+    expect(restarted.future).toEqual([]);
+    expect(editCount(restarted)).toBe(0);
+    expect(undo(restarted)).toBe(restarted); // nothing to go back to
+  });
+
+  it("is counted in the local metrics, only when used", () => {
+    const session = { startedAtMs: 0, bars: 8, cards: 8, reviewAtStart: 0, saves: [], undos: 0 };
+    const now = { ms: 1000, iso: "2026-10-02T00:00:01.000Z" };
+    expect(buildMetricsRecord({ ...session, restarts: 2 }, now, { reviewedCards: 0, edits: {} }).restarts).toBe(2);
+    expect(buildMetricsRecord(session, now, { reviewedCards: 0, edits: {} })).not.toHaveProperty("restarts");
   });
 });

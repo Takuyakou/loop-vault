@@ -32,16 +32,20 @@ const charPx: Record<CardSize, number> = { full: 10.5, narrow: 8.6, tiny: 6.8, b
 const padPx: Record<CardSize, number> = { full: 22, narrow: 12, tiny: 6, bare: 0 };
 
 /**
- * What a card shows: the whole name when it fits, otherwise only the root
- * (「Fmaj7」→「F」, never 「F···」), nothing when not even the root fits (spec v2.4 §6.2).
+ * What a card shows (P10.2 §10.4): the whole name; if it does not fit, the whole name in
+ * the smaller letters (13px); if that does not fit either, the root with 「…」 (「Bmaj9」→
+ * 「B…」, never a bare 「B」, which reads as another chord). Tiny cards keep the old rule
+ * (the name, else the root, else nothing; spec v2.4 §6.2); bare ones show nothing.
  */
-export function cardLabel(label: string, widthPx: number): string {
+export function cardLabel(label: string, widthPx: number): { text: string; small?: true } {
   const size = cardSize(widthPx);
-  if (size === "bare") return "";
-  const fits = (text: string) => text.length * charPx[size] + padPx[size] <= widthPx;
-  if (fits(label)) return label;
+  if (size === "bare") return { text: "" };
+  const fits = (text: string, letters: CardSize = size) => text.length * charPx[letters] + padPx[size] <= widthPx;
+  if (fits(label)) return { text: label };
   const root = /^[A-G][#b♯♭]?/.exec(label)?.[0] ?? label.slice(0, 1);
-  return fits(root) ? root : "";
+  if (size === "tiny") return { text: fits(root) ? root : "" };
+  if (size === "full" && fits(label, "narrow")) return { text: label, small: true };
+  return { text: `${root}…` };
 }
 
 /** Following: past 80% of the view, jump so the playhead sits at 20%. Undefined = stay. */

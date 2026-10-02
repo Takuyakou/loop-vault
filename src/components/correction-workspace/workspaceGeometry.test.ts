@@ -48,16 +48,23 @@ describe("workspace geometry (P10.0-05)", () => {
     expect(cardSize(14)).toBe("tiny");
     expect(cardSize(39)).toBe("tiny");
     expect(cardSize(71)).toBe("narrow");
-    expect(cardLabel("Fmaj7", 200)).toBe("Fmaj7");
-    expect(cardLabel("Fmaj7", 30)).toBe("F");
-    expect(cardLabel("Bbm7b5", 50)).toBe("Bb");
-    expect(cardLabel("C#dim7", 30)).toBe("C#");
-    expect(cardLabel("Fmaj7", 10)).toBe("");
-    // From 14px a root letter shows (P10.0-06); a root with an accidental needs more.
-    expect(cardLabel("Fmaj7", 14)).toBe("F");
-    expect(cardLabel("F#m7", 14)).toBe("");
-    expect(cardLabel("F#m7", 22)).toBe("F#");
-    expect(cardLabel("Fmaj7", 60)).not.toContain("·");
+    expect(cardLabel("Fmaj7", 200)).toEqual({ text: "Fmaj7" });
+    // Tiny cards (under 40px) keep the root, or nothing (P10.0-06: a root letter from 14px).
+    expect(cardLabel("Fmaj7", 30)).toEqual({ text: "F" });
+    expect(cardLabel("C#dim7", 30)).toEqual({ text: "C#" });
+    expect(cardLabel("Fmaj7", 10)).toEqual({ text: "" });
+    expect(cardLabel("Fmaj7", 14)).toEqual({ text: "F" });
+    expect(cardLabel("F#m7", 14)).toEqual({ text: "" });
+    expect(cardLabel("F#m7", 22)).toEqual({ text: "F#" });
+  });
+
+  it("never cuts a name to its bare root on a wider card: smaller letters, then 「B…」 (P10.2 §10.4)", () => {
+    expect(cardLabel("Bmaj9", 80)).toEqual({ text: "Bmaj9" }); // 16px fits
+    expect(cardLabel("Bmaj9", 74)).toEqual({ text: "Bmaj9", small: true }); // 13px fits
+    expect(cardLabel("Bbm7b5", 74)).toEqual({ text: "Bbm7b5", small: true });
+    expect(cardLabel("Bmaj9", 50)).toEqual({ text: "B…" }); // a narrow card at 13px
+    expect(cardLabel("Bbm7b5", 50)).toEqual({ text: "Bb…" });
+    expect(cardLabel("C#m7b5(9)", 74)).toEqual({ text: "C#…" });
   });
 
   it("builds the 300-bar, 5,000-note song in well under a second", () => {

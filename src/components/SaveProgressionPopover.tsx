@@ -17,6 +17,8 @@ interface SaveProgressionPopoverProps {
   onAppend: (ideaId: string, userVerified: boolean) => boolean;
   onCopyMemo: (ideaId: string) => boolean;
   onSaved: () => void;
+  /** A line under the dialog's title (the correction workspace: what saving makes final). */
+  note?: string;
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
@@ -51,6 +53,7 @@ export function SaveProgressionPopover({
   onAppend,
   onCopyMemo,
   onSaved,
+  note,
 }: SaveProgressionPopoverProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [panel, setPanel] = useState<SavePanel>();
@@ -297,6 +300,7 @@ export function SaveProgressionPopover({
           onKeyDown={handleFormKeyDown}
         >
           <h3 id={panelTitleId} className="text-base font-semibold">{panelTitle}</h3>
+          {note ? <p className="mt-1 text-xs text-[var(--lv-text-muted)]" data-testid="save-progression-note">{note}</p> : null}
 
           {panel === "new" ? (
             <div className="mt-4 grid gap-3">
