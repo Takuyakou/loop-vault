@@ -1,0 +1,1 @@
+{"extends":"../../tsconfig.json","compilerOptions":{"composite":false,"noEmit":true,"types":["node","vite/client"]},"include":["./*.ts","./*.tsx","../../src/vite-env.d.ts"],"references":[]}
