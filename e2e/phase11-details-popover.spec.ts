@@ -5,12 +5,18 @@ test.beforeEach(async ({ page }) => {
   await page.locator('[data-nav="voicing-loop"]').click();
 });
 
-test("P11 details close after Source change and reopen", async ({ page }) => {
+test("P11 details close and disable after fixed Source change, reopen on generated", async ({ page }) => {
   const details = page.getByTestId("voicing-loop-generated-details");
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");
   await page.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(details).not.toHaveAttribute("open", "");
+  await expect(details.locator("summary")).toHaveAttribute("aria-disabled", "true");
+  await details.locator("summary").dispatchEvent("click");
+  await details.locator("summary").press("Space");
+  await details.locator("summary").press("Enter");
+  await expect(details).not.toHaveAttribute("open", "");
+  await page.getByRole("button", { name: "自動生成", exact: true }).click();
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");
 });
@@ -36,7 +42,8 @@ test("P11 generated type switches close details without disabling later dismissa
   const trigger = details.locator("summary");
   for (const type of ["core", "teacher"]) {
     await trigger.click();
-    await page.getByLabel("生成タイプ", { exact: true }).selectOption(type);
+    await page.getByLabel("生成タイプ", { exact: true }).click();
+    await page.getByRole("option", { name: (type === "core" ? "骨組み" : "基本"), exact: true }).click();
     await expect(details).not.toHaveAttribute("open", "");
     await trigger.click();
     await expect(details).toHaveAttribute("open", "");

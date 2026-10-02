@@ -74,7 +74,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
 
   await expect(controls.locator("legend")).toHaveText(["ソース", "生成タイプ", "表示"]);
   await expect(controls.getByRole("button", { name: "自動生成", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveValue("teacher");
+  await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveAttribute("value", "teacher");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "Open配置", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).toBeChecked();
@@ -86,17 +86,21 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(explanation).toContainText("ルールP5.33-GEN-TEACHER-MAJ7");
   await expect(explanation).toContainText("トップトップ候補");
 
-  await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption("core");
+  await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
+    await page.getByRole("option", { name: "骨組み", exact: true }).click();
   await expect(explanation).toContainText("Family Core");
   await expect(explanation).toContainText("ルールP5.33-GEN-CORE-MAJ7");
 
   await controls.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
   await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
-  await openDetails(workspace);
-  for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
-    await expect(controls.getByRole("checkbox", { name: label, exact: true })).toBeDisabled();
-  }
+  const details = workspace.getByTestId("voicing-loop-generated-details");
+  await expect(details).not.toHaveAttribute("open", "");
+  await expect(details.locator("summary")).toHaveAttribute("aria-disabled", "true");
+  // Disabled legacy inputs stay in the closed details DOM; fixed sources cannot open it.
+  await expect(details.getByLabel("Colorを加える", { exact: true })).toBeDisabled();
+  await expect(details.getByLabel("Open配置", { exact: true })).toBeDisabled();
+  await expect(controls.getByLabel("進行に合わせて最適化", { exact: true })).toBeDisabled();
   await controls.getByRole("button", { name: "カスタム", exact: true }).click();
   await expect(explanation).toHaveCount(0);
 });
@@ -159,7 +163,8 @@ test("P5.33 supports all eight acceptance chords in every base/modifier combinat
     ["Teacher", false, false], ["Teacher", true, false], ["Teacher", false, true], ["Teacher", true, true],
     ["Core", false, false], ["Core", true, false], ["Core", false, true], ["Core", true, true],
   ] as const) {
-    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
+    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
+    await page.getByRole("option", { name: (study === "Teacher" ? "基本" : "骨組み"), exact: true }).click();
     await expect(workspace.getByTestId("voicing-loop-generated-details")).not.toHaveAttribute("open", "");
     await openDetails(workspace);
     await controls.getByRole("checkbox", { name: "Colorを加える", exact: true }).setChecked(color);
@@ -187,7 +192,8 @@ test("P5.33 keeps one 88-key A0-C8 geometry across source and study changes", as
     expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   }
   for (const study of ["Teacher", "Core"]) {
-    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).selectOption(study === "Teacher" ? "teacher" : "core");
+    await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
+    await page.getByRole("option", { name: (study === "Teacher" ? "基本" : "骨組み"), exact: true }).click();
     expectStableKeyboard(await keyboardGeometry(workspace), baseline);
   }
   await openDetails(workspace);
@@ -274,7 +280,10 @@ test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clea
   const workspace = await openRuleFixture(page);
   await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).focus();
   await page.keyboard.press("ArrowDown");
-  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveValue("core");
+  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveAttribute("value", "core");
   await assertNoHorizontalOverflow(page);
 
   const axe = await new AxeBuilder({ page: page as never })

@@ -1,3 +1,4 @@
+import { savedDuplicatesSource } from "../../voicingPractice/sourcePreference";
 import { describe, expect, it } from "vitest";
 import { makeChordSymbol } from "../chords";
 import { makeIdea } from "../testFactory";
@@ -45,6 +46,21 @@ describe("P5.27 saved Vault handoff", () => {
     idea.progressionBlocks = [];
     expect(result.handoff.snapshots["source-midi"]?.events[0]?.voicing?.midiNotes)
       .toEqual([48, 55, 59]);
+  });
+
+  it("deduplicates real detached MIDI only until any effective correction differs", () => {
+    const block = progression([event(1, 1, 2, 0, "source-midi"), event(1, 3, 2, 7, "source-midi")]);
+    const idea = makeIdea({ id: "public-source", progressionBlocks: [block] });
+    const read = () => buildProgressionVoicingPracticeHandoffFromVault([idea], { ideaId: idea.id, blockId: block.id });
+    const original = read();
+    expect(original.ok && savedDuplicatesSource(original.handoff.snapshots)).toBe(true);
+    const last = block.chords[1]!;
+    last.voicingMemory = { ...last.voicingMemory, playbackChoice: "CUSTOM", practiceVoicingOverride: {
+      ...last.voicingMemory!.sourceVoicing!, source: "manual", midiNotes: [43, 50, 54],
+    } };
+    const corrected = read();
+    expect(corrected.ok && savedDuplicatesSource(corrected.handoff.snapshots)).toBe(false);
+    expect(last.voicingMemory.playbackChoice).toBe("CUSTOM");
   });
 
   it("prefers complete Custom, but never treats a partial MY source as complete", () => {

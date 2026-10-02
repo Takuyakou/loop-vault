@@ -31,8 +31,8 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     const movement = panel.getByTestId("voicing-loop-next-move");
     await expect(movement).toBeVisible();
     const movementBox = (await movement.boundingBox())!;
-    expect(movementBox.height).toBeGreaterThanOrEqual(45);
-    expect(movementBox.height).toBeLessThanOrEqual(55);
+    expect(movementBox.height).toBeGreaterThanOrEqual(68);
+    expect(movementBox.height).toBeLessThanOrEqual(69);
     const slots = movement.getByTestId("voicing-loop-finger-slot");
     await expect(slots).toHaveCount(10);
     const boxes = await slots.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));

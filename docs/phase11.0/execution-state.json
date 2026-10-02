@@ -12,13 +12,15 @@
     "P11.0-05",
     "P11.0-06",
     "P11.0-07",
-    "P11.0-08"
+    "P11.0-08",
+    "P11.0-09",
+    "P11.0-10"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "73507e8726b6090732ba796f87e7287ba70be4a7",
-  "lastVerifiedCommit": "52159ae626e56f79c420b194a4c15ca0e4d81117",
-  "currentBranch": "master",
+  "baseCommit": "8b6480b4c811f36b4d15ff619a980f1f93c594ea",
+  "lastVerifiedCommit": "b0fe80769ed907f420d5da244df34e0f0c7dd13d",
+  "currentBranch": "fix/phase11-acceptance-layout-source-hands",
   "requiredGates": {
     "P11.0-00": [
       "p11-00-audit",
@@ -75,6 +77,20 @@
       "p11-08-full",
       "p11-08-exe",
       "p11-08-docs"
+    ],
+    "P11.0-09": [
+      "p11-09-focused",
+      "p11-09-ui",
+      "p11-09-full",
+      "p11-09-exe",
+      "p11-09-docs"
+    ],
+    "P11.0-10": [
+      "p11-10-focused",
+      "p11-10-ui",
+      "p11-10-full",
+      "p11-10-exe",
+      "p11-10-docs"
     ]
   },
   "gateResults": {
@@ -115,8 +131,18 @@
     "p11-08-ui": "pass",
     "p11-08-full": "pass",
     "p11-08-exe": "pass",
-    "p11-08-docs": "pass"
+    "p11-08-docs": "pass",
+    "p11-09-focused": "pass",
+    "p11-09-ui": "pass",
+    "p11-09-full": "pass",
+    "p11-09-exe": "pass",
+    "p11-09-docs": "pass",
+    "p11-10-focused": "pass",
+    "p11-10-ui": "pass",
+    "p11-10-full": "pass",
+    "p11-10-exe": "pass",
+    "p11-10-docs": "pass"
   },
-  "nextAction": "LOCAL MASTER MERGED at 52159ae6 by explicit human authorization; fresh FULL 3670 Vitest / 177 Playwright PASS. Await Human Product Acceptance; no next phase/push/tag/release.",
-  "updatedAt": "2026-10-01"
+  "nextAction": "P11-10 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE: final fresh FULL 3694 Vitest / 189 Playwright PASS at b0fe8076; raw Windows EXE built. Stop; no master merge/push/tag/release.",
+  "updatedAt": "2026-10-02"
 }

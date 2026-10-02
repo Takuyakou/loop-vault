@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 4ce81e7ca30fa0b8213f7656a0404ec0a899991a
-- date: 2026-09-29
+- commit: b0fe80769ed907f420d5da244df34e0f0c7dd13d
+- date: 2026-10-02
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -201,3 +201,15 @@ Product-level invariants to never break without explicit authorization:
 
 Do not preload all phase docs. Use the standing local merge and EXE
 authorization in root `AGENTS.md`; never push automatically.
+
+## P11-09 acceptance candidate complete
+
+Branch `fix/phase11-acceptance-layout-source-hands`, based on local master `8b6480b4`. Scope: current-panel/root geometry, complete exact Saved/Source deduplication, Saved fixed hand assignment and generated-type menu. No master merge/push/tag/release. [Current evidence](../phase11.0/reports/P11-09-acceptance-layout-source-hands.md). P11-00–08 integration above remains historical. Native WebView selector symptom was not reproduced in Chromium; distinguish that limitation from measured fixes.
+
+P11-09 final tested code / EXE HEAD `53682f69`: fresh FULL 3,687 Vitest / 186 Playwright PASS, 0 FAIL / 0 UNRUN, cache unused. Detail-shape → primary-type focus regression was isolated and fixed before this final verification. Result follow-up is documentation-only; local master remains `8b6480b4`. Stop for Human Product Acceptance, no merge/push/tag/release.
+
+## P11-10 current acceptance candidate
+
+Same branch/worktree as P11-09. Unavailable 0/N Source controls are native disabled with on-demand title/accessibility reasons; the old availability info banner is removed. Stale unavailable Source preferences recover through existing complete-source priority, partial AUTO fallback stays unchanged. Generated type/details remain visible but disabled for fixed Saved/Source/Custom. Source changes close details and returning Generated preserves the session's prior family, Basic/Core, left-hand variant, Color/Open.
+
+Final tested code / EXE HEAD `b0fe80769ed907f420d5da244df34e0f0c7dd13d`: fresh FULL 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. First failed FULL and bounded isolation are recorded in [P11-10 report](../phase11.0/reports/P11-10-source-availability-generated-controls.md). Result follow-up is documentation-only. No master merge/push/tag/release; local master remains `8b6480b4`. Stop for Human Product Acceptance.

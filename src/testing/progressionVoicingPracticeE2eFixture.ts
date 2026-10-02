@@ -69,6 +69,36 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "long-256") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 256, 4, 120));
   }
+  if (status === "p11-saved" || status === "p11-identical" || status === "p11-one-hand") {
+    const source = p533Snapshot("source-midi", true);
+    const notes = status === "p11-one-hand" ? [60, 64, 67] : [48, 67, 70, 74, 75];
+    const fixedChord = parseChordLabel(status === "p11-one-hand" ? "C" : "Cm9")!;
+    const events = source.events.map(event => ({ ...event, chord: fixedChord, playbackChoice: "SOURCE" as const,
+      voicing: { kind: "source-midi" as const, midiNotes: notes, ...(status === "p11-one-hand" ? {} : { bassNote: 48 }) } }));
+    const original = { ...source, key: status === "p11-one-hand" ? "C major" : "C minor", events };
+    const saved = { ...original, selection: "saved" as const, events: events.map((event, i) => ({ ...event,
+      voicing: { ...event.voicing, kind: "saved" as const, savedSource: "source-midi" as const,
+        midiNotes: status === "p11-saved" && i === events.length - 1 ? [...notes.slice(0, -1), 76] : notes } })) };
+    return { snapshots: { "source-midi": original, saved,
+      custom: { ...original, selection: "custom", events: events.map(event => ({ ...event, voicing: { ...event.voicing, kind: "custom" } })) },
+      "basic-full": p533Snapshot("basic-full", false) }, initialSelection: "saved" };
+  }
+  if (status === "p11-source-empty" || status === "p11-source-partial" || status === "p11-source-settings") {
+    const generated = p533Snapshot("basic-full", false);
+    const original = p533Snapshot("source-midi", true);
+    if (status === "p11-source-empty") return { snapshots: { "basic-full": generated }, initialSelection: "source-midi" };
+    if (status === "p11-source-partial") return { snapshots: {
+      "source-midi": { ...original, events: original.events.map((event, i) => i === 0 ? event : { ...event, voicing: undefined }) },
+      "basic-full": generated,
+    }, initialSelection: "source-midi" };
+    return { snapshots: {
+      "source-midi": original, custom: p533Snapshot("custom", true), "basic-full": generated,
+      saved: { ...original, selection: "saved", events: original.events.map(event => ({ ...event,
+        voicing: { kind: "saved", savedSource: "custom", midiNotes: [48, 52, 55] } })) },
+      ...Object.fromEntries((["basic-shell", "rootless-shell", "full-shell", "left-hand"] as const)
+        .map(selection => [selection, { ...generated, selection }])),
+    }, initialSelection: "basic-full" };
+  }
   if (status === "p533-rules") {
     return {
       snapshots: {
