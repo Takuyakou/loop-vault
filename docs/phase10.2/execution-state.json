@@ -15,6 +15,8 @@
       "p10.2-01-playback",
       "p10.2-01-select-range",
       "p10.2-01-bar-tempo",
+      "p10.2-01-addendum-1",
+      "p10.2-01-addendum-2",
       "p10.2-01-fast-feature",
       "p10.2-01-ui",
       "p10.2-01-data-retention",
@@ -31,6 +33,6 @@
     "p10.2-01-bar-tempo": "pass",
     "p10.2-01-fast-feature": "pass"
   },
-  "nextAction": "P10.2-01: 区切り1〜3 済み。区切り4（スクリーンショット・UI・データ保持・fresh FULL・EXE・報告）へ。",
+  "nextAction": "P10.2-01: 区切り1〜3 済み。追加 1（区切り3.5）→ 追加 2（区切り3.6）→ 区切り4。",
   "updatedAt": "2026-10-02"
 }
