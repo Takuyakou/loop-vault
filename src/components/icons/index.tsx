@@ -44,6 +44,8 @@ export const VoicingLoopIcon = createIcon("VoicingLoopIcon", p("M7 7.5h9.5a3.5 3
 export const BassPracticeIcon = createIcon("BassPracticeIcon", p("M5 18.5l9-9M14 9.5l2.5-2.5a1.8 1.8 0 012.5 2.5L16.5 12M6.5 20L4 17.5M9.5 5v4M12.5 3.5v4M19 13.5h-4"));
 export const LiveMidiIcon = createIcon("LiveMidiIcon", p("M3 6.5h18v11H3zM7.5 6.5v6.5M12 6.5v6.5M16.5 6.5v6.5"));
 export const HistoryIcon = createIcon("HistoryIcon", p("M4.5 12a7.5 7.5 0 102.2-5.3L4.5 9M4.5 4.5V9H9M12 8v4.2l2.8 1.8"));
+/** P10.3 §2: a gear for a screen's own settings menu (the sidebar's 設定 keeps SettingsIcon). */
+export const GearIcon = createIcon("GearIcon", <>{p("M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z")}<circle cx="12" cy="12" r="3" /></>);
 export const SettingsIcon = createIcon("SettingsIcon", <>{p("M4 7h10M18 7h2M4 17h4M12 17h8")}<circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></>);
 
 // Header
@@ -79,7 +81,7 @@ export const ChevronDownIcon = createIcon("ChevronDownIcon", p("M6 9.5l6 6 6-6")
 export const iconCatalog: ReadonlyArray<readonly [string, IconComponent]> = [
   ["ホーム", HomeIcon], ["取り込む", ImportIcon], ["Vault", VaultIcon], ["練習", PracticeIcon],
   ["Chord Dojo", ChordDojoIcon], ["Voicing Loop", VoicingLoopIcon], ["Bass Practice", BassPracticeIcon],
-  ["Live MIDI", LiveMidiIcon], ["履歴", HistoryIcon], ["設定", SettingsIcon], ["検索", SearchIcon], ["MIDI", MidiIcon],
+  ["Live MIDI", LiveMidiIcon], ["履歴", HistoryIcon], ["設定", SettingsIcon], ["この画面の設定", GearIcon], ["検索", SearchIcon], ["MIDI", MidiIcon],
   ["試聴音色", ToneIcon], ["メトロノーム", MetronomeIcon], ["音量", VolumeIcon], ["最小化", MinimizeIcon],
   ["最大化", MaximizeIcon], ["元に戻す（ウィンドウ）", RestoreIcon], ["閉じる", CloseIcon],
   ["成功", SuccessIcon], ["お知らせ", InfoIcon], ["注意", WarningIcon], ["エラー", ErrorIcon],

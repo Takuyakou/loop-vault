@@ -70,7 +70,7 @@ test("P10.0-06 recommended ranges, Shift+click and adding to an existing idea", 
   await saveNewIdea(page, "おすすめの範囲から");
 
   // Shift+click: from the selected card to the third one, in whole bars.
-  await saveForm(page).getByRole("button", { name: "範囲を外す" }).click();
+  await workspace(page).getByTestId("correction-range-chip-clear").click(); // P10.3 §3: 範囲を外す is the chip's ×
   const cards = workspace(page).getByTestId("correction-card");
   await cards.nth(0).click();
   await cards.nth(2).click({ modifiers: ["Shift"] });
@@ -132,15 +132,16 @@ test("P10.2 addendum 2: with no range chosen 「曲全体を保存」 saves the 
   const range = saveForm(page).getByTestId("correction-save-range");
   await expect(range).toHaveText("曲全体（1〜8小節）");
   await expect(saveForm(page)).not.toContainText("まだ選んでいません");
-  await expect(saveForm(page).getByRole("button", { name: "範囲を外す" })).toBeDisabled();
+  await expect(saveForm(page).getByRole("button", { name: "範囲を外す" })).toHaveCount(0); // P10.3 §3: on the chip, only with a range
+  await expect(workspace(page).getByTestId("correction-range-chip")).toHaveCount(0);
   const whole = saveForm(page).getByRole("button", { name: /曲全体を保存/ });
 
-  // A range: the range save; 範囲を外す: the whole song again.
+  // A range: the range save; the chip's ×: the whole song again.
   await workspace(page).getByTestId("correction-card").nth(1).click({ button: "right" });
   await workspace(page).getByTestId("correction-card").nth(2).click({ button: "right" });
   await expect(range).toContainText("2〜3小節・2枚");
   await expect(saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true })).toBeVisible();
-  await saveForm(page).getByRole("button", { name: "範囲を外す" }).click();
+  await workspace(page).getByTestId("correction-range-chip-clear").click();
   await expect(whole).toBeVisible();
 
   await whole.click();

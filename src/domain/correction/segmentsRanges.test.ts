@@ -4,7 +4,7 @@ import { buildCorrectionModel, type CorrectionCard, type CorrectionModel, type C
 import { addNote, setTempo } from "./edits";
 import { buildMetricsRecord } from "./metrics";
 import { commitEdit, editCount, editKindCounts, savedContentDiffers, startHistory, undo } from "./history";
-import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption } from "./rangePick";
+import { cardForBar, cardsBarRange, pickRangeCard, rangeCaption, rangeChipText } from "./rangePick";
 import { reviewThresholds } from "./reviewThresholds";
 import { moveSegmentEdge } from "./segmentEdits";
 
@@ -127,5 +127,13 @@ describe("the words on the range frames (P10.2 addendum 1 §1.2)", () => {
     expect(rangeCaption({ startBar: 25, endBar: 28 }, 4)).toBe("保存する範囲 25〜28小節・4コード");
     expect(rangeCaption({ startBar: 25, endBar: 25 }, 1)).toBe("保存する範囲 25小節・1コード");
     expect(rangeCaption({ startBar: 18, endBar: 21 }, 4, true)).toBe("18〜21小節・4コード（右クリックで決める）");
+  });
+});
+
+describe("the range chip in the control bar (P10.3 §3)", () => {
+  it("says the bars and the chords, and only the bars when narrow", () => {
+    expect(rangeChipText({ startBar: 6, endBar: 7 }, 2)).toBe("保存する範囲 6〜7小節・2コード");
+    expect(rangeChipText({ startBar: 9, endBar: 9 }, 1)).toBe("保存する範囲 9小節・1コード");
+    expect(rangeChipText({ startBar: 6, endBar: 7 }, 2, true)).toBe("6〜7小節");
   });
 });
