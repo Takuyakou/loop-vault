@@ -1,6 +1,6 @@
 # Loop Vault v2.0.0
 
-Release preparation date: 2026-10-03 (Asia/Tokyo). Status: candidate, not yet published.
+Version: 2.0.0. Build verification date: 2026-10-03 (Asia/Tokyo).
 
 ## MIDI / Text / Correction Workspace
 
@@ -36,3 +36,5 @@ The release lockfiles include narrow brace-expansion and rustls/rustls-webpki se
 ## Windows distribution
 
 A direct executable, NSIS setup and MSI installer follow the existing release convention. WebView2 Runtime is required. Built assets/checksums are listed in [release-assets](release-assets.md). User Vault/private recordings and local evaluation data are not included.
+
+Release page: [Loop Vault v2.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0).

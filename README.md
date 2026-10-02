@@ -8,14 +8,14 @@
 
 ## Download
 
-**Release target: v2.0.0（公開準備中）**
+**Version: v2.0.0**
 
 Loop Vault は Windows に対応しています。インストーラーは、一般的なセットアップ形式の
 **NSIS** と、Windows Installer 形式の **MSI** を用意しています。
 
-[公開済みの最新版をダウンロード](https://github.com/Takuyakou/loop-vault/releases/latest) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
+[v2.0.0をダウンロード](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
 
-配布時にはインストーラーに加え、インストールせず起動できる `loop-vault.exe` を用意します。Windows WebView2 Runtime が必要です。v2.0.0 は検証後に公開予定です。
+[起動用EXE（インストール不要）](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/loop-vault.exe)も用意しています。Windows WebView2 Runtime が必要です。ダウンロードしたファイルは配布ページの `SHA256SUMS` で確認できます。
 
 ## Loop Vault とは
 

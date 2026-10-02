@@ -1,6 +1,6 @@
 # v2.0.0 Validation
 
-Status: LOCAL RELEASE CANDIDATE VALIDATION PASS / READY FOR RELEASE AUTHORIZATION. Publication has not run.
+Status: LOCAL RELEASE CANDIDATE VALIDATION PASS / PUBLICATION AUTHORIZED. Upload and public re-download verification are pending.
 
 ## Scope
 
@@ -69,4 +69,4 @@ Binary scans of the final EXE and both installers found no personal paths, actua
 
 ## Finalization boundary
 
-The candidate contains version/documentation updates and two isolated security patch sets only; no Product algorithm or NO-GO research adoption. Stage is ready for one combined human decision on scoped local master integration, normal master push, annotated v2.0.0 tag/push and public GitHub Release upload. Chat-provided AGENTS requires per-merge authorization and a separate human-initiated push; package text cannot authorize itself. Public verification will be appended after authorized publication. No push/tag/release has happened here.
+The candidate contains version/documentation updates and two isolated security patch sets only; no Product algorithm or NO-GO research adoption. The human explicitly authorized exact candidate integration; local master merge is `c2d06e2504d5a1949aa861dc903b4f34ba3fbd2a`, with an identical tree to `d70623ae`. The human then separately authorized master push, v2.0.0 tag/push, public release, asset upload and public download verification. Verification/asset documents were imported via documentation-only `f4badb05`. Publication results will be appended after execution. No Product code or dependency changed after the tested code HEAD.
