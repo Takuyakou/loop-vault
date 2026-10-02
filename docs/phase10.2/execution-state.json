@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "94dae5b6",
-  "lastVerifiedCommit": "87c121f5",
+  "lastVerifiedCommit": "75f97418",
   "currentBranch": "feat/p10.2-workspace-polish",
   "requiredGates": {
     "P10.2-01": [
@@ -25,8 +25,9 @@
     ]
   },
   "gateResults": {
-    "p10.2-01-phase-docs": "pass"
+    "p10.2-01-phase-docs": "pass",
+    "p10.2-01-playback": "pass"
   },
-  "nextAction": "P10.2-01: 手順0 済み。区切り1（再生）へ。",
+  "nextAction": "P10.2-01: 区切り1 済み。区切り2（選ぶ・範囲・区切り）へ。",
   "updatedAt": "2026-10-02"
 }
