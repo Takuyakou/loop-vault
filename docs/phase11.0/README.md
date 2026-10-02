@@ -4,14 +4,18 @@
 
 ## Status
 
-Latest P11-11 candidate: tested code HEAD `d7d10838`, fresh FULL 3,717 Vitest / 191 Playwright PASS, raw Windows EXE built. See [P11-11 report](reports/P11-11-generated-bass-audio-fingering.md). Human listening remains; no master merge.
+P11-11 implementation verification: tested code HEAD `d7d10838`, fresh FULL 3,717 Vitest / 191 Playwright PASS, raw Windows EXE built. See [P11-11 report](reports/P11-11-generated-bass-audio-fingering.md). Human listening remains; candidate-only/no-merge notes are historical after the authorized integration below.
 
-- Status: completed / P11-11 READY_FOR_HUMAN_PRODUCT_ACCEPTANCE (candidate only); P11-00–10 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
+- Status: completed / P11-00–11 integrated into local master; P11-00–08 previously integrated into local master; P11-08 follow-up complete; P11-07 fixes retained; HUMAN_GATE_AFTER_P11_01 approved by the user.
 - Completed stages: P11.0-00 through P11.0-11; verified commits/gates in execution-state.json.
 - Phase starting base: local master 73507e87. P11-09 acceptance base: 8b6480b4. Phase 10 finish is an ancestor.
 - Historical P11-06 tested HEAD: `266b24a2`; fresh FULL 3,657 Vitest / 168 Playwright PASS, raw Windows EXE built. See [final report](reports/P11-06-final.md). Historical P11-06 verification. P11-07 final tested HEAD: `2377448a`; fresh FULL 3,668 Vitest / 174 Playwright PASS, updated runnable EXE. Stop for Human Product Acceptance; no master merge.
 
-## Current integration (P11-09/10)
+## Current integration (P11-11)
+
+Human-authorized merge `f86846bc`: candidate tree matches exactly; fresh post-merge focused 293/293 PASS, phase-doc / AI-handoff / privacy / diff PASS. [Integration report](reports/P11-11-master-merge.md). The earlier full verification remains tied to tested code HEAD `d7d10838`; FULL was not rerun on the merge HEAD. No push/tag/release.
+
+## Previous integration (P11-09/10)
 
 Human-authorized merge / fresh-tested HEAD `f7768617`: 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, cache unused. [Integration report](reports/P11-09-10-master-merge.md). P11-09/10 candidate stop-before-merge notes below are historical. No push/tag/release or new stage.
 
