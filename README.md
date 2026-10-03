@@ -1,232 +1,246 @@
 # Loop Vault
 
-**コード進行を集め、整え、鳴らし、練習と制作へつなぐ Windows デスクトップアプリ**
+MIDIやコード進行を取り込み、コードとボイシングを修正・保存し、そのまま鍵盤練習へつなげるWindowsアプリです。
+ボイシングとは、コードを実際にどの音・高さ・並びで鳴らすか、ということです。
+
+- MIDIからコード進行と、その区間で鳴っている音を取り込む
+- 修正作業場で、解析結果の音・コード名・区切りを直す
+- 気に入った進行をVaultへ保存し、検索・整理する
+- 保存した音・元MIDI・カスタム・自動生成を切り替えて試聴する
+- Voicing Loopで鍵盤・運指・次への動きを見ながら反復練習する
+
+**Windows版 v2.0.0： [ダウンロード・日本語リリースノート](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0)**
 
 [日本語](README.md) | [English](README.en.md)
 
-![Loop Vault](docs/images/hero.png)
+![Voicing Loop：現在と次のコード、左右の運指、進行タイムライン、88鍵盤](docs/images/v2-voicing-loop.png)
 
-## Download
+*画像はv2.0.0の画面です。自作の合成MIDIを使っており、個人のVaultやMIDIは含みません。*
 
-**Version: v2.0.0**
+## Loop Vaultとは
 
-Loop Vault は Windows に対応しています。インストーラーは、一般的なセットアップ形式の
-**NSIS** と、Windows Installer 形式の **MSI** を用意しています。
+「残したい音を選ぶ」「進行として保存する」「繰り返し弾く」までをつなぐアプリです。
+曲の一部分を練習用に集めたいときや、自分のボイシングを保存して弾き方を確認したいときに使えます。
+MIDIがなくても、コード名をテキスト入力して進行を作れます。
 
-[v2.0.0をダウンロード](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
-
-[起動用EXE（インストール不要）](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/loop-vault.exe)も用意しています。Windows WebView2 Runtime が必要です。ダウンロードしたファイルは配布ページの `SHA256SUMS` で確認できます。
-
-## Loop Vault とは
-
-Loop Vault は、コード進行を「見つける」だけでなく、その後の編集・試聴・練習・制作までを
-ひとつにつなぐアプリです。
-
-- **MIDI から解析する** — 1つまたは複数の MIDI ファイルを読み込み、曲の中からコード進行候補を抽出します。
-- **コードネームから作る** — MIDI がなくても、コードネームを直接入力して小節単位の進行を作れます。
-- **保存して活用する** — Vault に集めた進行を編集・試聴し、練習や MIDI 書き出し、DAW へのドラッグ＆ドロップにつなげます。
-
-解析や編集は元の MIDI ファイルを変更しません。Vault、設定、練習履歴などのデータは
-ローカルに保存され、外部へ自動送信されません。AI 展開案の画面は現在提供していません。以前保存した API キーは設定画面から削除できます。
-
-## 主な機能
-
-### MIDI Capture & Analysis
-
-- 1つまたは複数の MIDI ファイルをまとめて読み込み、拍・小節・コード候補を解析
-- 解析前に各 Voice を bass / harmony / pad / melody / percussion / mixed などへ分類し、
-  信頼度を「高・中・低」と要確認表示で確認・修正
-- 標準、自動、カスタムなどの解析プリセットと、伴奏の和声を優先する **和声コア**
-- 同じ Voice に和音とメロディが混在する場合、melody-like な音のコード検出への寄与を抑える処理
-- 解析結果をカード、ピアノロール、タイムラインで確認し、修正作業場で区間の分割・結合、コードや音の修正を行う
-
-#### 和声コア
-
-和声コアは、メロディを含む MIDI で**伴奏の和声を優先して解析するための、任意で選ぶモード**です。
-メロディらしい音のコード検出への寄与を弱めますが、元 MIDI から音を削除したり、ファイルを
-書き換えたりはしません。既定の標準解析を置き換えるものでもなく、必要な素材で選択して使えます。
-
-### Text Progression Entry
-
-MIDI ファイルがなくても、Capture の「テキスト」からコード進行を登録できます。
+## 基本ワークフロー
 
 ```text
-| Dm7 G7 | Cmaj7 | Am7 |
+MIDI / テキストのコード進行を取り込む
+        ↓
+MIDIを解析 / テキストの記法を確認して試聴
+        ↓
+必要なら音・コード名・区切りを修正
+        ↓
+保存する範囲を選び、Vaultへ保存
+        ↓
+保存した進行を開く
+        ↓
+Voicing Loopで試聴・反復練習
 ```
 
-- 標準 / 拡張のテキスト入力を用意し、小節区切りとコードネームを解析、診断を表示
-- Key と BPM を設定し、自動生成ボイシングのスタイルを選んで試聴
-- MIDI 鍵盤から弾いたボイシングを、選択中のコードへ明示的に保存予定として記録
-- MIDI / Text 共通の Capture と修正作業場から、試聴・Vault 保存へ接続
+はじめて使う場合は、サイドバーの「取り込む」からMIDIを読み込み、解析後に「Vaultに保存」を選んでください。
+Voicing LoopではVaultの進行を選び、音の出どころを確認して「開始」を押します。
 
-### Progression Detail & Vault
+## MIDI Import & Correction Workspace
 
-- コード進行、Key、BPM、セクション、タイトル、ステータスを編集・管理
-- コードごとの **Voicing Memory** で元 MIDI、自動生成、鍵盤で記録したボイシングを活用
-- 進行全体またはコード単位で試聴し、音色やテンポを調整
-- MIDI ファイルとして書き出し、対応 DAW へネイティブドラッグ＆ドロップ
-- タイトル、Key、コード、タグ、ステータスなどで Vault を検索・整理
+### MIDIを取り込む
 
-### Chord Dojo
+「取り込む」のMIDI画面でファイルを選ぶか、ドラッグ＆ドロップします。複数ファイルの取り込みにも対応しています。
+解析前に、どのパートを対象にするか、ベース・和音・メロディなどの役割を確認・変更できます。
+解析すると、コードカードとピアノロール、おすすめの保存範囲が表示されます。
 
-保存したコード進行を MIDI 鍵盤で段階的に練習できます。
+コード名だけでなく、元MIDIから抽出した音の高さや配置も保存・再生に利用します。
+スラッシュコードのベース音も扱いますが、音が密集した曲や複雑な和声では確認・修正が必要になる場合があります。
 
-- L1「見て弾く」から、コードネーム、度数、近いキー、任意キーへ進む5段階
-- 1コードずつ確認する Step と、進行を止めずに弾く Flow
-- 元のボイシング、自動、Shell、Open、Rootless などを使ったボイシング練習
-- 2〜5個の進行を組み合わせる Mix 練習、BPM・判定の厳しさ・周回数の調整
-- 練習段位と進捗を Vault に保存
+### 解析結果を修正する
 
-### Bass Practice
+修正作業場（Correction Workspace）では、音を聴きながら、残したい進行に整えられます。
 
-ベースで「聴く・歌う・考える・弾く・振り返る」を繰り返すための練習ワークスペースです。
+- **音を直す**：不要な音を除外し、除外した音を戻す。音の追加や高さの変更も可能
+- **コードを直す**：コード名や候補を確認・変更する
+- **区切りを直す**：コードの分割・結合や境界の調整を行う
+- **聴き比べる**：元の音と修正後の音を比較し、変更を元に戻す・やり直す
+- **保存する**：範囲を指定し、その範囲のコード進行とボイシングをVaultへ保存する
 
-- **Degree Echo** — 短いフレーズを聴き、歌い、度数で捉えてからベースで再現
-- **Rhythm Echo** — リズムを聴いて思い出し、歌ってから演奏
-- **Bassline Echo** — コード進行とベースラインを聴き、再現。内蔵プリセットまたは Vault の進行を利用
-- **Root Motion Echo** — コードのルート移動を2〜8音で聴き取り、指板上で再現・移調
-- Chord Context、4弦 / 5弦、右利き / 左利き表示、フレット範囲などの演奏条件
-- **Record & Compare** で自分の演奏を録音し、お手本や過去テイクと聴き比べ
-- Practice History で練習結果と履歴を振り返り
+編集はアプリ内の解析結果に対して行い、読み込んだ元MIDIファイルを書き換えません。
 
-### Voicing Loop
+![修正作業場：コードカード、ピアノロール、おすすめの範囲とVaultへの保存](docs/images/v2-correction-workspace.png)
 
-- 現在 / 次のコード、タイムライン、88鍵の鍵盤、Transport をまとめた練習画面
-- **保存した音 / 元MIDI / カスタム / 自動生成**を区別。Source が0件の選択肢は無効化し、部分利用可能な場合は件数を表示
-- 自動生成の基本 / 骨組みと、形・左手・Color・Open の詳しい設定
-- 右クリックまたはキーボードでコード単位の A–B 区間を指定する session-only Range Loop
-- おすすめ運指、保存した個人運指の固定、次への動き。元の音と左右手配分は運指の選択で変更しない
+## Vault
 
-### 制約
+Vaultは、取り込んだ進行や手入力した進行を集めておく場所です。
 
-MIDI の解析結果には修正が必要な場合があります。Core v2 の未採用研究を本番の解析器へ切り替えていません。
-Voicing Loop の推奨運指は相対的な計算指標であり、手サイズや身体的な弾きやすさを保証しません。
-Text 入力は元MIDIを持たないため、元MIDI Voicing を作りません。固定の対応拍子で練習できますが、拍子・tempo の変化や未対応データでは利用制限を表示します。Vault v2 は維持し、練習に使えない正常なrecordも保存から削除しません。
+- コード進行、各コードの音、区間のタイミングを保存
+- タイトル、キー、BPM、タグ、メモ、取り込み元の情報を管理
+- コード名・度数による検索や、キー・長さ・取り込み元・タグで絞り込み
+- お気に入り、試聴、複製、進行の詳細表示
 
-### データ管理と言語
+進行の詳細画面では、コードやボイシングを編集し、Voicing Loopへ進めます。
+対応する進行はMIDIとして書き出し、DAWへドラッグ＆ドロップして制作に使えます。
 
-- Vault と練習データの保存、バックアップ、復旧
-- 日本語 / 英語 UI
-- 評価用 MIDI、録音、個人データをリポジトリへ含めない運用
+![Vault：保存した進行のカードと検索・絞り込み](docs/images/v2-vault.png)
 
-## Screenshots
+## Voicing Loop
 
-以下は匿名の固定データを使った v1.1.0 時点の production UI です。v2.0.0 の修正作業場・Voicing Loop は更新されています。
+保存した進行を、コードごとの音と弾き方を見ながら繰り返し練習する画面です。
+現在のコードを大きく表示し、次のコード・その次のコード、進行タイムライン、88鍵の鍵盤を同時に確認できます。
 
-| MIDI Capture / 和声コア | Text Progression Entry |
+### 音の出どころ（Voicing Source）
+
+| 選択肢 | どの音を鳴らすか |
 | --- | --- |
-| ![Capture with Harmonic Core](docs/images/capture.png) | ![Text Progression Entry](docs/images/text-progression.png) |
+| 保存した音 | Vaultでそのコードの再生用に選ばれている保存済みの音。修正した音や、保存時に確定したテキストの試聴音も含みます |
+| 元MIDI | 取り込んだMIDIからコードごとに保存された音。修正作業場で除外した音は保存対象から外れます |
+| カスタム | 鍵盤で登録した音や、音の追加・高さの変更によって保存した手動ボイシング |
+| 自動生成 | コード名をもとに、練習用のボイシングを生成した音 |
 
-| Vault | Progression Detail |
-| --- | --- |
-| ![Vault](docs/images/vault.png) | ![Progression Detail](docs/images/progression-detail.png) |
+音が保存されていない選択肢は無効になります。一部だけ利用できる場合は「12/16」のように件数を表示し、
+不足するカードだけ自動生成で補完して印を表示します。保存されているカードの音を、この補完のために再生成することはありません。
+「保存した音」が全カードで「元MIDI」と同じ場合は、重複するボタンをまとめて表示します。
 
-![Bass Practice — Root Motion Echo](docs/images/bass-practice.png)
+テキストから作った進行には元MIDIがありません。利用できる保存した音・カスタム・自動生成を選んでください。
 
-## v2.0.0 highlights
+### 生成・表示・運指
 
-- MIDI / Text 共通の修正作業場、区間編集、保存・再生の操作を整理
-- 拡張Text入力、source-first再生、tempo event のないSMFの120 BPM既定を改善
-- Voicing Loop のタイムライン統合レイアウト、4つのSource、A–B区間ループ、運指と次への動きを更新
-- Vault v2、保存済みの明示的な音、元MIDIのsource timingを維持
-- 再生再開・初回発音・レスポンシブ・アクセシビリティ・テストrunnerを改善
+- **基本 / 骨組み**：自動生成の主要な2種類。詳しい設定では形・左手・Color・Openを調整
+- **固定音の保護**：保存した音・元MIDI・カスタムを選んだときは、生成タイプと詳しい設定を無効化
+- **覚える / 思い出す**：音を見ながら確認する表示と、思い出しながら弾く表示を切り替え
+- **おすすめ運指**：左右の指・音名・構成音を表示。個人の運指を保存し、固定して使うことも可能
+- **次への動き**：現在から次のコードへ向かう指と音の動きを確認
 
-詳細と既知の制約は [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md) を参照してください。SemVer は2.0.0ですが、Vault fileVersionは2のままです。
+詳細形で生成できないコードは「基本 / 骨組み」で代替し、そのことを表示します。
+代替でも生成できない場合は、利用不能の理由を表示します。
 
-## 技術スタック
+### 再生と区間ループ
 
-| 領域 | 採用技術 |
-| --- | --- |
-| デスクトップ基盤 | Tauri v2（Rust バックエンド + WebView フロント） |
-| フロントエンド | React 18 / TypeScript |
-| ビルド | Vite 7 |
-| 状態管理 | Zustand 5 |
-| スキーマ / バリデーション | Zod 3 |
-| 音声 / MIDI 再生 | Tone.js 15 |
-| ネイティブ機能 | OS キーチェーン、練習データ永続化、MIDI 書き出し、DAW へのネイティブドラッグ |
-| テスト / QA | Vitest / Playwright / axe-core / Rust tests |
+BPM、キー、オクターブ、カウントインを設定し、開始・一時停止・停止・最初からの操作ができます。
+「現在のコードを試聴」やカードの▶で、1コードだけを聴くこともできます。
 
-## Architecture / Accuracy Evaluation
+タイムラインのカードや帯を右クリックしてA・Bを指定すると、コード単位の区間ループになります。
+Shift＋右クリックでは1コードだけを指定できます。「区間解除」で全体のループへ戻ります。
+区間指定はその練習中だけ有効で、保存した進行自体は変更しません。
 
-React フロントエンドと Tauri（Rust）のネイティブコマンドを境界で分離しています。
-音楽理論・MIDI 解析・練習などの中核ロジックは UI から独立した純粋関数として
-`src/domain/` と各 feature の domain 層に置き、単体テストと統合テストで検証しています。
+入力欄などを操作していないときは、Spaceで再生・一時停止を切り替えられます。
+MIDI鍵盤を接続すると、押している鍵盤を画面で確認できます。
+
+### その他の練習
+
+- **Chord Dojo**：保存した進行を使い、コード名や度数などを段階的に練習
+- **Bass Practice**：度数・リズム・ベースライン・ルート移動を聴いて再現し、録音を聴き比べる練習
+- **Live MIDI**：接続したMIDI鍵盤の入力とコード候補・履歴を確認する専用画面
+
+## 対応入力
+
+- **Standard MIDI File（.mid / .midi）**：音符・テンポ・拍子などを読み込んで解析
+- **コード進行のテキスト**：「標準 / 拡張」を選び、プレビューと診断を確認して保存
+
+標準テキストでは、たとえば次のように小節線とコード名で入力できます。
 
 ```text
-src/
-├─ domain/           音楽理論・MIDI解析・進行編集・Chord Dojo
-├─ features/
-│  └─ bass-practice/ Bass Practice の application / domain / infra / ui
-├─ views/            Capture / Vault / Practice / Detail / History
-├─ llm/              Progression Advisor の Tauri bridge
-└─ i18n.ts           日本語 / 英語
-
-src-tauri/
-└─ src/              キーチェーン、データ保存、MIDI export、native drag
+| Dm7 G7 | Cmaj7 | Am7 | F G |
 ```
 
-現在の MIDI 解析仕様は
-[`docs/current-midi-detection-spec.md`](docs/current-midi-detection-spec.md)、アプリ全体の技術メモは
-[`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md) にあります。
+標準は4/4拍子で、1小節に1・2・4セルを配置します。`%`は前のコードを再発音、`_`は休符、`=`は再発音せず保持です。
+拡張では対応する拍子や細かな区切りを扱えます。入力を一意に読めない場合や、対応外の構造は画面の診断で確認してください。
 
-精度改善は感覚ではなく、固定コーパス、アブレーション、失敗分類、決定性確認で評価します。
-新しい検出アイデアはまず product に接続しない shadow として測り、事前に固定した閾値を通過した
-ものだけを昇格します。採用しなかった結果も判断理由とともに `docs/` へ残します。
+## インストール
 
-- 評価データのローカル配置: [`docs/local-data.md`](docs/local-data.md)
-- アブレーション例: [`docs/phase3.6.1-ablation-report.md`](docs/phase3.6.1-ablation-report.md)
-- 検出研究の記録: [`docs/stage-f/09-detector-research-report.md`](docs/stage-f/09-detector-research-report.md)
+**通常はセットアップ版を推奨します。** [v2.0.0のRelease](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0) を開き、Assetsから選んでください。
 
-評価用コーパスはライセンスとプライバシーの理由から公開していません。通常の単体テストや build は
-クリーンな clone だけで実行できます。
+| ファイル | 使い方 |
+| --- | --- |
+| [Loop.Vault_2.0.0_x64-setup.exe](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/Loop.Vault_2.0.0_x64-setup.exe) | 通常のセットアップ版。起動して案内に従ってインストール |
+| [Loop.Vault_2.0.0_x64_en-US.msi](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/Loop.Vault_2.0.0_x64_en-US.msi) | Windows Installer形式を使いたい場合 |
+| [loop-vault.exe](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/loop-vault.exe) | インストールせず起動したい場合 |
+| [SHA256SUMS](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/SHA256SUMS) | ダウンロードしたファイルのSHA-256照合用 |
 
-## AI を用いた開発フロー
+配布対象はWindows x64です。[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) が必要です。
+配布物は署名なしです。配布元とチェックサムを確認してください。
 
-仕様・評価契約・受け入れ条件を実装前に固定し、AI コーディングツールを役割分担させながら
-ステージ単位で実装、独立レビュー、検証、記録を行っています。作業報告と判断記録を `docs/` に
-残し、「なぜこの実装・既定値になったか」を後から追跡できるようにしています。
+## データとプライバシー
 
-- [`docs/loop-vault-codex-plan.md`](docs/loop-vault-codex-plan.md)
-- [`docs/loop-vault-codex-prompts.md`](docs/loop-vault-codex-prompts.md)
-- [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)
+Vault、設定、練習データ、録音は端末内に保存します。
+通常のMIDI取り込み・解析・修正・練習も端末内で行い、MIDIや録音を外部AIへ自動送信する機能は提供していません。
 
-## Setup for developers
+設定の「データ」から、保存場所の確認、Vaultのエクスポート・インポート、バックアップの確認・復元ができます。
+移行や大きな編集の前は、バックアップを保管してください。v2.0.0でもVaultの保存形式はv2のままです。
 
-### 前提
+AI提案の画面は現在提供していません。以前保存したAPIキーは設定画面から削除できます。
+このREADMEの画像にも、実際の利用者のVault・MIDI・録音は使用していません。
 
-- [Node.js](https://nodejs.org/)（LTS 推奨）
-- [Rust toolchain](https://www.rust-lang.org/tools/install)
-- [Tauri v2 の前提条件](https://tauri.app/start/prerequisites/)（Windows の WebView2 / C++ Build Tools 等）
+## 現在の制約
 
-### インストールと開発
+- MIDI解析は完全な自動採譜ではありません。メロディ、装飾音、残響的な持続音、複雑な和声などは手動確認が必要な場合があります。
+- 自動生成で扱えるコードや形には範囲があります。代替を使った場合も、選んだ詳細形と同じ音になるとは限りません。
+- Voicing Loopの対応拍子は、一定の1/4〜12/4です。途中の拍子・テンポ変化、長さやイベント数などの上限により利用できない進行があります。
+- おすすめ運指は練習の参考です。手の大きさや身体的な弾きやすさを保証するものではありません。
+- 外部配布はWindows版です。ブラウザ開発環境はネイティブ版と保存・機器接続の条件が異なります。
+
+## 開発
+
+### 技術と前提条件
+
+Tauri 2 / Rust、React 18 / TypeScript、Vite 7を使用しています。
+音声再生はTone.js、状態管理はZustand、データ検証はZodです。
+
+- [Node.js](https://nodejs.org/en/download) 22系（CIの使用バージョン）とnpm
+- [Rust / Cargo](https://rustup.rs/)（WindowsはMSVC toolchain）
+- [Tauri 2の前提条件](https://v2.tauri.app/start/prerequisites/)：WindowsのC++ Build ToolsとWebView2など
+
+### Setup
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Tauri アプリとして起動:
+ブラウザの開発画面は `http://localhost:1420` です。Vaultはブラウザではメモリ内にあり、再読み込みで消えます。
+デスクトップ版を開発起動する場合は、次を使います。
 
 ```bash
-npm run tauri dev
+npm run tauri -- dev
 ```
 
-### 検証と build
+### Test / Quality
+
+単体・統合テスト、Playwrightによる画面・操作テスト、アクセシビリティ、プライバシー・セキュリティ検査、Rustテストとproduction buildを使用しています。
 
 ```bash
 npm run lint
 npm test
+npm run playwright:install
 npm run test:e2e
-npm run build
-npm run tauri build
+npm run security:scan
+npm run security:audit
+cargo test --manifest-path src-tauri/Cargo.toml --locked
 ```
 
-## ライセンス
+作業中の確認には `npm run test:fast`、機能単位には `npm run test:feature` を用意しています。
+キャッシュを使わない全件検証は `npm run test:full -- --fresh` です。
+テスト件数とv2.0.0配布候補の実行結果は、[検証記録](docs/release/v2.0.0/release-validation.md) を参照してください。
 
-**本リポジトリはオープンソースではありません。** ソースコードは閲覧・評価のみを目的として
-公開しています。詳細は [LICENSE](LICENSE) を参照してください。
+### Build
 
-- 著作権者の書面による許可なく、商用利用・改変・再配布は禁止です（All Rights Reserved）。
-- ベース音色の FreePats
-  ([electric-bass-YR](https://github.com/freepats/electric-bass-YR)) は CC0-1.0 で、ライセンスとともに同梱しています。
-- MIDI 評価コーパスや個人データはリポジトリに含まれていません。
+```bash
+npm run build
+npm run tauri -- build
+```
+
+`npm run build` はWebフロントエンドを、Tauri buildはWindows実行ファイルと配布物を生成します。
+インストーラーを作らず実行ファイルだけビルドする場合は `npm run tauri -- build --no-bundle` を使います。
+
+## Release
+
+- [Loop Vault v2.0.0：変更内容・ダウンロード・チェックサム](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0)
+- [CHANGELOG](CHANGELOG.md)
+- [配布ファイルの検証記録](docs/release/v2.0.0/release-assets.md)
+
+研究・比較中の未採用機能は、正式機能として含めていません。
+
+## License
+
+**本リポジトリはオープンソースではありません。** ソースコードは閲覧・評価目的で公開されています。
+利用・実行・改変・再配布等の許諾条件は [LICENSE](LICENSE) を確認してください。著作権者の書面による許可なく、商用利用・改変・再配布はできません。
+
+同梱するFreePatsのベース音色はCC0-1.0です。第三者の音源・依存ライブラリにはそれぞれのライセンスが適用されます。
