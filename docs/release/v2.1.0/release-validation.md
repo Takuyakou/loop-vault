@@ -164,24 +164,23 @@ react, react-dom, tone, zod@3.25.76, zustand
 ## 6. 公開用コミットの確認
 
 - 公開用コミットは `git commit-tree` で作り、**親は `65593f75` だけ**、作者・コミッターは `Takuyakou <53846387+Takuyakou@users.noreply.github.com>` です
-- ツリーは、**FULL を通したツリー**(§5)から **docs/ の中の文書だけ**を直したものです。直したのは §3(保存場所)・§4.1(目視)・§4.2(JSON の `\\` の修正)・この記録・[release-notes](release-notes.md)・[release-assets](release-assets.md) で、**コード・テスト・設定の差はありません**(`git diff --name-only` で docs/ 以外が出ないことを確認)
+- ツリーは、**FULL を通したツリー**(§5)から **文書だけ**を直したものです。直したのは §3(保存場所)・§4.1(目視)・§4.2(JSON の円記号)・この記録・[release-notes](release-notes.md)・[release-assets](release-assets.md) と **`CHANGELOG.md` の公開日**で、**コード・テスト・設定の差はありません**(`git diff --name-only` で docs/ と CHANGELOG.md 以外が出ないことを確認)
 - `65593f75..public/v2.1.0` のスキャンは **0 件**(個人パス・メール・秘密情報・私的なメディアなし)。`git merge-base --is-ancestor` で **fast-forward できる**ことを確認済み(force push は不要)
-- 確認した**公開用ツリーとコミットの ID**、および docs だけの差分の一覧は、公開後にリリースブランチのこの記録へ追記します(この公開スナップショットには含まれません)
-- push・タグ・GitHub Release は**していません**(R-04 で利用者が決める)
+- **公開しました**(2026-11-08):`master` を `65593f75` から `16f17eff` へ fast-forward で進め、注釈つきタグ `v2.1.0` を付けて push。GitHub Release は下書きで作って 4/4 の一致を確認したあと、安定版として公開しました。結果は [release-assets](release-assets.md) の「公開(実施済み)」にあります
 
-### 公開用コミットの確定値(公開スナップショットのあとに追記)
+### 公開用コミットの確定値
 
 | 確認 | 結果 |
 |---|---|
-| 公開用コミット | `public/v2.1.0` = **`dbf3cfada6bc55f36436dd69bd411ef9c66ebfd7`** |
+| 公開用コミット | **`16f17eff0719cb1294ae1680ee285b96bbfa3529`**(`public/v2.1.0`、タグ `v2.1.0` の指す先) |
 | 親 | **`65593f75` のみ**(1 コミット) |
-| ツリー | **`0e0924e72740d2bda83a716b9a0dc01ab59ee8b0`** |
-| FULL を通したツリー(`2e0a9c2b` / `a9f23c4c…`)との差 | **docs の 4 ファイルだけ**:`docs/phase4.5/11-final-report.json`・`docs/phase5.14/00-baseline-lock.json`・`docs/release/v2.1.0/release-notes.md`・`docs/release/v2.1.0/release-validation.md`。**docs/ 以外の差は 0**(コード・テスト・設定は同じ) |
+| ツリー | **`76efa63891b18c48897c61d3268b170b94dbf8a9`** |
+| FULL を通したツリー(`2e0a9c2b` / `a9f23c4c…`)との差 | **文書の 5 ファイルだけ**:`CHANGELOG.md`(公開日)・`docs/phase4.5/11-final-report.json`・`docs/phase5.14/00-baseline-lock.json`・`docs/release/v2.1.0/release-notes.md`・`docs/release/v2.1.0/release-validation.md`。**コード・テスト・設定の差は 0** |
 | 作者・コミッター | `Takuyakou <53846387+Takuyakou@users.noreply.github.com>` |
 | `65593f75..public/v2.1.0` のスキャン | **1 コミット・984 blob・0 件**(テスト用の架空パス 2 件のみ許可) |
-| fast-forward | **可能**(`git merge-base --is-ancestor`)。force push は不要。`origin/master` から **1 コミット** |
-
-- この「確定値」は、公開用コミットを作った**あとの docs だけの追記**です(公開ツリーは `0e0924e7…` のまま)
+| タグ | `v2.1.0`(注釈つき、タグオブジェクト `77731bc78389038d147174428b792eb25b36a539`) |
+| 公開 | [Loop Vault v2.1.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.1.0)(2026-11-07T23:31:59Z = 2026-11-08 Asia/Tokyo、非ドラフト・非プレリリース) |
+| fast-forward | `master` は `65593f75` → `16f17eff`(force push なし) |
 
 ## 7. 配布物
 
