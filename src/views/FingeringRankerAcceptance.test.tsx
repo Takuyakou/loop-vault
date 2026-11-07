@@ -22,9 +22,11 @@ async function mount(snapshots=syntheticSnapshots()) {
   const container=document.createElement("div");document.body.append(container);root=createRoot(container);
   const audition=vi.fn(async()=>{});
   const runtime:ProgressionVoicingTransportPort={supportsSeek:true,seek:()=>undefined,setLoopBounds:()=>true,start:async()=>{},updatePlan:()=>true,pause:()=>true,resume:async()=>true,restart:async()=>true,stop:()=>{},setBpm:()=>{},setMetronomeEnabled:()=>{},setReferenceSoundEnabled:()=>{},audition};
-  await act(async()=>root!.render(<MetronomeProvider><PreviewSoundProvider><FingeringRankerComparisonSettings/><ProgressionVoicingPracticeView snapshots={snapshots} initialSelection="source-midi" monitorMidi={false} transportFactory={()=>runtime} onSelectProgression={()=>true} onEnterText={()=>{}}/></PreviewSoundProvider></MetronomeProvider>));
+  await act(async()=>root!.render(<MetronomeProvider><PreviewSoundProvider><FingeringRankerComparisonSettings/><ProgressionVoicingPracticeView snapshots={snapshots} initialSelection="source-midi" transportFactory={()=>runtime} onSelectProgression={()=>true} onEnterText={()=>{}}/></PreviewSoundProvider></MetronomeProvider>));
   return {container,snapshots,audition};
 }
+/** P5.26.2-02: the fingers in use are the slots with a note under them (the panel is five fixed slots). */
+const usedSlots=(c:HTMLElement,hand:"left"|"right")=>[...c.querySelectorAll(`[data-testid="voicing-loop-${hand}-hand"] tr[data-row="finger"] td[data-used="true"]`)].map(n=>n.textContent!).sort();
 const handLabels=(c:HTMLElement)=>[...c.querySelectorAll("[data-testid='voicing-loop-left-hand'],[data-testid='voicing-loop-right-hand']")].map(n=>n.textContent);
 it("normal candidate default reaches timing-aware Bass and CURRENT fallback without changing the source",async()=>{
   const snapshots=syntheticSnapshots(),base=snapshots["source-midi"]!;
@@ -63,12 +65,12 @@ it("Saved survives switching rankers and personal persistence; partial movement 
   const pitches=hands[0]!.right;const candidates=generateFingeringCandidates({hand:"right",midiPitches:pitches});if(candidates.status!=="supported")throw Error("fixture");
   const chosen=candidates.candidates[candidates.candidates.length-1]!;
   savePersonalFingering({version:1,entries:[]},{hand:"right",pitches:candidates.pitches,fingers:chosen.fingers});
-  const {container}=await mount();const expected=chosen.fingers.map(f=>`R${f}`).join(" · ");
-  expect(container.querySelector('[data-testid="voicing-loop-right-hand"]')!.textContent).toContain(expected);
+  const {container}=await mount();const expected=chosen.fingers.map(f=>`R${f}`).sort();
+  expect(usedSlots(container,"right")).toEqual(expected);
   await act(async()=>setFingeringRankerMode("E1-T"));
-  expect(container.querySelector('[data-testid="voicing-loop-right-hand"]')!.textContent).toContain(expected);
+  expect(usedSlots(container,"right")).toEqual(expected);
   await act(async()=>setFingeringRankerMode("CURRENT"));
-  expect(container.querySelector('[data-testid="voicing-loop-right-hand"]')!.textContent).toContain(expected);
+  expect(usedSlots(container,"right")).toEqual(expected);
   expect(container.querySelectorAll('[data-testid="voicing-loop-movement-certainty"]')).toHaveLength(2);
 });
 

@@ -84,6 +84,8 @@ export class BrowserCaptureDeviceRepository implements CaptureDeviceRepository {
 
 export class BrowserPracticeRecorder implements PracticeRecorder {
   private context?: AudioContext;
+  private meter?: AnalyserNode;
+  inputLevel(): number { if (!this.meter) return 0; const data = new Float32Array(this.meter.fftSize); this.meter.getFloatTimeDomainData(data); return Math.sqrt(data.reduce((n,x)=>n+x*x,0)/data.length); }
   private stream?: MediaStream;
   private recorder?: MediaRecorder;
   private nodes: AudioNode[] = [];
@@ -113,6 +115,8 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
     this.stream = stream;
     const context = new AudioContext();
     this.context = context;
+    if (context.state === "suspended") await context.resume();
+    if (generation !== this.generation) { void context.close(); return; }
     const source = context.createMediaStreamSource(stream);
     const splitter = context.createChannelSplitter(2);
     const merger = context.createChannelMerger(1);
@@ -120,6 +124,7 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
     source.connect(splitter);
     connectMono(splitter, merger, options.resolvedChannel);
     merger.connect(destination);
+    this.meter = context.createAnalyser(); this.meter.fftSize = 2048; merger.connect(this.meter);
     this.nodes = [source, splitter, merger];
 
     const recorder = new MediaRecorder(destination.stream, { mimeType: options.mimeType });
@@ -174,6 +179,7 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
       }
     });
     this.nodes = [];
+    this.meter?.disconnect(); this.meter = undefined;
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = undefined;
     if (this.context && this.context.state !== "closed") void this.context.close();

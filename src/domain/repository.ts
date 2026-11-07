@@ -65,7 +65,8 @@ type RepositoryErrorKind =
   | "invalid-vault"
   | "future-version"
   | "vault-too-large"
-  | "backup-not-found";
+  | "backup-not-found"
+  | "migration-recovery";
 
 export class VaultRepositoryError extends Error {
   constructor(
@@ -179,6 +180,11 @@ export class JsonVaultRepository implements VaultRepository {
   }
 
   async listBackups(): Promise<VaultBackup[]> {
+    return this.listRotatingBackups();
+  }
+
+  /** The backups that rotate (`data-YYYYMMDD-HHMM.json`), newest first. A subclass may list more for restoring; only these are counted and removed. */
+  protected async listRotatingBackups(): Promise<VaultBackup[]> {
     await this.storage.ensureDir(BACKUP_DIR);
     const names = await this.storage.listFiles(BACKUP_DIR);
 
@@ -234,7 +240,12 @@ export class JsonVaultRepository implements VaultRepository {
   private async createStartupBackup(): Promise<void> {
     const backupPath = joinVaultPath(BACKUP_DIR, backupFileName(this.now()));
     await this.storage.copyFile(DATA_PATH, backupPath);
-    await this.rotateBackups();
+    try {
+      await this.rotateBackups();
+    } catch (error) {
+      // Tidying old backups must never keep the vault from loading.
+      console.warn("Vault backup rotation failed; the vault was loaded anyway.", error);
+    }
   }
 
   private async moveCorruptDataFile(): Promise<string> {
@@ -244,12 +255,14 @@ export class JsonVaultRepository implements VaultRepository {
   }
 
   private async rotateBackups(): Promise<void> {
-    const backups = await this.listBackups();
+    const backups = await this.listRotatingBackups();
     const excess = backups.slice(this.maxBackups);
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       excess.map((backup) => this.storage.removeFile(backup.path)),
     );
+    const failed = results.find((result): result is PromiseRejectedResult => result.status === "rejected");
+    if (failed) throw failed.reason;
   }
 
   private parseLoadedVault(raw: string): Omit<VaultLoadResult, "created"> {
@@ -306,7 +319,17 @@ export function serializeVault(vault: VaultFile): string {
 }
 
 export function canonicalVaultJson(vault: VaultFile): string {
-  return `${JSON.stringify(vault, null, 2)}\n`;
+  // A v3 envelope makes every older reader reject the entire export before it
+  // can quarantine individual altered ideas. Internal state stays normalized v2.
+  const fileVersion = hasAlteredClassification(vault.ideas) ? 3 : 2;
+  return `${JSON.stringify({ ...vault, fileVersion }, null, 2)}\n`;
+}
+
+export function hasAlteredClassification(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) return value.some(hasAlteredClassification);
+  const record = value as Record<string, unknown>;
+  return record.altered === true || Object.values(record).some(hasAlteredClassification);
 }
 
 export function vaultCanonicalSerializedByteLength(vault: VaultFile): number {

@@ -95,10 +95,16 @@ export const chordSymbolSchema = z
     quality: chordQualitySchema,
     tensions: z.array(tensionSchema),
     omissions: z.array(z.enum(["3", "5"])).max(2).refine(values => new Set(values).size === values.length).optional(),
+    altered: z.literal(true).optional(),
     bass: z.number().int().min(0).max(11).optional(),
     label: z.string().min(1),
   })
-  .strict();
+  .strict()
+  .superRefine((chord, context) => {
+    if (chord.altered && (chord.quality !== "dom7" || chord.tensions.length > 0 || (chord.omissions?.length ?? 0) > 0)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["altered"], message: "Altered classification requires an unmodified dominant seventh symbol." });
+    }
+  });
 
 export const voicingSourceSchema = z.enum([
   "midi-extracted",
@@ -373,7 +379,7 @@ export const vaultFileSchema: z.ZodType<VaultFile, z.ZodTypeDef, unknown> = z
 const vaultEnvelopeSchema = z
   .object({
     app: z.literal("loopvault"),
-    fileVersion: z.union([z.literal(1), z.literal(2)]),
+    fileVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]),
     settings: vaultSettingsSchema,
     ideas: z.array(z.unknown()),
   })
@@ -411,7 +417,7 @@ export type VaultParseResult =
     };
 
 export function parseVaultFileJson(raw: string): VaultParseResult {
-  return parseVaultFileJsonWithMaximumVersion(raw, 2);
+  return parseVaultFileJsonWithMaximumVersion(raw, 3);
 }
 
 /** Compatibility evidence for the supported v1.1.0 TypeScript reader path. */
@@ -421,7 +427,7 @@ export function parseVaultFileJsonAsLegacyV1(raw: string): VaultParseResult {
 
 function parseVaultFileJsonWithMaximumVersion(
   raw: string,
-  maximumVersion: 1 | 2,
+  maximumVersion: 1 | 2 | 3,
 ): VaultParseResult {
   let parsed: unknown;
 

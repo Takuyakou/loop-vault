@@ -10,6 +10,8 @@ describe("createLiveMidiWindowSnapshot", () => {
 
     expect(serialized).not.toHaveProperty("language");
     expect(serialized.status).toBe("idle");
+    expect(serialized.kind).toBe("off");
+    expect(serialized.label).toBe("MIDI に接続");
     expect(serialized).not.toHaveProperty("activate");
     expect(serialized).not.toHaveProperty("notes");
     expect(serialized).not.toHaveProperty("preferences");

@@ -330,3 +330,27 @@ describe("Chord Context second-review safety", () => {
     expect(engine.getActivePlan()).toBeUndefined();
   });
 });
+
+describe('approved saved MIDI chord accompaniment', () => {
+  it('schedules exact octaves in Listen and Play through the existing driver', () => {
+    const notes = [36,73,85]; const {driver,players}=fakeDriver(); const engine=createChordContextPlaybackEngine(driver);
+    const event={id:'manual',chord:cMaj7,startBeat:0,durationBeats:4,savedMidiNotes:notes};
+    const listen=engine.start(listenInput({chordEvents:[event]}));expect(listen.ok).toBe(true);
+    expect(players[0]!.scheduled.find(event=>event.layer==='chords')).toMatchObject({notes:[36,73,85],timeSeconds:2,durationSeconds:2,gainDb:-12});
+    const play=engine.start({...playInput('chords-only'),chordEvents:[event]});expect(play.ok).toBe(true);
+    expect(players[1]!.scheduled.find(event=>event.layer==='chords')).toMatchObject({notes:[36,73,85]});
+    notes[0]=37;expect(players[1]!.scheduled.find(event=>event.layer==='chords')).toMatchObject({notes:[36,73,85]});
+    engine.dispose();expect(players[1]!.stop).toHaveBeenCalledOnce();
+  });
+  it('keeps default generation and disabled-layer behavior unchanged', () => {
+    const plain=buildChordContextPlaybackPlan(listenInput());const absent=buildChordContextPlaybackPlan({...listenInput(),chordEvents:listenInput().chordEvents.map(event=>({...event,savedMidiNotes:undefined}))});expect(absent).toEqual(plain);
+    const result=buildChordContextPlaybackPlan({...playInput('metronome-only'),chordEvents:[{id:'manual',chord:cMaj7,startBeat:0,durationBeats:4,savedMidiNotes:[36,73,85]}]});
+    expect(result.ok).toBe(true);if(result.ok)expect(result.plan.events.every(event=>event.layer==='metronome')).toBe(true);
+  });
+  it('fails closed for malformed saved notes even when the chord layer is disabled', () => {
+    for(const notes of [[],[60],[60,60],[67,60],[-1,60],[60,128],[60,60.5],[60,Infinity],[60,NaN],Array.from({length:11},(_,i)=>60+i),null,'60,64']){
+      const input={...playInput('no-accompaniment'),chordEvents:[{id:'manual',chord:cMaj7,startBeat:0,durationBeats:4,savedMidiNotes:notes}]};
+      expect(buildChordContextPlaybackPlan(input as unknown as ChordContextListenInput)).toMatchObject({ok:false,error:{code:'invalid-event',eventId:'manual'}});
+    }
+  });
+});

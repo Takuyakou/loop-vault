@@ -30,3 +30,18 @@ Each command stores its complete log under ignored `.local-evaluation/test-logs/
 FAST, FEATURE and UI reuse only a previous PASS with the same HEAD, dirty tracked/untracked relevant state, installed/config dependency hash, gate and selected inputs. A failed run is never cached. Editing source, tests, configuration, or selection invalidates the key. The local cache is ignored under `.local-evaluation/gate-cache/`. The final FULL executes every step afresh even if an earlier gate on the same HEAD passed. The production build and fixture-enabled Playwright build remain separate; FULL skips only the Playwright runner's duplicate TypeScript pass after its own app TypeScript check.
 
 Warning budgets: FAST >30s, FEATURE >60s, UI >120s, FULL >240s. They signal an investigation, never automatic coverage reduction. A FEATURE run that changes browser presentation may exceed 60s because it includes a real browser path. The [baseline](00-baseline.md) and [worker benchmark](05-worker-benchmark.md) provide the measured reference. Existing `npm test` and `npm run test:e2e` remain available.
+
+## Explicit browser lists and timing evidence
+
+A list consisting only of `e2e/*.spec.ts` paths is an exact browser request in FAST/FEATURE/UI. Shared or unmapped spec names do not expand that request to the repository. A missing explicit spec fails. Mixing source paths into the request retains conservative owner expansion; this is how shared source changes continue to receive broad coverage. FULL ignores file selection and always runs every configured project/test. UI with a non-browser owner and no selected browser test fails rather than silently running everything or nothing.
+
+```text
+npm run test:ui -- e2e/p14-midi-connection.spec.ts --fresh
+npm run test:feature -- src/styles/text-intake.css --fresh
+```
+
+Each invocation also writes a local `*-metrics.json` beside its logs: execution HEAD, level, cache eligibility, total time, per-step durations, actual cache hits and counts. Browser gates write `*-timing.json` with every discovered test, result, duration, retry, worker and failure artifact references. These reports are evidence, not PASS caches. They never alter scheduling or test outcomes. Existing conditional skips remain visible in counts. Zero passing tests fail the runner. Logs/reports stay Git-ignored; do not commit private inputs or traces.
+
+FEATURE/FAST browser checks reuse only the successful app TypeScript check in that same invocation. They still build the fixture bundle and run the browser tests. UI, which has no preceding app TypeScript step, retains that precheck. Production and fixture builds remain separate.
+
+Local Playwright workers use one quarter of available logical CPUs, bounded to 2–6 (6 on the measured i7-13700F); CI remains 1. `test:e2e -- --workers=2` remains available for constrained environments. Specs remain sequential internally (`fullyParallel=false`); contexts, failure artifacts, retries and timeouts are unchanged. See the root `TEST-PERFORMANCE-OPTIMIZATION.md` for the measurement and stability limits. Automatically inferred `--changed` spec lists retain owner expansion; only manually supplied all-spec lists are exact.

@@ -40,6 +40,8 @@ export interface ChordSymbol {
   tensions: Tension[];
   /** Explicit written omissions; an absent field keeps legacy identities unchanged. */
   omissions?: ("3" | "5")[];
+  /** Written altered-dominant classification, distinct from explicit tensions. */
+  altered?: true;
   bass?: number;
   label: string;
 }

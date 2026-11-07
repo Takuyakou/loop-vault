@@ -1,0 +1,120 @@
+{
+  "status": "FIXED_TEACHING_PROFILE",
+  "source": "Both-hand Form teaching templates after 48-cell preimplementation audit; physical performance pending",
+  "context": {
+    "id": "master251-form-templates-bpm80-v2",
+    "solver": "Master Form canonical teaching templates for both hands; production sequence solver retained for audit",
+    "policy": {
+      "variant": "E1-T",
+      "curve": "inverse",
+      "lambda": 2,
+      "gamma": 1
+    },
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restBeats": 2,
+    "lengthBeats": 8,
+    "cyclic": true,
+    "anchors": [],
+    "personalPreferences": "empty fixed teaching profile; no live user storage read",
+    "unresolved": [
+      false,
+      false,
+      false
+    ],
+    "range": "full progression; Range is not a solver input",
+    "leftHandSource": {
+      "kind": "form-template",
+      "version": 1,
+      "keyIds": "pitch-class 0..11",
+      "overrideCount": 0
+    },
+    "rightHandSource": {
+      "kind": "form-template",
+      "version": 1
+    },
+    "policyRole": "generic audit comparator; not canonical template selection"
+  },
+  "fingerprint": "6f5c04b3ee03b12a7be41a6e898a3cf1d186fdb5ec4308e942758f3f02667267",
+  "profileVersion": 2,
+  "solverVersion": "p11-13e-E1-T-4406d5b8",
+  "solverAdoptionCommit": "4406d5b8813bc122f85ff13b071e477550cfb436",
+  "notesSha256": "0a8244d5186f465e129dacfbeddc85b51979f6da84e1d11ea4fbcdf638ad78ed",
+  "genericBaseline": {
+    "fingerprint": "a1538e67764619d5b3f7d8244636ad328fc1b2f9c1c20950c73a6db4c0a81883",
+    "notesSha256": "0a8244d5186f465e129dacfbeddc85b51979f6da84e1d11ea4fbcdf638ad78ed",
+    "context": {
+      "id": "master251-e1t-lambda2-gamma1-bpm80-2beat-2beatrest-v1",
+      "solver": "production rankPracticeHandFingerings -> rankCyclicFingerings",
+      "policy": {
+        "variant": "E1-T",
+        "curve": "inverse",
+        "lambda": 2,
+        "gamma": 1
+      },
+      "bpm": 80,
+      "beatsPerChord": 2,
+      "restBeats": 2,
+      "lengthBeats": 8,
+      "cyclic": true,
+      "anchors": [],
+      "personalPreferences": "empty fixed teaching profile; no live user storage read",
+      "unresolved": [
+        false,
+        false,
+        false
+      ],
+      "range": "full progression; Range is not a solver input"
+    }
+  },
+  "cells": [
+    {"cell":"A:0","chords":[{"degree":"ii","notes":[62,77,81,84,88],"referenceHands":{"lh":[62],"rh":[77,81,84,88]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[67,77,81,83,88],"referenceHands":{"lh":[67],"rh":[77,81,83,88]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[60,76,81,83,86],"referenceHands":{"lh":[60],"rh":[76,81,83,86]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:1","chords":[{"degree":"ii","notes":[63,78,82,85,89],"referenceHands":{"lh":[63],"rh":[78,82,85,89]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[68,78,82,84,89],"referenceHands":{"lh":[68],"rh":[78,82,84,89]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[61,77,82,84,87],"referenceHands":{"lh":[61],"rh":[77,82,84,87]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:2","chords":[{"degree":"ii","notes":[52,67,71,74,78],"referenceHands":{"lh":[52],"rh":[67,71,74,78]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[57,67,71,73,78],"referenceHands":{"lh":[57],"rh":[67,71,73,78]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[50,66,71,73,76],"referenceHands":{"lh":[50],"rh":[66,71,73,76]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:3","chords":[{"degree":"ii","notes":[53,68,72,75,79],"referenceHands":{"lh":[53],"rh":[68,72,75,79]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[58,68,72,74,79],"referenceHands":{"lh":[58],"rh":[68,72,74,79]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[51,67,72,74,77],"referenceHands":{"lh":[51],"rh":[67,72,74,77]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:4","chords":[{"degree":"ii","notes":[54,69,73,76,80],"referenceHands":{"lh":[54],"rh":[69,73,76,80]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[59,69,73,75,80],"referenceHands":{"lh":[59],"rh":[69,73,75,80]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[52,68,73,75,78],"referenceHands":{"lh":[52],"rh":[68,73,75,78]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:5","chords":[{"degree":"ii","notes":[55,70,74,77,81],"referenceHands":{"lh":[55],"rh":[70,74,77,81]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[60,70,74,76,81],"referenceHands":{"lh":[60],"rh":[70,74,76,81]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[53,69,74,76,79],"referenceHands":{"lh":[53],"rh":[69,74,76,79]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:6","chords":[{"degree":"ii","notes":[56,71,75,78,82],"referenceHands":{"lh":[56],"rh":[71,75,78,82]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[61,71,75,77,82],"referenceHands":{"lh":[61],"rh":[71,75,77,82]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[54,70,75,77,80],"referenceHands":{"lh":[54],"rh":[70,75,77,80]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:7","chords":[{"degree":"ii","notes":[57,72,76,79,83],"referenceHands":{"lh":[57],"rh":[72,76,79,83]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[62,72,76,78,83],"referenceHands":{"lh":[62],"rh":[72,76,78,83]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[55,71,76,78,81],"referenceHands":{"lh":[55],"rh":[71,76,78,81]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:8","chords":[{"degree":"ii","notes":[58,73,77,80,84],"referenceHands":{"lh":[58],"rh":[73,77,80,84]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[63,73,77,79,84],"referenceHands":{"lh":[63],"rh":[73,77,79,84]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[56,72,77,79,82],"referenceHands":{"lh":[56],"rh":[72,77,79,82]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:9","chords":[{"degree":"ii","notes":[59,74,78,81,85],"referenceHands":{"lh":[59],"rh":[74,78,81,85]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[64,74,78,80,85],"referenceHands":{"lh":[64],"rh":[74,78,80,85]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[57,73,78,80,83],"referenceHands":{"lh":[57],"rh":[73,78,80,83]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:10","chords":[{"degree":"ii","notes":[60,75,79,82,86],"referenceHands":{"lh":[60],"rh":[75,79,82,86]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[65,75,79,81,86],"referenceHands":{"lh":[65],"rh":[75,79,81,86]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[58,74,79,81,84],"referenceHands":{"lh":[58],"rh":[74,79,81,84]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"A:11","chords":[{"degree":"ii","notes":[61,76,80,83,87],"referenceHands":{"lh":[61],"rh":[76,80,83,87]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"V","notes":[66,76,80,82,87],"referenceHands":{"lh":[66],"rh":[76,80,82,87]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"I","notes":[59,75,80,82,85],"referenceHands":{"lh":[59],"rh":[75,80,82,85]},"fingers":{"lh":[5],"rh":[1,2,3,5]}}]},
+    {"cell":"B:0","chords":[{"degree":"ii","notes":[62,72,77,81,88],"referenceHands":{"lh":[62,72],"rh":[77,81,88]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[67,71,77,81,88],"referenceHands":{"lh":[67,71],"rh":[77,81,88]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[60,71,76,81,86],"referenceHands":{"lh":[60,71],"rh":[76,81,86]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:1","chords":[{"degree":"ii","notes":[63,73,78,82,89],"referenceHands":{"lh":[63,73],"rh":[78,82,89]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[68,72,78,82,89],"referenceHands":{"lh":[68,72],"rh":[78,82,89]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[61,72,77,82,87],"referenceHands":{"lh":[61,72],"rh":[77,82,87]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:2","chords":[{"degree":"ii","notes":[52,62,67,71,78],"referenceHands":{"lh":[52,62],"rh":[67,71,78]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[57,61,67,71,78],"referenceHands":{"lh":[57,61],"rh":[67,71,78]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[50,61,66,71,76],"referenceHands":{"lh":[50,61],"rh":[66,71,76]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:3","chords":[{"degree":"ii","notes":[53,63,68,72,79],"referenceHands":{"lh":[53,63],"rh":[68,72,79]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[58,62,68,72,79],"referenceHands":{"lh":[58,62],"rh":[68,72,79]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[51,62,67,72,77],"referenceHands":{"lh":[51,62],"rh":[67,72,77]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:4","chords":[{"degree":"ii","notes":[54,64,69,73,80],"referenceHands":{"lh":[54,64],"rh":[69,73,80]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[59,63,69,73,80],"referenceHands":{"lh":[59,63],"rh":[69,73,80]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[52,63,68,73,78],"referenceHands":{"lh":[52,63],"rh":[68,73,78]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:5","chords":[{"degree":"ii","notes":[55,65,70,74,81],"referenceHands":{"lh":[55,65],"rh":[70,74,81]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[60,64,70,74,81],"referenceHands":{"lh":[60,64],"rh":[70,74,81]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[53,64,69,74,79],"referenceHands":{"lh":[53,64],"rh":[69,74,79]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:6","chords":[{"degree":"ii","notes":[56,66,71,75,82],"referenceHands":{"lh":[56,66],"rh":[71,75,82]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[61,65,71,75,82],"referenceHands":{"lh":[61,65],"rh":[71,75,82]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[54,65,70,75,80],"referenceHands":{"lh":[54,65],"rh":[70,75,80]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:7","chords":[{"degree":"ii","notes":[57,67,72,76,83],"referenceHands":{"lh":[57,67],"rh":[72,76,83]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[62,66,72,76,83],"referenceHands":{"lh":[62,66],"rh":[72,76,83]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[55,66,71,76,81],"referenceHands":{"lh":[55,66],"rh":[71,76,81]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:8","chords":[{"degree":"ii","notes":[58,68,73,77,84],"referenceHands":{"lh":[58,68],"rh":[73,77,84]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[63,67,73,77,84],"referenceHands":{"lh":[63,67],"rh":[73,77,84]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[56,67,72,77,82],"referenceHands":{"lh":[56,67],"rh":[72,77,82]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:9","chords":[{"degree":"ii","notes":[59,69,74,78,85],"referenceHands":{"lh":[59,69],"rh":[74,78,85]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[64,68,74,78,85],"referenceHands":{"lh":[64,68],"rh":[74,78,85]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[57,68,73,78,83],"referenceHands":{"lh":[57,68],"rh":[73,78,83]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:10","chords":[{"degree":"ii","notes":[60,70,75,79,86],"referenceHands":{"lh":[60,70],"rh":[75,79,86]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[65,69,75,79,86],"referenceHands":{"lh":[65,69],"rh":[75,79,86]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[58,69,74,79,84],"referenceHands":{"lh":[58,69],"rh":[74,79,84]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"B:11","chords":[{"degree":"ii","notes":[61,71,76,80,87],"referenceHands":{"lh":[61,71],"rh":[76,80,87]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"V","notes":[66,70,76,80,87],"referenceHands":{"lh":[66,70],"rh":[76,80,87]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"I","notes":[59,70,75,80,85],"referenceHands":{"lh":[59,70],"rh":[75,80,85]},"fingers":{"lh":[5,1],"rh":[1,2,5]}}]},
+    {"cell":"C:0","chords":[{"degree":"ii","notes":[62,72,76,77,81],"referenceHands":{"lh":[62],"rh":[72,76,77,81]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[55,71,76,77,81],"referenceHands":{"lh":[55],"rh":[71,76,77,81]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[60,71,74,76,79],"referenceHands":{"lh":[60],"rh":[71,74,76,79]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:1","chords":[{"degree":"ii","notes":[63,73,77,78,82],"referenceHands":{"lh":[63],"rh":[73,77,78,82]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[56,72,77,78,82],"referenceHands":{"lh":[56],"rh":[72,77,78,82]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[61,72,75,77,80],"referenceHands":{"lh":[61],"rh":[72,75,77,80]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:2","chords":[{"degree":"ii","notes":[52,62,66,67,71],"referenceHands":{"lh":[52],"rh":[62,66,67,71]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[45,61,66,67,71],"referenceHands":{"lh":[45],"rh":[61,66,67,71]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[50,61,64,66,69],"referenceHands":{"lh":[50],"rh":[61,64,66,69]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:3","chords":[{"degree":"ii","notes":[53,63,67,68,72],"referenceHands":{"lh":[53],"rh":[63,67,68,72]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[46,62,67,68,72],"referenceHands":{"lh":[46],"rh":[62,67,68,72]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[51,62,65,67,70],"referenceHands":{"lh":[51],"rh":[62,65,67,70]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:4","chords":[{"degree":"ii","notes":[54,64,68,69,73],"referenceHands":{"lh":[54],"rh":[64,68,69,73]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[47,63,68,69,73],"referenceHands":{"lh":[47],"rh":[63,68,69,73]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[52,63,66,68,71],"referenceHands":{"lh":[52],"rh":[63,66,68,71]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:5","chords":[{"degree":"ii","notes":[55,65,69,70,74],"referenceHands":{"lh":[55],"rh":[65,69,70,74]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[48,64,69,70,74],"referenceHands":{"lh":[48],"rh":[64,69,70,74]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[53,64,67,69,72],"referenceHands":{"lh":[53],"rh":[64,67,69,72]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:6","chords":[{"degree":"ii","notes":[56,66,70,71,75],"referenceHands":{"lh":[56],"rh":[66,70,71,75]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[49,65,70,71,75],"referenceHands":{"lh":[49],"rh":[65,70,71,75]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[54,65,68,70,73],"referenceHands":{"lh":[54],"rh":[65,68,70,73]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:7","chords":[{"degree":"ii","notes":[57,67,71,72,76],"referenceHands":{"lh":[57],"rh":[67,71,72,76]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[50,66,71,72,76],"referenceHands":{"lh":[50],"rh":[66,71,72,76]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[55,66,69,71,74],"referenceHands":{"lh":[55],"rh":[66,69,71,74]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:8","chords":[{"degree":"ii","notes":[58,68,72,73,77],"referenceHands":{"lh":[58],"rh":[68,72,73,77]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[51,67,72,73,77],"referenceHands":{"lh":[51],"rh":[67,72,73,77]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[56,67,70,72,75],"referenceHands":{"lh":[56],"rh":[67,70,72,75]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:9","chords":[{"degree":"ii","notes":[59,69,73,74,78],"referenceHands":{"lh":[59],"rh":[69,73,74,78]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[52,68,73,74,78],"referenceHands":{"lh":[52],"rh":[68,73,74,78]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[57,68,71,73,76],"referenceHands":{"lh":[57],"rh":[68,71,73,76]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:10","chords":[{"degree":"ii","notes":[60,70,74,75,79],"referenceHands":{"lh":[60],"rh":[70,74,75,79]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[53,69,74,75,79],"referenceHands":{"lh":[53],"rh":[69,74,75,79]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[58,69,72,74,77],"referenceHands":{"lh":[58],"rh":[69,72,74,77]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"C:11","chords":[{"degree":"ii","notes":[61,71,75,76,80],"referenceHands":{"lh":[61],"rh":[71,75,76,80]},"fingers":{"lh":[1],"rh":[1,2,3,5]}},{"degree":"V","notes":[54,70,75,76,80],"referenceHands":{"lh":[54],"rh":[70,75,76,80]},"fingers":{"lh":[5],"rh":[1,2,3,5]}},{"degree":"I","notes":[59,70,73,75,78],"referenceHands":{"lh":[59],"rh":[70,73,75,78]},"fingers":{"lh":[1],"rh":[1,2,3,5]}}]},
+    {"cell":"D:0","chords":[{"degree":"ii","notes":[62,65,72,76,81],"referenceHands":{"lh":[62,65],"rh":[72,76,81]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[55,65,71,76,81],"referenceHands":{"lh":[55,65],"rh":[71,76,81]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[60,64,71,74,79],"referenceHands":{"lh":[60,64],"rh":[71,74,79]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:1","chords":[{"degree":"ii","notes":[63,66,73,77,82],"referenceHands":{"lh":[63,66],"rh":[73,77,82]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[56,66,72,77,82],"referenceHands":{"lh":[56,66],"rh":[72,77,82]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[61,65,72,75,80],"referenceHands":{"lh":[61,65],"rh":[72,75,80]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:2","chords":[{"degree":"ii","notes":[52,55,62,66,71],"referenceHands":{"lh":[52,55],"rh":[62,66,71]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[45,55,61,66,71],"referenceHands":{"lh":[45,55],"rh":[61,66,71]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[50,54,61,64,69],"referenceHands":{"lh":[50,54],"rh":[61,64,69]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:3","chords":[{"degree":"ii","notes":[53,56,63,67,72],"referenceHands":{"lh":[53,56],"rh":[63,67,72]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[46,56,62,67,72],"referenceHands":{"lh":[46,56],"rh":[62,67,72]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[51,55,62,65,70],"referenceHands":{"lh":[51,55],"rh":[62,65,70]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:4","chords":[{"degree":"ii","notes":[54,57,64,68,73],"referenceHands":{"lh":[54,57],"rh":[64,68,73]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[47,57,63,68,73],"referenceHands":{"lh":[47,57],"rh":[63,68,73]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[52,56,63,66,71],"referenceHands":{"lh":[52,56],"rh":[63,66,71]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:5","chords":[{"degree":"ii","notes":[55,58,65,69,74],"referenceHands":{"lh":[55,58],"rh":[65,69,74]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[48,58,64,69,74],"referenceHands":{"lh":[48,58],"rh":[64,69,74]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[53,57,64,67,72],"referenceHands":{"lh":[53,57],"rh":[64,67,72]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:6","chords":[{"degree":"ii","notes":[56,59,66,70,75],"referenceHands":{"lh":[56,59],"rh":[66,70,75]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[49,59,65,70,75],"referenceHands":{"lh":[49,59],"rh":[65,70,75]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[54,58,65,68,73],"referenceHands":{"lh":[54,58],"rh":[65,68,73]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:7","chords":[{"degree":"ii","notes":[57,60,67,71,76],"referenceHands":{"lh":[57,60],"rh":[67,71,76]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[50,60,66,71,76],"referenceHands":{"lh":[50,60],"rh":[66,71,76]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[55,59,66,69,74],"referenceHands":{"lh":[55,59],"rh":[66,69,74]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:8","chords":[{"degree":"ii","notes":[58,61,68,72,77],"referenceHands":{"lh":[58,61],"rh":[68,72,77]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[51,61,67,72,77],"referenceHands":{"lh":[51,61],"rh":[67,72,77]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[56,60,67,70,75],"referenceHands":{"lh":[56,60],"rh":[67,70,75]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:9","chords":[{"degree":"ii","notes":[59,62,69,73,78],"referenceHands":{"lh":[59,62],"rh":[69,73,78]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[52,62,68,73,78],"referenceHands":{"lh":[52,62],"rh":[68,73,78]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[57,61,68,71,76],"referenceHands":{"lh":[57,61],"rh":[68,71,76]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:10","chords":[{"degree":"ii","notes":[60,63,70,74,79],"referenceHands":{"lh":[60,63],"rh":[70,74,79]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[53,63,69,74,79],"referenceHands":{"lh":[53,63],"rh":[69,74,79]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[58,62,69,72,77],"referenceHands":{"lh":[58,62],"rh":[69,72,77]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]},
+    {"cell":"D:11","chords":[{"degree":"ii","notes":[61,64,71,75,80],"referenceHands":{"lh":[61,64],"rh":[71,75,80]},"fingers":{"lh":[5,2],"rh":[1,2,5]}},{"degree":"V","notes":[54,64,70,75,80],"referenceHands":{"lh":[54,64],"rh":[70,75,80]},"fingers":{"lh":[5,1],"rh":[1,2,5]}},{"degree":"I","notes":[59,63,70,73,78],"referenceHands":{"lh":[59,63],"rh":[70,73,78]},"fingers":{"lh":[5,2],"rh":[1,2,5]}}]}
+  ]
+}

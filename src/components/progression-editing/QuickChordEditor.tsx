@@ -6,7 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { makeChordSymbol } from "../../domain/chords";
+import { formatChordSymbol, formatTextChordSymbol, makeChordSymbol } from "../../domain/chords";
 import {
   analyzerQuickCandidates,
   chordsEqual,
@@ -140,12 +140,13 @@ export function QuickChordEditor({
   }
 
   function shiftRoot(direction: -1 | 1) {
-    setDraftChord((current) => makeChordSymbol(
-      (current.root + direction + 12) % 12,
-      current.quality,
-      [...current.tensions],
-      current.bass,
-    ));
+    setDraftChord((current) => {
+      const next = { ...makeChordSymbol((current.root + direction + 12) % 12,
+        current.quality, [...current.tensions], current.bass),
+      ...(current.altered ? { altered: true as const } : {}) };
+      return { ...next, label: /m\(maj[79]\)/.test(current.label)
+        ? formatTextChordSymbol(next) : formatChordSymbol(next) };
+    });
     setSource("structure-editor");
     setSelectedCandidate(undefined);
   }

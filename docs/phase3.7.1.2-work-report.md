@@ -255,9 +255,9 @@ Phase 3.7.1からPhase 3.7.1.2まで、PR #117〜#137を依存順に`master`へ�
 
 ## 10. Windows成果物
 
-- 単体EXE: `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
-- MSI: `D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
-- セットアップEXE: `D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- 単体EXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- MSI: `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
+- セットアップEXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 ## 11. 既知の制約
 

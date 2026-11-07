@@ -48,12 +48,30 @@ export function useWorkspaceBassline(session: AnalysisSession | undefined, finge
     );
   }
 
-  /** undefined = save without it; null = the person cancelled. */
-  function forSave(candidate: ProgressionBlockCandidate): SourceBasslineSnapshotV1 | undefined | null {
+  /**
+   * undefined = save without it; null = the person cancelled.
+   * P17-02: `sourceBars` is where this range lived in the original MIDI (one source
+   * bar range), or null when the range crosses a cut — then no bass is taken at all.
+   */
+  function forSave(candidate: ProgressionBlockCandidate, sourceBars?: { startBar: number; endBar: number } | null): SourceBasslineSnapshotV1 | undefined | null {
+    if (sourceBars === null) return undefined;
     const current = state(candidate);
     if (!current.optedIn) return undefined;
-    if (current.rangeSelected && current.assessment.snapshot) return current.assessment.snapshot;
-    return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？") ? undefined : null;
+    if (!(current.rangeSelected && current.assessment.snapshot)) {
+      return globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？") ? undefined : null;
+    }
+    if (!sourceBars || (sourceBars.startBar === candidate.startBar && sourceBars.endBar === candidate.endBar)) {
+      return current.assessment.snapshot;
+    }
+    const mapped = assessManualSourceBasslineCapture(
+      session,
+      { ...candidate, startBar: sourceBars.startBar, endBar: sourceBars.endBar },
+      { startBeat: 1, endBeat: beatsPerBar },
+      beatsPerBar,
+      voiceId,
+      fingerprint,
+    );
+    return mapped.snapshot ?? (globalThis.confirm("元ベースラインを付けられません。コード進行だけを保存しますか？") ? undefined : null);
   }
 
   return { panel, forSave };

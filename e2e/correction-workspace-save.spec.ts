@@ -138,6 +138,7 @@ test("P10.2 addendum 2: with no range chosen 「曲全体を保存」 saves the 
 
   // A range: the range save; the chip's ×: the whole song again.
   await workspace(page).getByTestId("correction-card").nth(1).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await workspace(page).getByTestId("correction-card").nth(2).click({ button: "right" });
   await expect(range).toContainText("2〜3小節・2枚");
   await expect(saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true })).toBeVisible();
@@ -201,10 +202,12 @@ test("P10.2 addendum 2: a long song saved whole opens on the progression page an
   let t0 = Date.now();
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
   const chordCards = page.locator("[data-progression-card-stage] [data-chord-card]");
+  expect(await chordCards.count()).toBeGreaterThan(0);
+  await page.getByRole("button",{name:"全体",exact:true}).click();
   await expect(chordCards).toHaveCount(cards);
   const detailMs = Date.now() - t0;
   // Plays that chord. The lower left: on a narrow card the hover buttons sit over the middle (P10.3 §5, one-line cards).
-  await chordCards.last().click({ position: { x: 12, y: 70 } });
+  await chordCards.last().click();
   await expect(page.locator("[data-progression-detail-view]")).toBeVisible();
 
   t0 = Date.now();
@@ -233,13 +236,11 @@ test("P10.3 a progression saved by section keeps the section's name in its memo,
 
   await openVault(page);
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
-  await page.getByRole("button", { name: "親Ideaを開く" }).click();
-  const memos = page.getByTestId("block-memo");
-  await expect(memos).toHaveCount(4);
-  const texts = await memos.allTextContents();
-  expect(texts.map((text) => /^\d+〜\d+小節|^\d+小節/.exec(text)?.[0])).toEqual(["1〜8小節", "9〜16小節", "17〜24小節", "65小節"]);
-  // Warning ids never show raw; when there are warnings they follow the name in words.
-  for (const text of texts) expect(text).not.toMatch(/[a-z]+-[a-z]+/);
+  const names=page.getByRole('combobox',{name:'この曲の進行',exact:true}).locator('option');
+  await expect(names).toHaveCount(4);
+  const texts=await names.allTextContents();
+  expect(texts.map(text=>/\d+〜\d+小節|\d+小節/.exec(text)?.[0])).toEqual(["1〜8小節","9〜16小節","17〜24小節","65小節"]);
+  for(const text of texts)expect(text).not.toMatch(/[a-z]+-[a-z]+/);
 });
 
 test("P10.3 on a long progression's page the cards' review words stay on one line", async ({ page }) => {
@@ -251,12 +252,10 @@ test("P10.3 on a long progression's page the cards' review words stay on one lin
   await expect(form).toBeHidden();
   await openVault(page);
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
-  const reviews = page.locator("[data-progression-card-stage] [data-testid='chord-card-review']");
-  expect(await reviews.count()).toBeGreaterThan(10);
-  const heights = await reviews.evaluateAll((items) => items.map((item) => item.getBoundingClientRect().height));
-  expect(Math.max(...heights)).toBeLessThanOrEqual(20); // one line (the mark is 16px)
-  const first = reviews.first();
-  await expect(first).toHaveAttribute("title", /^要確認/);
+  // P10.4 saved cards are authored; analyzer review decorations no longer appear.
+  await expect(page.locator("[data-progression-card-stage] [data-testid='chord-card-review']")).toHaveCount(0);
+  await expect(page.getByTestId('correction-review-count')).toHaveCount(0);
+  expect(await page.getByTestId('correction-card').count()).toBeGreaterThan(0);
 });
 
 test("P10.3 §7: in Voicing Loop with 「保存した音」, the one chord without saved notes is filled by generated notes and marked", async ({ page }) => {

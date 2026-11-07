@@ -1,0 +1,134 @@
+.master251-card{margin-top:16px}.master251-counts{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0}.master251-counts span{display:flex;gap:8px}.master251-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.master251-header h1{font-size:24px;margin:4px 0}.master251-stage{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--lv-text-muted)}.master251-stage span{font-size:12px}.master251-prompt{min-height:150px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:8px}.master251-prompt h2{font-size:22px;margin:0}.master251-prompt strong{font-size:60px;line-height:1}.master251-chords{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.master251-chords>button{border:1px solid var(--lv-border);padding:12px;text-align:center;border-radius:8px;display:flex;flex-direction:column;gap:5px}.master251-chords>button[data-current=true]{border-color:var(--lv-accent);background:color-mix(in srgb,var(--lv-accent) 8%,transparent)}.master251-note-names{text-align:center;color:var(--lv-text-muted)}.master251-feedback{min-height:26px;text-align:center}.master251-keyboard{margin-top:12px;min-width:0;overflow-x:auto}.master251-progress{margin-top:16px}.master251-grid{display:grid;gap:8px}.master251-grid-row{display:grid;grid-template-columns:60px repeat(12,minmax(0,1fr));gap:4px;align-items:center}.master251-grid-row>span{border:1px solid var(--lv-border);border-radius:5px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 0;font-size:12px}.master251-grid-row small{font-size:10px}.master251-grid-row>span[data-status=learning]{border-color:#c6a663}.master251-grid-row>span[data-status=passed]{border-color:#48b3ab}.master251-grid-row>span[data-status=master]{background:#174940;border-color:#48b3ab}.master251-grid-row>span[data-review=true]{border-color:#c6a663}.master251-manual{display:grid;gap:8px;margin-top:12px}.master251-manual>div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.master251-manual button{font-size:12px}@media(max-width:800px){.master251-grid-row{grid-template-columns:48px repeat(12,minmax(0,1fr));gap:2px}.master251-grid-row>span{font-size:10px}.master251-grid-row small{font-size:8px}.master251-prompt strong{font-size:48px}}
+
+.master251-beats{display:flex;justify-content:center;gap:8px;margin:12px 0}.master251-beats span{width:28px;height:28px;border:1px solid var(--lv-border);border-radius:50%;display:grid;place-items:center;font-size:12px}.master251-beats [data-current=true]{background:#174940;border-color:#48b3ab}
+
+.master251{padding:28px 32px}.master251 .master251-prompt h2{display:block;text-align:center;font-size:24px}.dojo .master251-card h2{font-size:18px}@media(max-width:800px){.master251{padding:20px 16px}}
+
+.master251-keyboard {max-width:100%;overflow-x:auto;}
+.master251-keyboard [data-keyboard-layout=default],.master251-keyboard svg {min-width:760px!important;}
+
+/* Reserve the same score and keyboard rows in Learn, Recall, Ready and feedback. */
+.master251.dojo {padding:0 0 8px;box-sizing:border-box;position:relative;}
+.master251-layout {padding:0;height:100%;min-height:620px;display:grid;grid-template-rows:42px minmax(0,1fr);gap:0;}
+.master251-header {gap:12px;margin:0;padding:0 12px;min-width:0;}
+.master251-header>div:first-child {display:flex;align-items:center;gap:8px;}
+.master251-header h1 {font-size:18px;white-space:nowrap;}
+.master251-stage {font-size:12px;gap:8px;}
+.master251-stage span {font-size:11px;}
+.master251 .master251-practice {padding:0;display:grid;grid-template-rows:minmax(184px,1fr) 226px 168px;min-height:0;border:0;overflow:visible;}
+.master251-task {display:grid;align-content:safe center;justify-items:stretch;grid-template-rows:40px 42px 16px 28px 32px;gap:4px;padding:4px 12px;min-width:0;}
+.master251-prompt {grid-row:1;min-height:0;flex-direction:row;align-items:center;gap:12px;}
+.master251 .master251-prompt h2 {font-size:22px;margin:0;}
+.master251 .master251-prompt strong {font-size:40px;}
+.master251-chords {grid-row:2;gap:8px;max-width:720px;width:100%;justify-self:center;}
+.master251-chords>button {padding:3px 10px;gap:2px;}
+.master251-note-names {grid-row:3;margin:0;line-height:16px;}
+.master251-response {grid-row:4;display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;}
+.master251-feedback {min-height:0;margin:0;line-height:20px;overflow-wrap:anywhere;}
+.master251-beats {gap:6px;margin:0;}
+.master251-beats span {width:24px;height:24px;}
+.master251-task>.dojo-actions {grid-row:5;}
+.master251-keyboard {margin:0;padding:5px 16px 7px;display:flex;flex-direction:column;gap:8px;overflow-x:hidden;background:var(--dojo-bg-2);border-top:1px solid var(--dojo-border);}
+.master251-keyboard [role=region] {padding:0;border:0;background:none;}
+.master251-keyboard [data-keyboard-layout=default] {width:100%;}
+.master251-keyboard svg {width:100%;height:128px;}
+.master251-records {position:relative;flex-shrink:0;}
+.master251-records>summary {cursor:pointer;padding:7px 9px;border:1px solid var(--dojo-border-strong);border-radius:7px;font-size:12px;color:var(--dojo-secondary);}
+.master251-records>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+.master251-progress {position:absolute;right:0;top:calc(100% + 4px);z-index:5;margin:0;width:760px;max-width:calc(100vw - 48px);max-height:calc(100vh - 160px);overflow:auto;background:var(--dojo-bg-2);box-shadow:0 12px 28px rgb(0 0 0 / 35%);}
+@container(max-width:900px) {
+ .master251-header {flex-wrap:wrap;height:auto;padding-bottom:8px;}
+ .master251-layout {height:auto;min-height:0;grid-template-rows:auto auto;}
+ .master251 .master251-practice {grid-template-rows:auto minmax(226px,auto) auto;}
+ .master251-task {grid-template-rows:auto 42px auto auto auto;padding:12px;gap:8px;}
+ .master251-prompt {min-height:48px;flex-wrap:wrap;}
+ .master251-response {flex-wrap:wrap;}
+ .master251-keyboard {min-height:168px;overflow-x:auto;}
+ .master251-records[open] {flex-basis:100%;max-width:100%;}
+ .master251-progress {position:static;width:100%;max-width:none;max-height:none;overflow:visible;box-shadow:none;}
+ .master251-grid-row {grid-template-columns:48px repeat(12,minmax(40px,1fr));}
+ .master251-grid {overflow-x:auto;}
+}
+
+.master251-layout:has(>.dojo-notice) {height:auto;grid-template-rows:auto;}
+
+.master251-prompt {display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);}
+.master251-prompt>h2,.master251-prompt>p {grid-column:1/-1;}
+.master251-identity {grid-column:1;justify-self:end;display:flex;align-items:center;gap:8px;}
+.master251 .master251-identity h2,.master251 .master251-identity strong {font-size:20px;}
+.master251-current-chord {grid-column:2;font-size:40px;line-height:40px;color:#f2f6fc;}
+
+@container(max-width:600px) {
+ .master251-prompt {grid-template-columns:1fr;gap:4px;}
+ .master251-identity,.master251-current-chord {grid-column:1;justify-self:center;}
+}
+
+.master251-chords>button {font-size:14px;line-height:17px;cursor:pointer;color:var(--dojo-primary-text);background:var(--dojo-bg-2);}
+.master251-chords>button:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+
+.master251-release-wait {margin:0;font-size:14px;color:var(--dojo-muted);line-height:20px;}
+.master251-response>button {min-height:24px;padding:2px 8px;font-size:12px;}
+
+.master251-stage label{display:flex;align-items:center;gap:4px}.master251-stage select{background:var(--dojo-bg-2);border:1px solid var(--dojo-border-strong);border-radius:5px;padding:2px 5px;color:var(--dojo-primary-text);font-size:12px}.master251-stage span{display:none}.master251-entrances{margin-top:8px}.master251-empty{align-self:start;margin:24px}.master251-practice[hidden]{display:none}.master251-neutral-prompt{font-size:14px;color:var(--dojo-muted);margin:0}.master251-response:has(.master251-release-wait) .master251-feedback{display:none}.master251 .dojo-score-neutral{font-size:13px;fill:var(--dojo-muted)}
+
+.master251-card .master251-counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0}.master251-card .master251-counts>button{display:flex;justify-content:space-between;align-items:center;gap:4px;white-space:nowrap;padding:4px 6px;font-size:11px;line-height:18px}.master251-card .master251-entrances{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.master251-card .master251-entrances>button{white-space:nowrap;padding:4px 6px;font-size:12px}
+.dojo .master251-card .master251-continue {background:transparent;border:1px solid var(--dojo-accent);color:var(--dojo-accent);font-size:14px;height:40px;width:100%;}
+.dojo .master251-card .master251-continue:hover {background:var(--dojo-accent-soft);}
+
+/* Keep every Master entrance visible below dense saved progress and a source notice. */
+.dojo[data-dojo-screen=home] .master251-card{padding:12px}.dojo[data-dojo-screen=home] .master251-card .master251-counts{gap:4px;margin:6px 0}.dojo[data-dojo-screen=home] .master251-card .master251-entrances{margin-top:6px}
+
+/* P12.1: stable reserved rows and a two-row narrow header. */
+.master251-header {display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;height:42px;gap:8px;align-items:center;}
+.master251-title {grid-area:auto;}
+.master251-stage {align-items:center;justify-content:flex-start;flex-wrap:nowrap;min-width:0;}
+.master251-stage select {height:26px;box-sizing:border-box;}
+.master251-stage .master251-stage-description {display:block;line-height:26px;white-space:nowrap;}
+
+/* P12.2: pause explains the pending attempt and exposes only resume/return. */
+.master251-practice[data-paused] .master251-task {grid-template-rows:minmax(0,1fr) 34px 16px;gap:6px;}
+.master251-practice[data-paused] .master251-prompt {display:flex;flex-direction:column;gap:6px;justify-content:center;}
+.master251-practice[data-paused] .master251-prompt h2 {font-size:26px;line-height:32px;}
+.master251-pause-description {font-size:14px;line-height:20px;color:var(--dojo-secondary);margin:0;max-width:760px;}
+.master251-pause-warning {font-size:12px;line-height:16px;color:var(--dojo-warn);margin:0;}
+.master251-practice[data-paused] .master251-response {display:none;}
+.master251-practice[data-paused] .master251-task>.dojo-actions {grid-row:2;}
+.master251-pause-note {grid-row:3;font-size:12px;line-height:16px;color:var(--dojo-muted);margin:0;text-align:center;}
+/* The score stays a direct child of the practice grid (as in P12.1); the paused note overlays its row (row 2). */
+.master251 .master251-practice>.master251-task {grid-row:1;grid-column:1;}
+.master251 .master251-practice>.dojo-score {grid-row:2;grid-column:1;}
+.master251 .master251-practice>.master251-keyboard {grid-row:3;grid-column:1;}
+.master251-score-paused {grid-row:2;grid-column:1;align-self:center;justify-self:center;z-index:1;margin:0;pointer-events:none;font-size:13px;color:var(--dojo-muted);}
+.master251 .master251-header>button,.master251-records>summary {height:30px;min-height:30px;box-sizing:border-box;padding:0 9px;font-size:12px;display:flex;align-items:center;white-space:nowrap;}
+.master251-task {--master251-code-size:40px;grid-template-rows:calc(20px + var(--master251-code-size)) 42px 16px 28px 34px;}
+.master251-prompt {display:grid;grid-template-columns:1fr;grid-template-rows:20px var(--master251-code-size);gap:0;min-height:0;}
+.master251-identity {grid-column:1;grid-row:1;justify-self:center;display:block;font-size:14px;line-height:20px;color:var(--dojo-secondary);}
+.master251-current-chord {grid-column:1;grid-row:2;justify-self:center;font-size:var(--master251-code-size);line-height:1;}
+.master251-task>.dojo-actions {height:34px;align-items:center;}
+.master251-task>.dojo-actions button {height:34px;padding-top:0;padding-bottom:0;}
+@media(max-height:800px) {.master251-task {gap:0;padding-top:2px;padding-bottom:2px;}}
+@media(min-height:801px) {.master251-task {--master251-code-size:64px;}}
+@media(min-height:1001px) {.master251-task {--master251-code-size:80px;}}
+@container(max-width:900px) {
+ .master251-header {height:auto;grid-template-columns:minmax(0,1fr) auto auto auto;grid-template-areas:"title midi records back" "stage stage stage stage";row-gap:8px;padding:8px 12px;align-items:start;}
+ .master251-title {grid-area:title;height:30px;}
+ .master251-midi {grid-area:midi;}
+ .master251-records {grid-area:records;}
+ .master251-back {grid-area:back;}
+ .master251-stage {grid-area:stage;flex-wrap:wrap;align-items:center;}
+ .master251-task {grid-template-rows:calc(20px + var(--master251-code-size)) 42px 16px 28px 34px;}
+ .master251-prompt {min-height:0;gap:0;}
+ .master251-layout {min-height:100%;grid-template-rows:auto minmax(0,1fr);}
+ .master251 .master251-practice {grid-template-rows:minmax(auto,1fr) minmax(226px,auto) auto;}
+ .master251 .master251-records[open] {grid-area:auto;grid-column:1/-1;grid-row:3;min-width:0;}
+ .master251 .master251-records[open]>summary {width:max-content;margin-left:auto;}
+ .master251 .master251-progress {width:100%;box-sizing:border-box;}
+}
+
+/* P12.2: explicit hint/listen, completed chords and tempo identity. */
+.master251-chords .master251-completed {color:#5fd39a;font-size:14px;font-weight:700;}
+.master251-tempo-label {color:var(--dojo-warn);margin-left:6px;}
+.master251-hint-warning {font-size:12px;line-height:16px;color:var(--dojo-warn);}
+
+/* P12.4-01: the shared back button sits in the title, at the title's height, so the header row still aligns. */
+.master251-title .dojo-back {height:30px;min-height:30px;padding:0 8px;}

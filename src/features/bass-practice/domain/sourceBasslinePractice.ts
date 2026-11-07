@@ -182,6 +182,11 @@ function cropNotes(
   return { notes: Object.freeze(result), boundaryClippedNoteCount };
 }
 
+export function projectSourceBasslineNotes(notes: readonly SourceBasslineNote[]) {
+  const sorted = notes.map((note, sourceOrder) => ({ ...note, sourceOrder })).sort((a, b) => compareExactBeat(a.start, b.start) || a.sourceOrder - b.sourceOrder);
+  return projectMonophonic(sorted);
+}
+
 function projectMonophonic(notes: readonly CroppedNote[]): {
   readonly targetEvents: readonly BasslineTargetEvent[];
   readonly exactEvents: readonly ProjectedExactEvent[];

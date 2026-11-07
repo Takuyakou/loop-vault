@@ -1,3 +1,4 @@
+import { emptyStore } from "../../domain/chordDojo/store";
 import { describe, expect, it } from "vitest";
 import { makeIdea } from "../../domain/testFactory";
 import type { SavedProgressionBlock } from "../../domain/types";
@@ -77,4 +78,19 @@ describe("today's practice", () => {
     expect(summarizePracticeActivity(ideas, undefined, now).latest).toMatchObject({ kind: "chord-dojo" });
     expect(summarizePracticeActivity([], undefined, now).latest).toBeUndefined();
   });
+});
+
+it("includes MIDI bass attempts in today's activity without any kept audio",()=>{
+ const midi=[{completedAt:at(28,13)}] as import("../../features/bass-practice/midi/model").MidiBassAttempt[];
+ expect(summarizePracticeActivity([],undefined,now,undefined,midi).today["bass-practice"]).toBe(1);
+});
+
+
+it("keeps Dojo daily results and MIDI bass attempts independent after integration", () => {
+ const dojo = emptyStore(now);
+ dojo.today = { date: "2026-09-28", tasks: [], cursor: { taskIndex: 0, stage: "see", keyIndex: 0, chordIndex: 0, answerSeen: false, hints: [], tempoResults: [] }, finished: true, added: [], matched: 3 };
+ const midi = [{ completedAt: at(28, 13) }] as import("../../features/bass-practice/midi/model").MidiBassAttempt[];
+ const activity = summarizePracticeActivity([], undefined, now, dojo, midi);
+ expect(activity.today).toEqual({ "chord-dojo": 3, "bass-practice": 1 });
+ expect(activity.todayTotal).toBe(4);
 });

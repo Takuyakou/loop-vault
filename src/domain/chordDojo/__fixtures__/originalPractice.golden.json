@@ -1,0 +1,1507 @@
+{
+  "contract": "p12.5-original-source-golden-v1",
+  "provenance": {
+    "source": "human-provided source package data plus independent raw SMF decoding; never product JSON",
+    "hands": "human-authored source package assignment; not inferred from pitch heuristics"
+  },
+  "progressions": [
+    {
+      "id": "op-traditional-passing",
+      "tempoBpm": 72,
+      "bars": 4,
+      "sourceSha256": "df53ab92cf893dbea51b08876e11802c8ade38f7db3c622330f8def5b02d6a33",
+      "ppq": 480,
+      "events": [
+        {
+          "index": 0,
+          "startBeat": 0,
+          "durationBeats": 4,
+          "label": "Fm11",
+          "expectedPitches": [
+            41,
+            48,
+            56,
+            60,
+            63,
+            67,
+            70
+          ],
+          "expectedNames": [
+            "F2",
+            "C3",
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "F2",
+            "C3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "F2",
+              "pitch": 41,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "C3",
+              "pitch": 48,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.121,
+              "durationBeats": 3.679,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "startBeat": 4,
+          "durationBeats": 2,
+          "label": "Bb7sus4",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            63,
+            65,
+            70
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "F3",
+              "pitch": 53,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "startBeat": 6,
+          "durationBeats": 2,
+          "label": "Bb9",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            60,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [
+            "Bb2",
+            "F3"
+          ],
+          "struck": [
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "startBeat": 8,
+          "durationBeats": 4,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            46,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "Bb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2",
+            "Bb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "startBeat": 12,
+          "durationBeats": 2,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 72
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 75
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 75
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 75
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "startBeat": 14,
+          "durationBeats": 2,
+          "label": "Edim7",
+          "expectedPitches": [
+            40,
+            55,
+            58,
+            61,
+            64,
+            67
+          ],
+          "expectedNames": [
+            "E2",
+            "G3",
+            "Bb3",
+            "Db4",
+            "E4",
+            "G4"
+          ],
+          "leftHand": [
+            "E2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "Db4",
+            "E4",
+            "G4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "E2",
+              "pitch": 40,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 80
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 80
+            },
+            {
+              "name": "Db4",
+              "pitch": 61,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 80
+            },
+            {
+              "name": "E4",
+              "pitch": 64,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 80
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.121,
+              "durationBeats": 1.679,
+              "velocity": 80
+            }
+          ]
+        }
+      ],
+      "sourceNotes": [
+        {
+          "pitch": 41,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 75,
+          "sourceOrder": 1
+        },
+        {
+          "pitch": 48,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 70,
+          "sourceOrder": 2
+        },
+        {
+          "pitch": 56,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 3
+        },
+        {
+          "pitch": 60,
+          "startBeat": 0.029166666666666667,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 4
+        },
+        {
+          "pitch": 63,
+          "startBeat": 0.06041666666666667,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 5
+        },
+        {
+          "pitch": 67,
+          "startBeat": 0.08958333333333333,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 6
+        },
+        {
+          "pitch": 70,
+          "startBeat": 0.12083333333333333,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 7
+        },
+        {
+          "pitch": 46,
+          "startBeat": 4.0,
+          "endBeat": 7.8,
+          "velocity": 75,
+          "sourceOrder": 15
+        },
+        {
+          "pitch": 53,
+          "startBeat": 4.0,
+          "endBeat": 7.8,
+          "velocity": 70,
+          "sourceOrder": 16
+        },
+        {
+          "pitch": 56,
+          "startBeat": 4.0,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 17
+        },
+        {
+          "pitch": 63,
+          "startBeat": 4.029166666666667,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 18
+        },
+        {
+          "pitch": 65,
+          "startBeat": 4.060416666666667,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 19
+        },
+        {
+          "pitch": 70,
+          "startBeat": 4.089583333333334,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 20
+        },
+        {
+          "pitch": 56,
+          "startBeat": 6.0,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 25
+        },
+        {
+          "pitch": 60,
+          "startBeat": 6.029166666666667,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 26
+        },
+        {
+          "pitch": 62,
+          "startBeat": 6.060416666666667,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 27
+        },
+        {
+          "pitch": 65,
+          "startBeat": 6.089583333333334,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 28
+        },
+        {
+          "pitch": 39,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 75,
+          "sourceOrder": 35
+        },
+        {
+          "pitch": 46,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 70,
+          "sourceOrder": 36
+        },
+        {
+          "pitch": 55,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 37
+        },
+        {
+          "pitch": 58,
+          "startBeat": 8.029166666666667,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 38
+        },
+        {
+          "pitch": 62,
+          "startBeat": 8.060416666666667,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 39
+        },
+        {
+          "pitch": 65,
+          "startBeat": 8.089583333333334,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 40
+        },
+        {
+          "pitch": 39,
+          "startBeat": 12.0,
+          "endBeat": 13.8,
+          "velocity": 72,
+          "sourceOrder": 47
+        },
+        {
+          "pitch": 55,
+          "startBeat": 12.0,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 48
+        },
+        {
+          "pitch": 58,
+          "startBeat": 12.029166666666667,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 49
+        },
+        {
+          "pitch": 62,
+          "startBeat": 12.060416666666667,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 50
+        },
+        {
+          "pitch": 65,
+          "startBeat": 12.089583333333334,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 51
+        },
+        {
+          "pitch": 40,
+          "startBeat": 14.0,
+          "endBeat": 15.8,
+          "velocity": 75,
+          "sourceOrder": 57
+        },
+        {
+          "pitch": 55,
+          "startBeat": 14.0,
+          "endBeat": 15.8,
+          "velocity": 80,
+          "sourceOrder": 58
+        },
+        {
+          "pitch": 58,
+          "startBeat": 14.029166666666667,
+          "endBeat": 15.8,
+          "velocity": 80,
+          "sourceOrder": 59
+        },
+        {
+          "pitch": 61,
+          "startBeat": 14.060416666666667,
+          "endBeat": 15.8,
+          "velocity": 80,
+          "sourceOrder": 60
+        },
+        {
+          "pitch": 64,
+          "startBeat": 14.089583333333334,
+          "endBeat": 15.8,
+          "velocity": 80,
+          "sourceOrder": 61
+        },
+        {
+          "pitch": 67,
+          "startBeat": 14.120833333333334,
+          "endBeat": 15.8,
+          "velocity": 80,
+          "sourceOrder": 62
+        },
+        {
+          "pitch": 41,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 69
+        },
+        {
+          "pitch": 48,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 70,
+          "sourceOrder": 70
+        },
+        {
+          "pitch": 56,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 71
+        },
+        {
+          "pitch": 60,
+          "startBeat": 16.029166666666665,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 72
+        },
+        {
+          "pitch": 63,
+          "startBeat": 16.060416666666665,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 73
+        },
+        {
+          "pitch": 67,
+          "startBeat": 16.089583333333334,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 74
+        },
+        {
+          "pitch": 70,
+          "startBeat": 16.120833333333334,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 75
+        }
+      ]
+    },
+    {
+      "id": "op-modern-passing",
+      "tempoBpm": 72,
+      "bars": 4,
+      "sourceSha256": "bb5a45bcb7f4230d9cd04f15d0f62adce8d920c0efa77a31258700784002f2aa",
+      "ppq": 480,
+      "events": [
+        {
+          "index": 0,
+          "startBeat": 0,
+          "durationBeats": 4,
+          "label": "Fm11",
+          "expectedPitches": [
+            41,
+            48,
+            56,
+            60,
+            63,
+            67,
+            70
+          ],
+          "expectedNames": [
+            "F2",
+            "C3",
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "F2",
+            "C3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "F2",
+              "pitch": 41,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "C3",
+              "pitch": 48,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.121,
+              "durationBeats": 3.679,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "startBeat": 4,
+          "durationBeats": 2,
+          "label": "Bb7sus4",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            63,
+            65,
+            70
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "F3",
+              "pitch": 53,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "startBeat": 6,
+          "durationBeats": 2,
+          "label": "Bb9",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            60,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [
+            "Bb2",
+            "F3"
+          ],
+          "struck": [
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "startBeat": 8,
+          "durationBeats": 4,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            46,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "Bb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2",
+            "Bb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "startBeat": 12,
+          "durationBeats": 2,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 72
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 75
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 75
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 75
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "startBeat": 14,
+          "durationBeats": 2,
+          "label": "Cadd9/E",
+          "expectedPitches": [
+            40,
+            55,
+            60,
+            62,
+            64,
+            67
+          ],
+          "expectedNames": [
+            "E2",
+            "G3",
+            "C4",
+            "D4",
+            "E4",
+            "G4"
+          ],
+          "leftHand": [
+            "E2"
+          ],
+          "rightHand": [
+            "G3",
+            "C4",
+            "D4",
+            "E4",
+            "G4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "E2",
+              "pitch": 40,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 76
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 82
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 82
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 82
+            },
+            {
+              "name": "E4",
+              "pitch": 64,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 82
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.121,
+              "durationBeats": 1.679,
+              "velocity": 82
+            }
+          ]
+        }
+      ],
+      "sourceNotes": [
+        {
+          "pitch": 41,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 75,
+          "sourceOrder": 1
+        },
+        {
+          "pitch": 48,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 70,
+          "sourceOrder": 2
+        },
+        {
+          "pitch": 56,
+          "startBeat": 0.0,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 3
+        },
+        {
+          "pitch": 60,
+          "startBeat": 0.029166666666666667,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 4
+        },
+        {
+          "pitch": 63,
+          "startBeat": 0.06041666666666667,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 5
+        },
+        {
+          "pitch": 67,
+          "startBeat": 0.08958333333333333,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 6
+        },
+        {
+          "pitch": 70,
+          "startBeat": 0.12083333333333333,
+          "endBeat": 3.8,
+          "velocity": 78,
+          "sourceOrder": 7
+        },
+        {
+          "pitch": 46,
+          "startBeat": 4.0,
+          "endBeat": 7.8,
+          "velocity": 75,
+          "sourceOrder": 15
+        },
+        {
+          "pitch": 53,
+          "startBeat": 4.0,
+          "endBeat": 7.8,
+          "velocity": 70,
+          "sourceOrder": 16
+        },
+        {
+          "pitch": 56,
+          "startBeat": 4.0,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 17
+        },
+        {
+          "pitch": 63,
+          "startBeat": 4.029166666666667,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 18
+        },
+        {
+          "pitch": 65,
+          "startBeat": 4.060416666666667,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 19
+        },
+        {
+          "pitch": 70,
+          "startBeat": 4.089583333333334,
+          "endBeat": 5.8,
+          "velocity": 78,
+          "sourceOrder": 20
+        },
+        {
+          "pitch": 56,
+          "startBeat": 6.0,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 25
+        },
+        {
+          "pitch": 60,
+          "startBeat": 6.029166666666667,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 26
+        },
+        {
+          "pitch": 62,
+          "startBeat": 6.060416666666667,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 27
+        },
+        {
+          "pitch": 65,
+          "startBeat": 6.089583333333334,
+          "endBeat": 7.8,
+          "velocity": 78,
+          "sourceOrder": 28
+        },
+        {
+          "pitch": 39,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 75,
+          "sourceOrder": 35
+        },
+        {
+          "pitch": 46,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 70,
+          "sourceOrder": 36
+        },
+        {
+          "pitch": 55,
+          "startBeat": 8.0,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 37
+        },
+        {
+          "pitch": 58,
+          "startBeat": 8.029166666666667,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 38
+        },
+        {
+          "pitch": 62,
+          "startBeat": 8.060416666666667,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 39
+        },
+        {
+          "pitch": 65,
+          "startBeat": 8.089583333333334,
+          "endBeat": 11.8,
+          "velocity": 78,
+          "sourceOrder": 40
+        },
+        {
+          "pitch": 39,
+          "startBeat": 12.0,
+          "endBeat": 13.8,
+          "velocity": 72,
+          "sourceOrder": 47
+        },
+        {
+          "pitch": 55,
+          "startBeat": 12.0,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 48
+        },
+        {
+          "pitch": 58,
+          "startBeat": 12.029166666666667,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 49
+        },
+        {
+          "pitch": 62,
+          "startBeat": 12.060416666666667,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 50
+        },
+        {
+          "pitch": 65,
+          "startBeat": 12.089583333333334,
+          "endBeat": 13.8,
+          "velocity": 75,
+          "sourceOrder": 51
+        },
+        {
+          "pitch": 40,
+          "startBeat": 14.0,
+          "endBeat": 15.8,
+          "velocity": 76,
+          "sourceOrder": 57
+        },
+        {
+          "pitch": 55,
+          "startBeat": 14.0,
+          "endBeat": 15.8,
+          "velocity": 82,
+          "sourceOrder": 58
+        },
+        {
+          "pitch": 60,
+          "startBeat": 14.029166666666667,
+          "endBeat": 15.8,
+          "velocity": 82,
+          "sourceOrder": 59
+        },
+        {
+          "pitch": 62,
+          "startBeat": 14.060416666666667,
+          "endBeat": 15.8,
+          "velocity": 82,
+          "sourceOrder": 60
+        },
+        {
+          "pitch": 64,
+          "startBeat": 14.089583333333334,
+          "endBeat": 15.8,
+          "velocity": 82,
+          "sourceOrder": 61
+        },
+        {
+          "pitch": 67,
+          "startBeat": 14.120833333333334,
+          "endBeat": 15.8,
+          "velocity": 82,
+          "sourceOrder": 62
+        },
+        {
+          "pitch": 41,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 69
+        },
+        {
+          "pitch": 48,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 70,
+          "sourceOrder": 70
+        },
+        {
+          "pitch": 56,
+          "startBeat": 16.0,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 71
+        },
+        {
+          "pitch": 60,
+          "startBeat": 16.029166666666665,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 72
+        },
+        {
+          "pitch": 63,
+          "startBeat": 16.060416666666665,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 73
+        },
+        {
+          "pitch": 67,
+          "startBeat": 16.089583333333334,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 74
+        },
+        {
+          "pitch": 70,
+          "startBeat": 16.120833333333334,
+          "endBeat": 19.8,
+          "velocity": 75,
+          "sourceOrder": 75
+        }
+      ]
+    }
+  ]
+}

@@ -158,8 +158,8 @@ Phase 2でユーザーができるようになったこと:
 
 参照元:
 
-- `D:\dev\Chord Drip作成\src\ui\ProgressionGrid.tsx`
-- `D:\dev\Chord Drip作成\src\ui\playbackProgress.ts`
+- `<作業フォルダ>\Chord Drip作成\src\ui\ProgressionGrid.tsx`
+- `<作業フォルダ>\Chord Drip作成\src\ui\playbackProgress.ts`
 
 Loop Vault側の実装:
 

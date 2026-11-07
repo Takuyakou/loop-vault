@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 const ownerContracts = Object.freeze({
   "test-infrastructure": {
     smoke: [], vitest: [], browser: [],
-    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/test-dx/check-gallery-excluded.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
+    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/test-dx/reporting.node-test.mjs", "scripts/test-dx/check-gallery-excluded.node-test.mjs", "scripts/test-dx/performance-reporter.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
   },
   "text-capture": {
     smoke: ["src/components/capture/textCaptureStatus.test.ts"],
@@ -26,7 +26,7 @@ const ownerContracts = Object.freeze({
       "src/views/ProgressionDetailView.test.tsx", "src/views/ProgressionDetailView.chordContext.test.tsx",
       "src/views/ProgressionDetailView.sourceBassline.test.tsx", "src/views/DetailView.test.tsx",
       "src/views/DetailView.save-policy.test.tsx", "src/components/progression-editing/EditableChordCard.test.tsx",
-      "src/components/progression-editing/ChordInspector.test.tsx",
+      "src/domain/progressionWorkspace/progressionWorkspace.test.ts",
     ],
     browser: ["e2e/vault-flow.spec.ts"],
   },
@@ -41,9 +41,9 @@ const ownerContracts = Object.freeze({
     browser: ["e2e/voicing-loop-v2.spec.ts"],
   },
   "dojo/practice": {
-    smoke: ["src/views/PracticeView.test.tsx"],
-    vitest: ["src/views/PracticeView.test.tsx", "src/practice/PracticeClock.test.ts"],
-    browser: ["e2e/phase5.18-chord-context.spec.ts"],
+    smoke: ["src/domain/chordDojo/chordDojo.test.ts", "src/domain/chordDojo/reviewRegressions.test.ts", "src/domain/master251/master251.test.ts", "src/views/chord-dojo/keyboardRange.test.ts"],
+    vitest: ["src/domain/chordDojo/chordDojo.test.ts", "src/domain/chordDojo/reviewRegressions.test.ts", "src/domain/master251/master251.test.ts", "src/views/chord-dojo/keyboardRange.test.ts", "src/practice/PracticeClock.test.ts"],
+    browser: ["e2e/p12-chord-dojo.spec.ts"],
   },
   settings: {
     smoke: ["src/views/SettingsView.test.tsx"],
@@ -57,7 +57,7 @@ const ownerContracts = Object.freeze({
   },
   "shared-ui": {
     smoke: ["src/views/CaptureView.test.tsx"],
-    vitest: ["src/views/CaptureView.test.tsx", "src/views/PracticeView.test.tsx", "src/views/HomeView.test.tsx"],
+    vitest: ["src/views/CaptureView.test.tsx", "src/domain/chordDojo/chordDojo.test.ts", "src/views/HomeView.test.tsx"],
     browser: ["e2e/responsive.spec.ts", "e2e/accessibility.spec.ts", "e2e/visual.spec.ts"],
   },
   persistence: {
@@ -98,12 +98,14 @@ export function ownerForFile(input) {
     if (/phase8\.8\.4|transport/i.test(file)) return { areas: ["transport"], reason: "transport browser contract" };
     if (/voicing-loop|phase5\.(27|28|29|30|31|32|33)/i.test(file)) return { areas: ["voicing-loop"], reason: "Voicing Loop browser contract" };
     if (/vault/i.test(file)) return { areas: ["vault"], reason: "Vault browser contract" };
-    if (/practice|dojo|phase5\.18/i.test(file)) return { areas: ["dojo/practice"], reason: "practice browser contract" };
+    if (/practice|dojo|master251|phase5\.18/i.test(file)) return { areas: ["dojo/practice"], reason: "practice browser contract" };
     if (/visual|responsive|accessibility|keyboard|reduced-motion/i.test(file)) return { areas: ["shared-ui"], reason: "shared browser contract", broad: true };
     return { areas: ["shared-ui"], reason: "unmapped browser test", broad: true };
   }
   if (/^src\/security\//.test(file) || /^scripts\/security\//.test(file)) return { areas: ["privacy/security"], reason: "security boundary" };
   if (/^src\/audio\/textTransport/.test(file) || /TextCaptureTransport/.test(file) || /transport-button\.css/.test(file)) return { areas: ["transport"], reason: "transport owner" };
+  if (/^scripts\/master251\//.test(file) || /^src\/domain\/practice\/heldChordSettler/.test(file)) return {areas:["dojo/practice"],reason:"Master251 canonical / physical-set contract"};
+  if (/^src\/(domain\/(chordDojo|master251)\/|views\/chord-dojo\/)/.test(file)) return {areas:["dojo/practice"],reason:"Chord Dojo owner"};
   if (/^src\/domain\/(textProgression|midi|harmony|chord)/i.test(file)) return { areas: ["harmony/parser"], reason: "parser/harmony owner" };
   if (/^src\/components\/capture\//.test(file) || /text-intake\.css/.test(file) || /CaptureView\.textProgression/.test(file)) return { areas: ["text-capture"], reason: "Text Capture owner" };
   if (/^src\/(voicingPractice\/|views\/ProgressionVoicingPracticeView)/.test(file)) return { areas: ["voicing-loop"], reason: "Voicing Loop owner" };
@@ -128,8 +130,13 @@ function isVitestTest(file) {
   return !file.startsWith("e2e/") && /\.(test|spec)\.[cm]?[jt]sx?$/.test(file) && !file.endsWith(".node-test.mjs");
 }
 
-export function selectForFiles(files, level, exists = existsSync) {
+export function selectForFiles(files, level, exists = existsSync, { explicit = false } = {}) {
   const changed = [...new Set(files.map(normalizePath))].sort();
+  const explicitBrowser = explicit && ["fast", "feature", "ui"].includes(level) && changed.length > 0
+    && changed.every((file) => /^e2e\/.*\.spec\.ts$/.test(file));
+  if (explicitBrowser && changed.some((file) => !exists(file))) {
+    throw new Error("Explicit Playwright spec is missing");
+  }
   const areas = new Set();
   const vitest = new Set();
   const browser = new Set();
@@ -140,7 +147,7 @@ export function selectForFiles(files, level, exists = existsSync) {
   for (const file of changed) {
     const owner = ownerForFile(file);
     owner.areas.forEach((area) => areas.add(area));
-    broad ||= Boolean(owner.broad);
+    broad ||= !explicitBrowser && Boolean(owner.broad);
     browserChanged ||= /^e2e\//.test(file) || /\.(tsx|css)$/.test(file);
     reasons.push(`${file}: ${owner.areas.join(" + ") || "no test owner"} (${owner.reason})`);
     if (!exists(file)) continue; // deleted in this change: owner still counts, the file itself cannot run
@@ -153,7 +160,7 @@ export function selectForFiles(files, level, exists = existsSync) {
     const contract = ownerContracts[area];
     for (const file of level === "fast" ? contract.smoke : contract.vitest) vitest.add(file);
     (contract.node ?? []).forEach((file) => nodeTests.add(file));
-    if (level === "ui" || (level === "feature" && browserChanged)) {
+    if (!explicitBrowser && (level === "ui" || (level === "feature" && browserChanged))) {
       const specs = level === "feature" ? contract.browser.slice(0, 1) : contract.browser;
       specs.forEach((file) => browser.add(file));
     }
@@ -171,6 +178,7 @@ export function selectForFiles(files, level, exists = existsSync) {
     nodeTests: [...nodeTests].sort(),
     broad,
     browserChanged,
+    explicitBrowser,
     documentation: changed.some((file) => file.startsWith("docs/") || file.endsWith(".md")),
   };
 }

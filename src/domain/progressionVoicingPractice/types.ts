@@ -26,6 +26,7 @@ export interface DetachedPracticeVoicing {
 }
 
 export interface ProgressionPracticeChord {
+  readonly altered?: true;
   readonly root: number;
   readonly quality: ChordQuality;
   readonly tensions: readonly Tension[];

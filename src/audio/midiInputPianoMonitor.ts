@@ -63,7 +63,7 @@ export async function createMidiInputPianoMonitor(): Promise<MidiInputPianoMonit
 
   const stop = () => {
     if (disposed) return;
-    sampler.releaseAll();
+    sampler.releaseAll(Tone.immediate());
     sounding = new Set();
   };
 
@@ -75,11 +75,13 @@ export async function createMidiInputPianoMonitor(): Promise<MidiInputPianoMonit
           .filter((note) => Number.isInteger(note) && note >= 0 && note <= 127)
           .sort((left, right) => left - right),
       );
+      // Physical input uses the current audio time, without preview scheduling look-ahead.
+      const at = Tone.immediate();
       for (const note of sounding) {
-        if (!next.has(note)) sampler.triggerRelease(midiToNoteName(note));
+        if (!next.has(note)) sampler.triggerRelease(midiToNoteName(note), at);
       }
       for (const note of next) {
-        if (!sounding.has(note)) sampler.triggerAttack(midiToNoteName(note), undefined, 0.68);
+        if (!sounding.has(note)) sampler.triggerAttack(midiToNoteName(note), at, 0.68);
       }
       sounding = next;
     },

@@ -25,10 +25,12 @@ export function CloseDialogHost() {
         open
         title={blocker.title}
         description={blocker.message}
-        confirmLabel={blocker.confirmLabel}
+        confirmLabel={blocker.saveLabel??blocker.confirmLabel}
+        secondaryLabel={blocker.onSave?blocker.confirmLabel:undefined}
+        onSecondary={blocker.onSave?()=>finish(true):undefined}
         cancelLabel={blocker.cancelLabel}
         tone="danger"
-        onConfirm={() => finish(true)}
+        onConfirm={() => { if(!blocker.onSave||blocker.onSave())finish(true); }}
         onCancel={() => finish(false)}
       />
     );

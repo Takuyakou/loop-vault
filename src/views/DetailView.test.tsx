@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import {dojoStore} from "../domain/chordDojo/runtime";
+import {emptyStore,emptyItem} from "../domain/chordDojo/store";
+import {vaultKey} from "../domain/chordDojo/collect";
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -117,7 +120,7 @@ describe("DetailView status reasons", () => {
     await japanese.unmount();
   });
 
-  it("uses the Idea fallback key for progression practice state", async () => {
+  it("ignores legacy levels and displays new progression practice state", async () => {
     const source: SavedProgressionBlock = {
       id: "effective-key-block",
       summaryText: "Fallback key practice",
@@ -134,6 +137,7 @@ describe("DetailView status reasons", () => {
         confirmedLevel: 3,
       },
     };
+    const dojo=emptyStore();dojo.progressions[vaultKey(practiced)]={...emptyItem(),state:"passed"};dojoStore.setState({file:dojo,ready:true});
     const mounted = await renderDetail(makeIdea({
       key: "C major",
       progressionBlocks: [practiced],
@@ -145,7 +149,8 @@ describe("DetailView status reasons", () => {
       "[data-practice-state]",
     );
     expect(badge?.getAttribute("data-practice-state")).toBe("confirmed");
-    expect(badge?.textContent).toContain("L3");
+    expect(badge?.textContent).toContain("合格");
+    expect(badge?.textContent).not.toContain("L3");
     await mounted.unmount();
   });
 });

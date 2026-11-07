@@ -1,3 +1,6 @@
+import { resolveVaultSavedChordNotes } from './features/bass-practice/application/vaultSavedChordNotes';
+import { progressionPracticeIdeas } from "./domain/progressionWorkspace/progressionPracticeProjection";
+import { orderedProgressions, progressionName } from "./domain/progressionWorkspace/progressionWorkspace";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { readBoundedMidiPath } from "./storage/boundedMidiReader";
@@ -30,12 +33,12 @@ import { formatHomeDate } from "./views/home/useHomeSummary";
 import { SettingsView } from "./views/SettingsView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
-import { PracticeView } from "./views/PracticeView";
+import { ChordDojoView } from "./views/chord-dojo/ChordDojoView";
 import { ProgressionVoicingPracticeView } from "./views/ProgressionVoicingPracticeView";
 import { progressionVoicingPracticeE2eFixture } from "./testing/progressionVoicingPracticeE2eFixture";
-import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled, isBassPracticeRootMotionEnabled } from "./features/bass-practice/application/featureFlag";
+import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled, isBassPracticeRootMotionEnabled, isBassPracticeMidiBasslineEnabled } from "./features/bass-practice/application/featureFlag";
 import { buildVaultPickerCandidateViews, buildVaultSourceBasslineCandidateViews, type VaultPickerCandidateView, type VaultSourceBasslineCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
-import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
+import { buildVaultChordContextSnapshot, type ChordContextSnapshot, type VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
   createPracticeControllerIfEnabled,
   PracticeDataController,
@@ -90,7 +93,9 @@ import { CaptureView, type SavedTextProgressionTarget } from "./views/CaptureVie
 import { useUndoQueue } from "./hooks/useUndoQueue";
 import type { UndoRequest } from "./hooks/useUndoQueue";
 import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
-import { LiveMidiOpenGate, liveMidiActivation, type LiveMidiActivationLease } from "./liveMidi/activationLease";
+import { LiveMidiOpenGate } from "./liveMidi/activationLease";
+import { registerClosePreparation } from "./store/closePreparation";
+import { connectionController } from "./liveMidi/connectionController";
 import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/miniWindowController";
 import { recoverMainWindowIfOffscreen } from "./voicingPractice/mainWindowWorkArea";
 import { loadLiveMidiPreferences, saveLiveMidiPreferences, type WindowBounds } from "./liveMidi/preferences";
@@ -152,21 +157,14 @@ export function findSavedTextProgressionTarget(
 export async function closeLiveMidiModeSafely(options: {
   gate: Pick<LiveMidiOpenGate, "close">;
   getHistory: () => readonly LiveChordHistoryEntry[];
-  releaseLease: () => void;
   closeWindow: () => Promise<WindowBounds | undefined>;
   saveBounds: (bounds: WindowBounds) => void;
   hidePreview: () => void;
   preserveHistory: (history: LiveChordHistoryEntry[]) => void;
   reportFailure: () => void;
 }): Promise<void> {
-  let released = false;
   let stateSettled = false;
   let history: LiveChordHistoryEntry[] = [];
-  const releaseLease = () => {
-    if (released) return;
-    released = true;
-    options.releaseLease();
-  };
   const settleVisibleState = () => {
     if (stateSettled) return;
     stateSettled = true;
@@ -177,7 +175,6 @@ export async function closeLiveMidiModeSafely(options: {
   try {
     await options.gate.close(async () => {
       history = [...options.getHistory()];
-      releaseLease();
       try {
         const bounds = await options.closeWindow();
         if (bounds) options.saveBounds(bounds);
@@ -186,7 +183,6 @@ export async function closeLiveMidiModeSafely(options: {
       }
     });
   } catch {
-    releaseLease();
     settleVisibleState();
     options.reportFailure();
   }
@@ -241,11 +237,13 @@ function App() {
     setProgressionDetailDirty,
     captureWorkspaceDirty,
     setCaptureWorkspaceDirty,
+    saveProgression,
+    setProgressionSave,
     pendingProgressionLeave,
     setPendingProgressionLeave,
     requestProgressionLeave,
     navigateTo,
-    openDetail,
+    openDetail: openIdeaDetail,
     openProgression,
   } = useAppNavigation({
     onNavigate: (nextView, previousView) => {
@@ -253,7 +251,7 @@ function App() {
       if (nextView === "capture") setCaptureInitialInputMode("midi");
     },
   });
-  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled() || isBassPracticeRootMotionEnabled());
+  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled() || isBassPracticeRootMotionEnabled() || isBassPracticeMidiBasslineEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
   const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);
@@ -263,6 +261,7 @@ function App() {
   const [liveMidiSettingsOpen, setLiveMidiSettingsOpen] = useState(false);
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
+  const resolveSavedChordNotes = useCallback((snapshot: ChordContextSnapshot) => resolveVaultSavedChordNotes(defaultVaultStore.getState().ideas, snapshot), []);
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
@@ -287,17 +286,21 @@ function App() {
       .catch(() => undefined);
   }, [standardTitleBar]);
   const liveMidiClosingRef = useRef(false);
-  const liveMidiLeaseRef = useRef<LiveMidiActivationLease>();
+  const liveMidiModeOpenRef = useRef(false);
   const liveMidiOpenGateRef = useRef<LiveMidiOpenGate>();
   if (!liveMidiOpenGateRef.current) liveMidiOpenGateRef.current = new LiveMidiOpenGate();
   const undoQueue = useUndoQueue();
   const undoEpochRef = useRef(vaultEpoch);
   useEffect(() => () => {
     void liveMidiOpenGateRef.current?.close(async () => {
-      liveMidiLeaseRef.current?.release();
-      liveMidiLeaseRef.current = undefined;
+      liveMidiModeOpenRef.current = false;
       await miniWindowControllerRef.current?.close().catch(() => undefined);
     }).catch(() => undefined);
+  }, []);
+  // P14 §2: the app owns one MIDI connection. It starts here and closes with the app.
+  useEffect(() => {
+    void connectionController.initOnAppStart();
+    return registerClosePreparation(() => { void connectionController.shutdown(); });
   }, []);
   const pendingDeletions = useMemo(
     () => undoQueue.actions
@@ -339,6 +342,9 @@ function App() {
     [ideas, pendingDeletions, vaultEpoch],
   );
 
+  // Stable between renders: Chord Dojo re-plans when this array's identity changes, which would replace a practice in progress.
+  const chordDojoIdeas = useMemo(() => progressionPracticeIdeas(visibleIdeas), [visibleIdeas]);
+
   const vaultPickerCandidates = useMemo(
     () => view === "practice" && practiceMode === "bass-practice"
       ? buildVaultPickerCandidateViews(
@@ -360,7 +366,7 @@ function App() {
   const voicingLoopVaultCandidates = useMemo(
     () => view === "practice" && practiceMode === "voicing-loop"
       ? buildVoicingLoopVaultCandidates(
-        visibleIdeas,
+        progressionPracticeIdeas(visibleIdeas),
         "無題の進行",
       )
       : EMPTY_VOICING_LOOP_VAULT_CANDIDATES,
@@ -390,7 +396,7 @@ function App() {
     if (result.changedCount === 0) return true;
     const reference = voicingPracticeHandoff.sourceReference;
     if (!updateProgressionBlock(reference.ideaId, reference.blockId, { chords: result.cards })) return false;
-    const handoff = buildProgressionVoicingPracticeHandoffFromVault(defaultVaultStore.getState().ideas, reference);
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(progressionPracticeIdeas(defaultVaultStore.getState().ideas), reference);
     if (handoff.ok) setVoicingPracticeHandoff(handoff.handoff);
     return handoff.ok;
   }
@@ -477,6 +483,8 @@ function App() {
       ).catch(() => undefined);
     };
     const unsubscribeStore = defaultLiveMidiStore.subscribe(sendSnapshot);
+    // The mini window shows the shared state, which also depends on the controller (intent, last input).
+    const unsubscribeController = connectionController.state.subscribe(sendSnapshot);
 
     void (async () => {
       const stopCommands = await listen<LiveMidiWindowCommand>(
@@ -491,9 +499,9 @@ function App() {
           } else if (command.type === "close") {
             void leaveLiveMidiMode();
           } else if (command.type === "refresh-devices") {
-            void defaultLiveMidiStore.getState().refreshDevices();
+            void connectionController.refreshDevices();
           } else if (command.type === "select-device") {
-            void defaultLiveMidiStore.getState().selectDevice(command.backendId);
+            void connectionController.chooseDevice(command.backendId);
           } else if (command.type === "set-show-history") {
             defaultLiveMidiStore.getState().setShowHistory(command.show);
           }
@@ -510,6 +518,7 @@ function App() {
     return () => {
       disposed = true;
       unsubscribeStore();
+      unsubscribeController();
       unlistenCommand?.();
     };
   }, []);
@@ -533,6 +542,12 @@ function App() {
 
   /** Receives a detached P5.18 snapshot only; raw Vault data never crosses this boundary. */
   function openPractice(snapshot: VaultChordContextSnapshot) {
+    const reference = snapshot.source.reference;
+    const block = defaultVaultStore.getState().ideas.find(idea => idea.id === reference.ideaId)?.progressionBlocks?.find(block => block.id === reference.blockId);
+    if (!block) { setToast("保存元の進行は利用できません。", "error"); return; }
+    const current = buildVaultChordContextSnapshot({sourceReference: reference, block, sectionId: snapshot.section.id});
+    if (!current.ok) { setToast("保存済み進行を確認できないため、Bass Practiceを開始できません。", "error"); return; }
+    snapshot = current.snapshot;
     setPracticeTarget({
       ideaId: snapshot.source.reference.ideaId,
       blockId: snapshot.source.reference.blockId,
@@ -545,6 +560,18 @@ function App() {
   function openSettings() {
     navigateTo("settings");
     void refreshBackups();
+  }
+
+  const p104Seeded=useRef(false);
+  useEffect(()=>{
+    if(import.meta.env.VITE_P527_E2E_FIXTURE!=="1" || loadStatus!=="ready" || p104Seeded.current || !new URLSearchParams(window.location.search).has("p104"))return;
+    p104Seeded.current=true;
+    void import("./testing/p104ProgressionE2eFixture").then(({p104Ideas})=>{defaultVaultStore.setState({ideas:p104Ideas(new URLSearchParams(window.location.search).get("p104")==="long",new URLSearchParams(window.location.search).get("p104")==="text")});});
+  },[loadStatus]);
+  function openDetail(id:string) {
+    const idea=ideas.find(entry=>entry.id===id);
+    const first=orderedProgressions(idea?.progressionBlocks??[])[0];
+    if(first)openProgression(id,first.id);else openIdeaDetail(id);
   }
 
   function openChordDojo(target?: { ideaId: string; blockId: string }) {
@@ -565,7 +592,7 @@ function App() {
   }
 
   function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
-    const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
+    const result = buildProgressionVoicingPracticeHandoffFromVault(progressionPracticeIdeas(defaultVaultStore.getState().ideas), sourceReference);
     if (!result.ok) {
       setToast("保存済み進行を確認できないため、Voicing Loopを開始できません。", "error");
       return false;
@@ -587,9 +614,8 @@ function App() {
   }
 
   async function enterLiveMidiMode() {
-    if (liveMidiClosingRef.current || liveMidiLeaseRef.current) return;
+    if (liveMidiClosingRef.current || liveMidiModeOpenRef.current) return;
     await liveMidiOpenGateRef.current!.enter(async (isCurrent) => {
-      let modeLease: LiveMidiActivationLease | undefined;
       try {
         const preferences = loadLiveMidiPreferences();
         if (isTauri()) {
@@ -602,22 +628,17 @@ function App() {
           setWebLiveMidiPreviewOpen(true);
         }
         if (!isCurrent()) return;
-        modeLease = liveMidiActivation.acquire();
-        liveMidiLeaseRef.current = modeLease;
-        await modeLease.ready;
-        if (!isCurrent()) {
-          modeLease.release();
-          if (liveMidiLeaseRef.current === modeLease) liveMidiLeaseRef.current = undefined;
-          return;
-        }
+        liveMidiModeOpenRef.current = true;
+        // The mini mode shows the shared connection; it only asks for one when the user had turned it off.
+        if (connectionController.state.getState().intent === "off") await connectionController.connect();
+        if (!isCurrent()) return;
         if (isTauri()) {
           await sendLiveMidiSnapshot(
             createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState()),
           ).catch(() => undefined);
         }
       } catch (error) {
-        modeLease?.release();
-        if (liveMidiLeaseRef.current === modeLease) liveMidiLeaseRef.current = undefined;
+        liveMidiModeOpenRef.current = false;
         if (!isCurrent()) return;
         await miniWindowControllerRef.current?.close().catch(() => undefined);
         setToast(errorMessage(error, copy.liveMidi.miniModeFailed), "error");
@@ -633,11 +654,10 @@ function App() {
       await closeLiveMidiModeSafely({
         gate: liveMidiOpenGateRef.current!,
         getHistory: () => defaultLiveMidiStore.getState().history,
-        releaseLease: () => {
-          liveMidiLeaseRef.current?.release();
-          liveMidiLeaseRef.current = undefined;
+        closeWindow: async () => {
+          liveMidiModeOpenRef.current = false;
+          return miniWindowControllerRef.current?.close();
         },
-        closeWindow: async () => miniWindowControllerRef.current?.close(),
         saveBounds: (miniBounds) => {
           saveLiveMidiPreferences({ ...defaultLiveMidiStore.getState().preferences, miniBounds });
         },
@@ -745,8 +765,9 @@ function App() {
         view={view}
         setView={navigateTo}
         openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
+        openMidiSettings={() => setLiveMidiSettingsOpen(true)}
         openVoicingLoop={openDirectVoicingLoop}
-        openChordDojo={() => { navigateTo("practice"); setPracticeMode("chord-dojo"); }}
+        openChordDojo={() => openChordDojo()}
         openBassPractice={() => { navigateTo("practice"); openBassPractice(); }}
         bassPracticeAvailable={bassPracticeEnabled}
         bassPracticeActive={view === "practice" && practiceMode === "bass-practice"}
@@ -767,13 +788,13 @@ function App() {
         }}
         masterVolume={masterVolume}
         onMasterVolumeChange={changeMasterVolume}
-        pageTitle={shellTitle(view, practiceMode)}
+        pageTitle={view === "progression-detail" && progressionIdea && progressionBlock ? `Vault / ${progressionIdea.title} / ${progressionName(progressionBlock)}` : shellTitle(view, practiceMode)}
         pageSubtitle={view === "home" ? formatHomeDate(new Date()) : undefined}
         pageNavigation={view === "practice" ? (
           <PracticeModeTabs
             bassPracticeAvailable={bassPracticeEnabled}
             mode={practiceMode}
-            onModeChange={setPracticeMode}
+            onModeChange={mode=>{if(mode==='chord-dojo')setPracticeTarget(undefined);setPracticeMode(mode);}}
           />
         ) : undefined}
       >
@@ -785,14 +806,14 @@ function App() {
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={shellTitle(view, practiceMode)}
-          className={`min-h-0 min-w-0 flex-1 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
-            view === "practice" && practiceMode === "voicing-loop"
+          className={`min-h-0 min-w-0 flex-1 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] ${view === "practice" && practiceMode === "chord-dojo" ? "" : "px-4 lg:px-6"} ${
+            view === "practice" && practiceMode === "chord-dojo" ? "overflow-y-auto" : view === "practice" && (practiceMode === "voicing-loop" || practiceMode === "bass-practice")
               ? "overflow-x-hidden overflow-y-auto py-2"
               : "overflow-y-auto py-5"
           }`}
         >
-        <div className={`mx-auto flex w-full max-w-[1680px] min-w-0 flex-col ${
-          view === "practice" && practiceMode === "voicing-loop" ? "h-full min-h-0" : "min-h-full"
+        <div className={`mx-auto flex w-full min-w-0 flex-col ${view === "practice" && practiceMode === "chord-dojo" ? "max-w-none" : "max-w-[1680px]"} ${
+          view === "practice" ? "h-full min-h-0" : "min-h-full"
         }`}>
         {view === "settings" ? (
           <SettingsView
@@ -916,7 +937,7 @@ function App() {
                 />
               </CaptureRenderBoundary>
             ) : null}
-            {view === "detail" && selectedIdea ? (
+            {view === "detail" && selectedIdea && !selectedIdea.progressionBlocks?.length ? (
               <DetailView
                 idea={selectedIdea}
                 updateIdea={updateIdea}
@@ -939,6 +960,10 @@ function App() {
                 updateProgressionBlock={updateProgressionBlock}
                 duplicateProgressionBlock={duplicateProgressionBlock}
                 openProgression={openProgression}
+                onSaveReady={setProgressionSave}
+                updateIdea={updateIdea}
+                requestIdeaDelete={requestDelete}
+                openChordDojo={(ideaId,blockId)=>openChordDojo({ideaId,blockId})}
                 openIdea={openDetail}
                 openVault={() => setView("library")}
                 requestDelete={requestProgressionDelete}
@@ -954,13 +979,14 @@ function App() {
             {view === "practice" ? (
               <PracticeWorkspace
                   mode={practiceMode}
-                  onModeChange={setPracticeMode}
+                  onModeChange={mode=>{if(mode==='chord-dojo')setPracticeTarget(undefined);setPracticeMode(mode);}}
                   bassPracticeAvailable={bassPracticeEnabled}
                   bassPractice={(
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
                       {practiceData.status === "ready" ? <BassPracticeView
                         key={practiceSession.id}
                         chordContextSnapshot={chordContextSnapshot}
+                        resolveSavedChordNotes={resolveSavedChordNotes}
                         chordContextSnapshots={chordContextSnapshots}
                         vaultPickerCandidates={vaultPickerCandidates}
                         vaultSourceBasslines={vaultSourceBasslines}
@@ -1047,13 +1073,9 @@ function App() {
                     </Suspense>
                   )}
                   chordDojo={(
-                    <PracticeView
-                      ideas={visibleIdeas}
+                    <ChordDojoView
+                      ideas={chordDojoIdeas}
                       initialTarget={practiceTarget}
-                      updateProgressionBlock={updateProgressionBlock}
-                      openProgression={openProgression}
-                      openSettings={() => setLiveMidiSettingsOpen(true)}
-                      setToast={setToast}
                     />
                   )}
                   voicingLoop={(
@@ -1068,8 +1090,12 @@ function App() {
                       bulkSourcePreview={bulkSourcePreview}
                       onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}
+                      onToggleFavorite={(reference, pinned) => {
+                        // VL-15: the Voicing Loop star writes the same Vault flag the library row writes.
+                        const saved = updateProgressionBlock(reference.ideaId, reference.blockId, { pinned });
+                        return saved === "pending" ? true : saved;
+                      }}
                       onEnterText={openTextProgressionInput}
-                      openMidiSettings={() => setLiveMidiSettingsOpen(true)}
                     />
                   )}
               />
@@ -1109,10 +1135,13 @@ function App() {
         description={view === "capture"
           ? unsavedMessage(captureWorkspaceDirty, "移る")
           : progressionCopy.leaveUnsavedDescription}
-        confirmLabel={view === "capture" ? "保存せずに移る" : progressionCopy.discardAndLeave}
+        confirmLabel={view === "capture" ? "保存せずに移る" : "保存して移る"}
+        secondaryLabel={view === "progression-detail" ? "保存せずに移る" : undefined}
+        onSecondary={view === "progression-detail" ? () => { const action=pendingProgressionLeave;setPendingProgressionLeave(undefined);setProgressionDetailDirty(false);action?.(); } : undefined}
         cancelLabel={view === "capture" ? "戻る" : copy.common.cancel}
         onCancel={() => setPendingProgressionLeave(undefined)}
         onConfirm={() => {
+          if(view === "progression-detail" && !saveProgression())return;
           const action = pendingProgressionLeave;
           setPendingProgressionLeave(undefined);
           setProgressionDetailDirty(false);

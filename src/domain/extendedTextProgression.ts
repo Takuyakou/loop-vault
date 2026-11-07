@@ -1,5 +1,6 @@
 import { parseTextChordLabel } from "./chords";
-import { segmentScoreBar, normalizeScoreChord } from "./textScoreTokenizer";
+import { explicitSlashLabel } from "./explicitSlashLabel";
+import { segmentScoreBar, normalizeScoreChord, normalizeScoreSource } from "./textScoreTokenizer";
 import type { ChordSymbol } from "./types";
 import { confirmedTextProgressionKeyState } from "./textProgression";
 import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
@@ -128,7 +129,7 @@ export function parseExtendedTextProgression(
     return result("INVALID");
   }
 
-  const normalized = normalizeSourceLengthPreserving(source);
+  const normalized = normalizeScoreSource(source);
   const masked = normalized.split("");
   let commentCount = 0;
   for (const line of lineRanges(source)) {
@@ -228,7 +229,7 @@ export function parseExtendedTextProgression(
         continue;
       }
       const repeat = token.raw === "%";
-      const chord = repeat ? previousChord : parseExtendedChordToken(normalizeSourceLengthPreserving(token.raw));
+      const chord = repeat ? previousChord : parseExtendedChordToken(normalizeScoreSource(token.raw));
       if (!chord) {
         diagnostics.push(issue(source, repeat ? "INVALID_CONTROL_PREDECESSOR" : classifyInvalid(token.raw),
           repeat ? "Repeat needs preceding harmony." : "Unsupported chord meaning.", token.span));
@@ -284,7 +285,8 @@ export function parseExtendedTextProgression(
  * class (#11), with the written -5 retained for display/provenance.
  */
 export function parseExtendedTextChordLabel(raw: string): ChordSymbol | undefined {
-  const normalized = normalizeScoreChord(normalizeSourceLengthPreserving(raw));
+  if (/\s+alt\b/i.test(raw)) return undefined;
+  const normalized = normalizeScoreChord(raw);
   const onBass = /^(.*)on([A-G](?:#|b)*)$/.exec(normalized);
   const bassNormalized = onBass ? onBass[1] + "/" + onBass[2] : normalized;
   const bass = /\/([A-G](?:#|b)*)$/.exec(bassNormalized);
@@ -303,26 +305,17 @@ export function parseExtendedTextChordLabel(raw: string): ChordSymbol | undefine
       : base + "(" + (mark === "-5" ? "#11,omit5" : mark === "+5" ? "#5" : mark === "+9" ? "#9" : "#11") + ")" + suffix;
   }
   const parsed = parseTextChordLabel(semantic);
-  return parsed ? { ...parsed, label: normalized } : undefined;
+  return parsed ? { ...parsed, label: parsed.altered || parsed.quality === "minMaj7"
+    ? explicitSlashLabel(parsed)
+    : normalized } : undefined;
 }
 
 function isFlatFifthAlias(raw: string): boolean {
-  const normalized = normalizeScoreChord(normalizeSourceLengthPreserving(raw));
+  const normalized = normalizeScoreChord(raw);
   return /^[A-G](?:#|b)*7-5(?:\/[A-G](?:#|b)*)?$/.test(normalized);
 }
 
 const parseExtendedChordToken = parseExtendedTextChordLabel;
-
-function normalizeSourceLengthPreserving(source: string): string {
-  return [...source].map(char => {
-    const code = char.charCodeAt(0);
-    if (code >= 0xff01 && code <= 0xff5e) return String.fromCharCode(code - 0xfee0);
-    if (char === "　") return " ";
-    if (char === "♭") return "b";
-    if (char === "♯") return "#";
-    return char;
-  }).join("");
-}
 
 function* lineRanges(source: string): Generator<TextSourceRange> {
   let start = 0;

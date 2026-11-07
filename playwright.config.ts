@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { defineConfig, devices } from "@playwright/test";
 import { shouldReusePlaywrightWebServer } from "./scripts/playwright-web-server.js";
 
@@ -12,7 +13,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : 2,
+  // Measured on 24 logical CPUs; retain two on smaller desktops, cap at six.
+  workers: process.env.CI ? 1 : Math.min(6, Math.max(2, Math.floor(availableParallelism() / 4))),
   timeout: 30_000,
   expect: {
     timeout: 5_000,

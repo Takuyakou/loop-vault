@@ -305,10 +305,14 @@ test("P5.33 paused card seek persists through resume and keeps MIDI on the secon
 
   await transport.getByRole("button", { name: "開始", exact: true }).click();
   await transport.getByRole("button", { name: "一時停止", exact: true }).click();
+  // R-01 §2: the state that accepts the seek is the committed pause — the transport button has become 再開 — because a
+  // card click racing the (async) start/count-in commit can land on a runtime whose options are not set up yet, and
+  // that click is then silently ignored (one FULL run read no aria-current for its whole 10 s poll window).
+  await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
   await lastCard.click();
   await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
   await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("Dmaj7");
-  await expect(lastCard).toHaveAttribute("aria-current", "step");
+  await expect(lastCard).toHaveAttribute("aria-current", "step", { timeout: 10_000 });
   await transport.getByRole("button", { name: "再開", exact: true }).click();
   await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
 

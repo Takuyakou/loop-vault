@@ -1,4 +1,5 @@
 import type { ChordQuality, ChordSymbol, Tension } from "./types";
+import { normalizeScoreSource } from "./textScoreTokenizer";
 
 const noteNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"] as const;
 const sharpNoteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
@@ -211,7 +212,7 @@ function parenthesize(tensions: readonly string[]): string {
 export function formatChordSymbol(symbol: ChordSymbol, options?: ChordFormatOptions): string {
   const preference = accidentalPreferenceFor(options);
   const root = spell(symbol.root, preference);
-  const quality = qualityDisplay(symbol.quality, symbol.tensions, symbol.omissions);
+  const quality = symbol.altered ? "7alt" : qualityDisplay(symbol.quality, symbol.tensions, symbol.omissions);
   const bass =
     symbol.bass === undefined || normalizePc(symbol.bass) === normalizePc(symbol.root)
       ? ""
@@ -222,6 +223,14 @@ export function formatChordSymbol(symbol: ChordSymbol, options?: ChordFormatOpti
 
 export function labelFromSymbol(symbol: ChordSymbol): string {
   return formatChordSymbol(symbol);
+}
+
+/** Text notation alone adopts the approved minor-major canonical spelling. */
+export function formatTextChordSymbol(symbol: ChordSymbol, options?: ChordFormatOptions): string {
+  if (symbol.quality !== "minMaj7") return formatChordSymbol(symbol, options);
+  const ninth = symbol.tensions.includes("9");
+  const base = formatChordSymbol({ ...symbol, tensions: symbol.tensions.filter(value => value !== "9") }, options);
+  return base.replace("mMaj7", ninth ? "m(maj9)" : "m(maj7)");
 }
 
 function extractParenthesizedFactors(text: string): { rest: string; tensions: Tension[]; omissions: ("3" | "5")[]; valid: boolean } {
@@ -281,7 +290,7 @@ export function parseChordLabel(label: string): ChordSymbol | null {
 
 /** Phase 8.8 text-only semantics; both text dialects share this core. */
 export function parseTextChordLabel(label: string): ChordSymbol | null {
-  return parseChordLabelWithPolicy(label, true);
+  return parseChordLabelWithPolicy(normalizeScoreSource(label), true);
 }
 
 function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): ChordSymbol | null {
@@ -303,10 +312,29 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
     rest = rest.slice(0, rest.length - bassMatch[0].length);
   }
 
+  let altered = false;
+  let aliasTensions: Tension[] = [];
+  if (allowExtendedText) {
+    if (/^(?:7alt|7\(alt\)|alt)$/i.test(rest)) {
+      altered = true;
+      rest = "7";
+    } else {
+      const minorMajor = /^(?:m|min|-)(?:\((?:[mM][aA][jJ]|M|Δ|△)([79])\)|(?:[mM][aA][jJ]|M|Δ|△)([79]))(?=$|\()/.exec(rest);
+      if (minorMajor) {
+        rest = "mMaj7" + rest.slice(minorMajor[0].length);
+        if ((minorMajor[1] ?? minorMajor[2]) === "9") aliasTensions = ["9"];
+      } else {
+        rest = rest.replace(/^-(?=\d|$)/, "m").replace(/^mi(?=\d|$)/, "m")
+          .replace(/^(?:m7\(b5\)|[øØ]7)$/, "m7b5")
+          .replace(/^[°º]7$/, "dim7").replace(/^[Δ△]$/, "maj7")
+          .replace(/^(?:\+7|aug7)$/i, "7(#5)");
+      }
+    }
+  }
   const parenthesized = extractParenthesizedFactors(rest);
   if (!parenthesized.valid) return null;
   rest = parenthesized.rest;
-  let tensions: Tension[] = parenthesized.tensions;
+  let tensions: Tension[] = [...parenthesized.tensions, ...aliasTensions];
 
   const writtenQuality = rest;
   let quality = parseQuality(rest);
@@ -334,6 +362,7 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
     root,
     quality: folded.quality,
     tensions: orderTensions(folded.tensions.filter((tension) => !implied.includes(tension))),
+    ...(altered ? { altered: true as const } : {}),
     ...(parenthesized.omissions.length ? { omissions: [...parenthesized.omissions].sort() as ("3" | "5")[] } : {}),
     ...(bass !== undefined ? { bass } : {}),
     label: "",
@@ -341,7 +370,7 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
 
   const semantic = allowExtendedText
     ? applyTextSemanticPolicy(symbol, writtenQuality, parenthesized.tensions) : symbol;
-  return { ...semantic, label: labelFromSymbol(semantic) };
+  return { ...semantic, label: allowExtendedText ? formatTextChordSymbol(semantic) : labelFromSymbol(semantic) };
 }
 
 /** Text-only semantic repair; the legacy Product/MIDI parser is untouched. */

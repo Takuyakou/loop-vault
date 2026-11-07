@@ -104,3 +104,50 @@ test("runner and docs edits select their own validators", () => {
   assert.ok(runner.nodeTests.includes("scripts/test-dx/cache.node-test.mjs"));
   assert.equal(select(["docs/test-dx/README.md"], "fast").documentation, true);
 });
+
+
+const explicitSelect = (files, level) => selectForFiles(files, level, () => true, { explicit: true });
+
+test("explicit UI specs remain exact even for unmapped or shared browser owners", () => {
+  const files = ["e2e/p12-5-original.spec.ts", "e2e/ear-practice.spec.ts", "e2e/responsive.spec.ts"];
+  const result = explicitSelect(files, "ui");
+  assert.equal(result.explicitBrowser, true);
+  assert.equal(result.broad, false);
+  assert.deepEqual(result.browser, [...files].sort());
+});
+
+test("a missing explicit UI spec fails rather than falling back to the entire suite", () => {
+  assert.throws(() => selectForFiles(["e2e/misspelled.spec.ts"], "ui", () => false, { explicit: true }), /missing/);
+});
+
+test("mixed shared source and explicit specs still expand safely", () => {
+  const result = explicitSelect(["src/App.tsx", "e2e/ear-practice.spec.ts"], "ui");
+  assert.equal(result.explicitBrowser, false);
+  assert.equal(result.broad, true);
+  assert.ok(result.browser.includes("e2e/ear-practice.spec.ts"));
+});
+
+test("unknown product source continues to expand, while explicit Windows spec paths normalize", () => {
+  assert.equal(select(["src/new-feature/unknown.ts"], "feature").broad, true);
+  const result = explicitSelect(["e2e\\new-jazz.spec.ts"], "ui");
+  assert.deepEqual(result.browser, ["e2e/new-jazz.spec.ts"]);
+  assert.equal(result.broad, false);
+});
+
+
+test("explicit spec lists are bounded in FAST and FEATURE as well as UI", () => {
+  for (const level of ["fast", "feature", "ui"]) {
+    const files=["e2e/ear-practice.spec.ts", "e2e/p12-master251-ui-scheduler.spec.ts"];
+    const result=explicitSelect(files,level);
+    assert.equal(result.broad,false,level);
+    assert.deepEqual(result.browser,[...files].sort(),level);
+  }
+});
+
+
+test("automatically detected browser changes keep owner coverage instead of becoming explicit requests", () => {
+  assert.equal(select(["e2e/new-jazz.spec.ts"], "ui").broad, true);
+  const removed = selectForFiles(["e2e/deleted-shared.spec.ts"], "ui", file => file !== "e2e/deleted-shared.spec.ts");
+  assert.equal(removed.broad, true);
+  assert.ok(!removed.browser.includes("e2e/deleted-shared.spec.ts"));
+});

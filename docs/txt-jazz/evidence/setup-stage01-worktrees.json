@@ -1,0 +1,210 @@
+[
+  {
+    "worktree": "<作業フォルダ>/Loop Vault",
+    "head": "d3ccb86f6707436bfe872b97ae861cc71f56ecdc",
+    "branch": "refs/heads/feat/p537-union-chimera-production",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 153
+  },
+  {
+    "worktree": "[external protected worktree]",
+    "head": "360f7d0cf530ef9ea823b11f991b5fc2b1440947",
+    "branch": "refs/heads/research/phase7-core-v2",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p12-master-integration",
+    "head": "21d4828d0d62b35da574a2a32e3c2bfa39eea3a9",
+    "branch": "refs/heads/master",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p121-dojo-ui-fixes",
+    "head": "4175c29503963557e41d7841735f06138c342051",
+    "branch": "refs/heads/feat/p12.1-dojo-ui-fixes",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p122-master-fixes",
+    "head": "57c22e0f1f98b88612e2d9e34e2ff9338db0d6eb",
+    "branch": "refs/heads/feat/p12.2-master-fixes",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p532-compact-layout",
+    "head": "c78a2a6ebe8d4172037a639cbdbf8f751cabac9c",
+    "branch": "refs/heads/fix/p532-shell-taxonomy-follow-up",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p533-audit",
+    "head": "276d9b6dedebe9e4b57b91d44376db9a945883da",
+    "branch": "refs/heads/fix/p533-study-ui-optimizer-follow-up",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p533-merge",
+    "head": "cae487f29cde6e840507b1df71dcfa7aa9357750",
+    "branch": "refs/heads/fix/p533-transport-continuity-polish",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p540-merge",
+    "head": "ba8cf768e7cd1936909cf5ec7b36f31e4c029a65",
+    "branch": "refs/heads/research/phase8.8.3-r-compatibility-audit",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p542-text-intake",
+    "head": "a4da1b6f5dced724f3c701e714e8dc2404524023",
+    "branch": "refs/heads/feat/phase8.8.2-text-intake-ux",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p6-stage00",
+    "head": "1c37ae95bcd8ba880f2e26065dc14a296bf81442",
+    "branch": "refs/heads/feat/p6-orchestrator-stage00",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 1
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p8-off-baseline",
+    "head": "6b728b5636a8e3fe4adec7edabd62b76b3b7c10a",
+    "branch": null,
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p883-defining-tones",
+    "head": "36080b06b2ee02f388d45675ba02f2ee11167629",
+    "branch": "refs/heads/feat/phase8.8.3-defining-tone-correctness",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p883r-master-merge",
+    "head": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
+    "branch": null,
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p884-text-capture",
+    "head": "7ef13b9d3fdacd339d98300df06f3e5ed73c63fc",
+    "branch": "refs/heads/feat/phase8.8.4-text-capture",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p885-final-ui",
+    "head": "fef93c9822d737b46c71cf193b4364353c66efcc",
+    "branch": "refs/heads/feat/phase8.8.5-final-ui-correction",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/p885-global-playback",
+    "head": "b6d979f4f9fa8b56001a38ec217a6320f3b21da0",
+    "branch": "refs/heads/feat/phase8.8.5-global-playback-text-polish",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/txt-jazz-stage00",
+    "head": "6998a4317e7934a8f3e76784c66d95479e371bae",
+    "branch": "refs/heads/feat/txt-jazz-stage00",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/txt-jazz-stage01",
+    "head": "6998a4317e7934a8f3e76784c66d95479e371bae",
+    "branch": "refs/heads/feat/txt-jazz-stage01",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 67
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/.codex-staging/vl-v2",
+    "head": "622044ca61eadc76c042652d83773ee31cd52642",
+    "branch": "refs/heads/feat/p13.1-bass-ui-fixes",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 3
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault/task-p533-transport",
+    "head": "fa089e6fa804cab6eaa80062ce8354f632f23293",
+    "branch": "refs/heads/feat/p540-local-harmonic-identity-ranking",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault-251-master",
+    "head": "fb426bb8246fc2ab55df50063bc8d83bef73693c",
+    "branch": "refs/heads/feat/p12-theme-score",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault-dev",
+    "head": "8589c74ff6e7ee5a47f9c39d0ecbbc9640908be1",
+    "branch": "refs/heads/feat/p12.4-dojo-jazz",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 5
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault-p104",
+    "head": "8d107d3225201658a167cd3319eb73c85adcb492",
+    "branch": "refs/heads/feat/p10.4-progression-page",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault-p12",
+    "head": "bd8dff5ceff0115acf84ac80f807e3b22be07251",
+    "branch": "refs/heads/feat/p12-chord-dojo",
+    "statusReadExit": 0,
+    "clean": true,
+    "statusEntryCount": 0
+  },
+  {
+    "worktree": "<作業フォルダ>/Loop Vault-p1200",
+    "head": "7551a975837fbdaaf784c9153302115ef83194bd",
+    "branch": "refs/heads/feat/p12.0-00-audit",
+    "statusReadExit": 0,
+    "clean": false,
+    "statusEntryCount": 1
+  }
+]

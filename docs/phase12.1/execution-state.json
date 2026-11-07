@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "12.1",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P12.1-01"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "fb426bb8246fc2ab55df50063bc8d83bef73693c",
+  "lastVerifiedCommit": "f0f08b52f557d752bd2557c2bdc38d3097f1cf05",
+  "currentBranch": "feat/p12.1-dojo-ui-fixes",
+  "requiredGates": {
+    "P12.1-01": [
+      "p12.1-01-phase-docs",
+      "p12.1-01-practice",
+      "p12.1-01-master",
+      "p12.1-01-home-finish",
+      "p12.1-01-e2e",
+      "p12.1-01-others-unchanged",
+      "p12.1-01-data-unchanged",
+      "p12.1-01-screenshots",
+      "p12.1-01-full-fresh",
+      "p12.1-01-exe",
+      "p12.1-01-report"
+    ]
+  },
+  "gateResults": {
+    "p12.1-01-phase-docs": "pass",
+    "p12.1-01-practice": "pass",
+    "p12.1-01-master": "pass",
+    "p12.1-01-home-finish": "pass",
+    "p12.1-01-e2e": "pass",
+    "p12.1-01-others-unchanged": "pass",
+    "p12.1-01-data-unchanged": "pass",
+    "p12.1-01-screenshots": "pass",
+    "p12.1-01-full-fresh": "pass",
+    "p12.1-01-exe": "pass",
+    "p12.1-01-report": "pass"
+  },
+  "nextAction": "人間が EXE で確かめる。merge候補で停止する。",
+  "updatedAt": "2026-10-08"
+}

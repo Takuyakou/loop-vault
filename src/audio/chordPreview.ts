@@ -2,6 +2,7 @@ import * as Tone from "tone";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import type { ChordSymbol, ChordTimelineItem } from "../domain/types";
 import { createFreepatsBassInstrument } from "../features/bass-practice/application/freepatsBass";
+import { MAX_FADING_INSTRUMENTS, PREVIEW_STOP_FADE_SECONDS, PREVIEW_STOP_RETIRE_MS, rampOutputGain } from "./outputFade";
 
 const bundledPianoSamples = import.meta.glob(
   "./assets/salamander-piano/*.mp3",
@@ -74,6 +75,10 @@ const retiringInstruments = new Map<
   PreviewInstrument,
   ReturnType<typeof globalThis.setTimeout>
 >();
+/** The gain at the very end of each instrument's chain (after its effects): what is brought down when the instrument is stopped. */
+const instrumentOutputs = new WeakMap<PreviewInstrument, Tone.Gain>();
+/** Instruments that have been stopped and are fading out before they are thrown away (at most MAX_FADING_INSTRUMENTS). */
+const fadingInstruments: Array<{ instrument: PreviewInstrument; timer: ReturnType<typeof globalThis.setTimeout> }> = [];
 let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
 let previewGeneration = 0;
 let activeSession: PreviewSession | undefined;
@@ -315,7 +320,7 @@ export function stopPreview(): void {
   previewGeneration += 1;
   clearScheduledTimers();
   if (instrumentHasScheduledAudioEvents) {
-    disposePreviewInstrument();
+    fadeOutPreviewInstrument();
   } else {
     releasePreviewInstrument();
   }
@@ -368,10 +373,55 @@ function disposePreviewInstrument(): void {
   if (!instrument) return;
   cancelInstrumentRetirement(instrument);
   instrument.releaseAll();
-  instrument.dispose();
+  disposeWithOutput(instrument);
   instrument = undefined;
   instrumentSound = undefined;
   instrumentHasScheduledAudioEvents = false;
+}
+
+/** The instrument and the gain at the end of its chain, which this module made for it. */
+function disposeWithOutput(target: PreviewInstrument): void {
+  target.dispose();
+  instrumentOutputs.get(target)?.dispose();
+  instrumentOutputs.delete(target);
+}
+
+/**
+ * A stop that has to throw the instrument away (notes are scheduled for later, and nothing but disposing cancels them) must not
+ * cut a sounding note in the middle of its wave: that is heard as a click. The output gain is brought to zero over
+ * PREVIEW_STOP_FADE_SECONDS, the instrument is let go of at once (the next preview starts with a new one), and a timer
+ * (not the audio clock, which may have stopped) throws the old one away PREVIEW_STOP_RETIRE_MS later.
+ */
+function fadeOutPreviewInstrument(): void {
+  if (!instrument) return;
+  const retired = instrument;
+  cancelInstrumentRetirement(retired);
+  instrument = undefined;
+  instrumentSound = undefined;
+  instrumentHasScheduledAudioEvents = false;
+  const output = instrumentOutputs.get(retired);
+  if (!output) {
+    retired.releaseAll();
+    disposeWithOutput(retired);
+    return;
+  }
+  const now = Tone.immediate();
+  rampOutputGain(output, 0, now, now + PREVIEW_STOP_FADE_SECONDS, true);
+  retired.releaseAll(now);
+  const fading = {
+    instrument: retired,
+    timer: globalThis.setTimeout(() => disposeFadingInstrument(fading), PREVIEW_STOP_RETIRE_MS),
+  };
+  fadingInstruments.push(fading);
+  // a burst of stops: only so many may be fading at once
+  while (fadingInstruments.length > MAX_FADING_INSTRUMENTS) disposeFadingInstrument(fadingInstruments[0]!);
+}
+
+function disposeFadingInstrument(fading: { instrument: PreviewInstrument; timer: ReturnType<typeof globalThis.setTimeout> }): void {
+  globalThis.clearTimeout(fading.timer);
+  const index = fadingInstruments.indexOf(fading);
+  if (index >= 0) fadingInstruments.splice(index, 1);
+  disposeWithOutput(fading.instrument);
 }
 
 function releasePreviewInstrument(): void {
@@ -382,7 +432,7 @@ function releasePreviewInstrument(): void {
     releasedInstrument,
     globalThis.setTimeout(() => {
       retiringInstruments.delete(releasedInstrument);
-      releasedInstrument.dispose();
+      disposeWithOutput(releasedInstrument);
       if (instrument === releasedInstrument) {
         instrument = undefined;
         instrumentSound = undefined;
@@ -409,27 +459,36 @@ async function preparePreviewAudio(
       return undefined;
     }
 
-    if (instrument && instrumentSound === sound) {
+    if (instrument && instrumentSound === sound && sound !== "piano") {
       cancelInstrumentRetirement(instrument);
       return instrument;
     }
 
-    const nextInstrument = sound === "piano" || sound === "electric-piano"
-      ? await createPreviewInstrument(sound)
-      : sound === "clean-bass"
-        ? createCleanBassInstrument()
-        : sound === "singing-reference"
-          ? createSingingReferenceInstrument()
-          : sound === "freepats-finger-bass"
-            ? await createFreepatsBassInstrument("finger")
-            : sound === "freepats-picked-bass"
-              ? await createFreepatsBassInstrument("pick")
-              : createElectricPianoInstrument();
+    const output = new Tone.Gain(1).toDestination();
+    let nextInstrument: PreviewInstrument;
+    try {
+      nextInstrument = sound === "piano" || sound === "electric-piano"
+        ? await createPreviewInstrument(sound, output)
+        : sound === "clean-bass"
+          ? createCleanBassInstrument(output)
+          : sound === "singing-reference"
+            ? createSingingReferenceInstrument(output)
+            : sound === "freepats-finger-bass"
+              ? await createFreepatsBassInstrument("finger", { output })
+              : sound === "freepats-picked-bass"
+                ? await createFreepatsBassInstrument("pick", { output })
+                : createElectricPianoInstrument(output);
+    } catch (error) {
+      output.dispose();
+      throw error;
+    }
     if (!isActive(session)) {
       nextInstrument.dispose();
+      output.dispose();
       return undefined;
     }
 
+    instrumentOutputs.set(nextInstrument, output);
     instrument = nextInstrument;
     instrumentSound = sound;
     instrumentHasScheduledAudioEvents = false;
@@ -442,7 +501,25 @@ async function preparePreviewAudio(
   }
 }
 
-async function createPianoInstrument(output?: Tone.ToneAudioNode): Promise<PreviewInstrument> {
+// The module owns one immutable decoded sample set, not an idle instrument. A
+// stopped view may finish warming it; it cannot adopt a cancelled preview session.
+const PIANO_CACHE_MAX_BYTES = 50 * 1024 * 1024;
+type PianoBuffers = Record<string, AudioBuffer>;
+type PianoContext = ReturnType<typeof Tone.getContext>;
+let pianoCache: { context: PianoContext; key: string; buffers: PianoBuffers } | undefined;
+let pianoLoading: {
+  context: PianoContext;
+  key: string;
+  result: Promise<PianoBuffers>;
+  settled: Promise<void>;
+} | undefined;
+let pianoCacheContext: PianoContext | undefined;
+
+function clearClosedPianoCache(): void {
+  if (pianoCacheContext?.state === "closed") pianoCache = undefined;
+}
+
+async function getPianoBuffers(context: PianoContext): Promise<PianoBuffers> {
   const urls = Object.fromEntries(
     Object.entries(PIANO_SAMPLE_FILES).map(([note, fileName]) => {
       const url = bundledPianoSamples[`./assets/salamander-piano/${fileName}`];
@@ -452,15 +529,94 @@ async function createPianoInstrument(output?: Tone.ToneAudioNode): Promise<Previ
       return [note, url];
     }),
   );
+  // Vite's asset URLs include the content version in production. Context identity
+  // and rate are explicit: never publish a decode from a replaced context.
+  const key = JSON.stringify([context.sampleRate, urls]);
+  const isCurrent = () => Tone.getContext() === context && context.state !== "closed";
+  if (!isCurrent()) throw new Error("Piano audio context changed during loading.");
+  if (pianoCacheContext !== context) {
+    pianoCacheContext?.off("statechange", clearClosedPianoCache);
+    pianoCacheContext = context;
+    context.on("statechange", clearClosedPianoCache);
+    pianoCache = undefined;
+  }
+  if (pianoCache?.context === context && pianoCache.key === key) return pianoCache.buffers;
+  if (pianoLoading) {
+    if (pianoLoading.context === context && pianoLoading.key === key) return pianoLoading.result;
+    // decodeAudioData is not abortable. Serialize replacement/retry against the
+    // actual work, including work remaining after a public timeout.
+    await waitForPianoLoadRetirement(pianoLoading.settled);
+    return getPianoBuffers(context);
+  }
+  const controller = new AbortController();
+  let expired = false;
+  let timer: ReturnType<typeof globalThis.setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = globalThis.setTimeout(() => {
+      expired = true;
+      controller.abort();
+      reject(new Error("Piano samples did not load before timeout."));
+    }, 6_000);
+  });
+  const work = (async () => {
+    // allSettled prevents a failed sample from releasing the single-flight slot
+    // while other decodes are still in progress.
+    const results = await Promise.allSettled(Object.entries(urls).map(async ([note, url]) => {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error("Bundled piano sample could not be loaded.");
+      const bytes = await response.arrayBuffer();
+      if (controller.signal.aborted) throw new Error("Piano sample loading cancelled.");
+      return [note, await context.decodeAudioData(bytes)] as const;
+    }));
+    const buffers: PianoBuffers = {};
+    for (const result of results) {
+      if (result.status === "rejected") throw result.reason;
+      buffers[result.value[0]] = result.value[1];
+    }
+    if (expired || !isCurrent()) throw new Error("Piano audio context changed during loading.");
+    const bytes = Object.values(buffers).reduce((sum, buffer) =>
+      sum + buffer.length * buffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT, 0);
+    // At 48 kHz the existing assets use 47.2 MiB. Higher-rate contexts may
+    // exceed the cache budget: keep legacy playback working without retaining
+    // an oversized idle cache. Active Sampler memory is separately owned.
+    if (bytes <= PIANO_CACHE_MAX_BYTES) pianoCache = { context, key, buffers };
+    return buffers;
+  })();
+  const result = Promise.race([work, timeout]);
+  const loading = { context, key, result, settled: Promise.resolve() };
+  loading.settled = work.then(() => {}, () => {}).finally(() => {
+    globalThis.clearTimeout(timer);
+    if (pianoLoading === loading) pianoLoading = undefined;
+  });
+  pianoLoading = loading;
+  return result;
+}
+
+async function waitForPianoLoadRetirement(settled: Promise<void>): Promise<void> {
+  let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
+  try {
+    await Promise.race([settled, new Promise<never>((_, reject) => {
+      timer = globalThis.setTimeout(() => reject(new Error("Previous piano decode did not finish before timeout.")), 6_000);
+    })]);
+  } finally {
+    globalThis.clearTimeout(timer);
+  }
+}
+
+async function createPianoInstrument(output?: Tone.ToneAudioNode): Promise<PreviewInstrument> {
+  const context = Tone.getContext();
+  const buffers = await getPianoBuffers(context);
+  if (Tone.getContext() !== context || context.state === "closed") {
+    throw new Error("Piano audio context changed during loading.");
+  }
   const sampler = new Tone.Sampler({
-    urls,
+    context,
+    urls: buffers,
     release: 1,
   });
-  if (output) sampler.connect(output);
-  else sampler.toDestination();
-
   try {
-    await waitForPianoSamples(6_000);
+    if (output) sampler.connect(output);
+    else sampler.toDestination();
     return wrapInstrument(sampler);
   } catch (error) {
     sampler.dispose();
@@ -493,25 +649,6 @@ function wrapInstrument(source: {
       source.dispose();
     },
   };
-}
-
-function waitForPianoSamples(timeoutMs: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timeout = globalThis.setTimeout(() => {
-      reject(new Error("Piano samples did not load before timeout."));
-    }, timeoutMs);
-
-    Tone.loaded().then(
-      () => {
-        globalThis.clearTimeout(timeout);
-        resolve();
-      },
-      (error) => {
-        globalThis.clearTimeout(timeout);
-        reject(error);
-      },
-    );
-  });
 }
 
 function createElectricPianoInstrument(output?: Tone.ToneAudioNode): PreviewInstrument {
@@ -574,7 +711,7 @@ function createElectricPianoInstrument(output?: Tone.ToneAudioNode): PreviewInst
   };
 }
 
-function createCleanBassInstrument(): PreviewInstrument {
+function createCleanBassInstrument(output?: Tone.ToneAudioNode): PreviewInstrument {
   const highpass = new Tone.Filter({ frequency: 32, type: "highpass" });
   const lowpass = new Tone.Filter({
     frequency: 1700,
@@ -600,7 +737,7 @@ function createCleanBassInstrument(): PreviewInstrument {
       sustain: 0.12,
       release: 0.12,
     },
-  }).chain(highpass, lowpass, compressor, Tone.getDestination());
+  }).chain(highpass, lowpass, compressor, output ?? Tone.getDestination());
   synth.volume.value = -6;
 
   return {
@@ -619,7 +756,7 @@ function createCleanBassInstrument(): PreviewInstrument {
   };
 }
 
-function createSingingReferenceInstrument(): PreviewInstrument {
+function createSingingReferenceInstrument(output?: Tone.ToneAudioNode): PreviewInstrument {
   const highpass = new Tone.Filter({ frequency: 110, type: "highpass" });
   const lowpass = new Tone.Filter({
     frequency: 4200,
@@ -635,7 +772,7 @@ function createSingingReferenceInstrument(): PreviewInstrument {
       sustain: 0.72,
       release: 0.18,
     },
-  }).chain(highpass, lowpass, Tone.getDestination());
+  }).chain(highpass, lowpass, output ?? Tone.getDestination());
   synth.volume.value = -10;
 
   return {

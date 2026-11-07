@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
-const audio = vi.hoisted(() => ({ loaded: () => Promise.resolve(), disposed: 0, released: 0 }));
+const audio = vi.hoisted(() => ({ loaded: () => Promise.resolve(), disposed: 0, released: 0, chains: [] as unknown[][], destination: {} as object }));
 
 vi.mock("tone", () => {
-  class Node { chain() { return this; } dispose() { audio.disposed += 1; } }
+  class Node { chain(...nodes: unknown[]) { audio.chains.push(nodes); return this; } dispose() { audio.disposed += 1; } }
   class Sampler extends Node { volume = { value: 0 }; triggerAttackRelease() {} releaseAll() { audio.released += 1; } }
   class Filter extends Node {}
   class Compressor extends Node {}
   class PolySynth extends Node { volume = { value: 0 }; triggerAttackRelease() {} releaseAll() { audio.released += 1; } }
-  return { Sampler, Filter, Compressor, PolySynth, FMSynth: class {}, getDestination: () => new Node(), loaded: () => audio.loaded() };
+  return { Sampler, Filter, Compressor, PolySynth, FMSynth: class {}, getDestination: () => audio.destination, loaded: () => audio.loaded() };
 });
 
 import { createFreepatsBassInstrument } from "./freepatsBass";

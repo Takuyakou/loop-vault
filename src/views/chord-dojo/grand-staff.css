@@ -1,0 +1,27 @@
+.dojo-score {min-width:0;width:100%;background:var(--dojo-bg-2);border-top:1px solid var(--dojo-border);padding:8px 16px;box-sizing:border-box;}
+.dojo-score-caption {display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--dojo-muted);}
+.dojo-score-caption b {color:var(--dojo-secondary);}
+.dojo-score-scroll {height:244px;width:100%;max-width:100%;overflow:auto;overscroll-behavior:contain;}
+.dojo-grand-staff {display:block;width:100%;min-width:560px;overflow:visible;color:#edf1f5;}
+.dojo-grand-staff text {font-family:var(--font-ui);fill:currentColor;}
+.dojo-score-staff line,.dojo-score-ledger {stroke:#758797;stroke-width:1;}
+.dojo-score-clef,.dojo-score-brace {stroke:#c8d4df;stroke-width:2.6;fill:none;}
+.dojo-score-clef-label {font-size:12px;}
+.dojo-score-note {color:#eef0f4;fill:currentColor;}
+.dojo-score-accidental {font-size:23px;}
+.dojo-score-finger {font-size:15px;font-weight:650;}
+.dojo-score-leader {stroke:currentColor;stroke-width:1;fill:none;}
+.dojo-score-hidden {height:100%;display:grid;place-items:center;color:var(--dojo-muted);font-size:13px;}
+.dojo-score-legend {font-size:11px;color:var(--dojo-muted);margin:0;line-height:1.5;}
+
+/* Only empty space changes; staff lines, noteheads and finger text keep their size. */
+.dojo-score[data-score-compact=true] {padding:4px 16px;}
+.dojo-score[data-score-compact=true] .dojo-score-caption,.dojo-score[data-score-compact=true] .dojo-score-legend {line-height:14px;}
+.dojo-score[data-score-compact=true] .dojo-score-scroll {height:188px;}
+.dojo-score-scroll:focus-visible {outline:2px solid #8bd7ff;outline-offset:1px;}
+
+/* P16: tones for the ear practice (held keys, the sounded chord, the answer). The default colours are unchanged. */
+.dojo-score-note[data-tone="held"] {color:#42d8c6;}
+.dojo-score-note[data-tone="sounded"] {color:#eef0f4;}
+.dojo-score-note[data-tone="answer"] {color:#f2b84b;}
+.dojo-score-key .dojo-score-accidental {font-size:21px;fill:#c8d4df;}

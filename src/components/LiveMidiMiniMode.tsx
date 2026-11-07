@@ -2,8 +2,9 @@ import { ArrowLeft, History, Piano, RefreshCw } from "lucide-react";
 import { useStore } from "zustand";
 import { noteNameFromPitchClass } from "../domain/chords";
 import type { AppCopy } from "../i18n";
+import { connectionController } from "../liveMidi/connectionController";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
-import type { LiveMidiConnectionStatus } from "../liveMidi/types";
+import { useMidiConnection } from "../liveMidi/useMidiConnection";
 import type { LiveMidiWindowSnapshot } from "../liveMidi/windowProtocol";
 import { Button, IconButton, StatusMessage } from "./ui";
 
@@ -27,18 +28,21 @@ export function LiveMidiMiniMode({
   const localDevices = useStore(defaultLiveMidiStore, (state) => state.devices);
   const localSelected = useStore(defaultLiveMidiStore, (state) => state.selected);
   const localStatus = useStore(defaultLiveMidiStore, (state) => state.status);
+  const localView = useMidiConnection();
   const localError = useStore(defaultLiveMidiStore, (state) => state.error);
   const localInstant = useStore(defaultLiveMidiStore, (state) => state.instant);
   const localProvisionalChord = useStore(defaultLiveMidiStore, (state) => state.provisionalChord);
   const localConfirmedChord = useStore(defaultLiveMidiStore, (state) => state.confirmedChord);
   const localHistory = useStore(defaultLiveMidiStore, (state) => state.history);
   const localShowHistory = useStore(defaultLiveMidiStore, (state) => state.preferences.showHistory ?? true);
-  const localSelectDevice = useStore(defaultLiveMidiStore, (state) => state.selectDevice);
-  const localRefreshDevices = useStore(defaultLiveMidiStore, (state) => state.refreshDevices);
+  // The web preview talks to the one connection controller as well (P14 §2).
+  const localSelectDevice = connectionController.chooseDevice;
+  const localRefreshDevices = connectionController.refreshDevices;
   const localSetShowHistory = useStore(defaultLiveMidiStore, (state) => state.setShowHistory);
   const devices = snapshot?.devices ?? localDevices;
   const selected = snapshot?.selected ?? localSelected;
   const status = snapshot?.status ?? localStatus;
+  const connection = { kind: snapshot?.kind ?? localView.kind, label: snapshot?.label ?? localView.label };
   const error = snapshot?.error ?? localError;
   const instant = snapshot?.instant ?? localInstant;
   const provisionalChord = snapshot?.provisionalChord ?? localProvisionalChord;
@@ -97,11 +101,10 @@ export function LiveMidiMiniMode({
       </header>
 
       <div className="flex shrink-0 items-center gap-2 border-b border-[var(--lv-border)] py-2">
-        <div className="lv-live-mini-status flex items-center gap-1.5 text-xs text-[var(--lv-text-secondary)]" data-status={status} role="status" aria-live="polite">
+        <div className="lv-live-mini-status flex items-center gap-1.5 text-xs text-[var(--lv-text-secondary)]" data-status={status} data-midi-kind={connection.kind} role="status" aria-live="polite">
           <span className="lv-live-mini-dot" aria-hidden="true" />
-          {statusLabel(status, copy)}
+          {connection.label}
         </div>
-        {selected ? <span className="min-w-0 truncate text-xs text-[var(--lv-text-secondary)]">{selected.name}</span> : null}
       </div>
 
       <section className="lv-live-mini-chord my-2 flex min-h-0 flex-1 flex-col items-center justify-center p-3 text-center" data-live-midi-current-chord>
@@ -158,8 +161,4 @@ export function LiveMidiMiniMode({
       ) : null}
     </main>
   );
-}
-
-function statusLabel(status: LiveMidiConnectionStatus, copy: AppCopy["liveMidi"]): string {
-  return copy[status];
 }

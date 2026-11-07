@@ -1,7 +1,7 @@
 # Loop Vault Phase 3.9.2 ユーザー実機確認チェックリスト
 
 確認対象: Style Voicing Practice  
-確認EXE: `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
+確認EXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
 
 ## 1. 既定動作
 

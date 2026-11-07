@@ -22,13 +22,36 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
     snapshots: {}, initialSelection: "source-midi",
     vaultProgressions: [
       { id: "public-ready", sourceReference: { ideaId: "public-ready", blockId: "ready" },
-        title: "Public ready progression", bpm: 120, chordLabels: ["Cmaj7", "Dm7"], capturedAt: "2026-01-01T00:00:00.000Z" },
+        title: "Public ready progression", bpm: 120, chordLabels: ["Cmaj7", "Dm7"], capturedAt: "2026-01-01T00:00:00.000Z", favorite: false },
       { id: "public-bpm", sourceReference: { ideaId: "public-bpm", blockId: "missing-bpm" },
-        title: "Public missing BPM", bpm: 120, tempoOrigin: "PRACTICE_INITIAL", chordLabels: ["Cmaj7"], capturedAt: "2026-01-02T00:00:00.000Z" },
+        title: "Public missing BPM", bpm: 120, tempoOrigin: "PRACTICE_INITIAL", chordLabels: ["Cmaj7"], capturedAt: "2026-01-02T00:00:00.000Z", favorite: false },
       { id: "public-capacity", sourceReference: { ideaId: "public-capacity", blockId: "too-many-groups" },
-        title: "Public capacity case", bpm: 120, chordLabels: ["Cmaj7"], capturedAt: "2026-01-03T00:00:00.000Z", unavailableReason: "practice-capacity" },
+        title: "Public capacity case", bpm: 120, chordLabels: ["Cmaj7"], capturedAt: "2026-01-03T00:00:00.000Z", unavailableReason: "practice-capacity", favorite: false },
     ],
   };
+  if (status === "vl15-picker") {
+    // VL-15: favourites, recent, others, a provisional tempo and an unavailable row, all synthetic.
+    return {
+      snapshots: {}, initialSelection: "source-midi",
+      vaultProgressions: [
+        { id: JSON.stringify(["public-vl15-a", "a"]), sourceReference: { ideaId: "public-vl15-a", blockId: "a" }, title: "Public favourite loop",
+          key: "F# major", bpm: 120, tempoOrigin: "SAVED_BPM", lengthBars: 32, favorite: true,
+          chordLabels: ["Bm9", "Bb9", "Gmaj9/A", "Bbaug", "Em9/B", "Dadd9/F#"], capturedAt: "2026-02-05T00:00:00.000Z" },
+        { id: JSON.stringify(["public-vl15-b", "b"]), sourceReference: { ideaId: "public-vl15-b", blockId: "b" }, title: "Public second favourite",
+          key: "G major", bpm: 100, tempoOrigin: "SAVED_BPM", lengthBars: 8, favorite: true,
+          chordLabels: ["Abmaj9", "Ebadd9/G", "Fm9/G", "Cm7", "F13"], capturedAt: "2026-02-04T00:00:00.000Z" },
+        { id: JSON.stringify(["public-vl15-c", "c"]), sourceReference: { ideaId: "public-vl15-c", blockId: "c" }, title: "Public recent loop",
+          key: "E major", bpm: 100, tempoOrigin: "SAVED_BPM", lengthBars: 15, favorite: false,
+          chordLabels: ["C#m9", "F#13", "Bm11"], capturedAt: "2026-02-03T00:00:00.000Z" },
+        { id: JSON.stringify(["public-vl15-d", "d"]), sourceReference: { ideaId: "public-vl15-d", blockId: "d" }, title: "Public plain loop",
+          bpm: 120, tempoOrigin: "PRACTICE_INITIAL", lengthBars: 16, favorite: false,
+          chordLabels: ["C9", "B7(#9,#5)", "Em7", "A13"], capturedAt: "2026-02-02T00:00:00.000Z" },
+        { id: JSON.stringify(["public-vl15-e", "e"]), sourceReference: { ideaId: "public-vl15-e", blockId: "e" }, title: "Public unavailable loop",
+          bpm: 120, tempoOrigin: "SMF_DEFAULT", lengthBars: 300, favorite: false, unavailableReason: "practice-capacity",
+          chordLabels: ["Cmaj7"], capturedAt: "2026-02-01T00:00:00.000Z" },
+      ],
+    };
+  }
   if (status === "unavailable") {
     return oneSelection("custom", snapshot("custom", "maj7", false));
   }

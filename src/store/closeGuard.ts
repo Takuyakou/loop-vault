@@ -114,6 +114,9 @@ export async function registerTauriCloseGuard(
       }
     }
 
+    // The in-app saved-progression close dialog may have made a new vault mutation.
+    try { await flushPendingChangesBeforeClose(store); } catch { closeInProgress=false;await showCloseSaveError();return; }
+    if(store.getState().unsaved){closeInProgress=false;await showCloseSaveError();return;}
     await exitDesktopApp();
   });
 }

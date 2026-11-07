@@ -12,6 +12,7 @@ export interface PracticeDegreeSymbol {
   accidental: -1 | 0 | 1;
   quality: ChordQuality;
   tensions: readonly Tension[];
+  altered?: true;
   bassInterval?: number;
   bassLabel?: string;
   label: string;
@@ -51,8 +52,9 @@ export function degreeForChord(
     accidental: base.accidental,
     quality: base.quality,
     tensions,
+    ...(chord.altered ? { altered: true as const } : {}),
     ...(bassInterval === undefined ? {} : { bassInterval, bassLabel }),
-    label: `${baseLabel}${tensions.join("")}${bassLabel ? `/${bassLabel}` : ""}`,
+    label: `${baseLabel}${chord.altered ? "alt" : tensions.join("")}${bassLabel ? `/${bassLabel}` : ""}`,
   };
 }
 
@@ -68,6 +70,7 @@ export function preservesRomanNumeral(
   return source.degree === target.degree
     && source.accidental === target.accidental
     && source.quality === target.quality
+    && source.altered === target.altered
     && equalTensions(source.tensions, target.tensions)
     && source.bassInterval === target.bassInterval;
 }

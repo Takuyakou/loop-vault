@@ -29,6 +29,8 @@ export interface SourceVoicingContext {
   accuracyFirst?: {
     melodyContaminationFilter?: boolean;
   };
+  /** P17-02: the original-MIDI span to read instead of the item's own (screen) bars. */
+  position?: { startBeat: number; endBeat: number };
 }
 
 /**
@@ -69,10 +71,11 @@ export function attachSourceVoicing<T extends ChordTimelineItem>(
   }
 
   const meter = beatsPerBar(analysis.timeSignature);
-  const startBeat = (item.bar - 1) * meter + item.beat - 1;
+  const startBeat = context.position?.startBeat ?? (item.bar - 1) * meter + item.beat - 1;
+  const endBeat = context.position?.endBeat ?? startBeat + item.durationBeats;
   const extractionInput = {
     chord: item.chord,
-    segment: { startBeat, endBeat: startBeat + item.durationBeats },
+    segment: { startBeat, endBeat },
     notes: sourceData.notes,
     ticksPerBeat: sourceData.ticksPerBeat,
     voices: sourceVoices,

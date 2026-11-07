@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "13.1",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P13.1-01"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "884567e10f6f6860a11b1955931c079bdb09bb1f",
+  "lastVerifiedCommit": "8214a37449f52d80314c3e1775523df07839b8de",
+  "currentBranch": "feat/p13.1-bass-ui-fixes",
+  "requiredGates": {
+    "P13.1-01": [
+      "p13.1-01-phase-docs",
+      "p13.1-01-practice",
+      "p13.1-01-recording-rail",
+      "p13.1-01-controls-import-library",
+      "p13.1-01-e2e",
+      "p13.1-01-legacy-unchanged",
+      "p13.1-01-others-unchanged",
+      "p13.1-01-data-unchanged",
+      "p13.1-01-screenshots",
+      "p13.1-01-full-fresh",
+      "p13.1-01-exe",
+      "p13.1-01-report"
+    ]
+  },
+  "gateResults": {
+    "p13.1-01-phase-docs": "pass",
+    "p13.1-01-practice": "pass",
+    "p13.1-01-recording-rail": "pass",
+    "p13.1-01-controls-import-library": "pass",
+    "p13.1-01-e2e": "pass",
+    "p13.1-01-legacy-unchanged": "pass",
+    "p13.1-01-others-unchanged": "pass",
+    "p13.1-01-data-unchanged": "pass",
+    "p13.1-01-screenshots": "pass",
+    "p13.1-01-full-fresh": "pass",
+    "p13.1-01-exe": "pass",
+    "p13.1-01-report": "pass"
+  },
+  "nextAction": "人間が EXE で確かめる。merge候補で停止。",
+  "updatedAt": "2026-10-09"
+}

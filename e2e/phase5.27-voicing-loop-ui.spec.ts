@@ -45,12 +45,15 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("banner").locator("p").filter({ hasText: /^Voicing Loop$/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
+  // P5.26.2-02: each hand is five fixed slots; the notes and degrees under the used fingers are what is checked.
+  const used = (hand: "left" | "right", row: "pitch" | "degree") =>
+    page.getByTestId(`voicing-loop-${hand}-hand`).locator(`tr[data-row="${row}"] td[data-used="true"]`);
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("音名");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("C4");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("G4 · B4");
+  await expect(used("left", "pitch")).toHaveText(["C4"]);
+  await expect(used("right", "pitch")).toHaveText(["G4", "B4"]);
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("構成音");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("構成音1");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("5 · 7");
+  await expect(used("left", "degree")).toHaveText(["1"]);
+  await expect(used("right", "degree")).toHaveText(["5", "7"]);
   await expect(page.getByTestId("voicing-loop-event-timing")).toHaveText([
     "2拍",
     "2拍",
@@ -59,7 +62,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("progressbar")).toHaveCount(0);
   await expect(page.getByTestId("voicing-loop-status")).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("あと2拍");
-  await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
+  await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI 入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
   await expect(page.getByRole("button", { name: "元MIDI" })).toBeVisible();
   await expect(page.getByRole("button", { name: "自動生成", exact: true })).toBeVisible();
@@ -98,16 +101,16 @@ test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings bes
   expect(keyboardBox).not.toBeNull();
   expect(keyboardBox!.width).toBeGreaterThan(regionBox!.width * 0.9);
 
-  // P8.9-09: the MIDI link opens only the Live MIDI settings in a dialog; practice state survives.
+  // P14: 「MIDI 設定」 opens the shared MIDI panel (not a page); practice state survives.
   const recall = page.getByRole("button", { name: "思い出す（コード名のみ）" });
   await recall.click();
   await expect(recall).toHaveAttribute("aria-pressed", "true");
   const transport = page.getByTestId("voicing-loop-transport");
-  await expect(transport.getByRole("button", { name: "設定", exact: true })).toBeVisible();
-  await transport.getByRole("button", { name: "設定", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Live MIDI の設定" });
+  await expect(transport.getByRole("button", { name: "MIDI 設定", exact: true })).toBeVisible();
+  await transport.getByRole("button", { name: "MIDI 設定", exact: true }).click();
+  const dialog = page.getByTestId("midi-panel");
   await expect(dialog).toBeVisible();
-  await expect(dialog.locator("#settings-live-midi-device")).toBeVisible();
+  await expect(dialog.getByLabel("使う機器")).toBeVisible();
   await expect(page.getByTestId("settings-view")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();

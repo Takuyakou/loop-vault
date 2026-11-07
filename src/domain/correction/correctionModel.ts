@@ -6,6 +6,7 @@ import type { MidiSongData, TimedNote, Voice, VoiceRole } from "../midi/types";
 import type { ChordSymbol, MidiProgressionAnalysis } from "../types";
 import type { ReviewThresholds } from "./reviewThresholds";
 import { detectedName, nameAfterRemoving } from "./nameCandidates";
+import { screenToSource, sourceToScreen, type BeatRange } from "./barMap";
 
 /**
  * CorrectionModel (spec v2.3 §8): the working data of the correction workspace,
@@ -100,9 +101,13 @@ export interface SourceNoteRef {
 }
 
 export interface CorrectionContext {
+  /** Saved progression mode: no analysis-driven name or review changes. */
+  savedProgression?: boolean;
   thresholds: ReviewThresholds;
   meter: number;
   sourceNotes: readonly SourceNoteRef[];
+  /** P17-02: the source spans cut out of the screen («小節を消して詰める»); empty by default. */
+  removedBars?: readonly BeatRange[];
   melodyVoiceIds: readonly string[];
   melodyVoiceLabel: string;
   percussionPitches: readonly number[];
@@ -111,6 +116,11 @@ export interface CorrectionContext {
 }
 
 export interface CorrectionModel {
+  /** Session-only drafts, persisted through the existing block fields. */
+  progressionVoicingMemories?:Record<string, import("../types").ChordVoicingMemory|undefined>;
+  progressionMemo?: string;
+  progressionTags?: string[];
+  progressionSuppressedAutoTags?: import("../types").SuppressedAutoTag[];
   cards: CorrectionCard[];
   notes: CorrectionNote[];
   segments: CorrectionSegment[];
@@ -137,6 +147,11 @@ export interface CorrectionModelInput {
 export const EPSILON = 1e-6;
 export const MAX_CARD_PITCHES = 10;
 export const TOO_FEW_NOTES = "2音以上にしてください";
+
+/** P17-02: the source spans this capture cut out (empty when nothing was cut). */
+export function removedBarsOf(model: CorrectionModel): readonly BeatRange[] {
+  return model.context.removedBars ?? [];
+}
 
 export function noteLabel(pitch: number): string {
   return `${noteNameFromPitchClass(pitch)}${Math.floor(pitch / 12) - 1}`;
@@ -186,6 +201,7 @@ export function buildCorrectionModel(input: CorrectionModelInput, thresholds: Re
     thresholds,
     meter,
     sourceNotes,
+    removedBars: [],
     melodyVoiceIds: melodyVoices.map((voice) => voice.id),
     melodyVoiceLabel: melodyVoices.map((voice) => voice.trackName?.trim() || `トラック${voice.trackIndex + 1}`).join("・"),
     percussionPitches: [...percussion],
@@ -233,27 +249,43 @@ export function buildCorrectionModel(input: CorrectionModelInput, thresholds: Re
 /**
  * The source-note fragments of one card's span, all unused. Card edits pass the
  * previous fragments so a re-cut piece keeps the state of the piece it came from.
+ * P17-02: a card whose screen span covers cut-out bars takes its notes from every
+ * source range the map returns; pieces that meet again on screen become one.
  */
 export function cutFragments(card: Pick<CorrectionCard, "id" | "start" | "duration">, context: CorrectionContext): CorrectionNote[] {
+  const removed = context.removedBars ?? [];
   const end = card.start + card.duration;
-  return context.sourceNotes
-    .filter((source) => source.start < end - EPSILON && source.end > card.start + EPSILON)
-    .map((source): CorrectionNote => {
-      const start = Math.max(source.start, card.start);
-      return {
+  const ranges = screenToSource(card.start, end, removed);
+  const firstSourceBeat = ranges[0]?.start ?? card.start;
+  const notes: CorrectionNote[] = [];
+  for (const range of ranges) {
+    for (const source of context.sourceNotes) {
+      if (source.start >= range.end - EPSILON || source.end <= range.start + EPSILON) continue;
+      const from = Math.max(source.start, range.start);
+      const to = Math.min(source.end, range.end);
+      const start = sourceToScreen(from, removed);
+      if (start === undefined) continue;
+      const previous = notes.find((note) => note.sourceNoteId === source.id && note.pitch === source.pitch);
+      if (previous && Math.abs(previous.start + previous.duration - start) < EPSILON) {
+        previous.duration += to - from;
+        continue;
+      }
+      notes.push({
         id: `${source.id}@${card.id}`,
         provenance: "SOURCE",
         sourceNoteId: source.id,
         cardId: card.id,
         pitch: source.pitch,
         start,
-        duration: Math.min(source.end, end) - start,
-        continuesFromBefore: source.start < card.start - context.thresholds.melody.continuedToleranceBeats,
+        duration: to - from,
+        continuesFromBefore: source.start < firstSourceBeat - context.thresholds.melody.continuedToleranceBeats,
         used: false,
         ...(source.roleHint ? { roleHint: source.roleHint } : {}),
         ...(source.voiceId ? { voiceId: source.voiceId } : {}),
-      };
-    });
+      });
+    }
+  }
+  return notes;
 }
 
 export function notesByCard(notes: readonly CorrectionNote[]): Map<string, CorrectionNote[]> {
@@ -284,14 +316,25 @@ function renamedFromNotes(card: CorrectionCard, here: readonly CorrectionNote[])
   return detected ? { ...rest, name: detected, nameSource: "auto" } : { ...rest, nameSource: "auto", nameUnreadable: true };
 }
 
+/** P5.26.1: the span changed, the name does not. What the notes read as is offered, never applied. */
+function suggestedFromNotes(card: CorrectionCard, here: readonly CorrectionNote[]): CorrectionCard {
+  const detected = detectedName(here);
+  const { suggestedName: _suggested, ...rest } = card;
+  return detected && detected.label !== card.name.label ? { ...rest, suggestedName: detected } : rest;
+}
+
 /**
  * Recomputes everything that depends on the notes: the song-wide suggestions, the
  * review reasons of the touched cards (and their neighbours; all cards when the
  * melody suggestion appears or goes), the too-few-notes warning, and, when asked,
  * the automatic names of the touched cards. A person's name is never replaced.
+ * `updateNames`: `true` renames from the notes (a note edit, P10.1 §11.2); `"suggest"`
+ * keeps every name and only offers the reading of the notes (a span edit, P5.26.1:
+ * making a card longer must not turn it into another chord); `false` leaves names alone.
  */
-export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string> | "all", updateNames: boolean): CorrectionModel {
+export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string> | "all", updateNames: boolean | "suggest"): CorrectionModel {
   const { context } = model;
+  if (context.savedProgression) return { ...model, suggestions: [], cards: model.cards.map(card => ({ ...card, nameSource: "typed", reviewReasons: [], suggestedName: undefined, nameUnreadable: undefined, noteWarning: undefined })) };
   const byCard = notesByCard(model.notes);
   const melodyIds = new Set(context.melodyVoiceIds);
   const melodyNotes = model.notes.filter((note) => note.used && note.voiceId !== undefined && melodyIds.has(note.voiceId));
@@ -315,7 +358,7 @@ export function refreshModel(model: CorrectionModel, touched: ReadonlySet<string
   const cards = model.cards.map((card, index) => {
     if (!recompute.has(card.id)) return card;
     const here = byCard.get(card.id) ?? [];
-    const next = updateNames && nameTouched.has(card.id) ? renamedFromNotes(card, here) : card;
+    const next = updateNames && nameTouched.has(card.id) ? (updateNames === "suggest" ? suggestedFromNotes(card, here) : renamedFromNotes(card, here)) : card;
     const reasons = card.reviewed ? [] : reviewReasonsFor(next, here, byCard.get(model.cards[index + 1]?.id ?? "") ?? [], melodyRule, context, melodyIds);
     const warning = card.edited && usedPitchCount(here) < 2 ? TOO_FEW_NOTES : undefined;
     const { noteWarning: _dropped, ...rest } = next;

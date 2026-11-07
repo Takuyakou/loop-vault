@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const playback = vi.hoisted(() => ({
-  sessions: [] as { events: { layer: string }[]; stopped: number; disposed: number; complete: () => void }[],
+  sessions: [] as { events: { layer: string; notes?: readonly number[] }[]; stopped: number; disposed: number; complete: () => void }[],
   driversDisposed: 0,
   prepareFails: false,
   driverOptions: [] as unknown[],
@@ -106,6 +106,20 @@ afterEach(async () => {
 });
 
 describe("Bassline Echo Chord Context", () => {
+  it('delivers current saved MIDI notes to Listen/Play without changing the persisted history snapshot', async () => {
+    const snapshot=replacementChordContextSnapshot({ideaId:'saved-idea',blockId:'saved-block'});
+    const resolveSavedChordNotes=vi.fn(()=>({'chord:0':[36,73,85]}));
+    const onChordContextHistoryRecorded=vi.fn(async()=>undefined);
+    const container=await renderView({chordContextSnapshot:snapshot,resolveSavedChordNotes,onChordContextHistoryRecorded});
+    await clickStart(container);expect(resolveSavedChordNotes).toHaveBeenCalledWith(snapshot);
+    expect(playback.sessions[0]!.events.find(event=>event.layer==='chords')?.notes).toEqual([36,73,85]);
+    await chooseRadio(container,'chord-context-practice-mode','演奏');await clickStart(container);
+    expect(playback.sessions[playback.sessions.length-1]!.events.find(event=>event.layer==='chords')?.notes).toEqual([36,73,85]);
+    await act(async()=>{findButton(container,'レビュー')?.click();await Promise.resolve();});
+    await act(async()=>{container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();await Promise.resolve();await Promise.resolve();});
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledOnce();expect(JSON.stringify(onChordContextHistoryRecorded.mock.calls[0])).not.toMatch(/savedMidiNotes|midiNotes/);
+  });
+
   it("ships accessible Listen and Play controls with the locked defaults and clean labels", async () => {
     const container = await renderView();
 
@@ -905,11 +919,13 @@ describe("Bassline Echo Chord Context", () => {
   });
   it("uses captured harmony directly for Source Chord Context without reconstructing current chords", async () => {
     const fixture = sourceBasslineFixture(true);
-    const container = await renderView({ chordContextSnapshot: fixture.safeSnapshot, chordContextSnapshots: [fixture.safeSnapshot], vaultPickerCandidates: [fixture], vaultSourceBasslines: [fixture.sourceCatalogEntry] });
+    const resolveSavedChordNotes = vi.fn(() => ({"chord:0": [36,73,85]}));
+    const container = await renderView({ resolveSavedChordNotes, chordContextSnapshot: fixture.safeSnapshot, chordContextSnapshots: [fixture.safeSnapshot], vaultPickerCandidates: [fixture], vaultSourceBasslines: [fixture.sourceCatalogEntry] });
     await chooseSourceBassline(container);
     const start = container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")!;
     expect(start.disabled).toBe(false);
     await clickStart(container);
+    expect(resolveSavedChordNotes).not.toHaveBeenCalled();
     expect(playback.sessions[playback.sessions.length - 1]?.events.map((event) => event.layer)).toEqual(expect.arrayContaining(["bass", "chords"]));
   });
 

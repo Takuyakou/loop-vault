@@ -24,28 +24,20 @@ test("MIDIをドロップし、Voice確認から解析結果へ進める", async
   await expect(page.getByText("E2E harmony bass melody.mid", { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("pre-analysis-analyze")).toBeEnabled();
 
+  // 「アプリに任せる」: the roll shows the weights the analysis itself will use; 「分けない」 shows none.
   const pianoRoll = page.getByTestId("pre-analysis-piano-roll");
-  const standardVisibleNotes = Number(
-    await pianoRoll.getAttribute("data-visible-note-count"),
-  );
+  await expect(pianoRoll).toHaveAttribute("data-weighted-note-count", "0");
   await page.locator(
     "[data-analysis-contribution-preset='harmonic-core']",
   ).click();
-  await expect(pianoRoll).toHaveAttribute(
-    "data-contribution-preset",
-    "harmonic-core",
-  );
-  await expect(page.getByTestId(
-    "pre-analysis-harmonic-core-preview",
-  )).toContainText(/和声を強調/);
-  expect(Number(await pianoRoll.getAttribute("data-visible-note-count")))
-    .toBeLessThan(standardVisibleNotes);
+  await expect(page.locator("#pre-analysis-mix-note")).toContainText("結果が変わらないこともあります");
+  await expect(pianoRoll).not.toHaveAttribute("data-weighted-note-count", "0");
   await expect(page.locator('[data-capture-stage="pre-analysis"]')).toBeVisible();
 
   await page.locator(
     "[data-analysis-contribution-preset='standard']",
   ).click();
-  await expect(pianoRoll).toHaveAttribute("data-contribution-preset", "standard");
+  await expect(pianoRoll).toHaveAttribute("data-weighted-note-count", "0");
 
   // P10.0-07: the result opens in the correction workspace; the first recommended range is ready to save.
   await analyzeCurrentMidi(page);
@@ -62,13 +54,9 @@ test("11 Voiceとドラムを解析前一覧に表示する", async ({ page }) =
     "all-instruments-generated.mid",
   );
 
-  const partDetails = page.getByRole("button", { name: /パート詳細/ });
-  if (await partDetails.getAttribute("aria-expanded") !== "true") {
-    await partDetails.click();
-  }
   await expect(page.locator("[data-voice-id]")).toHaveCount(11);
   await expect(page.getByText("Drums", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/11 Voice/).first()).toBeVisible();
+  await expect(page.getByTestId("pre-analysis-part-count")).toContainText("11パート中");
 });
 
 test("解析前に複数MIDIを追加できる", async ({ page }) => {

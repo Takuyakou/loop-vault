@@ -1,3 +1,4 @@
+import { progressionToWorkspace, workspaceToProgression } from './progressionWorkspace/progressionWorkspace';
 /**
  * P8.9 data-retention round trip (docs/phase8.9/contracts/P8.9-data-retention.md §2).
  *
@@ -148,4 +149,11 @@ describe("P8.9 data retention — load → save round trip", () => {
     expected.ideas[1].progressionBlocks = [];
     expect(saved).toEqual(expected);
   });
+});
+
+it('P10.4 keeps every hidden field through the saved workspace and real repository round trip',async()=>{
+ const input=retentionVault();const storage=new BrowserMemoryVaultStorage();await storage.ensureDir('loopvault');await storage.writeText(DATA_PATH,JSON.stringify(input));
+ const repository=new JsonVaultRepository(storage,{now:()=>new Date(at(9))});const loaded=await repository.load();
+ for(const idea of loaded.vault.ideas){idea.progressionBlocks=idea.progressionBlocks?.map(block=>workspaceToProgression(block,progressionToWorkspace(block)));}
+ await repository.save(loaded.vault);expect(JSON.parse(await storage.readText(DATA_PATH))).toEqual(input);
 });

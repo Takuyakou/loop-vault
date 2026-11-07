@@ -89,13 +89,13 @@ test.describe("Phase 5.13 visual evidence", () => {
     const cards = page.locator("[data-progression-card-stage] [data-chord-card]");
     await cards.nth(Math.min(1, Math.max(0, await cards.count() - 1))).click();
     await evidence(page, testInfo, "progression-detail-selected");
-    await cards.first().dispatchEvent("contextmenu");
+    await cards.first().dblclick();
     await expect(page.locator("[data-quick-chord-editor]")).toBeVisible();
     await evidence(page, testInfo, "progression-detail-editing");
     await page.keyboard.press("Escape");
 
     await page.locator("[data-progression-detail-view]")
-      .getByRole("button", { name: /練習する/ }).click();
+      .getByRole("button", { name: /Bass Practice/ }).click();
     await page.locator('[data-nav="chord-dojo"]').click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, testInfo, "practice");
@@ -153,6 +153,9 @@ async function evidence(
   if (!options.preserveToast) {
     const toast = page.locator("[data-toast-tone]").first();
     if (await toast.isVisible().catch(() => false)) {
+      // A toast waits while the pointer is over it. The 「解析する」 button (P15) sits where toasts appear, so the
+      // pointer is moved away first, as a person would before reading the screen.
+      await page.mouse.move(2, 2);
       await expect(toast).toBeHidden({ timeout: 5_000 });
     }
   }

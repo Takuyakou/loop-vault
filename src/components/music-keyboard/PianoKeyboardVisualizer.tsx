@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   createPianoKeyboardGeometry,
   KEYBOARD_HEIGHT,
@@ -9,6 +9,7 @@ import { formatMidiNoteForDisplay } from "./noteDisplay";
 import { PianoKey } from "./PianoKey";
 import type {
   NoteAccidentalStyle,
+  KeyboardOctaveConvention,
   PianoKeyVisualState,
 } from "./types";
 
@@ -26,7 +27,7 @@ export interface PianoKeyboardVisualizerProps {
   heldBassNote?: number;
   showGuide: boolean;
   showCLabels: boolean;
-  octaveConvention: "fl-studio";
+  octaveConvention: KeyboardOctaveConvention;
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: "idle" | "partial" | "match" | "wrong";
   concealNoteNames?: boolean;
@@ -35,6 +36,12 @@ export interface PianoKeyboardVisualizerProps {
   fingerLabels?: ReadonlyMap<number, string>;
   layout?: "default" | "wide-61" | "wide-88";
   hideLegend?: boolean;
+  appearance?: "default" | "dojo";
+  colorGuideHands?: boolean;
+  markScale?: number;
+  /** Dojo appearance only: the height the keys are drawn at, in pixels (128 as before). The drawing is not stretched: the
+   * caller makes the `svg` this high, and the keys keep their proportions. */
+  dojoHeight?: number;
 }
 
 const copy = {
@@ -69,7 +76,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   heldBassNote,
   showGuide,
   showCLabels,
-  octaveConvention: _octaveConvention,
+  octaveConvention,
   accidentalStyle = "flat",
   matchState = "idle",
   concealNoteNames = false,
@@ -78,6 +85,10 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   fingerLabels,
   layout = "default",
   hideLegend = false,
+  appearance = "default",
+  colorGuideHands = false,
+  markScale = 1,
+  dojoHeight = 128,
 }: PianoKeyboardVisualizerProps) {
   const text = copy.ja;
   const range = useMemo(
@@ -107,8 +118,30 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
     () => notesOutsideKeyboardRange([...display.heldNotes, ...display.sustainedNotes], range),
     [display.heldNotes, display.sustainedNotes, range],
   );
-  const visibleKeys = geometry.keys.filter((key) => !key.black);
-  const blackKeys = geometry.keys.filter((key) => key.black);
+  const dojoHost = useRef<HTMLDivElement>(null);
+  const [dojoWidth, setDojoWidth] = useState(0);
+  useEffect(() => {
+    if (appearance !== "dojo" || !dojoHost.current) return;
+    const host = dojoHost.current;
+    const measure = () => setDojoWidth(host.getBoundingClientRect().width);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [appearance]);
+  // Dojo uses physical pixels so answer circles and C labels keep their shape.
+  // The existing visualizer geometry and defaults remain unchanged.
+  const renderedGeometry = appearance === "dojo" ? {
+    width: dojoWidth || geometry.width,
+    keys: geometry.keys.map(key => ({...key,
+      x: key.x * (dojoWidth || geometry.width) / geometry.width,
+      width: key.width * (dojoWidth || geometry.width) / geometry.width,
+      height: key.black ? Math.round(dojoHeight * 80 / 128) : dojoHeight,
+    })),
+  } : geometry;
+  const visibleKeys = renderedGeometry.keys.filter((key) => !key.black);
+  const blackKeys = renderedGeometry.keys.filter((key) => key.black);
   const ariaLabel = interactionMode === "neutral-monitor"
     ? text.neutralKeyboard(
       geometry.keys.length,
@@ -135,6 +168,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
       >
         {outside.below.length > 0 ? (
           <OutsideIndicator
+            octaveConvention={octaveConvention}
             direction="left"
             label={text.outside}
             notes={outside.below}
@@ -145,6 +179,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         ) : null}
         {outside.above.length > 0 ? (
           <OutsideIndicator
+            octaveConvention={octaveConvention}
             direction="right"
             label={text.outside}
             notes={outside.above}
@@ -159,11 +194,12 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
+          ref={dojoHost}
         >
           <svg
             role="img"
             aria-label={ariaLabel}
-            viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
+            viewBox={`0 0 ${renderedGeometry.width} ${appearance === "dojo" ? dojoHeight : KEYBOARD_HEIGHT}`}
             width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
             className={layout === "wide-88"
@@ -178,6 +214,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
               <PianoKey
                 key={key.note}
                 geometry={key}
+                octaveConvention={octaveConvention}
                 visualState={pianoKeyVisualState(key.note, {
                   guideNotes: guide,
                   heldNotes: held,
@@ -197,6 +234,10 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 fingerLabel={showGuide ? fingerLabels?.get(key.note) : undefined}
                 accidentalStyle={accidentalStyle}
                 concealNoteName={concealNoteNames}
+                appearance={appearance}
+                colorGuideHands={colorGuideHands}
+                markScale={markScale}
+                missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
               />
             ))}
           </g>
@@ -205,6 +246,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
               <PianoKey
                 key={key.note}
                 geometry={key}
+                octaveConvention={octaveConvention}
                 visualState={pianoKeyVisualState(key.note, {
                   guideNotes: guide,
                   heldNotes: held,
@@ -224,6 +266,10 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 fingerLabel={showGuide ? fingerLabels?.get(key.note) : undefined}
                 accidentalStyle={accidentalStyle}
                 concealNoteName={concealNoteNames}
+                appearance={appearance}
+                colorGuideHands={colorGuideHands}
+                markScale={markScale}
+                missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
               />
             ))}
           </g>
@@ -252,6 +298,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
 });
 
 function OutsideIndicator({
+  octaveConvention,
   direction,
   label,
   notes,
@@ -259,6 +306,7 @@ function OutsideIndicator({
   concealNoteNames,
   countLabel,
 }: {
+  octaveConvention: KeyboardOctaveConvention;
   direction: "left" | "right";
   label: string;
   notes: readonly number[];
@@ -277,7 +325,7 @@ function OutsideIndicator({
       {label}: {concealNoteNames
         ? countLabel(notes.length)
         : notes.map((note) => (
-            formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)
+            formatMidiNoteForDisplay(note, octaveConvention, accidentalStyle)
           )).join(" · ")}
       {direction === "right" ? " →" : ""}
     </div>

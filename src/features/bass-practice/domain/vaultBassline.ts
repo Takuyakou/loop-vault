@@ -1,4 +1,5 @@
 import { labelFromSymbol } from "../../../domain/chords";
+import { supportsTextChord } from "../../../domain/textChordConsumerCapabilities";
 import type { SavedProgressionBlock } from "../../../domain/types";
 import { BASSLINE_GENERATOR_VERSION, generateBasslineExercise } from "./bassline";
 import {
@@ -13,6 +14,7 @@ export type VaultBasslineResult = BasslineGeneratorResult | { readonly ok: false
 
 export function createVaultBasslineExercise(block: SavedProgressionBlock | undefined, seed: string, level: 1 | 2 | 3): VaultBasslineResult {
   if (!block) return { ok: false, error: { code: "source-unavailable", message: "This saved progression is no longer available." } };
+  if (block.chords.some(event => !supportsTextChord("bass-practice", event.chord))) return { ok: false, error: { code: "unsupported-source", message: "This saved chord classification is unavailable for Bass Practice." } };
   if (!block.detectedKey || !block.bpm || !block.chords.length || !block.chords.every((entry) => entry.chord && entry.durationBeats > 0)) return { ok: false, error: { code: "unsupported-source", message: "This saved progression cannot produce a Bassline exercise." } };
   const chords = block.chords.slice(0, 8).reduce<BasslineGeneratorSnapshot["chords"]>((result, entry) => {
     const startBeat = Math.max(0, (entry.bar - block.chords[0].bar) * 4 + entry.beat - 1);

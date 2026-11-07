@@ -11,8 +11,8 @@ async function openDegreeEcho(page: Page) {
 test("Degree Echo exposes an honest accessible setup with the shipped P5.16 modes", async ({ page }) => {
   await openDegreeEcho(page);
   const view = page.getByTestId("degree-echo-view");
-  await expect(view).toContainText("自己評価");
-  await expect(view).toContainText("自動採点ではありません");
+  await expect(page.locator(".bass-modebar")).toContainText("自己評価");
+  await expect(page.locator(".bass-modebar")).toContainText("自動採点ではありません");
   await expect(page.getByRole("tab", { name: "Rhythm Echo" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Bassline Echo" })).toBeVisible();
   await expect(view.locator("[data-primary-action]")).toHaveCount(1);
@@ -37,7 +37,8 @@ test("Degree Echo exposes an honest accessible setup with the shipped P5.16 mode
 test("Degree Echo shortcuts ignore form focus and key repeat", async ({ page }) => {
   await openDegreeEcho(page);
   const primary = page.locator("[data-primary-action]");
-  await page.getByLabel("弦数").focus();
+  await page.getByRole("button", { name: /^⚙/ }).click();
+  await page.getByLabel("共通の弦数", { exact: true }).focus();
   await page.keyboard.press("Space");
   await expect(primary).toContainText("練習を準備");
   await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", {

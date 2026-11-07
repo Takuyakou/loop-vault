@@ -74,6 +74,7 @@ export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, 
                   {rangeLabel(row.range) !== row.segment.label ? <span className="lv-cw-muted">{rangeLabel(row.range)}</span> : null}
                   {row.saved ? <span className="lv-cw-saved">保存済み</span> : null}
                   <span className="lv-cw-section-names">{row.names.join(" ")}</span>
+                  {row.result.ok && row.result.crossesCut ? <span className="lv-cw-muted" data-testid="correction-section-source-note">元の位置は残りません</span> : null}
                   {row.sameAs.length ? <span className="lv-cw-muted">{row.sameAs.join("・")} と同じ</span> : null}
                 </label>
                 {problem ? (

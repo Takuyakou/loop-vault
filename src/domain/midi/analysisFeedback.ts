@@ -3,6 +3,7 @@ import { analysisFeedbackEventSchema } from "./realEvaluation/schema";
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
 import type { ProgressionEditSource } from "../progressionEditing/types";
 import { beatsPerBar } from "./timing";
+import { screenToSource, type BeatRange } from "../correction/barMap";
 
 export type TaggedMidiChordCorrectionEvent = MidiChordCorrectionEvent & {
   eventType: "chord-correction";
@@ -76,16 +77,24 @@ export function buildProgressionSaveFeedbackEvent(
     occurredAt: string;
     userEdited: boolean;
     userVerified: boolean;
+    /** P17-02: after whole bars were cut, record the original position when the saved chord maps back to one span. */
+    removedBars?: readonly BeatRange[];
   },
 ): ProgressionSaveFeedbackEvent | undefined {
   if (!analysis.sourceFingerprint || saved.chords.length === 0) return undefined;
   const meter = beatsPerBar(analysis.timeSignature);
   const decisions = saved.chords.map((item, index) => {
     const detected = original.chords[index];
-    const startBeat = (item.bar - 1) * meter + item.beat - 1;
+    const screenStart = (item.bar - 1) * meter + item.beat - 1;
+    const screenEnd = screenStart + item.durationBeats;
+    const detectedStart = detected ? (detected.bar - 1) * meter + detected.beat - 1 : screenStart;
+    // P17-02: one source span → record it; a chord that crosses a cut keeps the detected span.
+    const mapped = screenToSource(screenStart, screenEnd, metadata.removedBars ?? []);
+    const startBeat = mapped.length === 1 ? mapped[0]!.start : detectedStart;
+    const endBeat = mapped.length === 1 ? mapped[0]!.end : (detected ? detectedStart + detected.durationBeats : screenEnd);
     return {
       startBeat,
-      endBeat: startBeat + item.durationBeats,
+      endBeat,
       detected: detected?.chord.label ?? null,
       saved: item.chord.label,
       outcome: correctionOutcome(detected, item.chord.label),

@@ -96,6 +96,7 @@ export function transposeChordSymbol(
     root,
     quality: source.quality,
     tensions: [...source.tensions],
+    ...(source.altered ? { altered: true as const } : {}),
     ...(source.omissions?.length ? { omissions: [...source.omissions] } : {}),
     ...(bass === undefined ? {} : { bass }),
     label: "",
@@ -103,7 +104,7 @@ export function transposeChordSymbol(
 
   return {
     ...transposed,
-    label: formatChordLabel(transposed, rootName, bassName),
+    label: formatChordLabel(transposed, rootName, bassName, source.label),
   };
 }
 
@@ -178,10 +179,18 @@ function formatChordLabel(
   chord: ChordSymbol,
   rootName: string,
   bassName: string | undefined,
+  sourceLabel: string,
 ): string {
+  const bass = bassName ? `/${bassName}` : "";
+  if (chord.altered) return `${rootName}7alt${bass}`;
+  if (chord.quality === "minMaj7" && /m\(maj[79]\)/.test(sourceLabel)) {
+    const ninth = chord.tensions.includes("9");
+    const tensions = chord.tensions.filter(value => value !== "9");
+    const factors = [...tensions, ...(chord.omissions ?? []).map(value => `omit${value}`)];
+    return `${rootName}m(maj${ninth ? "9" : "7"})${factors.length ? `(${factors.join(",")})` : ""}${bass}`;
+  }
   const quality = qualityLabels[chord.quality];
   const tensions = chord.tensions.join("");
-  const bass = bassName ? `/${bassName}` : "";
   const omissions = chord.omissions?.length ? `(${chord.omissions.map(value => `omit${value}`).join(",")})` : "";
   return `${rootName}${quality}${tensions}${omissions}${bass}`;
 }

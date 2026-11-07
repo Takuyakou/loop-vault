@@ -1,4 +1,5 @@
 import type { ChordQuality, ChordSymbol } from "../types";
+import { supportsTextChord } from "../textChordConsumerCapabilities";
 import {
   compareCandidate,
   enumerateSplitCandidates,
@@ -71,6 +72,7 @@ export function generateStudyCandidates(
   context: VoicingRuleContext,
   options: GenerateStudyCandidatesOptions,
 ): readonly StudyGeneratedCandidate[] {
+  if (!supportsTextChord("generated-loop", chord)) return [];
   const modifiers = {
     color: options.modifiers?.color ?? false,
     open: options.modifiers?.open ?? false,

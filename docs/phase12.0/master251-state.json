@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "package": "2-5-1 Master + independent octave-down range + fixed Form templates for both hands",
+  "status": "READY_FOR_HUMAN_PRODUCT_ACCEPTANCE",
+  "branch": "feat/p12-theme-score",
+  "baseCommit": "bd8dff5ceff0115acf84ac80f807e3b22be07251",
+  "testedSourceCommit": "7aef92ac699820bb9444c73bd1857a5d6f7820ba",
+  "localCompletedStages": [
+    "251-00",
+    "251-01",
+    "251-02",
+    "251-03",
+    "251-04"
+  ],
+  "gates": {
+    "sourceCanonical": "pass",
+    "feature": "pass",
+    "ui": "pass",
+    "fullFresh": "pass",
+    "nativeStorage": "pass",
+    "privacy": "pass",
+    "screens": "pass",
+    "exe": "pass",
+    "report": "pass"
+  },
+  "counts": {
+    "canonical": 144,
+    "vitest": 4137,
+    "playwright": 395,
+    "runner": 27,
+    "nativeStorage": 19,
+    "productScreens": 200,
+    "normalDojoScreens": 44,
+    "supplementalNativeScreens": 0,
+    "registerTargetsVerified": 96
+  },
+  "humanProductAcceptance": "pending",
+  "technicalBlockers": [],
+  "report": "reports/P12.0-01-master-form-templates.md",
+  "exe": {
+    "relativePath": "p12-generated/master-form-templates/review-candidate-7aef92ac.exe",
+    "sha256": "8464944a39b1ebc56101e5d4c504e77838624303120d1a05b0293b1de8d3db41",
+    "bytes": 24856064
+  },
+  "mergePerformed": false,
+  "pushPerformed": false,
+  "nextAction": "source 7aef92acのMaster両手Form教材はfresh FULL4137/395/27・native19・同HEAD FAST/FEATURE/UI・通常44/Master200画像・新EXEで検証済み。実音/身体運指/内蔵進行/人間30和音計測/製品保存先再起動/OS倍率は人間受入れ待ち。Phase12 in-progress、merge/pushなし。",
+  "updatedAt": "2026-10-07",
+  "reviewP1": "fixed; bb186dfb independent review 28 PASS confirmed by parent; historical result",
+  "previousRejectedSourceCommit": "d4ddf93db2368a9b3682fbb56a0d732211188577",
+  "latestTaskBaseCommit": "03719e2f7c567428d971f281cedcc1acd9d3c466",
+  "independentReview": {
+    "status": "pass",
+    "source": "ffedfd2ccdd32650679fb9e8408824845894f786",
+    "scope": "Master both-hand implementation only; 7aef92ac test-only delta not automatically included",
+    "evidence": "Parent received independent review summary; original report files not read in this worktree",
+    "reportedTests": 80,
+    "reportedDisplayChecks": 880,
+    "notesHandsGenericEngineUnchanged": true,
+    "perKeyOverrides": 0,
+    "reportedRegisterTargets": 96,
+    "reportedAll3ChordsMatch": true,
+    "parentArtifactReference": "master-both-hand-implementation-review-ffedfd2c-20261007/independent-review.json/.md",
+    "artifactP2": [
+      "CSV literal rowbreak",
+      "96 projection execution provenance"
+    ],
+    "artifactRepairs": {
+      "csv": "pass: parser49 physical rows/11 columns/saved JSON match",
+      "projectionScope": "corrected: original48 actual; minus12 mathematical projection before implementation",
+      "ownActualRegisterCheck": "pass: currentSource actual96/288 derived from loop results",
+      "productCodeChangedForArtifactRepairs": false
+    },
+    "physicalAcceptance": "pending"
+  },
+  "selectedRanges": [
+    "original",
+    "octave-down"
+  ],
+  "storageNamespace": "theme-lessons-ranges-v4",
+  "previousVerifiedProduct": {
+    "source": "d0f66cdc7903b1e14ccaef74e62273e9193974fe",
+    "report": "reports/P12.0-01-master-octave-down.md",
+    "exe": {
+      "relativePath": "p12-generated/master-octave-down/review-candidate-d0f66cdc.exe",
+      "sha256": "421bcb747cfed741b2be53d8efe25db6ed6ad45f660fcc797435dadad45fc053",
+      "bytes": 24856064
+    },
+    "counts": {
+      "canonical": 144,
+      "vitest": 4106,
+      "playwright": 393,
+      "runner": 27,
+      "nativeStorage": 19,
+      "relatedRegression": 378,
+      "productScreens": 404,
+      "supplementalNativeScreens": 7
+    },
+    "independentReview": "pass for d0f66cdc; parent confirmed"
+  },
+  "templates": {
+    "source": "src/domain/master251/teaching-templates.json",
+    "bothHands": true,
+    "perKeyOverrides": 0,
+    "physicalAcceptance": "pending"
+  }
+}

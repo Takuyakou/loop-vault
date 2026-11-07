@@ -51,6 +51,7 @@ export interface StartRecordingOptions {
 
 /** Owns the capture graph and releases every resource on stop/dispose. */
 export interface PracticeRecorder {
+  inputLevel?(): number;
   start(options: StartRecordingOptions): Promise<void>;
   stop(): Promise<RecordingTake | undefined>;
   /** Releases tracks, nodes, listeners, timers — safe to call repeatedly. */

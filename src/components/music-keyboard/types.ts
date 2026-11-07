@@ -1,4 +1,4 @@
-export type KeyboardOctaveConvention = "fl-studio";
+export type KeyboardOctaveConvention = "fl-studio" | "scientific";
 
 export type NoteAccidentalStyle = "sharp" | "flat";
 export type PianoGuideHand = "left" | "right";

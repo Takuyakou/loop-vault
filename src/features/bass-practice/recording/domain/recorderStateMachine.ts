@@ -227,7 +227,7 @@ export function reduceRecorder(
         : invalid(state, action.type);
 
     case "RETAKE":
-      return state.status === "recorded" || PLAYBACK_STATUSES.includes(state.status)
+      return state.status === "recorded" || state.status === "saved" || PLAYBACK_STATUSES.includes(state.status)
         ? ok({ status: "ready", channelMode: state.channelMode, heardTake: false, saveFailed: false })
         : invalid(state, action.type);
 

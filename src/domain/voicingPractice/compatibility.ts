@@ -1,4 +1,5 @@
 import type { ChordSymbol } from "../types";
+import { supportsTextChord } from "../textChordConsumerCapabilities";
 import type {
   StyleCompatibility,
   VoicingStyleId,
@@ -21,6 +22,7 @@ export function getStyleCompatibility(
   chord: ChordSymbol,
   styleId: VoicingStyleId,
 ): StyleCompatibility {
+  if (!supportsTextChord("generated-loop", chord)) return unsupported("このコード分類の生成規則は未対応です。");
   const tones = chordToneDescriptors(chord);
   if (tones.length < 3) {
     return unsupported("コード構成音を解釈できません。");

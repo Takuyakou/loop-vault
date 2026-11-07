@@ -81,10 +81,11 @@ export function PianoRoll(props: PianoRollProps) {
     }
     const note = noteAt(event);
     if (note) {
+      if (props.present.context.savedProgression && mode === "check" && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.button===0) { props.onSelectCard(note.cardId); props.onPlayPitch(note.pitch); return; }
       if (event.button === 2) {
         gesture.current = { kind: "paint", op: "exclude", ids: new Set([note.id]), pointerId: event.pointerId };
         props.onPreview(paintResult("exclude", gesture.current.ids).model);
-      } else if (!note.used && note.provenance === "SOURCE") {
+      } else if (!note.used && (note.provenance === "SOURCE" || props.present.context.savedProgression)) {
         gesture.current = { kind: "paint", op: "restore", ids: new Set([note.id]), pointerId: event.pointerId };
         props.onPreview(paintResult("restore", gesture.current.ids).model);
       } else if (event.shiftKey || event.ctrlKey || event.metaKey) {
@@ -114,7 +115,7 @@ export function PianoRoll(props: PianoRollProps) {
     const point = at(event);
     if (current.kind === "paint") {
       const note = noteAt(event);
-      const wanted = note && (current.op === "exclude" ? note.used || note.provenance === "MANUAL_ADDED" : !note.used && note.provenance === "SOURCE");
+      const wanted = note && (current.op === "exclude" ? note.used || note.provenance === "MANUAL_ADDED" : !note.used && (note.provenance === "SOURCE" || props.present.context.savedProgression));
       if (note && wanted && !current.ids.has(note.id)) {
         current.ids.add(note.id);
         props.onPreview(paintResult(current.op, current.ids).model);
@@ -156,10 +157,11 @@ export function PianoRoll(props: PianoRollProps) {
         const note = props.present.notes.find((entry) => entry.id === current.noteId)!;
         props.onSelectNotes([note.id], "replace");
         props.onSelectCard(note.cardId);
-        props.onPlayPitch(note.pitch);
+        if (props.present.context.savedProgression && mode === "edit") props.onCommit(deleteNotes(props.present,[note.id])); else props.onPlayPitch(note.pitch);
       }
     } else if (current.kind === "marquee") {
       if (!current.moved) {
+        if(props.present.context.savedProgression&&!current.add){const card=cardAt(current.from.beat);if(card){props.onSelectCard(card.id);props.onPlayPitch(current.from.pitch);}return;}
         if (!current.add) {
           if (props.selectedNoteIds.size === 0) props.onClearCard?.();
           props.onSelectNotes([], "replace");
@@ -178,7 +180,7 @@ export function PianoRoll(props: PianoRollProps) {
   }
 
   function onDoubleClick(event: ReactMouseEvent<HTMLDivElement>) {
-    if (mode === "edit" || noteAt(event)) return;
+    if (props.present.context.savedProgression || mode === "edit" || noteAt(event)) return;
     const point = at(event);
     const card = cardAt(point.beat);
     if (card) props.onAdd(card.id, point.pitch);
@@ -220,7 +222,7 @@ export function PianoRoll(props: PianoRollProps) {
               className="lv-cw-note"
               data-note-id={note.id}
               data-card={note.cardId}
-              data-kind={noteKind(note, props.warnNoteIds)}
+              data-kind={props.present.context.savedProgression&&note.originalPitch!==undefined&&note.used ? "manual" : noteKind(note, props.warnNoteIds)}
               data-moved={note.originalPitch !== undefined || undefined}
               data-selected={props.selectedNoteIds.has(note.id) || undefined}
               title={noteTitle(note)}
@@ -254,7 +256,7 @@ export function PianoRoll(props: PianoRollProps) {
 }
 
 export function noteKind(note: CorrectionNote, warn: ReadonlySet<string>): string {
-  if (note.provenance === "MANUAL_ADDED") return "manual";
+  if (note.provenance === "MANUAL_ADDED" && note.used) return "manual";
   if (note.used) return warn.has(note.id) ? "warn" : note.roleHint === "bass" ? "bass" : "harmony";
   return note.roleHint === "melody" ? "melody" : "off";
 }

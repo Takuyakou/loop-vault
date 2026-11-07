@@ -210,7 +210,7 @@ export function HomeView({
             <span className="flex-1" />
             <span
               className="inline-flex items-center gap-2 text-[11px] text-[var(--lv-record)]"
-              title={summary.activity.streakDays ? `${summary.activity.streakDays}日連続で練習しています` : "直近5日の練習"}
+              title="直近5日の練習"
               data-testid="home-practice-streak"
             >
               <span className="flex gap-[3px]" aria-hidden="true">
@@ -218,14 +218,14 @@ export function HomeView({
                   <span key={day.date} className="lv-home-dot" data-practiced={day.practiced} data-today={day.today} />
                 ))}
               </span>
-              {summary.activity.streakDays ? <span className="font-semibold">{summary.activity.streakDays}日連続</span> : null}
+
             </span>
           </div>
           <PracticeRow
             kind="chord-dojo"
             title="Chord Dojo"
             count={summary.activity.today["chord-dojo"]}
-            unit="進行"
+            unit="回"
             onOpen={() => openChordDojo()}
           />
           {bassPracticeAvailable ? (
@@ -465,7 +465,7 @@ function PracticeRow({ kind, title, count, unit, onOpen }: {
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-[13px] font-semibold">{title}</span>
         <span className="truncate text-[11px] text-[var(--lv-text-muted)]">
-          {count ? `今日 ${count}${unit}` : "今日はまだ"}
+          {count ? `今日 ${count}${unit}` : title === "Chord Dojo" ? "今日 0回" : "今日はまだ"}
         </span>
       </span>
       <span className="relative h-[34px] w-[34px] shrink-0" aria-hidden="true">

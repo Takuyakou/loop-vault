@@ -83,13 +83,13 @@ describe("Phase 5.12 Capture product path", () => {
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
     expect(analyzerCalls).toHaveLength(0);
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='review']"))
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(11);
-    expect(mounted.container.querySelectorAll("canvas")).toHaveLength(1);
+    expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-piano-roll']")).toHaveLength(1);
     expect(mounted.container.textContent).toContain("Acoustic Grand Piano");
     expect(mounted.container.textContent).toContain("Electric Guitar (jazz)");
-    expect(mounted.container.textContent).toContain("Drums");
+    expect(mounted.container.textContent).toContain("ドラム");
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
     expect(mounted.container.textContent).not.toContain("パートを確定");
@@ -125,9 +125,7 @@ describe("Phase 5.12 Capture product path", () => {
     const harmonicCore = mounted.container.querySelector<HTMLButtonElement>(
       "[data-analysis-contribution-preset='harmonic-core']",
     )!;
-    expect(mounted.container.textContent).toContain(
-      "選択後は「この設定で解析」を押すと結果に反映されます。",
-    );
+    expect(mounted.container.querySelector("#pre-analysis-mix-note")?.textContent).toContain("今までの「標準」");
 
     await act(async () => harmonicCore.click());
     await act(async () => {
@@ -164,7 +162,7 @@ describe("Phase 5.12 Capture product path", () => {
       "[data-testid='pre-analysis-reanalysis-required']",
     );
     expect(warning?.textContent).toContain("再解析が必要です");
-    expect(warning?.textContent).toContain("この設定で解析");
+    expect(warning?.textContent).toContain("「解析する」");
 
     await mounted.unmount();
   }, 20_000);
@@ -183,20 +181,13 @@ describe("Phase 5.12 Capture product path", () => {
 
     const selectedRow = [
       ...mounted.container.querySelectorAll<HTMLElement>("[data-voice-id]"),
-    ].find((row) => row.querySelector<HTMLInputElement>(
-      'input[type="checkbox"]:checked:not(:disabled)',
-    ));
-    const selectedCheckbox = selectedRow?.querySelector<HTMLInputElement>(
-      'input[type="checkbox"]',
-    );
+    ].find((row) => row.dataset.role !== "off");
     const excludedChannel = Number(selectedRow?.dataset.voiceChannel);
-    expect(selectedCheckbox).toBeDefined();
+    expect(selectedRow).toBeDefined();
     expect(Number.isInteger(excludedChannel)).toBe(true);
 
-    await act(async () => selectedCheckbox?.click());
-    expect(mounted.container.querySelector<HTMLElement>(
-      '[data-analysis-preset="custom"]',
-    )?.getAttribute("aria-checked")).toBe("true");
+    await act(async () => selectedRow?.querySelector<HTMLButtonElement>("[data-r='off']")?.click());
+    expect(selectedRow?.querySelector(".lv-pa-badge")?.textContent).toBe("変更");
 
     await act(async () => {
       mounted.container.querySelector<HTMLButtonElement>(
@@ -244,7 +235,7 @@ describe("Phase 5.12 Capture product path", () => {
       "C:/fixtures/all_instruments.mid",
     );
     expect(analyzerCalls).toHaveLength(0);
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='review']"))
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
@@ -261,9 +252,9 @@ describe("Phase 5.12 Capture product path", () => {
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
     expect(analyzerCalls).toHaveLength(0);
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='review']"))
       .not.toBeNull();
-    expect(mounted.container.querySelectorAll("canvas")).toHaveLength(1);
+    expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-piano-roll']")).toHaveLength(1);
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
 
@@ -287,7 +278,7 @@ describe("Phase 5.12 Capture product path", () => {
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='review']"))
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(1);
 
@@ -310,7 +301,7 @@ describe("Phase 5.12 Capture product path", () => {
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='review']"))
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(1);
 
@@ -344,16 +335,12 @@ describe("Phase 5.12 Capture product path", () => {
     const workspace = mounted.container.querySelector(
       "[data-testid='pre-analysis-workspace']",
     );
-    const firstRole = mounted.container.querySelector<HTMLSelectElement>(
-      "select[aria-label$='の解析役割']",
-    )!;
+    const firstPart = mounted.container.querySelector<HTMLElement>("[data-voice-id]:not([data-off])")!;
+    const firstPartId = firstPart.dataset.voiceId;
     await act(async () => {
-      firstRole.value = "exclude";
-      firstRole.dispatchEvent(new Event("change", { bubbles: true }));
+      firstPart.querySelector<HTMLButtonElement>("[data-r='off']")?.click();
     });
-    expect(mounted.container.querySelector<HTMLElement>(
-      '[role="radio"][aria-checked="true"]',
-    )?.textContent).toBe("カスタム");
+    expect(mounted.container.querySelector<HTMLElement>(`[data-voice-id="${firstPartId}"]`)?.dataset.role).toBe("off");
     const zoom = mounted.container.querySelector<HTMLInputElement>("#pre-analysis-zoom")!;
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")
@@ -370,12 +357,7 @@ describe("Phase 5.12 Capture product path", () => {
       .toBe(workspace);
     expect(mounted.container.querySelector<HTMLInputElement>("#pre-analysis-zoom")?.value)
       .toBe("3");
-    expect(mounted.container.querySelector<HTMLSelectElement>(
-      "select[aria-label$='の解析役割']",
-    )?.value).toBe("exclude");
-    expect(mounted.container.querySelector<HTMLElement>(
-      '[role="radio"][aria-checked="true"]',
-    )?.textContent).toBe("カスタム");
+    expect(mounted.container.querySelector<HTMLElement>(`[data-voice-id="${firstPartId}"]`)?.dataset.role).toBe("off");
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
 
@@ -484,6 +466,48 @@ describe("Phase 5.12 Capture product path", () => {
     expect(setToast).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
+
+  it("remembers the shape of the parts and the choice when analysed, never the file or track names", async () => {
+    const analyzerCalls: AnalyzeMidiOptions[] = [];
+    const mounted = await renderCaptureProduct(analyzerCalls);
+
+    await dropMidi(mounted.container, "all_instruments.mid", allInstrumentsMidi());
+    await waitFor(() => mounted.container.querySelectorAll("[data-voice-id]").length === 11);
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>("[data-testid='pre-analysis-analyze']")?.click();
+    });
+    await waitFor(() => mounted.container.querySelector("[data-capture-stage='result']") !== null);
+
+    await waitFor(() => localStorage.getItem("loopvault.preAnalysisMemory") !== null);
+    const stored = localStorage.getItem("loopvault.preAnalysisMemory");
+    expect(stored).not.toBeNull();
+    expect(stored).not.toContain("all_instruments");
+    expect(stored).not.toContain("All Instruments");
+    expect(JSON.parse(stored!).entries[0].parts).toHaveLength(11);
+
+    await mounted.unmount();
+  }, 20_000);
+
+  it("analyses a 1/4 file exactly as it is written: the notice is only information, the bytes route is used", async () => {
+    const calls: AnalyzeMidiOptions[] = [];
+    const mounted = await renderCaptureProduct(calls);
+    const bytes = oddMeterMidi();
+    await dropMidi(mounted.container, "odd.mid", bytes);
+    await waitFor(() => mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
+    const notice = mounted.container.querySelector("[data-testid^='pre-analysis-notice-meter:']")!;
+    expect(notice.textContent).toContain("解析は書かれた拍子のまま行います");
+    expect(notice.querySelector("button")).toBeNull();
+    expect(mounted.container.textContent).not.toContain("4/4 として読む");
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>("[data-testid='pre-analysis-analyze']")?.click();
+    });
+    await waitFor(() => calls.length === 1);
+    // As on master: no prepared data, no analysis input; the file's own meter is kept.
+    expect(calls[0]!.preparedData).toBeUndefined();
+    expect(calls[0]!.analysisInput).toBeUndefined();
+    expect(analyzeMidi(bytes, calls[0]!).timeSignature).toBe("1/4");
+    await mounted.unmount();
+  }, 20_000);
 });
 
 async function renderCaptureProduct(
@@ -624,6 +648,20 @@ function allInstrumentsMidi(): Uint8Array {
 
 function simplePianoMidi(): Uint8Array {
   return smf([
+    { deltaTime: 0, type: "programChange", channel: 0, programNumber: 0 },
+    { deltaTime: 0, type: "noteOn", channel: 0, noteNumber: 60, velocity: 96 },
+    { deltaTime: 0, type: "noteOn", channel: 0, noteNumber: 64, velocity: 96 },
+    { deltaTime: 0, type: "noteOn", channel: 0, noteNumber: 67, velocity: 96 },
+    { deltaTime: 1920, type: "noteOff", channel: 0, noteNumber: 60, velocity: 0 },
+    { deltaTime: 0, type: "noteOff", channel: 0, noteNumber: 64, velocity: 0 },
+    { deltaTime: 0, type: "noteOff", channel: 0, noteNumber: 67, velocity: 0 },
+    { deltaTime: 0, meta: true, type: "endOfTrack" },
+  ]);
+}
+
+function oddMeterMidi(): Uint8Array {
+  return smf([
+    { deltaTime: 0, meta: true, type: "timeSignature", numerator: 1, denominator: 4, metronome: 24, thirtyseconds: 8 },
     { deltaTime: 0, type: "programChange", channel: 0, programNumber: 0 },
     { deltaTime: 0, type: "noteOn", channel: 0, noteNumber: 60, velocity: 96 },
     { deltaTime: 0, type: "noteOn", channel: 0, noteNumber: 64, velocity: 96 },

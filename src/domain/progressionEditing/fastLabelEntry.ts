@@ -1,4 +1,4 @@
-import { formatChordSymbol, makeChordSymbol, parseChordLabel } from "../chords";
+import { formatChordSymbol, makeChordSymbol, parseChordLabel, parseTextChordLabel } from "../chords";
 import type { ChordQuality, ChordSymbol } from "../types";
 import { parseKeySignature } from "./chordSuggestions";
 
@@ -22,7 +22,7 @@ export function parseFastChordEntry(
   keySignature?: string,
   previousChord?: ChordSymbol,
 ): ChordSymbol | null {
-  const absolute = parseChordLabel(value);
+  const absolute = parseChordLabel(value) ?? parseTextChordLabel(value);
   if (absolute) return absolute;
   const key = parseKeySignature(keySignature);
   if (!key) return null;

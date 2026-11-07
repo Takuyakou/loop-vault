@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { degreeHintDisclosure } from "../application";
+import { degreeHintDisclosure } from "../application/degreeHints";
 import {
   formatDegree,
   midiNoteName,
@@ -11,22 +11,22 @@ export function DegreeFretboard({
   exercise,
   handedness,
   hintLevel,
+  rawNotes, rawTuning, rawFretRange,
 }: {
-  exercise: PracticeExercise;
+  exercise?: PracticeExercise;
+  rawNotes?: readonly number[]; rawTuning?: readonly number[]; rawFretRange?: { min:number;max:number };
   handedness: Handedness;
   hintLevel: 0 | 1 | 2 | 3 | 4;
 }) {
   const [display, setDisplay] = useState<"degree" | "note">("degree");
-  const fretRange = exercise.generatorSnapshot.fretRange;
+  const fretRange = rawFretRange ?? exercise!.generatorSnapshot.fretRange;
   const frets = Array.from(
     { length: fretRange.max - fretRange.min + 1 },
     (_, index) => fretRange.min + index,
   );
   const visualFrets = handedness === "left" ? [...frets].reverse() : frets;
-  const tuning = exercise.generatorSnapshot.tuning;
-  const markers = hintLevel === 4
-    ? degreeHintDisclosure(exercise, 4).fretboard ?? []
-    : [];
+  const tuning = rawTuning ?? exercise!.generatorSnapshot.tuning;
+  const markers = rawNotes ? rawNotes.map((midi, sequenceIndex) => ({ sequenceIndex, degree:midiNoteName(midi,"C","major"), noteName:midiNoteName(midi,"C","major"), positions:tuning.flatMap((open,stringIndex)=>midi-open>=fretRange.min&&midi-open<=fretRange.max?[{stringIndex,fret:midi-open,midiNote:midi}]:[]) })) : hintLevel === 4 ? degreeHintDisclosure(exercise!, 4).fretboard ?? [] : [];
   const markerByPosition = new Map<string, typeof markers>();
   for (const marker of markers) {
     for (const position of marker.positions) {
@@ -114,7 +114,7 @@ export function DegreeFretboard({
                         {positionMarkers.map((marker) => (
                           display === "degree"
                             ? marker.degree
-                            : midiNoteName(openNote + fret, exercise.tonalContext.key, exercise.tonalContext.scale)
+                            : midiNoteName(openNote + fret, exercise?.tonalContext.key ?? "C", exercise?.tonalContext.scale ?? "major")
                         )).join("/")}
                       </span>
                     ) : null}
@@ -129,7 +129,7 @@ export function DegreeFretboard({
         <span className="inline-block h-3 w-3 rounded-full border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)]" aria-hidden="true" />
         <span>{hintLevel === 4 ? "丸印は答えの候補位置" : "マーカーはヒント4で表示"}</span>
         {hintLevel === 4 ? (
-          <span>· {exercise.targetEvents.map((event) => formatDegree(event.degree)).join(" → ")}</span>
+          <span>· {rawNotes ? rawNotes.map((n) => midiNoteName(n,"C","major")).join(" → ") : exercise!.targetEvents.map((event) => formatDegree(event.degree)).join(" → ")}</span>
         ) : null}
       </div>
     </section>

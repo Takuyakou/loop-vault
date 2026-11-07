@@ -9,6 +9,8 @@ import {
 } from "../../domain/extendedTextProgression";
 import { buildTextPreviewScore } from "../../domain/textPreviewScore";
 import { extendedTextPlaybackNotes } from "../../domain/extendedTextPlayback";
+import { textPreviewNotes, textVoicingAvailability } from "../../domain/textVoicingAvailability";
+import { TextVoicingAvailability } from "./TextVoicingAvailability";
 import { evaluateExtendedTextPractice } from "../../domain/extendedTextPractice";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import type { PreviewSound } from "../../audio/chordPreview";
@@ -41,7 +43,7 @@ const japaneseDiagnostic: Readonly<Record<ExtendedTextReasonCode, string>> = {
   AMBIGUOUS_TOKENIZATION: "コードの区切り方を一意に決められません。空白か小節線で区切ってください。",
   INVALID_STRUCTURE: "小節内の区切り・保持・スラッシュ等の書式を確認してください。",
   UNSUPPORTED_SUBDIVISION: "この等分割は正確なタイミングで表現できません。",
-  INPUT_LIMIT_EXCEEDED: "入力が対応する長さ・小節数・イベント数の上限を超えています。",
+  INPUT_LIMIT_EXCEEDED: "入力が対応する長さ・小節数・イベント数の上限を超えています。長い曲は、A部分・B部分などのセクションごとに分けて取り込んでください。",
   UNSUPPORTED_METER: "対応する拍子は1/4から12/4です。",
   INVALID_METADATA: "拍子以外の設定値を確認してください。",
 };
@@ -85,6 +87,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
   }), [beat, key, bpm]);
   const result = useMemo(() => parseExtendedTextProgression(input, metadata), [input, metadata]);
   const scoreItems = useMemo(() => buildTextPreviewScore(result), [result]);
+  const registration = useMemo(() => textVoicingAvailability(result.harmonicSpans), [result]);
   const playbackSnapshot = useMemo(() => ({
     notes: extendedTextPlaybackNotes(result, metronome), lengthBeats: result.scoreLengthBeats,
     beatsPerBar: result.beatsPerBar, sourceText: input,
@@ -121,11 +124,13 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
     const harmonic = result.harmonicSpans.find(item => item.sourceSpan.start === span.start
       || item.attacks.some(attack => attack.span.start === span.start));
     if (!harmonic || !sourceMatches) return;
+    const notes = textPreviewNotes(harmonic.chord);
+    if (!notes.length) { setPlayError("試聴の音を作れません: " + harmonic.chord.label); return; }
     const attack = harmonic.attacks.find(item => item.span.start === span.start);
     transport.seek(attack?.beat ?? harmonic.startBeat);
     if (transportState.status === "playing") return;
     void controller.toggle({ kind: "capture", id: "extended-text-band:" + span.start },
-      { type: "chord", chord: harmonic.chord, sound: selectedSound }).catch(error => {
+      { type: "chord", chord: harmonic.chord, sound: selectedSound, explicitMidiNotes: notes }).catch(error => {
       setPlayError(error instanceof Error ? error.message : String(error));
     });
   }
@@ -189,6 +194,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
         {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
       </div>
 
+      {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
       <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
         aria-label={"テキスト作業領域"}>
         <button type="button" role="tab" aria-selected={visiblePane === "input"}

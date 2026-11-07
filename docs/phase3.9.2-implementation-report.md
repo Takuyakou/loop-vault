@@ -87,7 +87,7 @@ Style練習では `recordPracticeRound()` を呼ばない。
 
 ## 5. Chord Drip参照結果
 
-`D:\dev\Chord Drip作成` の既存voicing処理とLow Interval Limitを監査し、仕様上の考え方だけを参照した。実装詳細は `docs/phase3.9.2-chord-drip-voicing-audit.md` に記録した。
+`<作業フォルダ>\Chord Drip作成` の既存voicing処理とLow Interval Limitを監査し、仕様上の考え方だけを参照した。実装詳細は `docs/phase3.9.2-chord-drip-voicing-audit.md` に記録した。
 
 Loop VaultからChord Drip repositoryへのruntime import、seed tie-break、ファイル依存は追加していない。
 

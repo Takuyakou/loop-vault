@@ -1,3 +1,4 @@
+import { Select } from "../../../components/ui/controls";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Ear, Lightbulb, Music2, Square } from "lucide-react";
 import { Button, Field, Surface } from "../../../components/ui";
@@ -212,23 +213,19 @@ export function RhythmPracticeView({
             {rhythmStatusLabel(status)} · {"再生位置"} {playhead ?? "—"} · {"ヒント"} {hintLevel}/4
           </p>
           <div className="mx-auto mt-5 min-h-16 max-w-2xl rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" data-testid="rhythm-grid">
-            {gridVisible ? exercise.targetEvents.map((event) => (
-              <span key={event.index} className="mr-2 inline-block rounded bg-[var(--lv-accent-soft)] px-2 py-1 text-[var(--lv-accent)]">
-                {event.startBeat}+{event.durationBeats}
-              </span>
-            )) : "リズムグリッドはヒント4またはレビューまで隠れています。"}
+            {gridVisible ? <div className="bass-rhythm-grid" role="group" aria-label="16分のリズムグリッド">{Array.from({length:Math.ceil(Math.max(...exercise.targetEvents.map(e=>e.startBeat+e.durationBeats),Number(meter.split("/")[0]))*4)},(_,cell)=>{const onset=exercise.targetEvents.some(e=>Math.abs(e.startBeat-cell/4)<.01),sounding=exercise.targetEvents.some(e=>e.startBeat<=cell/4&&e.startBeat+e.durationBeats>cell/4);return <span key={cell} className={onset?"bass-rhythm-onset":sounding?"bass-rhythm-held":""} title={`${cell/4+1}拍`} aria-label={`${cell/4+1}拍 ${onset?"音の始まり":sounding?"音の長さ":"休み"}`}>{onset?"●":sounding?"━":"·"}</span>;})}</div> : "リズムグリッドはヒント4またはレビューまで隠れています。"}
           </div>
         </div>
 
         <div className="grid gap-3 border-t border-[var(--lv-border)] pt-4 sm:grid-cols-2 xl:grid-cols-4">
           <Field htmlFor="rhythm-tempo" label={"テンポ"}>
-            <input id="rhythm-tempo" name="rhythm-tempo" aria-label={"リズムのテンポ"} className="lv-input w-full" type="number" min="30" max="240" disabled={controlsLocked} value={tempo} onChange={(event) => setTempo(Math.max(30, Math.min(240, Number(event.target.value))))} />
+            <input id="rhythm-tempo" name="rhythm-tempo" aria-label={"リズムのテンポ"} className="bass-input w-full" type="number" min="30" max="240" disabled={controlsLocked} value={tempo} onChange={(event) => setTempo(Math.max(30, Math.min(240, Number(event.target.value))))} />
           </Field>
           <Field htmlFor="rhythm-meter" label={"拍子"}>
-            <select id="rhythm-meter" name="rhythm-meter" aria-label={"リズムの拍子"} className="lv-input w-full" disabled={controlsLocked} value={meter} onChange={(event) => setMeter(event.target.value as typeof meter)}><option>3/4</option><option>4/4</option><option>6/8</option></select>
+            <Select id="rhythm-meter" name="rhythm-meter" aria-label={"リズムの拍子"} className="w-full" disabled={controlsLocked} value={meter} onChange={(event) => setMeter(event.target.value as typeof meter)}><option>3/4</option><option>4/4</option><option>6/8</option></Select>
           </Field>
           <Field htmlFor="rhythm-count-in" label={"カウントイン"}>
-            <select id="rhythm-count-in" name="rhythm-count-in" aria-label={"カウントインの小節数"} className="lv-input w-full" disabled={controlsLocked} value={countInBars} onChange={(event) => setCountInBars(Number(event.target.value) as 1 | 2)}><option value={1}>{"1小節"}</option><option value={2}>{"2小節"}</option></select>
+            <Select id="rhythm-count-in" name="rhythm-count-in" aria-label={"カウントインの小節数"} className="w-full" disabled={controlsLocked} value={countInBars} onChange={(event) => setCountInBars(Number(event.target.value) as 1 | 2)}><option value={1}>{"1小節"}</option><option value={2}>{"2小節"}</option></Select>
           </Field>
           <p className="flex min-h-10 items-center self-end text-xs text-[var(--lv-text-muted)]" data-testid="rhythm-global-metronome">
             {"ヘッダーのメトロノーム"}: {metronome ? "ON" : "OFF"}
@@ -247,7 +244,7 @@ export function RhythmPracticeView({
               {RATINGS.map((value) => <Button key={value} type="button" variant={rating === value ? "primary" : "ghost"} data-review-rating={value} aria-pressed={rating === value} onClick={() => setRating(value)}>{rhythmRatingLabel(value)}</Button>)}
             </div>
             <label className="mt-3 block text-sm text-[var(--lv-text-secondary)]" htmlFor="rhythm-issue">{"今回の課題"}</label>
-            <select id="rhythm-issue" name="rhythm-issue" className="lv-input mt-2 w-full max-w-sm" aria-label={"リズム練習の課題"} value={issue ?? ""} onChange={(event) => setIssue((event.target.value || undefined) as typeof issue)}><option value="">{"課題を選択しない"}</option><option value="rhythm">{"リズム"}</option><option value="duration">{"音の長さ"}</option><option value="recall">{"思い出し"}</option></select>
+            <Select id="rhythm-issue" name="rhythm-issue" className="mt-2 w-full max-w-sm" aria-label={"リズム練習の課題"} value={issue ?? ""} onChange={(event) => setIssue((event.target.value || undefined) as typeof issue)}><option value="">{"課題を選択しない"}</option><option value="rhythm">{"リズム"}</option><option value="duration">{"音の長さ"}</option><option value="recall">{"思い出し"}</option></Select>
           </fieldset>
         ) : null}
 

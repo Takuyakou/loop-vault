@@ -1,3 +1,9 @@
+import { Select } from "../../../components/ui/controls";
+import { DegreeFretboard } from "./DegreeFretboard";
+import type { DegreeUiSettings } from "./BassPracticeView";
+import { STANDARD_BASS_TUNINGS } from "../domain/constants";
+import { EchoRail } from "./EchoPracticeFrame";
+import type { SavedChordNotes } from '../application/vaultSavedChordNotes';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Ear, Lightbulb, Square } from "lucide-react";
 import { stopPreview, previewMidiNotes } from "../../../audio/chordPreview";
@@ -78,7 +84,10 @@ const BASSLINE_STEPS = {
 } as const;
 
 export interface BasslinePracticeViewProps {
+  readonly instrument?: DegreeUiSettings;
   readonly chordContextSnapshot?: ChordContextSnapshot;
+  /** Current-Vault pitches for this session only; never included in history. */
+  readonly resolveSavedChordNotes?: (snapshot: ChordContextSnapshot) => SavedChordNotes;
   readonly chordContextSnapshots?: readonly VaultChordContextSnapshot[];
   /** Live Vault title projection for picker display and search only. */
   readonly vaultPickerCandidates?: readonly VaultPickerCandidateView[];
@@ -95,7 +104,9 @@ export interface BasslinePracticeViewProps {
 }
 
 export function BasslinePracticeView({
+  instrument,
   chordContextSnapshot,
+  resolveSavedChordNotes,
   chordContextSnapshots,
   vaultPickerCandidates,
   vaultSourceBasslines,
@@ -350,7 +361,7 @@ export function BasslinePracticeView({
       },
     });
     session.engine = engine;
-    const input = toChordContextInput(activeSnapshot, activeTargetEvents, effectiveBpm, selectedPracticeMode, selectedListenMode, selectedPlayMode, sourceSelected ? sourceWindow?.harmonyEvents : undefined);
+    const input = toChordContextInput(activeSnapshot, activeTargetEvents, effectiveBpm, selectedPracticeMode, selectedListenMode, selectedPlayMode, sourceSelected ? sourceWindow?.harmonyEvents : undefined, sourceSelected ? undefined : resolveSavedChordNotes?.(activeSnapshot));
     const result = engine.start(input);
     if (!result.ok) {
       setPlaybackError(result.error.message);
@@ -367,13 +378,18 @@ export function BasslinePracticeView({
       setContextPlayback(undefined);
       return NO_CHORD_CONTEXT_ACTIVITY;
     }
+    if (import.meta.env.VITE_P527_E2E_FIXTURE === "1") {
+      (window as typeof window & {__lvBassSavedPlayback?: {mode: string; notes: readonly (readonly number[])[]}}).__lvBassSavedPlayback = {
+        mode: selectedPracticeMode, notes: activePlan.events.filter(event => event.layer === "chords").map(event => event.notes),
+      };
+    }
     const activity = Object.freeze({ started: true, metronomeUsed: activePlan.events.some((event) => event.layer === "metronome") });
     if (sessionRef.current?.generation === generation) {
       setContextPlayback(selectedPracticeMode);
       if (activity.metronomeUsed) setMetronomeUsed(true);
     }
     return activity;
-  }, [activeSnapshot, activeTargetEvents, effectiveBpm, exercise, hasPracticeTarget, listenMode, playMode, practiceMode, sourceContextPlayable, sourceSelected, sourceWindow?.harmonyEvents]);
+  }, [activeSnapshot, activeTargetEvents, effectiveBpm, exercise, hasPracticeTarget, listenMode, playMode, practiceMode, resolveSavedChordNotes, sourceContextPlayable, sourceSelected, sourceWindow?.harmonyEvents]);
 
   const startChordContext = useCallback(async (options: { readonly practiceMode?: PracticeMode; readonly listenMode?: ChordContextListenMode; readonly playMode?: ChordContextPlayMode } = {}): Promise<ChordContextPlaybackActivity> => {
     const prepared = await prepareChordContext();
@@ -774,11 +790,11 @@ export function BasslinePracticeView({
                 : ("プリセットを選ぶか、対応する4/4の進行をVaultに保存して選びます。")}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <select
+                <Select
                   id="bassline-progression-select"
                   name="bassline-progression-select"
                   data-testid="bassline-progression-select"
-                  className="lv-input min-w-0 flex-1"
+                  className="min-w-0 flex-1"
                   disabled={recordingInFlight || preparing}
                   value={selectedProgressionSource}
                   onChange={(event) => {
@@ -789,7 +805,7 @@ export function BasslinePracticeView({
                   <option value="generated">{"現在のデフォルト（生成）"}</option>
                   {activeSnapshot?.source.kind === "vault" ? <option value="vault">{`Vault: ${activeSnapshot.source.safeLabel}`}</option> : null}
                   {BASSLINE_PROGRESSION_PRESETS.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
-                </select>
+                </Select>
                 <VaultProgressionPicker
                   candidates={pickerCandidates}
                   activeSignature={activeSnapshot?.source.kind === "vault" ? activeSnapshot.signature : undefined}
@@ -818,11 +834,11 @@ export function BasslinePracticeView({
                   ? ("元ベースラインは明示選択したときだけ使います。")
                   : ("利用するには、元ベースライン付きの進行をVaultへ保存してください。")}
             >
-              <select
+              <Select
                 id="bassline-line-source"
                 name="bassline-line-source"
                 data-testid="bassline-line-source"
-                className="lv-input w-full"
+                className="w-full"
                 aria-describedby={sourceSelected && !sourceAvailable ? "bassline-line-source-description source-bassline-unavailable" : "bassline-line-source-description"}
                 disabled={recordingInFlight || preparing}
                 value={basslineSource}
@@ -830,13 +846,13 @@ export function BasslinePracticeView({
               >
                 <option value="generated">{"生成ベースライン"}</option>
                 <option value="source-bassline" disabled={!sourceCatalogAvailable && !sourceSelected}>{"元ベースライン"}</option>
-              </select>
+              </Select>
               {sourceSelected ? <div className="mt-3 min-w-0">
                 <label className="text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="source-bassline-vault-select">{"保存済み元ベースライン"}</label>
-                <select
+                <Select
                   id="source-bassline-vault-select"
                   data-testid="source-bassline-vault-select"
-                  className="lv-input mt-1 w-full min-w-0"
+                  className="mt-1 w-full min-w-0"
                   aria-describedby="source-bassline-selection-description"
                   disabled={recordingInFlight || preparing || !sourceCatalogAvailable}
                   value={selectedSourceReferenceKey}
@@ -845,30 +861,30 @@ export function BasslinePracticeView({
                   <option value="" disabled>{"選択してください"}</option>
                   {selectedSourceReference && !sourceCandidate ? <option value={selectedSourceReferenceKey} disabled>{"選択したソースは利用できません"}</option> : null}
                   {(vaultSourceBasslines ?? []).map((candidate, index) => <option key={sourceReferenceKey(candidate.reference)} value={sourceReferenceKey(candidate.reference)}>{candidate.displayTitle} · {index + 1}</option>)}
-                </select>
+                </Select>
                 <p id="source-bassline-selection-description" className="mt-1 text-xs text-[var(--lv-text-muted)]">{"選択状態にはVaultの項目参照だけを使い、ノート列は複製しません。"}</p>
               </div> : null}
               {sourceSelected && !sourceAvailable ? <p id="source-bassline-unavailable" aria-live="polite" className="mt-1 text-xs text-[var(--lv-text-secondary)]">{sourceUnavailableReason}</p> : null}
             </Field>
             {activePreset ? <Field htmlFor="bassline-preset-key-select" label={"プリセットのキー"}>
-              <select
+              <Select
                 id="bassline-preset-key-select"
                 name="bassline-preset-key-select"
                 data-testid="bassline-preset-key-select"
-                className="lv-input w-full"
+                className="w-full"
                 disabled={recordingInFlight || preparing}
                 value={activeSnapshot?.tonalContext.key ?? activePreset.defaultKey}
                 onChange={(event) => choosePresetKey(event.currentTarget.value)}
               >
                 {presetKeyOptions(activePreset.defaultKey).map((key) => <option key={key} value={key}>{key}</option>)}
-              </select>
+              </Select>
             </Field> : null}
           </div> : null}
           <Field htmlFor="bassline-level" label={"レベル"}>
-            <select
+            <Select
               id="bassline-level"
               name="bassline-level"
-              className="lv-input w-full"
+              className="w-full"
               aria-label={"ベースラインのレベル"}
               aria-describedby={sourceSelected ? "bassline-level-description" : undefined}
               disabled={recordingInFlight || (sourceSelected && !sourceWindow)}
@@ -884,7 +900,7 @@ export function BasslinePracticeView({
                 <option value={2}>{"2 - コードトーン"}</option>
                 <option value={3}>{"3 - アプローチ"}</option>
               </>}
-            </select>
+            </Select>
             {sourceSelected ? <p id="bassline-level-description" aria-live="polite" className="mt-1 text-xs text-[var(--lv-text-secondary)]">{sourceLevelUnavailableReason ?? sourceSimplificationAvailabilityReason ?? ("保存済み和声から決定的に導出します。元スナップショットは変更しません。")}</p> : null}
           </Field>        </div>
       </div>
@@ -939,7 +955,8 @@ export function BasslinePracticeView({
     </section> : null}
     <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
       <span className="mr-2 text-xs text-[var(--lv-text-muted)]">{"お手本の音名"}</span>
-      {activeTargetEvents.map((event) => <span key={event.index} className="mr-2 font-semibold" title={`MIDI ${event.midiNote}`}>{midiNoteName(event.midiNote)}</span>)}
+      <div className="bass-midi-lanes"><div style={{width:`max(100%, ${Math.max(4,...activeTargetEvents.map(e=>e.startBeat+e.durationBeats))*30}px)`}}><div className="bass-midi-lane" role="group" aria-label="ベースラインの拍">{Array.from({length:Math.ceil(Math.max(4,...activeTargetEvents.map(e=>e.startBeat+e.durationBeats)))},(_,i)=><span key={i} className="text-xs" style={{position:"absolute",left:`${i/Math.max(4,...activeTargetEvents.map(e=>e.startBeat+e.durationBeats))*100}%`}}>{i+1}</span>)}</div><div className="bass-midi-lane" role="group" aria-label="ベースラインのお手本">{activeTargetEvents.map(event=><span key={event.index} className="bass-midi-note" title={`MIDI ${event.midiNote}`} style={{left:`${event.startBeat/Math.max(4,...activeTargetEvents.map(e=>e.startBeat+e.durationBeats))*100}%`,width:`${Math.max(1,event.durationBeats/Math.max(4,...activeTargetEvents.map(e=>e.startBeat+e.durationBeats))*100)}%`}}>{midiNoteName(event.midiNote)}</span>)}</div></div></div>
+      {instrument?<DegreeFretboard rawNotes={activeTargetEvents.map(e=>e.midiNote)} rawTuning={STANDARD_BASS_TUNINGS[instrument.stringCount]} rawFretRange={instrument.fretRange} handedness={instrument.handedness} hintLevel={4} />:null}
     </> : "まずお手本を聴いて思い出してください。音名はヒント4またはレビューで表示されます。"}</div>
 
     {chordContextEnabled ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-heading" data-testid="chord-context-controls">
@@ -951,16 +968,16 @@ export function BasslinePracticeView({
         <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">{sourceSelected ? (`セッション既定: ${SOURCE_SESSION_DEFAULT_BPM} BPM。変更はこのセッションだけに適用され、Vaultは変更されません。`) : (`元のテンポ: ${tempoBaselineBpm} BPM。変更はこのセッションだけに適用され、Vaultは変更されません。`)}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <label htmlFor="chord-context-effective-bpm">BPM</label>
-          <input id="chord-context-effective-bpm" data-testid="chord-context-effective-bpm" type="number" min={30} max={240} step={1} value={effectiveBpm} disabled={recordingInFlight} onChange={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} onBlur={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} className="lv-input w-24" />
+          <input id="chord-context-effective-bpm" data-testid="chord-context-effective-bpm" type="number" min={30} max={240} step={1} value={effectiveBpm} disabled={recordingInFlight} onChange={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} onBlur={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} className="bass-input w-24" />
           <Button type="button" variant="ghost" data-testid="chord-context-bpm-plus-four" onClick={() => chooseEffectiveBpm(effectiveBpm + 4)} disabled={recordingInFlight || effectiveBpm >= 240}>+4 BPM</Button>
           <Button type="button" variant="ghost" onClick={() => chooseEffectiveBpm(tempoBaselineBpm)} disabled={recordingInFlight || effectiveBpm === tempoBaselineBpm}>{sourceSelected ? ("セッション既定に戻す") : ("元のテンポに戻す")}</Button>
         </div>
       </fieldset>
       <Field htmlFor="chord-context-timbre" label={"コード音色"} helper={"このセッションだけに適用されます。"} className="mt-3 max-w-sm">
-        <select id="chord-context-timbre" name="chord-context-timbre" data-testid="chord-context-timbre" className="lv-input w-full" disabled={recordingInFlight} value={chordTimbre} onChange={(event) => chooseChordTimbre(event.currentTarget.value as ChordContextChordTimbre)}>
+        <Select id="chord-context-timbre" name="chord-context-timbre" data-testid="chord-context-timbre" className="w-full" disabled={recordingInFlight} value={chordTimbre} onChange={(event) => chooseChordTimbre(event.currentTarget.value as ChordContextChordTimbre)}>
           <option value="electric">{"エレクトリック"}</option>
           <option value="piano">{"ピアノ"}</option>
-        </select>
+        </Select>
       </Field>
       <fieldset className="mt-3">
         <legend>{"練習モード"}</legend>
@@ -1072,7 +1089,7 @@ export function BasslinePracticeView({
         stopPreview,
       )}
     /> : null}
-    {review ? <section className="mt-4 rounded border p-3" aria-labelledby="bassline-history-heading" data-testid={sourceSelected ? "source-bassline-history-save" : "chord-context-history-save"}>
+    {review ? <EchoRail><section className="mt-4 rounded border p-3" aria-labelledby="bassline-history-heading" data-testid={sourceSelected ? "source-bassline-history-save" : "chord-context-history-save"}>
       <h3 id="bassline-history-heading" className="font-semibold">{"練習履歴"}</h3>
       <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{sourceSelected
         ? ("Vault項目参照、スナップショット署名、区間、レベル、差分数、保持したテイク参照だけを保存します。ノート列や演奏の採点は保存しません。")
@@ -1086,8 +1103,8 @@ export function BasslinePracticeView({
         disabled={(sourceSelected ? !onSourceBasslineHistoryRecorded || !sourceLevelResult?.available : !onChordContextHistoryRecorded) || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"}
         data-testid={sourceSelected ? "source-bassline-save-history" : "chord-context-save-history"}
       >{historyStatus === "saved" ? "履歴へ保存済み" : "セッションを履歴へ保存"}</Button>
-    </section> : null}
-    {sourceBasslineHistory.length ? <section className="mt-4 rounded border p-3" aria-labelledby="source-bassline-history-heading" data-testid="source-bassline-history">
+    </section></EchoRail> : null}
+    {sourceBasslineHistory.length ? <EchoRail><section className="mt-4 rounded border p-3" aria-labelledby="source-bassline-history-heading" data-testid="source-bassline-history">
       <h3 id="source-bassline-history-heading" className="font-semibold">{"元ベースライン履歴"}</h3>
       <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{"履歴は参照と事実だけを保持します。保存元がない場合は別のソースへ置き換えません。"}</p>
       <ul className="mt-3 grid min-w-0 gap-2">
@@ -1101,7 +1118,7 @@ export function BasslinePracticeView({
         })}
       </ul>
       {historyRestartMessage ? <p aria-live="polite" className="mt-3 text-sm" data-testid="source-bassline-history-restart-status">{historyRestartMessage}</p> : null}
-    </section> : null}    </Surface>
+    </section></EchoRail> : null}    </Surface>
   </div>;
 }
 
@@ -1159,6 +1176,7 @@ function toChordContextInput(
   listenMode: ChordContextListenMode,
   playMode: ChordContextPlayMode,
   capturedHarmony?: readonly SourceBasslineHarmonyEvent[],
+  savedMidiNotesByChordId?: SavedChordNotes,
 ): ChordContextPlaybackInput {
   const source = {
     bpm: effectiveBpm,
@@ -1172,6 +1190,7 @@ function toChordContextInput(
       }))
       : snapshot.section.chords.map((chord) => ({
         id: chord.id,
+        ...(savedMidiNotesByChordId?.[chord.id] ? {savedMidiNotes: savedMidiNotesByChordId[chord.id]} : {}),
         chord: {
           root: chord.root,
           quality: chord.quality,

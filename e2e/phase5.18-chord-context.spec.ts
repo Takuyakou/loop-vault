@@ -120,7 +120,7 @@ test("P5.18.1 selects a preset and key before confirming a Vault source from Bas
   await openVault(page);
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
-  await detail.getByRole("button", { name: /練習する/ }).click();
+  await detail.getByRole("button", { name: /Bass Practice/ }).click();
 
   const bassline = page.getByTestId("bassline-echo-view");
   const selector = bassline.getByTestId("bassline-progression-select");

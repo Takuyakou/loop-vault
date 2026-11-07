@@ -3,6 +3,8 @@ import type {
   LiveChordDetection,
   LiveChordHistoryEntry,
 } from "../domain/liveMidi";
+import { connectionController } from "./connectionController";
+import { selectMidiConnection, type MidiConnectionControllerView, type MidiConnectionKind } from "./connectionView";
 import type { LiveMidiStoreState } from "./liveMidiStore";
 import type { LiveMidiConnectionStatus, LiveMidiDevice } from "./types";
 import { LIVE_MIDI_WINDOW_LABEL } from "./miniWindowController";
@@ -22,6 +24,9 @@ export interface LiveMidiWindowSnapshot {
   devices: LiveMidiDevice[];
   selected?: LiveMidiDevice;
   status: LiveMidiConnectionStatus;
+  /** P14 §5: the shared state, so the mini window says what the header says. */
+  kind: MidiConnectionKind;
+  label: string;
   error?: string;
   instant: LiveChordDetection;
   provisionalChord?: LiveChordDetection;
@@ -32,11 +37,15 @@ export interface LiveMidiWindowSnapshot {
 
 export function createLiveMidiWindowSnapshot(
   state: LiveMidiStoreState,
+  controller: MidiConnectionControllerView = connectionController.state.getState(),
 ): LiveMidiWindowSnapshot {
+  const view = selectMidiConnection(state, controller);
   return {
     devices: state.devices,
     selected: state.selected,
     status: state.status,
+    kind: view.kind,
+    label: view.label,
     error: state.error,
     instant: state.instant,
     provisionalChord: state.provisionalChord,

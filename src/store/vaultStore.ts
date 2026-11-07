@@ -29,13 +29,14 @@ import { parseExtendedTextProgression, parseExtendedTextChordLabel } from "../do
 import { EXTENDED_TEXT_LIMITS } from "../domain/extendedTextBudgets";
 import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSource";
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
-import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
+import { attachSourceVoicing, attachSourceVoicings, isUsablePracticeVoicing, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
   MAX_PERSISTED_CHORD_ALTERNATIVES,
   savedTextSourceSchema,
   type QuarantinedRecord,
 } from "../domain/schema";
 import { sourceBasslineSnapshotSchema, type SourceBasslineSnapshotV1 } from "../domain/sourceBassline";
+import { screenToSource, type BeatRange } from "../domain/correction/barMap";
 import type {
   ChordTimelineItem,
   MidiProgressionAnalysis,
@@ -64,7 +65,7 @@ export type LoadStatus =
   | "error";
 
 export interface RecoveryState {
-  kind: "corrupt-json";
+  kind: "corrupt-json" | "migration-recovery";
   message: string;
   corruptPath?: string;
   backups: VaultBackup[];
@@ -144,6 +145,8 @@ export interface ProgressionSaveMetadata {
   onPersistenceError?: (message: string) => void;
   /** P10.3 §4: words added to the saved block's memo after the analyzer's warnings (the section it was saved from). */
   memoNote?: string;
+  /** P17-02: the source spans cut out of the capture (empty/absent when nothing was cut). */
+  removedBars?: readonly BeatRange[];
 }
 
 export type VaultMutationResult = boolean | "pending";
@@ -184,6 +187,7 @@ export interface VaultStoreState {
   duplicateProgressionBlock: (
     ideaId: string,
     blockId: string,
+    draft?: SavedProgressionBlock,
   ) => string | undefined;
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
@@ -392,12 +396,12 @@ export function createVaultStore(
         } catch (error) {
           if (
             error instanceof VaultRepositoryError &&
-            error.kind === "invalid-json"
+            (error.kind === "invalid-json" || error.kind === "migration-recovery")
           ) {
             set({
               loadStatus: "recovery",
               recovery: {
-                kind: "corrupt-json",
+                kind: error.kind === "migration-recovery" ? "migration-recovery" : "corrupt-json",
                 message: error.message,
                 corruptPath: corruptPathFromDetails(error.details),
                 backups: await safeListBackups(options.repository),
@@ -429,10 +433,7 @@ export function createVaultStore(
 
           set({
             loadStatus: "error",
-            error:
-              error instanceof Error
-                ? error.message
-                : "Vaultを読み込めませんでした。",
+            error: errorText(error, "Vaultを読み込めませんでした。"),
           });
         }
       },
@@ -648,18 +649,19 @@ export function createVaultStore(
         }), true);
       },
 
-      duplicateProgressionBlock(ideaId, blockId) {
+      duplicateProgressionBlock(ideaId, blockId, draft) {
         const idea = get().ideas.find((entry) => entry.id === ideaId);
         const block = idea?.progressionBlocks?.find((entry) => entry.id === blockId);
         if (!idea || !block) {
           return undefined;
         }
+        const version = draft ?? block;
         const id = idFactory();
         const capturedAt = now().toISOString();
         const duplicate: SavedProgressionBlock = {
-          ...block,
+          ...version,
           id,
-          chords: block.chords.map((item) => ({
+          chords: version.chords.map((item) => ({
             ...item,
             eventId: idFactory(),
             chord: { ...item.chord, tensions: [...item.chord.tensions] },
@@ -692,11 +694,11 @@ export function createVaultStore(
                 }
               : {}),
           })),
-          tags: [...block.tags],
-          ...(block.textSource ? { textSource: savedTextSourceSchema.parse(block.textSource) } : {}),
-          suppressedAutoTags: block.suppressedAutoTags?.map((tag) => ({ ...tag })),
-          ...(block.sourceBassline
-            ? { sourceBassline: cloneSourceBassline(block.sourceBassline) }
+          tags: [...version.tags],
+          ...(version.textSource ? { textSource: savedTextSourceSchema.parse(version.textSource) } : {}),
+          suppressedAutoTags: version.suppressedAutoTags?.map((tag) => ({ ...tag })),
+          ...(version.sourceBassline
+            ? { sourceBassline: cloneSourceBassline(version.sourceBassline) }
             : {}),
           capturedAt,
         };
@@ -849,10 +851,7 @@ export function createVaultStore(
         } catch (error) {
           set({
             loadStatus: "ready",
-            error:
-              error instanceof Error
-                ? error.message
-                : "Vaultを読み込めませんでした（バックアップファイル）。",
+            error: errorText(error, "Vaultを読み込めませんでした（バックアップファイル）。"),
           });
           return false;
         }
@@ -976,6 +975,13 @@ async function safeListBackups(
   } catch {
     return [];
   }
+}
+
+/** What went wrong, as the screen shows it: an Error's message, or the text itself when the failure is a string (the Tauri commands reject with one). */
+export function errorText(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
 }
 
 function vaultBudgetMessage(): string {
@@ -1173,6 +1179,8 @@ function textPracticeVoicingForSave(
     || practice.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(practice)
     || voicingCompatibility(practice, chord) !== "compatible"
+    || practice.source === "manual" && practice.extractorVersion?.startsWith("text-style-v1:")
+      && !isUsablePracticeVoicing(practice, chord)
   ) return undefined;
   return {
     practiceVoicingOverride: {
@@ -1258,6 +1266,7 @@ function sameTextProgressionChord(
   supplied: ChordTimelineItem["chord"],
 ): boolean {
   return parsed.root === supplied.root
+    && parsed.altered === supplied.altered
     && parsed.quality === supplied.quality
     && parsed.bass === supplied.bass
     && parsed.tensions.length === supplied.tensions.length
@@ -1285,7 +1294,7 @@ function textAbsoluteBeat(item: Pick<ChordTimelineItem, "bar" | "beat">, beatsPe
 function isValidTextProgressionBpm(value: number | undefined): value is number {
   return value !== undefined && Number.isFinite(value) && value >= 30 && value <= 240;
 }
-function toSavedProgressionBlock(
+export function toSavedProgressionBlock(
   block: SavedProgressionBlock | ProgressionBlockCandidate,
   analysis: MidiProgressionAnalysis | undefined,
   context: {
@@ -1314,10 +1323,18 @@ function toSavedProgressionBlock(
   const savedChords = block.events?.length
     ? candidateEventsAsTimeline(block.events, block.startBar, barLengthBeats)
     : block.chords;
-  const sourceRange = savedChords.length > 0 ? {
-    sourceStartBeat: Math.min(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1)),
-    sourceEndBeat: Math.max(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1 + item.durationBeats)),
-  } : undefined;
+  // P17-02: the source position is the screen position mapped back through the cuts.
+  // A range that crosses a cut has no single original position, so both beats are left out.
+  const removedBars = metadata.removedBars ?? [];
+  // P17-02: a range that crosses a cut has no single original position, and no
+  // voicing is taken from a position at all (the chords keep what they sound as).
+  const crossesCut = screenToSource((block.startBar - 1) * barLengthBeats, block.endBar * barLengthBeats, removedBars).length > 1;
+  const sourceRange = !crossesCut && savedChords.length > 0 ? (() => {
+    const screenStart = Math.min(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1));
+    const screenEnd = Math.max(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1 + item.durationBeats));
+    const ranges = screenToSource(screenStart, screenEnd, removedBars);
+    return ranges.length === 1 ? { sourceStartBeat: ranges[0]!.start, sourceEndBeat: ranges[0]!.end } : undefined;
+  })() : undefined;
   return {
     id: context.idFactory(),
     ...(analysis?.sourceAssetId ? { sourceAssetId: analysis.sourceAssetId } : {}),
@@ -1329,12 +1346,16 @@ function toSavedProgressionBlock(
     lengthBars: block.lengthBars,
     summaryText: block.summaryText,
     chords: persistChordEvents(
-      savedChords.map((item) => attachExtractedVoicing(
-        item,
-        analysis,
-        context.sourceData,
-        context.sourceVoices,
-      )),
+      savedChords.map((item) => crossesCut
+        ? item
+        : attachExtractedVoicing(
+          item,
+          analysis,
+          context.sourceData,
+          context.sourceVoices,
+          barLengthBeats,
+          removedBars,
+        )),
       context.idFactory,
     ),
     ...(analysis?.detectedKey ? { detectedKey: analysis.detectedKey } : {}),
@@ -1409,13 +1430,20 @@ function attachExtractedVoicing(
   analysis: MidiProgressionAnalysis | undefined,
   sourceData: MidiSongData | undefined,
   sourceVoices: Voice[] | undefined,
+  meter: number,
+  removedBars: readonly BeatRange[],
 ): SavedProgressionBlock["chords"][number] {
   if (item.voicingMemory?.sourceVoicing) {
     return item.voicingMemory.playbackChoice === undefined
       ? { ...item, voicingMemory: { ...item.voicingMemory, playbackChoice: "SOURCE" } }
       : item;
   }
-  return attachSourceVoicing(item, { analysis, sourceData, sourceVoices });
+  // P17-02: never take a voicing from a position that is no longer the chord's
+  // original time. A chord that crosses a cut keeps what it already has.
+  const start = (item.bar - 1) * meter + item.beat - 1;
+  const ranges = screenToSource(start, start + item.durationBeats, removedBars);
+  if (ranges.length !== 1) return item;
+  return attachSourceVoicing(item, { analysis, sourceData, sourceVoices, position: { startBeat: ranges[0]!.start, endBeat: ranges[0]!.end } });
 }
 
 function persistChordEvents(

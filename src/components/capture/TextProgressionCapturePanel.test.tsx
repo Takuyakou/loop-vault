@@ -344,7 +344,7 @@ describe("TextProgressionCapturePanel", () => {
       .toContain("[overflow-wrap:anywhere]");
     await harness.unmount();
   });
-  it("releases a Live MIDI connection when conversion unmounts the Inspector", async () => {
+  it("closes the recording panel when conversion unmounts the Inspector, and leaves the shared MIDI connection alone", async () => {
     const original = defaultLiveMidiStore.getState();
     const activate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: true }); });
     const deactivate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: false }); });
@@ -355,14 +355,14 @@ describe("TextProgressionCapturePanel", () => {
       await changeValue(input(harness), "| C | ");
       await click(buttonByText(harness, "鍵盤で記録"));
       await act(async () => { await Promise.resolve(); });
-      expect(activate).toHaveBeenCalledTimes(1);
+      expect(activate).not.toHaveBeenCalled(); // P14 §5: the panel never opens the input itself
       expect(harness.container.querySelector("[data-voicing-panel]")).not.toBeNull();
 
       await harness.render({ draftActive: true });
       await act(async () => { await Promise.resolve(); });
       expect(harness.container.querySelector("[data-testid=\"text-progression-inspector\"]")).toBeNull();
       expect(harness.container.querySelector("[data-voicing-panel]")).toBeNull();
-      expect(deactivate).toHaveBeenCalledTimes(1);
+      expect(deactivate).not.toHaveBeenCalled();
     } finally {
       await harness.unmount();
       defaultLiveMidiStore.setState({
@@ -451,7 +451,7 @@ describe("TextProgressionCapturePanel", () => {
     try {
       await changeValue(input(harness), "| Cmaj7 Cmaj7 |");
       await click(buttonByText(harness, "鍵盤で記録"));
-      expect(activate).toHaveBeenCalledTimes(1);
+      expect(activate).not.toHaveBeenCalled();
 
       const cards = harness.container.querySelectorAll<HTMLButtonElement>(
         '[data-testid="text-progression-card"]',
@@ -461,7 +461,7 @@ describe("TextProgressionCapturePanel", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(deactivate).toHaveBeenCalledTimes(1);
+      expect(deactivate).not.toHaveBeenCalled();
       expect(harness.container.querySelector('[data-testid="voicing-capture-confirmation"]'))
         .toBeNull();
     } finally {

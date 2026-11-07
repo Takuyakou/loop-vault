@@ -51,3 +51,12 @@ p89-generated/
 
 # Phase 10: generated mocks and screenshots
 p10-generated/
+
+# Phase 12: review tables, native targets and local evidence
+p12-generated/
+
+# Phase 13: local review mocks and build evidence
+p13-generated/
+
+# Phase 14: generated mocks and screenshots
+p14-generated/

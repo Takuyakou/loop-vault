@@ -40,3 +40,4 @@ function readFlag(key: string, fallback: boolean, storage?: StorageLike): boolea
   if (!target) return fallback;
   try { const value = target.getItem(key); return value === "true" ? true : value === "false" ? false : fallback; } catch { return fallback; }
 }
+export function isBassPracticeMidiBasslineEnabled(storage?: StorageLike): boolean { return readFlag("loop-vault:bass-practice-midi-bassline-enabled:v1", true, storage); }

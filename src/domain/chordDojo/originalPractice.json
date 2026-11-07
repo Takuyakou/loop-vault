@@ -1,0 +1,932 @@
+{
+  "version": 2,
+  "category": "original-practice",
+  "categoryTitle": "Original Practice",
+  "note": "MIDI の1〜4小節目から機械的に作成。5小節目は1小節目と音の高さ・発音タイミング・音価が同一(ベロシティのみ僅かに異なる)のため除外し、4小節ループとする。expectedPitches は MIDI ノート番号(参照キー E♭)で、判定の正。struck はそのカードで新しく弾く音(カード切替後にすべて押し直す必要がある)。heldFromPrevious は前のカードから押さえたままでよい音(expectedPitches に含む)。音名は読みやすさのための表記。",
+  "progressions": [
+    {
+      "id": "op-traditional-passing",
+      "title": "01 Traditional Passing — E°7",
+      "referenceKey": "Eb major",
+      "tempoBpm": 72,
+      "meter": "4/4",
+      "bars": 4,
+      "loop": true,
+      "events": [
+        {
+          "index": 0,
+          "startBeat": 0,
+          "durationBeats": 4,
+          "label": "Fm11",
+          "expectedPitches": [
+            41,
+            48,
+            56,
+            60,
+            63,
+            67,
+            70
+          ],
+          "expectedNames": [
+            "F2",
+            "C3",
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "F2",
+            "C3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "F2",
+              "pitch": 41,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "C3",
+              "pitch": 48,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.121,
+              "durationBeats": 3.679,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "startBeat": 4,
+          "durationBeats": 2,
+          "label": "Bb7sus4",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            63,
+            65,
+            70
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "F3",
+              "pitch": 53,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "startBeat": 6,
+          "durationBeats": 2,
+          "label": "Bb9",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            60,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [
+            "Bb2",
+            "F3"
+          ],
+          "struck": [
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "startBeat": 8,
+          "durationBeats": 4,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            46,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "Bb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2",
+            "Bb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "startBeat": 12,
+          "durationBeats": 2,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 72
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 75
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 75
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 75
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "startBeat": 14,
+          "durationBeats": 2,
+          "label": "Edim7",
+          "expectedPitches": [
+            40,
+            55,
+            58,
+            61,
+            64,
+            67
+          ],
+          "expectedNames": [
+            "E2",
+            "G3",
+            "Bb3",
+            "Db4",
+            "E4",
+            "G4"
+          ],
+          "leftHand": [
+            "E2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "Db4",
+            "E4",
+            "G4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "E2",
+              "pitch": 40,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 80
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 80
+            },
+            {
+              "name": "Db4",
+              "pitch": 61,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 80
+            },
+            {
+              "name": "E4",
+              "pitch": 64,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 80
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.121,
+              "durationBeats": 1.679,
+              "velocity": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "op-modern-passing",
+      "title": "02 Modern Passing — Cadd2 on E",
+      "referenceKey": "Eb major",
+      "tempoBpm": 72,
+      "meter": "4/4",
+      "bars": 4,
+      "loop": true,
+      "events": [
+        {
+          "index": 0,
+          "startBeat": 0,
+          "durationBeats": 4,
+          "label": "Fm11",
+          "expectedPitches": [
+            41,
+            48,
+            56,
+            60,
+            63,
+            67,
+            70
+          ],
+          "expectedNames": [
+            "F2",
+            "C3",
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "F2",
+            "C3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "Eb4",
+            "G4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "F2",
+              "pitch": 41,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "C3",
+              "pitch": 48,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.121,
+              "durationBeats": 3.679,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "startBeat": 4,
+          "durationBeats": 2,
+          "label": "Bb7sus4",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            63,
+            65,
+            70
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "Eb4",
+            "F4",
+            "Bb4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "F3",
+              "pitch": 53,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "Eb4",
+              "pitch": 63,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "Bb4",
+              "pitch": 70,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "startBeat": 6,
+          "durationBeats": 2,
+          "label": "Bb9",
+          "expectedPitches": [
+            46,
+            53,
+            56,
+            60,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Bb2",
+            "F3",
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Bb2",
+            "F3"
+          ],
+          "rightHand": [
+            "Ab3",
+            "C4",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [
+            "Bb2",
+            "F3"
+          ],
+          "struck": [
+            {
+              "name": "Ab3",
+              "pitch": 56,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 78
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "startBeat": 8,
+          "durationBeats": 4,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            46,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "Bb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2",
+            "Bb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb2",
+              "pitch": 46,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 70
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 3.8,
+              "velocity": 78
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 3.771,
+              "velocity": 78
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 3.74,
+              "velocity": 78
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 3.71,
+              "velocity": 78
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "startBeat": 12,
+          "durationBeats": 2,
+          "label": "Ebmaj9",
+          "expectedPitches": [
+            39,
+            55,
+            58,
+            62,
+            65
+          ],
+          "expectedNames": [
+            "Eb2",
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "leftHand": [
+            "Eb2"
+          ],
+          "rightHand": [
+            "G3",
+            "Bb3",
+            "D4",
+            "F4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "Eb2",
+              "pitch": 39,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 72
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 75
+            },
+            {
+              "name": "Bb3",
+              "pitch": 58,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 75
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 75
+            },
+            {
+              "name": "F4",
+              "pitch": 65,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 75
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "startBeat": 14,
+          "durationBeats": 2,
+          "label": "Cadd9/E",
+          "expectedPitches": [
+            40,
+            55,
+            60,
+            62,
+            64,
+            67
+          ],
+          "expectedNames": [
+            "E2",
+            "G3",
+            "C4",
+            "D4",
+            "E4",
+            "G4"
+          ],
+          "leftHand": [
+            "E2"
+          ],
+          "rightHand": [
+            "G3",
+            "C4",
+            "D4",
+            "E4",
+            "G4"
+          ],
+          "heldFromPrevious": [],
+          "struck": [
+            {
+              "name": "E2",
+              "pitch": 40,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 76
+            },
+            {
+              "name": "G3",
+              "pitch": 55,
+              "offsetBeats": 0.0,
+              "durationBeats": 1.8,
+              "velocity": 82
+            },
+            {
+              "name": "C4",
+              "pitch": 60,
+              "offsetBeats": 0.029,
+              "durationBeats": 1.771,
+              "velocity": 82
+            },
+            {
+              "name": "D4",
+              "pitch": 62,
+              "offsetBeats": 0.06,
+              "durationBeats": 1.74,
+              "velocity": 82
+            },
+            {
+              "name": "E4",
+              "pitch": 64,
+              "offsetBeats": 0.09,
+              "durationBeats": 1.71,
+              "velocity": 82
+            },
+            {
+              "name": "G4",
+              "pitch": 67,
+              "offsetBeats": 0.121,
+              "durationBeats": 1.679,
+              "velocity": 82
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

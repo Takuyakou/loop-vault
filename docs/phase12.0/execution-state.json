@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "12.0",
+  "status": "in-progress",
+  "activeStage": "P12.0-01",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "8d107d3225201658a167cd3319eb73c85adcb492",
+  "lastVerifiedCommit": "7aef92ac699820bb9444c73bd1857a5d6f7820ba",
+  "currentBranch": "feat/p12-theme-score",
+  "requiredGates": {
+    "P12.0-01": [
+      "p12.0-01-phase-docs",
+      "p12.0-01-audit",
+      "p12.0-01-domain",
+      "p12.0-01-screens-shape",
+      "p12.0-01-voicing-prog",
+      "p12.0-01-others-unchanged",
+      "p12.0-01-fast-feature",
+      "p12.0-01-ui",
+      "p12.0-01-data-retention",
+      "p12.0-01-screenshots",
+      "p12.0-01-full-fresh",
+      "p12.0-01-exe",
+      "p12.0-01-report"
+    ]
+  },
+  "gateResults": {
+    "p12.0-01-phase-docs": "pass",
+    "p12.0-01-audit": "pass",
+    "p12.0-01-domain": "pass",
+    "p12.0-01-screens-shape": "pass",
+    "p12.0-01-voicing-prog": "pass",
+    "p12.0-01-others-unchanged": "pass",
+    "p12.0-01-fast-feature": "pass",
+    "p12.0-01-ui": "pass",
+    "p12.0-01-data-retention": "pass",
+    "p12.0-01-screenshots": "pass",
+    "p12.0-01-full-fresh": "pass",
+    "p12.0-01-exe": "pass",
+    "p12.0-01-report": "pass"
+  },
+  "nextAction": "source 7aef92acのMaster両手Form教材はfresh FULL4137/395/27・native19・同HEAD FAST/FEATURE/UI・通常44/Master200画像・新EXEで検証済み。実音/身体運指/内蔵進行/人間30和音計測/製品保存先再起動/OS倍率は人間受入れ待ち。Phase12 in-progress、merge/pushなし。",
+  "updatedAt": "2026-10-07"
+}

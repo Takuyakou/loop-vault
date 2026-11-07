@@ -17,10 +17,11 @@ export function PracticeWorkspace({
   onModeChange: (mode: PracticeWorkspaceMode) => void;
   voicingLoop: ReactNode;
 }) {
-  const compact = mode === "voicing-loop";
+  const compact = mode === "voicing-loop" || mode === "bass-practice";
+  const dojo = mode === "chord-dojo";
 
   return (
-    <div className={compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
+    <div data-bass-practice-workspace={mode === "bass-practice" || undefined} className={dojo ? "flex h-full min-h-0 min-w-0 flex-col" : compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
       <div className="shrink-0 lg:hidden" data-practice-workspace-tabs>
         <PracticeModeTabs
           bassPracticeAvailable={bassPracticeAvailable}
@@ -34,7 +35,7 @@ export function PracticeWorkspace({
         aria-label="練習の作業領域"
         role="tabpanel"
         tabIndex={-1}
-        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : ""}`}
+        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : dojo ? "min-h-0 flex-1" : ""}`}
       >
         {mode === "bass-practice"
           ? bassPractice

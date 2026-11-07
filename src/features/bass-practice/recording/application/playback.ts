@@ -9,16 +9,19 @@ import type { RecordingTake } from "./ports";
 
 export interface PlaybackHandle {
   stop(): void;
+  /** Delay before recorded audio should start for an aligned MIDI overlay. */
+  audioDelayMs?: number;
 }
 
 /** Plays the exercise Target; each mode builds one from its own primitives. */
 export interface TargetPlayer {
+  prepare?(): Promise<boolean>;
   play(onEnded: () => void): PlaybackHandle;
 }
 
 /** Plays a recorded take back. */
 export interface TakePlayer {
-  play(take: RecordingTake, onEnded: () => void): PlaybackHandle;
+  play(take: RecordingTake, onEnded: () => void, delayMs?: number): PlaybackHandle;
 }
 
 /**
@@ -39,7 +42,7 @@ export function createTargetPlayer(
 
 /** Browser take playback via an Audio element and an object URL that is revoked. */
 export class BrowserTakePlayer implements TakePlayer {
-  play(take: RecordingTake, onEnded: () => void): PlaybackHandle {
+  play(take: RecordingTake, onEnded: () => void, delayMs = 0): PlaybackHandle {
     const blob = take.data instanceof Blob
       ? take.data
       : new Blob([take.data as BlobPart], { type: take.metadata.mimeType });
@@ -55,12 +58,15 @@ export class BrowserTakePlayer implements TakePlayer {
       release();
       onEnded();
     };
-    void audio.play().catch(() => {
+    const start = () => { if (released) return; void audio.play().catch(() => {
       release();
       onEnded();
-    });
+    }); };
+    const timer = delayMs > 0 ? setTimeout(start, delayMs) : undefined;
+    if (timer === undefined) start();
     return {
       stop() {
+        clearTimeout(timer);
         audio.pause();
         release();
       },

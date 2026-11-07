@@ -1,0 +1,1231 @@
+[
+  {
+    "quality": "maj",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      60,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "maj",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      36,
+      40,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "maj",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      64,
+      67,
+      72
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "maj",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      60,
+      63,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "min",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      36,
+      39,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "min",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      63,
+      67,
+      72
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "min",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj7",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      59,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "maj7",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      59,
+      64,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj7",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      59,
+      64,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "maj7",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      59,
+      64,
+      67
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj7",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      64,
+      67,
+      71
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj7",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      64,
+      67,
+      71
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj7",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      36,
+      47,
+      64,
+      67
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "maj7",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      47,
+      64,
+      67
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj9",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      59,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "maj9",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      59,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj9",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      59,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "maj9",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      59,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "maj9",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      64,
+      67,
+      71
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj9",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      64,
+      67,
+      71
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "maj9",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      59,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "maj9",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      59,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      57,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      57,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      36,
+      40,
+      67,
+      69
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      40,
+      67,
+      69
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      64,
+      67,
+      69,
+      72
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "sixNine",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      64,
+      67,
+      69
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "min7",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "min7",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      67
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      63,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min7",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      63,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min7",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      36,
+      46,
+      63,
+      67
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "min7",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      46,
+      63,
+      67
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min9",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      62,
+      63,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "min9",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      62,
+      63,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min9",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      67,
+      74
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "min9",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      67,
+      74
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min9",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      63,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min9",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      63,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min9",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      67,
+      74
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "min9",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      67,
+      74
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min6",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      57,
+      63,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "min6",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      57,
+      63,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min6",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      36,
+      39,
+      67,
+      69
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "min6",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      39,
+      67,
+      69
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min6",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min6",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min6",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      63,
+      67,
+      69,
+      72
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "min6",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      63,
+      67,
+      69
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "dom7",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "dom7",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom7",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom7",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      36,
+      46,
+      64,
+      67
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "dom7",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      46,
+      64,
+      67
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom9",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "dom9",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      62,
+      64,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom9",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "dom9",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom9",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      62,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom9",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      62,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom9",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "dom9",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom13",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      62,
+      64,
+      67,
+      69
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "dom13",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      62,
+      64,
+      67,
+      69
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom13",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "dom13",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom13",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      62,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom13",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      62,
+      67,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom13",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "dom13",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      58,
+      64,
+      67,
+      74
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      65,
+      67
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      65,
+      67
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      65,
+      67
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      65,
+      67
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      36,
+      46,
+      65,
+      67
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "dom7sus4",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      46,
+      65,
+      67
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      66
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      66
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      58,
+      63,
+      66
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      58,
+      63,
+      66
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [
+      48,
+      63,
+      66,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [
+      63,
+      66,
+      70
+    ],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      36,
+      46,
+      63,
+      66
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "min7b5",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      46,
+      63,
+      66
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dim7",
+    "preset": "basic",
+    "bass": "self",
+    "notes": [
+      48,
+      57,
+      63,
+      66
+    ],
+    "source": "generated-close"
+  },
+  {
+    "quality": "dim7",
+    "preset": "basic",
+    "bass": "external",
+    "notes": [
+      57,
+      63,
+      66
+    ],
+    "source": "generated-close + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dim7",
+    "preset": "skeleton",
+    "bass": "self",
+    "notes": [
+      48,
+      57,
+      63,
+      66
+    ],
+    "source": "shell-17"
+  },
+  {
+    "quality": "dim7",
+    "preset": "skeleton",
+    "bass": "external",
+    "notes": [
+      57,
+      63,
+      66
+    ],
+    "source": "shell-17 + 調査内で全ルートを除去"
+  },
+  {
+    "quality": "dim7",
+    "preset": "upper-triad",
+    "bass": "self",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dim7",
+    "preset": "upper-triad",
+    "bass": "external",
+    "notes": [],
+    "source": "専用レシピなし"
+  },
+  {
+    "quality": "dim7",
+    "preset": "spread",
+    "bass": "self",
+    "notes": [
+      48,
+      57,
+      66,
+      75
+    ],
+    "source": "open-17"
+  },
+  {
+    "quality": "dim7",
+    "preset": "spread",
+    "bass": "external",
+    "notes": [
+      57,
+      66,
+      75
+    ],
+    "source": "open-17 + 調査内で全ルートを除去"
+  }
+]

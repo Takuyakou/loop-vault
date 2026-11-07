@@ -224,8 +224,8 @@ Part Aの情報保存効果は確認できたが、新規Gold Devで広く発火
 
 生成物:
 
-- `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
-- `D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
-- `D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 残る警告はViteの500 kB超chunk warningのみ。既存のbundle構成に由来し、Phase 4.7のProduct変更はない。

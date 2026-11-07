@@ -128,3 +128,5 @@ describe("music keyboard visual state", () => {
     });
   });
 });
+
+it('supports explicit scientific C2-C6 labels while preserving the FL default',()=>{expect(formatMidiNoteForDisplay(36,'scientific')).toBe('C2');expect(formatMidiNoteForDisplay(84,'scientific')).toBe('C6');expect(formatMidiNoteForDisplay(36)).toBe('C3');});

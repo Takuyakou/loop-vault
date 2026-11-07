@@ -1,0 +1,29 @@
+{
+  "contract": "p13-freepats-v1",
+  "fixtureCases": 120,
+  "codeCommit": "8214a37449f52d80314c3e1775523df07839b8de",
+  "metrics": {
+    "pitchAccuracy": 1,
+    "onsetMedianMs": 0,
+    "onsetP90Ms": 5,
+    "markAccuracy": 0.9944444444444445,
+    "extraRecall": 1,
+    "falseExtrasPerCleanCase": 0,
+    "latencyMaxErrorMs": 2.5,
+    "runtimeMs": 316.0737000000008
+  },
+  "baselineMetrics": {
+    "pitchAccuracy": 1,
+    "onsetMedianMs": 0,
+    "onsetP90Ms": 5,
+    "markAccuracy": 0.9944444444444445,
+    "extraRecall": 1,
+    "falseExtrasPerCleanCase": 0,
+    "latencyMaxErrorMs": 2.5,
+    "runtimeMs": 299.9981000000007
+  },
+  "perCaseResultsIdentical": true,
+  "accuracyMetricsIdentical": true,
+  "passed": true,
+  "source": "public bundled FreePats; unchanged qualification script; isolated ignored output; no freeze"
+}

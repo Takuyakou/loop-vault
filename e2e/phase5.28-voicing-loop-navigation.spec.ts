@@ -21,7 +21,8 @@ async function openDirectVoicingLoopWithKeyboard(page: Page) {
     await page.keyboard.press("Enter");
     await expect(tab).toHaveAttribute("aria-selected", "true");
   }
-  await expect(page.getByRole("heading", { name: "Voicing Loop", exact: true })).toBeVisible();
+  // VL-15: the picker no longer repeats the "Voicing Loop" heading under the shell title.
+  await expect(page.getByRole("heading", { name: "練習する進行" })).toBeVisible();
 }
 
 test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallback at 320px", async ({ page }) => {
@@ -36,7 +37,7 @@ test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallba
   await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 
-  const textCta = page.getByRole("button", { name: /Textで新しい進行を入力/ });
+  const textCta = page.getByRole("button", { name: /テキストで新しい進行を入力/ });
   await textCta.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-capture-stage='text']")).toBeVisible();
@@ -55,7 +56,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   test.setTimeout(60_000);
   await openEmptyApp(page);
   await openDirectVoicingLoopWithKeyboard(page);
-  await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
 
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
@@ -80,7 +81,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 
   await page.locator('[data-nav="voicing-loop"]').click();
-  await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近使った" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
 
   const search = page.getByRole("searchbox", { name: "進行を検索" });
@@ -94,7 +95,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
 
   await page.locator('[data-nav="home"]').click();
   await page.locator('[data-nav="voicing-loop"]').click();
-  await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近使った" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
   await page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" }).click();
   await page.locator('[data-nav="voicing-loop"]').click();

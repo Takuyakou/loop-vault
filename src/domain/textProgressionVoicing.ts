@@ -2,6 +2,8 @@ import { voiceTextChordForAudition } from "./textChordTones";
 import { isValidVoicingSnapshot } from "./voicing/normalizeVoicing";
 import type { ChordSymbol, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { normalizedChordKey } from "./voicing";
+import { validateTextChordNotes } from "./textChordValidation";
+import { supportsTextChord } from "./textChordConsumerCapabilities";
 import {
   generateStyleVoicingPlan,
   type GeneratedVoicingStyleId,
@@ -40,7 +42,19 @@ export function textProgressionVoicingNotes(
   chord: ChordSymbol,
   styleId: TextProgressionVoicingStyleId,
 ): number[] | undefined {
-  if (styleId === "generated-close") return [...voiceTextChordForAudition(chord)];
+  try { return generateValidatedTextVoicing(chord, styleId); }
+  catch { return undefined; }
+}
+
+function generateValidatedTextVoicing(
+  chord: ChordSymbol,
+  styleId: TextProgressionVoicingStyleId,
+): number[] | undefined {
+  if (styleId === "generated-close") {
+    const notes = voiceTextChordForAudition(chord);
+    return validateTextChordNotes(chord, notes) ? [...notes] : undefined;
+  }
+  if (!supportsTextChord("generated-loop", chord)) return undefined;
   const event: ChordTimelineItem = {
     eventId: "text-style-preview",
     bar: 1,
@@ -56,7 +70,8 @@ export function textProgressionVoicingNotes(
     maxRightHandSpanSemitones: 12,
     allowUnsupportedFallback: false,
   }).events[0]?.allNotes;
-  return generated ? [...new Set(generated)].sort((left, right) => left - right) : undefined;
+  const notes = generated ? [...new Set(generated)].sort((left, right) => left - right) : undefined;
+  return notes && validateTextChordNotes(chord, notes) ? notes : undefined;
 }
 
 export function createTextProgressionStyleSnapshot(

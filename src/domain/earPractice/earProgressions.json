@@ -1,0 +1,1975 @@
+{
+ "version": 1,
+ "grammar": "degree tokens: [b|#]?(I..VII) relative to the major scale of the tonic, then the app's chord suffix, then optional /<bass degree>",
+ "benchmark": {
+  "1": [
+   {
+    "id": "L1-4-01",
+    "tonic": 5
+   },
+   {
+    "id": "L1-4-02",
+    "tonic": 2
+   },
+   {
+    "id": "L1-4-03",
+    "tonic": 10
+   },
+   {
+    "id": "L1-4-04",
+    "tonic": 9
+   }
+  ],
+  "2": [
+   {
+    "id": "L2-4-01",
+    "tonic": 5
+   },
+   {
+    "id": "L2-4-02",
+    "tonic": 2
+   },
+   {
+    "id": "L2-4-03",
+    "tonic": 10
+   },
+   {
+    "id": "L2-4-04",
+    "tonic": 9
+   }
+  ],
+  "3": [
+   {
+    "id": "L3-4-01",
+    "tonic": 5
+   },
+   {
+    "id": "L3-4-02",
+    "tonic": 2
+   },
+   {
+    "id": "L3-4-03",
+    "tonic": 10
+   },
+   {
+    "id": "L3-4-04",
+    "tonic": 11
+   }
+  ],
+  "4": [
+   {
+    "id": "L4-4-01",
+    "tonic": 5
+   },
+   {
+    "id": "L4-4-02",
+    "tonic": 2
+   },
+   {
+    "id": "L4-4-03",
+    "tonic": 10
+   },
+   {
+    "id": "L4-4-04",
+    "tonic": 9
+   }
+  ],
+  "5": [
+   {
+    "id": "L5-4-01",
+    "tonic": 5
+   },
+   {
+    "id": "L5-4-02",
+    "tonic": 4
+   },
+   {
+    "id": "L5-4-03",
+    "tonic": 7
+   },
+   {
+    "id": "L5-4-04",
+    "tonic": 9
+   }
+  ]
+ },
+ "progressions": [
+  {
+   "id": "L1-4-01",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "王道ポップ(I–V–vi–IV)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ]
+   ]
+  },
+  {
+   "id": "L1-4-02",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "vi から始まるポップ",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L1-4-03",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "50年代進行",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L1-4-04",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "王道進行(IV–V–iii–vi)",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ]
+   ]
+  },
+  {
+   "id": "L1-4-05",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "マイナーのループ(i–♭VI–♭III–♭VII)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ]
+   ]
+  },
+  {
+   "id": "L1-4-06",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "カノンを2拍ずつ",
+   "bars": [
+    [
+     "I",
+     "V"
+    ],
+    [
+     "VIm",
+     "IIIm"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "IIm",
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L1-8-01",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "カノン進行",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L1-8-02",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "王道進行からトニックへ",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L1-8-03",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "下降するマイナー(i–♭VII–♭VI–V)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L1-8-04",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "vi 始まりの8小節",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L1-16-01",
+   "level": 1,
+   "length": 16,
+   "mode": "major",
+   "name": "Aメロ→サビの16小節",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L1-16-02",
+   "level": 1,
+   "length": 16,
+   "mode": "minor",
+   "name": "マイナーの16小節",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-01",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが上がる(I–I/3–IV–V)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-02",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ミクソリディアンのロック(♭VII)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-03",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "サブドミナントマイナー(IV–iv)",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-04",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる(I–V/7)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV",
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-05",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "sus4 から解決するマイナー",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Vsus4",
+     "V"
+    ],
+    [
+     "Im"
+    ]
+   ]
+  },
+  {
+   "id": "L2-4-06",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "II のメジャー(I–II–IV–I)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "II"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L2-8-01",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "III のメジャーを通る",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "III"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ]
+   ]
+  },
+  {
+   "id": "L2-8-02",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "♭VI–♭VII–I の盛り上がり",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ]
+  },
+  {
+   "id": "L2-8-03",
+   "level": 2,
+   "length": 8,
+   "mode": "minor",
+   "name": "マイナーの4度進行",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "Vsus4",
+     "V"
+    ],
+    [
+     "Im"
+    ]
+   ]
+  },
+  {
+   "id": "L2-8-04",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "ベースが1音ずつ下がる",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "Vsus4",
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L2-16-01",
+   "level": 2,
+   "length": 16,
+   "mode": "major",
+   "name": "転回形と借用の16小節",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "III"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L2-16-02",
+   "level": 2,
+   "length": 16,
+   "mode": "minor",
+   "name": "マイナーの16小節(sus4 付き)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-01",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ii–V–I",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-02",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "王道進行のセブンス",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-03",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "I–vi–ii–V",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-04",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "マイナーの ii–V–i",
+   "bars": [
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-05",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "VI7 を通る(セカンダリードミナント)",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-4-06",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "IV–III7–vi(Just the Two of Us 型)",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "III7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "Vm7",
+     "I7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-8-01",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "iii–VI を挟むターンアラウンド",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-8-02",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "IV–III7–vi を2回",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "III7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "Vm7",
+     "I7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "III7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "VIm7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-8-03",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "マイナーの4度進行(セブンス)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-8-04",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナーの m6",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-16-01",
+   "level": 3,
+   "length": 16,
+   "mode": "major",
+   "name": "経過のディミニッシュを含む16小節",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "#Idim7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIIIdim7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7",
+     "VI7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ]
+  },
+  {
+   "id": "L3-16-02",
+   "level": 3,
+   "length": 16,
+   "mode": "minor",
+   "name": "マイナーの循環(枯葉の型)",
+   "bars": [
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-01",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "王道進行のテンション(V/IV)",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "V/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-02",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "テンション付きの ii–V–I",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-03",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "I–vi–ii–V のテンション",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7sus4"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-04",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "IV/V で解決",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-05",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "マイナーの i–iv–♭VII–♭III",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-4-06",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "下降する IV–iii–ii–I",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "Iadd9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-8-01",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "王道進行のテンション(8小節)",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "V/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "Iadd9"
+    ],
+    [
+     "Iadd9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-8-02",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "13th のターンアラウンド",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ]
+   ]
+  },
+  {
+   "id": "L4-8-03",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "マイナーの4度進行(テンション)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7sus4",
+     "V7"
+    ],
+    [
+     "Im9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-8-04",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "6/9 と maj9 の揺れ",
+   "bars": [
+    [
+     "I6/9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "I6/9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IV/V"
+    ]
+   ]
+  },
+  {
+   "id": "L4-16-01",
+   "level": 4,
+   "length": 16,
+   "mode": "major",
+   "name": "テンションの16小節",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L4-16-02",
+   "level": 4,
+   "length": 16,
+   "mode": "minor",
+   "name": "マイナーのテンション16小節",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7sus4",
+     "V7"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7sus4"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-01",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "♭9 の ii–V–I",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-02",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "マイナーのクリシェ",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "ImMaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im6"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-03",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "オルタードのマイナー ii–V–i",
+   "bars": [
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-04",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "裏コード(♭II7)",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-05",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "IV–III7–vi のオルタード",
+   "bars": [
+    [
+     "IVmaj7(#11)"
+    ],
+    [
+     "III7(b13)"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "VIm9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-4-06",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "♭9 と ♯9 のターンアラウンド",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7(#9)"
+    ]
+   ]
+  },
+  {
+   "id": "L5-8-01",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "経過ディミニッシュと裏コード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIIIdim7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "bII7(#11)"
+    ]
+   ]
+  },
+  {
+   "id": "L5-8-02",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "クリシェから ii–V–i",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "ImMaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im6"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-8-03",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "b13 と ♭9 の8小節",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "V7(b13)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-8-04",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "IV–III7–vi のオルタード(8小節)",
+   "bars": [
+    [
+     "IVmaj7(#11)"
+    ],
+    [
+     "III7(b13)"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "Vm9",
+     "I7(b9)"
+    ],
+    [
+     "IVmaj7(#11)"
+    ],
+    [
+     "III7(b13)"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "VIm9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-16-01",
+   "level": 5,
+   "length": 16,
+   "mode": "major",
+   "name": "オルタードの16小節",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7(b13)"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIIIdim7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ]
+   ]
+  },
+  {
+   "id": "L5-16-02",
+   "level": 5,
+   "length": 16,
+   "mode": "minor",
+   "name": "マイナーのジャズ16小節",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7(#11)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im",
+     "ImMaj7"
+    ],
+    [
+     "Im7",
+     "Im6"
+    ]
+   ]
+  }
+ ]
+}

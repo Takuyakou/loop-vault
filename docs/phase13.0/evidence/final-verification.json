@@ -1,0 +1,52 @@
+{
+  "contract": "p13-local-gates-v1",
+  "testedCodeCommit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+  "passCacheUsed": false,
+  "gates": {
+    "focused": {
+      "status": "pass",
+      "commit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+      "report": "reports/FINAL-REPORT.md"
+    },
+    "audio-qualification": {
+      "status": "pass",
+      "commit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+      "report": "reports/FINAL-REPORT.md"
+    },
+    "full": {
+      "status": "pass",
+      "commit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+      "report": "reports/FINAL-REPORT.md"
+    },
+    "native": {
+      "status": "pass",
+      "commit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+      "report": "reports/FINAL-REPORT.md"
+    },
+    "exe": {
+      "status": "pass",
+      "commit": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+      "report": "reports/FINAL-REPORT.md"
+    }
+  },
+  "full": {
+    "vitestPassed": 3835,
+    "playwrightPassed": 235,
+    "failed": 0,
+    "unrun": 0,
+    "seconds": 339.8,
+    "rawOutputBytes": 29803
+  },
+  "focusedVitestPassed": 17,
+  "nativeTestsPassed": 43,
+  "audioFixtureCases": 120,
+  "exe": {
+    "testedCodeHead": "00615cfda382a0061312d1ccf9386ee5e490ae87",
+    "file": "Loop-Vault-Phase13-00615cfd.exe",
+    "bytes": 24774656,
+    "sha256": "4A189A62E900A303E62E9280F0C7E154465D89D4EA36DAB34EA883532533A1B3",
+    "copyVerified": true,
+    "pe": "Windows x64",
+    "installer": false
+  }
+}

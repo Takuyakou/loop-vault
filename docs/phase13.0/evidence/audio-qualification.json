@@ -1,0 +1,1457 @@
+{
+  "contract": "p13-freepats-v1",
+  "fixtureCases": 120,
+  "metrics": {
+    "pitchAccuracy": 1,
+    "onsetMedianMs": 0,
+    "onsetP90Ms": 5,
+    "markAccuracy": 0.9944444444444445,
+    "extraRecall": 1,
+    "falseExtrasPerCleanCase": 0,
+    "latencyMaxErrorMs": 2.5,
+    "runtimeMs": 299.9981000000007
+  },
+  "passed": true,
+  "details": [
+    {
+      "id": "finger-60-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-60-0-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-60-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-60-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -2.5
+    },
+    {
+      "id": "finger-60-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -2.5
+    },
+    {
+      "id": "finger-60-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-60-40-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-60-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-60-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -42.5
+    },
+    {
+      "id": "finger-60-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -42.5
+    },
+    {
+      "id": "finger-60-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-60-120-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-60-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-60-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -122.5
+    },
+    {
+      "id": "finger-60-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -122.5
+    },
+    {
+      "id": "finger-60-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-60-240-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-60-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-60-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -242.5
+    },
+    {
+      "id": "finger-60-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -242.5
+    },
+    {
+      "id": "finger-100-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-100-0-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-100-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "finger-100-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -2.5
+    },
+    {
+      "id": "finger-100-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -2.5
+    },
+    {
+      "id": "finger-100-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-100-40-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-100-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "finger-100-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -42.5
+    },
+    {
+      "id": "finger-100-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -42.5
+    },
+    {
+      "id": "finger-100-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-100-120-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-100-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "finger-100-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -122.5
+    },
+    {
+      "id": "finger-100-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -122.5
+    },
+    {
+      "id": "finger-100-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-100-240-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-100-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "finger-100-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -242.5
+    },
+    {
+      "id": "finger-100-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -242.5
+    },
+    {
+      "id": "finger-140-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -0.35714285714266225
+    },
+    {
+      "id": "finger-140-0-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 2,
+        "total": 12
+      },
+      "latency": -0.7142857142857792
+    },
+    {
+      "id": "finger-140-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -0.35714285714266225
+    },
+    {
+      "id": "finger-140-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -0.35714285714277594
+    },
+    {
+      "id": "finger-140-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -0.35714285714277594
+    },
+    {
+      "id": "finger-140-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.35714285714266
+    },
+    {
+      "id": "finger-140-40-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 2,
+        "total": 12
+      },
+      "latency": -40.71428571428578
+    },
+    {
+      "id": "finger-140-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.35714285714266
+    },
+    {
+      "id": "finger-140-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.357142857142776
+    },
+    {
+      "id": "finger-140-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.357142857142776
+    },
+    {
+      "id": "finger-140-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.35714285714266
+    },
+    {
+      "id": "finger-140-120-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 2,
+        "total": 12
+      },
+      "latency": -120.71428571428578
+    },
+    {
+      "id": "finger-140-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.35714285714266
+    },
+    {
+      "id": "finger-140-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.35714285714278
+    },
+    {
+      "id": "finger-140-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.35714285714278
+    },
+    {
+      "id": "finger-140-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.35714285714266
+    },
+    {
+      "id": "finger-140-240-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 2,
+        "total": 12
+      },
+      "latency": -240.71428571428578
+    },
+    {
+      "id": "finger-140-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.35714285714266
+    },
+    {
+      "id": "finger-140-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.35714285714278
+    },
+    {
+      "id": "finger-140-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.35714285714278
+    },
+    {
+      "id": "pick-60-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-60-0-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-60-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-60-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 2.2737367544323206e-13
+    },
+    {
+      "id": "pick-60-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 2.2737367544323206e-13
+    },
+    {
+      "id": "pick-60-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-60-40-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-60-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-60-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -39.99999999999977
+    },
+    {
+      "id": "pick-60-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-60-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-60-120-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-60-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-60-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-60-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-60-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-60-240-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-60-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-60-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-60-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-100-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-100-0-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-100-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-100-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-100-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-100-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-100-40-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-100-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-100-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-100-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-100-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-100-120-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-100-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-100-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-100-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-100-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-100-240-altered",
+      "counts": {
+        "correct": 7,
+        "wrongPitch": 2,
+        "timing": 2,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-100-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-100-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-100-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-140-0-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-140-0-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-140-0-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": 0
+    },
+    {
+      "id": "pick-140-0-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -1.1368683772161603e-13
+    },
+    {
+      "id": "pick-140-0-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -1.1368683772161603e-13
+    },
+    {
+      "id": "pick-140-40-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-140-40-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-140-40-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40
+    },
+    {
+      "id": "pick-140-40-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.000000000000114
+    },
+    {
+      "id": "pick-140-40-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -40.000000000000114
+    },
+    {
+      "id": "pick-140-120-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-140-120-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-140-120-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120
+    },
+    {
+      "id": "pick-140-120-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.00000000000011
+    },
+    {
+      "id": "pick-140-120-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -120.00000000000011
+    },
+    {
+      "id": "pick-140-240-clean",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-140-240-altered",
+      "counts": {
+        "correct": 8,
+        "wrongPitch": 2,
+        "timing": 1,
+        "missed": 1,
+        "extra": 1,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-140-240-quiet-noise",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240
+    },
+    {
+      "id": "pick-140-240-shift20",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.0000000000001
+    },
+    {
+      "id": "pick-140-240-shift60",
+      "counts": {
+        "correct": 12,
+        "wrongPitch": 0,
+        "timing": 0,
+        "missed": 0,
+        "extra": 0,
+        "total": 12
+      },
+      "latency": -240.0000000000001
+    }
+  ]
+}

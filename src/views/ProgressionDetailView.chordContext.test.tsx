@@ -59,6 +59,7 @@ describe("Progression Detail Chord Context handoff", () => {
       );
     });
 
+    await act(async()=>container.querySelector<HTMLButtonElement>('button[aria-label="そのほか"]')!.click());
     const select = container.querySelector<HTMLSelectElement>("[data-testid='chord-context-section-select']")!;
     expect([...select.options].map((option) => option.value)).toEqual(["bars:1-1", "bars:1-2", "bars:2-2"]);
     await act(async () => {
@@ -66,7 +67,7 @@ describe("Progression Detail Chord Context handoff", () => {
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
     const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "練習する")!;
+      .find((button) => button.textContent?.trim() === "Bass Practice")!;
     await act(async () => practice.click());
 
     expect(openPractice).toHaveBeenCalledOnce();
@@ -108,7 +109,7 @@ describe("Progression Detail Chord Context handoff", () => {
       );
     });
     const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "練習する")!;
+      .find((button) => button.textContent?.trim() === "Bass Practice")!;
     expect(practice.disabled).toBe(true);
     expect(openPractice).not.toHaveBeenCalled();
     await act(async () => root.unmount());
@@ -142,7 +143,7 @@ describe("Progression Detail Chord Context handoff", () => {
     });
 
     const chordContext = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "練習する")!;
+      .find((button) => button.textContent?.trim() === "Bass Practice")!;
     expect(chordContext.disabled).toBe(true);
     const voicingLoop = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-handoff']")!;
     expect(voicingLoop.disabled).toBe(false);

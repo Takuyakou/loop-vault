@@ -48,6 +48,11 @@ export interface FreepatsBassInstrumentOptions {
    * global master-volume route. Omitted keeps the established preview level.
    */
   readonly volumeDb?: number;
+  /**
+   * Where the instrument's last node is connected. A caller that owns a gain at the end (to fade the sound out) passes it;
+   * omitted, it is connected to the destination as before.
+   */
+  readonly output?: Tone.ToneAudioNode;
 }
 
 export async function createFreepatsBassInstrument(
@@ -65,7 +70,7 @@ export async function createFreepatsBassInstrument(
     const sampler = new Tone.Sampler({ urls, release: timbre === "finger" ? 0.5 : 0.12 });
     const highPass = new Tone.Filter({ frequency: 28, type: "highpass", Q: 0.7 });
     const compressor = new Tone.Compressor({ threshold: -10, ratio: 2 });
-    sampler.chain(highPass, compressor, Tone.getDestination());
+    sampler.chain(highPass, compressor, options.output ?? Tone.getDestination());
     sampler.volume.value = options.volumeDb ?? -3;
     await waitForSamples();
     return {
@@ -89,7 +94,7 @@ function createSynthFallback(timbre: BassTimbre, options: FreepatsBassInstrument
     modulation: { type: "triangle" },
     envelope: { attack: 0.004, decay: timbre === "finger" ? 0.18 : 0.05, sustain: timbre === "finger" ? 0.58 : 0.08, release: timbre === "finger" ? 0.22 : 0.08 },
     modulationEnvelope: { attack: 0.002, decay: 0.1, sustain: 0.12, release: 0.12 },
-  }).chain(highPass, lowPass, Tone.getDestination());
+  }).chain(highPass, lowPass, options.output ?? Tone.getDestination());
   synth.volume.value = options.volumeDb ?? -6;
   return {
     source: "synth-fallback",

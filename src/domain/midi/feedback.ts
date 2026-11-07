@@ -2,6 +2,7 @@ import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../type
 import type { ProgressionEditSource } from "../progressionEditing/types";
 import type { QuickCandidateSelectionMetadata } from "../progressionEditing/quickCandidates";
 import { beatsPerBar } from "./timing";
+import { screenToSource, type BeatRange } from "../correction/barMap";
 export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint";
 
 export interface MidiChordCorrectionEvent {
@@ -35,6 +36,7 @@ export function buildCorrectionEvents(
   >,
   editSources?: readonly (ProgressionEditSource | undefined)[],
   quickCandidateSelections?: readonly (QuickCandidateSelectionMetadata | undefined)[],
+  removedBars?: readonly BeatRange[],
 ): MidiChordCorrectionEvent[] {
   const sourceFingerprint = analysis.sourceFingerprint;
   if (!sourceFingerprint) return [];
@@ -47,13 +49,19 @@ export function buildCorrectionEvents(
     if (editSources && editSource !== "manual-label" && editSource !== "alternative" && editSource !== "structure-editor") {
       return [];
     }
-    const startBeat = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
+    const screenStart = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
+    const screenEnd = screenStart + detected.durationBeats;
+    // P17-02: record the original position when the event maps back to one span;
+    // an event that crosses a cut keeps the detected span.
+    const mapped = screenToSource(screenStart, screenEnd, removedBars ?? []);
+    const startBeat = mapped.length === 1 ? mapped[0]!.start : screenStart;
+    const endBeat = mapped.length === 1 ? mapped[0]!.end : screenEnd;
     return [{
       schemaVersion: 1 as const,
       sourceFingerprint,
       analyzerVersion: analysis.analyzerVersion,
       weightsVersion: "phase3.6-v1",
-      segment: { startBeat, endBeat: startBeat + detected.durationBeats },
+      segment: { startBeat, endBeat },
       detected: {
         primary: detected.chord.label,
         alternatives: detected.alternatives.map((item) => item.chord.label),

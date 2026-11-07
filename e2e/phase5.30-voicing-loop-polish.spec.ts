@@ -96,7 +96,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
   await chooseVoicingLoop(page);
-  await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
 
   const capture = page.getByTestId("text-progression-capture");
   const maximumInput = `| ${Array(32).fill("Cmaj7 Cmaj7 Cmaj7 Cmaj7").join(" | ")} |`;

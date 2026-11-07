@@ -1,0 +1,2042 @@
+[
+  {
+    "id": "plain-8",
+    "cards": 8,
+    "totalBeats": 32,
+    "saved": {
+      "userEdited": false,
+      "candidate": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        }
+      ],
+      "original": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4
+        }
+      ],
+      "editable": [
+        {
+          "id": "legacy:manual-1.1-8.4:1:1:0",
+          "position": {
+            "bar": 1,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:2:1:1",
+          "position": {
+            "bar": 2,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Am",
+          "current": "Am",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:3:1:2",
+          "position": {
+            "bar": 3,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "F",
+          "current": "F",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:4:1:3",
+          "position": {
+            "bar": 4,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:5:1:4",
+          "position": {
+            "bar": 5,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:6:1:5",
+          "position": {
+            "bar": 6,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Am",
+          "current": "Am",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:7:1:6",
+          "position": {
+            "bar": 7,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "F",
+          "current": "F",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:8:1:7",
+          "position": {
+            "bar": 8,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        }
+      ]
+    },
+    "block": {
+      "sourceStartBeat": 0,
+      "sourceEndBeat": 32,
+      "startBar": 1,
+      "endBar": 8,
+      "lengthBars": 8,
+      "userEdited": false,
+      "chords": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        }
+      ]
+    },
+    "logs": [
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-ba2ee7bc",
+        "noteHash": "fnv1a32-9c14d445"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-3274a0ad",
+        "noteHash": "fnv1a32-2957d89c"
+      },
+      {
+        "detected": "F",
+        "saved": "F",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-5b175dac",
+        "noteHash": "fnv1a32-cc0e8fdd"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-5f53c01d",
+        "noteHash": "fnv1a32-c894fb0b"
+      },
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-adfefc21",
+        "noteHash": "fnv1a32-32b8556c"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-8248d23f",
+        "noteHash": "fnv1a32-5eae669a"
+      },
+      {
+        "detected": "F",
+        "saved": "F",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-d9303b45",
+        "noteHash": "fnv1a32-4ca7cd68"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-d333ac42",
+        "noteHash": "fnv1a32-77ca8de0"
+      }
+    ],
+    "events": [],
+    "feedback": {
+      "range": {
+        "startBeat": 0,
+        "endBeat": 32
+      },
+      "decisions": [
+        {
+          "startBeat": 0,
+          "endBeat": 4,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 4,
+          "endBeat": 8,
+          "detected": "Am",
+          "saved": "Am",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 8,
+          "endBeat": 12,
+          "detected": "F",
+          "saved": "F",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 12,
+          "endBeat": 16,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 16,
+          "endBeat": 20,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 20,
+          "endBeat": 24,
+          "detected": "Am",
+          "saved": "Am",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 24,
+          "endBeat": 28,
+          "detected": "F",
+          "saved": "F",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 28,
+          "endBeat": 32,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        }
+      ],
+      "savedEventCount": 8
+    }
+  },
+  {
+    "id": "plain-8",
+    "cards": 8,
+    "totalBeats": 32,
+    "saved": {
+      "userEdited": true,
+      "candidate": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am7",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        }
+      ],
+      "original": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4
+        }
+      ],
+      "editable": [
+        {
+          "id": "legacy:manual-1.1-8.4:1:1:0",
+          "position": {
+            "bar": 1,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:2:1:1",
+          "position": {
+            "bar": 2,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Am",
+          "current": "Am7",
+          "edited": true,
+          "editSource": "alternative"
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:3:1:2",
+          "position": {
+            "bar": 3,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "F",
+          "current": "F",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:4:1:3",
+          "position": {
+            "bar": 4,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:5:1:4",
+          "position": {
+            "bar": 5,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:6:1:5",
+          "position": {
+            "bar": 6,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Am",
+          "current": "Am",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:7:1:6",
+          "position": {
+            "bar": 7,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "F",
+          "current": "F",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-8.4:8:1:7",
+          "position": {
+            "bar": 8,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        }
+      ]
+    },
+    "block": {
+      "sourceStartBeat": 0,
+      "sourceEndBeat": 32,
+      "startBar": 1,
+      "endBar": 8,
+      "lengthBars": 8,
+      "userEdited": true,
+      "chords": [
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am7",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        }
+      ]
+    },
+    "logs": [
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-ba2ee7bc",
+        "noteHash": "fnv1a32-9c14d445"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am7",
+        "editType": "manual-input",
+        "fingerprint": "fnv1a32-3274a0ad",
+        "noteHash": "fnv1a32-2957d89c"
+      },
+      {
+        "detected": "F",
+        "saved": "F",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-5b175dac",
+        "noteHash": "fnv1a32-cc0e8fdd"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-5f53c01d",
+        "noteHash": "fnv1a32-c894fb0b"
+      },
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-adfefc21",
+        "noteHash": "fnv1a32-32b8556c"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-8248d23f",
+        "noteHash": "fnv1a32-5eae669a"
+      },
+      {
+        "detected": "F",
+        "saved": "F",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-d9303b45",
+        "noteHash": "fnv1a32-4ca7cd68"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-d333ac42",
+        "noteHash": "fnv1a32-77ca8de0"
+      }
+    ],
+    "events": [
+      {
+        "segment": {
+          "startBeat": 4,
+          "endBeat": 8
+        },
+        "detected": "Am",
+        "corrected": "Am7",
+        "method": "alternative-selection"
+      }
+    ],
+    "feedback": {
+      "range": {
+        "startBeat": 0,
+        "endBeat": 32
+      },
+      "decisions": [
+        {
+          "startBeat": 0,
+          "endBeat": 4,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 4,
+          "endBeat": 8,
+          "detected": "Am",
+          "saved": "Am7",
+          "outcome": "manual-input"
+        },
+        {
+          "startBeat": 8,
+          "endBeat": 12,
+          "detected": "F",
+          "saved": "F",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 12,
+          "endBeat": 16,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 16,
+          "endBeat": 20,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 20,
+          "endBeat": 24,
+          "detected": "Am",
+          "saved": "Am",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 24,
+          "endBeat": 28,
+          "detected": "F",
+          "saved": "F",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 28,
+          "endBeat": 32,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        }
+      ],
+      "savedEventCount": 8
+    }
+  },
+  {
+    "id": "melody-track-8",
+    "cards": 14,
+    "totalBeats": 36,
+    "saved": {
+      "userEdited": true,
+      "candidate": [
+        {
+          "label": "Cadd9",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            74
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 2,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G13",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            74,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F13",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            74,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 7,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G13",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Cm",
+          "bar": 9,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": null,
+          "source": null,
+          "playbackChoice": null,
+          "practice": null
+        }
+      ],
+      "original": [
+        {
+          "label": "Cadd9",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 2
+        },
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 3,
+          "durationBeats": 2
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 2
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 3,
+          "durationBeats": 2
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "G13",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 2
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 3,
+          "durationBeats": 2
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4
+        },
+        {
+          "label": "F13",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 2
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 7,
+          "beat": 3,
+          "durationBeats": 2
+        },
+        {
+          "label": "G13",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 2
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 3,
+          "durationBeats": 2
+        },
+        {
+          "label": "Cm",
+          "bar": 9,
+          "beat": 1,
+          "durationBeats": 4
+        }
+      ],
+      "editable": [
+        {
+          "id": "legacy:manual-1.1-9.4:1:1:0",
+          "position": {
+            "bar": 1,
+            "beat": 1,
+            "durationBeats": 2
+          },
+          "original": "Cadd9",
+          "current": "Cadd9",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:1:3:1",
+          "position": {
+            "bar": 1,
+            "beat": 3,
+            "durationBeats": 2
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:2:1:2",
+          "position": {
+            "bar": 2,
+            "beat": 1,
+            "durationBeats": 2
+          },
+          "original": "Am",
+          "current": "Am",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:2:3:3",
+          "position": {
+            "bar": 2,
+            "beat": 3,
+            "durationBeats": 2
+          },
+          "original": "Am",
+          "current": "Fmaj7",
+          "edited": true,
+          "editSource": "manual-label"
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:3:1:4",
+          "position": {
+            "bar": 3,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Fmaj7",
+          "current": "Fmaj7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:4:1:5",
+          "position": {
+            "bar": 4,
+            "beat": 1,
+            "durationBeats": 2
+          },
+          "original": "G13",
+          "current": "G13",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:4:3:6",
+          "position": {
+            "bar": 4,
+            "beat": 3,
+            "durationBeats": 2
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:5:1:7",
+          "position": {
+            "bar": 5,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "C",
+          "current": "C",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:6:1:8",
+          "position": {
+            "bar": 6,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Am",
+          "current": "Am",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:7:1:9",
+          "position": {
+            "bar": 7,
+            "beat": 1,
+            "durationBeats": 2
+          },
+          "original": "F13",
+          "current": "F13",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:7:3:10",
+          "position": {
+            "bar": 7,
+            "beat": 3,
+            "durationBeats": 2
+          },
+          "original": "Fmaj7",
+          "current": "Fmaj7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:8:1:11",
+          "position": {
+            "bar": 8,
+            "beat": 1,
+            "durationBeats": 2
+          },
+          "original": "G13",
+          "current": "G13",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:8:3:12",
+          "position": {
+            "bar": 8,
+            "beat": 3,
+            "durationBeats": 2
+          },
+          "original": "G7",
+          "current": "G7",
+          "edited": false,
+          "editSource": null
+        },
+        {
+          "id": "legacy:manual-1.1-9.4:9:1:13",
+          "position": {
+            "bar": 9,
+            "beat": 1,
+            "durationBeats": 4
+          },
+          "original": "Cm",
+          "current": "Cm",
+          "edited": false,
+          "editSource": null
+        }
+      ]
+    },
+    "block": {
+      "sourceStartBeat": 0,
+      "sourceEndBeat": 36,
+      "startBar": 1,
+      "endBar": 9,
+      "lengthBars": 9,
+      "userEdited": true,
+      "chords": [
+        {
+          "label": "Cadd9",
+          "bar": 1,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            74
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 1,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 2,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 2,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 3,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G13",
+          "bar": 4,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            74,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 4,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "C",
+          "bar": 5,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            36,
+            60,
+            64,
+            67,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Am",
+          "bar": 6,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": [
+            33,
+            57,
+            60,
+            64,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "F13",
+          "bar": 7,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            74,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Fmaj7",
+          "bar": 7,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            41,
+            53,
+            57,
+            60,
+            65,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G13",
+          "bar": 8,
+          "beat": 1,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75,
+            76
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "G7",
+          "bar": 8,
+          "beat": 3,
+          "durationBeats": 2,
+          "midiNotes": [
+            43,
+            55,
+            59,
+            62,
+            65,
+            75
+          ],
+          "source": "midi-extracted",
+          "playbackChoice": "SOURCE",
+          "practice": null
+        },
+        {
+          "label": "Cm",
+          "bar": 9,
+          "beat": 1,
+          "durationBeats": 4,
+          "midiNotes": null,
+          "source": null,
+          "playbackChoice": null,
+          "practice": null
+        }
+      ]
+    },
+    "logs": [
+      {
+        "detected": "Cadd9",
+        "saved": "Cadd9",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-3d3b08b8",
+        "noteHash": "fnv1a32-bcc0e88a"
+      },
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-76d7249a",
+        "noteHash": "fnv1a32-41a65403"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-2a0bc5a3",
+        "noteHash": "fnv1a32-162efe7a"
+      },
+      {
+        "detected": "Am",
+        "saved": "Fmaj7",
+        "editType": "manual-input",
+        "fingerprint": "fnv1a32-861e1283",
+        "noteHash": "fnv1a32-f88ffca2"
+      },
+      {
+        "detected": "Fmaj7",
+        "saved": "Fmaj7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-fc1a3539",
+        "noteHash": "fnv1a32-14880681"
+      },
+      {
+        "detected": "G13",
+        "saved": "G13",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-a8f494de",
+        "noteHash": "fnv1a32-7e205649"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-ff1dcbd3",
+        "noteHash": "fnv1a32-37d2df46"
+      },
+      {
+        "detected": "C",
+        "saved": "C",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-eede4201",
+        "noteHash": "fnv1a32-04035ebe"
+      },
+      {
+        "detected": "Am",
+        "saved": "Am",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-edafe89f",
+        "noteHash": "fnv1a32-0b09bf7a"
+      },
+      {
+        "detected": "F13",
+        "saved": "F13",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-ba331763",
+        "noteHash": "fnv1a32-c038d64f"
+      },
+      {
+        "detected": "Fmaj7",
+        "saved": "Fmaj7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-79ded22a",
+        "noteHash": "fnv1a32-d124ba0c"
+      },
+      {
+        "detected": "G13",
+        "saved": "G13",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-e07a1eb3",
+        "noteHash": "fnv1a32-7a6ff8a1"
+      },
+      {
+        "detected": "G7",
+        "saved": "G7",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-a0baaf93",
+        "noteHash": "fnv1a32-7195f396"
+      },
+      {
+        "detected": "Cm",
+        "saved": "Cm",
+        "editType": "accepted-rank1",
+        "fingerprint": "fnv1a32-729a295b",
+        "noteHash": "fnv1a32-3f9abeee"
+      }
+    ],
+    "events": [
+      {
+        "segment": {
+          "startBeat": 6,
+          "endBeat": 8
+        },
+        "detected": "Am",
+        "corrected": "Fmaj7",
+        "method": "manual-label"
+      }
+    ],
+    "feedback": {
+      "range": {
+        "startBeat": 0,
+        "endBeat": 36
+      },
+      "decisions": [
+        {
+          "startBeat": 0,
+          "endBeat": 2,
+          "detected": "Cadd9",
+          "saved": "Cadd9",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 2,
+          "endBeat": 4,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 4,
+          "endBeat": 6,
+          "detected": "Am",
+          "saved": "Am",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 6,
+          "endBeat": 8,
+          "detected": "Am",
+          "saved": "Fmaj7",
+          "outcome": "manual-input"
+        },
+        {
+          "startBeat": 8,
+          "endBeat": 12,
+          "detected": "Fmaj7",
+          "saved": "Fmaj7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 12,
+          "endBeat": 14,
+          "detected": "G13",
+          "saved": "G13",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 14,
+          "endBeat": 16,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 16,
+          "endBeat": 20,
+          "detected": "C",
+          "saved": "C",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 20,
+          "endBeat": 24,
+          "detected": "Am",
+          "saved": "Am",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 24,
+          "endBeat": 26,
+          "detected": "F13",
+          "saved": "F13",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 26,
+          "endBeat": 28,
+          "detected": "Fmaj7",
+          "saved": "Fmaj7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 28,
+          "endBeat": 30,
+          "detected": "G13",
+          "saved": "G13",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 30,
+          "endBeat": 32,
+          "detected": "G7",
+          "saved": "G7",
+          "outcome": "rank1"
+        },
+        {
+          "startBeat": 32,
+          "endBeat": 36,
+          "detected": "Cm",
+          "saved": "Cm",
+          "outcome": "rank1"
+        }
+      ],
+      "savedEventCount": 14
+    }
+  }
+]

@@ -356,22 +356,34 @@
     gap: 8px;
   }
 
-  .lv-midi-chip {
+  /* P14: the MIDI connection button (state from selectMidiConnection) and its panel. */
+  .lv-midi-anchor {
+    position: relative;
     display: inline-flex;
-    height: 30px;
-    max-width: 180px;
+  }
+
+  .lv-midi-chip {
+    --lv-midi-dot: var(--lv-text-muted);
+    --lv-midi-edge: rgb(150 170 195 / 28%);
+    display: inline-flex;
+    height: 32px;
+    max-width: 240px;
     align-items: center;
-    gap: 7px;
-    padding: 0 11px;
-    border: 1px solid rgb(150 170 195 / 14%);
-    border-radius: var(--lv-radius-pill);
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid var(--lv-midi-edge);
+    border-radius: 16px;
     color: var(--lv-text-secondary);
-    font-size: var(--lv-text-11);
+    font-size: var(--lv-text-12);
   }
 
   .lv-midi-chip:hover {
     border-color: color-mix(in srgb, var(--lv-accent) 50%, var(--lv-border-strong));
     color: var(--lv-text);
+  }
+
+  .lv-midi-chip[aria-expanded="true"] {
+    box-shadow: 0 0 0 2px rgb(66 216 198 / 45%);
   }
 
   .lv-midi-label {
@@ -382,24 +394,184 @@
   }
 
   .lv-midi-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     flex-shrink: 0;
+    box-sizing: border-box;
     border-radius: 50%;
-    background: var(--lv-text-muted);
+    background: var(--lv-midi-dot, var(--lv-text-muted));
   }
 
-  .lv-midi-chip[data-midi-status="connected"] .lv-midi-dot {
-    background: var(--lv-success);
-    box-shadow: 0 0 0 3px rgb(54 201 144 / 18%);
+  .lv-midi-chip[data-midi-kind="connected"],
+  .lv-midi-dot[data-midi-kind="connected"] { --lv-midi-dot: var(--lv-success); }
+
+  .lv-midi-chip[data-midi-kind="off"] {
+    --lv-midi-edge: var(--lv-accent);
+    color: var(--lv-accent);
   }
 
-  .lv-midi-chip[data-midi-status="connecting"] .lv-midi-dot {
-    background: var(--lv-warning);
+  .lv-midi-chip[data-midi-kind="off"] .lv-midi-dot,
+  .lv-midi-dot[data-midi-kind="off"] {
+    background: transparent;
+    border: 1.5px solid var(--lv-accent);
   }
 
-  .lv-midi-chip[data-midi-status="error"] .lv-midi-dot {
-    background: var(--lv-danger);
+  .lv-midi-chip[data-midi-kind="lost"],
+  .lv-midi-chip[data-midi-kind="missing"],
+  .lv-midi-chip[data-midi-kind="no-device"],
+  .lv-midi-chip[data-midi-kind="choose"] { --lv-midi-edge: rgb(242 193 78 / 55%); }
+
+  .lv-midi-chip[data-midi-kind="lost"],
+  .lv-midi-chip[data-midi-kind="missing"],
+  .lv-midi-chip[data-midi-kind="no-device"],
+  .lv-midi-chip[data-midi-kind="choose"],
+  .lv-midi-dot[data-midi-kind="lost"],
+  .lv-midi-dot[data-midi-kind="missing"],
+  .lv-midi-dot[data-midi-kind="no-device"],
+  .lv-midi-dot[data-midi-kind="choose"] { --lv-midi-dot: var(--lv-warning); }
+
+  .lv-midi-chip[data-midi-kind="error"] { --lv-midi-edge: rgb(238 107 115 / 60%); }
+
+  .lv-midi-chip[data-midi-kind="error"],
+  .lv-midi-dot[data-midi-kind="error"] { --lv-midi-dot: var(--lv-danger); }
+
+  .lv-midi-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    display: grid;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 12px;
+    background: var(--lv-surface-overlay);
+    box-shadow: 0 16px 36px rgb(0 0 0 / 45%);
+    color: var(--lv-text);
+    font-size: 13px;
+  }
+
+  .lv-midi-panel-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .lv-midi-panel-status .lv-midi-dot {
+    width: 10px;
+    height: 10px;
+    margin-top: 5px;
+  }
+
+  .lv-midi-panel-status b { font-size: 15px; }
+
+  .lv-midi-panel-status p {
+    margin: 2px 0 0;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+  }
+
+  .lv-midi-panel-error,
+  .lv-midi-panel-warn {
+    padding: 8px 10px;
+    border: 1px solid rgb(238 107 115 / 50%);
+    border-radius: 8px;
+    background: var(--lv-danger-soft);
+    color: #ffc2c6;
+    font-size: 12px;
+  }
+
+  .lv-midi-panel-warn {
+    border-color: rgb(242 193 78 / 50%);
+    background: var(--lv-warning-soft);
+    color: #f7dc9a;
+  }
+
+  .lv-midi-panel-field {
+    display: grid;
+    gap: 4px;
+  }
+
+  .lv-midi-panel-field > span:first-child {
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+  }
+
+  .lv-midi-panel-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .lv-midi-panel-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lv-midi-panel-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--lv-border, rgb(150 170 195 / 14%));
+  }
+
+  .lv-midi-panel-links button {
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* P14: the shared notice a mode shows when MIDI is not connected. */
+  .lv-midi-notice {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 10px;
+    background: var(--lv-bg);
+  }
+
+  .lv-midi-notice > :is(b, h2) { font-size: 14px; margin: 0; }
+  .lv-midi-notice > p { margin: 0; color: var(--lv-text-secondary); font-size: 12.5px; }
+  .lv-midi-notice[data-midi-kind="lost"],
+  .lv-midi-notice[data-midi-kind="missing"],
+  .lv-midi-notice[data-midi-kind="no-device"],
+  .lv-midi-notice[data-midi-kind="choose"] { border-color: rgb(242 193 78 / 50%); }
+  .lv-midi-notice[data-midi-kind="error"] { border-color: rgb(238 107 115 / 50%); }
+
+  .lv-midi-notice[data-compact] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 4px 10px;
+  }
+
+  .lv-midi-notice-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .lv-midi-notice-buttons button {
+    min-height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .lv-midi-notice-buttons .lv-midi-notice-primary {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent);
+    color: #06110f;
+    font-weight: 600;
   }
 
   /* P8.9-09b header volume: an always-visible knob (drag up/down) beside the level meter. */

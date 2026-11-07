@@ -9,6 +9,8 @@ import {
 } from "../audio/playbackController";
 import type { PreviewLifecycleCallbacks } from "../audio/chordPreview";
 import { appCopy } from "../i18n";
+import { connectionController } from "../liveMidi/connectionController";
+import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { AppShell, type SaveStatus } from "./AppShell";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -37,6 +39,7 @@ async function renderShell({
   setView = vi.fn(),
   openVoicingLoop = vi.fn(),
   openLiveMidi = vi.fn(),
+  openMidiSettings = vi.fn(),
   voicingLoopActive = false,
   openSettings = vi.fn(),
   onSearch = vi.fn(),
@@ -51,6 +54,7 @@ async function renderShell({
   setView?: ReturnType<typeof vi.fn>;
   openVoicingLoop?: ReturnType<typeof vi.fn>;
   openLiveMidi?: ReturnType<typeof vi.fn>;
+  openMidiSettings?: ReturnType<typeof vi.fn>;
   voicingLoopActive?: boolean;
   openSettings?: ReturnType<typeof vi.fn>;
   onSearch?: ReturnType<typeof vi.fn>;
@@ -67,6 +71,7 @@ async function renderShell({
       view={view}
       setView={setView}
       openLiveMidi={openLiveMidi}
+      openMidiSettings={openMidiSettings}
       openVoicingLoop={openVoicingLoop}
       openSettings={openSettings}
       onSearch={onSearch}
@@ -161,7 +166,7 @@ describe("AppShell (P8.9-02)", () => {
     const onMasterVolumeChange = vi.fn();
     const { container, root } = await renderShell({ masterVolume: 72, onMasterVolumeChange });
     const actions = container.querySelector("[data-global-actions]")!;
-    expect([...actions.children].map((child) => child.getAttribute("data-midi-status") ? "midi"
+    expect([...actions.children].map((child) => child.classList.contains("lv-midi-anchor") ? "midi"
       : child.getAttribute("aria-label") === "試聴音色" ? "sound"
         : child.getAttribute("data-testid") === "global-metronome" ? "metronome"
           : child.classList.contains("lv-volume-group") ? "volume"
@@ -224,15 +229,28 @@ describe("AppShell (P8.9-02)", () => {
     await act(async () => root.unmount());
   });
 
-  it("reads the Live MIDI state without activating it and opens Live MIDI on click", async () => {
+  it("shows the shared MIDI state on the button, opens the panel (not Live MIDI) on click, and the panel links reach Live MIDI and the detailed settings", async () => {
+    vi.spyOn(connectionController, "refreshDevices").mockResolvedValue();
     const openLiveMidi = vi.fn();
-    const { container, root } = await renderShell({ openLiveMidi });
-    const chip = container.querySelector<HTMLButtonElement>("[data-midi-status]");
-    expect(chip?.dataset.midiStatus).toBe("idle");
-    expect(chip?.textContent).toBe("MIDI 未接続");
+    const openMidiSettings = vi.fn();
+    const { container, root } = await renderShell({ openLiveMidi, openMidiSettings });
+    const chip = container.querySelector<HTMLButtonElement>("[data-midi-kind]");
+    expect(chip?.dataset.midiKind).toBe("off");
+    expect(chip?.textContent).toBe("MIDI に接続");
+    expect(chip?.getAttribute("aria-haspopup")).toBe("dialog");
+    expect(chip?.getAttribute("aria-expanded")).toBe("false");
     await act(async () => chip?.click());
+    expect(container.querySelector("[data-testid='midi-panel']")).not.toBeNull();
+    expect(chip?.getAttribute("aria-expanded")).toBe("true");
+    expect(openLiveMidi).not.toHaveBeenCalled();
+    const link = (name: string) => [...container.querySelectorAll<HTMLButtonElement>(".lv-midi-panel-links button")].find((entry) => entry.textContent?.includes(name));
+    await act(async () => link("詳しい設定")?.click());
+    expect(openMidiSettings).toHaveBeenCalledOnce();
+    await act(async () => chip?.click());
+    await act(async () => link("Live MIDI")?.click());
     expect(openLiveMidi).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
+    vi.restoreAllMocks();
   });
 
   it("keeps one bounded frame: title bar, then sidebar and a column that holds the header and content", async () => {
@@ -260,4 +278,16 @@ describe("AppShell (P8.9-02)", () => {
     expect(onSearch).toHaveBeenCalledTimes(2);
     await act(async () => root.unmount());
   });
+});
+
+
+it("shows the shared MIDI facts: searching, error and the connected device name",async()=>{
+ const initial=defaultLiveMidiStore.getState();const intent=connectionController.state.getState().intent;
+ connectionController.state.setState({intent:"on"});defaultLiveMidiStore.setState({initializing:true,status:"idle"});
+ const {container,root}=await renderShell();const chip=container.querySelector<HTMLButtonElement>("[data-midi-kind]");
+ expect(chip?.textContent).toBe("MIDI を探しています");expect(chip?.dataset.midiKind).toBe("searching");
+ await act(async()=>defaultLiveMidiStore.setState({initializing:false,active:true,status:"error"}));expect(chip?.textContent).toBe("MIDI エラー");
+ await act(async()=>defaultLiveMidiStore.setState({status:"connected",selected:{backendId:"synthetic",name:"合成入力",index:0}}));expect(chip?.textContent).toBe("合成入力");
+ await act(async()=>connectionController.state.setState({intent:"off"}));expect(chip?.dataset.midiKind).toBe("off");
+ await act(async()=>root.unmount());defaultLiveMidiStore.setState(initial);connectionController.state.setState({intent});
 });

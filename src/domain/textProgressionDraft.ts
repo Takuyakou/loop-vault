@@ -12,6 +12,7 @@ import { confirmedTextProgressionKeyState, TEXT_PROGRESSION_MAX_BARS } from "./t
 import type { TextProgressionEvent, TextProgressionParseResult } from "./textProgression";
 import { createTextProgressionStyleSnapshot, isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 import { isValidVoicingSnapshot, voicingCompatibility } from "./voicing";
+import { validateTextChordNotes } from "./textChordValidation";
 
 /**
  * Session-only Live MIDI overrides chosen while inspecting Text Progression
@@ -258,6 +259,7 @@ function practiceOnlyMemory(
     )
     || override.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(override)
+    || (isTextProgressionStyleSnapshot(override, chord) && !validateTextChordNotes(chord, override.midiNotes))
     || voicingCompatibility(override, chord) !== "compatible"
   ) return undefined;
   return { practiceVoicingOverride: cloneVoicingSnapshot(override) };

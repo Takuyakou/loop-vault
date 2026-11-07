@@ -123,8 +123,7 @@ describe("saved Text Progression target", () => {
 });
 
 describe("closeLiveMidiModeSafely", () => {
-  it("consumes a rejecting window close while releasing the lease and hiding the preview", async () => {
-    const releaseLease = vi.fn();
+  it("consumes a rejecting window close while hiding the preview", async () => {
     const preserveHistory = vi.fn();
     const rawFailure = new Error("private adapter failure");
     let previewVisible = true;
@@ -140,7 +139,6 @@ describe("closeLiveMidiModeSafely", () => {
         startedAtMs: 1,
         committedAtMs: 2,
       }],
-      releaseLease,
       closeWindow: async () => { throw rawFailure; },
       saveBounds: vi.fn(),
       hidePreview: () => { previewVisible = false; },
@@ -148,7 +146,6 @@ describe("closeLiveMidiModeSafely", () => {
       reportFailure: () => { feedback = appCopy.ja.liveMidi.miniModeCloseFailed; },
     })).resolves.toBeUndefined();
 
-    expect(releaseLease).toHaveBeenCalledOnce();
     expect(previewVisible).toBe(false);
     expect(preserveHistory).toHaveBeenCalledOnce();
     expect(feedback).toBe("ミニモードを終了できませんでした。メイン画面は安全に復帰しました。");

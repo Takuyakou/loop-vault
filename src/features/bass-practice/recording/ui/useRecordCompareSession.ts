@@ -27,6 +27,7 @@ export interface UseRecordCompareOptions {
 export interface RecordCompareSession {
   readonly state: RecorderState | null;
   currentTake(): RecordingTake | undefined;
+  inputLevel(): number;
   enable(): Promise<void>;
   setChannel(mode: ChannelMode): void;
   startCountIn(): void;
@@ -82,6 +83,7 @@ export function useRecordCompareSession(
 
   return {
     state,
+    inputLevel() { return withController((controller) => controller.inputLevel()) ?? 0; },
     currentTake() {
       return withController((controller) => controller.currentTake());
     },

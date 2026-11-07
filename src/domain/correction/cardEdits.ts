@@ -1,9 +1,11 @@
 import type { ChordSymbol } from "../types";
 import {
+  barRangeLabel,
   cutFragments,
   EPSILON,
   notesByCard,
   refreshModel,
+  removedBarsOf,
   sameNotesRuns,
   usedShape,
   type CorrectionCard,
@@ -11,6 +13,7 @@ import {
   type CorrectionNote,
   type NameSource,
 } from "./correctionModel";
+import { normalizeRemoved, screenToSource, shiftSegments } from "./barMap";
 import type { EditKind, EditResult } from "./edits";
 
 /**
@@ -24,8 +27,12 @@ export const MIN_CARD_BEATS = 0.25;
 
 const unchanged = (model: CorrectionModel, message?: string): EditResult => ({ model, changed: false, label: "", ...(message ? { message } : {}) });
 
-/** `renames`: the cards' notes or spans changed, so names follow the notes (P10.1 §11.2). */
-function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, kind: EditKind, seq = model.seq, renames = false): EditResult {
+/**
+ * `renames`: `true` when the cards' notes changed, so names follow the notes (P10.1 §11.2);
+ * `"suggest"` when only their spans changed (boundary, merge, split): the names stay and the
+ * reading of the notes is offered as a suggestion (P5.26.1).
+ */
+function done(model: CorrectionModel, cards: CorrectionCard[], notes: CorrectionNote[], touched: Iterable<string>, label: string, kind: EditKind, seq = model.seq, renames: boolean | "suggest" = false): EditResult {
   return { model: refreshModel({ ...model, cards, notes, seq }, new Set(touched), renames), changed: true, label, kind };
 }
 
@@ -51,6 +58,10 @@ const sameState = (a: PieceState, b: PieceState) => a.used === b.used && a.pitch
 
 /** Source-note fragments of the new cards, cut from the old fragments of the replaced cards. */
 function recut(model: CorrectionModel, oldCardIds: ReadonlySet<string>, newCards: readonly CorrectionCard[]): CorrectionNote[] {
+  if (model.context.savedProgression) return newCards.flatMap(card => {
+    const owner = model.cards.find(c => c.id === card.id) ?? model.cards.find(c => c.timelineIndex === card.timelineIndex);
+    return model.notes.filter(n => n.provenance === "SOURCE" && n.cardId === owner?.id).map(n => ({ ...n, id: `${n.sourceNoteId}@${card.id}`, cardId: card.id, start: card.start, duration: card.duration }));
+  });
   const old = new Map<string, CorrectionNote[]>();
   for (const note of model.notes) {
     if (note.provenance !== "SOURCE" || !oldCardIds.has(note.cardId)) continue;
@@ -112,7 +123,7 @@ function mergedCard(group: readonly CorrectionCard[]): CorrectionCard {
     ...first,
     duration: last.start + last.duration - first.start,
     name: (typed ?? first).name,
-    nameSource: typed ? "typed" : "auto",
+    nameSource: typed ? "typed" : first.nameSource,
     attacks: group.reduce((sum, card) => sum + card.attacks, 0),
     reviewed: group.every((card) => card.reviewed),
     edited: group.some((card) => card.edited),
@@ -139,7 +150,7 @@ function mergeGroups(model: CorrectionModel, groups: readonly (readonly string[]
     ...recut(model, replaced, merged),
     ...merged.flatMap((card) => manualOnto(firstOf.get(card.id)!.flatMap((id) => manual.get(id) ?? []), card, () => "")),
   ];
-  return done(model, cards, notes, merged.map((card) => card.id), label, kind, model.seq, true);
+  return done(model, cards, notes, merged.map((card) => card.id), label, kind, model.seq, "suggest");
 }
 
 /** M / 「つなぐ」: this card and the next become one; attacks add up (×n). */
@@ -170,7 +181,7 @@ export function splitCard(model: CorrectionModel, cardId: string): EditResult {
   if (!card) return unchanged(model);
   const end = card.start + card.duration;
   const mid = Math.round(card.start + card.duration / 2);
-  if (mid - card.start <= 1 + EPSILON || end - mid <= 1 + EPSILON) return unchanged(model, "1拍以下になるので分けません");
+  if (model.context.savedProgression ? (mid - card.start < 1 - EPSILON || end - mid < 1 - EPSILON) : (mid - card.start <= 1 + EPSILON || end - mid <= 1 + EPSILON)) return unchanged(model, "1拍以下になるので分けません");
   const { meter } = model.context;
   let seq = model.seq + 1;
   const first = { ...placed(card, card.start, mid, meter), attacks: Math.ceil(card.attacks / 2) };
@@ -183,7 +194,7 @@ export function splitCard(model: CorrectionModel, cardId: string): EditResult {
     ...manualOnto(manual, second, () => `manual-${(seq += 1)}`, false),
   ];
   const cards = [...model.cards.slice(0, index), first, second, ...model.cards.slice(index + 1)];
-  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, "split", seq, true);
+  return done(model, cards, notes, [first.id, second.id], `${positionLabel(card.start, meter)} を分けた`, "split", seq, "suggest");
 }
 
 /**
@@ -196,7 +207,8 @@ export function moveBoundary(model: CorrectionModel, leftCardId: string, beat: n
   const right = model.cards[index + 1];
   if (!left || !right) return unchanged(model);
   const end = right.start + right.duration;
-  if (Math.abs(beat - right.start) < EPSILON || beat - left.start < MIN_CARD_BEATS - EPSILON || end - beat < MIN_CARD_BEATS - EPSILON) return unchanged(model);
+  const minimum = model.context.savedProgression ? 1 : MIN_CARD_BEATS;
+  if (Math.abs(beat - right.start) < EPSILON || beat - left.start < minimum - EPSILON || end - beat < minimum - EPSILON) return unchanged(model);
   const { meter } = model.context;
   const nextLeft = placed(left, left.start, beat, meter);
   const nextRight = placed(right, beat, end, meter);
@@ -209,7 +221,7 @@ export function moveBoundary(model: CorrectionModel, leftCardId: string, beat: n
     ...manualOnto(manual.get(right.id) ?? [], nextRight, () => ""),
   ];
   const cards = model.cards.map((card) => card.id === left.id ? nextLeft : card.id === right.id ? nextRight : card);
-  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`, "boundary", model.seq, true);
+  return done(model, cards, notes, ids, `境目を ${positionLabel(beat, meter)} へ`, "boundary", model.seq, "suggest");
 }
 
 /**
@@ -248,4 +260,180 @@ export function markReviewed(model: CorrectionModel, cardId: string): EditResult
   if (!card || card.reviewed) return unchanged(model);
   const cards = model.cards.map((entry) => entry === card ? { ...entry, reviewed: true } : entry);
   return done(model, cards, model.notes, [cardId], `${positionLabel(card.start, model.context.meter)} をこのままでよいに`, "reviewed");
+}
+
+export type DeleteCardMode = "extend-previous" | "extend-next";
+
+/**
+ * P17-01 §1: delete one card in the MIDI capture. The remaining card (previous or next;
+ * the first/last card falls back to the other side) takes the deleted card's span. The
+ * deleted card's source notes stay on the remaining card as unused notes (a pitch fixed
+ * by a person keeps that pitch); its added notes go; the remaining card's name and
+ * attacks stay, and a changed reading is only offered (`suggest`, P5.26.1). The
+ * progression page keeps its own four-mode delete (progressionWorkspace.ts).
+ */
+export function deleteCard(model: CorrectionModel, cardId: string, mode: DeleteCardMode): EditResult {
+  const index = model.cards.findIndex((card) => card.id === cardId);
+  const card = model.cards[index];
+  if (!card) return unchanged(model);
+  if (model.cards.length <= 1) return unchanged(model, "最後の1枚は消せません");
+  let keepIndex = mode === "extend-previous" ? index - 1 : index + 1;
+  if (keepIndex < 0) keepIndex = index + 1;
+  if (keepIndex >= model.cards.length) keepIndex = index - 1;
+  const keep = model.cards[keepIndex]!;
+  const nextKeep = placed(keep, Math.min(card.start, keep.start), Math.max(card.start + card.duration, keep.start + keep.duration), model.context.meter);
+  const deletedStart = card.start;
+  const deletedEnd = card.start + card.duration;
+  const replaced = new Set([card.id, keep.id]);
+  const keepManual = model.notes.filter((note) => note.provenance === "MANUAL_ADDED" && note.cardId === keep.id);
+  const source: CorrectionNote[] = [];
+  for (const note of recut(model, replaced, [nextKeep])) {
+    const start = note.start;
+    const end = note.start + note.duration;
+    const cuts = [start, end];
+    if (deletedStart > start + EPSILON && deletedStart < end - EPSILON) cuts.push(deletedStart);
+    if (deletedEnd > start + EPSILON && deletedEnd < end - EPSILON) cuts.push(deletedEnd);
+    cuts.sort((a, b) => a - b);
+    for (let part = 0; part < cuts.length - 1; part += 1) {
+      const from = cuts[part]!;
+      const to = cuts[part + 1]!;
+      if (to - from <= EPSILON) continue;
+      const insideDeleted = from >= deletedStart - EPSILON && to <= deletedEnd + EPSILON;
+      source.push({ ...note, id: part === 0 ? note.id : `${note.id}~d${part}`, start: from, duration: to - from, ...(insideDeleted ? { used: false } : {}) });
+    }
+  }
+  const cards = model.cards.filter((entry) => entry.id !== card.id).map((entry) => entry.id === keep.id ? nextKeep : entry);
+  const notes = [
+    ...model.notes.filter((note) => !replaced.has(note.cardId)),
+    ...source,
+    ...manualOnto(keepManual, nextKeep, () => ""),
+  ];
+  const position = positionLabel(card.start, model.context.meter);
+  const result = done(model, cards, notes, [keep.id], `${position} のカードを消した`, "delete", model.seq, "suggest");
+  return { ...result, message: `${position} のカードを消しました(音は使っていない音として残しています。Ctrl+Z で戻せます)` };
+}
+
+/**
+ * P17-02: 「小節を消して詰める」 — remove whole bars and close the gap (MIDI capture
+ * only; the progression page keeps its own four-mode card delete). Cards before the
+ * cut stay; cards after it move left; a card that overlaps the cut keeps the parts
+ * outside it, and a card shorter than ¼ beat is absorbed by its neighbour. The
+ * source notes and the analysis never change: `context.removedBars` records the
+ * source spans, and the cuts compose (each new span is mapped to the source time
+ * before it is added). The last bar cannot be removed.
+ */
+export function cutBars(model: CorrectionModel, startBar: number, endBar: number = startBar): EditResult {
+  const meter = model.context.meter;
+  const totalBars = Math.max(1, Math.round(model.totalBeats / meter));
+  if (!Number.isInteger(startBar) || !Number.isInteger(endBar) || startBar < 1 || endBar < startBar || endBar > totalBars) {
+    return unchanged(model, "その小節はありません");
+  }
+  if (endBar >= totalBars) return unchanged(model, "最後の1小節は消せません");
+  const from = (startBar - 1) * meter;
+  const to = endBar * meter;
+  const length = to - from;
+  const oldById = new Map(model.cards.map((card) => [card.id, card]));
+  let entries: { card: CorrectionCard; owners: string[] }[] = [];
+  for (const card of model.cards) {
+    const start = card.start;
+    const end = start + card.duration;
+    if (end <= from + EPSILON) {
+      entries.push({ card, owners: [card.id] });
+      continue;
+    }
+    if (start >= to - EPSILON) {
+      entries.push({ card: placed(card, start - length, end - length, meter), owners: [card.id] });
+      continue;
+    }
+    // Overlaps the cut: keep the left and/or right part; the gap closes between them.
+    const nextStart = start < from - EPSILON ? start : from;
+    const nextEnd = end > to + EPSILON ? end - length : from;
+    if (nextEnd - nextStart <= EPSILON) continue;
+    entries.push({ card: placed(card, nextStart, nextEnd, meter), owners: [card.id] });
+  }
+
+  // A piece shorter than ¼ beat is absorbed by the neighbour on its left (or right).
+  for (let guard = 0; guard < 4; guard += 1) {
+    const at = entries.findIndex((entry) => entry.card.duration < MIN_CARD_BEATS - EPSILON);
+    if (at < 0) break;
+    const sliver = entries[at]!;
+    const left = at > 0 ? entries[at - 1] : undefined;
+    const right = at + 1 < entries.length ? entries[at + 1] : undefined;
+    const target = left ?? right;
+    if (!target) break;
+    const merged = placed(
+      target.card,
+      Math.min(target.card.start, sliver.card.start),
+      Math.max(target.card.start + target.card.duration, sliver.card.start + sliver.card.duration),
+      meter,
+    );
+    const entry = { card: merged, owners: [...target.owners, ...sliver.owners] };
+    const atTarget = left ? at - 1 : at + 1;
+    entries = entries.filter((_, index) => index !== at && index !== atTarget);
+    entries.splice(Math.min(at, atTarget), 0, entry);
+  }
+
+  const cards = entries.map((entry) => entry.card);
+  const replaced = new Set(entries.flatMap((entry) => entry.owners));
+  for (const entry of entries) {
+    const before = oldById.get(entry.card.id);
+    if (before && Math.abs(before.start - entry.card.start) < EPSILON && Math.abs(before.duration - entry.card.duration) < EPSILON) {
+      for (const id of entry.owners) replaced.delete(id);
+    }
+  }
+  for (const card of model.cards) {
+    if (!entries.some((entry) => entry.owners.includes(card.id))) replaced.add(card.id);
+  }
+
+  const oldRemoved = removedBarsOf(model);
+  const nextRemoved = normalizeRemoved([...oldRemoved, ...screenToSource(from, to, oldRemoved)]);
+  const nextContext = { ...model.context, removedBars: nextRemoved };
+  // Old fragments moved onto the new screen time, so re-cutting keeps each piece's state.
+  const shifted = shiftSourceNotesForCut(model.notes, from, to, length);
+  const recutModel: CorrectionModel = { ...model, notes: shifted, context: nextContext };
+  const recutNotes = recut(recutModel, replaced, cards.filter((card) => replaced.has(card.id)));
+  const keptNotes = model.notes.filter((note) => note.provenance === "SOURCE" && !replaced.has(note.cardId));
+  const manualByCard = notesByCard(model.notes.filter((note) => note.provenance === "MANUAL_ADDED"));
+  const manual = entries.flatMap((entry) => manualOnto(
+    entry.owners.flatMap((id) => manualByCard.get(id) ?? []),
+    entry.card,
+    () => "",
+  ));
+
+  const next = refreshModel({
+    ...model,
+    cards,
+    notes: [...keptNotes, ...recutNotes, ...manual],
+    segments: shiftSegments(model.segments, startBar, endBar),
+    totalBeats: model.totalBeats - length,
+    context: nextContext,
+  }, new Set(cards.map((card) => card.id)), "suggest");
+  const label = `${barRangeLabel(startBar, endBar)}を消して詰めた`;
+  return { model: next, changed: true, kind: "bar-cut", label, message: `${label}（Ctrl+Z で戻せます）` };
+}
+
+/** Old source fragments in the new screen time (after the gap closes). */
+function shiftSourceNotesForCut(
+  notes: readonly CorrectionNote[],
+  from: number,
+  to: number,
+  length: number,
+): CorrectionNote[] {
+  const out: CorrectionNote[] = [];
+  for (const note of notes) {
+    if (note.provenance !== "SOURCE") continue;
+    const start = note.start;
+    const end = start + note.duration;
+    if (end <= from + EPSILON) {
+      out.push(note);
+      continue;
+    }
+    if (start >= to - EPSILON) {
+      out.push({ ...note, start: start - length });
+      continue;
+    }
+    if (start < from - EPSILON) out.push({ ...note, duration: from - start });
+    if (end > to + EPSILON) out.push({ ...note, id: `${note.id}~cut`, start: from, duration: end - to });
+  }
+  return out;
 }

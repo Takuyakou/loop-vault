@@ -1,0 +1,36 @@
+# cargo-audit config. This file must sit at the TOP of the repository: the weekly
+# rustsec/audit-check job (.github/workflows/security.yml) runs
+#   cargo audit --json --file src-tauri/Cargo.lock
+# from the repository top, so src-tauri/.cargo/audit.toml would NOT be read there.
+#
+# Every entry below is an "unmaintained" / "unsound" WARNING (none is a vulnerability), and
+# every one comes in only through Tauri 2.11.x or tauri-plugin-opener. We cannot update them with `cargo update`
+# (nothing newer is published that is compatible). Revisit them all each time Tauri is upgraded:
+# delete the entry, run `cargo audit --file src-tauri/Cargo.lock` from the top, and keep it only
+# if the warning is still there. Details: docs/reports/rust-advisories-2026-11.md
+
+[advisories]
+ignore = [
+  # --- In the Windows tree: tauri-utils 2.9.3 -> urlpattern 0.3.0 -> unic-* (also in tauri-build) ---
+  # Used only to parse URL patterns of "remote" capabilities; this app has none (no remote/urls
+  # in src-tauri/capabilities or tauri.conf.json) and does not call urlpattern itself. Unmaintained only.
+  # Revisit: when upgrading Tauri (urlpattern moving off unic-*).
+  "RUSTSEC-2025-0075", # unic-char-range is unmaintained
+  "RUSTSEC-2025-0080", # unic-common is unmaintained
+  "RUSTSEC-2025-0081", # unic-char-property is unmaintained
+  "RUSTSEC-2025-0098", # unic-ucd-version is unmaintained
+  "RUSTSEC-2025-0100", # unic-ucd-ident is unmaintained
+
+  # --- Linux only (not in the Windows tree; the release is a Windows exe): tauri -> muda/tao -> gtk-rs 0.18 ---
+  # glib 0.18.5 "VariantStrIter" unsoundness: the app never calls glib (grep of src-tauri/src finds none)
+  # and the crate is not built for Windows. Revisit: when upgrading Tauri (gtk-rs 0.18 -> 0.20+).
+  "RUSTSEC-2024-0429", # glib: unsound Iterator impls for VariantStrIter
+  # proc-macro-error 1.0.4 is a build-time macro helper of glib-macros 0.18.5. Revisit: same time as glib.
+  "RUSTSEC-2024-0370", # proc-macro-error is unmaintained
+
+  # --- Linux only: tauri-plugin-opener 2.5.4 -> zbus 5.16 (D-Bus), not in the Windows tree ---
+  # Unmaintained only; the app has no D-Bus code. Revisit: when upgrading tauri-plugin-opener (or Tauri).
+  "RUSTSEC-2026-0370", # zvariant is unmaintained
+  "RUSTSEC-2026-0371", # zbus_names is unmaintained
+  "RUSTSEC-2026-0372", # zvariant_derive is unmaintained
+]

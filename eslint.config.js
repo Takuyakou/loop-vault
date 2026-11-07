@@ -5,6 +5,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist/**",
+      "p12-generated/**",
       "src-tauri/**",
       "node_modules/**",
       "coverage/**",

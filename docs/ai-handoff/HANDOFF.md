@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: f7768617f01bf61c342b9cbb991c139681d70a22
-- date: 2026-10-02
+- commit: 12d2961a7406574a166524be12c23358898ccab2
+- date: 2026-10-08
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -52,6 +52,16 @@ progression vocabulary. It is **not** a chord detector.
 The human authorized merging `feat/phase11-voicing-loop-v4` (`5359a037`) into local master. Merge/fresh-tested HEAD: `52159ae6`. Fresh FULL: 3,670 Vitest / 177 Playwright PASS, 0 FAIL / 0 UNRUN; cache unused. See [integration report](../phase11.0/reports/P11-master-merge.md).
 
 P11-00–P11-08 preserve session-only native A–B ranges, exact persisted Text preview notes, four explicit voicing sources, visible partial-source fallback, and human manual/live pitches across chord rename. Source MIDI compatibility stays guarded; Vault stays v2. Basic/Core primary types and legacy detailed controls remain. P11-07 Range shortcuts remain; P11-08 details dismissal and compact Next Move are included. The prior candidate/stop-before-merge notes are historical. Runnable EXE from tested P11-08 code remains available; no push/tag/release or new phase in this integration.
+
+## Unmerged Phase12 candidate
+
+`feat/p12-theme-score` latest tested product source `d0f66cdc7903b1e14ccaef74e62273e9193974fe` adds Master original / octave-down selection and independent grades, learning cursor/stage/session. All144 chords transpose both hands exactly -12 using fixed canonical correspondence, shared by score/keyboard/audio/judge/results. No solver/canonical change. Switch cancels stale audio/Hint/Tempo/feedback and requires physical release; eligible same cell retained, otherwise selected bank's first unfinished/resume/empty pool. Exact learning/review/Mixed grade boundaries remain. [Latest report](../phase12.0/reports/P12.0-01-master-octave-down.md), [range contract](../phase12.0/contracts/251-master-register.md).
+
+New Dojo namespace theme-lessons-ranges-v4 / browser theme-ranges-v1 isolates all recovery artifacts from the old strict reader. Previous committed theme-v4/theme/legacy is copied read-only once after schema validation; damaged/future/incomplete state refuses empty fallback. Old/new EXEs do not synchronize later progress. Masterv1/Dojo4/Vault2 unchanged. Isolated synthetic native WebView import/range save/return passed; production contents never read.
+
+Fresh FAST404/FEATURE4106+393/UI35/FULL4106+393+27, related378/native19 PASS. Each range138checks/180PNG, normal44PNG, native7, fixture/gallery-free x64 EXE. Baseline update0. Audio/solver7/canonical/clock/answerPolicy/Bass/VoicingLoop/dependencies/default GrandStaff/CSS/policy/scheduler unchanged from5ce6eaaf; target adapter/engine/fixed-finger correspondence/UI/storage intentional. master8d107d32/cached origin65593f75/known4worktrees/13historical EXEs preserved. Previous dc7 UI/learning results remain historical.
+
+Parent confirmed independent review PASS for d0f66cdc; no unresolved P1/P2. Physical MIDI/audio/fingering/builtins, production-identity migration/save/restart and OS/WebView zoom remain pending. Phase12 in-progress/completedStages empty, no merge/push/fetch/rebase/reset. P10.2 intermittent scroll-start is not claimed repaired.
 
 ## Major systems (see ARCHITECTURE-MAP for paths)
 
@@ -217,3 +227,13 @@ Final tested code / EXE HEAD `b0fe80769ed907f420d5da244df34e0f0c7dd13d`: fresh F
 ## P11-09/10 integrated into local master
 
 The human explicitly authorized the merge. Candidate `29918fef` was merged into local master at `f7768617f01bf61c342b9cbb991c139681d70a22`; merge tree equals candidate. Fresh FULL on that merge HEAD: 3,694 Vitest / 189 Playwright PASS, 0 FAIL / 0 UNRUN, no PASS cache. [Integration evidence](../phase11.0/reports/P11-09-10-master-merge.md). Earlier candidate stop-before-merge statements are historical. Result follow-up is documentation-only; tracked state clean, pre-existing untracked reports/assets/Claude outputs untouched. No push/tag/release, new implementation stage or EXE rebuild in this merge task.
+
+## Phase 13 Bass Practice candidate
+
+`feat/phase13-bass-practice` implements shared practice framing and an independent MIDI bass library. The new library reuses allowlisted atomic storage, existing opt-in Record & Compare, FreePats playback and the fretboard. Only MIDI bass gets local post-record approximate feedback; four legacy modes remain self-review. Vault stays v2. See [Phase 13 status](../phase13.0/README.md) and [integration report](../phase13.0/reports/05-integration.md) for measured gates and remaining real-interface acceptance. Candidate is not merged into master.
+
+Final Phase 13 tested code HEAD `00615cfd`: fresh FULL 3,835 Vitest / 235 Playwright PASS, 0 FAIL / 0 UNRUN; native 43 PASS and public audio qualification 120 cases PASS. Runnable Windows EXE built; [final report](../phase13.0/reports/FINAL-REPORT.md). Human acceptance is pending. Candidate remains based on `8d107d32`; independently advanced P12 master changes are not incorporated.
+
+## Phase 13 integrated into local master
+
+The human authorized integration. Merge `12d2961a7406574a166524be12c23358898ccab2` preserves P12/P12.1 already present in master `4175c295`. Its tree equals tested candidate `b0056ab471dfa76327cb6c6fefa891d852b80f9f`. Fresh FULL on the candidate: 4,163 Vitest / 439 Playwright / 27 runner contracts PASS, 0 FAIL / 0 UNRUN, no cache, D-only build/temp output. Master merge HEAD: fresh 23 Unit / 4 product-path browser / 62 native PASS, TypeScript / lint / docs / privacy / production build PASS. FULL was not rerun on master; keep provenance distinct. [Integration report](../phase13.0/reports/MASTER-INTEGRATION.md). Earlier candidate/unmerged notes are historical. Real-interface acceptance is pending; no EXE rebuild or push/tag/release in this task. The follow-up changes only documentation.

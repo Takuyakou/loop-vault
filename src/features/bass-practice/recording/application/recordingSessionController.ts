@@ -44,6 +44,8 @@ export class RecordingSessionController {
     this.state = createRecorderState(channelMode);
   }
 
+  inputLevel(): number { return this.deps.recorder.inputLevel?.() ?? 0; }
+
   getState(): RecorderState {
     return this.state;
   }

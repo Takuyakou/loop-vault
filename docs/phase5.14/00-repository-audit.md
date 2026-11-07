@@ -30,7 +30,7 @@ Phase 5.14では上記4ファイルを変更しない。
 
 ## Chord Drip
 
-- 発見path: `D:\dev\Chord Drip作成`
+- 発見path: `<作業フォルダ>\Chord Drip作成`
 - Repository: `Takuyakou/chord-drip`
 - 監査時HEAD: `0254c440d5c532a49b21c9ba5102fa48f94b9f1f`
 - 関連実装は作業tree上で変更されていない

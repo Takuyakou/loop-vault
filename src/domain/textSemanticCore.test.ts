@@ -7,14 +7,15 @@ import { normalizedChordKey } from "./voicing";
 
 describe("P8.8 shared text chord semantics", () => {
   it.each([
-    ["CmMaj7", "minMaj7", [0, 3, 7, 11]],
-    ["C5", "power", [0, 7]],
-    ["Cadd13", "add13", [0, 4, 7, 9]],
-    ["D11", "dom11", [2, 6, 9, 0, 4, 7]],
-  ] as const)("preserves %s as an explicit quality", (label, quality, expected) => {
+    // TXT-JAZZ: the text canonical display of minMaj7 is Cm(maj7) (an approved text-only change from CmMaj7).
+    ["CmMaj7", "minMaj7", [0, 3, 7, 11], "Cm(maj7)"],
+    ["C5", "power", [0, 7], "C5"],
+    ["Cadd13", "add13", [0, 4, 7, 9], "Cadd13"],
+    ["D11", "dom11", [2, 6, 9, 0, 4, 7], "D11"],
+  ] as const)("preserves %s as an explicit quality", (label, quality, expected, display) => {
     const chord = parseTextChordLabel(label);
     expect(chord?.quality).toBe(quality);
-    expect(chord?.label).toBe(label);
+    expect(chord?.label).toBe(display);
     expect(chordPitchClasses(chord!).sort((a, b) => a - b)).toEqual([...expected].sort((a, b) => a - b));
   });
 

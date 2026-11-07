@@ -8,7 +8,7 @@ import {
   type VaultLoadResult,
   type VaultRepository,
 } from "../domain/repository";
-import { parseChordLabel } from "../domain/chords";
+import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { analyzeMidi } from "../domain/midi/analysis";
 import { createManualDraft } from "../domain/midi/manualDraft";
 import { draftToCandidate } from "../domain/midi/manualDraftEditing";
@@ -1360,6 +1360,27 @@ describe("vault store", () => {
     expect(practice.meter).toEqual({ numerator: 4, denominator: 4 });
   });
 
+  it("refuses forged altered identity and drops invalid app recommendations while keeping live notes authoritative", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const alt = parseTextChordLabel("G7alt")!;
+    const event: ChordTimelineItem = {bar:1,beat:1,durationBeats:4,chord:alt,confidence:0,alternatives:[],warnings:[]};
+    expect(store.getState().createIdeaFromTextProgression({title:"Synthetic forged alt",summaryText:"ignored",
+      chords:[{...event,chord:{...alt,altered:undefined}}]})).toBeUndefined();
+    const app = createTextProgressionStyleSnapshot(alt,"generated-close")!;
+    expect(app).toBeDefined();
+    const rejected = store.getState().createIdeaFromTextProgression({title:"Synthetic rejected recommendation",summaryText:"ignored",
+      chords:[{...event,voicingMemory:{practiceVoicingOverride:{...app,midiNotes:[43,62,65,71],bassNote:43}}}]});
+    expect(rejected).toBeDefined();
+    const saved = store.getState().ideas.find(idea=>idea.id===rejected)?.progressionBlocks?.[0]?.chords[0];
+    expect(saved?.chord).toEqual(alt);
+    expect(saved?.voicingMemory).toBeUndefined();
+    const live = store.getState().createIdeaFromTextProgression({title:"Synthetic live authoritative",summaryText:"ignored",
+      chords:[{...event,voicingMemory:{practiceVoicingOverride:{...app,source:"live-played",midiNotes:[43,62,65,71],bassNote:43}}}]});
+    expect(store.getState().ideas.find(idea=>idea.id===live)?.progressionBlocks?.[0]?.chords[0]?.voicingMemory?.practiceVoicingOverride?.midiNotes)
+      .toEqual([43,62,65,71]);
+  });
   it("fails closed for direct text saves that do not satisfy the text grammar", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository, now: () => now });

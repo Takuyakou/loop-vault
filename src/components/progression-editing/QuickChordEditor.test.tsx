@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EditableChordSlot } from "../../domain/progressionEditing";
 import { QuickChordEditor } from "./QuickChordEditor";
+import { parseTextChordLabel } from "../../domain/chords";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -28,6 +29,25 @@ afterEach(() => {
 });
 
 describe("QuickChordEditor", () => {
+  it("keeps altered classification in keyboard root shifts and applied edits", async () => {
+    const chord = parseTextChordLabel("G7alt/B")!;
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    vi.spyOn(anchor,"getBoundingClientRect").mockReturnValue(rect(40,40,140,80));
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const onPreview = vi.fn(), onApply = vi.fn();
+    await act(async () => root.render(<QuickChordEditor slot={{...slot,originalChord:chord,currentChord:chord,alternatives:[]}}
+      anchorElement={anchor} onPreview={onPreview} onApply={onApply} onReset={vi.fn()} onOpenInspector={vi.fn()} onClose={vi.fn()} />));
+    const panel = document.querySelector<HTMLElement>("[data-quick-chord-editor]")!;
+    await act(async () => panel.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true})));
+    await act(async () => panel.dispatchEvent(new KeyboardEvent("keydown",{key:" ",bubbles:true})));
+    expect(onPreview).toHaveBeenLastCalledWith({root:8,quality:"dom7",tensions:[],altered:true,bass:11,label:"Ab7alt/B"});
+    await act(async () => panel.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true})));
+    expect(onApply).toHaveBeenCalledWith({root:8,quality:"dom7",tensions:[],altered:true,bass:11,label:"Ab7alt/B"},"structure-editor");
+    await act(async () => root.unmount());
+  });
   it("previews a numbered candidate without applying until Enter", async () => {
     const onPreview = vi.fn();
     const onApply = vi.fn();

@@ -1,0 +1,623 @@
+/* P12 mock: content adapts to the existing shell; home 360 / practice 320, flow 54, keyboard 190. */
+.dojo {--dojo-bg:#0a1019;--dojo-bg-2:#0d1522;--dojo-surface:#111b2a;--dojo-raised:#162338;--dojo-border:rgb(150 170 195 / 14%);--dojo-border-strong:rgb(150 170 195 / 28%);--dojo-accent:#42d8c6;--dojo-accent-soft:#123b3a;--dojo-warn:#f2c14e;--dojo-warn-soft:#3b2b11;--dojo-muted:#7f90aa;--dojo-secondary:#a5b2c6;min-width:0;min-height:100%;height:100%;background:var(--dojo-bg);color:#f2f6fc;font-size:13px;line-height:normal;}
+.dojo * {box-sizing:border-box;}
+.dojo h1,.dojo h2,.dojo p {margin:0;}
+.dojo h2 {font-size:12px;font-weight:600;color:var(--dojo-secondary);display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;}
+.dojo h2 small {font-size:11px;font-weight:400;color:var(--dojo-muted);}
+.dojo button {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:0 12px;border:1px solid var(--dojo-border-strong);border-radius:7px;background:transparent;color:var(--dojo-secondary);font-size:13px;cursor:pointer;}
+.dojo button:hover {background:var(--dojo-raised);color:#f2f6fc;}
+.dojo button:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+.dojo button:disabled {opacity:.45;cursor:wait;}
+.dojo .dojo-primary {background:var(--dojo-accent);border-color:var(--dojo-accent);color:#06110f;font-weight:600;}
+.dojo .dojo-primary:hover {background:#5fe3d3;color:#06110f;}
+.dojo .dojo-big {height:48px;padding:0 28px;font-size:16px;border-radius:10px;}
+.dojo-muted {color:var(--dojo-muted);font-size:12px;line-height:1.7;}
+.dojo-card {border:1px solid var(--dojo-border);border-radius:10px;background:var(--dojo-surface);padding:14px 16px;min-width:0;}
+.dojo-chip {display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:2px 9px;border:1px solid var(--dojo-border-strong);border-radius:12px;font-size:12px;color:#f2f6fc;max-width:100%;}
+.dojo-chip i {font-style:normal;font-size:11px;color:var(--dojo-muted);}
+.dojo-badge {display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:4px;background:var(--dojo-raised);color:var(--dojo-secondary);}
+.dojo-badge[data-state=provisional] {background:var(--dojo-warn-soft);color:var(--dojo-warn);}
+.dojo-badge[data-state=passed],.dojo-badge[data-state=twelve-keys] {background:var(--dojo-accent-soft);color:var(--dojo-accent);}
+.dojo-notice {border:1px solid var(--dojo-warn);background:var(--dojo-warn-soft);color:#f7dc9a;border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.6;}
+.dojo-notice button {margin-left:8px;}
+.dojo-home {display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:100%;}
+.dojo-home-left {padding:28px 32px;display:grid;align-content:start;gap:18px;min-width:0;}
+.dojo-home-right {border-left:1px solid var(--dojo-border);background:var(--dojo-bg-2);padding:20px;display:grid;align-content:start;gap:16px;min-width:0;}
+.dojo-today {border:1px solid var(--dojo-accent);border-radius:14px;background:linear-gradient(180deg,rgb(66 216 198 / 7%),transparent 60%),var(--dojo-surface);padding:22px 24px;display:grid;gap:16px;}
+.dojo-today h1 {font-size:22px;font-weight:700;line-height:normal;}
+.dojo-today>.dojo-muted,.dojo-today>div>.dojo-muted {font-size:13px;color:var(--dojo-secondary);line-height:normal;}
+.dojo-plan-rows {display:grid;gap:8px;}
+.dojo-plan {display:grid;grid-template-columns:30px 170px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--dojo-border);border-radius:9px;background:var(--dojo-bg-2);min-height:48px;}
+.dojo-plan b {font-size:14px;}
+.dojo-step-number {width:26px;height:26px;border-radius:13px;background:var(--dojo-raised);color:var(--dojo-secondary);display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;}
+.dojo-plan-items {display:flex;flex-wrap:wrap;gap:6px;min-width:0;}
+.dojo-plan small {color:var(--dojo-secondary);font-family:var(--font-mono);font-size:12px;}
+.dojo-start-row {display:flex;align-items:center;gap:16px;}
+.dojo-choose {display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--dojo-muted);font-size:12.5px;}
+.dojo-choose button {border:0;border-radius:0;padding:0 4px;min-height:24px;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;}
+.dojo-builtins {display:flex;flex-wrap:wrap;gap:6px;}
+.dojo-builtins button {min-height:24px;padding:1px 9px;border-radius:12px;border-style:dashed;font-size:12px;}
+.dojo-builtin-panel {display:grid;gap:8px;}
+.dojo-builtin-panel h2 {margin:0;}
+.dojo-wanted-list {display:grid;gap:4px;}
+.dojo-wanted-list>div {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;min-height:28px;font-size:12.5px;}
+.dojo-wanted-list small {font-size:12px;color:var(--dojo-muted);}
+.dojo-keys {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;}
+.dojo-key-status {height:40px;border-radius:6px;border:1px solid var(--dojo-border);background:var(--dojo-bg);display:grid;place-items:center;align-content:center;gap:1px;font-size:12px;color:var(--dojo-muted);}
+.dojo-key-status small {font-size:10px;color:var(--dojo-muted);font-family:var(--font-mono);}
+.dojo-key-status[data-state=fast] {background:var(--dojo-accent-soft);border-color:rgb(66 216 198 / 45%);color:var(--dojo-accent);}
+.dojo-key-status[data-state=slow],.dojo-key-status[data-state=self] {background:var(--dojo-warn-soft);border-color:rgb(242 193 78 / 45%);color:var(--dojo-warn);}
+.dojo-key-status[data-current=true] {box-shadow:0 0 0 2px var(--dojo-accent);}
+.dojo-key-legend {display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--dojo-muted);margin-top:6px;}
+.dojo-key-legend i,.dojo-keyboard-head i {display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.dojo-key-legend [data-state=fast] {background:var(--dojo-accent-soft);border:1px solid var(--dojo-accent);}
+.dojo-key-legend [data-state=slow] {background:var(--dojo-warn-soft);border:1px solid var(--dojo-warn);}
+.dojo-key-legend [data-state=pending] {border:1px solid var(--dojo-border-strong);}
+.dojo-practice {display:grid;grid-template-columns:minmax(0,1fr) 320px;grid-template-rows:54px minmax(0,1fr) 190px;height:100%;min-height:680px;}
+.dojo-flow {grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 16px;border-bottom:1px solid var(--dojo-border);background:#0b121d;min-width:0;}
+.dojo-flow-part {display:inline-flex;align-items:center;gap:6px;}
+.dojo-flow-step {display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid var(--dojo-border);border-radius:15px;color:var(--dojo-muted);font-size:12.5px;white-space:nowrap;}
+.dojo-flow-step em {font-style:normal;font-size:11px;color:var(--dojo-muted);font-family:var(--font-mono);}
+.dojo-flow-step[data-done=true] {color:var(--dojo-accent);border-color:rgb(66 216 198 / 40%);}
+.dojo-flow-step[data-active=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);color:#f2f6fc;}
+.dojo-flow-step[data-active=true] em {color:var(--dojo-secondary);}
+.dojo-arrow {color:var(--dojo-muted);font-size:11px;}
+.dojo-flow-summary {margin-left:auto;white-space:nowrap;color:var(--dojo-muted);font-size:11px;}
+.dojo-flow>button {font-size:12px;padding:0 10px;white-space:nowrap;}
+.dojo-center {display:grid;justify-items:center;align-content:center;gap:14px;padding:20px;position:relative;min-height:0;min-width:0;overflow-y:auto;}
+.dojo-kind {font-size:12px;color:var(--dojo-muted);letter-spacing:.06em;}
+.dojo .dojo-prompt {font-size:92px;font-weight:700;letter-spacing:-.02em;line-height:1;}
+.dojo .dojo-progression-title {font-size:30px;font-weight:700;line-height:1.3;text-align:center;}
+.dojo-chips,.dojo-actions,.dojo-stage-row {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;}
+.dojo .dojo-star {min-height:24px;padding:2px 9px;border-radius:12px;font-size:13px;}
+.dojo-star[aria-pressed=true] {border-color:var(--dojo-warn);color:var(--dojo-warn);background:var(--dojo-warn-soft);}
+.dojo-stage {display:inline-flex;flex-wrap:wrap;border:1px solid var(--dojo-border-strong);border-radius:8px;overflow:hidden;}
+.dojo-stage>span {padding:6px 12px;color:var(--dojo-muted);font-size:12.5px;border-right:1px solid var(--dojo-border-strong);}
+.dojo-stage>span:last-child {border-right:0;}
+.dojo-stage>span[data-active=true] {background:var(--dojo-accent-soft);color:var(--dojo-accent);}
+.dojo-stage>span[data-done=true] {color:var(--dojo-secondary);}
+/* P18-01 Stage 2: a stage that can be pressed is a button with the same shape */
+.dojo-stage>button {background:none;border:0;border-right:1px solid var(--dojo-border-strong);padding:6px 12px;color:var(--dojo-muted);font-size:12.5px;font-family:inherit;line-height:inherit;cursor:pointer;}
+.dojo-stage>button:last-child {border-right:0;}
+.dojo-stage>button[data-active=true] {background:var(--dojo-accent-soft);color:var(--dojo-accent);}
+.dojo-stage>button[data-off=true] {cursor:default;}
+.dojo-stage>button:not([data-active=true]):not([data-off=true]):hover {color:var(--dojo-secondary);}
+.dojo-timer {font-size:26px;line-height:1.2;min-height:31px;color:var(--dojo-secondary);font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+.dojo-result {min-height:46px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;padding:0 18px;border-radius:10px;color:var(--dojo-secondary);text-align:center;}
+.dojo-result[data-ok=true] {background:#12382c;color:#5fd39a;}
+.dojo-result[data-ok=false] {background:#3a1820;color:#ffb3b8;}
+.dojo-composition {display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
+.dojo-tone {min-width:78px;padding:8px 10px;border:1px solid var(--dojo-border-strong);border-radius:9px;display:grid;justify-items:center;gap:2px;background:var(--dojo-surface);}
+.dojo-tone b {font-size:20px;font-weight:600;font-family:var(--font-mono);}
+.dojo-tone span {font-size:12px;color:var(--dojo-secondary);}
+.dojo-tone[data-pressed=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);}
+.dojo-tone[data-pressed=true] b,.dojo-tone[data-pressed=true] span {color:var(--dojo-accent);}
+.dojo-formline {font-size:13px;color:var(--dojo-secondary);font-family:var(--font-mono);}
+.dojo-keyboard {grid-column:1;border-top:1px solid var(--dojo-border);background:var(--dojo-bg-2);padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;min-width:0;overflow-x:hidden;}
+.dojo-keyboard-head {display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-height:16px;font-size:11.5px;color:var(--dojo-muted);}
+.dojo-keyboard-head b {font-size:12px;color:#f2f6fc;}
+.dojo-held-swatch {background:#8fb7ff;}
+.dojo-answer-swatch {background:var(--dojo-accent);border-radius:50%!important;width:8px!important;height:8px!important;}
+.dojo-left-swatch,.dojo-right-swatch {border-radius:50%!important;width:8px!important;height:8px!important;}
+.dojo-left-swatch {background:#f59e0b;}
+.dojo-right-swatch {background:#22d3ee;}
+.dojo-wrong-swatch {background:#ffb3b8;}
+.dojo-missing-swatch {border:1px dashed var(--dojo-accent);border-radius:50%!important;}
+.dojo-range-notice {font-size:11px;color:var(--dojo-muted);line-height:14px;}
+.dojo-keyboard [role=region] {border:0;padding:0;background:none;}
+.dojo-keyboard [data-keyboard-layout=default] {width:100%;}
+.dojo-keyboard svg {width:100%;height:128px;min-width:0!important;}
+.dojo-keyboard:has(.dojo-range-notice) {gap:4px;padding-block:5px;}
+.dojo-practice-right {grid-column:2;grid-row:2/4;border-left:1px solid var(--dojo-border);background:var(--dojo-bg-2);padding:16px;display:grid;align-content:start;gap:16px;min-width:0;overflow-y:auto;}
+.dojo-log {display:grid;gap:3px;}
+.dojo-log>div {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;min-height:24px;font-size:12.5px;}
+.dojo-log em {font-style:normal;font-size:12px;font-family:var(--font-mono);color:var(--dojo-secondary);}
+.dojo-log [data-ok=true] {color:#5fd39a;}
+.dojo-log [data-ok=false] {color:#ee6b73;}
+.dojo-log [data-self=true] {color:var(--dojo-warn);}
+.dojo-chord-cards {display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.dojo-chord-cards>button {width:92px;min-height:58px;border:1px solid var(--dojo-border);border-radius:8px;background:var(--dojo-surface);display:grid;align-content:center;justify-items:start;padding:4px 10px;gap:3px;position:relative;font:inherit;color:inherit;text-align:left;cursor:pointer;}
+.dojo-chord-cards strong {font-size:15px;color:var(--dojo-secondary);}
+.dojo-chord-cards small {font-size:11px;color:var(--dojo-muted);font-family:var(--font-mono);}
+.dojo-chord-cards [data-current=true] {border:2px solid var(--dojo-accent);background:var(--dojo-accent-soft);}
+.dojo-chord-cards [data-current=true] strong {color:var(--dojo-accent);}
+.dojo-chord-cards [data-hidden=true] {border-style:dashed;}
+.dojo-chord-cards [data-hint=true] {border-color:var(--dojo-warn);background:var(--dojo-warn-soft);}
+.dojo-chord-cards [data-hint=true] strong {color:var(--dojo-warn);}
+.dojo-settings {display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;font-size:12px;}
+.dojo-settings input[type=number] {width:64px;background:var(--dojo-bg);border:1px solid var(--dojo-border);padding:5px;}
+.dojo .dojo-settings-button {min-height:28px;padding:0 7px;}
+.dojo-tempo-result {font-size:12px;text-align:center;}
+.dojo-finish {width:min(620px,calc(100% - 40px));margin:60px auto 30px;display:grid;gap:16px;text-align:center;}
+.dojo-finish h1 {font-size:26px;font-weight:650;}
+.dojo-vocab {display:grid;gap:8px;}
+.dojo-added {display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--dojo-accent);border-radius:10px;background:var(--dojo-accent-soft);text-align:left;}
+.dojo-added strong {font-size:17px;}
+.dojo-finish-summary {display:grid;gap:6px;text-align:left;color:var(--dojo-muted);font-size:12.5px;line-height:1.6;}
+.dojo-choose-page {padding:28px 32px;}
+.dojo-choose-page>h1 {font-size:22px;margin-bottom:14px;}
+.dojo-list {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px;}
+.dojo-list .dojo-card {display:grid;gap:10px;}
+.dojo-list.dojo-saved-list {grid-template-columns:repeat(auto-fit,minmax(min(100%,max(290px,calc((100% - 24px)/3))),1fr));align-items:start;}
+.dojo-saved-list .dojo-saved-card {gap:12px;align-content:start;}
+.dojo .dojo-saved-title {display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;font-size:17px;line-height:1.45;min-height:2.9em;margin:0;color:#f2f6fc;}
+.dojo-saved-size {font-size:15px;}.dojo-saved-size span,.dojo-saved-state {color:var(--dojo-muted);font-size:12px;}
+.dojo .dojo-saved-practice {min-height:40px;width:100%;}
+.dojo-saved-secondary {display:flex;align-items:start;gap:12px;flex-wrap:wrap;min-width:0;}
+.dojo-saved-details {flex:1;min-width:70px;font-size:12px;line-height:1.6;color:var(--dojo-secondary);}
+.dojo-saved-details summary {cursor:pointer;padding:6px 0;}.dojo-saved-details summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+.dojo-saved-details>div {overflow-wrap:anywhere;display:grid;gap:8px;}
+.dojo-saved-list .dojo-section-picker {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,110px),1fr));gap:10px;}
+.dojo-saved-list .dojo-section-picker label {display:grid;gap:6px;min-width:0;}
+.dojo-saved-list .dojo-section-picker input {width:100%;min-width:0;padding:8px;border:1px solid var(--dojo-border-strong);border-radius:6px;background:var(--dojo-bg-2);color:#f2f6fc;font-size:15px;}
+.dojo-saved-list .dojo-section-picker>button,.dojo-saved-list .dojo-section-picker>p {grid-column:1/-1;white-space:normal;overflow-wrap:anywhere;}
+.dojo-saved-theme {border-top:1px solid var(--dojo-border);padding-top:10px;display:grid;gap:6px;}
+.dojo-saved-theme small {font-size:11px;color:var(--dojo-muted);line-height:1.5;}
+.dojo-saved-card button:disabled {cursor:not-allowed;}
+@media(max-width:1250px) {.dojo-flow {flex-wrap:wrap;padding:10px 16px;}.dojo-practice {grid-template-rows:auto minmax(420px,1fr) 190px;min-height:100%;}.dojo-plan {grid-template-columns:30px 140px minmax(0,1fr) auto;}.dojo-home-left {padding:24px;}}
+@media(max-width:1000px) {.dojo-home {grid-template-columns:minmax(0,1fr);}.dojo-home-right {border-left:0;border-top:1px solid var(--dojo-border);}.dojo-practice {grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(440px,1fr) 190px auto;height:auto;}.dojo-practice-right {grid-column:1;grid-row:4;border-left:0;border-top:1px solid var(--dojo-border);overflow:visible;}.dojo-flow-summary {margin-left:0;}.dojo-list {grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:600px) {.dojo-home-left {padding:18px;}.dojo-today {padding:18px;}.dojo-plan {grid-template-columns:26px minmax(0,1fr) auto;gap:8px;}.dojo-plan-items {grid-column:2/-1;}.dojo-plan>small {grid-column:3;grid-row:1;}.dojo-plan>b {grid-column:2;}.dojo .dojo-prompt {font-size:clamp(56px,14vw,92px);}.dojo-center {padding:16px;}.dojo-list {grid-template-columns:minmax(0,1fr);}.dojo-added {grid-template-columns:minmax(0,1fr) auto;}.dojo-added .dojo-badge {grid-column:2;}.dojo-choose-page {padding:18px;}.dojo-keyboard {padding-inline:12px;}}
+
+.dojo-chips .dojo-chip {min-height:28px;font-size:13px;}
+.dojo-keyboard text {font-family:var(--font-mono);}
+
+.dojo-wanted-heading {display:inline-flex;align-items:center;gap:4px;}
+
+.dojo-progression-states {display:grid;gap:4px;margin-bottom:10px;}
+.dojo-progression-states>div {display:flex;justify-content:space-between;align-items:center;min-height:28px;font-size:12.5px;}
+
+/* Keep saved identity available on hover, and the practice range visible without duplicating origin. */
+.dojo-plan-progression {flex-direction:column;align-items:flex-start;gap:2px;min-width:0;width:100%;border-radius:8px;}
+.dojo-plan-progression>span {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.dojo-theme {display:grid;gap:8px;padding:12px;border:1px solid var(--dojo-border-strong);border-radius:8px;line-height:1.6;}
+.dojo-theme details {font-size:12px;color:var(--dojo-secondary);}
+.dojo-theme-practice {font-size:12px;color:var(--dojo-secondary);text-align:center;overflow-wrap:anywhere;}
+.dojo {container-type:inline-size;}
+@container(max-width:1100px){.dojo-home{grid-template-columns:minmax(0,1fr);}.dojo-home-left{padding:18px 12px;}.dojo-home-right{border-left:0;}.dojo-plan{grid-template-columns:26px minmax(0,1fr) auto;gap:8px;}.dojo-plan-items{grid-column:2/4;}.dojo-today{padding:16px 12px;}.dojo-start-row{flex-wrap:wrap;}}
+
+.dojo-keyboard {overflow-x:auto;}
+.dojo-keyboard [data-keyboard-layout=default],.dojo-keyboard svg {min-width:var(--target-keyboard-width,760px)!important;}
+
+@container(max-width:1100px){.dojo-plan small{grid-column:3;grid-row:1;}.dojo-plan b{grid-column:2;grid-row:1;}.dojo-step-number{grid-column:1;grid-row:1;}.dojo-plan-items{grid-row:2;}.dojo-theme{gap:4px;}.dojo-theme h2{display:block;overflow-wrap:anywhere;line-height:1.5;}}
+
+.dojo-lesson-summary {text-align:left;overflow-wrap:anywhere;}
+.dojo-lesson-summary h2 {font-size:17px;margin:10px 0;}
+.dojo-finish-group {margin-top:16px;}
+.dojo-finish-group h3 {font-size:14px;margin-bottom:8px;}
+.dojo-finish-task {padding:10px 0;border-top:1px solid var(--dojo-border);font-size:13px;}
+.dojo-finish-task p {color:var(--dojo-muted);line-height:1.6;}
+
+/* Keep the video reading order: chord / notes, Grand Staff, input keyboard. */
+.dojo[data-dojo-screen=practice] .dojo-practice {grid-template-columns:minmax(0,1fr);grid-template-rows:42px minmax(192px,1fr) 226px 168px;min-height:628px;height:100%;position:relative;}
+.dojo[data-dojo-screen=practice] .dojo-flow {grid-column:1;grid-row:1;flex-wrap:nowrap;padding:0 12px;gap:6px;}
+.dojo[data-dojo-screen=practice] .dojo-flow-step {padding-inline:9px;}
+.dojo[data-dojo-screen=practice] .dojo-center {grid-column:1;grid-row:2;height:auto;align-content:safe center;padding:2px 16px;gap:4px;overflow-y:auto;}
+.dojo[data-dojo-screen=practice] .dojo-prompt {font-size:48px;}
+.dojo[data-dojo-screen=practice] .dojo-progression-title {font-size:26px;overflow-wrap:anywhere;}
+.dojo-task-context {display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 16px;}
+.dojo[data-dojo-screen=practice] .dojo-chips .dojo-chip {min-height:24px;font-size:12px;}
+.dojo[data-dojo-screen=practice] .dojo-stage>span {padding:4px 10px;line-height:16px;}
+.dojo[data-dojo-screen=practice] .dojo-composition {gap:6px;}
+.dojo[data-dojo-screen=practice] .dojo-tone {min-width:64px;padding:2px 10px;gap:0;}
+.dojo[data-dojo-screen=practice] .dojo-tone b {line-height:22px;}
+.dojo[data-dojo-screen=practice] .dojo-tone span {line-height:14px;}
+.dojo[data-dojo-screen=practice] .dojo-timer {font-size:20px;min-height:24px;}
+.dojo[data-dojo-screen=practice] .dojo-result {font-size:14px;min-height:24px;padding:0 8px;overflow-wrap:anywhere;}
+.dojo[data-dojo-screen=practice] .dojo-response {gap:4px;}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards>button {min-height:42px;gap:1px;padding-block:3px;}
+.dojo[data-dojo-screen=practice] .dojo-practice>.dojo-score {grid-column:1;grid-row:3;align-self:stretch;}
+.dojo[data-dojo-screen=practice] .dojo-practice>.dojo-keyboard {grid-column:1;grid-row:4;padding:5px 16px 7px;gap:8px;}
+.dojo-practice-records {position:relative;flex-shrink:0;}
+.dojo-practice-records>summary {cursor:pointer;padding:7px 9px;border:1px solid var(--dojo-border-strong);border-radius:7px;font-size:12px;color:var(--dojo-secondary);}
+.dojo-practice-records>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+.dojo-record-panel {position:absolute;right:0;top:calc(100% + 8px);z-index:5;width:360px;max-width:calc(100vw - 32px);max-height:calc(100vh - 164px);overflow:auto;border:1px solid var(--dojo-border-strong);border-radius:10px;background:var(--dojo-bg-2);box-shadow:0 12px 28px rgb(0 0 0 / 35%);}
+.dojo-record-panel .dojo-theme-practice {padding:12px 16px 0;text-align:left;}
+.dojo-record-panel .dojo-practice-right {display:grid;grid-column:auto;grid-row:auto;border:0;overflow:visible;gap:16px;}
+@container(max-width:900px) {
+ .dojo[data-dojo-screen=practice] .dojo-practice {grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(226px,auto) auto;min-height:0;height:auto;}
+ .dojo[data-dojo-screen=practice] .dojo-flow {flex-wrap:wrap;padding:10px;}
+ .dojo[data-dojo-screen=practice] .dojo-flow-summary {margin-left:0;white-space:normal;}
+ .dojo[data-dojo-screen=practice] .dojo-flow-step {white-space:normal;}
+ .dojo[data-dojo-screen=practice] .dojo-center {grid-column:1;grid-row:2;overflow:visible;padding:16px 12px;}
+ .dojo[data-dojo-screen=practice] .dojo-practice>.dojo-score {grid-column:1;grid-row:3;border-left:0;border-top:1px solid var(--dojo-border);}
+ .dojo[data-dojo-screen=practice] .dojo-practice>.dojo-keyboard {grid-column:1;grid-row:4;min-height:168px;}
+ .dojo-practice-records[open] {flex-basis:100%;max-width:100%;}
+ .dojo-record-panel {position:static;width:100%;max-width:none;max-height:none;overflow:visible;box-shadow:none;}
+}
+
+.dojo-record-panel>.dojo-record-context,.dojo-record-panel>.dojo-muted {padding:12px 16px 0;font-size:12px;line-height:1.6;overflow-wrap:anywhere;}
+
+.dojo-response {display:grid;gap:8px;width:100%;}
+.dojo-tempo-result>summary {cursor:pointer;padding:6px;font-size:12px;color:var(--dojo-secondary);}
+.dojo-tempo-result>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+
+.dojo-feedback-row {display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;}
+.dojo-feedback-row .dojo-timer {flex-shrink:0;}
+.dojo-feedback-row .dojo-timer:empty {display:none;}
+
+.dojo-actions>.dojo-tempo-result {position:relative;}
+.dojo-actions>.dojo-tempo-result>summary {padding:7px 9px;border:1px solid var(--dojo-border-strong);border-radius:7px;line-height:16px;}
+.dojo-tempo-panel {position:absolute;z-index:5;right:0;bottom:calc(100% + 4px);width:480px;max-width:calc(100vw - 32px);padding:8px;border:1px solid var(--dojo-border-strong);border-radius:8px;background:var(--dojo-bg-2);display:flex;flex-wrap:wrap;gap:6px;}
+@container(max-width:900px) {.dojo-tempo-panel {position:static;width:auto;max-width:none;}}
+
+/* The home has one main lesson and direct practice entries; long lists are optional. */
+.dojo[data-dojo-screen=home] {height:auto;min-height:100%;display:flex;flex-direction:column;}
+.dojo[data-dojo-screen=home] .dojo-home {grid-template-columns:minmax(0,1fr) 320px;min-height:0;flex:1;align-items:start;}
+.dojo[data-dojo-screen=home] .dojo-home-left {padding:16px 20px;gap:12px;}
+.dojo[data-dojo-screen=home] .dojo-home-right {padding:16px;gap:12px;}
+.dojo[data-dojo-screen=home] .dojo-today {padding:18px 20px;gap:12px;}
+.dojo-today-head {display:flex;justify-content:space-between;align-items:center;gap:16px;}
+.dojo-today-head>div:first-child {min-width:0;}
+.dojo-today-head .dojo-start-row {flex-direction:column;gap:4px;flex-shrink:0;}
+.dojo-today-head .dojo-start-row>.dojo-muted {font-size:12px;}
+.dojo-home-theme-preview {display:grid;gap:6px;padding:12px;border:1px solid var(--dojo-border-strong);border-radius:8px;background:var(--dojo-bg-2);}
+.dojo-home-theme-preview>p:first-child {display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--dojo-secondary);font-size:13px;line-height:20px;}
+.dojo-home-theme-preview b {color:#f2f6fc;}
+.dojo-home-theme-chords {font-size:18px;line-height:24px;overflow-wrap:anywhere;}
+.dojo-home-theme-chords small {margin-left:12px;font-size:12px;color:var(--dojo-secondary);white-space:nowrap;}
+.dojo-home-steps {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.dojo-home-steps>div {display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px;border:1px solid var(--dojo-border);border-radius:8px;background:var(--dojo-bg-2);min-height:52px;font-size:13px;}
+.dojo-home-steps>div>span:last-child {color:var(--dojo-secondary);white-space:nowrap;}
+.dojo-home-steps [data-current=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);}
+.dojo-free-practice {display:grid;gap:8px;}
+.dojo-free-practice h2 {font-size:16px;margin:0;color:#f2f6fc;}
+.dojo[data-dojo-screen=home] .dojo-choose {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.dojo[data-dojo-screen=home] .dojo-choose button {min-height:44px;padding:8px;border:1px solid var(--dojo-border-strong);border-radius:8px;background:var(--dojo-bg-2);font-size:14px;text-decoration:none;}
+.dojo[data-dojo-screen=home] .master251-card {margin:0;}
+.dojo[data-dojo-screen=home] .master251-card .dojo-primary {width:100%;min-height:44px;font-size:14px;}
+.dojo[data-dojo-screen=home] .master251-counts {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;margin:10px 0;}
+.dojo[data-dojo-screen=home] .master251-counts>strong {grid-column:1/-1;}
+.dojo-home-details>summary,.dojo-home-progress>summary,.dojo-free-builtins>summary,.dojo-lesson-settings>summary {cursor:pointer;min-height:28px;line-height:20px;padding:4px 0;color:var(--dojo-secondary);font-size:13px;}
+.dojo-home-details>summary:focus-visible,.dojo-home-progress>summary:focus-visible,.dojo-free-builtins>summary:focus-visible,.dojo-lesson-settings>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+.dojo-home-detail-content {display:grid;gap:12px;padding-block:12px;overflow-wrap:anywhere;}
+.dojo[data-dojo-screen=home] .dojo-plan {grid-template-columns:26px minmax(0,1fr) auto;}
+.dojo[data-dojo-screen=home] .dojo-plan-items {grid-column:2/-1;grid-row:2;}
+.dojo[data-dojo-screen=home] .dojo-plan>small {grid-column:3;grid-row:1;}
+.dojo[data-dojo-screen=home] .dojo-plan-progression>span {white-space:normal;overflow:visible;text-overflow:clip;}
+@container(max-width:900px) {
+ .dojo[data-dojo-screen=home] .dojo-home {grid-template-columns:minmax(0,1fr);}
+ .dojo[data-dojo-screen=home] .dojo-home-left,.dojo[data-dojo-screen=home] .dojo-home-right {padding:16px 12px;}
+ .dojo[data-dojo-screen=home] .dojo-home-right {border-left:0;border-top:1px solid var(--dojo-border);}
+ .dojo[data-dojo-screen=home] .dojo-today {padding:16px 12px;}
+ .dojo-today-head {flex-wrap:wrap;}
+ .dojo-today-head .dojo-start-row {flex-direction:row;flex-wrap:wrap;}
+}
+
+.dojo[data-dojo-screen=home] [data-testid=dojo-midi-disconnected] {border-color:var(--dojo-border-strong);background:var(--dojo-bg-2);color:var(--dojo-secondary);font-size:13px;}
+
+.dojo-keyboard-head {line-height:16px;}
+
+.dojo-source-status {color:var(--dojo-warn);}
+
+.dojo-review-description {font-size:13px;line-height:20px;color:var(--dojo-secondary);}
+
+/* Open key progress and the Master card share the right rail; free practice stays by today's lesson. */
+.dojo[data-dojo-screen=home] .dojo-home-progress {border:1px solid var(--dojo-border);border-radius:10px;padding:10px 12px;background:var(--dojo-surface);}
+.dojo-home-progress h2 {font-size:15px;line-height:20px;margin-bottom:6px;}
+.dojo-home-progress .dojo-home-detail-content {gap:10px;padding-block:8px 0;}
+.dojo[data-dojo-screen=home] .dojo-home-left .dojo-choose {grid-template-columns:repeat(5,minmax(0,1fr));}
+.dojo-wanted-more>summary {cursor:pointer;padding:4px 0;font-size:12px;color:var(--dojo-secondary);}
+.dojo-wanted-more>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+@container(max-width:900px) {.dojo[data-dojo-screen=home] .dojo-home-left .dojo-choose {grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+.dojo-free-heading {display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+.dojo-home-options {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+.dojo-home-options:has(details[open]) {grid-template-columns:minmax(0,1fr);}
+@media(max-height:850px) {.dojo[data-dojo-screen=home] .dojo-today {gap:8px;padding-block:14px;}}
+@container(max-width:600px) {.dojo-home-options {grid-template-columns:minmax(0,1fr);}}
+
+.master251-card-head {display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.master251-card-head>strong {white-space:nowrap;font-size:14px;}
+@media(max-height:850px) {.dojo[data-dojo-screen=home] .dojo-home-left,.dojo[data-dojo-screen=home] .dojo-home-right {padding-block:8px;}}
+
+
+/* P12.1: feedback remains local to the current task and tempo round. */
+.dojo[data-dojo-screen=practice] .dojo-flow>button {height:30px;min-height:30px;padding-inline:9px;font-size:12px;}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards [data-result=ok] {border:1px solid rgb(95 211 154 / 70%);}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards [data-result=ng] {border:1px solid rgb(255 107 120 / 75%);background:#1d1219;}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards [data-result] small {font-size:13px;}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards [data-result=ok] small {color:#5fd39a;}
+.dojo[data-dojo-screen=practice] .dojo-chord-cards [data-result=ng] small {color:#ff8a95;}
+.dojo[data-dojo-screen=practice] .dojo-result[data-partial=true] {background:var(--dojo-warn-soft);color:var(--dojo-warn);}
+
+/* Viewport height tiers leave the short-screen rows and GrandStaff unchanged. */
+@media(min-height:801px) {
+ .dojo[data-dojo-screen=practice] .dojo-prompt {font-size:72px;}
+ .dojo[data-dojo-screen=practice] .dojo-progression-title {font-size:28px;}
+ .dojo[data-dojo-screen=practice] .dojo-center {gap:10px;padding:8px 16px;align-content:safe center;}
+ .dojo[data-dojo-screen=practice] .dojo-task-context {flex-direction:column;gap:8px;}
+ .dojo[data-dojo-screen=practice] .dojo-chips .dojo-chip {height:26px;min-height:26px;font-size:13px;}
+ .dojo[data-dojo-screen=practice] .dojo-stage>span {padding:5px 12px;}
+ .dojo[data-dojo-screen=practice] .dojo-result {font-size:15px;min-height:30px;}
+ .dojo[data-dojo-screen=practice] .dojo-actions button {height:34px;min-height:34px;}
+ .dojo[data-dojo-screen=practice] .dojo-chord-cards>button {width:110px;height:58px;min-height:58px;}
+}
+@media(min-height:1001px) {
+ .dojo[data-dojo-screen=practice] .dojo-prompt {font-size:96px;}
+ .dojo[data-dojo-screen=practice] .dojo-progression-title {font-size:32px;}
+ .dojo[data-dojo-screen=practice] .dojo-center {gap:14px;}
+ .dojo[data-dojo-screen=practice] .dojo-practice {grid-template-rows:42px minmax(192px,1fr) 226px 190px;}
+ .dojo[data-dojo-screen=practice] .dojo-keyboard svg {height:150px;}
+}
+
+/* P12.1 home, finish and narrow practice. Keep the keyboard docked when space allows. */
+.dojo-home-steps>div[data-empty=true],.dojo-plan[data-empty=true] {opacity:.5;}
+.dojo-budget-inputs {display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;}
+.dojo-budget-inputs label {display:inline-flex;align-items:center;gap:6px;}
+.dojo-budget-inputs input {width:64px;background:var(--dojo-bg);border:1px solid var(--dojo-border-strong);border-radius:6px;padding:5px 6px;}
+.dojo-budget-summary {font-size:12px;color:var(--dojo-muted);margin-top:8px;}
+.dojo-finish-log {text-align:left;}
+.dojo-finish-log>summary {cursor:pointer;color:var(--dojo-secondary);font-size:13px;line-height:1.6;}
+.dojo-finish-log>summary:focus-visible {outline:2px solid #8bd7ff;outline-offset:2px;}
+@container(max-width:900px) {
+ .dojo[data-dojo-screen=practice] .dojo-practice {min-height:100%;height:auto;grid-template-rows:auto minmax(auto,1fr) minmax(226px,auto) auto;}
+ .dojo[data-dojo-screen=practice] .dojo-center {align-self:stretch;align-content:safe center;}
+}
+/* P14 5.1: while MIDI is away the practice shows its notice over the top of the centre row, under the flow bar. */
+.dojo[data-dojo-screen=practice] .dojo-practice>.lv-midi-notice {grid-column:1;grid-row:2;align-self:start;justify-self:center;z-index:3;margin-top:6px;width:min(560px,calc(100% - 32px));box-shadow:0 10px 24px rgb(0 0 0 / 45%);}
+/* P12.3 5・6: chord cards that sound when pressed. */
+.dojo-chord-cards>button:hover:not(:disabled),.dojo-chord-cards>button:focus-visible {border-color:color-mix(in srgb,var(--dojo-accent) 60%,transparent);}
+.dojo-chord-cards>button:disabled {cursor:default;opacity:.75;}
+.dojo-card-sound {position:absolute;top:5px;right:6px;width:12px;height:12px;color:var(--dojo-muted);}
+.dojo-chord-cards>button[data-playing=true] {border-color:var(--dojo-accent);box-shadow:0 0 0 3px rgb(66 216 198 / 30%);}
+.dojo-prompt-card {position:relative;display:grid;justify-items:center;min-width:220px;padding:0 28px;border-radius:12px;background:var(--dojo-surface);box-shadow:inset 0 0 0 1px var(--dojo-border-strong);cursor:pointer;}
+.dojo-prompt-card:hover,.dojo-prompt-card:focus-within {box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dojo-accent) 60%,transparent);}
+.dojo-prompt-card[data-playing=true] {box-shadow:inset 0 0 0 1px var(--dojo-accent),0 0 0 3px rgb(66 216 198 / 30%);}
+.dojo .dojo-prompt-play {position:absolute;top:8px;right:8px;width:24px;height:24px;min-height:0;padding:0;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--dojo-secondary);cursor:pointer;}
+.dojo-progression-degrees {margin:0;font:13px var(--font-mono);color:var(--dojo-secondary);}
+.dojo-chord-cards [data-current=true] small,.dojo-chord-cards [data-hint=true] small {color:var(--dojo-secondary);}
+.dojo-prompt-card .dojo-prompt {margin:0;}
+/* P12.3 4: the grouped list of standard progressions. */
+.dojo-builtin-head {display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.dojo-builtin-head h1 {font-size:22px;margin:0 8px 0 0;}
+.dojo-builtin-key {display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px solid var(--dojo-border-strong);border-radius:6px;background:var(--dojo-bg-2);font-size:13px;}
+.dojo-builtin-key select {border:0;background:transparent;color:inherit;font:inherit;}
+.dojo-builtin-note {font-size:12px;color:var(--dojo-muted);}
+.dojo-builtin-jump {display:flex;gap:6px;margin:14px 0 4px;flex-wrap:wrap;}
+.dojo-builtin-jump button {height:26px;min-height:26px;padding:0 10px;border:1px solid var(--dojo-border-strong);border-radius:13px;background:transparent;color:var(--dojo-secondary);font-size:12px;cursor:pointer;}
+.dojo-builtin-group,.dojo-jazz-group {margin-top:18px;}
+.dojo-builtin-group>h2,.dojo-jazz-group>h2 {display:flex;justify-content:flex-start;gap:8px;align-items:baseline;margin:0 0 8px;font-size:14px;color:var(--dojo-secondary);}
+.dojo-builtin-group>h2 small,.dojo-jazz-group>h2 small {font-size:12px;font-weight:400;color:var(--dojo-muted);}
+.dojo-builtin-group .dojo-list,.dojo-jazz-group .dojo-list {margin-top:0;}
+.dojo-builtin-card,.dojo-jazz-card {display:grid;gap:6px;align-content:start;}
+.dojo-builtin-title {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.dojo-builtin-title h2,.dojo-builtin-title h3 {margin:0;font-size:15px;font-weight:700;color:#f2f6fc;}
+.dojo-builtin-degrees {margin:0;font:13px var(--font-mono);color:var(--dojo-secondary);}
+.dojo-builtin-chords {margin:0;font-size:12px;color:var(--dojo-muted);}
+.dojo-builtin-actions {display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.dojo-builtin-actions button {height:30px;min-height:30px;}
+.dojo-builtin-actions .dojo-builtin-endless {border-color:var(--dojo-accent);color:var(--dojo-accent);}
+.dojo-builtin-actions .dojo-builtin-theme {border-color:transparent;background:transparent;color:var(--dojo-muted);text-decoration:underline;text-underline-offset:3px;padding-inline:4px;}
+/* P12.3 8–11: random-key endless practice (same four tiers and heights as the practice screen). */
+.dojo[data-dojo-screen=endless] .dojo-practice,.dojo[data-dojo-screen=original] .dojo-practice {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:42px minmax(192px,1fr) 226px 168px;min-height:628px;height:100%;position:relative;}
+.dojo-endless-head {grid-column:1;grid-row:1;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--dojo-border);background:#0b121d;font-size:12px;color:var(--dojo-secondary);min-width:0;}
+.dojo-endless-name {display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden;white-space:nowrap;}
+.dojo-endless-name span {color:var(--dojo-muted);}
+.dojo-endless-name b {font-size:15px;color:#f2f6fc;}
+.dojo-endless-name i {font:normal 11px var(--font-mono);color:var(--dojo-muted);overflow:hidden;text-overflow:ellipsis;}
+.dojo-endless-stats {margin-left:auto;display:flex;gap:14px;white-space:nowrap;}
+.dojo-endless-stats em {font-style:normal;font-family:var(--font-mono);color:#f2f6fc;}
+.dojo-endless-center {grid-column:1;grid-row:2;display:grid;justify-items:center;align-content:safe center;gap:8px;padding:4px 16px;overflow-y:auto;min-height:0;min-width:0;}
+.dojo[data-dojo-screen=endless] .dojo-practice>.dojo-score,.dojo[data-dojo-screen=original] .dojo-practice>.dojo-score {grid-column:1;grid-row:3;align-self:stretch;}
+.dojo[data-dojo-screen=endless] .dojo-practice>.dojo-keyboard,.dojo[data-dojo-screen=original] .dojo-practice>.dojo-keyboard {grid-column:1;grid-row:4;padding:5px 16px 7px;gap:8px;}
+.dojo-endless-key {display:grid;justify-items:center;}
+.dojo-endless-key small {font-size:13px;color:var(--dojo-secondary);}
+.dojo-endless-key b {font-size:72px;font-weight:700;line-height:1.05;}
+.dojo-endless-cards {display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.dojo-endless-cards>button {position:relative;width:148px;height:84px;display:grid;align-content:center;justify-items:center;gap:2px;border:1px solid var(--dojo-border-strong);border-radius:10px;background:var(--dojo-surface);color:inherit;font:inherit;cursor:pointer;}
+.dojo-endless-cards>button:hover,.dojo-endless-cards>button:focus-visible {border-color:color-mix(in srgb,var(--dojo-accent) 60%,transparent);}
+.dojo-endless-cards .dojo-card-sound {top:7px;right:8px;}
+.dojo-endless-degree {font-size:20px;font-weight:700;color:#f2f6fc;}
+.dojo-endless-chord {font-size:14px;color:var(--dojo-muted);}
+.dojo-endless-cards>button[data-state=current] {border:2px solid var(--dojo-accent);background:var(--dojo-accent-soft);}
+.dojo-endless-cards>button[data-state=current] .dojo-endless-degree {color:var(--dojo-accent);}
+.dojo-endless-cards>button[data-state=current] .dojo-endless-chord {color:var(--dojo-secondary);}
+.dojo-endless-cards>button[data-state=done] {border-color:rgb(95 211 154 / 70%);}
+.dojo-endless-cards>button[data-state=done] .dojo-endless-chord {color:#5fd39a;}
+.dojo-endless-cards>button[data-hint=true] {border-color:var(--dojo-warn);background:var(--dojo-warn-soft);}
+.dojo-endless-cards>button[data-hint=true] .dojo-endless-chord {color:var(--dojo-warn);}
+.dojo-endless-cards>button[data-playing=true] {border-color:var(--dojo-accent);box-shadow:0 0 0 3px rgb(66 216 198 / 30%);}
+.dojo-endless-result {margin:0;min-height:24px;font-size:15px;color:var(--dojo-secondary);overflow-wrap:anywhere;text-align:center;}
+.dojo-endless-result[data-error=true] {color:#ff8a95;}
+.dojo-endless-actions {display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.dojo-endless-actions button {height:34px;min-height:34px;}
+.dojo-endless-history {display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--dojo-muted);}
+.dojo-endless-chip {display:inline-flex;align-items:center;height:24px;padding:0 8px;border:1px solid var(--dojo-border-strong);border-radius:12px;color:var(--dojo-secondary);font-family:var(--font-mono);}
+.dojo-endless-chip[data-kind=ok] {border-color:rgb(95 211 154 / 50%);}
+.dojo-endless-chip[data-kind=hint] {border-color:var(--dojo-warn);color:var(--dojo-warn);}
+.dojo-endless-chip[data-kind=skipped] {color:var(--dojo-muted);}
+.dojo-endless-clear {display:inline-flex;align-items:center;gap:12px;height:40px;padding:0 18px;border-radius:20px;background:#123b2c;color:#5fd39a;font-size:17px;font-weight:700;}
+.dojo-endless-clear small {font-size:13px;font-weight:400;color:var(--dojo-secondary);}
+.dojo-endless-summary-page {display:grid;place-items:center;min-height:100%;padding:24px;}
+.dojo-endless-summary {width:560px;max-width:100%;display:grid;gap:14px;padding:22px 26px;border:1px solid var(--dojo-border-strong);border-radius:12px;background:var(--dojo-surface);}
+.dojo-endless-summary h2 {margin:0;font-size:20px;}
+.dojo-endless-summary dl {display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0;}
+.dojo-endless-summary dl>div {display:grid;padding:8px 10px;border:1px solid var(--dojo-border);border-radius:8px;}
+.dojo-endless-summary dt {font-size:11px;color:var(--dojo-muted);}
+.dojo-endless-summary dd {margin:0;font:600 20px var(--font-mono);}
+.dojo-endless-slow {margin:0;font-size:12px;color:var(--dojo-secondary);}
+.dojo-endless-summary-actions {display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-height:800px) {
+ .dojo-endless-key b {font-size:44px;}
+ .dojo-endless-cards>button {height:64px;}
+ .dojo-endless-center {gap:4px;}
+}
+@container(max-width:900px) {
+ .dojo[data-dojo-screen=endless] .dojo-practice,.dojo[data-dojo-screen=original] .dojo-practice {grid-template-rows:auto auto minmax(226px,auto) auto;min-height:0;height:auto;}
+ .dojo-endless-head {flex-wrap:wrap;padding:8px 12px;}
+ .dojo-endless-center {overflow:visible;padding:16px 12px;}
+ .dojo[data-dojo-screen=endless] .dojo-practice>.dojo-keyboard,.dojo[data-dojo-screen=original] .dojo-practice>.dojo-keyboard {min-height:168px;}
+ .dojo-endless-summary dl {grid-template-columns:repeat(2,1fr);}
+}
+
+/* P12.4-01: the one back button — the quiet kind, at the top left of every screen below the top. */
+.dojo .dojo-back {flex:none;min-height:32px;padding:0 10px;background:transparent;border-color:transparent;color:var(--dojo-secondary);font-size:13px;}
+.dojo .dojo-back:hover,.dojo .dojo-back:focus-visible {background:var(--dojo-surface);border-color:var(--dojo-border-strong);color:var(--dojo-primary-text,inherit);}
+.dojo-page-head {display:flex;align-items:center;gap:10px;min-width:0;}
+.dojo-page-head h1 {margin:0;}
+/* P12.4-02: where a device is used — one quiet line under the degrees. */
+.dojo-builtin-usage {margin:0;font-size:12px;line-height:1.4;color:var(--dojo-muted);}
+/* P12.4-03: a long progression's key choice on its card, and the short result after one lap. */
+.dojo-builtin-ownkey {display:grid;gap:6px;padding:8px;border:1px solid var(--dojo-border);border-radius:8px;background:var(--dojo-bg-2);}
+.dojo-builtin-ownkey label {display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dojo-muted);}
+.dojo-builtin-ownkey select {min-height:30px;}
+.dojo-builtin-ownkey>button {justify-self:start;}
+.dojo-keydone {display:grid;gap:14px;max-width:720px;margin:0 auto;padding:16px;}
+.dojo-keydone-lead {margin:0;font-size:16px;font-weight:600;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;}
+/* P12.5-01: a miss or a hint in this pass or the last: small, quiet flags (display only). */
+.dojo-card-flags {position:absolute;right:6px;bottom:3px;display:flex;gap:4px;pointer-events:none;}
+.dojo-card-flags i {font-style:normal;font-size:9px;line-height:1.2;color:var(--dojo-muted);border:1px solid var(--dojo-border-strong);border-radius:4px;padding:0 3px;}
+.dojo-card-flags i[data-flag="ミス"] {color:#ff8a95;border-color:rgb(255 138 149 / 55%);}
+.dojo-lap-note {margin:6px 0 0;text-align:center;font-size:12px;color:var(--dojo-muted);}
+/* P12.5-02: Original Practice (the cards also show the left and right hand notes). */
+.dojo-original-key {display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--dojo-muted);}
+.dojo-original-key label {display:flex;align-items:center;gap:6px;}
+.dojo-original-key select,.dojo-original-card .dojo-builtin-ownkey select {min-height:30px;padding:0 8px;border:1px solid var(--dojo-border-strong);border-radius:6px;background:var(--dojo-bg-2);color:#f2f6fc;font:inherit;}
+.dojo-original-cards>button {height:auto;min-height:104px;width:176px;padding:8px 6px;}
+.dojo-original-notes {font:normal 11px/1.45 var(--font-mono);color:var(--dojo-muted);text-align:center;}
+.dojo-original-notes i {font-style:normal;color:var(--dojo-secondary);}
+.dojo-original-lap b {color:#5fd39a;}
+/* Jazz Progressions: the same four tiers as Original Practice, with a compact centre so that the cards, the hint and what the progression teaches fit at 1280x720. */
+.dojo-jazz-bar {display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--dojo-muted);}
+.dojo-jazz-bar button {min-height:28px;}
+.dojo-jazz-versions {display:flex;gap:4px;flex-wrap:wrap;}
+.dojo-jazz-octave {display:flex;align-items:center;gap:4px;}
+.dojo-jazz-octave>span {margin-right:0;}
+.dojo-jazz-octave button {padding-left:6px;padding-right:6px;}
+.dojo-jazz-bar [data-testid=jazz-random][aria-pressed=true],.dojo-jazz-versions button[aria-pressed=true],.dojo-jazz-octave button[aria-pressed=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);color:#f2f6fc;}
+.dojo-jazz-key b {margin-left:4px;font-size:15px;color:#f2f6fc;}
+.dojo-jazz-note {font-size:12px;color:var(--dojo-muted);}
+.dojo-jazz-cards>button {width:216px;min-height:0;height:auto;padding:6px;gap:1px;}
+.dojo-jazz-cards .dojo-endless-degree {font-size:14px;}
+.dojo-jazz-cards .dojo-endless-chord {font-size:16px;}
+.dojo-jazz-cards .dojo-original-notes {font-size:12px;line-height:1.4;}
+.dojo-jazz-focus {margin:0;max-width:980px;text-align:center;font-size:12px;line-height:1.45;color:var(--dojo-secondary);}
+.dojo-jazz-focus b {margin-right:8px;font-weight:600;color:var(--dojo-muted);}
+.dojo-jazz-list-versions {display:flex;gap:4px;flex-wrap:wrap;}
+.dojo-jazz-list-versions button[aria-pressed=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);}
+/* what the progression teaches, in the caption of the staff (one of two places being compared) */
+.dojo[data-held-kind=jazz][data-focus-place=staff] .dojo-score-caption b {font-weight:500;font-size:12px;line-height:1.35;white-space:normal;color:var(--dojo-secondary);}
+.dojo[data-held-kind=jazz][data-focus-place=staff] .dojo-score-caption b::first-line {color:var(--dojo-secondary);}
+/* 𝄪 is drawn tiny and high by the fonts that have it: the character stays in the text (it can be read and copied), a double-sharp mark is drawn over it. */
+.dojo-dsharp {display:inline-block;width:10px;height:10px;font-size:0;overflow:hidden;white-space:nowrap;vertical-align:-1px;margin:0 1px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 2L12 12M12 2L2 12' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M0 0h4v4h-4zM10 0h4v4h-4zM0 10h4v4h-4zM10 10h4v4h-4z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 2L12 12M12 2L2 12' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M0 0h4v4h-4zM10 0h4v4h-4zM0 10h4v4h-4zM10 10h4v4h-4z'/%3E%3C/svg%3E") center/contain no-repeat;}
+.dojo-score-dsharp {display:none;}
+.dojo[data-held-kind=jazz] .dojo-score-accidental[data-double] {fill:transparent;}
+.dojo[data-held-kind=jazz] .dojo-score-dsharp {display:block;fill:currentColor;stroke:currentColor;stroke-width:2.2px;}
+.dojo[data-held-kind=jazz] .dojo-score-dsharp path:last-child {stroke:none;}
+/* listening to the whole progression: the card that sounds has a gold ring (not the green of the card being practised), and a thin bar shows where it is */
+.dojo-jazz-cards>button[data-listening=true] {border-color:#fbbf24;box-shadow:0 0 0 3px rgb(251 191 36 / 45%);}
+.dojo-jazz-seek {position:relative;width:min(100%,720px);height:6px;border-radius:3px;background:#1d2a3a;visibility:hidden;}
+.dojo-jazz-seek[data-active] {visibility:visible;}
+.dojo-jazz-seek-fill {position:absolute;inset:0;width:var(--seek,0%);border-radius:3px;background:#fbbf24;}
+.dojo-jazz-seek i {position:absolute;top:-3px;width:2px;height:12px;background:#5b6b80;}
+.dojo-dflat {display:inline-block;font-size:0;white-space:nowrap;}
+.dojo-dflat::after {content:"♭♭";font-size:12px;letter-spacing:-1px;}
+/* the key of the item (12 keys) and the keys that have been played through */
+.dojo-jazz-keyselect {display:flex;align-items:center;gap:6px;}
+.dojo-jazz-keyselect select {min-height:28px;padding:0 8px;border:1px solid var(--dojo-border-strong);border-radius:6px;background:var(--dojo-bg-2);color:#f2f6fc;font:inherit;}
+.dojo-jazz-keys {display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-left:auto;}
+.dojo-jazz-keys .dojo-endless-chip[data-current] {outline:2px solid var(--dojo-accent);}
+.dojo-jazz-status {display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+.dojo-jazz-status .dojo-endless-result {margin:0;}
+/* ---- Jazz Progressions: the screen grows with the room it has (practiceLayout.ts: compact | stacked) ---- */
+.dojo-jazz-notices:empty {display:none;}
+.dojo-jazz-notices {display:grid;justify-items:center;gap:6px;}
+.dojo-jazz-focus b {display:block;margin:0 0 4px;font-weight:600;color:var(--dojo-muted);}
+.dojo-jazz-focus p {margin:0;}
+.dojo-jazz-focus-more {margin-top:4px;border:0;background:none;padding:0;color:var(--dojo-accent);text-decoration:underline;text-underline-offset:3px;font:inherit;cursor:pointer;}
+.dojo-jazz-note-name {white-space:nowrap;display:inline-block;}
+
+/* ======================================================================================================================================
+   The common frame of the practice screens of 定番の進行 (A: the standard progressions, B: their random key, C: Original Practice,
+   D: Jazz Progressions). practiceLayout.ts decides compact | stacked and gives the numbers (--pf-*). Rows, top to bottom:
+   1 the top row · 2 the settings · 3 the cards · 4 the message and the buttons (rows 2-4 are the centre) · 5 the staff · 6 the keyboard · 7 the free strip.
+   ====================================================================================================================================== */
+@container(min-width:901px) {
+ .dojo[data-practice-frame] .dojo-practice {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:42px minmax(192px,1fr) var(--pf-staff,210px) var(--pf-kb,168px) var(--pf-safe,16px);height:100%;min-height:0;position:relative;}
+}
+@container(max-width:900px) {
+ .dojo[data-practice-frame] .dojo-practice {display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(var(--pf-staff,210px),auto) auto auto;height:auto;min-height:0;}
+ .dojo[data-practice-frame] .dojo-endless-center {overflow:visible;padding:12px;}
+ .dojo[data-practice-frame] .dojo-practice-head {flex-wrap:nowrap;padding:0 8px;gap:6px;min-height:42px;}
+ .dojo[data-practice-frame] .dojo-practice-head .dojo-endless-name>span,.dojo[data-practice-frame] .dojo-practice-head .dojo-endless-name>i {display:none;}
+ .dojo[data-practice-frame] .dojo-stage>span:not([data-active=true]) .dojo-stage-name,.dojo[data-practice-frame] .dojo-stage>button:not([data-active=true]) .dojo-stage-name {display:none;}
+ .dojo[data-practice-frame] .dojo-endless-stats {gap:8px;}
+ .dojo[data-practice-frame] .dojo-endless-stats>span:not(:first-child) {display:none;}
+ .dojo[data-practice-frame] .dojo-practice-head>button {padding:0 8px;}
+ .dojo[data-practice-frame] .dojo-practice-safe {min-height:calc(var(--pf-safe,16px) + 4px);}
+}
+.dojo[data-practice-frame] .dojo-practice>.dojo-score {grid-column:1;grid-row:3;align-self:stretch;}
+.dojo[data-practice-frame] .dojo-practice>.dojo-keyboard {grid-column:1;grid-row:4;padding:5px 16px 7px;gap:8px;}
+.dojo-practice-safe {grid-column:1;grid-row:5;min-height:var(--pf-safe,16px);}
+.dojo[data-practice-frame] .dojo-keyboard svg {height:var(--held-key-height,128px);}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=compact] .dojo-score-scroll {height:150px;}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=compact] .dojo-grand-staff {height:150px!important;}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-score-scroll {height:calc(var(--pf-staff) - 58px);}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-grand-staff {height:calc(var(--pf-staff) - 64px)!important;}
+/* 1 the top row: one line; when it is narrow the degrees go first, then the kind; the title stays */
+.dojo[data-practice-frame] .dojo-practice-head {flex-wrap:nowrap;white-space:nowrap;}
+.dojo[data-practice-frame] .dojo-practice-head>button {flex:none;}
+.dojo[data-practice-frame] .dojo-practice-head .dojo-endless-name {flex:1 1 0;min-width:0;}
+.dojo[data-practice-frame] .dojo-endless-name b {flex:0 1 auto;min-width:4em;overflow:hidden;text-overflow:ellipsis;}
+.dojo[data-practice-frame] .dojo-endless-name i {flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.dojo[data-practice-frame] .dojo-endless-name span {flex:none;}
+.dojo[data-practice-frame] .dojo-practice-head .dojo-stage {flex:none;flex-wrap:nowrap;}
+.dojo[data-practice-frame] .dojo-practice-head .dojo-stage>span,.dojo[data-practice-frame] .dojo-practice-head .dojo-stage>button {padding:4px 9px;font-size:11.5px;line-height:16px;}
+.dojo[data-practice-frame] .dojo-stage>span[data-off=true],.dojo[data-practice-frame] .dojo-stage>button[data-off=true] {color:#46526a;}
+.dojo[data-practice-frame] .dojo-endless-stats {flex:none;margin-left:0;gap:10px;}
+/* 2 the settings */
+.dojo[data-practice-frame] .dojo-endless-center {gap:4px;padding:2px 16px;}
+.dojo-practice-set {display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--dojo-muted);}
+.dojo-practice-set button,.dojo-practice-set select {min-height:28px;}
+.dojo-practice-key {font-size:12px;color:var(--dojo-secondary);}
+.dojo-practice-key b {margin-left:4px;font-size:15px;color:#f2f6fc;}
+.dojo-practice-key small {margin-left:4px;color:var(--dojo-muted);}
+.dojo-practice-pill {border:1px solid var(--dojo-border-strong);border-radius:999px;padding:3px 10px;font-size:11px;color:var(--dojo-secondary);}
+.dojo-practice-set [aria-pressed=true] {border-color:var(--dojo-accent);background:var(--dojo-accent-soft);color:#f2f6fc;}
+/* 3 the cards: the same card for all four (degree above and small, the chord large, the notes of the two hands when there are any) */
+.dojo[data-practice-frame] .dojo-endless-cards {width:100%;max-width:calc((216px * var(--pf-scale,1) + 8px) * var(--pf-cards,4));flex-wrap:nowrap;gap:8px;}
+.dojo[data-practice-frame] .dojo-endless-cards>button {position:relative;flex:1 1 0;min-width:0;max-width:calc(216px * var(--pf-scale,1));width:auto;height:auto;min-height:0;display:grid;align-content:center;justify-items:center;gap:1px;padding:5px 8px;line-height:1.25;border-radius:9px;}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-endless-degree {font-size:12px;font-weight:700;color:var(--dojo-secondary);font-family:inherit;}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-endless-chord {font-size:17px;font-weight:700;color:#f2f6fc;}
+.dojo[data-practice-frame] .dojo-endless-cards>button[data-state=current] .dojo-endless-degree {color:var(--dojo-accent);}
+.dojo[data-practice-frame] .dojo-endless-cards>button[data-state=done] .dojo-endless-chord {color:#5fd39a;}
+.dojo[data-practice-frame] .dojo-endless-cards>button[data-hint=true] .dojo-endless-chord {color:var(--dojo-warn);}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-original-notes {font-size:11px;line-height:1.35;}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-card-status {font-size:10.5px;color:var(--dojo-warn);}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-card-flags {position:static;margin-top:1px;}
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-card-sound {top:5px;right:6px;}
+/* P18-02: the hint mark of the ② of Jazz — a small tag at the corner, so that the cards keep their height */
+.dojo[data-practice-frame] .dojo-endless-cards .dojo-jazz-hint-chip {position:absolute;top:3px;left:8px;font-size:9.5px;line-height:13px;color:var(--dojo-warn);border:1px solid var(--dojo-warn);border-radius:5px;padding:0 4px;background:var(--dojo-bg,#0b111d);}
+.dojo[data-practice-frame] .dojo-endless-cards>button[data-hidden=true] {border-style:dashed;}
+/* 4 the message (one line) and the buttons under it */
+.dojo[data-practice-frame] .dojo-endless-result,.dojo[data-practice-frame] .dojo-result {margin:0;min-height:20px;font-size:14px;line-height:1.3;color:var(--dojo-secondary);text-align:center;}
+.dojo[data-practice-frame] .dojo-practice-say {display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;}
+.dojo[data-practice-frame] .dojo-endless-actions {display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.dojo[data-practice-frame] .dojo-endless-actions button {height:28px;min-height:28px;padding:0 12px;}
+.dojo[data-practice-frame] .dojo-endless-clear {height:auto;padding:0 10px;font-size:13px;gap:8px;}
+/* P18-01 Stage 2: A says the message first and puts the buttons under it (the other screens already do); the end of a lap
+   takes the place of the message and the buttons: the text of the lap end, then its two buttons. */
+.dojo[data-practice-frame='a'] .dojo-practice-say {flex-direction:column;}
+.dojo[data-practice-frame] .dojo-result small {display:block;font-size:12px;font-weight:400;color:var(--dojo-muted);margin-top:3px;}
+.dojo[data-practice-frame] .dojo-repeat-toggle {margin-left:6px;padding:0 4px;font-size:10.5px;flex:none;}
+.dojo[data-practice-frame] .dojo-practice-set {gap:6px;}
+/* the larger window: everything of the centre grows (up to 1.4 times); the row of the settings only up to 1.15 so that it stays on one line */
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-name b {font-size:calc(15px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-name i {font-size:calc(11px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-name span {font-size:calc(12px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-center {gap:calc(10px * var(--pf-scale));padding:calc(10px * var(--pf-scale)) calc(16px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-practice-set {font-size:calc(12px * var(--pf-bar));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-practice-set button,.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-practice-set select {min-height:calc(28px * var(--pf-bar));font-size:calc(12px * var(--pf-bar));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-cards>button {padding:calc(8px * var(--pf-scale)) 8px;gap:calc(2px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-cards .dojo-endless-degree {font-size:calc(12px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-cards .dojo-endless-chord {font-size:calc(17px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-cards .dojo-original-notes {font-size:calc(12px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-result,.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-result {font-size:calc(14px * var(--pf-scale));}
+.dojo[data-practice-frame] .dojo-practice[data-practice-layout=stacked] .dojo-endless-actions button {height:calc(28px * var(--pf-bar));min-height:calc(28px * var(--pf-bar));font-size:calc(12px * var(--pf-bar));}
+/* D: what the progression teaches, the seek bar, the note */
+.dojo[data-held-kind=jazz] .dojo-practice[data-practice-layout=stacked] .dojo-jazz-note {font-size:calc(12px * var(--pf-scale));}
+.dojo[data-held-kind=jazz] .dojo-practice[data-practice-layout=stacked] .dojo-jazz-focus {font-size:calc(12px * var(--pf-scale));line-height:1.6;color:var(--dojo-secondary);max-width:min(100%,calc(980px * var(--pf-scale)));text-align:center;}
+.dojo[data-held-kind=jazz] .dojo-practice[data-practice-layout=stacked] .dojo-jazz-focus p {display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dojo[data-held-kind=jazz] .dojo-practice[data-practice-layout=stacked] .dojo-jazz-focus[data-open] p {display:block;-webkit-line-clamp:unset;}
+.dojo[data-held-kind=jazz] .dojo-practice[data-practice-layout=stacked] .dojo-jazz-seek {height:calc(6px * var(--pf-scale));width:min(100%,calc(720px * var(--pf-scale)));}

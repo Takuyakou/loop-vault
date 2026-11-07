@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {answerKeyboardRange,DOJO_BASE_RANGE} from './keyboardRange';
+import {QUALITIES,recipeNotes} from '../../domain/chordDojo/recipes';
+it('shows every accepted recipe in all twelve keys without changing any pitch',()=>{for(const q of QUALITIES)for(const p of ['basic','skeleton','upper-triad','spread'] as const)for(const b of ['self','external'] as const)for(let k=0;k<12;k++){const notes=recipeNotes(k,q,p,b);if(!notes)continue;const before=[...notes],range=answerKeyboardRange(notes,true);expect(notes.every(n=>n>=range.minMidiNote&&n<=range.maxMidiNote)).toBe(true);expect(notes).toEqual(before);expect(answerKeyboardRange(notes,false)).toEqual(DOJO_BASE_RANGE);}});
+it('keeps C2-C6 for ordinary answers and expands explicitly for Bmaj9 skeleton',()=>{expect(answerKeyboardRange([48,60,64,67],true)).toEqual(DOJO_BASE_RANGE);const notes=recipeNotes(11,'maj9','skeleton','self')!;expect(notes).toEqual([59,70,75,78,85]);expect(answerKeyboardRange(notes,true).maxMidiNote).toBe(96);});

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useReserveBottomSpace } from "../notifications";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
+import { textPreviewNotes, textVoicingAvailability } from "../../domain/textVoicingAvailability";
+import { TextVoicingAvailability } from "./TextVoicingAvailability";
 import { useTextTransport } from "./useTextTransport";
 import { TextTransportBar } from "./TextTransportBar";
 import type { PreviewSound } from "../../audio/chordPreview";
@@ -116,6 +118,9 @@ export function TextProgressionCapturePanel({
     () => evaluateTextProgressionCapabilities({ result, ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }) }),
     [explicitBpm, result],
   );
+  const registration = useMemo(() => textVoicingAvailability(result.events.map(event => ({
+    chord: event.chord, memory: voicingOverrides.get(textProgressionEventKey(event)),
+  }))), [result, voicingOverrides]);
   const selectedEvent = useMemo(() => result.events.find(
     (event) => textProgressionEventKey(event) === selectedEventKey,
   ) ?? result.events[0], [result.events, selectedEventKey]);
@@ -179,7 +184,9 @@ export function TextProgressionCapturePanel({
     setSelectedEventKey(key);
     if (transportState.status !== "playing") {
       if (transportState.status === "stopped") onStop();
-      onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+      if (textPreviewNotes(event.chord, voicingOverrides.get(key)).length) {
+        onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+      }
     }
   }
 
@@ -276,7 +283,7 @@ export function TextProgressionCapturePanel({
   }
 
   function previewSelected() {
-    if (draftActive || !selectedEvent) return;
+    if (draftActive || !selectedEvent || !textPreviewNotes(selectedEvent.chord, selectedMemory).length) return;
     onPreview(selectedEvent, selectedMemory, explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
   }
 
@@ -352,6 +359,7 @@ export function TextProgressionCapturePanel({
           reasonId="text-progression-save-reason" name={saveTitle} blockedReason={saveBlocked} disabled={disabled}
           onName={value => { setSaveTitle(value); setSaved(false); setSaveFailed(false); }} onSave={saveStandard} /> : null}
       </div>
+      {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
       <StandardTextScoreWorkspace input={input} result={result} statusModel={statusModel} disabled={disabled}
         editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
@@ -409,7 +417,7 @@ export function TextProgressionCapturePanel({
                   type="button"
                   className="lv-button-primary px-3 py-2 text-sm"
                   data-testid="text-progression-preview"
-                  disabled={disabled}
+                  disabled={disabled || !textPreviewNotes(selectedEvent.chord, selectedMemory).length}
                   onClick={previewSelected}
                 >
                   {"保存予定音を再生"}
@@ -625,8 +633,8 @@ function diagnosticMessage(diagnostic: TextProgressionDiagnostic): string {
     "unsupported-meter": "テキスト進行入力 v1 は4/4のみに対応しています。",
     "malformed-bar-notation": "小節表記は `|` で始まり `|` で終える必要があります。",
     "empty-bar": "空の小節はテキスト進行入力では使用できません。",
-    "too-many-bars": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_BARS}小節です。`,
-    "too-many-tokens": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_TOKENS}個のコード・トークンです。`,
+    "too-many-bars": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_BARS}小節です。長い曲は、A部分・B部分などのセクションごとに分けて取り込んでください。`,
+    "too-many-tokens": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_TOKENS}個のコード・トークンです。長い曲は、セクションごとに分けて取り込んでください。`,
     "three-chord-bar": "1小節に3つのコードは、v1の文法では正確に表現できません。",
     "invalid-chord-count": "4/4の各小節には、コード・トークンを1つ、2つ、または4つだけ入力できます。",
     "invalid-chord": "このトークンは対応するコード表記ではありません。",

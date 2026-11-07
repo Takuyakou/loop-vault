@@ -1,3 +1,4 @@
+import { Select } from "../../../components/ui/controls";
 import { useDeferredValue, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Modal } from "../../../components/Modal";
 import { Button } from "../../../components/ui/primitives";
@@ -119,7 +120,7 @@ export function VaultProgressionPicker({
           data-testid="vault-progression-picker-search"
           data-autofocus
           aria-controls="vault-progression-picker-candidates"
-          className="lv-input mt-2 w-full"
+          className="bass-input mt-2 w-full"
           value={query}
           disabled={loading}
           onChange={(event) => setQuery(event.currentTarget.value)}
@@ -185,10 +186,10 @@ export function VaultProgressionPicker({
             <p data-testid="vault-progression-picker-preview-facts" className="mt-1 text-xs text-[var(--lv-text-muted)]">{pickerSnapshotLabel(selectedCandidate.safeSnapshot)}</p>
             {selectedProgression && selectedProgression.candidates.length > 1 ? <label className="mt-3 block text-sm font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-progression-picker-section">
               {"練習する範囲"}
-              <select
+              <Select
                 id="vault-progression-picker-section"
                 data-testid="vault-progression-picker-section"
-                className="lv-input mt-1 w-full"
+                className="mt-1 w-full"
                 value={selectedCandidate.safeSnapshot.signature}
                 onChange={(event) => setSelectedSignature(event.currentTarget.value)}
                 onKeyDown={(event) => event.stopPropagation()}
@@ -196,7 +197,7 @@ export function VaultProgressionPicker({
                 {selectedProgression.candidates.map((sectionCandidate) => <option key={sectionCandidate.safeSnapshot.signature} value={sectionCandidate.safeSnapshot.signature}>
                   {pickerSectionLabel(sectionCandidate.safeSnapshot)}
                 </option>)}
-              </select>
+              </Select>
             </label> : null}
           </section> : null}
         </> : null}

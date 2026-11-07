@@ -1,0 +1,27 @@
+import { z } from "zod";
+export const midiBassNoteSchema = z.object({ pitch:z.number().int().min(0).max(127), startBeat:z.number().finite().nonnegative(), durationBeats:z.number().finite().positive(), velocity:z.number().min(0).max(1) }).strict();
+export type MidiBassNote = z.infer<typeof midiBassNoteSchema>;
+const mark = z.enum(["ok","pitch","early","late","miss"]);
+export const midiBassAttemptSchema = z.object({ completedAt:z.string().datetime(), window:z.object({startBar:z.number().int().positive(),bars:z.number().int().positive()}).strict(), tempoPercent:z.number().min(60).max(100), toleranceMs:z.number().positive(), counts:z.object({ correct:z.number().int().nonnegative(), wrongPitch:z.number().int().nonnegative(), timing:z.number().int().nonnegative(), missed:z.number().int().nonnegative(), extra:z.number().int().nonnegative(), total:z.number().int().nonnegative() }).strict(), meanOffsetMs:z.number().finite(), latencyCorrectionMs:z.number().min(-250).max(250), marks:z.array(mark).max(5000) }).strict().refine(a => a.counts.total === a.marks.length && a.counts.total === a.counts.correct+a.counts.wrongPitch+a.counts.timing+a.counts.missed, "Counts must cover all target notes");
+export type MidiBassAttempt = z.infer<typeof midiBassAttemptSchema>;
+export const midiBassSongSchema = z.object({ id:z.string().uuid(), title:z.string().trim().min(1).max(120), favorite:z.boolean(), createdAt:z.string().datetime(), lastPracticedAt:z.string().datetime().optional(), bpm:z.number().finite().min(20).max(300), meter:z.object({numerator:z.literal(4),denominator:z.literal(4)}).strict(), lengthBeats:z.number().finite().positive().max(100000), transposeOctaves:z.union([z.literal(0),z.literal(1)]), bass:z.array(midiBassNoteSchema).min(1).max(5000), accompaniment:z.array(z.object({ trackLabel:z.string().max(80), notes:z.array(midiBassNoteSchema).max(50000) }).strict()).max(128), chordLabels:z.array(z.object({startBeat:z.number().nonnegative(),label:z.string().max(80)}).strict()).optional(), importFacts:z.object({trackCount:z.number().int().nonnegative(),mergedSimultaneousNotes:z.number().int().nonnegative(),tempoChanges:z.number().int().nonnegative()}).strict(), attempts:z.array(midiBassAttemptSchema).max(200) }).strict().superRefine((song, ctx) => {
+  if (song.bass.some(n=>n.pitch+song.transposeOctaves*12>127)) ctx.addIssue({code:"custom",message:"Transposed bass outside MIDI range"});
+  let end = 0;
+  for (const note of song.bass) { if (note.startBeat < end-1e-8 || note.startBeat+note.durationBeats > song.lengthBeats+1e-8) ctx.addIssue({code:"custom",message:"Bass must be ordered, monophonic and inside song"}); end=note.startBeat+note.durationBeats; }
+  if (song.accompaniment.reduce((n,t)=>n+t.notes.length, song.bass.length)>50000) ctx.addIssue({code:"custom",message:"Note budget exceeded"});
+  for (const t of song.accompaniment) for (const note of t.notes) if(note.startBeat+note.durationBeats>song.lengthBeats+1e-8) ctx.addIssue({code:"custom",message:"Accompaniment outside song"});
+  for (const a of song.attempts) if((a.window.startBar-1+a.window.bars)*4>Math.ceil(song.lengthBeats/4)*4) ctx.addIssue({code:"custom",message:"Attempt window outside song"});
+});
+export type MidiBassSong = z.infer<typeof midiBassSongSchema>;
+export const midiBassSettingsSchema = z.object({ timingToleranceMs:z.union([z.literal(50),z.literal(70),z.literal(100)]), octaveCountsAsCorrect:z.boolean(), autoLatencyCorrection:z.boolean(), defaultWindowBars:z.union([z.literal(1),z.literal(2),z.literal(4),z.literal(8),z.literal("all")]), defaultTempoPercent:z.union([z.literal(60),z.literal(80),z.literal(100)]) }).strict();
+export type MidiBassSettings = z.infer<typeof midiBassSettingsSchema>;
+export const midiBassLibrarySchema = z.object({ app:z.literal("loopvault-bass-midi-library"), fileVersion:z.literal(1), revision:z.number().int().positive(), version:z.literal(1), songs:z.array(midiBassSongSchema).max(200), settings:midiBassSettingsSchema }).strict().refine(l=>new Set(l.songs.map(s=>s.id)).size===l.songs.length,"Duplicate song ID");
+export type MidiBassLibrary = z.infer<typeof midiBassLibrarySchema>;
+export function emptyMidiBassLibrary(): MidiBassLibrary { return {app:"loopvault-bass-midi-library",fileVersion:1,revision:1,version:1,songs:[],settings:{timingToleranceMs:70,octaveCountsAsCorrect:true,autoLatencyCorrection:true,defaultWindowBars:2,defaultTempoPercent:100}}; }
+export function midiBassWindow(song: MidiBassSong, startBar:number, requested:MidiBassSettings["defaultWindowBars"], tempoPercent:number) {
+  const totalBars=Math.ceil(song.lengthBeats/4); const start=Math.max(1,Math.min(totalBars,startBar)); const bars=Math.min(requested==="all"?totalBars:requested,totalBars-start+1);
+  const startBeat=(start-1)*4, lengthBeats=bars*4;
+  const crop=(notes:MidiBassNote[],transpose=0)=>notes.flatMap(n=>{const s=Math.max(n.startBeat,startBeat),e=Math.min(n.startBeat+n.durationBeats,startBeat+lengthBeats);return e>s?[{...n,pitch:n.pitch+transpose,startBeat:s-startBeat,durationBeats:e-s}]:[];});
+  return {startBar:start,bars,startBeat,lengthBeats,bpm:song.bpm*tempoPercent/100,durationMs:lengthBeats*60000/(song.bpm*tempoPercent/100),bass:crop(song.bass,song.transposeOctaves*12),accompaniment:song.accompaniment.map(t=>({...t,notes:crop(t.notes)}))};
+}
+export function bestMidiBassAttempt(song:MidiBassSong) { return [...song.attempts].sort((a,b)=>(b.counts.total?b.counts.correct/b.counts.total:0)-(a.counts.total?a.counts.correct/a.counts.total:0)||b.completedAt.localeCompare(a.completedAt))[0]; }

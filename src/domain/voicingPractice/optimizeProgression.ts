@@ -1,4 +1,5 @@
 import { normalizedChordKey } from "../voicing";
+import { supportsTextChord } from "../textChordConsumerCapabilities";
 import {
   compareCandidate,
   type StyleVoicingCandidate,
@@ -34,8 +35,11 @@ export function generateStyleVoicingPlan(
       progressionFingerprint: fingerprint,
       styleId,
       generatorVersion: STYLE_VOICING_GENERATOR_VERSION,
-      events: progression.map(adaptGeneratedCloseVoicing),
-      unsupportedEvents: [],
+      events: progression.flatMap((event, index) => supportsTextChord("generated-loop", event.chord)
+        ? [adaptGeneratedCloseVoicing(event, index)] : []),
+      unsupportedEvents: progression.flatMap((event, index) => supportsTextChord("generated-loop", event.chord)
+        ? [] : [{ eventId: event.eventId ?? `style-event-${index}`, chordLabel: event.chord.label,
+          reason: "このコード分類の生成規則は未対応です。" }]),
     };
   }
 
@@ -59,7 +63,7 @@ export function generateStyleVoicingPlan(
       chordLabel: event.chord.label,
       reason: compatibility.reason ?? "現在のspanでは候補を生成できません。",
     });
-    if (options.allowUnsupportedFallback) {
+    if (options.allowUnsupportedFallback && supportsTextChord("generated-loop", event.chord)) {
       const fallback = adaptGeneratedCloseVoicing(event, index);
       candidateGroups.push([{
         ...fallback,

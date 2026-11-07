@@ -1,0 +1,263 @@
+/* P16-02: 耳で弾く. Uses the Chord Dojo's tokens (.dojo). The practice never scrolls the page: the keyboard is always whole. */
+#main-content:has(.ear) { overflow-y: auto; }
+#main-content:has(.ear[data-screen="run"]) { overflow: hidden; }
+#main-content:has(.ear[data-screen="run"]) > div { height: 100%; min-height: 0; }
+.ear { --ear-staff-h: 240px; display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.ear[data-screen="run"] { overflow: hidden; }
+@media (max-width: 1279px) { .ear { --ear-staff-h: 200px; } }
+@media (max-width: 1023px) { .ear { --ear-staff-h: 130px; } }
+
+/* ---- choosing ---- */
+.ear-choose { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; padding: 20px 28px; align-items: start; }
+.ear-choose-main { display: grid; gap: 14px; min-width: 0; }
+.ear-field { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.ear-field legend { padding: 0; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--dojo-secondary); }
+.ear-seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ear-seg button[data-on], .ear-levels button[data-on] { border-color: var(--dojo-accent); background: var(--dojo-accent-soft); color: var(--dojo-accent); font-weight: 600; }
+.ear-levels { display: grid; gap: 6px; }
+.dojo .ear-levels button { justify-content: flex-start; gap: 12px; text-align: left; min-height: 34px; }
+.ear-levels b { width: 18px; font-size: 14px; }
+.ear-levels span { font-size: 12.5px; }
+.ear-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; }
+.ear-inline { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dojo-secondary); }
+.ear-inline select, .ear-inline input[type="number"] { min-height: 30px; border: 1px solid var(--dojo-border-strong); border-radius: 6px; background: var(--dojo-bg-2); color: #f2f6fc; padding: 0 8px; }
+.ear-inline input[type="number"] { width: 72px; }
+.ear-hint { font-size: 12px; color: var(--dojo-muted); }
+.ear-details { border: 1px solid var(--dojo-border); border-radius: 9px; padding: 8px 12px; display: grid; gap: 8px; }
+.ear-details summary { cursor: pointer; font-size: 12.5px; color: var(--dojo-secondary); }
+.ear-details label { font-size: 12.5px; color: var(--dojo-secondary); display: flex; align-items: center; gap: 8px; }
+.ear-side { display: grid; gap: 14px; align-content: start; }
+.ear-notice { border: 1px solid var(--dojo-warn); background: var(--dojo-warn-soft); color: #f7dc9a; border-radius: 9px; padding: 8px 12px; font-size: 12.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ear-entry { display: grid; gap: 8px; }
+.ear kbd { font: inherit; font-size: 11px; opacity: .7; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+
+/* ---- practice ---- */
+.ear-run { display: flex; flex-direction: column; gap: 8px; padding: 8px 18px 10px; min-height: 0; height: 100%; box-sizing: border-box; }
+.ear-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: none; }
+.ear-head h1 { font-size: 18px; font-weight: 700; margin: 0; }
+.ear-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 10px; border: 1px solid var(--dojo-accent); border-radius: 999px; font-size: 12px; color: var(--dojo-accent); }
+.ear-badge-plain { border-color: var(--dojo-border-strong); color: var(--dojo-secondary); }
+.ear-note { font-size: 12px; color: var(--dojo-muted); }
+.ear-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: none; font-size: 12.5px; }
+.ear-steps > span[data-state] { padding: 4px 10px; border: 1px solid var(--dojo-border); border-radius: 8px; color: var(--dojo-muted); }
+.ear-steps > span[data-state="current"] { border-color: var(--dojo-accent); color: var(--dojo-accent); background: var(--dojo-accent-soft); }
+.ear-steps > span[data-state="done"] { color: var(--dojo-secondary); }
+.ear-legend { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dojo-muted); }
+.ear-legend span { display: inline-flex; align-items: center; gap: 5px; }
+@media (max-width: 1023px) { .ear-legend { display: none; } }
+
+.ear-mark { font-style: normal; display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 4px; font-size: 11px; font-weight: 700; line-height: 1; }
+.ear-mark[data-mark="ok"] { color: #7bd88f; background: transparent; font-weight: 600; }
+.ear-mark[data-mark="retry"] { background: #f2b84b; color: #1a1305; }
+.ear-mark[data-mark="name"] { background: #b79cff; color: #170f30; }
+.ear-mark[data-mark="key"] { background: #6cc7ff; color: #06192a; }
+
+.ear-cards { display: flex; gap: 8px; flex: none; min-width: 0; }
+.ear-cards-result { flex-wrap: wrap; }
+.ear-card { position: relative; flex: 1 1 0; min-width: 0; min-height: 76px; border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); padding: 6px 8px; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center; overflow: hidden; }
+.ear-cards-result .ear-card { flex: 0 1 120px; }
+.ear-card[data-current] { border-color: var(--dojo-accent); box-shadow: 0 0 0 1px var(--dojo-accent); }
+.ear-card[data-lap] { border-color: var(--dojo-accent); background: var(--dojo-accent-soft); }
+.ear-card[data-done] { background: var(--dojo-bg-2); }
+.ear-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; width: 100%; min-height: 18px; }
+.ear-card-no { font-size: 10.5px; color: var(--dojo-muted); }
+.ear-marks { display: flex; gap: 3px; flex-wrap: nowrap; }
+.ear-card-name { font-size: 17px; font-weight: 700; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.ear-card-sub { font-size: 11px; color: var(--dojo-muted); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.ear-card[data-current] .ear-card-sub { color: var(--dojo-accent); }
+.ear-position { display: flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--dojo-muted); min-height: 14px; }
+.ear-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dojo-border-strong); display: inline-block; }
+.ear-dot[data-state="ok"] { background: #7bd88f; }
+.ear-dot[data-state="help"] { background: #f2b84b; }
+.ear-dot[data-state="retry"] { background: #e0883a; }
+.ear-dot[data-current] { box-shadow: 0 0 0 2px var(--dojo-bg), 0 0 0 4px var(--dojo-accent); }
+
+.ear-middle { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 34%); gap: 14px; flex: none; min-height: var(--ear-staff-h); }
+.ear-controls { display: flex; flex-direction: column; gap: 8px; min-width: 0; align-content: start; }
+.ear-line { font-size: 13px; color: var(--dojo-secondary); }
+.ear-feedback { border-left: 3px solid #e0883a; background: var(--dojo-warn-soft); border-radius: 6px; padding: 8px 12px; font-size: 13.5px; color: #f7dc9a; }
+.ear-feedback[data-ok="true"] { border-left-color: #7bd88f; background: rgb(123 216 143 / 10%); color: #bfeccb; }
+.ear-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ear-stats { font-size: 12px; color: var(--dojo-muted); }
+.ear-help { font-size: 11.5px; color: var(--dojo-muted); line-height: 1.5; }
+@media (max-width: 1023px) { .ear-help { display: none; } .ear-note { display: none; } }
+
+.ear-score { display: flex; flex-direction: column; border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-bg-2); height: var(--ear-staff-h); min-height: 0; overflow: hidden; }
+.ear-score-short { display: none; }
+.ear-score-head b { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 600; }
+.ear-score-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px 0; font-size: 12px; color: var(--dojo-secondary); flex: none; }
+.dojo .ear-zoom { min-height: 24px; padding: 0 10px; font-size: 11.5px; flex: none; white-space: nowrap; }
+.ear-score-body { flex: 1 1 0; min-height: 0; overflow: hidden; }
+.ear-score .dojo-score { border: 0; background: transparent; padding: 0 8px; height: 100%; display: flex; flex-direction: column; }
+.ear-score .dojo-score-scroll { height: auto; flex: 1 1 0; min-height: 0; overflow: hidden; }
+.ear-score .dojo-grand-staff { min-width: 0; height: 100% !important; width: 100%; }
+.ear-score[data-open] { position: fixed; z-index: 40; inset: 70px 6vw auto 6vw; height: min(520px, 70vh); box-shadow: 0 20px 60px rgb(0 0 0 / 60%); border-color: var(--dojo-accent); }
+.ear-score-foot { margin: 0; padding: 0 10px 6px; font-size: 11.5px; color: var(--dojo-muted); min-height: 16px; flex: none; }
+
+.ear-keyboard { --target-keyboard-width: 0px; flex: 1 1 0; min-height: 0; padding: 8px 12px 10px; }
+.ear-keyboard .dojo-keyboard-head { min-height: 22px; }
+.ear-range { display: inline-flex; gap: 4px; margin-left: auto; }
+.dojo .ear-range button { min-height: 22px; padding: 0 8px; font-size: 11px; }
+.ear-outside { color: #f2b84b; font-weight: 600; }
+/* The keyboard is drawn as high as its keys are wide times about 4.2 (earKeyboardHeight.ts), lower only when the window has no more
+   room, never under 112 px (92 px in a narrow window). The picture is drawn at that height: it is not stretched. */
+.ear-keyboard svg { height: var(--ear-key-h, 112px) !important; }
+
+/* ---- result ---- */
+.ear-result { gap: 14px; overflow: auto; }
+.ear-summary { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; }
+.ear-summary > div { border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); padding: 10px 16px; min-width: 120px; }
+.ear-summary dt { font-size: 11.5px; color: var(--dojo-muted); }
+.ear-summary dd { margin: 2px 0 0; font-size: 20px; font-weight: 700; }
+
+
+/* ---- room: a tall window gives the cards and the keyboard more; a small one makes everything compact ---- */
+@media (min-height: 860px) {
+  .ear-run { gap: 12px; padding-top: 12px; }
+  .ear-card { min-height: 108px; }
+  .ear-card-name { font-size: 21px; }
+}
+@media (max-width: 1023px) {
+  .ear-run { gap: 5px; padding: 6px 12px 8px; }
+  .ear-head h1 { font-size: 15px; }
+  .ear-steps { gap: 6px; }
+  .ear-steps > span[data-state] { padding: 2px 8px; }
+  .ear-card { min-height: 56px; padding: 4px 6px; }
+  .ear-card-name { font-size: 15px; }
+  .ear-middle { grid-template-columns: minmax(0, 1fr) minmax(220px, 38%); gap: 8px; }
+  .ear-controls { gap: 5px; }
+  .ear-feedback { padding: 5px 10px; font-size: 12.5px; }
+  .ear-line { font-size: 12px; }
+  .dojo .ear-actions button { min-height: 26px; padding: 0 8px; font-size: 12px; }
+  .ear-actions kbd { display: none; }
+  .ear-actions { gap: 5px; }
+  .ear-stats { font-size: 11px; }
+  .ear-keyboard { padding: 5px 10px 6px; }
+  .ear-score-head { padding-top: 3px; font-size: 11px; }
+}
+
+.ear-clock { font-size: 11px; color: var(--dojo-muted); font-variant-numeric: tabular-nums; }
+.ear-clock[data-bad] { color: #f2b84b; font-weight: 600; }
+
+/* Narrow windows: the heading is 「楽譜」 alone and the note names under the staff are left out, so that the staff
+   fills the frame (the frame itself keeps its height). */
+@media (max-width: 1023px) {
+  .ear-score-long { display: none; }
+  .ear-score-short { display: inline; }
+  .ear-score-foot { display: none; }
+  .ear-score .dojo-score-caption { line-height: 14px; font-size: 11px; }
+  .ear-score .dojo-score { padding: 0 6px; }
+}
+
+/* ---- P16-03: records, charts, benchmark ---- */
+.ear .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ear-records { display: grid; gap: 14px; padding: 20px 28px 28px; max-width: 1040px; margin: 0 auto; min-width: 0; }
+.ear-empty { border: 1px dashed var(--dojo-border-strong); border-radius: 9px; padding: 10px 14px; color: var(--dojo-secondary); font-size: 13px; }
+.ear-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ear-table th, .ear-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--dojo-border); }
+.ear-table thead th { font-size: 11.5px; font-weight: 600; color: var(--dojo-muted); }
+.ear-table tbody th { text-align: left; font-weight: 500; color: var(--dojo-secondary); }
+.ear-table tbody th[title] { cursor: help; text-decoration: underline dotted var(--dojo-border-strong); text-underline-offset: 3px; }
+.ear-faint { opacity: .5; }
+.ear-few { margin-left: 6px; font-size: 11px; color: var(--dojo-muted); }
+.ear-diff { font-size: 12.5px; color: var(--dojo-muted); white-space: nowrap; }
+.ear-diff[data-better="true"] { color: #7bd88f; }
+.ear-diff[data-better="false"] { color: #f2b84b; }
+.ear-help { font-size: 11.5px; color: var(--dojo-muted); line-height: 1.6; }
+.ear-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ear-filter button[data-on] { border-color: var(--dojo-accent); background: var(--dojo-accent-soft); color: var(--dojo-accent); font-weight: 600; }
+.ear-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1023px) { .ear-charts { grid-template-columns: minmax(0, 1fr); } .ear-records { padding: 14px 14px 24px; } }
+.ear-chart { margin: 0; min-width: 0; }
+.ear-chart figcaption { font-size: 12px; color: var(--dojo-secondary); margin-bottom: 4px; }
+.ear-chart svg { width: 100%; height: auto; display: block; }
+.ear-chart-grid { stroke: var(--dojo-border); stroke-width: 1; }
+.ear-chart-axis { fill: var(--dojo-muted); font-size: 11px; }
+.ear-chart-extra { fill: var(--dojo-secondary); font-size: 10.5px; }
+.ear-chart-line { fill: none; stroke: var(--dojo-accent); stroke-width: 2; }
+.ear-chart-dot { fill: var(--dojo-accent); stroke: var(--dojo-accent); stroke-width: 2; }
+.ear-chart-dot[data-few] { fill: var(--dojo-bg); }
+.ear-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1023px) { .ear-two { grid-template-columns: minmax(0, 1fr); } }
+.ear-weak { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ear-weak li { display: grid; justify-items: start; gap: 6px; font-size: 13px; }
+.ear-guide { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ear-guide li { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.ear-guide-say { color: #7bd88f; font-size: 12.5px; }
+.ear-guide li[data-state="on-track"] .ear-guide-say { color: var(--dojo-secondary); }
+.ear-bench-result { height: auto; padding: 20px 28px; max-width: 760px; margin: 0 auto; }
+.ear-side .dojo-card { display: grid; gap: 8px; justify-items: start; }
+.ear-side .dojo-card h2 { width: 100%; margin-bottom: 0; }
+
+/* ---- P16-04: the score of the whole progression (result screen) ---- */
+.ear-score-card { display: grid; gap: 10px; min-width: 0; }
+.ear-score-bar-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.ear-score-bar-head h2 { margin: 0; }
+.ear-progression-score { min-width: 0; overflow: hidden; }
+.ear-progression-score svg { display: block; max-width: 100%; color: #dfe8f6; }
+.ear-score-line, .ear-score-barline, .ear-score-ledger, .ear-score-stem { stroke: currentColor; stroke-width: 1; opacity: .8; }
+.ear-score-barline-end { stroke-width: 3; }
+.ear-score-ledger { stroke-width: 1.2; opacity: .9; }
+.ear-score-stem { stroke-width: 1.4; opacity: 1; }
+.ear-score-flag { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.ear-score-brace, .ear-score-clef path { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.ear-score-clef circle { fill: currentColor; }
+.ear-score-head { fill: currentColor; stroke: currentColor; stroke-width: 1.4; }
+.ear-score-head[data-open] { fill: none; }
+.ear-score-note[data-tone="played"] { color: #8fd0ff; }
+.ear-score-accidental { fill: currentColor; font-size: 18px; }
+.ear-score-dot { fill: currentColor; }
+.ear-score-name { fill: #f2f6fc; font-size: 15px; font-weight: 700; }
+.ear-score-sub { fill: var(--dojo-muted); font-size: 11.5px; }
+.ear-score-mark[data-mark="ok"] { fill: #7bd88f; }
+.ear-score-mark[data-mark="retry"] { fill: #f2b84b; }
+.ear-score-mark[data-mark="name"] { fill: #b79cff; }
+.ear-score-mark[data-mark="key"] { fill: #6cc7ff; }
+.ear-score-hit { fill: transparent; stroke: transparent; cursor: pointer; }
+.ear-score-chord:hover .ear-score-hit, .ear-score-hit:focus-visible { stroke: var(--dojo-accent); fill: rgb(66 216 198 / 6%); outline: none; }
+.ear-score-chord[data-playing] .ear-score-hit { stroke: var(--dojo-accent); fill: rgb(66 216 198 / 14%); }
+.ear-score-chord > :not(.ear-score-hit) { pointer-events: none; }
+
+/* ---- P16-06: degree and function under the chord name, pressing a card ---- */
+.ear-card[role="button"] { cursor: default; }
+.ear-card[data-pressable] { cursor: pointer; }
+.ear-card[data-pressable]:hover::after { content: "押すと鳴ります"; position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 9.5px; color: var(--dojo-accent); background: var(--dojo-surface); pointer-events: none; }
+.ear-card[data-pressed] { border-color: #8bd7ff; box-shadow: 0 0 0 1px #8bd7ff; background: rgb(139 215 255 / 12%); }
+.ear-card-degree, .ear-card-fn { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+/* The degree is the main thing the card adds: 12px, the ordinary text colour, heavier than the function's size. */
+.ear-card-degree { font-size: 12px; line-height: 14px; font-weight: 700; color: #f2f6fc; }
+.ear-card-fn { font-size: 11px; line-height: 13px; font-weight: 700; }
+/* The Roman numerals are full-width characters (1em); Ⅰ and Ⅱ leave a third and a quarter of that empty beside the strokes
+   (measured with the font in use), so they are drawn closer to what stands next to them (Ⅰm, not Ⅰ m). */
+.ear-roman[data-roman="Ⅰ"] { margin-left: -0.28em; letter-spacing: -0.3em; }
+.ear-roman[data-roman="Ⅱ"] { margin-left: -0.2em; letter-spacing: -0.2em; }
+.ear-card-fn[data-kind="T"] { color: #7bd88f; }
+.ear-card-fn[data-kind="SD"] { color: #f2b84b; }
+.ear-card-fn[data-kind="SDm"] { color: #ff9f7a; }
+.ear-card-fn[data-kind="D"] { color: #8bd7ff; }
+.ear-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dojo-secondary); margin-left: 4px; }
+/* The card is as high as it was: the two lines are made to fit (the number and the marks, the name, the degree, the function, the seconds). */
+.ear-card[data-degree] { grid-template-rows: auto auto auto auto auto; align-content: center; row-gap: 0; padding-top: 3px; padding-bottom: 3px; }
+.ear-card[data-degree] .ear-card-name { line-height: 1.15; }
+.ear-card[data-degree] .ear-card-top { min-height: 14px; }
+/* A shorter or a narrower window: the seconds (or what the card says) go up beside the number, where there is no fifth line to give. */
+@media (max-height: 859px) {
+  .ear-card[data-degree] .ear-mark { height: 14px; min-width: 14px; font-size: 10px; }
+  .ear-card[data-degree] .ear-card-name { font-size: 16px; }
+  .ear-card[data-degree] .ear-card-sub { position: absolute; top: 3px; left: 22px; right: 28px; text-align: left; font-size: 10.5px; line-height: 12px; }
+}
+@media (max-width: 1023px) {
+  .ear-card { min-height: 68px; }
+  .ear-card[data-degree] .ear-mark { height: 14px; min-width: 14px; font-size: 10px; }
+  .ear-card[data-degree] .ear-card-name { font-size: 15px; }
+  .ear-card[data-degree] .ear-card-sub { position: absolute; top: 3px; left: 22px; right: 28px; text-align: left; font-size: 10.5px; line-height: 12px; }
+}
+/* A tall window has room: the degree and the function are bigger. */
+@media (min-height: 860px) {
+  .ear-card-degree { font-size: 14px; line-height: 16px; }
+  .ear-card-fn { font-size: 12px; line-height: 14px; }
+}
+
+/* The thin strokes of ♭ and ♯ took the colours of the screen's sub-pixels (a ♭ looked gold, the next olive, the next blue).
+   The staves are drawn as their own layers, which are painted with grey-scale smoothing, so a sign is the colour it is given. */
+.ear-score .dojo-grand-staff, .ear-progression-score svg { will-change: transform; }

@@ -330,6 +330,25 @@ describe("close guards", () => {
     expect(tauriMocks.message).not.toHaveBeenCalled();
     expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
   });
+  it.each([false,true])('flushes edits saved by the close dialog and keeps the window open on failure: %s',async(fail)=>{
+    tauriMocks.isTauri.mockReturnValue(true);
+    let closeHandler:CloseRequestHandler|undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async(handler:CloseRequestHandler)=>{closeHandler=handler;return()=>undefined;});
+    vi.spyOn(playbackController,'stop').mockImplementation(()=>undefined);
+    let current=state({unsaved:false});
+    const flush=vi.fn(async()=>{if(fail)throw new Error('synthetic disk failure');current=state({unsaved:false,flush});});
+    const onSave=()=>{current=state({unsaved:true,flush});return true;};
+    const unBlock=registerCloseBlocker({title:'Save?',message:'Synthetic edits',confirmLabel:'Discard',cancelLabel:'Back',saveLabel:'Save',onSave});
+    const requests:CloseDialogRequest[]=[];
+    const unHost=registerCloseDialogHost(async(request)=>{requests.push(request);return request.kind==='confirm'?request.blocker.onSave!():false;});
+    await registerTauriCloseGuard(storeFrom(()=>current));await closeHandler?.({preventDefault:vi.fn()});
+    expect(flush).toHaveBeenCalled();
+    if(fail){expect(requests.some(request=>request.kind==='error')).toBe(true);expect(tauriMocks.invoke).not.toHaveBeenCalledWith('exit_app');}
+    else expect(tauriMocks.invoke).toHaveBeenCalledWith('exit_app');
+    unHost();unBlock();
+  });
+
+
 });
 
 describe("shouldBlockClose", () => {

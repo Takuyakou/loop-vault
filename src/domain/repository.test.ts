@@ -361,7 +361,7 @@ describe("JsonVaultRepository", () => {
     const storage = new MemoryVaultStorage();
     const futureVault = JSON.stringify({
       ...createEmptyVault(),
-      fileVersion: 3,
+      fileVersion: 4,
     });
     storage.files.set(DATA_PATH, futureVault);
     const repo = new JsonVaultRepository(storage);

@@ -3,6 +3,9 @@ export interface CloseBlocker {
   message: string;
   confirmLabel: string;
   cancelLabel: string;
+  /** Saved progression pages can save before window close without changing Capture. */
+  onSave?: () => boolean;
+  saveLabel?: string;
 }
 
 const blockers = new Map<symbol, CloseBlocker>();

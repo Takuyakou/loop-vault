@@ -3,7 +3,7 @@
 ## 1. 監査範囲
 
 - Loop Vault: `src/views/CaptureView.tsx`, `src/ui/ProgressionGrid.tsx`, `src/domain/chords.ts`, `src/domain/midi/feedback.ts`, `src/storage/analysisFeedbackStorage.ts`, `src/store/vaultStore.ts`, `src/i18n.ts`
-- Chord Drip: `D:/dev/Chord Drip作成/src/ui/ProgressionGrid.tsx`, `src/ui/inspector/ChordInspector.tsx`, `src/ui/shortcuts.ts`, `src/domain/inspectorTarget.ts`, `src/ui/RadialChordPalette.tsx`, `src/audio/*`
+- Chord Drip: `<作業フォルダ>/Chord Drip作成/src/ui/ProgressionGrid.tsx`, `src/ui/inspector/ChordInspector.tsx`, `src/ui/shortcuts.ts`, `src/domain/inspectorTarget.ts`, `src/ui/RadialChordPalette.tsx`, `src/audio/*`
 - 仕様: `docs/phase3.6.3-progression-editing-workspace-plan.md`
 
 ## 2. 現在のLoop Vault

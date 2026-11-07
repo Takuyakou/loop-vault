@@ -1,0 +1,3602 @@
+[
+  {
+    "form": "A",
+    "key": 0,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Dm9",
+        "notes": [
+          62,
+          77,
+          81,
+          84,
+          88
+        ],
+        "referenceHands": {
+          "lh": [
+            62
+          ],
+          "rh": [
+            77,
+            81,
+            84,
+            88
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "G13",
+        "notes": [
+          67,
+          77,
+          81,
+          83,
+          88
+        ],
+        "referenceHands": {
+          "lh": [
+            67
+          ],
+          "rh": [
+            77,
+            81,
+            83,
+            88
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Cmaj13",
+        "notes": [
+          60,
+          76,
+          81,
+          83,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            60
+          ],
+          "rh": [
+            76,
+            81,
+            83,
+            86
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 1,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Ebm9",
+        "notes": [
+          63,
+          78,
+          82,
+          85,
+          89
+        ],
+        "referenceHands": {
+          "lh": [
+            63
+          ],
+          "rh": [
+            78,
+            82,
+            85,
+            89
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Ab13",
+        "notes": [
+          68,
+          78,
+          82,
+          84,
+          89
+        ],
+        "referenceHands": {
+          "lh": [
+            68
+          ],
+          "rh": [
+            78,
+            82,
+            84,
+            89
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dbmaj13",
+        "notes": [
+          61,
+          77,
+          82,
+          84,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            61
+          ],
+          "rh": [
+            77,
+            82,
+            84,
+            87
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 2,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Em9",
+        "notes": [
+          52,
+          67,
+          71,
+          74,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52
+          ],
+          "rh": [
+            67,
+            71,
+            74,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "A13",
+        "notes": [
+          57,
+          67,
+          71,
+          73,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            57
+          ],
+          "rh": [
+            67,
+            71,
+            73,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dmaj13",
+        "notes": [
+          50,
+          66,
+          71,
+          73,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            50
+          ],
+          "rh": [
+            66,
+            71,
+            73,
+            76
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 3,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Fm9",
+        "notes": [
+          53,
+          68,
+          72,
+          75,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53
+          ],
+          "rh": [
+            68,
+            72,
+            75,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Bb13",
+        "notes": [
+          58,
+          68,
+          72,
+          74,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            58
+          ],
+          "rh": [
+            68,
+            72,
+            74,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Ebmaj13",
+        "notes": [
+          51,
+          67,
+          72,
+          74,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            51
+          ],
+          "rh": [
+            67,
+            72,
+            74,
+            77
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 4,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "F#m9",
+        "notes": [
+          54,
+          69,
+          73,
+          76,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54
+          ],
+          "rh": [
+            69,
+            73,
+            76,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "B13",
+        "notes": [
+          59,
+          69,
+          73,
+          75,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            59
+          ],
+          "rh": [
+            69,
+            73,
+            75,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Emaj13",
+        "notes": [
+          52,
+          68,
+          73,
+          75,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52
+          ],
+          "rh": [
+            68,
+            73,
+            75,
+            78
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 5,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Gm9",
+        "notes": [
+          55,
+          70,
+          74,
+          77,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55
+          ],
+          "rh": [
+            70,
+            74,
+            77,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "C13",
+        "notes": [
+          60,
+          70,
+          74,
+          76,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            60
+          ],
+          "rh": [
+            70,
+            74,
+            76,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Fmaj13",
+        "notes": [
+          53,
+          69,
+          74,
+          76,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53
+          ],
+          "rh": [
+            69,
+            74,
+            76,
+            79
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 6,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Abm9",
+        "notes": [
+          56,
+          71,
+          75,
+          78,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56
+          ],
+          "rh": [
+            71,
+            75,
+            78,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Db13",
+        "notes": [
+          61,
+          71,
+          75,
+          77,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            61
+          ],
+          "rh": [
+            71,
+            75,
+            77,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gbmaj13",
+        "notes": [
+          54,
+          70,
+          75,
+          77,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54
+          ],
+          "rh": [
+            70,
+            75,
+            77,
+            80
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 7,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Am9",
+        "notes": [
+          57,
+          72,
+          76,
+          79,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            57
+          ],
+          "rh": [
+            72,
+            76,
+            79,
+            83
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "D13",
+        "notes": [
+          62,
+          72,
+          76,
+          78,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            62
+          ],
+          "rh": [
+            72,
+            76,
+            78,
+            83
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gmaj13",
+        "notes": [
+          55,
+          71,
+          76,
+          78,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55
+          ],
+          "rh": [
+            71,
+            76,
+            78,
+            81
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 8,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bbm9",
+        "notes": [
+          58,
+          73,
+          77,
+          80,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            58
+          ],
+          "rh": [
+            73,
+            77,
+            80,
+            84
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Eb13",
+        "notes": [
+          63,
+          73,
+          77,
+          79,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            63
+          ],
+          "rh": [
+            73,
+            77,
+            79,
+            84
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Abmaj13",
+        "notes": [
+          56,
+          72,
+          77,
+          79,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56
+          ],
+          "rh": [
+            72,
+            77,
+            79,
+            82
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 9,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bm9",
+        "notes": [
+          59,
+          74,
+          78,
+          81,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            59
+          ],
+          "rh": [
+            74,
+            78,
+            81,
+            85
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "E13",
+        "notes": [
+          64,
+          74,
+          78,
+          80,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            64
+          ],
+          "rh": [
+            74,
+            78,
+            80,
+            85
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Amaj13",
+        "notes": [
+          57,
+          73,
+          78,
+          80,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            57
+          ],
+          "rh": [
+            73,
+            78,
+            80,
+            83
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 10,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Cm9",
+        "notes": [
+          60,
+          75,
+          79,
+          82,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            60
+          ],
+          "rh": [
+            75,
+            79,
+            82,
+            86
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F13",
+        "notes": [
+          65,
+          75,
+          79,
+          81,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            65
+          ],
+          "rh": [
+            75,
+            79,
+            81,
+            86
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bbmaj13",
+        "notes": [
+          58,
+          74,
+          79,
+          81,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            58
+          ],
+          "rh": [
+            74,
+            79,
+            81,
+            84
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "A",
+    "key": 11,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "C#m9",
+        "notes": [
+          61,
+          76,
+          80,
+          83,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            61
+          ],
+          "rh": [
+            76,
+            80,
+            83,
+            87
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F#13",
+        "notes": [
+          66,
+          76,
+          80,
+          82,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            66
+          ],
+          "rh": [
+            76,
+            80,
+            82,
+            87
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bmaj13",
+        "notes": [
+          59,
+          75,
+          80,
+          82,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            59
+          ],
+          "rh": [
+            75,
+            80,
+            82,
+            85
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 0,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Dm9",
+        "notes": [
+          62,
+          72,
+          77,
+          81,
+          88
+        ],
+        "referenceHands": {
+          "lh": [
+            62,
+            72
+          ],
+          "rh": [
+            77,
+            81,
+            88
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "G13",
+        "notes": [
+          67,
+          71,
+          77,
+          81,
+          88
+        ],
+        "referenceHands": {
+          "lh": [
+            67,
+            71
+          ],
+          "rh": [
+            77,
+            81,
+            88
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Cmaj13",
+        "notes": [
+          60,
+          71,
+          76,
+          81,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            60,
+            71
+          ],
+          "rh": [
+            76,
+            81,
+            86
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 1,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Ebm9",
+        "notes": [
+          63,
+          73,
+          78,
+          82,
+          89
+        ],
+        "referenceHands": {
+          "lh": [
+            63,
+            73
+          ],
+          "rh": [
+            78,
+            82,
+            89
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Ab13",
+        "notes": [
+          68,
+          72,
+          78,
+          82,
+          89
+        ],
+        "referenceHands": {
+          "lh": [
+            68,
+            72
+          ],
+          "rh": [
+            78,
+            82,
+            89
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dbmaj13",
+        "notes": [
+          61,
+          72,
+          77,
+          82,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            61,
+            72
+          ],
+          "rh": [
+            77,
+            82,
+            87
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 2,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Em9",
+        "notes": [
+          52,
+          62,
+          67,
+          71,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52,
+            62
+          ],
+          "rh": [
+            67,
+            71,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "A13",
+        "notes": [
+          57,
+          61,
+          67,
+          71,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            57,
+            61
+          ],
+          "rh": [
+            67,
+            71,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dmaj13",
+        "notes": [
+          50,
+          61,
+          66,
+          71,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            50,
+            61
+          ],
+          "rh": [
+            66,
+            71,
+            76
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 3,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Fm9",
+        "notes": [
+          53,
+          63,
+          68,
+          72,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53,
+            63
+          ],
+          "rh": [
+            68,
+            72,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Bb13",
+        "notes": [
+          58,
+          62,
+          68,
+          72,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            58,
+            62
+          ],
+          "rh": [
+            68,
+            72,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Ebmaj13",
+        "notes": [
+          51,
+          62,
+          67,
+          72,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            51,
+            62
+          ],
+          "rh": [
+            67,
+            72,
+            77
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 4,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "F#m9",
+        "notes": [
+          54,
+          64,
+          69,
+          73,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54,
+            64
+          ],
+          "rh": [
+            69,
+            73,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "B13",
+        "notes": [
+          59,
+          63,
+          69,
+          73,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            59,
+            63
+          ],
+          "rh": [
+            69,
+            73,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Emaj13",
+        "notes": [
+          52,
+          63,
+          68,
+          73,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52,
+            63
+          ],
+          "rh": [
+            68,
+            73,
+            78
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 5,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Gm9",
+        "notes": [
+          55,
+          65,
+          70,
+          74,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55,
+            65
+          ],
+          "rh": [
+            70,
+            74,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "C13",
+        "notes": [
+          60,
+          64,
+          70,
+          74,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            60,
+            64
+          ],
+          "rh": [
+            70,
+            74,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Fmaj13",
+        "notes": [
+          53,
+          64,
+          69,
+          74,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53,
+            64
+          ],
+          "rh": [
+            69,
+            74,
+            79
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 6,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Abm9",
+        "notes": [
+          56,
+          66,
+          71,
+          75,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56,
+            66
+          ],
+          "rh": [
+            71,
+            75,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Db13",
+        "notes": [
+          61,
+          65,
+          71,
+          75,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            61,
+            65
+          ],
+          "rh": [
+            71,
+            75,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gbmaj13",
+        "notes": [
+          54,
+          65,
+          70,
+          75,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54,
+            65
+          ],
+          "rh": [
+            70,
+            75,
+            80
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 7,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Am9",
+        "notes": [
+          57,
+          67,
+          72,
+          76,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            57,
+            67
+          ],
+          "rh": [
+            72,
+            76,
+            83
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "D13",
+        "notes": [
+          62,
+          66,
+          72,
+          76,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            62,
+            66
+          ],
+          "rh": [
+            72,
+            76,
+            83
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gmaj13",
+        "notes": [
+          55,
+          66,
+          71,
+          76,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55,
+            66
+          ],
+          "rh": [
+            71,
+            76,
+            81
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 8,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bbm9",
+        "notes": [
+          58,
+          68,
+          73,
+          77,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            58,
+            68
+          ],
+          "rh": [
+            73,
+            77,
+            84
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Eb13",
+        "notes": [
+          63,
+          67,
+          73,
+          77,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            63,
+            67
+          ],
+          "rh": [
+            73,
+            77,
+            84
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Abmaj13",
+        "notes": [
+          56,
+          67,
+          72,
+          77,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56,
+            67
+          ],
+          "rh": [
+            72,
+            77,
+            82
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 9,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bm9",
+        "notes": [
+          59,
+          69,
+          74,
+          78,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            59,
+            69
+          ],
+          "rh": [
+            74,
+            78,
+            85
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "E13",
+        "notes": [
+          64,
+          68,
+          74,
+          78,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            64,
+            68
+          ],
+          "rh": [
+            74,
+            78,
+            85
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Amaj13",
+        "notes": [
+          57,
+          68,
+          73,
+          78,
+          83
+        ],
+        "referenceHands": {
+          "lh": [
+            57,
+            68
+          ],
+          "rh": [
+            73,
+            78,
+            83
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 10,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Cm9",
+        "notes": [
+          60,
+          70,
+          75,
+          79,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            60,
+            70
+          ],
+          "rh": [
+            75,
+            79,
+            86
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F13",
+        "notes": [
+          65,
+          69,
+          75,
+          79,
+          86
+        ],
+        "referenceHands": {
+          "lh": [
+            65,
+            69
+          ],
+          "rh": [
+            75,
+            79,
+            86
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bbmaj13",
+        "notes": [
+          58,
+          69,
+          74,
+          79,
+          84
+        ],
+        "referenceHands": {
+          "lh": [
+            58,
+            69
+          ],
+          "rh": [
+            74,
+            79,
+            84
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "B",
+    "key": 11,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "C#m9",
+        "notes": [
+          61,
+          71,
+          76,
+          80,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            61,
+            71
+          ],
+          "rh": [
+            76,
+            80,
+            87
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F#13",
+        "notes": [
+          66,
+          70,
+          76,
+          80,
+          87
+        ],
+        "referenceHands": {
+          "lh": [
+            66,
+            70
+          ],
+          "rh": [
+            76,
+            80,
+            87
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bmaj13",
+        "notes": [
+          59,
+          70,
+          75,
+          80,
+          85
+        ],
+        "referenceHands": {
+          "lh": [
+            59,
+            70
+          ],
+          "rh": [
+            75,
+            80,
+            85
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 0,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Dm9",
+        "notes": [
+          62,
+          72,
+          76,
+          77,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            62
+          ],
+          "rh": [
+            72,
+            76,
+            77,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "G13",
+        "notes": [
+          55,
+          71,
+          76,
+          77,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55
+          ],
+          "rh": [
+            71,
+            76,
+            77,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Cmaj9",
+        "notes": [
+          60,
+          71,
+          74,
+          76,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            60
+          ],
+          "rh": [
+            71,
+            74,
+            76,
+            79
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 1,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Ebm9",
+        "notes": [
+          63,
+          73,
+          77,
+          78,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            63
+          ],
+          "rh": [
+            73,
+            77,
+            78,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Ab13",
+        "notes": [
+          56,
+          72,
+          77,
+          78,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56
+          ],
+          "rh": [
+            72,
+            77,
+            78,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dbmaj9",
+        "notes": [
+          61,
+          72,
+          75,
+          77,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            61
+          ],
+          "rh": [
+            72,
+            75,
+            77,
+            80
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 2,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Em9",
+        "notes": [
+          52,
+          62,
+          66,
+          67,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            52
+          ],
+          "rh": [
+            62,
+            66,
+            67,
+            71
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "A13",
+        "notes": [
+          45,
+          61,
+          66,
+          67,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            45
+          ],
+          "rh": [
+            61,
+            66,
+            67,
+            71
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dmaj9",
+        "notes": [
+          50,
+          61,
+          64,
+          66,
+          69
+        ],
+        "referenceHands": {
+          "lh": [
+            50
+          ],
+          "rh": [
+            61,
+            64,
+            66,
+            69
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 3,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Fm9",
+        "notes": [
+          53,
+          63,
+          67,
+          68,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            53
+          ],
+          "rh": [
+            63,
+            67,
+            68,
+            72
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Bb13",
+        "notes": [
+          46,
+          62,
+          67,
+          68,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            46
+          ],
+          "rh": [
+            62,
+            67,
+            68,
+            72
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Ebmaj9",
+        "notes": [
+          51,
+          62,
+          65,
+          67,
+          70
+        ],
+        "referenceHands": {
+          "lh": [
+            51
+          ],
+          "rh": [
+            62,
+            65,
+            67,
+            70
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 4,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "F#m9",
+        "notes": [
+          54,
+          64,
+          68,
+          69,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            54
+          ],
+          "rh": [
+            64,
+            68,
+            69,
+            73
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "B13",
+        "notes": [
+          47,
+          63,
+          68,
+          69,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            47
+          ],
+          "rh": [
+            63,
+            68,
+            69,
+            73
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Emaj9",
+        "notes": [
+          52,
+          63,
+          66,
+          68,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            52
+          ],
+          "rh": [
+            63,
+            66,
+            68,
+            71
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 5,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Gm9",
+        "notes": [
+          55,
+          65,
+          69,
+          70,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            55
+          ],
+          "rh": [
+            65,
+            69,
+            70,
+            74
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "C13",
+        "notes": [
+          48,
+          64,
+          69,
+          70,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            48
+          ],
+          "rh": [
+            64,
+            69,
+            70,
+            74
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Fmaj9",
+        "notes": [
+          53,
+          64,
+          67,
+          69,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            53
+          ],
+          "rh": [
+            64,
+            67,
+            69,
+            72
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 6,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Abm9",
+        "notes": [
+          56,
+          66,
+          70,
+          71,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            56
+          ],
+          "rh": [
+            66,
+            70,
+            71,
+            75
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Db13",
+        "notes": [
+          49,
+          65,
+          70,
+          71,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            49
+          ],
+          "rh": [
+            65,
+            70,
+            71,
+            75
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gbmaj9",
+        "notes": [
+          54,
+          65,
+          68,
+          70,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            54
+          ],
+          "rh": [
+            65,
+            68,
+            70,
+            73
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 7,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Am9",
+        "notes": [
+          57,
+          67,
+          71,
+          72,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            57
+          ],
+          "rh": [
+            67,
+            71,
+            72,
+            76
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "D13",
+        "notes": [
+          50,
+          66,
+          71,
+          72,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            50
+          ],
+          "rh": [
+            66,
+            71,
+            72,
+            76
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gmaj9",
+        "notes": [
+          55,
+          66,
+          69,
+          71,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            55
+          ],
+          "rh": [
+            66,
+            69,
+            71,
+            74
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 8,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bbm9",
+        "notes": [
+          58,
+          68,
+          72,
+          73,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            58
+          ],
+          "rh": [
+            68,
+            72,
+            73,
+            77
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Eb13",
+        "notes": [
+          51,
+          67,
+          72,
+          73,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            51
+          ],
+          "rh": [
+            67,
+            72,
+            73,
+            77
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Abmaj9",
+        "notes": [
+          56,
+          67,
+          70,
+          72,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            56
+          ],
+          "rh": [
+            67,
+            70,
+            72,
+            75
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 9,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bm9",
+        "notes": [
+          59,
+          69,
+          73,
+          74,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            59
+          ],
+          "rh": [
+            69,
+            73,
+            74,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "E13",
+        "notes": [
+          52,
+          68,
+          73,
+          74,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52
+          ],
+          "rh": [
+            68,
+            73,
+            74,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Amaj9",
+        "notes": [
+          57,
+          68,
+          71,
+          73,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            57
+          ],
+          "rh": [
+            68,
+            71,
+            73,
+            76
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 10,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Cm9",
+        "notes": [
+          60,
+          70,
+          74,
+          75,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            60
+          ],
+          "rh": [
+            70,
+            74,
+            75,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F13",
+        "notes": [
+          53,
+          69,
+          74,
+          75,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53
+          ],
+          "rh": [
+            69,
+            74,
+            75,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bbmaj9",
+        "notes": [
+          58,
+          69,
+          72,
+          74,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            58
+          ],
+          "rh": [
+            69,
+            72,
+            74,
+            77
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "C",
+    "key": 11,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "C#m9",
+        "notes": [
+          61,
+          71,
+          75,
+          76,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            61
+          ],
+          "rh": [
+            71,
+            75,
+            76,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F#13",
+        "notes": [
+          54,
+          70,
+          75,
+          76,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54
+          ],
+          "rh": [
+            70,
+            75,
+            76,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bmaj9",
+        "notes": [
+          59,
+          70,
+          73,
+          75,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            59
+          ],
+          "rh": [
+            70,
+            73,
+            75,
+            78
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 0,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Dm9",
+        "notes": [
+          62,
+          65,
+          72,
+          76,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            62,
+            65
+          ],
+          "rh": [
+            72,
+            76,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "G13",
+        "notes": [
+          55,
+          65,
+          71,
+          76,
+          81
+        ],
+        "referenceHands": {
+          "lh": [
+            55,
+            65
+          ],
+          "rh": [
+            71,
+            76,
+            81
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Cmaj9",
+        "notes": [
+          60,
+          64,
+          71,
+          74,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            60,
+            64
+          ],
+          "rh": [
+            71,
+            74,
+            79
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 1,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Ebm9",
+        "notes": [
+          63,
+          66,
+          73,
+          77,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            63,
+            66
+          ],
+          "rh": [
+            73,
+            77,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Ab13",
+        "notes": [
+          56,
+          66,
+          72,
+          77,
+          82
+        ],
+        "referenceHands": {
+          "lh": [
+            56,
+            66
+          ],
+          "rh": [
+            72,
+            77,
+            82
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dbmaj9",
+        "notes": [
+          61,
+          65,
+          72,
+          75,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            61,
+            65
+          ],
+          "rh": [
+            72,
+            75,
+            80
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 2,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Em9",
+        "notes": [
+          52,
+          55,
+          62,
+          66,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            52,
+            55
+          ],
+          "rh": [
+            62,
+            66,
+            71
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "A13",
+        "notes": [
+          45,
+          55,
+          61,
+          66,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            45,
+            55
+          ],
+          "rh": [
+            61,
+            66,
+            71
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Dmaj9",
+        "notes": [
+          50,
+          54,
+          61,
+          64,
+          69
+        ],
+        "referenceHands": {
+          "lh": [
+            50,
+            54
+          ],
+          "rh": [
+            61,
+            64,
+            69
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 3,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Fm9",
+        "notes": [
+          53,
+          56,
+          63,
+          67,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            53,
+            56
+          ],
+          "rh": [
+            63,
+            67,
+            72
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Bb13",
+        "notes": [
+          46,
+          56,
+          62,
+          67,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            46,
+            56
+          ],
+          "rh": [
+            62,
+            67,
+            72
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Ebmaj9",
+        "notes": [
+          51,
+          55,
+          62,
+          65,
+          70
+        ],
+        "referenceHands": {
+          "lh": [
+            51,
+            55
+          ],
+          "rh": [
+            62,
+            65,
+            70
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 4,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "F#m9",
+        "notes": [
+          54,
+          57,
+          64,
+          68,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            54,
+            57
+          ],
+          "rh": [
+            64,
+            68,
+            73
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "B13",
+        "notes": [
+          47,
+          57,
+          63,
+          68,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            47,
+            57
+          ],
+          "rh": [
+            63,
+            68,
+            73
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Emaj9",
+        "notes": [
+          52,
+          56,
+          63,
+          66,
+          71
+        ],
+        "referenceHands": {
+          "lh": [
+            52,
+            56
+          ],
+          "rh": [
+            63,
+            66,
+            71
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 5,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Gm9",
+        "notes": [
+          55,
+          58,
+          65,
+          69,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            55,
+            58
+          ],
+          "rh": [
+            65,
+            69,
+            74
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "C13",
+        "notes": [
+          48,
+          58,
+          64,
+          69,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            48,
+            58
+          ],
+          "rh": [
+            64,
+            69,
+            74
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Fmaj9",
+        "notes": [
+          53,
+          57,
+          64,
+          67,
+          72
+        ],
+        "referenceHands": {
+          "lh": [
+            53,
+            57
+          ],
+          "rh": [
+            64,
+            67,
+            72
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 6,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Abm9",
+        "notes": [
+          56,
+          59,
+          66,
+          70,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            56,
+            59
+          ],
+          "rh": [
+            66,
+            70,
+            75
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Db13",
+        "notes": [
+          49,
+          59,
+          65,
+          70,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            49,
+            59
+          ],
+          "rh": [
+            65,
+            70,
+            75
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gbmaj9",
+        "notes": [
+          54,
+          58,
+          65,
+          68,
+          73
+        ],
+        "referenceHands": {
+          "lh": [
+            54,
+            58
+          ],
+          "rh": [
+            65,
+            68,
+            73
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 7,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Am9",
+        "notes": [
+          57,
+          60,
+          67,
+          71,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            57,
+            60
+          ],
+          "rh": [
+            67,
+            71,
+            76
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "D13",
+        "notes": [
+          50,
+          60,
+          66,
+          71,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            50,
+            60
+          ],
+          "rh": [
+            66,
+            71,
+            76
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Gmaj9",
+        "notes": [
+          55,
+          59,
+          66,
+          69,
+          74
+        ],
+        "referenceHands": {
+          "lh": [
+            55,
+            59
+          ],
+          "rh": [
+            66,
+            69,
+            74
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 8,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bbm9",
+        "notes": [
+          58,
+          61,
+          68,
+          72,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            58,
+            61
+          ],
+          "rh": [
+            68,
+            72,
+            77
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "Eb13",
+        "notes": [
+          51,
+          61,
+          67,
+          72,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            51,
+            61
+          ],
+          "rh": [
+            67,
+            72,
+            77
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Abmaj9",
+        "notes": [
+          56,
+          60,
+          67,
+          70,
+          75
+        ],
+        "referenceHands": {
+          "lh": [
+            56,
+            60
+          ],
+          "rh": [
+            67,
+            70,
+            75
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 9,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Bm9",
+        "notes": [
+          59,
+          62,
+          69,
+          73,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            59,
+            62
+          ],
+          "rh": [
+            69,
+            73,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "E13",
+        "notes": [
+          52,
+          62,
+          68,
+          73,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            52,
+            62
+          ],
+          "rh": [
+            68,
+            73,
+            78
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Amaj9",
+        "notes": [
+          57,
+          61,
+          68,
+          71,
+          76
+        ],
+        "referenceHands": {
+          "lh": [
+            57,
+            61
+          ],
+          "rh": [
+            68,
+            71,
+            76
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 10,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "Cm9",
+        "notes": [
+          60,
+          63,
+          70,
+          74,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            60,
+            63
+          ],
+          "rh": [
+            70,
+            74,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F13",
+        "notes": [
+          53,
+          63,
+          69,
+          74,
+          79
+        ],
+        "referenceHands": {
+          "lh": [
+            53,
+            63
+          ],
+          "rh": [
+            69,
+            74,
+            79
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bbmaj9",
+        "notes": [
+          58,
+          62,
+          69,
+          72,
+          77
+        ],
+        "referenceHands": {
+          "lh": [
+            58,
+            62
+          ],
+          "rh": [
+            69,
+            72,
+            77
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "form": "D",
+    "key": 11,
+    "bpm": 80,
+    "beatsPerChord": 2,
+    "restAfterProgressionBeats": 2,
+    "chords": [
+      {
+        "degree": "ii",
+        "symbol": "C#m9",
+        "notes": [
+          61,
+          64,
+          71,
+          75,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            61,
+            64
+          ],
+          "rh": [
+            71,
+            75,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "V",
+        "symbol": "F#13",
+        "notes": [
+          54,
+          64,
+          70,
+          75,
+          80
+        ],
+        "referenceHands": {
+          "lh": [
+            54,
+            64
+          ],
+          "rh": [
+            70,
+            75,
+            80
+          ]
+        }
+      },
+      {
+        "degree": "I",
+        "symbol": "Bmaj9",
+        "notes": [
+          59,
+          63,
+          70,
+          73,
+          78
+        ],
+        "referenceHands": {
+          "lh": [
+            59,
+            63
+          ],
+          "rh": [
+            70,
+            73,
+            78
+          ]
+        }
+      }
+    ]
+  }
+]

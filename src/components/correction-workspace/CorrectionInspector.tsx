@@ -11,6 +11,7 @@ import { chordToneDiff, nameCandidatesFor } from "../../domain/correction/nameCa
  * differ, addendum 1 §3), card actions.
  */
 export interface CorrectionInspectorProps {
+  progression?: { singleCard?:boolean; names:ChordSymbol[];alignNotes:boolean;onAlignNotes:(value:boolean)=>void;changed:boolean;onReset:()=>void;onDeleteCard:(kind:import("../../domain/progressionEditing/contextActions").DeleteChordMode)=>void };
   card: CorrectionCard;
   notes: readonly CorrectionNote[];
   playing: "source" | "card" | null;
@@ -30,6 +31,10 @@ export interface CorrectionInspectorProps {
   onMergePrevious?: () => void;
   onMergeNext?: () => void;
   onSplit: () => void;
+  /** P17-01 §3.3: the MIDI capture's two delete modes (the progression page keeps its four). */
+  onDeleteCard?: (mode: "extend-previous" | "extend-next") => void;
+  /** P17-01 §3.3: disabled when the song has only one card. */
+  cardCount?: number;
   canUndo: boolean;
   onUndo: () => void;
   /** Spec §12: other cards with the same notes that still have the old name. */
@@ -40,7 +45,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
   const { card, notes } = props;
   const [picking, setPicking] = useState(false);
   const warnIds = new Set(card.reviewReasons.flatMap((reason) => reason.noteIds));
-  const names = nameCandidatesFor(card, notes);
+  const names = props.progression?.names ?? nameCandidatesFor(card, notes);
   const diff = chordToneDiff(card.name, notes);
   const extraTones = diff.currentTones.filter((tone) => !diff.chordTones.includes(tone));
   // One row per pitch (spec v2.4 §4.4): a held-over note and a new one of the same pitch are one row.
@@ -52,14 +57,29 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
     <div className="lv-cw-insp-body" aria-live="polite" data-testid="correction-inspector">
       <div>
         <p className="lv-cw-eyebrow">選んだカード</p>
-        <h3 className="lv-cw-insp-name" data-testid="correction-inspector-name">{card.name.label}</h3>
+        <div className="lv-cw-insp-name-row">
+          <h3 className="lv-cw-insp-name" data-testid="correction-inspector-name">{card.name.label}</h3>
+          {props.progression || props.onDeleteCard ? (
+            <details className="lv-cw-danger-menu lv-cw-insp-delete">
+              <summary className="lv-cw-btn" data-danger><span>カードを消す</span> <kbd>Del</kbd> ▾</summary>
+              <div className="lv-cw-delete-menu">
+                {(props.progression
+                  ? ([['extend-previous','消して前を伸ばす','前のカードがこの長さまで伸びる'],['extend-next','消して次を伸ばす','次のカードがここから始まる'],['close-gap','消して詰める','後ろのカードが前に詰まる'],['replace-no-chord','無音（N.C.）にする','長さはそのまま、音を鳴らさない']] as const)
+                  : ([['extend-previous','消して前を伸ばす','前のカードがこの長さまで伸びる'],['extend-next','消して次を伸ばす','次のカードがここから始まる']] as const)
+                ).map(([kind,label,hint])=>(
+                  <button key={kind} type="button" className="lv-cw-btn" data-danger disabled={props.progression ? (props.progression.singleCard && kind !== 'replace-no-chord') : (props.cardCount ?? 2) <= 1} onClick={()=>props.progression ? props.progression.onDeleteCard(kind) : props.onDeleteCard!(kind as 'extend-previous'|'extend-next')}><span>{label}</span><small>{hint}</small></button>
+                ))}
+              </div>
+            </details>
+          ) : null}
+        </div>
         <p className="lv-cw-muted">
           {card.bar}小節{card.beat}拍から・{formatBeats(card.duration)}拍{card.attacks > 1 ? `・打ち直し ×${card.attacks}` : ""}
         </p>
-        {card.reviewed && !card.reviewReasons.length ? <p className="lv-cw-muted" data-testid="correction-reviewed-note">このままでよい にしたカード</p> : null}
-        <span className="lv-cw-name-tag" data-user={card.nameSource !== "auto" || undefined} data-testid="correction-name-tag">
+        {!props.progression && card.reviewed && !card.reviewReasons.length ? <p className="lv-cw-muted" data-testid="correction-reviewed-note">このままでよい にしたカード</p> : null}
+        {!props.progression ? <span className="lv-cw-name-tag" data-user={card.nameSource !== "auto" || undefined} data-testid="correction-name-tag">
           {card.nameSource === "typed" ? "手で打った名前" : card.nameSource === "chosen" ? "候補から選んだ名前（音を直すと自動に戻る）" : "自動の名前（音を直すと変わる）"}
-        </span>
+        </span> : <span className="lv-cw-name-tag">{props.progression.changed?"変えた（まだ保存していない）":"保存した音"}</span>}
         {card.nameUnreadable ? <p className="lv-cw-name-note" data-testid="correction-name-unreadable">音から名前を決められません（前の名前のまま）</p> : null}
         {card.suggestedName ? (
           <p className="lv-cw-name-note" data-testid="correction-name-suggestion">
@@ -94,7 +114,20 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
       )) : null}
 
       <section>
-        <h4 className="lv-cw-h4">名前の候補</h4>
+        <h4 className="lv-cw-h4">カードの操作</h4>
+        <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
+          <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
+          <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
+          <button type="button" className="lv-cw-btn" onClick={props.onSplit}>{props.progression?"分けて足す":"分ける"} <kbd>S</kbd></button>
+          <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
+          {props.progression ? <button type="button" className="lv-cw-btn" title="保存時の音と名前に戻します。境目・分割はUndoで戻します" onClick={props.progression.onReset}>このカードを元に戻す</button> : null}
+          <button type="button" className="lv-cw-btn" onClick={props.onUndo} disabled={!props.canUndo} data-testid="correction-inspector-undo">元に戻す <kbd>Ctrl+Z</kbd></button>
+        </div>
+      </section>
+
+      <section>
+        <h4 className="lv-cw-h4">{props.progression?"コードを替える":"名前の候補"}</h4>
+        {props.progression ? <label className="lv-cw-check"><input type="checkbox" checked={props.progression.alignNotes} onChange={event=>props.progression!.onAlignNotes(event.target.checked)}/>音も合わせる</label> : null}
         <div className="lv-cw-alts" data-testid="correction-name-candidates">
           {names.map((name, index) => (
             <button
@@ -105,7 +138,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
               onClick={() => props.onChooseName(name)}
               title={`${index + 1} を押しても選べます`}
             >
-              <span className="lv-cw-alt-no">{index + 1}</span>
+              {!props.progression || index<4 ? <span className="lv-cw-alt-no">{index + 1}</span> : null}
               <span className="lv-cw-alt-name">{name.label}</span>
             </button>
           ))}
@@ -120,8 +153,8 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
       <section>
         <h4 className="lv-cw-h4">聴き比べ</h4>
         <div className="lv-cw-ab">
-          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "source"} onClick={props.onPlaySource} title="区間に鳴っている音すべて（A）" data-testid="correction-play-source">▶ A 元の音</button>
-          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "card"} onClick={props.onPlayCard} title="保存すると鳴る音（B）" data-testid="correction-play-card">▶ B カードの音</button>
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "source"} onClick={props.onPlaySource} title="区間に鳴っている音すべて（A）" data-testid="correction-play-source">{props.progression ? "▶ A 保存してある音" : "▶ A 元の音"}</button>
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "card"} onClick={props.onPlayCard} title="保存すると鳴る音（B）" data-testid="correction-play-card">{props.progression ? "▶ B 今の音" : "▶ B カードの音"}</button>
         </div>
       </section>
 
@@ -143,14 +176,15 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
           {rows.map(({ pitch, notes: same, lead }) => {
             const used = same.filter((note) => note.used);
             const manualOnly = same.every((note) => note.provenance === "MANUAL_ADDED");
+            const moved = Boolean(props.progression&&same.some(note=>note.originalPitch!==undefined));
             return (
               <li key={pitch} className="lv-cw-nrow" data-used={used.length > 0 || undefined}>
-                <span className="lv-cw-nrow-pitch" data-kind={manualOnly ? "manual" : same.some((note) => warnIds.has(note.id)) ? "warn" : used.length ? lead.roleHint === "bass" ? "bass" : "harmony" : "off"}>
+                <span className="lv-cw-nrow-pitch" data-kind={manualOnly||moved ? "manual" : same.some((note) => warnIds.has(note.id)) ? "warn" : used.length ? lead.roleHint === "bass" ? "bass" : "harmony" : "off"}>
                   {noteLabel(pitch)}
                 </span>
                 <span className="lv-cw-nrow-why">{noteWhy(lead)}{same.length > 1 ? `・${same.length}つ` : ""}</span>
                 {manualOnly ? (
-                  <button type="button" className="lv-cw-tog" onClick={() => props.onDelete(same.map((note) => note.id))}>消す</button>
+                  <button type="button" className="lv-cw-tog" onClick={() => props.onDelete(same.map((note) => note.id))}>{props.progression?"外す":"消す"}</button>
                 ) : used.length ? (
                   <button type="button" className="lv-cw-tog" onClick={() => props.onDelete(used.map((note) => note.id))}>外す</button>
                 ) : (
@@ -179,17 +213,6 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
           ) : null}
         </section>
       ) : null}
-
-      <section>
-      <h4 className="lv-cw-h4">カードの操作</h4>
-      <div className="lv-cw-actions" role="group" aria-label="カードの操作" data-testid="correction-card-actions">
-        <button type="button" className="lv-cw-btn" onClick={props.onMergePrevious} disabled={!props.onMergePrevious}>前とつなぐ</button>
-        <button type="button" className="lv-cw-btn" onClick={props.onMergeNext} disabled={!props.onMergeNext}>次とつなぐ <kbd>M</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onSplit}>分ける <kbd>S</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onTypeName}>名前を入力 <kbd>F2</kbd></button>
-        <button type="button" className="lv-cw-btn" onClick={props.onUndo} disabled={!props.canUndo} data-testid="correction-inspector-undo">元に戻す <kbd>Ctrl+Z</kbd></button>
-      </div>
-      </section>
 
     </div>
   );

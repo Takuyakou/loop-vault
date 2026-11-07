@@ -14,13 +14,13 @@ Phase 3.9.0: 暫定完了
 ### 起動するexe
 
 ```text
-D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe
+<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe
 ```
 
 インストーラー:
 
 ```text
-D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
+<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
 ```
 
 ### 用意するもの

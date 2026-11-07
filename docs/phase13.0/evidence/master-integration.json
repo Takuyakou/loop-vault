@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "testedCandidateCommit": "b0056ab471dfa76327cb6c6fefa891d852b80f9f",
+  "targetBaseCommit": "4175c29503963557e41d7841735f06138c342051",
+  "mergeCommit": "12d2961a7406574a166524be12c23358898ccab2",
+  "candidateAndMergeTree": "015275b7af7cf2a9007f988f1d38c30c784dfce5",
+  "treeEqual": true,
+  "candidateFull": {
+    "status": "pass",
+    "vitest": {
+      "pass": 4163,
+      "fail": 0
+    },
+    "playwright": {
+      "pass": 439,
+      "fail": 0,
+      "unrun": 0
+    },
+    "runnerContracts": 27,
+    "cacheUsed": false,
+    "wallSeconds": 783.7,
+    "rawLogBytes": 35339,
+    "tempDrive": "D"
+  },
+  "candidateNative": {
+    "status": "pass",
+    "testsPassed": 62
+  },
+  "masterFresh": {
+    "measuredCommit": "12d2961a7406574a166524be12c23358898ccab2",
+    "unitSmoke": 23,
+    "playwrightSmoke": 4,
+    "native": 62,
+    "appTypeScript": "pass",
+    "e2eTypeScript": "pass",
+    "lint": "pass",
+    "phaseDocs": "pass",
+    "aiHandoff": "pass",
+    "privacy": "pass",
+    "productionBuild": "pass",
+    "galleryExcluded": "pass",
+    "diffCheck": "pass",
+    "fullRerun": false
+  },
+  "realInterfaceAcceptance": "NOT_RUN",
+  "exeRebuilt": false,
+  "pushPerformed": false
+}

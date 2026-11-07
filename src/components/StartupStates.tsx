@@ -32,7 +32,7 @@ export function StartupState({
       <div className="w-full max-w-2xl">
         {loadStatus === "recovery" && recovery ? (
           <StatusMessage tone="warning" title={copy.startup.recoveryTitle}>
-            <p>{copy.startup.recoveryBody}</p>
+            <p>{recovery.kind === "migration-recovery" ? recovery.message : copy.startup.recoveryBody}</p>
             {recovery.corruptPath ? <p className="mt-2 break-all text-xs text-[var(--lv-text-muted)]">{recovery.corruptPath}</p> : null}
             <div className="mt-4 flex flex-col gap-2">
               {recovery.backups.length > 0 ? recovery.backups.map((backup) => (

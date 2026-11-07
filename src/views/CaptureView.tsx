@@ -7,7 +7,6 @@ import { createPortal } from "react-dom";
 import {
   beatsPerBar as beatsPerBarFor,
   buildRoleCorrectionLogEvents,
-  buildSessionAnalysisRequest,
   removeMidiSource,
   type AnalysisSession,
   type SessionAnalysisRequest,
@@ -53,6 +52,18 @@ import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
 import { CorrectionWorkspace } from "../components/correction-workspace/CorrectionWorkspace";
 import { buildCorrectionModel } from "../domain/correction/correctionModel";
+import { restoreExcludedNotes } from "../domain/preAnalysisParts/restoreExcluded";
+import {
+  buildSplitAnalysisRequest,
+  deriveSplitSession,
+  restorePartNames,
+  type ExcludedPart,
+  type PartMap,
+  type PartSplits,
+} from "../domain/preAnalysisParts/splitSession";
+import { partNames } from "../components/pre-analysis/sessionView";
+import { analysisSessionVoiceContributionPreset } from "../domain/midi/preAnalysis";
+import { memoryEntryFor, rememberPreAnalysis } from "../storage/preAnalysisMemory";
 import { reviewThresholds } from "../domain/correction/reviewThresholds";
 import {
   captureAnalysisIdentity,
@@ -124,14 +135,27 @@ type CaptureAnalysisTargetVoice = Pick<
 
 export function captureAnalysisTargetLabel(
   voices: readonly CaptureAnalysisTargetVoice[] | undefined,
+  /** A line split a part: said in the heading, since the notes above it were not analysed. */
+  withLines = false,
 ): string | undefined {
-  return voices?.filter((voice) =>
+  const label = voices?.filter((voice) =>
     voice.included
     && !voice.isDrum
     && !voice.duplicateOf
     && voice.assignedRole !== "exclude")
     .map((voice) => voice.displayName)
     .join(" / ");
+  return label !== undefined && withLines ? `${label}（線で分けたパートあり）` : label;
+}
+
+/** What the analysis left out of a split part, kept after the analysis to put the notes back for display. */
+interface AnalysisSplitState {
+  /** The analysis it belongs to: the result's `sourceFingerprint` is the request's `analysisFingerprint`. */
+  fingerprint: string | undefined;
+  excluded: readonly ExcludedPart[];
+  map: PartMap;
+  names: ReadonlyMap<string, string>;
+  channels: ReadonlyMap<string, number>;
 }
 export interface CaptureAnalysisRunSummary {
   preset: "standard" | "harmonic-core";
@@ -207,6 +231,9 @@ export function CaptureView(props: CaptureViewProps) {
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
   const [savedTextPracticeStatus, setSavedTextPracticeStatus] = useState<ExtendedTextPracticeStatus>();
+  // 「線で分ける」 (P15-02): the lines (session-only), and what the last analysis left out of split parts.
+  const [partSplits, setPartSplits] = useState<PartSplits>({});
+  const [analysisSplit, setAnalysisSplit] = useState<AnalysisSplitState>();
   const captureViewMountedRef = useRef(true);
   useEffect(() => {
     captureViewMountedRef.current = true;
@@ -219,8 +246,6 @@ export function CaptureView(props: CaptureViewProps) {
     sourcePath,
     preAnalysisSession,
     setPreAnalysisSession,
-    preAnalysisDetailsExpanded,
-    setPreAnalysisDetailsExpanded,
     completedAnalysisSummary,
     setCompletedAnalysisSummary,
     intakeError,
@@ -248,21 +273,60 @@ export function CaptureView(props: CaptureViewProps) {
     mountedRef: captureViewMountedRef,
   });
   const result = analysis.result;
-  const workspaceBassline = useWorkspaceBassline(preAnalysisSession, result?.sourceFingerprint, beatsPerBarFor(result?.timeSignature));
+  // 「線で分ける」: the session the analysis was built from (the original when no line is in effect).
+  const analysisSession = useMemo(
+    () => (preAnalysisSession ? deriveSplitSession(preAnalysisSession, partSplits).session : undefined),
+    [preAnalysisSession, partSplits],
+  );
+  const workspaceBassline = useWorkspaceBassline(analysisSession, result?.sourceFingerprint, beatsPerBarFor(result?.timeSignature));
   const workspaceDatasetKey = result ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}` : undefined;
-  const correctionModel = useMemo(() => (
-    result && analysis.sourceData && analysis.sourceVoices
-      ? buildCorrectionModel({
-          result,
-          sourceData: analysis.sourceData,
-          sourceVoices: analysis.sourceVoices,
-          ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
-        }, reviewThresholds)
-      : undefined
-  ), [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, result]);
+  const correctionModel = useMemo(() => {
+    if (!result || !analysis.sourceData || !analysis.sourceVoices) return undefined;
+    // A line was used: the notes above it were not analysed. They come back here, unused, as melody.
+    const split = analysisSplit && analysisSplit.fingerprint !== undefined
+      && analysisSplit.fingerprint === result.sourceFingerprint ? analysisSplit : undefined;
+    if (split) {
+      const nameOf = (partId: string) => split.names.get(partId);
+      const restored = restoreExcludedNotes({
+        sourceData: analysis.sourceData,
+        ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
+        excluded: split.excluded,
+        nameOf,
+        channelOf: (partId) => split.channels.get(partId) ?? 0,
+      });
+      const named = restorePartNames(analysis.sourceVoices, split.map, nameOf);
+      const restoredVoices = restored.restoredVoiceIds.length
+        ? restored.sourceVoices.map((voice) => named.find((entry) => entry.id === voice.id) ?? voice)
+        : named;
+      return buildCorrectionModel({
+        result,
+        sourceData: restored.sourceData,
+        sourceVoices: restoredVoices,
+        roleOverrides: restored.roleOverrides,
+      }, reviewThresholds);
+    }
+    return buildCorrectionModel({
+      result,
+      sourceData: analysis.sourceData,
+      sourceVoices: analysis.sourceVoices,
+      ...(analysisInput?.roleOverrides ? { roleOverrides: analysisInput.roleOverrides } : {}),
+    }, reviewThresholds);
+  }, [analysis.sourceData, analysis.sourceVoices, analysisInput?.roleOverrides, analysisSplit, result]);
+  // Lines belong to the files that are open: a new set of files starts without any.
+  const hasPreAnalysisSession = preAnalysisSession !== undefined;
+  useEffect(() => {
+    if (!hasPreAnalysisSession) {
+      setPartSplits((current) => (Object.keys(current).length ? {} : current));
+      setAnalysisSplit(undefined);
+    }
+  }, [hasPreAnalysisSession]);
   const analysisTargetLabel = useMemo(
-    () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
-    [preAnalysisSession],
+    () => captureAnalysisTargetLabel(
+      preAnalysisSession?.voices,
+      analysisSplit !== undefined && analysisSplit.fingerprint !== undefined
+        && analysisSplit.fingerprint === result?.sourceFingerprint,
+    ),
+    [analysisSplit, preAnalysisSession, result?.sourceFingerprint],
   );
   /** A new file or a new analysis drops the text draft (was inline in the intake code). */
   function resetSelectionForNewAnalysis() {
@@ -619,9 +683,9 @@ export function CaptureView(props: CaptureViewProps) {
             session={preAnalysisSession}
             busy={analysisProgress !== undefined}
             requiresReanalysis={completedAnalysisSummary !== undefined}
-            defaultDetailsExpanded={preAnalysisDetailsExpanded}
+            splits={partSplits}
+            onSplitsChange={setPartSplits}
             onSessionChange={setPreAnalysisSession}
-            onDetailsExpandedChange={setPreAnalysisDetailsExpanded}
             onAddMidi={() => void chooseMidi(true)}
             onRemoveSource={(sourceId) => {
               const next = removeMidiSource(preAnalysisSession, sourceId);
@@ -630,8 +694,16 @@ export function CaptureView(props: CaptureViewProps) {
             onAnalyze={() => {
               if (!master) return;
               try {
-                const request = buildSessionAnalysisRequest(preAnalysisSession);
+                const split = buildSplitAnalysisRequest(preAnalysisSession, partSplits);
+                const request = split.request;
                 const runSummary = captureAnalysisRunSummary(request);
+                const lineParts = split.excluded;
+                const names = partNames(preAnalysisSession);
+                const channels = new Map(preAnalysisSession.voices.map((voice) => [voice.id, voice.channel]));
+                // Set before the analysis: the workspace takes its model once, when the result appears.
+                setAnalysisSplit(lineParts.length
+                  ? { fingerprint: request.options.analysisFingerprint, excluded: lineParts, map: split.map, names, channels }
+                  : undefined);
                 const roleEvents = buildRoleCorrectionLogEvents(
                   preAnalysisSession,
                   new Date().toISOString(),
@@ -642,6 +714,12 @@ export function CaptureView(props: CaptureViewProps) {
                   request.options,
                 ).then((analyzed) => {
                   if (!analyzed || !captureViewMountedRef.current) return;
+                  // 「前回と同じ設定」: only the shape of the parts and what was chosen (never names or notes).
+                  rememberPreAnalysis(memoryEntryFor(
+                    preAnalysisSession,
+                    Object.fromEntries(lineParts.map((part) => [part.partId, part.melodyFrom])),
+                    analysisSessionVoiceContributionPreset(preAnalysisSession),
+                  ));
                   setCompletedAnalysisSummary(runSummary);
                   void appendRoleCorrectionLog(roleEvents)
                     .catch(() => undefined);
@@ -709,14 +787,14 @@ export function CaptureView(props: CaptureViewProps) {
               copy,
               titleFor: (candidate) => captureSaveTitle(candidate, result.fileName, result.detectedKey, copy),
               onCreate: (ready, title, nextAction, userVerified, extra) => {
-                const sourceBassline = workspaceBassline.forSave(ready.candidate);
+                const sourceBassline = workspaceBassline.forSave(ready.candidate, ready.crossesCut ? null : ready.sourceBars);
                 if (sourceBassline === null) return undefined;
-                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}) });
+                return saveNew(ready.candidate, title, nextAction, userVerified, ready.original, ready.editable, [], ready.userEdited, sourceBassline, { stayOnCapture: true, ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}), ...(ready.removedBars.length ? { removedBars: ready.removedBars } : {}) });
               },
               onAppend: (ready, ideaId, userVerified, extra) => {
-                const sourceBassline = workspaceBassline.forSave(ready.candidate);
+                const sourceBassline = workspaceBassline.forSave(ready.candidate, ready.crossesCut ? null : ready.sourceBars);
                 if (sourceBassline === null) return false;
-                const options = { ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}) };
+                const options = { ...(ready.bpm !== undefined ? { bpm: ready.bpm } : {}), ...(extra?.memoNote ? { memoNote: extra.memoNote } : {}), ...(ready.removedBars.length ? { removedBars: ready.removedBars } : {}) };
                 return appendExisting(ready.candidate, ready.original, ready.editable, ideaId, userVerified, [], ready.userEdited, sourceBassline, Object.keys(options).length ? options : undefined);
               },
               onCopyMemo: copyMemo,

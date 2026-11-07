@@ -11,6 +11,11 @@ const BROWSER_TEMP_KEY = "loop-vault:practice-v1:tmp";
 const BROWSER_BACKUP_PREFIX = "loop-vault:practice-v1:backup:";
 const BROWSER_CORRUPT_PREFIX = "loop-vault:practice-v1:corrupt:";
 
+export type PracticeNamespace = "practice" | "bass-midi-library" | "ear-practice" | "original-practice" | "jazz-progressions";
+const NAMESPACE_APP: Record<PracticeNamespace, string> = { practice: "loopvault-practice", "bass-midi-library": "loopvault-bass-midi-library", "ear-practice": "loopvault-ear-practice", "original-practice": "loopvault-original-practice", "jazz-progressions": "loopvault-jazz-progressions" };
+/** Envelopes whose file version stays 1 (everything but the practice file). */
+const VERSION_ONE_APPS = new Set(["loopvault-bass-midi-library", "loopvault-ear-practice", "loopvault-original-practice", "loopvault-jazz-progressions"]);
+
 interface KeyValueStorage {
   readonly length: number;
   key(index: number): string | null;
@@ -20,55 +25,69 @@ interface KeyValueStorage {
 }
 
 export class BrowserPracticeStorage implements PracticeStorage {
-  constructor(private readonly storage: KeyValueStorage) {}
+  private readonly dataKey: string;
+  private readonly tempKey: string;
+  private readonly backupPrefix: string;
+  private readonly corruptPrefix: string;
+  constructor(private readonly storage: KeyValueStorage, private readonly namespace: PracticeNamespace = "practice") {
+    const own = namespace === "practice" ? undefined : `loop-vault:${namespace}-v1:`;
+    this.dataKey = own ? `${own}data` : BROWSER_DATA_KEY;
+    this.tempKey = own ? `${own}tmp` : BROWSER_TEMP_KEY;
+    this.backupPrefix = own ? `${own}backup:` : BROWSER_BACKUP_PREFIX;
+    this.corruptPrefix = own ? `${own}corrupt:` : BROWSER_CORRUPT_PREFIX;
+  }
 
   async readCommitted(): Promise<PracticeStoredDocument | undefined> {
-    const contents = this.storage.getItem(BROWSER_DATA_KEY) ?? undefined;
-    if (contents !== undefined) { try { this.storage.removeItem(BROWSER_TEMP_KEY); } catch { /* retry on the next load */ } }
+    const contents = this.storage.getItem(this.dataKey) ?? undefined;
+    if (contents !== undefined) { try { this.storage.removeItem(this.tempKey); } catch { /* retry on the next load */ } }
     return contents === undefined ? undefined : storedDocument(contents);
   }
 
   async listRecoveryArtifacts(): Promise<readonly string[]> {
-    return this.keys(BROWSER_CORRUPT_PREFIX).filter(isBrowserRecoveryArtifact).sort().reverse();
+    const corrupt = this.keys(this.corruptPrefix).filter((name) => /^\d{8}-\d{6}-\d{6}$/.test(name.slice(this.corruptPrefix.length)));
+    // The lap records (Original Practice, Jazz Progressions) must not mistake unsupported/corrupt backup-only data for a first run.
+    return [...corrupt, ...(this.namespace === "original-practice" || this.namespace === "jazz-progressions" ? this.keys(this.backupPrefix) : [])].sort().reverse();
   }
 
   async commit(contents: string, timestampToken: string, expectedRevision?: number, expectedToken?: string): Promise<number> {
+    const app = JSON.parse(contents).app;
+    if ((NAMESPACE_APP[this.namespace]) !== app) throw new Error("Storage namespace envelope mismatch.");
     const revision = validatedNextRevision(contents, expectedRevision);
-    const previous = this.storage.getItem(BROWSER_DATA_KEY);
+    const previous = this.storage.getItem(this.dataKey);
     const currentRevision = previous === null ? undefined : storedDocument(previous).revision;
     const currentToken = previous === null ? undefined : contentToken(previous);
     if (currentRevision !== expectedRevision || currentToken !== expectedToken) throw new Error("Practice storage rejected a stale revision or content token.");
     let backupKey: string | undefined;
     try {
-      this.storage.setItem(BROWSER_TEMP_KEY, contents);
+      this.storage.setItem(this.tempKey, contents);
       if (previous !== null) {
-        backupKey = this.uniqueKey(BROWSER_BACKUP_PREFIX, timestampToken);
+        backupKey = this.uniqueKey(this.backupPrefix, timestampToken);
         this.storage.setItem(backupKey, previous);
       }
-      this.storage.setItem(BROWSER_DATA_KEY, contents);
+      this.storage.setItem(this.dataKey, contents);
     } catch (error) {
       if (backupKey) { try { this.storage.removeItem(backupKey); } catch { /* canonical data remains authoritative */ } }
       throw error;
     } finally {
-      try { this.storage.removeItem(BROWSER_TEMP_KEY); } catch { /* canonical data decides commit state */ }
+      try { this.storage.removeItem(this.tempKey); } catch { /* canonical data decides commit state */ }
     }
-    try { this.rotate(BROWSER_BACKUP_PREFIX, 20); } catch { /* post-commit retention cleanup is best effort */ }
+    try { this.rotate(this.backupPrefix, 20); } catch { /* post-commit retention cleanup is best effort */ }
     return revision;
   }
 
   async quarantineCommitted(timestampToken: string, expectedToken: string): Promise<string> {
-    const current = this.storage.getItem(BROWSER_DATA_KEY);
+    const current = this.storage.getItem(this.dataKey);
     if (current === null) throw new Error("No Practice file exists to quarantine.");
     if (contentToken(current) !== expectedToken) throw new Error("Practice storage rejected a stale quarantine token.");
-    this.rotate(BROWSER_CORRUPT_PREFIX, 19);
-    const key = this.uniqueKey(BROWSER_CORRUPT_PREFIX, timestampToken);
+    this.rotate(this.corruptPrefix, 19);
+    const key = this.uniqueKey(this.corruptPrefix, timestampToken);
     this.storage.setItem(key, current);
-    this.storage.removeItem(BROWSER_DATA_KEY);
+    this.storage.removeItem(this.dataKey);
     return key;
   }
 
   async listBackups(): Promise<readonly PracticeBackupMetadata[]> {
-    return this.keys(BROWSER_BACKUP_PREFIX)
+    return this.keys(this.backupPrefix)
       .sort()
       .reverse()
       .flatMap((name) => {
@@ -80,7 +99,7 @@ export class BrowserPracticeStorage implements PracticeStorage {
   }
 
   async readBackup(name: string): Promise<PracticeStoredDocument> {
-    if (!name.startsWith(BROWSER_BACKUP_PREFIX) || !this.keys(BROWSER_BACKUP_PREFIX).includes(name)) {
+    if (!name.startsWith(this.backupPrefix) || !this.keys(this.backupPrefix).includes(name)) {
       throw new Error("Practice backup name is invalid.");
     }
     const selected = this.storage.getItem(name);
@@ -123,7 +142,7 @@ export class BrowserPracticeStorage implements PracticeStorage {
 type PracticeInvoke = <T>(command: string, args?: Record<string, unknown>) => Promise<T>;
 
 export class TauriPracticeStorage implements PracticeStorage {
-  constructor(private readonly invokeCommand: PracticeInvoke = <T>(command: string, args?: Record<string, unknown>) => invoke<T>(command, args)) {}
+  constructor(private readonly invokeCommand: PracticeInvoke = <T>(command: string, args?: Record<string, unknown>) => invoke<T>(command, args), private readonly namespace?: Exclude<PracticeNamespace, "practice">) {}
   async readCommitted(): Promise<PracticeStoredDocument | undefined> {
     return (await this.call<PracticeStoredDocument | null>("load_practice_file")) ?? undefined;
   }
@@ -146,7 +165,7 @@ export class TauriPracticeStorage implements PracticeStorage {
     return this.call<PracticeStoredDocument>("restore_practice_backup", { name, backupToken, expectedRevision, expectedToken });
   }
   private async call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
-    try { return await this.invokeCommand<T>(command, args); }
+    try { return await this.invokeCommand<T>(command, this.namespace ? { ...args, namespace: this.namespace } : args); }
     catch (error) { throw normalizePracticeStorageError(error); }
   }
 }
@@ -248,8 +267,7 @@ function strictRevision(contents: string): number | undefined {
   try {
     const parsed = JSON.parse(contents) as Record<string, unknown>;
     const revision = parsed.revision;
-    return parsed.app === "loopvault-practice"
-      && (parsed.fileVersion === 1 || parsed.fileVersion === 2)
+    return ((parsed.app === "loopvault-practice" && (parsed.fileVersion === 1 || parsed.fileVersion === 2)) || (VERSION_ONE_APPS.has(parsed.app as string) && parsed.fileVersion === 1 && parsed.version === 1))
       && Number.isSafeInteger(revision)
       && (revision as number) >= 1
       ? revision as number
@@ -268,7 +286,7 @@ function validatedNextRevision(contents: string, expectedRevision?: number): num
 
 function withCurrentVersionAndRevision(contents: string, revision: number): string {
   const parsed = JSON.parse(contents) as Record<string, unknown>;
-  return JSON.stringify({ ...parsed, fileVersion: 2, revision }, null, 2) + "\n";
+  return JSON.stringify({ ...parsed, fileVersion: VERSION_ONE_APPS.has(parsed.app as string) ? 1 : 2, revision }, null, 2) + "\n";
 }
 
 function backupTimestamp(name: string): string | undefined {
@@ -277,10 +295,6 @@ function backupTimestamp(name: string): string | undefined {
 
 function timestampTokenFromDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, "").replace("T", "-").slice(0, 15);
-}
-
-function isBrowserRecoveryArtifact(name: string): boolean {
-  return /^loop-vault:practice-v1:corrupt:\d{8}-\d{6}-\d{6}$/.test(name);
 }
 
 function isMemoryRecoveryArtifact(name: string): boolean {

@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "7a3d432a828e9e268fdfe112540d0acc52c7fe77",
+  "sourcePath": "src/domain/chordDojo/store.ts",
+  "sourceSha256": "43442ef60a086e4c5a7d17ce04d4c24a8e7f3cc72172ba3913b636f6281e90ec",
+  "adaptation": "relative import paths only; actual old reader/repository/schema"
+}

@@ -4,6 +4,12 @@ import {
   type PreviewInstrument,
   type PreviewSound,
 } from "../audio/chordPreview";
+import {
+  AUDITION_ATTACK_SECONDS,
+  AUDITION_FADE_SECONDS,
+  AUDITION_RETIRE_MS,
+  rampOutputGain,
+} from "../audio/outputFade";
 import type {
   ProgressionPracticeVoicingPlan,
   ProgressionVoicingPracticeSnapshot,
@@ -26,7 +32,8 @@ export interface ProgressionVoicingTransportStartOptions {
   readonly loopBounds?: { readonly startBeat: number; readonly endBeat: number };
   readonly onLoopBoundsActivated?: (bounds: { readonly startBeat: number; readonly endBeat: number } | undefined,
     startBeat: number) => void;
-  readonly onTransportBeat: (absoluteBeat: number) => void;
+  /** `audioTime` is the context time at which `absoluteBeat` sounds. */
+  readonly onTransportBeat: (absoluteBeat: number, audioTime: number) => void;
 }
 
 export interface ProgressionVoicingTransportPort {
@@ -51,9 +58,6 @@ export interface ProgressionVoicingTransportPort {
   seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
-const AUDITION_FADE_SECONDS = 0.012;
-const AUDITION_ATTACK_SECONDS = 0.005;
-const AUDITION_RETIRE_MS = 24;
 
 interface AuditionVoice {
   readonly instrument: PreviewInstrument;
@@ -166,9 +170,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
     this.running = true;
     this.paused = false;
-    options.onTransportBeat(this.v2 && (countInBeats > 0 || this.loopBounds) ? 0 : startBeat);
-    const transportStartAudioTime = Tone.now() + 0.05;
-    if (!this.v2) this.transport.start("+0.05");
+    const startAudioTime = Tone.now() + 0.05;
+    const startBeatAtTime = this.v2 && (countInBeats > 0 || this.loopBounds) ? 0 : startBeat;
+    if (!this.v2) {
+      options.onTransportBeat(startBeat, startAudioTime);
+      this.transport.start("+0.05");
+    }
 
     try {
       const voicingInstrument = await voicingInstrumentPromise;
@@ -182,11 +189,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
         // that same tick after Tone has begun dispatching it. Prime the first
         // attack while the Transport is still stopped.
         if (countInBeats === 0) this.refillRolling(Tone.now(), ppq, generation);
+        options.onTransportBeat(startBeatAtTime, Tone.now() + 0.05);
         this.transport.start("+0.05");
         return;
       }
       const currentBeat = this.transport.ticks / ppq;
-      const missedImmediateAttack = countInBeats === 0 && Tone.now() >= transportStartAudioTime;
+      const missedImmediateAttack = countInBeats === 0 && Tone.now() >= startAudioTime;
       if (!this.paused && (
         startBeat > countInBeats
         || currentBeat > startBeat
@@ -287,7 +295,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       Tone.getDraw().schedule(() => {
         if (scheduleEpoch === this.scheduleEpoch && projectionEpoch === this.projectionEpoch
           && this.acceptsCallback(generation)) {
-          options.onTransportBeat(absoluteBeat);
+          options.onTransportBeat(absoluteBeat, time);
         }
       }, time);
     }, "64n", 0));
@@ -332,8 +340,15 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.resetRollingCursor(inCountIn ? this.originProgressionBeat : this.currentProgressionBeat());
       if (!inCountIn) this.skipCurrentRollingAttack();
     }
-    this.attackCurrentVoicing(this.v2 ? this.logicalBeat(this.transport.ticks / this.transport.PPQ) : this.transport.ticks / this.transport.PPQ, Tone.now());
+    // VL-14: send the beat and the audio time it plays at, so the view resumes
+    // at the sound's position instead of holding the paused beat for a look-ahead.
+    const resumeAudioTime = Tone.now();
+    const resumeBeat = this.v2
+      ? this.logicalBeat(this.transport.ticks / this.transport.PPQ)
+      : this.transport.ticks / this.transport.PPQ;
+    this.attackCurrentVoicing(resumeBeat, resumeAudioTime);
     this.transport.start();
+    this.activeOptions?.onTransportBeat(resumeBeat, resumeAudioTime);
     return true;
   }
 
@@ -383,6 +398,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (this.v2 && this.countInBeats === 0) {
       this.refillRolling(Tone.now(), this.transport.PPQ, generation);
     }
+    options.onTransportBeat(0, Tone.now() + 0.05);
     this.transport.start("+0.05");
     return true;
   }
@@ -500,7 +516,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       }
       options.onLoopBoundsActivated?.(bounds, start);
       options.onTransportBeat(toneBeat < this.countInBeats ? 0
-        : this.countInBeats + start - this.loopStart());
+        : this.countInBeats + start - this.loopStart(), time);
     };
     const toneBeat = this.transport.ticks / this.transport.PPQ;
     if (this.paused || toneBeat < this.countInBeats) {
@@ -555,7 +571,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.resetRollingCursor(target);
       this.paused = remainPaused;
       if (!remainPaused) this.transport.start("+0.05");
-      options.onTransportBeat(0);
+      options.onTransportBeat(0, remainPaused ? Tone.now() : Tone.now() + 0.05);
       return { status: remainPaused ? "paused" : "count-in", absoluteBeat: 0 };
     }
     this.originToneBeat = toneBeat;
@@ -564,7 +580,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.resetRollingCursor(target);
     this.skipCurrentRollingAttack(eventIndex);
     const absoluteBeat = this.countInBeats + previousLoop * this.loopLength() + target - this.loopStart();
-    options.onTransportBeat(absoluteBeat);
+    options.onTransportBeat(absoluteBeat, Tone.now());
     if (!this.paused) this.attackCurrentVoicing(absoluteBeat, Tone.now() + 0.01);
     return { status: this.paused ? "paused" : "running", absoluteBeat };
   }
@@ -917,13 +933,4 @@ function assertCompatibleRuntimePpq(runtimePpq: number): void {
 /** Candidate transport with bounded chord scheduling; legacy constructor remains the rollback path. */
 export class ProgressionVoicingTransportV2 extends ProgressionVoicingTransport {
   constructor() { super(true); }
-}
-
-/** Preserve the current value while retriggering; never jump a sounding gain to zero. */
-function rampOutputGain(output: Tone.Gain, value: 0 | 1, start: number, end: number, cancel = false): void {
-  const gain = output.gain;
-  const held = gain.getValueAtTime(start);
-  if (cancel) gain.cancelScheduledValues(start);
-  gain.setValueAtTime(held, start);
-  gain.linearRampToValueAtTime(value, end);
 }

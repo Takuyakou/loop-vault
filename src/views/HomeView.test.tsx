@@ -1,3 +1,6 @@
+import {dojoStore} from "../domain/chordDojo/runtime";
+import {emptyStore,emptyItem} from "../domain/chordDojo/store";
+import {vaultKey} from "../domain/chordDojo/collect";
 // @vitest-environment jsdom
 
 import { act } from "react";
@@ -19,6 +22,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 8, 28, 12, 0));
   window.localStorage.clear();
+  dojoStore.setState({file:emptyStore(),ready:true,error:undefined});
 });
 
 afterEach(async () => {
@@ -57,6 +61,7 @@ describe("HomeView", () => {
     const openChordDojo = vi.fn();
     const ideas = homeIdeas();
     ideas[0].progressionBlocks![1].practice = { schemaVersion: 1, progressionFingerprint: "x", lastPracticedAt: new Date(2026, 8, 27, 22, 40).toISOString() };
+    const dojo=emptyStore();dojo.progressions[vaultKey(ideas[0].progressionBlocks![1])] = {...emptyItem(),recent:[{at:new Date(2026,8,27,22,40).toISOString(),ok:true}]};dojoStore.setState({file:dojo});
     const { container } = await renderHome(ideas, { openChordDojo });
     const card = container.querySelector("[data-testid='home-continue']")!;
     expect(card.textContent).toContain("Chord Dojo · 昨日 22:40");
@@ -65,6 +70,7 @@ describe("HomeView", () => {
     expect(openChordDojo).toHaveBeenCalledWith({ ideaId: "idea", blockId: "block-2" });
 
     const openProgression = vi.fn();
+    await act(async()=>{dojoStore.setState({file:emptyStore()});});
     const plain = await renderHome(homeIdeas(), { openProgression });
     const plainCard = plain.container.querySelectorAll("[data-testid='home-continue']")[0]!;
     expect(plainCard.textContent).toContain("最後に更新");
@@ -134,14 +140,15 @@ describe("HomeView", () => {
     expect(openVoicingLoop).toHaveBeenCalledWith({ ideaId: "idea", blockId: "block-5" });
   });
 
-  it("shows today's practice count and streak from existing records only", async () => {
+  it("shows today's count from new Dojo records without a streak", async () => {
     const ideas = homeIdeas();
     ideas[0].progressionBlocks![0].practice = { schemaVersion: 1, progressionFingerprint: "x", lastPracticedAt: new Date(2026, 8, 28, 9).toISOString() };
     ideas[0].progressionBlocks![1].practice = { schemaVersion: 1, progressionFingerprint: "y", lastPracticedAt: new Date(2026, 8, 27, 9).toISOString() };
+    const dojo=emptyStore();dojo.shapes["preset:synthetic"]={...emptyItem(),recent:[{at:new Date(2026,8,28,9).toISOString(),ok:true},{at:new Date(2026,8,27,9).toISOString(),ok:true}]};dojoStore.setState({file:dojo});
     const { container } = await renderHome(ideas);
     const card = container.querySelector("section[aria-label='今日の練習']")!;
-    expect(card.textContent).toContain("今日 1進行");
-    expect(card.querySelector("[data-testid='home-practice-streak']")?.textContent).toContain("2日連続");
+    expect(card.textContent).toContain("今日 1回");
+    expect(card.querySelector("[data-testid='home-practice-streak']")?.textContent).not.toContain("連続");
     expect(card.querySelectorAll(".lv-home-dot[data-practiced='true']")).toHaveLength(2);
   });
 });

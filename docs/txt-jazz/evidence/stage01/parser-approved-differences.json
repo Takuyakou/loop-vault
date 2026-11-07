@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "baselineSha256": "1DAA4AEE1D77028D75DBDF0AB5441166EDA02BF04E58AA80F481C1BA4329F043",
+  "differences": [
+    {
+      "recordSha256": "21e2a28904d53d6ebe103dc96380fbc60793de3e16723b29e2eb8713ffde702b",
+      "reason": "new-text-alias",
+      "input": "E♭13",
+      "explanation": "Previously rejected Unicode flat root. E-flat dom13 remains the existing dom13 quality, with no tensions or bass.",
+      "expectedOutputSha256": "22ca1d49b2ccb62452f4f55d6534ae433e8f433bc792dd7ff026004b0ab71ee7"
+    },
+    {
+      "recordSha256": "65e54b96a47e1874fd61528706a8c6aa5a5900734062d49ff97f78886994e54a",
+      "reason": "approved-text-minor-major-display",
+      "input": "CmMaj7",
+      "explanation": "Extended chord label alone adopts Cm(maj7). Root0/minMaj7/empty tensions and absent bass are unchanged.",
+      "expectedOutputSha256": "56568902618ec348a7e9d4e0ffec9b335f3b629968679a309018ffc461dc72c1"
+    },
+    {
+      "recordSha256": "95e686cdb25f83c08202f5e1430fd51448ec1b2baa4894162712b294b5cd4519",
+      "reason": "approved-text-minor-major-display",
+      "input": "CmMaj7",
+      "explanation": "Text-only chord label alone adopts Cm(maj7). Root0/minMaj7/empty tensions and absent bass are unchanged.",
+      "expectedOutputSha256": "56568902618ec348a7e9d4e0ffec9b335f3b629968679a309018ffc461dc72c1"
+    },
+    {
+      "recordSha256": "9aefd2c14b605ec6ca2a7ad7f7e7e9c5de44cb5bca1fd134c0ee580922a27969",
+      "reason": "new-text-alias",
+      "input": "C-7",
+      "explanation": "Previously rejected shared-core minor dash alias. Root0/min7/empty tensions/absent bass/Cm7; standard intake already recognized this equivalent alias.",
+      "expectedOutputSha256": "e84c2abe638edc099e0581ab50dd682044c4f290f9d884b10049f1f5a72f1fcb"
+    },
+    {
+      "recordSha256": "c674b51631a2b499383bd3cd2d3936aa0579f2e16c282b3ff258734148508f95",
+      "reason": "new-text-alias",
+      "input": "B♭maj7",
+      "explanation": "Previously rejected Unicode flat root. Root10/maj7/empty tensions/absent bass/Bbmaj7; extended intake already recognized this spelling.",
+      "expectedOutputSha256": "d4e3db03a0e0be729469963e036743ca3eb360851e73c0d89c4bb14a450ec8bf"
+    },
+    {
+      "recordSha256": "e13712732411e5307881569d52e5475be6b8ca43e7b7e341d47b017b8f696d35",
+      "reason": "approved-text-minor-major-display",
+      "input": "CmMaj7",
+      "explanation": "Only the slot and harmonic-span chord labels adopt Cm(maj7). Original source/raw/writtenChord, coordinates, timing, structure, metadata and diagnostics are unchanged.",
+      "expectedOutputSha256": "4cff05b321b4ae84ddc67fbdc868223e8830a40f1e5936e19eab0ad18a1ddfe7"
+    }
+  ]
+}

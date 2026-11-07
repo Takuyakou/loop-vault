@@ -1,0 +1,26 @@
+/* P5.26.2-03: the shared "that was right" mark for practice cards (Chord Dojo, 2-5-1 Master). */
+.lv-card-mark {
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+/* Judged from the keyboard: a filled disc. Said by the player: the same mark as a hollow ring. */
+.lv-card-mark[data-state=correct][data-source=midi] { background: #5fd39a; color: #07130d; }
+.lv-card-mark[data-state=correct][data-source=self] { border: 2px solid #5fd39a; color: #5fd39a; }
+.lv-card-mark[data-state=miss] { border: 2px solid #ff8a95; color: #ff8a95; }
+.lv-card-mark[data-bare] { all: unset; font: inherit; color: inherit; }
+/* A corner mark sits in the card's top-left (the top-right belongs to the speaker). */
+.lv-card-mark[data-corner] { position: absolute; top: 5px; left: 6px; }
+/* The moment's frame: a short ring that is gone with the mark (never a lasting colour). */
+[data-moment=correct] { box-shadow: 0 0 0 3px rgb(95 211 154 / 45%) !important; }
+[data-moment=miss] { box-shadow: 0 0 0 3px rgb(255 138 149 / 40%) !important; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-moment] { transition: box-shadow 160ms ease-out; }
+}

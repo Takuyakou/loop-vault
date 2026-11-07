@@ -240,7 +240,7 @@ describe("ProgressionVoicingTransport", () => {
     stale.callback(2);
     const attacksAfter = toneMock.instruments.reduce((count, instrument) => count + instrument.triggerAttackRelease.mock.calls.length, 0);
     expect(attacksAfter).toBe(attacksBefore + 1);
-    expect(onTransportBeat).toHaveBeenLastCalledWith(snapshot.events[1]!.startBeat);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(snapshot.events[1]!.startBeat, expect.any(Number));
     runtime.stop();
     expect(toneMock.activeScheduleIds.size).toBe(0);
   });
@@ -305,7 +305,7 @@ describe("ProgressionVoicingTransport", () => {
       metronomeEnabled: false, onTransportBeat });
     toneMock.transport.ticks = (3 * snapshot.lengthBeats + 1) * toneMock.transport.PPQ;
     expect(runtime.seek(1)).toEqual({ status: "running", absoluteBeat: 3 * snapshot.lengthBeats + 2 });
-    expect(onTransportBeat).toHaveBeenLastCalledWith(3 * snapshot.lengthBeats + 2);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(3 * snapshot.lengthBeats + 2, expect.any(Number));
     runtime.stop();
   });
 
@@ -620,11 +620,11 @@ describe("ProgressionVoicingTransport", () => {
 
     expect(toneMock.transport.start).toHaveBeenCalledWith("+0.05");
     expect(toneMock.scheduled).toHaveLength(4);
-    expect(onTransportBeat).toHaveBeenCalledWith(0);
+    expect(onTransportBeat).toHaveBeenCalledWith(0, expect.any(Number));
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
     toneMock.scheduled[3]?.callback(1);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).toHaveBeenLastCalledWith(1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(1, expect.any(Number));
 
     releaseInstrument(new toneMock.PolySynth());
     await pending;
@@ -667,7 +667,7 @@ describe("ProgressionVoicingTransport", () => {
       ["64n", 0],
     ]);
     expect(toneMock.transport.start).toHaveBeenCalledWith("+0.05");
-    expect(onTransportBeat).toHaveBeenCalledWith(0);
+    expect(onTransportBeat).toHaveBeenCalledWith(0, expect.any(Number));
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(1152);
     toneMock.scheduled[1]?.callback(1.5);
@@ -688,7 +688,7 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.scheduled[3]?.callback(2);
     toneMock.drawCallbacks[toneMock.drawCallbacks.length - 1]?.();
     expect(toneMock.transport.getTicksAtTime).toHaveBeenCalledWith(2);
-    expect(onTransportBeat).toHaveBeenLastCalledWith(5);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(5, expect.any(Number));
   });
 
   it("gates automatic reference attacks without stopping click, projection, or manual audition", async () => {
@@ -830,7 +830,7 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
     toneMock.scheduled[3]?.callback(2);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).toHaveBeenLastCalledWith(1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(1, expect.any(Number));
     expect(toneMock.transport.stop).toHaveBeenCalledTimes(1);
   });
 
@@ -1034,19 +1034,24 @@ describe("ProgressionVoicingTransport", () => {
     expect(runtime.pause()).toBe(true);
     await expect(runtime.resume()).resolves.toBe(true);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).not.toHaveBeenCalled();
+    // VL-14: the resume epoch re-anchors at the paused beat and reports it immediately;
+    // the stale draw from before the pause is still dropped.
+    expect(onTransportBeat).toHaveBeenCalledTimes(1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(0, expect.any(Number));
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
     visual.callback(2);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).toHaveBeenLastCalledWith(2);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(2, expect.any(Number));
 
     onTransportBeat.mockClear();
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(576);
     visual.callback(3);
     await expect(runtime.restart()).resolves.toBe(true);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).not.toHaveBeenCalled();
+    // The restart epoch reports the restarted position immediately; the stale draw is dropped.
+    expect(onTransportBeat).toHaveBeenCalledTimes(1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(0, expect.any(Number));
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
     visual.callback(4);
@@ -1054,7 +1059,7 @@ describe("ProgressionVoicingTransport", () => {
     const restartedVisual = toneMock.scheduled[toneMock.scheduled.length - 1]!;
     restartedVisual.callback(4);
     toneMock.drawCallbacks.shift()?.();
-    expect(onTransportBeat).toHaveBeenLastCalledWith(1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(1, expect.any(Number));
   });
 
   it("schedules the canonical P5.29 4,2,2,4,4 boundaries from the shared snapshot", async () => {
@@ -1207,7 +1212,7 @@ describe("ProgressionVoicingTransport", () => {
       toneMock.transport.getTicksAtTime.mockReturnValueOnce(30 * 80 * toneMock.transport.PPQ);
       visualCallback.callback(1);
       toneMock.drawCallbacks.pop()?.();
-      expect(onTransportBeat).toHaveBeenLastCalledWith(2_400);
+      expect(onTransportBeat).toHaveBeenLastCalledWith(2_400, expect.any(Number));
       expect(toneMock.scheduled).toHaveLength(scheduledBeforeLongProjection);
       expect(toneMock.instruments).toHaveLength(instrumentsBeforeLongProjection);
       expect(toneMock.activeScheduleIds.size).toBe(schedulesPerCycle);
@@ -1286,7 +1291,7 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.transport.ticks = 384;
     boundary.callback(2);
     expect(activated).toHaveBeenCalledWith(undefined, 2);
-    expect(onTransportBeat).toHaveBeenLastCalledWith(2);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(2, expect.any(Number));
     expect(toneMock.instruments[0]!.triggerAttackRelease.mock.calls.map(call => call[0]))
       .toEqual([["C3", "G3", "B3"], ["D3", "A3", "C4"]]);
     runtime.stop();

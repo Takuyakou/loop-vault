@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "14.0",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P14.0-01"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "1028a3b2",
+  "lastVerifiedCommit": "e54838db",
+  "currentBranch": "feat/p14-midi-connection",
+  "requiredGates": {
+    "P14.0-01": [
+      "p14.0-01-phase-docs",
+      "p14.0-01-controller",
+      "p14.0-01-race",
+      "p14.0-01-header-panel",
+      "p14.0-01-modes",
+      "p14.0-01-drop-pause",
+      "p14.0-01-input",
+      "p14.0-01-e2e",
+      "p14.0-01-existing-e2e",
+      "p14.0-01-io-unchanged",
+      "p14.0-01-screenshots",
+      "p14.0-01-full-fresh",
+      "p14.0-01-exe",
+      "p14.0-01-report"
+    ]
+  },
+  "gateResults": {
+    "p14.0-01-phase-docs": "pass",
+    "p14.0-01-controller": "pass",
+    "p14.0-01-race": "pass",
+    "p14.0-01-header-panel": "pass",
+    "p14.0-01-modes": "pass",
+    "p14.0-01-drop-pause": "pass",
+    "p14.0-01-input": "pass",
+    "p14.0-01-e2e": "pass",
+    "p14.0-01-io-unchanged": "pass",
+    "p14.0-01-existing-e2e": "pass",
+    "p14.0-01-screenshots": "pass",
+    "p14.0-01-full-fresh": "pass",
+    "p14.0-01-exe": "pass",
+    "p14.0-01-report": "pass"
+  },
+  "nextAction": "人間が EXE で確かめる（報告の 11）。merge 候補 e54838db。merge・push・tag・release はしていない。",
+  "updatedAt": "2026-10-09"
+}

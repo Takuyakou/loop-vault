@@ -1,4 +1,5 @@
 import type { ChordSymbol } from "../types";
+import { supportsTextChord } from "../textChordConsumerCapabilities";
 import { labelFromSymbol } from "../chords";
 import { chordPitchClasses } from "../chordVoicing";
 import {
@@ -121,6 +122,10 @@ export function resolveProgressionPracticeVoicings(
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, index) => {
+    if (!supportsTextChord("generated-loop", event.chord)) {
+      resolutions[index] = unsupportedRule(event.id);
+      return;
+    }
     const candidates = selection === "left-hand"
       ? leftHandCandidates(event.chord, candidateOptions, options.leftHandVariant ?? "auto")
       : basicCandidates(event.chord, selection, candidateOptions);
@@ -175,7 +180,8 @@ export function resolveProgressionPracticeVoicings(
  * optimizer, so neighboring cards still influence voice leading.
  */
 function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): ProgressionPracticeVoicingPlan {
-  const groups = snapshot.events.map(event => {
+  const supportedEvents = snapshot.events.filter(event => supportsTextChord("generated-loop", event.chord));
+  const groups = supportedEvents.map(event => {
     const chord = asChordSymbol(event.chord);
     const bassPc = pitchClass(chord.bass ?? chord.root);
     const bassNote = 43 + ((bassPc - 43 + 120) % 12);
@@ -196,8 +202,10 @@ function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): Pro
     });
   });
   const optimized = optimizeCandidateGroups(groups);
-  const resolutions = snapshot.events.map((event, index) => {
-    const candidate = optimized[index];
+  const byEvent = new Map(supportedEvents.map((event, index) => [event.id, optimized[index]]));
+  const resolutions = snapshot.events.map(event => {
+    if (!supportsTextChord("generated-loop", event.chord)) return unsupportedRule(event.id);
+    const candidate = byEvent.get(event.id);
     if (!candidate) return generationError(event.id);
     const midiNotes = Object.freeze([...candidate.allNotes]);
     const bassNote = candidate.leftHandNotes[0]!;
@@ -268,6 +276,10 @@ function resolveStudyVoicings(
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, eventIndex) => {
+    if (!supportsTextChord("generated-loop", event.chord)) {
+      resolutions[eventIndex] = unsupportedRule(event.id);
+      return;
+    }
     const candidates = generateStudyCandidates(asChordSymbol(event.chord), study, context, {
       ...options,
       modifiers: { color: options.color, open: options.open },
@@ -755,6 +767,7 @@ function unique(values: readonly string[]): string[] {
 
 function asChordSymbol(chord: ProgressionPracticeChord): ChordSymbol {
   return {
+    ...(chord.altered ? { altered: true as const } : {}),
     root: chord.root,
     quality: chord.quality,
     tensions: [...chord.tensions],

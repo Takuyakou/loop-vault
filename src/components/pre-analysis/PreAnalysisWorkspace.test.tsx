@@ -6,6 +6,8 @@ import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
+  applyAnalysisSessionPreset,
+  buildSessionAnalysisRequest,
   createAnalysisSession,
   type AnalysisSession,
 } from "../../domain/midi/preAnalysis";
@@ -20,22 +22,52 @@ beforeAll(() => {
   );
 });
 
-describe("PreAnalysisWorkspace", () => {
-  it("renders one Canvas instead of one DOM element per note", async () => {
-    const session = fixtureSession();
-    const { container, unmount } = await renderWorkspace(session);
+describe("PreAnalysisWorkspace (取り込み前の確認)", () => {
+  it("draws the notes on canvases, not as DOM nodes, and says what the screen is", async () => {
+    const { container, unmount } = await renderWorkspace(fixtureSession());
 
-    expect(container.querySelectorAll("canvas")).toHaveLength(1);
+    expect(container.querySelector("[data-testid='pre-analysis-piano-roll']")).not.toBeNull();
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(0);
-    expect(container.textContent).toContain("読み込んだMIDI");
-    expect(container.textContent).toContain("Piano");
-    expect(container.textContent).toContain("Bass");
-    expect(container.textContent).toContain("Drums");
-
+    expect(container.querySelector("h2")?.textContent).toBe("取り込み前の確認");
+    // The old wording is gone.
+    for (const word of ["Voice", "和声コア", "プリセット", "読み込んだMIDI", "この構成で解析"]) {
+      expect(container.textContent).not.toContain(word);
+    }
     await unmount();
   });
 
-  it("shows only a robust real-time weighted tempo range", async () => {
+  it("names a part by track name, then instrument name, then 「パート n」", async () => {
+    const named = createAnalysisSession([{
+      sourceId: "names",
+      displayName: "names.mid",
+      bytes: midi([0], { trackName: "Keys" }),
+    }]).session!;
+    const unnamed = createAnalysisSession([{
+      sourceId: "plain",
+      displayName: "plain.mid",
+      bytes: midi([0, 9]),
+    }]).session!;
+    const noProgram: AnalysisSession = {
+      ...unnamed,
+      voices: unnamed.voices.map((voice) => ({ ...voice, gmProgramName: undefined })),
+    };
+
+    const first = await renderWorkspace(named);
+    expect(first.container.querySelector("[data-voice-id] .lv-pa-pname")?.textContent).toBe("Keys");
+    await first.unmount();
+
+    const second = await renderWorkspace(unnamed);
+    const names = [...second.container.querySelectorAll(".lv-pa-pname")].map((n) => n.textContent);
+    expect(names).toEqual(["Acoustic Grand Piano", "ドラム"]);
+    await second.unmount();
+
+    const third = await renderWorkspace(noProgram);
+    const fallback = [...third.container.querySelectorAll(".lv-pa-pname")].map((n) => n.textContent);
+    expect(fallback[0]).toBe("パート 1");
+    await third.unmount();
+  });
+
+  it("shows file facts and only a robust, real-time weighted tempo range", async () => {
     const base = fixtureSession();
     const master = base.sources[0]!;
     const session = {
@@ -59,12 +91,25 @@ describe("PreAnalysisWorkspace", () => {
     };
     const { container, unmount } = await renderWorkspace(session);
 
-    expect(container.textContent).toContain("108 BPM");
+    expect(container.textContent).toContain("♩108");
+    expect(container.textContent).toContain("4/4");
     expect(container.textContent).toContain("テンポ変動あり 90〜120 BPM");
+    expect(container.textContent).not.toContain("テンポ・拍子に問題なし");
     await unmount();
   });
 
-  it("renders every Voice from an all-in-one Type 0 MIDI", async () => {
+  it("says 「問題なし」 only when tempo, meter and files agree", async () => {
+    const single = createAnalysisSession([{
+      sourceId: "ok",
+      displayName: "ok.mid",
+      bytes: midi([0]),
+    }]).session!;
+    const { container, unmount } = await renderWorkspace(single);
+    expect(container.textContent).toContain("✓ テンポ・拍子に問題なし");
+    await unmount();
+  });
+
+  it("lists every part of an all-in-one Type 0 MIDI, with the file name kept off the cards", async () => {
     const session = createAnalysisSession([{
       sourceId: "all-in-one",
       displayName: "all_instruments.mid",
@@ -72,25 +117,18 @@ describe("PreAnalysisWorkspace", () => {
     }]).session!;
     const { container, unmount } = await renderWorkspace(session);
 
-    expect(session.sources).toHaveLength(1);
     expect(session.voices).toHaveLength(11);
-    expect(container.querySelector("[data-testid='pre-analysis-workspace']")
-      ?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
-    expect(container.querySelectorAll("select")).toHaveLength(11);
     expect(container.querySelectorAll("[data-voice-id]")).toHaveLength(11);
-    expect(new Set([...container.querySelectorAll<HTMLElement>("[data-voice-id]")]
-      .map((row) => row.dataset.voiceColor)).size).toBe(11);
-    expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
-      .toHaveLength(1);
-    expect(container.textContent).toContain("SMF 0");
-    expect(container.textContent).toContain("Drums");
-
+    expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']")).toHaveLength(1);
+    expect(container.querySelector("[data-testid='pre-analysis-part-list']")
+      ?.textContent).not.toContain("all_instruments.mid");
+    expect(container.textContent).toContain("ch1");
     await unmount();
   });
 
-  it("shows Role v2 confidence buckets and privacy-safe evidence without percentages", async () => {
+  it("marks a part 「自動」 until it is changed, and explains the guess on hover", async () => {
     const base = fixtureSession();
-    const voice = base.voices.find((entry) => !entry.isDrum)!;
+    const voice = base.voices.find((entry) => !entry.isDrum && !entry.duplicateOf)!;
     const session = {
       ...base,
       voices: base.voices.map((entry) => entry.id === voice.id
@@ -102,17 +140,55 @@ describe("PreAnalysisWorkspace", () => {
           }
         : entry),
     };
-    const { container, unmount } = await renderWorkspace(session);
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const card = () => container.querySelector<HTMLElement>(`[data-voice-id="${voice.id}"]`)!;
+    const badge = () => card().querySelector<HTMLElement>(".lv-pa-badge")!;
 
-    expect(container.textContent).toContain("信頼度: 低");
-    expect(container.textContent).toContain("高い音域");
-    expect(container.textContent).toContain("順次進行");
-    expect(container.textContent).toContain("要確認");
-    expect(container.textContent).not.toContain("90%");
+    expect(badge().textContent).toBe("自動");
+    expect(badge().title).toContain("自信：低い");
+    expect(badge().title).toContain("高い音域");
+    expect(badge().title).toContain("順に動く");
+    expect(badge().title).not.toContain("90%");
 
+    const other = card().dataset.role === "bass" ? "melody" : "bass";
+    await act(async () => {
+      card().querySelector<HTMLButtonElement>(`[data-r="${other}"]`)!.click();
+    });
+    expect(badge().textContent).toBe("変更");
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>(".lv-pa-link")]
+        .find((button) => button.textContent?.includes("自動の見立てに戻す"))!.click();
+    });
+    expect(badge().textContent).toBe("自動");
+    expect([...container.querySelectorAll(".lv-pa-badge")]
+      .every((element) => element.textContent === "自動")).toBe(true);
     await unmount();
   });
-  it("exposes an accessible, localized opt-in Harmonic Core contribution preset", async () => {
+
+  it("changes a role with one click, and each button is the old role value", async () => {
+    const session = fixtureSession();
+    const target = session.voices.find((voice) => !voice.isDrum && !voice.duplicateOf)!;
+    const onSessionChange = vi.fn();
+    const { container, unmount } = await renderWorkspace(session, { onSessionChange });
+    const click = async (role: string) => {
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>(
+          `[data-voice-id="${target.id}"] [data-r="${role}"]`,
+        )!.click();
+      });
+      return lastSession(onSessionChange).voices.find((voice) => voice.id === target.id)!;
+    };
+
+    expect(await click("chord")).toMatchObject({ assignedRole: "harmony", included: true });
+    expect(await click("bass")).toMatchObject({ assignedRole: "bass", included: true });
+    expect(await click("melody")).toMatchObject({ assignedRole: "melody-weak", included: true });
+    expect(await click("off")).toMatchObject({ assignedRole: "exclude", included: false });
+    expect(lastSession(onSessionChange).preset).toBe("custom");
+    await unmount();
+  });
+
+  it("puts the one mixed-notes choice above the part list, and not in the cards", async () => {
     const { container, unmount } = await renderStatefulWorkspace(fixtureSession());
     const standard = container.querySelector<HTMLButtonElement>(
       "[data-analysis-contribution-preset='standard']",
@@ -120,420 +196,83 @@ describe("PreAnalysisWorkspace", () => {
     const harmonicCore = container.querySelector<HTMLButtonElement>(
       "[data-analysis-contribution-preset='harmonic-core']",
     )!;
+    const list = container.querySelector("[data-testid='pre-analysis-part-list']")!;
 
+    expect(standard.textContent).toBe("分けない");
+    expect(harmonicCore.textContent).toBe("アプリに任せる");
+    expect(list.contains(standard)).toBe(false);
+    expect(list.querySelectorAll("[role='radiogroup']")).toHaveLength(0);
+    expect(standard.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
     expect(standard.getAttribute("aria-checked")).toBe("true");
-    expect(harmonicCore.getAttribute("aria-checked")).toBe("false");
-    expect(harmonicCore.closest("[role='radiogroup']")
-      ?.getAttribute("aria-describedby")).toBe(
-        "pre-analysis-harmonic-core-description pre-analysis-contribution-apply-hint",
-      );
-    expect(container.querySelector("#pre-analysis-harmonic-core-description")?.textContent)
-      .toBe("テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします");
-    expect(container.querySelector("#pre-analysis-contribution-apply-hint")?.textContent)
-      .toBe("選択後は「この設定で解析」を押すと結果に反映されます。");
+    expect(container.querySelector("#pre-analysis-voice-contribution")?.textContent)
+      .toContain("全パート共通");
 
     document.body.append(container);
     standard.focus();
-    expect(document.activeElement).toBe(standard);
-    expect(standard.tabIndex).toBe(0);
-    expect(harmonicCore.tabIndex).toBe(-1);
-
     await act(async () => {
-      standard.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "ArrowRight",
-        bubbles: true,
-      }));
+      standard.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
     expect(document.activeElement).toBe(harmonicCore);
     expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
-    expect(harmonicCore.tabIndex).toBe(0);
-    expect(standard.tabIndex).toBe(-1);
-
+    expect(container.querySelector("#pre-analysis-mix-note")?.textContent)
+      .toBe("和音の名前の決め方を変えます。曲によっては結果が変わらないこともあります");
+    expect(container.textContent).not.toContain("ベースを解析対象から除外");
     await act(async () => {
-      harmonicCore.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "Home",
-        bubbles: true,
-      }));
+      harmonicCore.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
     });
-    expect(document.activeElement).toBe(standard);
     expect(standard.getAttribute("aria-checked")).toBe("true");
-
-    await act(async () => {
-      standard.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "End",
-        bubbles: true,
-      }));
-    });
-    expect(document.activeElement).toBe(harmonicCore);
-    expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
-
     await unmount();
     container.remove();
   });
 
-  it("announces when the current settings still need to be analyzed", async () => {
-    const { container, unmount } = await renderWorkspace(fixtureSession(), {
-      requiresReanalysis: true,
-    });
-
-    const warning = container.querySelector(
-      "[data-testid='pre-analysis-reanalysis-required']",
-    );
-    expect(warning?.textContent).toContain("再解析が必要です");
-    expect(warning?.textContent).toContain(
-      "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
-    );
-
-    await unmount();
-  });
-
-  it("opens details for a simple one-Voice piano without adding a required step", async () => {
-    const session = createAnalysisSession([{
-      sourceId: "simple",
-      displayName: "piano.mid",
-      bytes: midi([0]),
-    }]).session!;
-    const { container, unmount } = await renderWorkspace(session);
-    const workspace = container.querySelector("[data-testid='pre-analysis-workspace']");
-
-    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
-    expect(container.querySelectorAll("canvas")).toHaveLength(1);
-    expect(container.textContent).toContain("解析対象:");
-    expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
-      .toHaveLength(1);
-
-    await unmount();
-  });
-
-  it("switches presets and moves manual role edits to Custom", async () => {
+  it("offers the old presets under 「詳しい設定」, with the same result as before", async () => {
     const session = fixtureSession();
     const onSessionChange = vi.fn();
-    const { container, unmount } = await renderWorkspace(
-      session,
-      { onSessionChange },
-    );
+    const { container, unmount } = await renderWorkspace(session, { onSessionChange });
 
-    const allParts = [...container.querySelectorAll<HTMLButtonElement>('[role="radio"]')]
-      .find((button) => button.textContent === "全パート")!;
-    await act(async () => allParts.click());
-    expect(lastSession(onSessionChange)).toMatchObject({
+    expect(container.querySelector("[data-analysis-preset]")).toBeNull();
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.includes("詳しい設定"))!.click();
+    });
+    const options = [...container.querySelectorAll<HTMLElement>("[data-analysis-preset]")];
+    expect(options.map((option) => option.dataset.analysisPreset))
+      .toEqual(["auto", "harmony-bass", "accompaniment-only", "all-pitched"]);
+    expect(container.querySelector('[data-analysis-preset="custom"]')).toBeNull();
+
+    for (const preset of ["auto", "harmony-bass", "accompaniment-only", "all-pitched"] as const) {
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>(`[data-analysis-preset="${preset}"]`)!.click();
+      });
+      expect(lastSession(onSessionChange)).toEqual(applyAnalysisSessionPreset(session, preset));
+    }
+    await unmount();
+  });
+
+  it("counts and lists what the analysis will really take", async () => {
+    const base = fixtureSession();
+    const target = base.voices.find((voice) => !voice.isDrum && !voice.duplicateOf)!;
+    const session: AnalysisSession = {
+      ...base,
       preset: "all-pitched",
-    });
-
-    const roleSelect = container.querySelector<HTMLSelectElement>(
-      'select[aria-label="Acoustic Grand Pianoの解析役割"]',
-    )!;
-    await act(async () => {
-      roleSelect.value = "exclude";
-      roleSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(lastSession(onSessionChange)).toMatchObject({
-      preset: "custom",
-    });
-    const changed = lastSession(onSessionChange);
-    expect(changed.voices.find((voice) =>
-      voice.displayName === "Acoustic Grand Piano")).toMatchObject({
-      assignedRole: "exclude",
-      included: false,
-    });
-
-    const reset = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("自動推定に戻す"));
-    await act(async () => reset?.click());
-    expect(lastSession(onSessionChange).preset).toBe("auto");
-
-    await unmount();
-  });
-
-  it("keeps Channel 10 protected while enabling duplicate review in Custom", async () => {
-    const base = fixtureSession();
-    const target = base.voices.find((voice) =>
-      !voice.isDrum && !voice.duplicateOf)!;
-    const drum = base.voices.find((voice) => voice.isDrum)!;
-    const duplicate = base.voices.find((voice) => voice.duplicateOf)!;
-    const session: AnalysisSession = {
-      ...base,
-      preset: "auto",
       voices: base.voices.map((voice) => voice.id === target.id
-        ? {
-            ...voice,
-            autoRole: "exclude",
-            assignedRole: "exclude",
-            included: false,
-          }
-        : (voice.isDrum
-          ? { ...voice, assignedRole: "harmony" as const, included: true }
-          : voice)),
+        // included, but the role is 「使わない」: the analysis ignores such a part.
+        ? { ...voice, assignedRole: "exclude" as const, included: true }
+        : voice),
     };
-    const { container, unmount } = await renderStatefulWorkspace(session);
-    const controlsFor = (voiceId: string) => {
-      const row = [...container.querySelectorAll<HTMLElement>("[data-voice-id]")]
-        .find((candidate) => candidate.dataset.voiceId === voiceId)!;
-      return {
-        checkbox: row.querySelector<HTMLInputElement>('input[type="checkbox"]')!,
-        role: row.querySelector<HTMLSelectElement>("select")!,
-      };
-    };
+    const really = buildSessionAnalysisRequest(session).selectedVoiceIds.length;
+    expect(really).toBe(session.voices.filter((voice) =>
+      !voice.isDrum && voice.included && voice.assignedRole !== "exclude").length);
+    const { container, unmount } = await renderWorkspace(session);
 
-    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
-    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
-    expect(controlsFor(drum.id).role.disabled).toBe(true);
-    expect(controlsFor(drum.id).role.value).toBe("exclude");
-    expect(controlsFor(duplicate.id).checkbox.checked).toBe(false);
-    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(true);
-    expect(controlsFor(duplicate.id).role.disabled).toBe(true);
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        '[data-analysis-preset="custom"]',
-      )?.click();
-    });
-
-    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
-    expect(controlsFor(drum.id).role.disabled).toBe(true);
-    expect(controlsFor(drum.id).role.value).toBe("exclude");
-    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(false);
-    expect(controlsFor(duplicate.id).role.disabled).toBe(false);
-
-    await act(async () => {
-      controlsFor(target.id).checkbox.click();
-      controlsFor(duplicate.id).checkbox.click();
-    });
-
-    expect(controlsFor(target.id).checkbox.checked).toBe(true);
-    expect(controlsFor(target.id).role.value).toBe("harmony");
-    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
-    expect(controlsFor(drum.id).role.value).toBe("exclude");
-    expect(controlsFor(duplicate.id).checkbox.checked).toBe(true);
-    expect(controlsFor(duplicate.id).role.value).not.toBe("exclude");
-    expect(container.querySelector<HTMLElement>(
-      '[data-analysis-preset="custom"]',
-    )?.getAttribute("aria-checked")).toBe("true");
-
+    expect(container.querySelector("[data-testid=pre-analysis-part-count]")?.textContent)
+      .toBe(`${session.voices.length}パート中 ${really}パートを解析します`);
+    expect(container.querySelector("[data-testid=pre-analysis-summary]")?.textContent)
+      .toContain("使わない:");
     await unmount();
   });
 
-  it("keeps the Piano Roll synchronized with the selected analysis preset", async () => {
-    const base = createAnalysisSession([{
-      sourceId: "preset-visual",
-      displayName: "preset-visual.mid",
-      bytes: midi([0, 1, 2, 9]),
-    }]).session!;
-    const roles = ["harmony", "bass", "melody-weak", "exclude"] as const;
-    const session: AnalysisSession = {
-      ...base,
-      preset: "auto",
-      voices: base.voices.map((voice, index) => ({
-        ...voice,
-        autoRole: roles[index],
-        assignedRole: roles[index],
-        included: index < 3,
-      })),
-    };
-    const { container, onAnalyze, unmount } = await renderStatefulWorkspace(session);
-    const canvas = container.querySelector<HTMLCanvasElement>(
-      "[data-testid='pre-analysis-piano-roll']",
-    )!;
-
-    expect(canvas.dataset.displayScope).toBe("analysis-targets");
-    expect(canvas.dataset.contributionPreset).toBe("standard");
-    expect(canvas.dataset.visibleNoteCount).toBe("3");
-    expect(canvas.dataset.weightedNoteCount).toBe("0");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        "[data-analysis-contribution-preset='harmonic-core']",
-      )?.click();
-    });
-    expect(onAnalyze).not.toHaveBeenCalled();
-    expect(canvas.dataset.contributionPreset).toBe("harmonic-core");
-    expect(canvas.getAttribute("aria-describedby")).toBe(
-      "pre-analysis-harmonic-core-piano-roll-preview",
-    );
-    expect(canvas.dataset.visibleNoteCount).toBe("2");
-    expect(canvas.dataset.boostedVoiceCount).toBe("1");
-    expect(canvas.dataset.reducedVoiceCount).toBe("1");
-    expect(canvas.dataset.excludedVoiceCount).toBe("2");
-    expect(canvas.dataset.weightedNoteCount).toBe("1");
-    expect(canvas.dataset.uncertainNoteCount).toBe("1");
-    expect(container.querySelector(
-      "[data-testid='pre-analysis-harmonic-core-preview']",
-    )?.textContent).toContain("和声を強調");
-    expect(container.querySelector(
-      "[data-testid='pre-analysis-harmonic-core-preview']",
-    )?.textContent).toContain("ベースを解析対象から除外");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        "[data-analysis-contribution-preset='standard']",
-      )?.click();
-    });
-    expect(canvas.dataset.contributionPreset).toBe("standard");
-    expect(canvas.dataset.visibleNoteCount).toBe("3");
-    expect(canvas.dataset.weightedNoteCount).toBe("0");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        "[data-analysis-preset='accompaniment-only']",
-      )?.click();
-    });
-    expect(canvas.dataset.visibleNoteCount).toBe("1");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        "[data-piano-roll-scope='all-voices']",
-      )?.click();
-    });
-    expect(canvas.dataset.displayScope).toBe("all-voices");
-    expect(canvas.dataset.visibleNoteCount).toBe("4");
-
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        "[data-analysis-preset='harmony-bass']",
-      )?.click();
-      container.querySelector<HTMLButtonElement>(
-        "[data-piano-roll-scope='analysis-targets']",
-      )?.click();
-    });
-    expect(canvas.dataset.displayScope).toBe("analysis-targets");
-    expect(canvas.dataset.visibleNoteCount).toBe("2");
-
-    await unmount();
-  });
-
-  it("moves the same Piano Roll viewport from the timeline scrollbar", async () => {
-    const base = fixtureSession();
-    const session: AnalysisSession = {
-      ...base,
-      sources: base.sources.map((source) => ({
-        ...source,
-        durationBeats: 64,
-      })),
-    };
-    const { container, unmount } = await renderStatefulWorkspace(session);
-    const zoom = container.querySelector<HTMLInputElement>(
-      "#pre-analysis-zoom",
-    )!;
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")
-        ?.set?.call(zoom, "4");
-      zoom.dispatchEvent(new Event("input", { bubbles: true }));
-      zoom.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-
-    const scrollbar = container.querySelector<HTMLDivElement>(
-      "[data-testid='pre-analysis-time-scrollbar']",
-    )!;
-    expect(scrollbar.className).toContain("cursor-pointer");
-    await act(async () => {
-      scrollbar.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "End",
-        bubbles: true,
-      }));
-    });
-
-    expect(scrollbar.getAttribute("aria-valuenow")).toBe("64");
-    expect(container.querySelector<HTMLCanvasElement>(
-      "[data-testid='pre-analysis-piano-roll']",
-    )?.dataset.viewportStartBeat).toBe("48");
-
-    const canvas = container.querySelector<HTMLCanvasElement>(
-      "[data-testid='pre-analysis-piano-roll']",
-    )!;
-    expect(canvas.className).toContain("cursor-pointer");
-    canvas.getBoundingClientRect = () => ({
-      x: 0,
-      y: 0,
-      top: 0,
-      right: 1000,
-      bottom: 290,
-      left: 0,
-      width: 1000,
-      height: 290,
-      toJSON: () => ({}),
-    });
-    await act(async () => {
-      canvas.dispatchEvent(pointerEvent("pointerdown", 519));
-      canvas.dispatchEvent(pointerEvent("pointerup", 519));
-    });
-    expect(Number(canvas.dataset.playheadBeat)).toBeGreaterThan(48);
-    expect(Number(canvas.dataset.playheadBeat)).toBeLessThan(64);
-
-    await unmount();
-  });
-
-  it("keeps Voice visibility independent from analysis inclusion", async () => {
-    const session = fixtureSession();
-    const onSessionChange = vi.fn();
-    const { container, unmount } = await renderWorkspace(
-      session,
-      { onSessionChange },
-    );
-
-    const hide = container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Acoustic Bassを非表示"]',
-    )!;
-    await act(async () => hide.click());
-    const changed = lastSession(onSessionChange);
-    expect(changed.voices.find((voice) =>
-      voice.displayName === "Acoustic Bass")).toMatchObject({
-      visible: false,
-      included: true,
-    });
-    expect(changed.preset).toBe("auto");
-
-    await unmount();
-  });
-
-  it("exposes add, remove, analyze, keyboard, and accessible controls", async () => {
-    const session = fixtureSession();
-    const onAddMidi = vi.fn();
-    const onRemoveSource = vi.fn();
-    const onAnalyze = vi.fn();
-    const { container, unmount } = await renderWorkspace(session, {
-      onAddMidi,
-      onRemoveSource,
-      onAnalyze,
-    });
-    const addMidiButton = container.querySelector<HTMLButtonElement>(
-      "[data-testid='pre-analysis-add-midi']",
-    )!;
-    const analyzeButton = container.querySelector<HTMLButtonElement>(
-      "[data-testid='pre-analysis-analyze']",
-    )!;
-    expect(addMidiButton.parentElement).toBe(analyzeButton.parentElement);
-    expect(addMidiButton.compareDocumentPosition(analyzeButton)
-      & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
-    expect(container.querySelector(
-      "[data-testid='pre-analysis-primary-actions']",
-    )?.textContent).toContain("4 Voice中 2 Voiceを解析します");
-
-    await act(async () => {
-      [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.includes("MIDIを追加"))?.click();
-      [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.includes("この構成で解析"))?.click();
-      [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.getAttribute("aria-label")
-          ?.startsWith("MIDIを削除:"))?.click();
-    });
-    expect(onAddMidi).toHaveBeenCalledOnce();
-    expect(onAnalyze).toHaveBeenCalledOnce();
-    expect(onRemoveSource).toHaveBeenCalledWith("master");
-
-    const canvas = container.querySelector<HTMLCanvasElement>("canvas")!;
-    await act(async () => {
-      canvas.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "ArrowRight",
-        bubbles: true,
-      }));
-    });
-    expect(canvas.getAttribute("aria-label")).toContain("左右キー");
-
-    await unmount();
-  });
-
-  it("explains why Analyze is disabled when no Voice is selected", async () => {
+  it("explains why 「解析する」 is disabled when no part is used", async () => {
     const session = fixtureSession();
     const { container, unmount } = await renderWorkspace({
       ...session,
@@ -548,50 +287,210 @@ describe("PreAnalysisWorkspace", () => {
       "[data-testid='pre-analysis-analyze']",
     )!;
     expect(analyze.disabled).toBe(true);
-    expect(analyze.getAttribute("aria-describedby"))
-      .toBe("pre-analysis-disabled-reason");
+    expect(analyze.getAttribute("aria-describedby")).toBe("pre-analysis-disabled-reason");
     expect(container.querySelector("#pre-analysis-disabled-reason")?.textContent)
       .toContain("1つ以上選んでください");
     await unmount();
   });
 
-  it("uses one Play / Stop toggle while keeping Voice audition controls independent", async () => {
+  it("answers the keyboard, except while an input has the focus", async () => {
+    const session = fixtureSession();
+    const onSessionChange = vi.fn();
+    const onAnalyze = vi.fn();
+    const onPlay = vi.fn();
+    const { container, unmount } = await renderStatefulWorkspace(session, { onAnalyze, onPlay, onSessionChange });
+    const press = async (key: string, target: EventTarget = window) => {
+      await act(async () => {
+        target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+      });
+    };
+    const selected = () => container.querySelector<HTMLElement>("[data-selected]")?.dataset.voiceId;
+    // The newest file is selected when a session opens.
+    const first = selected()!;
+    const index = session.voices.findIndex((voice) => voice.id === first);
+    const second = session.voices[(index + 1) % session.voices.length]!.id;
+    const secondIsBelow = index + 1 < session.voices.length;
+    const roleOf = (id: string) => container.querySelector<HTMLElement>(
+      `[data-voice-id="${id}"]`,
+    )!.dataset.role;
+
+    if (secondIsBelow) {
+      await press("ArrowDown");
+      expect(selected()).toBe(second);
+      await press("ArrowUp");
+    } else {
+      await press("ArrowUp");
+      await press("ArrowDown");
+    }
+    expect(selected()).toBe(first);
+
+    await press("3");
+    expect(roleOf(first)).toBe("melody");
+    await press("2");
+    expect(roleOf(first)).toBe("bass");
+    await press("0");
+    expect(roleOf(first)).toBe("off");
+    await press("1");
+    expect(roleOf(first)).toBe("chord");
+
+    await press("s");
+    expect(container.querySelector(`[data-voice-id="${first}"] [aria-label$="をソロ"]`)
+      ?.getAttribute("aria-pressed")).toBe("true");
+    await press("m");
+    expect(lastSession(onSessionChange).voices.find((voice) => voice.id === first)?.muted).toBe(true);
+
+    await press(" ");
+    expect(onPlay).toHaveBeenCalledOnce();
+    await press("Enter");
+    expect(onAnalyze).toHaveBeenCalledOnce();
+
+    // An open select keeps its keys.
+    const select = document.createElement("select");
+    container.append(select);
+    await press("0", select);
+    expect(roleOf(first)).toBe("chord");
+    await press("Enter", select);
+    expect(onAnalyze).toHaveBeenCalledOnce();
+    await unmount();
+  });
+
+  it("moves the roll from the whole-song strip", async () => {
+    const base = fixtureSession();
+    const session: AnalysisSession = {
+      ...base,
+      sources: base.sources.map((source) => ({ ...source, durationBeats: 64 })),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const strip = container.querySelector<HTMLDivElement>("[data-testid='pre-analysis-overview']")!;
+    const canvas = container.querySelector<HTMLCanvasElement>("[data-testid='pre-analysis-piano-roll']")!;
+    strip.getBoundingClientRect = () => ({
+      x: 0, y: 0, top: 0, right: 1000, bottom: 36, left: 0, width: 1000, height: 36, toJSON: () => ({}),
+    });
+    expect(strip.querySelector("[data-navigator-frame]")).not.toBeNull();
+
+    await act(async () => {
+      strip.dispatchEvent(pointerEvent("pointerdown", 900));
+      strip.dispatchEvent(pointerEvent("pointerup", 900));
+    });
+    expect(Number(canvas.dataset.playheadBeat)).toBeGreaterThan(50);
+    expect(Number(canvas.dataset.viewportStartBeat)).toBeGreaterThan(0);
+    await unmount();
+  });
+
+  it("sets the roll position by clicking the roll, and zooms with the slider", async () => {
+    const base = fixtureSession();
+    const session: AnalysisSession = {
+      ...base,
+      sources: base.sources.map((source) => ({ ...source, durationBeats: 64 })),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const canvas = container.querySelector<HTMLCanvasElement>("[data-testid='pre-analysis-piano-roll']")!;
+    const before = Number(canvas.dataset.pixelsPerBeat);
+    const zoom = container.querySelector<HTMLInputElement>("#pre-analysis-zoom")!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(zoom, "4");
+      zoom.dispatchEvent(new Event("input", { bubbles: true }));
+      zoom.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(Number(canvas.dataset.pixelsPerBeat)).toBe(before * 4);
+
+    canvas.getBoundingClientRect = () => ({
+      x: 0, y: 0, top: 0, right: 1000, bottom: 300, left: 0, width: 1000, height: 300, toJSON: () => ({}),
+    });
+    await act(async () => {
+      canvas.dispatchEvent(pointerEvent("pointerdown", 300));
+      canvas.dispatchEvent(pointerEvent("pointerup", 300));
+    });
+    expect(Number(canvas.dataset.playheadBeat)).toBeGreaterThan(0);
+    await unmount();
+  });
+
+  it("keeps a part's visibility independent from analysis", async () => {
+    const session = fixtureSession();
+    const onSessionChange = vi.fn();
+    const { container, unmount } = await renderWorkspace(session, { onSessionChange });
+    const hide = [...container.querySelectorAll<HTMLButtonElement>("[data-voice-id] button")]
+      .find((button) => button.getAttribute("aria-label")?.endsWith("を非表示"))!;
+    await act(async () => hide.click());
+    const changed = lastSession(onSessionChange);
+    expect(changed.voices.filter((voice) => !voice.visible)).toHaveLength(1);
+    expect(changed.voices.filter((voice) => voice.included).length)
+      .toBe(session.voices.filter((voice) => voice.included).length);
+    expect(changed.preset).toBe("auto");
+    await unmount();
+  });
+
+  it("announces that the settings still need to be analysed", async () => {
+    const { container, unmount } = await renderWorkspace(fixtureSession(), { requiresReanalysis: true });
+    const banner = container.querySelector("[data-testid='pre-analysis-reanalysis-required']");
+    expect(banner?.textContent).toContain("再解析が必要です");
+    expect(banner?.textContent).toContain("「解析する」を押してください");
+    await unmount();
+  });
+
+  it("shows file warnings in a band at the top", async () => {
+    const base = fixtureSession();
+    const session: AnalysisSession = {
+      ...base,
+      warnings: [{ code: "time-signature-mismatch", sourceIds: ["master", "split"] }],
+    };
+    const { container, unmount } = await renderWorkspace(session);
+    const band = container.querySelector(".lv-pa-notices");
+    expect(band?.textContent).toContain("「split.mid」の拍子が「full.mid」と違います");
+    expect(container.textContent).not.toContain("master");
+    await unmount();
+  });
+
+  it("exposes add, remove and analyse", async () => {
+    const onAddMidi = vi.fn();
+    const onRemoveSource = vi.fn();
+    const onAnalyze = vi.fn();
+    const { container, unmount } = await renderWorkspace(fixtureSession(), {
+      onAddMidi,
+      onRemoveSource,
+      onAnalyze,
+    });
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='pre-analysis-add-midi']")!.click();
+      container.querySelector<HTMLButtonElement>("[data-testid='pre-analysis-analyze']")!.click();
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.getAttribute("aria-label")?.startsWith("MIDIを削除:"))!.click();
+    });
+    expect(onAddMidi).toHaveBeenCalledOnce();
+    expect(onAnalyze).toHaveBeenCalledOnce();
+    expect(onRemoveSource).toHaveBeenCalledWith("master");
+    // The file name appears under the part only when more than one file is loaded.
+    expect(container.querySelectorAll(".lv-pa-pfile").length).toBeGreaterThan(0);
+    await unmount();
+  });
+
+  it("uses one play / stop toggle, with solo and mute kept apart", async () => {
     const session = fixtureSession();
     const onSessionChange = vi.fn();
     const onPlay = vi.fn();
     const onStop = vi.fn();
-    const { container, unmount } = await renderWorkspace(session, {
-      onSessionChange,
-      onPlay,
-      onStop,
-    });
-
-    const playbackToggle = container.querySelector<HTMLButtonElement>(
+    const { container, unmount } = await renderWorkspace(session, { onSessionChange, onPlay, onStop });
+    const toggle = container.querySelector<HTMLButtonElement>(
       "[data-testid='pre-analysis-playback-toggle']",
     )!;
-    expect(playbackToggle.textContent).toContain("再生");
-    expect(playbackToggle.className).toContain("bg-[var(--lv-accent)]");
-    await act(async () => playbackToggle.click());
-    expect(playbackToggle.textContent).toContain("停止");
-    expect(playbackToggle.className).toContain("border-rose-300/70");
-    await act(async () => playbackToggle.click());
-    expect(playbackToggle.textContent).toContain("再生");
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>(
-        'button[aria-label="Acoustic Grand Pianoをミュート"]',
-      )?.click();
-    });
 
+    expect(toggle.textContent).toContain("再生");
+    await act(async () => toggle.click());
+    expect(toggle.textContent).toContain("停止");
+    await act(async () => toggle.click());
+    expect(toggle.textContent).toContain("再生");
     expect(onPlay).toHaveBeenCalledOnce();
-    expect(onStop).toHaveBeenCalledTimes(2);
-    expect(lastSession(onSessionChange).voices.find((voice) =>
-      voice.displayName === "Acoustic Grand Piano")).toMatchObject({
-      muted: true,
+    expect(onStop).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("[data-voice-id] button")]
+        .find((button) => button.getAttribute("aria-label")?.endsWith("を消音"))!.click();
     });
+    expect(lastSession(onSessionChange).voices.filter((voice) => voice.muted)).toHaveLength(1);
     await unmount();
   });
 
-  it("renders 100,000 notes on one Canvas without creating note DOM nodes", async () => {
+  it("draws 100,000 notes on a canvas without creating note DOM nodes", async () => {
     const base = fixtureSession();
     const voice = base.voices.find((candidate) => !candidate.isDrum)!;
     const source = base.sources.find((candidate) => candidate.id === voice.sourceId)!;
@@ -615,10 +514,8 @@ describe("PreAnalysisWorkspace", () => {
     const { container, unmount } = await renderWorkspace(session);
     const elapsedMs = performance.now() - startedAt;
 
-    expect(container.querySelectorAll("canvas")).toHaveLength(1);
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(0);
     expect(elapsedMs).toBeLessThan(3_000);
-
     await unmount();
   }, 10_000);
 });
@@ -628,7 +525,6 @@ async function renderWorkspace(
   overrides: Partial<Parameters<typeof PreAnalysisWorkspace>[0]> = {},
 ) {
   const container = document.createElement("div");
-  Object.defineProperty(container, "clientWidth", { value: 1000 });
   const root = createRoot(container);
   await act(async () => root.render(
     <PreAnalysisWorkspace
@@ -646,21 +542,31 @@ async function renderWorkspace(
   };
 }
 
-async function renderStatefulWorkspace(initialSession: AnalysisSession) {
+async function renderStatefulWorkspace(
+  initialSession: AnalysisSession,
+  handlers: {
+    onAnalyze?: () => void;
+    onPlay?: () => void;
+    onSessionChange?: (session: AnalysisSession) => void;
+  } = {},
+) {
   const container = document.createElement("div");
-  Object.defineProperty(container, "clientWidth", { value: 1000 });
   const root = createRoot(container);
-  const onAnalyze = vi.fn();
+  const onAnalyze = handlers.onAnalyze ?? vi.fn();
 
   function Harness() {
     const [session, setSession] = useState(initialSession);
     return (
       <PreAnalysisWorkspace
         session={session}
-        onSessionChange={setSession}
+        onSessionChange={(next) => {
+          handlers.onSessionChange?.(next);
+          setSession(next);
+        }}
         onAddMidi={vi.fn()}
         onRemoveSource={vi.fn()}
         onAnalyze={onAnalyze}
+        {...(handlers.onPlay ? { onPlay: handlers.onPlay } : {})}
       />
     );
   }
@@ -675,21 +581,18 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
 
 function fixtureSession(): AnalysisSession {
   return createAnalysisSession([
-    {
-      sourceId: "master",
-      displayName: "full.mid",
-      bytes: midi([0, 1, 9]),
-    },
-    {
-      sourceId: "split",
-      displayName: "split.mid",
-      bytes: midi([2]),
-    },
+    { sourceId: "master", displayName: "full.mid", bytes: midi([0, 1, 9]) },
+    { sourceId: "split", displayName: "split.mid", bytes: midi([2]) },
   ]).session!;
 }
 
-function midi(channels: readonly number[]): Uint8Array {
-  const events: MidiEvent[] = [{ deltaTime: 0, meta: true, type: "trackName", text: "Piano" }];
+function midi(
+  channels: readonly number[],
+  options: { trackName?: string } = {},
+): Uint8Array {
+  const events: MidiEvent[] = options.trackName
+    ? [{ deltaTime: 0, meta: true, type: "trackName", text: options.trackName }]
+    : [];
   channels.forEach((channel, index) => {
     events.push({
       deltaTime: 0,
@@ -741,7 +644,7 @@ function fakeCanvasContext() {
 }
 
 function lastSession(callback: ReturnType<typeof vi.fn>): AnalysisSession {
-  return callback.mock.calls[callback.mock.calls.length - 1][0] as AnalysisSession;
+  return callback.mock.calls[callback.mock.calls.length - 1]![0] as AnalysisSession;
 }
 
 function pointerEvent(type: string, clientX: number): Event {
@@ -749,6 +652,7 @@ function pointerEvent(type: string, clientX: number): Event {
   Object.defineProperties(event, {
     clientX: { value: clientX },
     pointerId: { value: 1 },
+    buttons: { value: 1 },
   });
   return event;
 }

@@ -1,4 +1,5 @@
 import { labelFromSymbol } from "../../../domain/chords";
+import { supportsTextChord } from "../../../domain/textChordConsumerCapabilities";
 import type {
   ChordQuality,
   ChordSymbol,
@@ -523,6 +524,7 @@ function isSnapshotChord(value: unknown): value is ChordContextSnapshotChord {
 function isChordSymbol(value: unknown): value is ChordSymbol {
   if (!isRecord(value)) return false;
   const { root, quality, tensions, bass } = value;
+  if (!supportsTextChord("chord-context", value)) return false;
   return typeof root === "number"
     && Number.isInteger(root)
     && root >= 0

@@ -113,7 +113,7 @@ Source Truth → Harmony Interpretation → Practice Rendering
 
 ## 11. Practice (Chord Dojo + voicing + transposition + mix)
 
-- Paths: `src/domain/voicingPractice/`, `src/domain/practiceTransposition/`, `src/domain/practiceMix/`, `src/views/PracticeView.tsx`, `src/components/practice/`
+- Paths: `src/domain/voicingPractice/`, `src/domain/practiceTransposition/`, `src/domain/practiceMix/`, `src/views/chord-dojo/ChordDojoView.tsx`, `src/domain/chordDojo/`, `src/components/practice/`
 - Responsibilities: voicing generation (shell/open/rootless, style generator, transition cost), transposition practice, mix sessions, keyboard practice UI.
 
 ## 12. Bass Practice (+ Record & Compare)

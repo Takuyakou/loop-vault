@@ -145,9 +145,9 @@ Chord Drip repositoryへのruntime依存、workspace参照、共通package化は
 
 2026-07-15の最終ビルドで次を生成した。生成物はGit管理対象外である。
 
-- 本体EXE: `D:/dev/Loop Vault/src-tauri/target-p365/release/loop-vault.exe`
-- MSI: `D:/dev/Loop Vault/src-tauri/target-p365/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi`
-- セットアップEXE: `D:/dev/Loop Vault/src-tauri/target-p365/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe`
+- 本体EXE: `<作業フォルダ>/Loop Vault/src-tauri/target-p365/release/loop-vault.exe`
+- MSI: `<作業フォルダ>/Loop Vault/src-tauri/target-p365/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi`
+- セットアップEXE: `<作業フォルダ>/Loop Vault/src-tauri/target-p365/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe`
 
 ## 10. 変更していないもの
 

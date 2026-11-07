@@ -202,3 +202,25 @@ describe("PianoKeyboardVisualizer", () => {
       .toContain("C5 (60), R1");
   });
 });
+
+it('Dojo can request scientific C2-C6 labels without changing the default keyboard',()=>{const keyboard=renderKeyboard({minMidiNote:36,maxMidiNote:84,octaveConvention:'scientific'});expect(keyboard.querySelector('[data-midi-note="36"] [data-c-label="C2"]')).not.toBeNull();expect(keyboard.querySelector('[data-midi-note="84"] [data-c-label="C6"]')).not.toBeNull();});
+
+it('Dojo reuses exact left/right production finger labels and keeps black-key labels clear of answer circles',()=>{const keyboard=renderKeyboard({appearance:'dojo',guideNotes:[60,61],leftHandGuideNotes:[60],rightHandGuideNotes:[61],fingerLabels:new Map([[60,'L2'],[61,'R3']]),heldNotes:[],sustainedNotes:[]});expect(keyboard.querySelector('[data-midi-note="60"] [data-finger-label]')?.textContent).toBe('L2');expect(keyboard.querySelector('[data-midi-note="61"] [data-finger-label]')?.textContent).toBe('R3');expect(keyboard.querySelector('[data-midi-note="60"] title')?.textContent).toContain('L2');const number=keyboard.querySelector('[data-midi-note="61"] [data-finger-label]')!,circle=keyboard.querySelector('[data-midi-note="61"] [data-answer-marker]')!;expect(Number(number.getAttribute('y'))).toBeLessThan(Number(circle.getAttribute('cy'))-Number(circle.getAttribute('r')));});
+it('hidden guide clears Dojo finger labels even when a stale map is supplied',()=>{const keyboard=renderKeyboard({appearance:'dojo',showGuide:false,concealNoteNames:true,fingerLabels:new Map([[60,'L2'],[61,'R3']])});expect(keyboard.querySelectorAll('[data-finger-label]')).toHaveLength(0);expect(keyboard.querySelectorAll('svg title')).toHaveLength(0);});
+
+describe("Dojo appearance: the height of the keys", () => {
+  const draw = (extra: Partial<PianoKeyboardVisualizerProps> = {}) =>
+    renderKeyboard({ minMidiNote: 48, maxMidiNote: 59, guideNotes: [], heldNotes: [], sustainedNotes: [], allowedPitchClasses: [], requiredPitchClasses: [], showGuide: false, appearance: "dojo", ...extra });
+  it("is 128 (white) and 80 (black) as before when no height is given", () => {
+    const container = draw();
+    expect(container.querySelector("svg")!.getAttribute("viewBox")!.split(" ")[3]).toBe("128");
+    expect(container.querySelector("[data-key-kind='white'] rect")!.getAttribute("height")).toBe("128");
+    expect(container.querySelector("[data-key-kind='black'] rect")!.getAttribute("height")).toBe("80");
+  });
+  it("draws the keys at the height it is given, the black keys 80/128 of it, so that the picture is not stretched", () => {
+    const container = draw({ dojoHeight: 208 });
+    expect(container.querySelector("svg")!.getAttribute("viewBox")!.split(" ")[3]).toBe("208");
+    expect(container.querySelector("[data-key-kind='white'] rect")!.getAttribute("height")).toBe("208");
+    expect(container.querySelector("[data-key-kind='black'] rect")!.getAttribute("height")).toBe("130");
+  });
+});

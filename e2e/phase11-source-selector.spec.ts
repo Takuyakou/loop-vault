@@ -28,8 +28,11 @@ for (const fixture of ["p11-identical", "p11-saved", "p11-one-hand"]) {
     const left = panel.getByTestId("voicing-loop-left-hand");
     const right = panel.getByTestId("voicing-loop-right-hand");
     await expect(right).toBeVisible();
-    if (fixture === "p11-one-hand") await expect(left).toHaveCount(0);
-    else {
+    // P5.26.2-02: a hand with no notes is still a panel (five empty slots), so the layout never depends on the chord.
+    if (fixture === "p11-one-hand") {
+      await expect(left).toBeVisible();
+      await expect(left.locator('td[data-used="true"]')).toHaveCount(0);
+    } else {
       await expect(left).toContainText("C4");
       await expect(right).not.toContainText("C4");
     }

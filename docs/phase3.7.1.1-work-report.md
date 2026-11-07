@@ -162,9 +162,9 @@ Phase 3.7.1.1 では、保存済み進行と MIDI 解析候補のコード編集
 
 ## 9. Windows成果物
 
-- 単体 EXE: `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
-- MSI: `D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
-- セットアップ EXE: `D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- 単体 EXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- MSI: `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
+- セットアップ EXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 ## 10. PR構成
 

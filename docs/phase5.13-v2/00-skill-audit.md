@@ -2,7 +2,7 @@
 
 ## ui-ux-pro-max
 
-- Path: `D:/dev/Loop Vault/.agents/skills/ui-ux-pro-max/SKILL.md`
+- Path: `<作業フォルダ>/Loop Vault/.agents/skills/ui-ux-pro-max/SKILL.md`
 - Product query:
   `desktop music production MIDI chord analysis dark workstation content-dense`
 - Design dials:

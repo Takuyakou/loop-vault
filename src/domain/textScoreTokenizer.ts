@@ -34,11 +34,11 @@ export function segmentScoreBar(
   const boundaries: number[] = [];
   let depth = 0;
   for (let i = 0; i < source.length; i += 1) {
-    const char = source[i]!;
+    const char = normalizeScoreSource(source[i]!);
     if (char === "(") depth += 1;
     if (char === ")") depth -= 1;
     if (depth < 0 || depth > 1) return { kind: "invalid" };
-    if (depth === 0 && /[A-G%_=]/.test(char) && source[i - 1] !== "/") boundaries.push(i);
+    if (depth === 0 && /[A-G%_=]/.test(char) && normalizeScoreSource(source[i - 1] ?? "") !== "/") boundaries.push(i);
   }
   if (depth !== 0) return { kind: "invalid" };
   boundaries.push(source.length);
@@ -46,7 +46,8 @@ export function segmentScoreBar(
   const identity = (tokens: readonly ScoreToken[]) => tokens.map(token => {
     const chord = parseCached(token.raw)!;
     if (typeof chord === "string") return chord;
-    return [chord.root, chord.quality, [...chord.tensions].sort(), chord.bass ?? chord.root];
+    return [chord.root, chord.quality, [...chord.tensions].sort(), chord.bass ?? chord.root,
+      ...(chord.altered ? ["alt"] : [])];
   });
   const search = (offset: number, remaining: number): readonly ScoreToken[][] => {
     while (offset < source.length && /\s/.test(source[offset]!)) offset += 1;
@@ -85,7 +86,19 @@ export function segmentScoreBar(
 
 /** Only root/type whitespace is removed, never arbitrary inter-chord spaces. */
 export function normalizeScoreChord(raw: string): string {
-  return raw.replace(/^([A-G](?:#|b)*)\s+(?=[^A-G\s])/, "$1");
+  return normalizeScoreSource(raw).replace(/^([A-G](?:#|b)*)\s+(?=[^A-G\s])/, "$1");
+}
+
+/** One-code-unit substitutions keep every diagnostic anchored to its source. */
+export function normalizeScoreSource(source: string): string {
+  return source.replace(/[！-～\u3000♭♯−–]/gu, char => {
+    const code = char.charCodeAt(0);
+    if (code >= 0xff01 && code <= 0xff5e) return String.fromCharCode(code - 0xfee0);
+    if (char === "　") return " ";
+    if (char === "♭") return "b";
+    if (char === "♯") return "#";
+    return "-";
+  });
 }
 
 /** Comments are replaced, not removed, so source offsets remain accurate. */

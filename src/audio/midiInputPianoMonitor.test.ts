@@ -24,6 +24,7 @@ const tone = vi.hoisted(() => {
     samplers,
     loaded: vi.fn(async () => undefined),
     start: vi.fn(async () => undefined),
+    immediate: vi.fn(() => 12.5),
   };
 });
 
@@ -34,6 +35,7 @@ vi.mock("tone", () => ({
   getDestination: vi.fn(() => new tone.AudioNode()),
   loaded: tone.loaded,
   start: tone.start,
+  immediate: tone.immediate,
 }));
 
 import { createMidiInputPianoMonitor } from "./midiInputPianoMonitor";
@@ -53,17 +55,18 @@ describe("MIDI input piano monitor", () => {
     expect(tone.start).toHaveBeenCalledOnce();
     expect(tone.loaded).toHaveBeenCalledOnce();
     expect(sampler.triggerAttack.mock.calls).toEqual([
-      ["C4", undefined, 0.68],
-      ["E4", undefined, 0.68],
+      ["C4", 12.5, 0.68],
+      ["E4", 12.5, 0.68],
     ]);
 
     monitor.updateNotes([64, 67]);
-    expect(sampler.triggerRelease).toHaveBeenCalledWith("C4");
-    expect(sampler.triggerAttack).toHaveBeenLastCalledWith("G4", undefined, 0.68);
+    expect(sampler.triggerRelease).toHaveBeenCalledWith("C4", 12.5);
+    expect(sampler.triggerAttack).toHaveBeenLastCalledWith("G4", 12.5, 0.68);
     expect(sampler.triggerAttack).toHaveBeenCalledTimes(3);
 
     monitor.stop();
     expect(sampler.releaseAll).toHaveBeenCalledOnce();
+    expect(sampler.releaseAll).toHaveBeenLastCalledWith(12.5);
     monitor.dispose();
     expect(sampler.releaseAll).toHaveBeenCalledTimes(2);
     expect(sampler.dispose).toHaveBeenCalledOnce();

@@ -1,3 +1,4 @@
+import { useEchoFramed } from "./EchoPracticeFrame";
 import { Badge } from "../../../components/ui";
 
 export function EchoPracticeHeader({
@@ -11,8 +12,9 @@ export function EchoPracticeHeader({
   readonly kicker: string;
   readonly title: string;
 }) {
+  const framed=useEchoFramed();
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="bass-echo-task flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <p className="lv-section-kicker">{kicker}</p>
         <h2 className="mt-1 text-2xl font-bold text-[var(--lv-text)]">{title}</h2>
@@ -20,7 +22,7 @@ export function EchoPracticeHeader({
           {description}
         </p>
       </div>
-      <Badge tone="indigo" className="w-fit">{badge}</Badge>
+      {!framed ? <Badge tone="indigo" className="w-fit">{badge}</Badge> : null}
     </div>
   );
 }
@@ -35,7 +37,7 @@ export function EchoPracticeProgress({
   readonly steps: readonly string[];
 }) {
   return (
-    <ol className={`grid gap-1 ${steps.length > 4 ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2 sm:grid-cols-4"}`} aria-label={ariaLabel}>
+    <ol className={`grid gap-1 ${steps.length === 3 ? "grid-cols-3" : steps.length > 4 ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2 sm:grid-cols-4"}`} aria-label={ariaLabel}>
       {steps.map((step, index) => (
         <li
           key={step}

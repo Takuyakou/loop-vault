@@ -239,6 +239,7 @@ function normalizeEvents(
 
 function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
   const canonical: ChordSymbol = {
+    ...(chord.altered ? { altered: true as const } : {}),
     root: chord.root,
     quality: chord.quality,
     tensions: [...chord.tensions],
@@ -248,6 +249,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
   };
   return Object.freeze({
     root: canonical.root,
+    ...(canonical.altered ? { altered: true as const } : {}),
     quality: canonical.quality,
     tensions: Object.freeze([...canonical.tensions]),
     ...(canonical.omissions?.length ? { omissions: Object.freeze([...canonical.omissions]) } : {}),
@@ -267,6 +269,7 @@ function validatedSavedChordLabel(source: ChordSymbol, canonical: ChordSymbol): 
 
 function sameChordSemantics(left: ChordSymbol, right: ChordSymbol): boolean {
   return left.root === right.root
+    && left.altered === right.altered
     && left.quality === right.quality
     && left.bass === right.bass
     && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|")

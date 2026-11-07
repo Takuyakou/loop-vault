@@ -1,4 +1,4 @@
-import { makeChordSymbol } from "../../domain/chords";
+import { formatChordSymbol, formatTextChordSymbol, makeChordSymbol } from "../../domain/chords";
 import type { ChordQuality, ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy } from "../../i18n";
 
@@ -38,7 +38,10 @@ export function ChordStructureEditor({
 }: ChordStructureEditorProps) {
   const text = progressionEditorCopy.ja;
   function update(root: number, quality: ChordQuality, bass: number | undefined) {
-    onChange(makeChordSymbol(root, quality, [...chord.tensions], bass));
+    const next = { ...makeChordSymbol(root, quality, [...chord.tensions], bass),
+      ...(chord.altered && quality === "dom7" ? { altered: true as const } : {}) };
+    onChange({ ...next, label: /m\(maj[79]\)/.test(chord.label)
+      ? formatTextChordSymbol(next) : formatChordSymbol(next) });
   }
 
   return (
@@ -55,9 +58,19 @@ export function ChordStructureEditor({
         />
         <StructureSelect
           label={text.quality}
-          value={chord.quality}
-          onChange={(value) => update(chord.root, value as ChordQuality, chord.bass)}
-          options={qualityOptions}
+          value={chord.altered ? "alt" : chord.quality}
+          onChange={(value) => {
+            if (value === "alt") {
+              const next = { ...makeChordSymbol(chord.root, "dom7", [], chord.bass), altered: true as const };
+              onChange({ ...next, label: formatChordSymbol(next) });
+            } else {
+              const next = makeChordSymbol(chord.root, value as ChordQuality, [...chord.tensions], chord.bass);
+              onChange({ ...next, label: /m\(maj[79]\)/.test(chord.label)
+                ? formatTextChordSymbol(next) : formatChordSymbol(next) });
+            }
+          }}
+          options={[...qualityOptions, { value: "alt", label: "7alt" },
+            ...(chord.quality === "minMaj7" ? [{ value: "minMaj7", label: "m(maj7)" }] : [])]}
         />
         <StructureSelect
           label={text.bass}

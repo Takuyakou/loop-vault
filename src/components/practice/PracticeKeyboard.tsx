@@ -4,6 +4,7 @@ import {
   formatMidiNoteForDisplay,
   PianoKeyboardVisualizer,
   type KeyboardRange,
+  type KeyboardOctaveConvention,
   type NoteAccidentalStyle,
 } from "../music-keyboard";
 import { heldNotes, sustainedNotes } from "../../domain/liveMidi";
@@ -15,6 +16,7 @@ import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 
 interface PracticeKeyboardProps {
   range: KeyboardRange;
+  octaveConvention?: KeyboardOctaveConvention;
   guideNotes: readonly number[];
   referenceBassNote?: number;
   leftHandGuideNotes?: readonly number[];
@@ -31,6 +33,11 @@ interface PracticeKeyboardProps {
   keyboardLayout?: "default" | "wide-61" | "wide-88";
   compactSummary?: boolean;
   hideLegend?: boolean;
+  appearance?: "default" | "dojo";
+  colorGuideHands?: boolean;
+  markScale?: number;
+  /** Dojo appearance: the height the keys are drawn at, in pixels (128 when not given). */
+  dojoHeight?: number;
 }
 
 const copy = {
@@ -46,6 +53,7 @@ const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) =>
 
 export const PracticeKeyboard = memo(function PracticeKeyboard({
   range,
+  octaveConvention = "fl-studio",
   guideNotes,
   referenceBassNote,
   leftHandGuideNotes = [],
@@ -62,6 +70,10 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   keyboardLayout = "default",
   compactSummary = false,
   hideLegend = false,
+  appearance = "default",
+  colorGuideHands = false,
+  markScale = 1,
+  dojoHeight,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -102,7 +114,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         heldBassNote={heldBassNote}
         showGuide={level === 1}
         showCLabels
-        octaveConvention="fl-studio"
+        octaveConvention={octaveConvention}
         accidentalStyle={accidentalStyle}
         matchState={visualMatchState}
         concealNoteNames={concealNoteNames}
@@ -111,6 +123,10 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         fingerLabels={fingerLabels}
         layout={keyboardLayout}
         hideLegend={hideLegend}
+        appearance={appearance}
+        colorGuideHands={colorGuideHands}
+        markScale={markScale}
+        {...(dojoHeight === undefined ? {} : { dojoHeight })}
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">
@@ -125,6 +141,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         aria-live="polite"
       >
         {inputSummary({
+          octaveConvention,
           accidentalStyle,
           foreignCount: foreignNotes.length,
           guideNotes,
@@ -140,6 +157,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
 });
 
 function inputSummary({
+  octaveConvention,
   accidentalStyle,
   foreignCount,
   guideNotes,
@@ -149,6 +167,7 @@ function inputSummary({
   missingPitchClasses,
   neutralMonitor,
 }: {
+  octaveConvention: KeyboardOctaveConvention;
   accidentalStyle: NoteAccidentalStyle;
   foreignCount: number;
   guideNotes: readonly number[];
@@ -162,7 +181,7 @@ function inputSummary({
   if (neutralMonitor) {
     const input = currentHeldNotes.length > 0
       ? currentHeldNotes
-        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle))
+        .map((note) => formatMidiNoteForDisplay(note, octaveConvention, accidentalStyle))
         .join(" · ")
       : "-";
     return `${text.input}: ${input}`;
@@ -173,7 +192,7 @@ function inputSummary({
   if (level === 1) {
     const input = currentHeldNotes.length > 0
       ? currentHeldNotes
-        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle))
+        .map((note) => formatMidiNoteForDisplay(note, octaveConvention, accidentalStyle))
         .join(" · ")
       : "-";
     const missing = missingPitchClasses
@@ -181,7 +200,7 @@ function inputSummary({
         (note) => positivePitchClass(note) === positivePitchClass(pitchClass),
       ))
       .filter((note): note is number => note !== undefined)
-      .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle));
+      .map((note) => formatMidiNoteForDisplay(note, octaveConvention, accidentalStyle));
     return `${text.input}: ${input}${
       missing.length > 0 ? ` · ${text.missing}: ${missing.join(" · ")}` : ""
     }`;

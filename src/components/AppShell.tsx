@@ -1,11 +1,10 @@
 // P8.9-02 app shell: integrated title bar (36px), sidebar (232px / 64px) and
 // header (56px). Only the content area scrolls. Mock: RHome.dc.html / RHomeCompact.dc.html.
 import { useEffect, useRef, useState, type ReactNode, type TransitionEvent } from "react";
-import { useStore } from "zustand";
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
+import { MidiConnectionButton } from "./MidiConnectionPanel";
 import {
   BassPracticeIcon,
   ChordDojoIcon,
@@ -42,6 +41,8 @@ interface AppShellProps {
   view: AppView;
   setView: (view: AppView) => void;
   openLiveMidi: () => void;
+  /** 「詳しい設定…」 in the MIDI panel: the Live MIDI settings dialog. */
+  openMidiSettings: () => void;
   openSettings: () => void;
   openVoicingLoop: () => void;
   openChordDojo?: () => void;
@@ -79,6 +80,7 @@ export function AppShell({
   onMasterVolumeChange,
   onSearch = () => undefined,
   openLiveMidi,
+  openMidiSettings,
   openSettings,
   openVoicingLoop,
   openChordDojo,
@@ -182,7 +184,7 @@ export function AppShell({
               {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
             </div>
             <div className="lv-app-header-actions" data-global-actions>
-              <MidiStatusChip onOpen={openLiveMidi} />
+              <MidiConnectionButton openLiveMidi={openLiveMidi} openSettings={openMidiSettings} />
               <GlobalPreviewSoundSelector copy={copy} />
               <GlobalMetronomeButton />
               <div className="lv-volume-group" role="group" aria-label={copy.nav.masterVolume}>
@@ -271,22 +273,6 @@ function SidebarToggleGlyph({ collapsed }: { collapsed: boolean }) {
       <path d="M4.5 5.5h15v13h-15zM9.5 5.5v13" />
       <path d={collapsed ? "M13 10l2 2-2 2" : "M15 10l-2 2 2 2"} />
     </svg>
-  );
-}
-
-/** Reads the existing Live MIDI state only; never asks for MIDI access. Opens Live MIDI on click. */
-function MidiStatusChip({ onOpen }: { onOpen: () => void }) {
-  const status = useStore(defaultLiveMidiStore, (state) => state.status);
-  const device = useStore(defaultLiveMidiStore, (state) => state.selected?.name);
-  const label = status === "connected" ? device ?? "MIDI 接続中"
-    : status === "connecting" ? "MIDI 接続しています"
-      : status === "error" ? "MIDI エラー"
-        : "MIDI 未接続";
-  return (
-    <button type="button" className="lv-midi-chip" data-midi-status={status} onClick={onOpen} title={`MIDI 入力：${label}（Live MIDI を開く）`}>
-      <span className="lv-midi-dot" aria-hidden="true" />
-      <span className="lv-midi-label">{label}</span>
-    </button>
   );
 }
 

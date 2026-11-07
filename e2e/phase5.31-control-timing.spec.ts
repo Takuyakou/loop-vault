@@ -14,7 +14,7 @@ async function saveTextToLoop(page: Page, input: string) {
     await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
-  await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(input);
   await expect(capture.getByTestId("text-progression-invalid-card")).toHaveCount(0);

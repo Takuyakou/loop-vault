@@ -14,7 +14,8 @@ import {
   voicingCompatibility,
 } from "../../domain/voicing";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
-import { liveMidiActivation, type LiveMidiActivationLease } from "../../liveMidi/activationLease";
+import { useMidiConnection } from "../../liveMidi/useMidiConnection";
+import { MidiRequiredNotice } from "../MidiRequiredNotice";
 import { KeyboardVisualizer } from "./KeyboardVisualizer";
 import { midiNoteName } from "./midiNoteName";
 import { VoicingSourceChip } from "./VoicingSourceChip";
@@ -92,11 +93,11 @@ export function VoicingPanel({
   const [preparing, setPreparing] = useState(false);
   const [stableNotes, setStableNotes] = useState<number[]>([]);
   const [monitorAvailable, setMonitorAvailable] = useState(true);
+  const midiView = useMidiConnection();
   const [captureConfirmation, setCaptureConfirmation] = useState<{
     chordKey: string;
     notes: number[];
   }>();
-  const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const monitorRef = useRef<MidiInputPianoMonitor>();
   const captureGeneration = useRef(0);
   const releasedSinceCandidate = useRef(false);
@@ -156,8 +157,6 @@ export function VoicingPanel({
     captureGeneration.current += 1;
     monitorRef.current?.dispose();
     monitorRef.current = undefined;
-    midiLeaseRef.current?.release();
-    midiLeaseRef.current = undefined;
   }, []);
 
   async function startRecording() {
@@ -166,26 +165,11 @@ export function VoicingPanel({
     captureGeneration.current = generation;
     setPreparing(true);
     setCaptureConfirmation(undefined);
-    const midiLease = liveMidiActivation.acquire();
-    midiLeaseRef.current = midiLease;
-    const monitorPromise = createMidiInputPianoMonitor().catch(() => undefined);
-    const activationPromise = midiLease.ready.then(
-      () => true,
-      () => false,
-    );
     try {
-      const [monitor, activated] = await Promise.all([monitorPromise, activationPromise]);
-      if (!activated) {
-        midiLease.release();
-        if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
-        monitor?.dispose();
-        if (captureGeneration.current === generation) setMonitorAvailable(false);
-        return;
-      }
+      // The panel never opens the input itself (P14 §5): it listens to the shared connection.
+      const monitor = await createMidiInputPianoMonitor().catch(() => undefined);
       if (captureGeneration.current !== generation) {
         monitor?.dispose();
-        midiLease.release();
-        if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
         return;
       }
       monitorRef.current?.dispose();
@@ -207,8 +191,6 @@ export function VoicingPanel({
     releasedSinceCandidate.current = false;
     setStableNotes([]);
     setPreparing(false);
-    midiLeaseRef.current?.release();
-    midiLeaseRef.current = undefined;
   }
 
   function confirmCapture() {
@@ -326,6 +308,7 @@ export function VoicingPanel({
       {recording ? (
         <div className="mt-4 border border-[var(--lv-border)] p-3">
           <p className="text-sm text-[var(--lv-text)]">{text.recordPrompt}</p>
+          {midiView.connected ? null : <div className="mt-2"><MidiRequiredNotice view={midiView} /></div>}
           <p className={`mt-2 text-xs ${monitorAvailable ? "text-teal-100" : "text-amber-100"}`} role="status">
             {monitorAvailable ? text.monitorReady : text.monitorUnavailable}
           </p>

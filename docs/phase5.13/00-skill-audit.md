@@ -4,7 +4,7 @@
 
 ### ui-ux-pro-max
 
-- Path: `D:\dev\Loop Vault\.agents\skills\ui-ux-pro-max\SKILL.md`
+- Path: `<作業フォルダ>\Loop Vault\.agents\skills\ui-ux-pro-max\SKILL.md`
 - SHA-256: `0B64203A5CA7FD979BCC0C5BD8B6E9AF09A1F43696F9286755FFDF993338D747`
 - Declared version/source commit: not present in the installed file
 - Usage: information architecture, density, hierarchy, product-fit design direction, and component consistency

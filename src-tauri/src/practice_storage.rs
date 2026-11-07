@@ -42,10 +42,11 @@ pub struct PracticeBackupMetadata {
 #[tauri::command]
 pub fn load_practice_file(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
 ) -> Result<Option<PracticeStoredDocument>, String> {
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     fs::create_dir_all(&paths.root).map_err(|_| storage_error("create directory"))?;
     let _process_lock = acquire_cross_process_lock(&paths.lock)?;
     recover_interrupted_replace(&paths)?;
@@ -55,6 +56,7 @@ pub fn load_practice_file(
 #[tauri::command]
 pub fn save_practice_file(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
     contents: String,
     timestamp_token: String,
@@ -63,7 +65,7 @@ pub fn save_practice_file(
 ) -> Result<u64, String> {
     validate_timestamp_token(&timestamp_token)?;
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     save_document_with_token(
         &paths,
         &contents,
@@ -76,23 +78,25 @@ pub fn save_practice_file(
 #[tauri::command]
 pub fn quarantine_practice_file(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
     timestamp_token: String,
     expected_token: String,
 ) -> Result<String, String> {
     validate_timestamp_token(&timestamp_token)?;
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     quarantine_document(&paths, &timestamp_token, &expected_token)
 }
 
 #[tauri::command]
 pub fn list_practice_recovery_artifacts(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
 ) -> Result<Vec<String>, String> {
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     fs::create_dir_all(&paths.root).map_err(|_| storage_error("create directory"))?;
     let _process_lock = acquire_cross_process_lock(&paths.lock)?;
     list_recovery_artifacts(&paths)
@@ -139,6 +143,17 @@ fn list_recovery_artifacts(paths: &PracticePaths) -> Result<Vec<String>, String>
             artifacts.push(format!("{PRACTICE_DIR}/{name}"));
         }
     }
+    // Include raw lap-record backup presence even when its envelope is unsupported.
+    if is_lap_record_file(paths) && paths.backups.exists() {
+        for entry in fs::read_dir(&paths.backups).map_err(|_| storage_error("list recovery backups"))? {
+            let entry = entry.map_err(|_| storage_error("list recovery backups"))?;
+            if entry.file_type().map_err(|_| storage_error("inspect recovery backup"))?.is_file() {
+                if let Some(name) = entry.file_name().to_str().filter(|name| is_backup_name(name)) {
+                    artifacts.push(format!("backup/{name}"));
+                }
+            }
+        }
+    }
     artifacts.sort_unstable_by(|left, right| right.cmp(left));
     Ok(artifacts)
 }
@@ -146,16 +161,18 @@ fn list_recovery_artifacts(paths: &PracticePaths) -> Result<Vec<String>, String>
 #[tauri::command]
 pub fn list_practice_backups(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
 ) -> Result<Vec<PracticeBackupMetadata>, String> {
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     list_valid_backups(&paths)
 }
 
 #[tauri::command]
 pub fn read_practice_backup(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
     name: String,
 ) -> Result<PracticeStoredDocument, String> {
@@ -163,13 +180,14 @@ pub fn read_practice_backup(
     if !is_backup_name(&name) {
         return Err(storage_error("validate backup name"));
     }
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     read_document(&paths.backups.join(name)).map_err(|_| storage_error("validate backup"))
 }
 
 #[tauri::command]
 pub fn restore_practice_backup(
     app: AppHandle,
+    namespace: Option<String>,
     state: State<'_, PracticeStorageState>,
     name: String,
     backup_token: String,
@@ -177,7 +195,7 @@ pub fn restore_practice_backup(
     expected_token: Option<String>,
 ) -> Result<PracticeStoredDocument, String> {
     let _guard = state.0.lock().map_err(|_| storage_error("lock"))?;
-    let paths = practice_paths(&app)?;
+    let paths = namespaced_paths(&app, namespace.as_deref())?;
     fs::create_dir_all(&paths.root).map_err(|_| storage_error("create directory"))?;
     let _process_lock = acquire_cross_process_lock(&paths.lock)?;
     recover_interrupted_replace(&paths)?;
@@ -224,6 +242,56 @@ fn practice_paths(app: &AppHandle) -> Result<PracticePaths, String> {
         .app_data_dir()
         .map_err(|_| storage_error("resolve AppData"))?;
     Ok(paths_from_root(app_data.join(PRACTICE_DIR)))
+}
+
+fn namespaced_paths(app: &AppHandle, namespace: Option<&str>) -> Result<PracticePaths, String> {
+    namespaced_paths_from_root(practice_paths(app)?.root, namespace)
+}
+
+fn namespaced_paths_from_root(
+    root: PathBuf,
+    namespace: Option<&str>,
+) -> Result<PracticePaths, String> {
+    let paths = paths_from_root(root);
+    match namespace {
+        None => Ok(paths),
+        Some("bass-midi-library") => {
+            let data = paths.root.join("bass-midi-library-v1.json");
+            let mut library = paths_from_root(paths.root.join("bass-midi-library-storage"));
+            library.data = data.clone();
+            library.temp = data.with_extension("json.tmp");
+            Ok(library)
+        }
+        Some("ear-practice") => {
+            let data = paths.root.join("ear-practice-v1.json");
+            let mut ear = paths_from_root(paths.root.join("ear-practice-storage"));
+            ear.data = data.clone();
+            ear.temp = data.with_extension("json.tmp");
+            Ok(ear)
+        }
+        Some("original-practice") => {
+            let mut original = paths_from_root(paths.root.join("original-practice-storage"));
+            original.data = paths.root.join("original-practice-v1.json");
+            original.temp = original.data.with_extension("json.tmp");
+            Ok(original)
+        }
+        Some("jazz-progressions") => {
+            let mut jazz = paths_from_root(paths.root.join("jazz-progressions-storage"));
+            jazz.data = paths.root.join("jazz-progressions-v1.json");
+            jazz.temp = jazz.data.with_extension("json.tmp");
+            Ok(jazz)
+        }
+        _ => Err(storage_error("unknown storage namespace")),
+    }
+}
+
+/// The lap-record files (Original Practice and Jazz Progressions): strict version-1 envelopes whose unsupported or future data is
+/// kept as it is, never recovered over and never mistaken for a first run.
+fn is_lap_record_file(paths: &PracticePaths) -> bool {
+    matches!(
+        paths.data.file_name().and_then(|name| name.to_str()),
+        Some("original-practice-v1.json" | "jazz-progressions-v1.json")
+    )
 }
 
 fn paths_from_root(root: PathBuf) -> PracticePaths {
@@ -329,6 +397,16 @@ fn save_document_unlocked_with_fault(
     if next_revision == u64::MAX && expected_revision == Some(u64::MAX) {
         return Err(storage_error("advance revision"));
     }
+    let envelope: Value = serde_json::from_str(contents).map_err(|_| storage_error("parse document"))?;
+    // The envelope must belong to the file it is written to: each separate record file has its own app marker.
+    let expected_app = match paths.data.file_name().and_then(|name| name.to_str()) {
+        Some("bass-midi-library-v1.json") => "loopvault-bass-midi-library",
+        Some("ear-practice-v1.json") => "loopvault-ear-practice",
+        Some("original-practice-v1.json") => "loopvault-original-practice",
+        Some("jazz-progressions-v1.json") => "loopvault-jazz-progressions",
+        _ => "loopvault-practice",
+    };
+    if envelope["app"] != expected_app { return Err(storage_error("namespace envelope mismatch")); }
     let document_revision = validate_document(contents)?;
     if document_revision != next_revision {
         return Err(storage_error("validate next revision"));
@@ -417,6 +495,15 @@ fn save_document_with_fault(
 }
 
 fn recover_interrupted_replace(paths: &PracticePaths) -> Result<(), String> {
+    // Check raw future lap-record data before any recovery cleanup or replacement.
+    if is_lap_record_file(paths) && paths.data.exists() {
+        let contents = read_bounded_utf8(&paths.data, MAX_PRACTICE_BYTES)?;
+        if let Ok(value) = serde_json::from_str::<Value>(&contents) {
+            if ["fileVersion", "version"].iter().any(|key| value[*key].as_f64().is_some_and(|version| version > 1.0)) {
+                return Err(storage_error("preserve future lap-record version"));
+            }
+        }
+    }
     remove_file_if_present(&paths.marker_temp)?;
     if paths.marker.exists() {
         let marker = read_bounded_utf8(&paths.marker, 512)?;
@@ -564,7 +651,17 @@ fn validate_document(contents: &str) -> Result<u64, String> {
     let object = value
         .as_object()
         .ok_or_else(|| storage_error("validate JSON envelope"))?;
-    if object.get("app").and_then(Value::as_str) != Some("loopvault-practice") {
+    let library = matches!(
+        object.get("app").and_then(Value::as_str),
+        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions")
+    );
+    if library
+        && (object.get("version").and_then(Value::as_u64) != Some(1)
+            || object.get("fileVersion").and_then(Value::as_u64) != Some(1))
+    {
+        return Err(storage_error("validate library version"));
+    }
+    if !library && object.get("app").and_then(Value::as_str) != Some("loopvault-practice") {
         return Err(storage_error("validate app marker"));
     }
     if !matches!(
@@ -585,7 +682,12 @@ fn with_current_version_and_revision(contents: &str, revision: u64) -> Result<St
     let object = value
         .as_object_mut()
         .ok_or_else(|| storage_error("validate backup envelope"))?;
-    object.insert("fileVersion".to_string(), Value::from(2));
+    if !matches!(
+        object.get("app").and_then(Value::as_str),
+        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions")
+    ) {
+        object.insert("fileVersion".to_string(), Value::from(2));
+    }
     object.insert("revision".to_string(), Value::from(revision));
     let mut serialized = serde_json::to_string_pretty(&value)
         .map_err(|_| storage_error("serialize restored backup"))?;
@@ -884,6 +986,234 @@ mod tests {
     }
 
     #[test]
+    fn bass_library_is_isolated_atomic_and_keeps_version_one_on_restore() {
+        let legacy = test_paths("bass-library");
+        let library =
+            namespaced_paths_from_root(legacy.root.clone(), Some("bass-midi-library")).unwrap();
+        assert!(namespaced_paths_from_root(legacy.root.clone(), Some("../other")).is_err());
+        save_document(&legacy, &document(1, "legacy"), "20261008-100000", None).unwrap();
+        let bass = |revision| {
+            format!(
+                r#"{{"app":"loopvault-bass-midi-library","fileVersion":1,"version":1,"revision":{revision},"songs":[],"settings":{{}}}}"#
+            )
+        };
+        save_document(&library, &bass(1), "20261008-100001", None).unwrap();
+        save_document(&library, &bass(2), "20261008-100002", Some(1)).unwrap();
+        assert_eq!(
+            read_document_if_present(&legacy.data)
+                .unwrap()
+                .unwrap()
+                .contents,
+            document(1, "legacy")
+        );
+        assert!(save_document(
+            &library,
+            &document(3, "wrong-envelope"),
+            "20261008-100003",
+            Some(2)
+        )
+        .is_err());
+        let current = read_document_if_present(&library.data).unwrap().unwrap();
+        assert!(save_document_unlocked_with_fault(
+            &library,
+            &bass(3),
+            "20261008-100003",
+            Some(2),
+            Some(&current.token),
+            SaveFault::AtomicReplace
+        )
+        .is_err());
+        recover_interrupted_replace(&library).unwrap();
+        assert_eq!(
+            read_document_if_present(&library.data)
+                .unwrap()
+                .unwrap()
+                .revision,
+            2
+        );
+        let backups = list_valid_backups(&library).unwrap();
+        assert!(backups.iter().any(|b| b.revision == 1));
+        let backup = read_document(&library.backups.join(&backups.iter().find(|b| b.revision == 1).unwrap().name)).unwrap();
+        let restored_contents = with_current_version_and_revision(&backup.contents, 3).unwrap();
+        save_document(&library, &restored_contents, "20261008-100004", Some(2)).unwrap();
+        let restored = read_document_if_present(&library.data).unwrap().unwrap();
+        let json: Value = serde_json::from_str(&restored.contents).unwrap();
+        assert_eq!(json["fileVersion"], 1);
+        assert_eq!(json["app"], "loopvault-bass-midi-library");
+        cleanup(&legacy);
+    }
+
+    #[test]
+    fn ear_practice_is_isolated_and_keeps_version_one_on_restore() {
+        let legacy = test_paths("ear-practice");
+        let ear = namespaced_paths_from_root(legacy.root.clone(), Some("ear-practice")).unwrap();
+        assert_ne!(ear.data, legacy.data);
+        save_document(&legacy, &document(1, "legacy"), "20261017-100000", None).unwrap();
+        let record = |revision| {
+            format!(
+                r#"{{"app":"loopvault-ear-practice","fileVersion":1,"version":1,"revision":{revision},"records":[]}}"#
+            )
+        };
+        save_document(&ear, &record(1), "20261017-100001", None).unwrap();
+        save_document(&ear, &record(2), "20261017-100002", Some(1)).unwrap();
+        // version 2 is not a thing for the ear records, and a practice envelope is not theirs
+        assert!(save_document(&ear, &record(3).replace("\"version\":1", "\"version\":2"), "20261017-100003", Some(2)).is_err());
+        assert_eq!(
+            read_document_if_present(&legacy.data).unwrap().unwrap().contents,
+            document(1, "legacy")
+        );
+        let backups = list_valid_backups(&ear).unwrap();
+        let backup = read_document(&ear.backups.join(&backups.iter().find(|b| b.revision == 1).unwrap().name)).unwrap();
+        let restored_contents = with_current_version_and_revision(&backup.contents, 3).unwrap();
+        save_document(&ear, &restored_contents, "20261017-100004", Some(2)).unwrap();
+        let restored = read_document_if_present(&ear.data).unwrap().unwrap();
+        let json: Value = serde_json::from_str(&restored.contents).unwrap();
+        assert_eq!(json["fileVersion"], 1);
+        assert_eq!(json["app"], "loopvault-ear-practice");
+        cleanup(&legacy);
+    }
+
+    #[test]
+    fn original_records_are_isolated_atomic_and_keep_version_one_on_restore() {
+        let legacy = test_paths("original-records");
+        let library =
+            namespaced_paths_from_root(legacy.root.clone(), Some("original-practice")).unwrap();
+        assert!(namespaced_paths_from_root(legacy.root.clone(), Some("../other")).is_err());
+        save_document(&legacy, &document(1, "legacy"), "20261008-100000", None).unwrap();
+        let bass = |revision| {
+            format!(
+                r#"{{"app":"loopvault-original-practice","fileVersion":1,"version":1,"revision":{revision},"laps":{{}},"operations":[]}}"#
+            )
+        };
+        save_document(&library, &bass(1), "20261008-100001", None).unwrap();
+        save_document(&library, &bass(2), "20261008-100002", Some(1)).unwrap();
+        assert_eq!(
+            read_document_if_present(&legacy.data)
+                .unwrap()
+                .unwrap()
+                .contents,
+            document(1, "legacy")
+        );
+        assert!(save_document(
+            &library,
+            &document(3, "wrong-envelope"),
+            "20261008-100003",
+            Some(2)
+        )
+        .is_err());
+        let current = read_document_if_present(&library.data).unwrap().unwrap();
+        assert!(save_document_unlocked_with_fault(
+            &library,
+            &bass(3),
+            "20261008-100003",
+            Some(2),
+            Some(&current.token),
+            SaveFault::AtomicReplace
+        )
+        .is_err());
+        recover_interrupted_replace(&library).unwrap();
+        assert_eq!(
+            read_document_if_present(&library.data)
+                .unwrap()
+                .unwrap()
+                .revision,
+            2
+        );
+        let backups = list_valid_backups(&library).unwrap();
+        assert!(backups.iter().any(|b| b.revision == 1));
+        let backup = read_document(&library.backups.join(&backups.iter().find(|b| b.revision == 1).unwrap().name)).unwrap();
+        let restored_contents = with_current_version_and_revision(&backup.contents, 3).unwrap();
+        save_document(&library, &restored_contents, "20261008-100004", Some(2)).unwrap();
+        let restored = read_document_if_present(&library.data).unwrap().unwrap();
+        let json: Value = serde_json::from_str(&restored.contents).unwrap();
+        assert_eq!(json["fileVersion"], 1);
+        assert_eq!(json["app"], "loopvault-original-practice");
+        cleanup(&legacy);
+    }
+
+    /// Each of the five record files takes its own envelope only: a document of any other app is refused by it (before and after its first save),
+    /// and what is already stored is left untouched.
+    #[test]
+    fn every_storage_namespace_accepts_only_its_own_app() {
+        let files: [(Option<&str>, &str); 5] = [
+            (None, "loopvault-practice"),
+            (Some("bass-midi-library"), "loopvault-bass-midi-library"),
+            (Some("ear-practice"), "loopvault-ear-practice"),
+            (Some("original-practice"), "loopvault-original-practice"),
+            (Some("jazz-progressions"), "loopvault-jazz-progressions"),
+        ];
+        let envelope = |app: &str, revision: u64| {
+            if app == "loopvault-practice" {
+                document(revision, "own")
+            } else {
+                format!(r#"{{"app":"{app}","fileVersion":1,"version":1,"revision":{revision}}}"#)
+            }
+        };
+        let base = test_paths("namespace-apps");
+        for (namespace, own) in files {
+            let target = namespaced_paths_from_root(base.root.clone(), namespace).unwrap();
+            for (_, other) in files.iter().filter(|(_, app)| *app != own) {
+                assert!(
+                    save_document(&target, &envelope(other, 1), "20261022-100000", None).is_err(),
+                    "{own} file took a {other} document"
+                );
+                assert!(read_document_if_present(&target.data).unwrap().is_none(), "{own} file was written by {other}");
+            }
+            save_document(&target, &envelope(own, 1), "20261022-100001", None).unwrap();
+            let stored = read_document_if_present(&target.data).unwrap().unwrap();
+            for (_, other) in files.iter().filter(|(_, app)| *app != own) {
+                assert!(
+                    save_document(&target, &envelope(other, 2), "20261022-100002", Some(1)).is_err(),
+                    "{own} file took a {other} document after its own"
+                );
+                assert_eq!(read_document_if_present(&target.data).unwrap().unwrap().contents, stored.contents);
+            }
+            save_document(&target, &envelope(own, 2), "20261022-100003", Some(1)).unwrap();
+        }
+        cleanup(&base);
+    }
+
+    #[test]
+    fn jazz_progressions_are_isolated_keep_version_one_and_preserve_future_data() {
+        let legacy = test_paths("jazz-progressions");
+        let jazz = namespaced_paths_from_root(legacy.root.clone(), Some("jazz-progressions")).unwrap();
+        let original = namespaced_paths_from_root(legacy.root.clone(), Some("original-practice")).unwrap();
+        assert_ne!(jazz.data, original.data);
+        assert_ne!(jazz.backups, original.backups);
+        let record = |revision| {
+            format!(
+                r#"{{"app":"loopvault-jazz-progressions","fileVersion":1,"version":1,"revision":{revision},"laps":{{}},"operations":[]}}"#
+            )
+        };
+        save_document(&legacy, &document(1, "legacy"), "20261022-110000", None).unwrap();
+        save_document(&jazz, &record(1), "20261022-110001", None).unwrap();
+        save_document(&jazz, &record(2), "20261022-110002", Some(1)).unwrap();
+        assert!(save_document(&jazz, &record(3).replace("\"version\":1", "\"version\":2"), "20261022-110003", Some(2)).is_err());
+        assert_eq!(read_document_if_present(&legacy.data).unwrap().unwrap().contents, document(1, "legacy"));
+        assert!(read_document_if_present(&original.data).unwrap().is_none());
+        // restoring an older backup keeps version 1
+        let backups = list_valid_backups(&jazz).unwrap();
+        let backup = read_document(&jazz.backups.join(&backups.iter().find(|b| b.revision == 1).unwrap().name)).unwrap();
+        let restored_contents = with_current_version_and_revision(&backup.contents, 3).unwrap();
+        save_document(&jazz, &restored_contents, "20261022-110004", Some(2)).unwrap();
+        let json: Value = serde_json::from_str(&read_document_if_present(&jazz.data).unwrap().unwrap().contents).unwrap();
+        assert_eq!(json["fileVersion"], 1);
+        assert_eq!(json["app"], "loopvault-jazz-progressions");
+        // a file written by a newer version is kept byte for byte, and a backup-only folder is not a first run
+        for field in ["version", "fileVersion"] {
+            let mut future: Value = serde_json::from_str(&record(9)).unwrap();
+            future[field] = Value::from(2);
+            let bytes = serde_json::to_vec(&future).unwrap();
+            fs::write(&jazz.data, &bytes).unwrap();
+            assert!(recover_interrupted_replace(&jazz).is_err());
+            assert_eq!(fs::read(&jazz.data).unwrap(), bytes);
+        }
+        fs::remove_file(&jazz.data).unwrap();
+        assert!(!list_recovery_artifacts(&jazz).unwrap().is_empty());
+        cleanup(&legacy);
+    }
+
+    #[test]
     fn accepts_only_safe_timestamp_and_artifact_names() {
         assert!(validate_timestamp_token("20260802-123456").is_ok());
         assert!(validate_timestamp_token("../../private").is_err());
@@ -1144,4 +1474,37 @@ mod tests {
         assert_eq!(value.get("marker").and_then(Value::as_str), Some("one"));
         cleanup(&paths);
     }
+    #[test]
+    fn original_future_recovery_preserves_all_bytes_and_backup_only_presence() {
+        let legacy = test_paths("original-future");
+        let paths = namespaced_paths_from_root(legacy.root.clone(), Some("original-practice")).unwrap();
+        fs::create_dir_all(&paths.root).unwrap();
+        fs::create_dir_all(&paths.backups).unwrap();
+        let old = r#"{"app":"loopvault-original-practice","fileVersion":1,"version":1,"revision":1,"laps":{},"operations":[]}"#;
+        let name = create_backup(&paths, "20261012-000000", old.as_bytes()).unwrap();
+        for field in ["version", "fileVersion"] {
+            let mut future: Value = serde_json::from_str(old).unwrap();
+            future[field] = Value::from(2);
+            let bytes = serde_json::to_vec(&future).unwrap();
+            fs::write(&paths.data, &bytes).unwrap();
+            write_marker(&paths, &name).unwrap();
+            fs::write(&paths.marker_temp, b"pending-marker").unwrap();
+            fs::write(&paths.temp, b"pending-document").unwrap();
+            assert!(recover_interrupted_replace(&paths).is_err());
+            assert_eq!(fs::read(&paths.data).unwrap(), bytes);
+            assert_eq!(fs::read_to_string(paths.backups.join(&name)).unwrap(), old);
+            assert_eq!(fs::read_to_string(&paths.marker).unwrap(), format!("{name}\n"));
+            assert_eq!(fs::read(&paths.marker_temp).unwrap(), b"pending-marker");
+            assert_eq!(fs::read(&paths.temp).unwrap(), b"pending-document");
+        }
+        fs::remove_file(&paths.data).unwrap();
+        for contents in ["broken", r#"{"app":"loopvault-original-practice","fileVersion":2,"version":2,"revision":1}"#] {
+            fs::write(paths.backups.join(&name), contents).unwrap();
+            assert!(list_valid_backups(&paths).unwrap().is_empty());
+            assert!(!list_recovery_artifacts(&paths).unwrap().is_empty());
+            assert_eq!(fs::read_to_string(paths.backups.join(&name)).unwrap(), contents);
+        }
+        fs::remove_dir_all(legacy.root).unwrap();
+    }
+
 }

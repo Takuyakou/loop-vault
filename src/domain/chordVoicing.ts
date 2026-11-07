@@ -1,4 +1,5 @@
 import type { ChordQuality, ChordSymbol, Tension } from "./types";
+import { supportsTextChord } from "./textChordConsumerCapabilities";
 
 export interface PreviewVoicing {
   bassNote: number;
@@ -47,6 +48,7 @@ const tensionIntervals: Record<Tension, number> = {
 export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
   const bassPc = symbol.bass ?? symbol.root;
   const bassNote = nearestMidiForPc(bassPc, 43, 55);
+  if (!supportsTextChord("legacy-chord-voicing", symbol)) return { bassNote, notes: [] };
   const pcs = uniquePitchClasses([
     ...qualityIntervals[symbol.quality].filter((interval) => (!symbol.tensions.includes("#5") || interval !== 7) && !omittedInterval(symbol, interval)),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),
@@ -64,6 +66,7 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
 }
 
 export function chordPitchClasses(symbol: ChordSymbol): number[] {
+  if (!supportsTextChord("legacy-chord-voicing", symbol)) return [];
   return uniquePitchClasses([
     ...qualityIntervals[symbol.quality].filter((interval) => (!symbol.tensions.includes("#5") || interval !== 7) && !omittedInterval(symbol, interval)),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),

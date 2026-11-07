@@ -1,0 +1,708 @@
+{
+ "jb-minor-251": {
+  "bars": [
+   [
+    "IIm7b5"
+   ],
+   [
+    "V7alt"
+   ],
+   [
+    "Im(maj7)"
+   ],
+   [
+    "Im(maj7)"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Dm7b5"
+   ],
+   [
+    "G7alt"
+   ],
+   [
+    "Cm(maj7)"
+   ],
+   [
+    "Cm(maj7)"
+   ]
+  ],
+  "mode": "minor"
+ },
+ "jb-tritone-turnaround": {
+  "bars": [
+   [
+    "Imaj7",
+    "bIII7"
+   ],
+   [
+    "IIm7",
+    "bII7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7",
+    "Eb7"
+   ],
+   [
+    "Dm7",
+    "Db7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jb-3625": {
+  "bars": [
+   [
+    "IIIm7"
+   ],
+   [
+    "VI7"
+   ],
+   [
+    "IIm7"
+   ],
+   [
+    "V7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Em7"
+   ],
+   [
+    "A7"
+   ],
+   [
+    "Dm7"
+   ],
+   [
+    "G7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jd-minor-line-cliche": {
+  "bars": [
+   [
+    "Im"
+   ],
+   [
+    "Im(maj7)"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "Im6"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cm"
+   ],
+   [
+    "Cm(maj7)"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Cm6"
+   ]
+  ],
+  "mode": "minor"
+ },
+ "jd-major-line-cliche": {
+  "bars": [
+   [
+    "I"
+   ],
+   [
+    "I+"
+   ],
+   [
+    "I6"
+   ],
+   [
+    "I7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "C"
+   ],
+   [
+    "C+"
+   ],
+   [
+    "C6"
+   ],
+   [
+    "C7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jd-descending-bass": {
+  "bars": [
+   [
+    "Imaj7"
+   ],
+   [
+    "Imaj7/VII"
+   ],
+   [
+    "VIm7"
+   ],
+   [
+    "VIm7/V"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7"
+   ],
+   [
+    "Cmaj7/B"
+   ],
+   [
+    "Am7"
+   ],
+   [
+    "Am7/G"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jd-major-third-cycle": {
+  "bars": [
+   [
+    "Imaj7",
+    "bIII7"
+   ],
+   [
+    "bVImaj7",
+    "VII7"
+   ],
+   [
+    "IIImaj7",
+    "V7"
+   ],
+   [
+    "Imaj7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7",
+    "Eb7"
+   ],
+   [
+    "Abmaj7",
+    "B7"
+   ],
+   [
+    "Emaj7",
+    "G7"
+   ],
+   [
+    "Cmaj7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jd-dominant-chain": {
+  "bars": [
+   [
+    "III7"
+   ],
+   [
+    "VI7"
+   ],
+   [
+    "II7"
+   ],
+   [
+    "V7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "E7"
+   ],
+   [
+    "A7"
+   ],
+   [
+    "D7"
+   ],
+   [
+    "G7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jd-constant-structure": {
+  "bars": [
+   [
+    "Imaj7"
+   ],
+   [
+    "bVIImaj7"
+   ],
+   [
+    "bVImaj7"
+   ],
+   [
+    "bVIImaj7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7"
+   ],
+   [
+    "Bbmaj7"
+   ],
+   [
+    "Abmaj7"
+   ],
+   [
+    "Bbmaj7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jf-jazz-blues": {
+  "bars": [
+   [
+    "I7"
+   ],
+   [
+    "IV7"
+   ],
+   [
+    "I7"
+   ],
+   [
+    "Vm7",
+    "I7"
+   ],
+   [
+    "IV7"
+   ],
+   [
+    "#IVdim7"
+   ],
+   [
+    "I7"
+   ],
+   [
+    "VI7"
+   ],
+   [
+    "IIm7"
+   ],
+   [
+    "V7"
+   ],
+   [
+    "I7",
+    "VI7"
+   ],
+   [
+    "IIm7",
+    "V7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "C7"
+   ],
+   [
+    "F7"
+   ],
+   [
+    "C7"
+   ],
+   [
+    "Gm7",
+    "C7"
+   ],
+   [
+    "F7"
+   ],
+   [
+    "F#dim7"
+   ],
+   [
+    "C7"
+   ],
+   [
+    "A7"
+   ],
+   [
+    "Dm7"
+   ],
+   [
+    "G7"
+   ],
+   [
+    "C7",
+    "A7"
+   ],
+   [
+    "Dm7",
+    "G7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "jf-minor-blues": {
+  "bars": [
+   [
+    "Im7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "IVm7"
+   ],
+   [
+    "IVm7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "bVI7"
+   ],
+   [
+    "V7alt"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "IIm7b5",
+    "V7alt"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Fm7"
+   ],
+   [
+    "Fm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Ab7"
+   ],
+   [
+    "G7alt"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Dm7b5",
+    "G7alt"
+   ]
+  ],
+  "mode": "minor"
+ },
+ "jf-rhythm-a": {
+  "bars": [
+   [
+    "I6",
+    "VI7"
+   ],
+   [
+    "IIm7",
+    "V7"
+   ],
+   [
+    "I6",
+    "VI7"
+   ],
+   [
+    "IIm7",
+    "V7"
+   ],
+   [
+    "I6",
+    "I7"
+   ],
+   [
+    "IV",
+    "#IVdim7"
+   ],
+   [
+    "I6/V",
+    "VI7"
+   ],
+   [
+    "IIm7",
+    "V7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "C6",
+    "A7"
+   ],
+   [
+    "Dm7",
+    "G7"
+   ],
+   [
+    "C6",
+    "A7"
+   ],
+   [
+    "Dm7",
+    "G7"
+   ],
+   [
+    "C6",
+    "C7"
+   ],
+   [
+    "F",
+    "F#dim7"
+   ],
+   [
+    "C6/G",
+    "A7"
+   ],
+   [
+    "Dm7",
+    "G7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "md-pedal": {
+  "bars": [
+   [
+    "Imaj7/V"
+   ],
+   [
+    "bVIImaj7/V"
+   ],
+   [
+    "bVImaj7/V"
+   ],
+   [
+    "V7sus"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7/G"
+   ],
+   [
+    "Bbmaj7/G"
+   ],
+   [
+    "Abmaj7/G"
+   ],
+   [
+    "G7sus"
+   ]
+  ],
+  "mode": "major"
+ },
+ "md-slash-dominant": {
+  "bars": [
+   [
+    "IVmaj9/V"
+   ],
+   [
+    "IVmaj9/V"
+   ],
+   [
+    "Imaj9"
+   ],
+   [
+    "Imaj9"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Fmaj9/G"
+   ],
+   [
+    "Fmaj9/G"
+   ],
+   [
+    "Cmaj9"
+   ],
+   [
+    "Cmaj9"
+   ]
+  ],
+  "mode": "major"
+ },
+ "md-lydian-vamp": {
+  "bars": [
+   [
+    "Imaj7"
+   ],
+   [
+    "II/I"
+   ],
+   [
+    "Imaj7"
+   ],
+   [
+    "II/I"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7"
+   ],
+   [
+    "D/C"
+   ],
+   [
+    "Cmaj7"
+   ],
+   [
+    "D/C"
+   ]
+  ],
+  "mode": "major"
+ },
+ "md-bossa-descent": {
+  "bars": [
+   [
+    "Imaj7"
+   ],
+   [
+    "#IVm7b5",
+    "VII7"
+   ],
+   [
+    "IIIm7",
+    "VI7"
+   ],
+   [
+    "IIm7",
+    "V7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cmaj7"
+   ],
+   [
+    "F#m7b5",
+    "B7"
+   ],
+   [
+    "Em7",
+    "A7"
+   ],
+   [
+    "Dm7",
+    "G7"
+   ]
+  ],
+  "mode": "major"
+ },
+ "md-modal-halfstep": {
+  "bars": [
+   [
+    "Im7"
+   ],
+   [
+    "Im7"
+   ],
+   [
+    "bIIm7"
+   ],
+   [
+    "Im7"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "Cm7"
+   ],
+   [
+    "Cm7"
+   ],
+   [
+    "Dbm7"
+   ],
+   [
+    "Cm7"
+   ]
+  ],
+  "mode": "minor"
+ },
+ "cp-chromatic-mediant": {
+  "bars": [
+   [
+    "I"
+   ],
+   [
+    "bVI"
+   ],
+   [
+    "I"
+   ],
+   [
+    "bVI"
+   ]
+  ],
+  "exampleInC": [
+   [
+    "C"
+   ],
+   [
+    "Ab"
+   ],
+   [
+    "C"
+   ],
+   [
+    "Ab"
+   ]
+  ],
+  "mode": "major"
+ }
+}

@@ -152,9 +152,9 @@ Web buildには既存の1.2MB級chunk警告が残るが、build失敗ではな�
 
 ## 10. Build成果物
 
-- `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
-- `D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
-- `D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 ## 11. Rollback
 

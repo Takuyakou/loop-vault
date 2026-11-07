@@ -1,88 +1,25 @@
-import { displayKey } from "../domain/displayLabels";
-import type { ToastFn } from "../components/notifications";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo,useState } from "react";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
-import {
-  playbackController,
-  type PlaybackController,
-  type PlayingSource,
-} from "../audio/playbackController";
-import { PlayToggle } from "../components/PlayToggle";
+import { playbackController,type PlaybackController } from "../audio/playbackController";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
-import {
-  ProgressionMidiControl,
-  type ProgressionMidiControlActions,
-} from "../components/ProgressionMidiControl";
+import { ProgressionMidiControl,type ProgressionMidiControlActions } from "../components/ProgressionMidiControl";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
-import { usePlaybackState } from "../hooks/usePlaybackState";
-import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
-import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
-import { ChordInspector } from "../components/progression-editing/ChordInspector";
-import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
-import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
-import { Button, IconButton } from "../components/ui";
 import { VoicingPanel } from "../components/voicing/VoicingPanel";
-import {
-  applyEditableProgressionToSavedBlock,
-  buildAuthorReferenceIndex,
-  canMergeEditableChords,
-  canRedoProgressionEdit,
-  canSplitEditableChord,
-  canUndoProgressionEdit,
-  createEditableProgression,
-  deleteEditableChord,
-  insertSuggestedEditableChordAfter,
-  hasProgressionEdits,
-  markEditableProgressionSaved,
-  mergeEditableChords,
-  quickCandidatesForSlot,
-  redoProgressionEdit,
-  replaceEditableChord,
-  resetAllEditableChords,
-  resetEditableChord,
-  selectedEditableSlotIndex,
-  selectEditableSlot,
-  setEditableVoicingMemories,
-  setEditableVoicingMemory,
-  splitEditableChord,
-  undoProgressionEdit,
-} from "../domain/progressionEditing";
-import {
-  annotateVoiceRolesV2,
-  beatsPerBar,
-  buildCorrectionEvents,
-  buildVoices,
-  normalizeNotes,
-} from "../domain/midi";
+import { applyEditableProgressionToSavedBlock,createEditableProgression,setEditableVoicingMemories } from "../domain/progressionEditing";
+import { annotateVoiceRolesV2,beatsPerBar,buildVoices,normalizeNotes } from "../domain/midi";
 import type { MidiSongData } from "../domain/midi/types";
-import {
-  buildProgressionMidi,
-  ProgressionMidiExportError,
-} from "../domain/midiExport";
+import { buildProgressionMidi,ProgressionMidiExportError } from "../domain/midiExport";
 import { formatProgressionText } from "../domain/progressionText";
-import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import type { SavedProgressionBlock,SongIdea } from "../domain/types";
 import { sourceBasslineNoteFacts } from "../domain/sourceBassline";
-import { buildVaultChordContextSnapshot, selectVaultChordContextSections, type VaultChordContextSnapshot } from "../features/bass-practice/domain";
-import { extractVoicing, resolveVoicingForUse, setAllEligibleCardsToSource } from "../domain/voicing";
-import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
+import type { VaultChordContextSnapshot } from "../features/bass-practice/domain";
+import { extractVoicing,setAllEligibleCardsToSource } from "../domain/voicing";
 import { isProgressionMidiExportEnabled } from "../midiExport/featureFlag";
-import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../domain/textProgression";
-import { registerCloseBlocker } from "../store/closeBlocker";
-import {
-  progressionDetailCopy,
-  type AppCopy,
-} from "../i18n";
-import {
-  ArrowLeft,
-  CopyPlus,
-  ExternalLink,
-  Save,
-  Trash2,
-  Dumbbell,
-} from "lucide-react";
-
-interface ProgressionDetailViewProps {
+import type { AppCopy } from "../i18n";
+import type { ToastFn } from "../components/notifications";
+export { ProgressionWorkspacePage as ProgressionDetailView } from "./ProgressionWorkspacePage";
+export interface ProgressionDetailViewProps {
   idea: SongIdea;
   ideas?: readonly SongIdea[];
   block: SavedProgressionBlock;
@@ -91,7 +28,7 @@ interface ProgressionDetailViewProps {
     blockId: string,
     changes: Partial<SavedProgressionBlock>,
   ) => boolean | "pending";
-  duplicateProgressionBlock: (ideaId: string, blockId: string) => string | undefined;
+  duplicateProgressionBlock: (ideaId: string, blockId: string, draft?: SavedProgressionBlock) => string | undefined;
   openProgression: (ideaId: string, blockId: string) => void;
   openIdea: (ideaId: string) => void;
   openVault: () => void;
@@ -99,6 +36,10 @@ interface ProgressionDetailViewProps {
   openPractice?: (snapshot: VaultChordContextSnapshot) => void;
   openVoicingPractice?: (ideaId: string, blockId: string) => void;
   requestLeave?: (action: () => void) => void;
+  onSaveReady?: (save: (() => boolean) | undefined) => void;
+  updateIdea?: (id: string,changes: Partial<SongIdea>) => boolean | "pending";
+  requestIdeaDelete?: (idea: SongIdea) => void;
+  openChordDojo?: (ideaId: string,blockId: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
   setToast: ToastFn;
   copy: AppCopy;
@@ -108,246 +49,23 @@ interface ProgressionDetailViewProps {
   midiExportActions?: ProgressionMidiControlActions;
 }
 
-export function ProgressionDetailView({
-  idea,
-  ideas = [idea],
-  block,
-  updateProgressionBlock,
-  duplicateProgressionBlock,
-  openProgression,
-  openIdea,
-  openVault,
-  requestDelete,
-  openPractice,
-  openVoicingPractice,
-  requestLeave,
-  onDirtyChange,
-  setToast,
-  copy,
-  controller = playbackController,
-  loadMidiSource,
-  midiExportEnabled,
-  midiExportActions,
-}: ProgressionDetailViewProps) {
-  const text = progressionDetailCopy.ja;
-  const meter = beatsPerBar(block.timeSignature);
-  const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
-  const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
-  const [reextracting, setReextracting] = useState(false);
-  const [defaultMidiExportEnabled] = useState(
-    () => isProgressionMidiExportEnabled(),
-  );
-  const showMidiExport = midiExportEnabled ?? defaultMidiExportEnabled;
-  const dirty = hasProgressionEdits(editable);
-  useEffect(() => {
-    onDirtyChange?.(dirty);
-  }, [dirty, onDirtyChange]);
-  useEffect(() => () => {
-    onDirtyChange?.(false);
-  }, [onDirtyChange]);
-  useEffect(() => {
-    if (!dirty) return undefined;
-    return registerCloseBlocker({
-      title: text.leaveUnsavedTitle,
-      message: text.leaveUnsavedDescription,
-      confirmLabel: text.discardAndLeave,
-      cancelLabel: copy.common.cancel,
-    });
-  }, [
-    copy.common.cancel,
-    dirty,
-    text.discardAndLeave,
-    text.leaveUnsavedDescription,
-    text.leaveUnsavedTitle,
-  ]);
-  const editingBlock = useMemo(
-    () => applyEditableProgressionToSavedBlock(block, editable),
-    [block, editable],
-  );
-  const chordContextSectionsResult = useMemo(
-    () => selectVaultChordContextSections(block),
-    [block],
-  );
-  const chordContextSections = chordContextSectionsResult.ok
-    ? chordContextSectionsResult.sections
-    : [];
-  const [selectedChordContextSectionId, setSelectedChordContextSectionId] = useState<string>();
-  const selectedChordContextSection = chordContextSections.find(
-    (section) => section.id === selectedChordContextSectionId,
-  ) ?? chordContextSections[0];
-  const selectedIndex = selectedEditableSlotIndex(editable);
-  const keySignature = block.detectedKey ?? idea.key;
-  const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
-  const selectedSlot = selectedIndex === undefined
-    ? undefined
-    : editable.slots[selectedIndex];
-  const selectedQuickCandidates = selectedSlot
-    ? quickCandidatesForSlot({
-        editable,
-        slotId: selectedSlot.id,
-        keySignature,
-        authorReferenceIndex,
-      })
-    : [];
-  const previousSlot = selectedIndex !== undefined && selectedIndex > 0
-    ? editable.slots[selectedIndex - 1]
-    : undefined;
-  const nextSlot = selectedIndex === undefined ? undefined : editable.slots[selectedIndex + 1];
-  const playbackSource: PlayingSource = {
-    kind: "detail",
-    id: `idea:${idea.id}:progression:${block.id}`,
+/** Former detail-only operations; all editing is committed through the shared workspace history. */
+export function ProgressionAdvancedView(props:ProgressionDetailViewProps) {
+  const {idea,block,copy,setToast,loadMidiSource,midiExportActions}=props;
+  const controller=props.controller??playbackController;
+  const meter=beatsPerBar(block.timeSignature);
+  const editable=useMemo(()=>createEditableProgression(block,meter),[block,meter]);
+  const [selected,setSelected]=useState(0);
+  const selectedItem=block.chords[Math.min(selected,block.chords.length-1)];
+  const {sound:previewSound,setSound:setPreviewSound}=usePreviewSound();
+  const [reextracting,setReextracting]=useState(false);
+  const [enabled]=useState(isProgressionMidiExportEnabled);
+  const showMidiExport=props.midiExportEnabled??enabled;
+  const sourceAsset=idea.assets.find(asset=>asset.type==='midi'&&(asset.id===block.sourceAssetId||(!block.sourceAssetId&&block.sourceFileName!==undefined&&fileNameFromPath(asset.path)===block.sourceFileName)));
+  const setEditable=(update:(current:typeof editable)=>typeof editable)=>{
+    const next=update(editable);if(next!==editable)props.updateProgressionBlock(idea.id,block.id,progressionDetailUpdateChanges(block,next));
   };
-  const playback = usePlaybackState(controller);
-  const playingSlotId = playback.source?.kind === "detail"
-    ? editable.slots.find((slot) => playback.source?.id.includes(`:chord:${slot.id}:`))?.id
-    : undefined;
-  const sourceAsset = idea.assets.find((asset) => (
-    asset.type === "midi"
-    && (
-      asset.id === block.sourceAssetId
-      || (
-        !block.sourceAssetId
-        && block.sourceFileName !== undefined
-        && fileNameFromPath(asset.path) === block.sourceFileName
-      )
-    )
-  ));
-  const explicitMidiNotesByEventId = useMemo(() => Object.fromEntries(
-    editingBlock.chords.flatMap((item) => {
-      if (!item.eventId) return [];
-      return [[
-        item.eventId,
-        resolveVoicingForUse(
-          item.chord,
-          item.voicingMemory,
-          (block.textSource ? [...voiceTextChordForAudition(item.chord)] : voiceChordForPreview(item.chord).notes),
-        ).midiNotes,
-      ]];
-    }),
-  ), [editingBlock.chords, block.textSource]);
-  const midiExport = useMemo(() => {
-    if (!showMidiExport) return {};
-    try {
-      return {
-        result: buildProgressionMidi(editingBlock, { ideaBpm: idea.bpm }),
-      };
-    } catch (error) {
-      return {
-        disabledReason: midiExportDisabledReason(error),
-      };
-    }
-  }, [editingBlock, idea.bpm, showMidiExport]);
-
-  function saveChanges() {
-    const saved = updateProgressionBlock(
-      idea.id,
-      block.id,
-      progressionDetailUpdateChanges(block, editable),
-    );
-    if (saved === "pending") return;
-    if (!saved) {
-      setToast(text.saveFailed, "error");
-      return;
-    }
-    const correctionEvents = buildCorrectionEvents(
-      block,
-      editingBlock,
-      {
-        sourceFingerprint: block.sourceFingerprint,
-        analyzerVersion: block.sourceAnalyzerVersion ?? block.analyzerVersion,
-        timeSignature: block.timeSignature,
-        detectedKey: block.detectedKey ?? idea.key,
-      },
-      editable.slots.map((slot) => slot.editSource),
-      editable.slots.map((slot) => slot.quickCandidateSelection),
-    );
-    if (correctionEvents.length > 0) {
-      void appendAnalysisFeedback(correctionEvents)
-        .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
-    }
-    setEditable((current) => markEditableProgressionSaved(current));
-    setToast(text.savedToast, "success");
-  }
-
-  function duplicate() {
-    runLeaveAction(() => {
-      const duplicateId = duplicateProgressionBlock(idea.id, block.id);
-      if (!duplicateId) {
-        setToast(text.duplicateFailed, "error");
-        return;
-      }
-      setToast(text.duplicatedToast, "success");
-      openProgression(idea.id, duplicateId);
-    });
-  }
-
-  function runLeaveAction(action: () => void) {
-    if (requestLeave) {
-      requestLeave(action);
-      return;
-    }
-    action();
-  }
-
-  function startChordContextPractice() {
-    if (!openPractice || !selectedChordContextSection) {
-      setToast("この進行では Chord Context の練習を開けません。", "error");
-      return;
-    }
-    const snapshot = buildVaultChordContextSnapshot({
-      sourceReference: { ideaId: idea.id, blockId: block.id },
-      block,
-      sectionId: selectedChordContextSection.id,
-    });
-    if (!snapshot.ok) {
-      setToast(chordContextErrorText(snapshot.error.code), "error");
-      return;
-    }
-    runLeaveAction(() => openPractice(snapshot.snapshot));
-  }
-
-  function startVoicingLoop() {
-    if (!openVoicingPractice) return;
-    runLeaveAction(() => openVoicingPractice(idea.id, block.id));
-  }
-  async function copyForChordDrip() {
-    if (!navigator.clipboard?.writeText) {
-      setToast(text.copyFailed, "error");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(formatProgressionText(editingBlock.chords));
-      setToast(text.copiedForChordDrip);
-    } catch {
-      setToast(text.copyFailed, "error");
-    }
-  }
-
-  async function previewChord(
-    chord: SavedProgressionBlock["chords"][number]["chord"],
-    slotId = "draft",
-    useSavedVoicing = false,
-  ) {
-    const slot = useSavedVoicing
-      ? editable.slots.find((candidate) => candidate.id === slotId)
-      : undefined;
-    const explicitMidiNotes = slot
-      ? resolveVoicingForUse(
-          chord,
-          slot.voicingMemory,
-          (block.textSource ? [...voiceTextChordForAudition(chord)] : voiceChordForPreview(chord).notes),
-        ).midiNotes
-      : block.textSource ? [...voiceTextChordForAudition(chord)] : undefined;
-    try {
-      await controller.toggle(
-        { kind: "detail", id: `${playbackSource.id}:chord:${slotId}:${chordPreviewKey(chord)}` },
-        { type: "chord", chord, sound: previewSound, explicitMidiNotes },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
+  const midiExport=useMemo(()=>{if(!showMidiExport)return {};try{return {result:buildProgressionMidi(block,{ideaBpm:idea.bpm})};}catch(error){return {disabledReason:midiExportDisabledReason(error)};}},[block,idea.bpm,showMidiExport]);
   async function reextractSourceVoicings() {
     if (!sourceAsset?.path || !loadMidiSource) {
       setToast("元MIDIファイルを見つけられませんでした。", "error");
@@ -398,332 +116,18 @@ export function ProgressionDetailView({
     }
   }
 
-  const bars = block.lengthBars ?? progressionBarCount(block);
 
-  return (
-    <div className="lv-capture-content py-5" data-progression-detail-view>
-      <section
-        className="border-b border-[var(--lv-border)] pb-4"
-        aria-label={text.progression}
-        data-progression-card-stage
-      >
-        <EditableProgressionGrid
-          editable={editable}
-          playingSlotId={playingSlotId}
-          onSelect={(slotId, index) => {
-            setEditable((current) => selectEditableSlot(current, slotId));
-            const slot = editable.slots[index];
-            if (slot) void previewChord(slot.currentChord, slot.id, true);
-          }}
-          onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
-          onPreviewSlot={(slotId, chord) => {
-            setEditable((current) => selectEditableSlot(current, slotId));
-            void previewChord(chord, slotId, true);
-          }}
-          onInsertAfter={(slotId) => setEditable((current) => (
-            insertSuggestedEditableChordAfter(
-              current,
-              slotId,
-              keySignature,
-              authorReferenceIndex,
-            )
-          ))}
-          keySignature={keySignature}
-          authorReferenceIndex={authorReferenceIndex}
-          showConfidenceReview={block.analyzerVersion !== TEXT_PROGRESSION_ANALYZER_VERSION}
-          quickEditor={{
-            onPreview: (slotId, chord) => void previewChord(chord, slotId),
-            onApply: (slotId, chord, source, selection) => setEditable((current) => (
-              replaceEditableChord(
-                selectEditableSlot(current, slotId),
-                slotId,
-                chord,
-                source,
-                selection,
-              )
-            )),
-            onReset: (slotId) => setEditable((current) => resetEditableChord(current, slotId)),
-            onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
-          }}
-        />
-        <button
-          type="button"
-          className="lv-button-secondary mt-3 px-3 py-2 text-sm"
-          onClick={() => {
-            const candidates = editable.slots.map((slot) => ({
-              id: slot.id,
-              chord: slot.currentChord,
-              voicingMemory: slot.voicingMemory,
-            }));
-            const result = setAllEligibleCardsToSource(candidates);
-            if (result.changedCount > 0) {
-              setEditable((current) => setEditableVoicingMemories(current,
-                result.cards.filter((card, index) => card !== candidates[index]).map((card) => ({
-                  slotId: card.id,
-                  memory: card.voicingMemory,
-                })),
-              ));
-            }
-            setToast(`元MIDI再生に変更: ${result.changedCount}件`);
-          }}
-        >
-          {"対象カードを元MIDI再生に変更"}
-        </button>
-      </section>
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] py-3">
-        <div className="min-w-0">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="!px-0 text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"
-            onClick={() => runLeaveAction(openVault)}
-          >
-            <ArrowLeft aria-hidden="true" size={16} />
-            {text.backToVault}
-          </Button>
-          <p className="mt-2 text-xs font-semibold uppercase text-[var(--lv-accent)]">
-            {text.progression}
-          </p>
-          <h2 className="mt-1 text-base font-semibold text-[var(--lv-text)]">
-            {block.summaryText || text.untitled}
-          </h2>
-          <span className="mt-2 inline-flex">
-            <PracticeProgressBadge
-              block={block}
-              effectiveKeySignature={block.detectedKey ?? idea.key}
-            />
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {openVoicingPractice ? (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              data-testid="voicing-loop-handoff"
-              onClick={startVoicingLoop}
-            >
-              <Dumbbell aria-hidden="true" size={16} />
-              Voicing Loop
-            </Button>
-          ) : null}
-          {openPractice ? (
-            <div className="flex flex-wrap items-center justify-end gap-2" data-testid="chord-context-handoff">
-              {selectedChordContextSection ? (
-                <label className="text-xs text-[var(--lv-text-secondary)]">
-                  {"Chord Context セクション"}
-                  <select
-                    aria-label="Chord Context のセクション"
-                    className="ml-1 rounded border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 text-sm text-[var(--lv-text)]"
-                    data-testid="chord-context-section-select"
-                    value={selectedChordContextSection.id}
-                    onChange={(event) => setSelectedChordContextSectionId(event.target.value)}
-                  >
-                    {chordContextSections.map((section) => (
-                      <option key={section.id} value={section.id}>
-                        {`${section.startBar}–${section.endBar}小節`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <p className="text-xs text-[var(--lv-text-secondary)]" role="status">
-                  {chordContextSectionsResult.ok ? "Chord Context の練習は使えません。" : chordContextErrorText(chordContextSectionsResult.error.code)}
-                </p>
-              )}
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                disabled={!selectedChordContextSection}
-                onClick={startChordContextPractice}
-              >
-                <Dumbbell aria-hidden="true" size={16} />
-                {"練習する"}
-              </Button>
-            </div>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => runLeaveAction(() => openIdea(idea.id))}
-          >
-            <ExternalLink aria-hidden="true" size={16} />
-            {text.openParentIdea}
-          </Button>
-          <IconButton
-            type="button"
-            variant="ghost"
-            onClick={duplicate}
-            label={text.duplicate}
-          >
-            <CopyPlus aria-hidden="true" size={16} />
-          </IconButton>
-          <IconButton
-            type="button"
-            variant="ghost"
-            className="text-[var(--lv-danger)]"
-            onClick={() => runLeaveAction(() => requestDelete(idea, block))}
-            label={copy.common.delete}
-          >
-            <Trash2 aria-hidden="true" size={16} />
-          </IconButton>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
-        <PlayToggle
-          source={playbackSource}
-          request={{
-            type: "timeline",
-            timeline: editingBlock.chords,
-            bpm: block.bpm ?? idea.bpm,
-            sound: previewSound,
-            beatsPerBar: meter,
-            explicitMidiNotesByEventId,
-          }}
-          playLabel={copy.common.preview}
-          stopLabel={copy.common.stop}
-          className="lv-button-primary lv-progression-preview-toggle inline-flex min-h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-3 text-sm font-semibold"
-          onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
-          controller={controller}
-        />
-        <PreviewSoundSelector
-          value={previewSound}
-          onChange={(sound) => {
-            controller.stop();
-            setPreviewSound(sound);
-          }}
-          copy={copy}
-        />
-        {showMidiExport ? (
-          <ProgressionMidiControl
-            result={midiExport.result}
-            disabledReason={midiExport.disabledReason}
-            setToast={setToast}
-            actions={midiExportActions}
-          />
-        ) : null}
-        <MetadataBadge label="キー" value={displayKey(block.detectedKey ?? idea.key) ?? "-"} />
-        <MetadataBadge label="BPM" value={String(block.bpm ?? idea.bpm ?? "-")} />
-        <MetadataBadge label={text.barCount(bars)} value={block.startBar && block.endBar ? text.barRange(block.startBar, block.endBar) : block.timeSignature ?? "-"} />
-        <span
-          className={`ml-auto text-xs font-semibold ${dirty ? "text-amber-200" : "text-teal-200"}`}
-          aria-live="polite"
-        >
-          {dirty ? text.unsavedChanges : text.noChanges}
-        </span>
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          disabled={!dirty}
-          onClick={saveChanges}
-        >
-          <Save aria-hidden="true" size={16} />
-          {text.saveChanges}
-        </Button>
-      </div>
-
-      <SourceBasslineStatus block={editingBlock} progressionEdited={dirty} />
-
-      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]" data-progression-detail-editor>
-        <section className="min-w-0">
-          <ProgressionEditorToolbar
-            canUndo={canUndoProgressionEdit(editable)}
-            canRedo={canRedoProgressionEdit(editable)}
-            dirty={dirty}
-            onUndo={() => setEditable((current) => undoProgressionEdit(current))}
-            onRedo={() => setEditable((current) => redoProgressionEdit(current))}
-            onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
-          />
-          <div className="mt-6 border-t border-[var(--lv-border)] pt-4">
-            <ProgressionTagsEditor
-              block={editingBlock}
-              keySignature={block.detectedKey ?? idea.key}
-              onChange={(changes) => {
-                const updated = updateProgressionBlock(idea.id, block.id, changes);
-                if (updated === false) setToast(text.saveFailed, "error");
-              }}
-            />
-            <dl className="grid gap-2 text-sm">
-              <MetadataRow label={text.source} value={block.sourceFileName ?? block.origin ?? "Manual"} />
-              <MetadataRow label={text.parentIdea} value={idea.title} />
-            </dl>
-          </div>
-
-          <button
-            type="button"
-            className="lv-button-secondary mt-5 px-3 py-2 text-sm"
-            onClick={() => void copyForChordDrip()}
-          >
-            {text.copyForChordDrip}
-          </button>
-        </section>
-
-        <div className="lv-progression-detail-inspector min-w-0" data-progression-detail-inspector>
-          <ChordInspector
-            slot={selectedSlot}
-            quickCandidates={selectedQuickCandidates}
-            onPreview={(chord) => void previewChord(chord)}
-            playbackSource={playbackSource}
-            previewSound={previewSound}
-            stopLabel={copy.common.stop}
-            onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
-            controller={controller}
-            originalLabel={text.savedChord}
-            currentLabel={text.editingChord}
-            currentExplicitMidiNotes={selectedSlot
-              ? resolveVoicingForUse(
-                  selectedSlot.currentChord,
-                  selectedSlot.voicingMemory,
-                  (block.textSource ? [...voiceTextChordForAudition(selectedSlot.currentChord)] : voiceChordForPreview(selectedSlot.currentChord).notes),
-                ).midiNotes
-              : undefined}
-            keySignature={keySignature}
-            previousChord={previousSlot?.currentChord}
-            onApply={(chord, source, selection) => setEditable((current) => {
-              const slotId = current.selectedSlotId;
-              return slotId
-                ? replaceEditableChord(current, slotId, chord, source, selection)
-                : current;
-            })}
-            onReset={() => setEditable((current) => {
-              const slotId = current.selectedSlotId;
-              return slotId ? resetEditableChord(current, slotId) : current;
-            })}
-            canSplit={Boolean(selectedSlot && canSplitEditableChord(editable, selectedSlot.id))}
-            canMergePrevious={Boolean(previousSlot && selectedSlot && canMergeEditableChords(editable, previousSlot.id, selectedSlot.id))}
-            canMergeNext={Boolean(selectedSlot && nextSlot && canMergeEditableChords(editable, selectedSlot.id, nextSlot.id))}
-            canDelete={editable.slots.length > 1}
-            onSplit={() => selectedSlot && setEditable(splitEditableChord(editable, selectedSlot.id))}
-            onMergePrevious={() => previousSlot && selectedSlot && setEditable(mergeEditableChords(editable, previousSlot.id, selectedSlot.id, "second"))}
-            onMergeNext={() => selectedSlot && nextSlot && setEditable(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
-            onDelete={() => selectedSlot && setEditable(deleteEditableChord(editable, selectedSlot.id))}
-          />
-          {selectedSlot ? (
-            <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
-              <VoicingPanel
-                chord={selectedSlot.currentChord}
-                memory={selectedSlot.voicingMemory}
-                generatedNotes={(block.textSource ? [...voiceTextChordForAudition(selectedSlot.currentChord)] : voiceChordForPreview(selectedSlot.currentChord).notes)}
-                sourceAvailable={Boolean(sourceAsset?.path && loadMidiSource)}
-                reextracting={reextracting}
-                onMemoryChange={(memory) => setEditable((current) => (
-                  setEditableVoicingMemory(current, selectedSlot.id, memory)
-                ))}
-                onReextract={() => void reextractSourceVoicings()}
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
+  return <section className="lv-progression-subpanel" aria-label="MIDIと以前の操作">
+    <PreviewSoundSelector value={previewSound} onChange={sound=>{controller.stop();setPreviewSound(sound);}} copy={copy}/>
+    {showMidiExport?<ProgressionMidiControl result={midiExport.result} disabledReason={midiExport.disabledReason} setToast={setToast} actions={midiExportActions}/>:null}
+    <SourceBasslineStatus block={block} progressionEdited={false}/>
+    <p>元ファイル: {block.sourceFileName??block.origin??'Manual'}</p>
+    <button type="button" className="lv-cw-btn" onClick={()=>{void (async()=>{try{await navigator.clipboard.writeText(formatProgressionText(block.chords));setToast('ChordDrip 用にコピーしました');}catch{setToast('コピーできませんでした','error');}})();}}>ChordDrip 用にコピー</button>
+    <button type="button" className="lv-cw-btn" onClick={()=>{const candidates=editable.slots.map(slot=>({id:slot.id,chord:slot.currentChord,voicingMemory:slot.voicingMemory}));const result=setAllEligibleCardsToSource(candidates);if(result.changedCount)setEditable(current=>setEditableVoicingMemories(current,result.cards.filter((card,index)=>card!==candidates[index]).map(card=>({slotId:card.id,memory:card.voicingMemory}))));setToast(`元MIDI再生に変更: ${result.changedCount}件`);}}>対象カードを元MIDI再生に変更</button>
+    <label>音の保存設定を見るカード<select aria-label="音の保存設定を見るカード" value={selected} onChange={e=>setSelected(Number(e.target.value))}>{block.chords.map((item,index)=><option key={index} value={index}>{item.bar}小節 {item.chord.label}</option>)}</select></label>
+    {selectedItem?<VoicingPanel chord={selectedItem.chord} memory={selectedItem.voicingMemory} generatedNotes={block.textSource?[...voiceTextChordForAudition(selectedItem.chord)]:voiceChordForPreview(selectedItem.chord).notes} sourceAvailable={Boolean(sourceAsset?.path&&loadMidiSource)} reextracting={reextracting} onMemoryChange={memory=>props.updateProgressionBlock(idea.id,block.id,{chords:block.chords.map((item,index)=>index===selected?{...item,voicingMemory:memory}:item)})} onReextract={()=>void reextractSourceVoicings()}/>:null}
+  </section>;
 }
-
 function fileNameFromPath(path: string | undefined): string | undefined {
   return path?.split(/[\\/]/).pop();
 }
@@ -806,16 +210,6 @@ function greatestCommonDivisor(left: bigint, right: bigint): bigint {
   }
   return a === 0n ? 1n : a;
 }
-function progressionBarCount(block: SavedProgressionBlock): number {
-  if (block.chords.length === 0) return 0;
-  const bars = block.chords.map((item) => item.bar);
-  return Math.max(...bars) - Math.min(...bars) + 1;
-}
-
-function chordPreviewKey(chord: SavedProgressionBlock["chords"][number]["chord"]): string {
-  return [chord.root, chord.quality, chord.bass ?? "root", ...chord.tensions].join("-");
-}
-
 function midiExportDisabledReason(
   error: unknown,
 ): string {
@@ -826,32 +220,4 @@ function midiExportDisabledReason(
     return `${position}${"MIDIに書き出せない内容があります。"}`;
   }
   return "この進行はMIDIに書き出せません。";
-}
-
-function MetadataBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="inline-flex min-h-9 items-center gap-2 border border-[var(--lv-border)] px-3 text-xs">
-      <span className="text-[var(--lv-text-muted)]">{label}</span>
-      <strong className="font-semibold text-[var(--lv-text)]">{value}</strong>
-    </span>
-  );
-}
-
-function MetadataRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3">
-      <dt className="text-[var(--lv-text-muted)]">{label}</dt>
-      <dd className="min-w-0 truncate text-[var(--lv-text)]">{value}</dd>
-    </div>
-  );
-}
-
-/** P8.9-09: the Bass Practice domain explains Chord Context failures in English; show Japanese by code. */
-function chordContextErrorText(code: "source-unavailable" | "unsupported-source" | "invalid-section" | "invalid-snapshot"): string {
-  switch (code) {
-    case "source-unavailable": return "保存した進行が見つかりません。";
-    case "unsupported-source": return "この進行はコードの長さや拍子が合わないため、Chord Context の練習に使えません。";
-    case "invalid-section": return "選んだセクションを Chord Context の練習に使えません。";
-    default: return "Chord Context の練習を準備できませんでした。";
-  }
 }

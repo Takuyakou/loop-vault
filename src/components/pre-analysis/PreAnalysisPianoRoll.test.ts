@@ -1,60 +1,113 @@
 import { describe, expect, it } from "vitest";
-import type { AnalysisSession, PreAnalysisNote } from "../../domain/midi/preAnalysis";
-import { drawPianoRoll, harmonicCorePianoRollNotePreview } from "./PreAnalysisPianoRoll";
+import { normalizeNotes } from "../../domain/midi/normalize";
+import { buildHarmonicCoreNoteWeights } from "../../domain/midi/harmonicCoreNoteWeights";
+import { buildVoiceAwareRoleContext } from "../../domain/midi/voiceAwareReranker";
+import { buildVoices, voiceId } from "../../domain/midi/voices";
+import {
+  buildSessionAnalysisRequest,
+  type AnalysisSession,
+  type PreAnalysisNote,
+} from "../../domain/midi/preAnalysis";
+import { harmonicCoreNoteMultipliers } from "./harmonicCorePreview";
+import {
+  MAX_ROW_HEIGHT,
+  MIN_ROW_HEIGHT,
+  PIANO_ROLL_RULER,
+  drawPianoRoll,
+  noteAlpha,
+  noteColor,
+  pianoRollLayout,
+} from "./PreAnalysisPianoRoll";
+import { ROLE_COLOR } from "./sessionView";
 
-describe("harmonicCorePianoRollNotePreview", () => {
-  it("fades melody-like notes inside one harmony Voice without mutating the session", () => {
+describe("harmonicCoreNoteMultipliers", () => {
+  it("is the weight the analysis itself gives each note, and does not touch the session", () => {
     const session = textureSession();
     const before = JSON.stringify(session);
+    const preview = harmonicCoreNoteMultipliers(session);
 
-    const standard = harmonicCorePianoRollNotePreview(session, "standard");
-    const harmonicCore = harmonicCorePianoRollNotePreview(session, "harmonic-core");
+    // The analysis's own pipeline, called directly on its own input.
+    const request = buildSessionAnalysisRequest({ ...session, voiceContributionPreset: "harmonic-core" });
+    const prepared = request.options.preparedData!;
+    const normalized = normalizeNotes(prepared);
+    const context = buildVoiceAwareRoleContext(buildVoices(prepared), normalized, request.options.analysisInput);
+    const evidence = normalized.filter((note) =>
+      note.channel !== undefined
+      && context.analysisInput.enabledVoiceIds.includes(voiceId(note.trackIndex, note.channel)));
+    const direct = buildHarmonicCoreNoteWeights(evidence, context.roles);
 
-    expect(standard.weightedNoteCount).toBe(0);
-    expect(harmonicCore.weightedNoteCount).toBe(6);
-    expect(harmonicCore.classCounts["melody-like"]).toBe(3);
-    expect(session.notes.slice(3).map((note) =>
-      harmonicCore.multipliers.get(note))).toEqual([0.25, 0.25, 0.25]);
+    expect(preview.size).toBe(direct.summary.weightedNoteCount);
+    expect(preview.size).toBeGreaterThan(0);
+    expect([...preview.values()].sort()).toEqual([...direct.multipliers.values()].sort());
     expect(JSON.stringify(session)).toBe(before);
   });
 
-  it("draws melody-like notes at the locked reduced opacity", () => {
+  it("leaves bass, unused parts and Channel 10 out", () => {
     const session = textureSession();
-    const preview = harmonicCorePianoRollNotePreview(session, "harmonic-core");
+    session.voices[0] = { ...session.voices[0]!, assignedRole: "bass" };
+    session.notes.push(note(9, 36, 0, 1));
+    expect(harmonicCoreNoteMultipliers(session).size).toBe(0);
+
+    const unused = textureSession();
+    unused.voices[0] = { ...unused.voices[0]!, assignedRole: "exclude", included: false };
+    expect(harmonicCoreNoteMultipliers(unused).size).toBe(0);
+  });
+});
+
+describe("pianoRollLayout", () => {
+  it("sizes a row from the height: 6 to 16 px, fitted to the pitches in use ±2", () => {
+    const session = textureSession(); // pitches 48 … 76 (29 rows + 4)
+    const tall = pianoRollLayout(session, 700);
+    expect(tall.rowHeight).toBe(MAX_ROW_HEIGHT);
+    const middle = pianoRollLayout(session, 420);
+    expect(middle.rowHeight).toBeGreaterThanOrEqual(MIN_ROW_HEIGHT);
+    expect(middle.rowHeight).toBeLessThanOrEqual(MAX_ROW_HEIGHT);
+    expect(middle.contentHeight).toBe(420);
+    const cramped = pianoRollLayout(session, 120);
+    expect(cramped.rowHeight).toBe(MIN_ROW_HEIGHT);
+    // Does not fit even at 6 px: the roll gets taller than the area and scrolls.
+    expect(cramped.contentHeight).toBeGreaterThan(120);
+    expect(cramped.contentHeight)
+      .toBe(PIANO_ROLL_RULER + (cramped.maxPitch - cramped.minPitch + 1) * MIN_ROW_HEIGHT);
+  });
+
+  it("widens the range to fill a tall area, and leaves no empty space below", () => {
+    const layout = pianoRollLayout(textureSession(), 900);
+    const rows = layout.maxPitch - layout.minPitch + 1;
+    expect(layout.rowHeight).toBe(MAX_ROW_HEIGHT);
+    expect(PIANO_ROLL_RULER + rows * layout.rowHeight).toBeGreaterThan(900 - MAX_ROW_HEIGHT);
+    expect(layout.minPitch).toBeLessThan(46);
+    expect(layout.maxPitch).toBeGreaterThan(78);
+  });
+});
+
+describe("drawPianoRoll", () => {
+  it("paints each note in the colour of its part's role, and unused parts faintly", () => {
+    const session = textureSession();
     const fills: Array<{ alpha: number; color: string }> = [];
     const context = fakeContext(fills);
-
-    drawPianoRoll(context, 900, 290, {
+    drawPianoRoll(context, 900, pianoRollLayout(session, 400), {
       session,
-      zoom: 1,
+      pixelsPerBeat: 100,
       viewportStartBeat: 0,
-      playheadBeat: 0,
-      showAnalysisTargetsOnly: true,
-      voiceContributionPreset: "harmonic-core",
-      notePreview: preview,
     }, { current: [] });
-
-    const voiceFills = fills.filter((fill) => fill.color === "#2dd4bf");
-    expect(voiceFills).toHaveLength(6);
-    expect(voiceFills.slice(3).map((fill) => fill.alpha))
-      .toEqual([0.2375, 0.2375, 0.2375]);
+    const notes = fills.filter((fill) => fill.color === ROLE_COLOR.chord);
+    expect(notes).toHaveLength(6);
+    expect(noteColor({ ...session.voices[0]!, assignedRole: "bass" })).toBe(ROLE_COLOR.bass);
+    expect(noteColor({ ...session.voices[0]!, assignedRole: "melody-weak" })).toBe(ROLE_COLOR.melody);
+    const off = { ...session.voices[0]!, assignedRole: "exclude" as const, included: false };
+    expect(noteColor(off)).toBe(ROLE_COLOR.off);
+    expect(noteAlpha(off, false, false)).toBeLessThan(noteAlpha(session.voices[0]!, false, false));
   });
-  it("leaves excluded, bass, and Channel 10 notes outside the note preview", () => {
-    const session = textureSession();
-    session.voices[0] = {
-      ...session.voices[0]!,
-      assignedRole: "bass",
-    };
-    session.notes.push(note(9, 36, 0, 1));
 
-    const preview = harmonicCorePianoRollNotePreview(session, "harmonic-core");
-
-    expect(preview.weightedNoteCount).toBe(0);
-    expect(preview.classCounts).toEqual({
-      harmonic: 0,
-      "melody-like": 0,
-      uncertain: 0,
-    });
+  it("dims muted parts and, while one part is soloed, every other part", () => {
+    const voice = textureSession().voices[0]!;
+    expect(noteAlpha({ ...voice, muted: true }, false, false)).toBe(0.25);
+    expect(noteAlpha(voice, true, false)).toBe(0.25);
+    expect(noteAlpha({ ...voice, solo: true }, true, false)).toBeGreaterThan(0.5);
+    // A weighted note follows its weight (never invisible).
+    expect(noteAlpha(voice, false, false, 0.25)).toBeLessThan(noteAlpha(voice, false, false, 1));
+    expect(noteAlpha(voice, false, false, 0)).toBeGreaterThan(0);
   });
 });
 
@@ -134,6 +187,7 @@ function fakeContext(fills: Array<{ alpha: number; color: string }>) {
   };
   return context as unknown as CanvasRenderingContext2D;
 }
+
 function note(
   channel: number,
   pitch: number,

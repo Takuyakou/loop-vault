@@ -4,6 +4,7 @@ mod media_permission;
 mod midi_export;
 mod native_drag;
 mod practice_storage;
+mod chord_dojo_storage;
 
 use tauri::Manager;
 
@@ -19,6 +20,7 @@ pub fn run() {
         .manage(midi_export::MidiExportState::default())
         .manage(llm::LlmState::default())
         .manage(practice_storage::PracticeStorageState::default())
+        .manage(chord_dojo_storage::ChordDojoStorageState::default())
         .setup(|app| {
             midi_export::startup_cleanup(app.handle());
             if let Some(window) = app.get_webview_window("main") {
@@ -53,6 +55,16 @@ pub fn run() {
             practice_storage::list_practice_backups,
             practice_storage::read_practice_backup,
             practice_storage::restore_practice_backup,
+            chord_dojo_storage::load_chord_dojo_file,
+            chord_dojo_storage::read_legacy_chord_dojo_file,
+            chord_dojo_storage::read_previous_theme_chord_dojo_file,
+            chord_dojo_storage::save_chord_dojo_file,
+            chord_dojo_storage::quarantine_chord_dojo_file,
+            chord_dojo_storage::list_chord_dojo_recovery_artifacts,
+            chord_dojo_storage::list_chord_dojo_backups,
+            chord_dojo_storage::read_chord_dojo_backup,
+            chord_dojo_storage::restore_chord_dojo_backup,
+
         ])
         .run(tauri::generate_context!())
         .expect("error while running Loop Vault");

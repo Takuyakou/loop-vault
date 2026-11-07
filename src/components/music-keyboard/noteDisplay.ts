@@ -63,7 +63,7 @@ function displayOctave(
   convention: KeyboardOctaveConvention,
 ): number {
   if (convention === "fl-studio") return Math.floor(midiNote / 12);
-  return Math.floor(midiNote / 12);
+  return Math.floor(midiNote / 12) - 1;
 }
 
 function positiveModulo(value: number, divisor: number): number {

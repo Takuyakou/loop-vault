@@ -1,7 +1,7 @@
 // P8.9-02: the app's screen routing, split out of App.tsx (audit §1).
 // Owns which screen is shown, the selected Idea / progression, and the
 // "leave with unsaved progression edits?" guard.
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { AppView } from "../components/AppShell";
 
 export interface ProgressionSelection {
@@ -22,6 +22,9 @@ export function useAppNavigation(options: UseAppNavigationOptions = {}) {
   // P10.0-06: the correction workspace keeps its edits only while it is shown (count of unsaved operations).
   const [captureWorkspaceDirty, setCaptureWorkspaceDirty] = useState(0);
   const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
+  const progressionSaveRef = useRef<(() => boolean) | undefined>();
+  const setProgressionSave = useCallback((save: (() => boolean) | undefined) => { progressionSaveRef.current=save; },[]);
+  const saveProgression = () => progressionSaveRef.current?.() ?? false;
   const onNavigateRef = useRef(options.onNavigate);
   onNavigateRef.current = options.onNavigate;
 
@@ -53,6 +56,8 @@ export function useAppNavigation(options: UseAppNavigationOptions = {}) {
   }
 
   return {
+    saveProgression,
+    setProgressionSave,
     view,
     setView,
     selectedId,

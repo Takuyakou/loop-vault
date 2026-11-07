@@ -41,6 +41,7 @@ export interface LiveMidiServicePort {
 
 export interface LiveMidiStoreState {
   active: boolean;
+  initializing: boolean;
   devices: LiveMidiDevice[];
   selected?: LiveMidiDevice;
   status: LiveMidiConnectionStatus;
@@ -54,15 +55,26 @@ export interface LiveMidiStoreState {
   historyState: LiveChordHistoryState;
   history: LiveChordHistoryEntry[];
   latency: LiveMidiLatencyReport;
-  activate: () => Promise<void>;
+  activate: (options?: LiveMidiActivateOptions) => Promise<void>;
   deactivate: () => Promise<void>;
   refreshDevices: () => Promise<void>;
-  selectDevice: (backendId: string) => Promise<void>;
+  selectDevice: (backendId: string, options?: LiveMidiSelectOptions) => Promise<void>;
   setPreferredDevice: (backendId: string) => void;
   testDevice: (backendId: string) => Promise<LiveMidiDeviceTestResult>;
   setShowHistory: (show: boolean) => void;
   clearSession: () => void;
   resetLatencyMetrics: () => void;
+}
+
+/** P14: the connection controller picks the device itself, so it can switch the store's own choice off. */
+export interface LiveMidiActivateOptions {
+  /** Default true: connect to the saved input after the first device refresh (the earlier behaviour). */
+  autoSelect?: boolean;
+}
+
+export interface LiveMidiSelectOptions {
+  /** Default true: remember the input once it opened. P14 saves only results that are still current. */
+  persist?: boolean;
 }
 
 export interface LiveMidiDeviceTestResult {
@@ -105,6 +117,7 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
 
   const store = createStore<LiveMidiStoreState>((set, get) => ({
     active: false,
+    initializing: false,
     devices: [],
     status: "idle",
     preferences: { alwaysOnTop: true, showHistory: true },
@@ -116,10 +129,10 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     history: [],
     latency: latencyTracker.report(),
 
-    async activate() {
+    async activate(options) {
       if (get().active) return;
       const preferences = loadPreferences();
-      set({ active: true, preferences, error: undefined });
+      set({ active: true, initializing: true, preferences, error: undefined });
       unlistenSnapshot = service.subscribe((snapshot) => {
         set({
           devices: snapshot.devices,
@@ -131,15 +144,19 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       });
       unlistenBatches = service.subscribeBatches((batch) => processBatch(batch, set, get));
       deviceTimer = scheduleInterval(() => { void get().refreshDevices(); }, 2000);
-      await get().refreshDevices();
-      if (!get().active) return;
-      const preferred = resolvePreferredInput(get().devices, preferences.preferredInput);
-      if (preferred) await get().selectDevice(preferred.backendId);
+      try {
+        await get().refreshDevices();
+        if (!get().active) return;
+        const preferred = resolvePreferredInput(get().devices, preferences.preferredInput);
+        if (preferred && options?.autoSelect !== false) await get().selectDevice(preferred.backendId);
+      } finally {
+        set({ initializing: false });
+      }
     },
 
     async deactivate() {
       if (!get().active) return;
-      set({ active: false });
+      set({ active: false, initializing: false });
       if (deadlineTimer !== undefined) cancelTimeout(deadlineTimer);
       if (deviceTimer !== undefined) cancelInterval(deviceTimer);
       deadlineTimer = undefined;
@@ -159,12 +176,12 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       set({ devices, preferences });
     },
 
-    async selectDevice(backendId) {
+    async selectDevice(backendId, options) {
       const device = get().devices.find((entry) => entry.backendId === backendId);
       if (!device) return;
       resetRuntimeNotes(set, get);
       const opened = await service.start(device);
-      if (!opened || !get().active) return;
+      if (!opened || !get().active || options?.persist === false) return;
       const preferences = { ...get().preferences, preferredInput: preferredInputFromDevice(device) };
       set({ preferences });
       savePreferences(preferences);
@@ -176,7 +193,8 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
         ...get().preferences,
         preferredInput: device ? preferredInputFromDevice(device) : undefined,
       };
-      set({ preferences, error: undefined });
+      // A settings choice explicitly acknowledges an input error; passive refresh does not.
+      set({ preferences, error: undefined, ...(get().status === "error" ? { status: "idle" as const } : {}) });
       savePreferences(preferences);
     },
 

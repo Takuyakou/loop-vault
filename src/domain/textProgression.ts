@@ -1,4 +1,5 @@
 import { parseTextChordLabel } from "./chords";
+import { supportsTextChord } from "./textChordConsumerCapabilities";
 import { explicitSlashLabel } from "./explicitSlashLabel";
 import { parseFastChordEntry } from "./progressionEditing/fastLabelEntry";
 import { parseKeySignature } from "./progressionEditing/chordSuggestions";
@@ -439,7 +440,9 @@ export function evaluateTextProgressionCapabilities(
     : capability("bass-practice", chordContext.status, `Bass Practice is ${chordContext.status}: ${chordContext.reason}`);
   const rootMotion = evaluateRootMotionCapability(rootMotionNoteCount, chordContextEligibility);
   const voicingMemory = valid && result.events.length > 0
-    ? capability("voicing-memory", "supported", "Auto voicing remains available; compatible Live MIDI practice overrides use the existing Voicing Memory contract.")
+    ? capability("voicing-memory", "supported", result.events.some(event => event.chord.altered)
+      ? "Altered chords use registered notes only; generated substitute voicings are unavailable."
+      : "Auto voicing remains available; compatible Live MIDI practice overrides use the existing Voicing Memory contract.")
     : capability("voicing-memory", "unsupported", "Voicing Memory requires a sounding chord in a valid Text Draft.");
   return [vaultSave, chordDojo, bassPractice, chordContext, rootMotion, voicingMemory];
 }
@@ -637,6 +640,7 @@ function parseTextChordToken(raw: string, keyState: TextProgressionKeyState): Ch
 function isControlToken(raw: string): boolean { return raw === "%" || raw === "_" || raw === "="; }
 
 function parseAbsoluteChordToken(raw: string): ChordSymbol | undefined {
+  if (/\s+alt\b/i.test(raw)) return undefined;
   const normalized = normalizeScoreChord(raw);
   const direct = parseTextChordLabel(normalized);
   if (direct) return direct;
@@ -713,6 +717,9 @@ function evaluateChordContextCapability(
   bpm: number | undefined,
 ): ChordContextEligibility {
   if (!result.canConvert) return unsupportedChordContext("Chord Context requires a valid exact text result.");
+  if (result.events.some(event => !supportsTextChord("chord-context", event.chord))) {
+    return unsupportedChordContext("Chord Context does not support altered-dominant symbols.");
+  }
   if (!isConfirmedTextProgressionKey(result.keyState)) {
     return unsupportedChordContext("Chord Context requires a user-confirmed key; an inferred key is only a suggestion.");
   }

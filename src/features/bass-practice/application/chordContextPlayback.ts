@@ -1,4 +1,6 @@
+import { normalizeMidiNotes } from '../../../domain/voicing';
 import { chordPitchClasses } from "../../../domain/chordVoicing";
+import { supportsTextChord } from "../../../domain/textChordConsumerCapabilities";
 import type { ChordQuality, ChordSymbol, Tension } from "../../../domain/types";
 
 /**
@@ -25,7 +27,11 @@ export const DEFAULT_CHORD_CONTEXT_PLAY_MODE: ChordContextPlayMode = "chords-onl
 
 export interface ChordContextMeter { readonly numerator: 4; readonly denominator: 4; }
 /** Accepts either a validated chord symbol or strict captured pitch-class facts. */
-interface ChordContextChordEventBase { readonly id: string; readonly startBeat: number; readonly durationBeats: number; }
+interface ChordContextChordEventBase {
+  readonly id: string; readonly startBeat: number; readonly durationBeats: number;
+  /** Validated current-Vault session pitches; never a persisted snapshot field. */
+  readonly savedMidiNotes?: readonly number[];
+}
 export type ChordContextChordEvent =
   | (ChordContextChordEventBase & { readonly chord: ChordSymbol; readonly pitchClasses?: never })
   | (ChordContextChordEventBase & { readonly chord?: never; readonly pitchClasses: readonly number[] });
@@ -193,6 +199,7 @@ export function buildChordContextPlaybackPlan(input: ChordContextPlaybackInput):
     const timingError = validateTimedEvent(event);
     if (timingError) return failure("invalid-event", timingError.message, timingError.eventId);
     if ("chord" in event ? !isSupportedChord(event.chord) : !isCanonicalPitchClasses(event.pitchClasses)) return failure("unsupported-chord", "Chord Context cannot voice this chord safely.", event.id);
+    if (event.savedMidiNotes !== undefined && !isSavedMidiNotes(event.savedMidiNotes)) return failure("invalid-event", "Saved chord MIDI notes are invalid.", event.id);
   }
   for (const event of bass) {
     const timingError = validateTimedEvent(event);
@@ -204,7 +211,10 @@ export function buildChordContextPlaybackPlan(input: ChordContextPlaybackInput):
   const events: ChordContextScheduledEvent[] = [];
   let previousNotes: readonly number[] = [];
   for (const event of chords.sort(compareChordEvents)) {
-    const voicing = "chord" in event
+    // Approved P10.4 exception: exact saved session pitches bypass generation.
+    const voicing = event.savedMidiNotes !== undefined
+      ? { ok: true as const, notes: Object.freeze([...event.savedMidiNotes]) }
+      : "chord" in event
       ? voiceChordContext(event.chord, previousNotes)
       : voiceCapturedPitchClasses(event.pitchClasses, previousNotes);
     if (!voicing.ok) return failure("unsupported-chord", "Chord Context cannot voice this chord safely.", event.id);
@@ -300,7 +310,7 @@ function isCanonicalPitchClasses(value: unknown): value is readonly number[] {
     && value.every((pitchClass, index) => Number.isInteger(pitchClass) && pitchClass >= 0 && pitchClass <= 11
       && (index === 0 || value[index - 1] < pitchClass));
 }
-function isSupportedChord(chord: ChordSymbol): boolean { return isRecord(chord) && Number.isInteger(chord.root) && (chord.bass === undefined || Number.isInteger(chord.bass)) && supportedQualities.has(chord.quality as ChordQuality) && Array.isArray(chord.tensions) && chord.tensions.every((tension) => supportedTensions.has(tension as Tension)); }
+function isSupportedChord(chord: ChordSymbol): boolean { return isRecord(chord) && supportsTextChord("chord-context", chord) && Number.isInteger(chord.root) && (chord.bass === undefined || Number.isInteger(chord.bass)) && supportedQualities.has(chord.quality as ChordQuality) && Array.isArray(chord.tensions) && chord.tensions.every((tension) => supportedTensions.has(tension as Tension)); }
 function isSupportedMeter(meter: unknown): meter is ChordContextMeter { return isRecord(meter) && meter.numerator === 4 && meter.denominator === 4; }
 function validateTimedEvent(event: unknown): { readonly message: string; readonly eventId?: string } | undefined {
   if (!isRecord(event)) return { message: "Chord Context events must be objects." };
@@ -320,3 +330,9 @@ function normalizePitchClass(value: number): number { return ((value % 12) + 12)
 function isRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === "object"; }
 function failure(code: ChordContextPlanError["code"], message: string, eventId?: string): ChordContextPlanResult { return { ok: false, error: { code, message, eventId } }; }
 function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "Chord Context audio driver failed."; }
+
+function isSavedMidiNotes(value: unknown): value is readonly number[] {
+  if (!Array.isArray(value) || value.length < 2 || value.length > 10) return false;
+  const normalized = normalizeMidiNotes(value);
+  return normalized.length === value.length && normalized.every((note, index) => note === value[index]);
+}

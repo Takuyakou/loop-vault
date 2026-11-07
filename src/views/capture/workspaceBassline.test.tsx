@@ -41,11 +41,13 @@ function session(withBass = true): AnalysisSession {
   return {
     id: "session",
     masterSourceId: "source",
-    sources: [{ id: "source", displayName: "Synthetic", smfType: 1, ppq: 480, durationBeats: 8, durationTick: 3840, tempoMap: [{ beat: 0, bpm: 120 }], timeSignatures: [{ beat: 0, numerator: 4, denominator: 4 }], bytes: new Uint8Array(), visible: true, muted: false }],
-    voices: withBass ? [{ id: "bass", sourceId: "source", trackIndex: 0, channel: 0, programNumbers: [33], displayName: "Bass candidate", hasProgramChanges: false, isDrum: false, noteCount: 2, autoRole: "bass", autoRoleConfidence: 1, assignedRole: "bass", included: true, visible: true, muted: false, solo: false }] : [],
+    sources: [{ id: "source", displayName: "Synthetic", smfType: 1, ppq: 480, durationBeats: 16, durationTick: 7680, tempoMap: [{ beat: 0, bpm: 120 }], timeSignatures: [{ beat: 0, numerator: 4, denominator: 4 }], bytes: new Uint8Array(), visible: true, muted: false }],
+    voices: withBass ? [{ id: "bass", sourceId: "source", trackIndex: 0, channel: 0, programNumbers: [33], displayName: "Bass candidate", hasProgramChanges: false, isDrum: false, noteCount: 4, autoRole: "bass", autoRoleConfidence: 1, assignedRole: "bass", included: true, visible: true, muted: false, solo: false }] : [],
     notes: withBass ? [
       { sourceId: "source", voiceId: "bass", trackIndex: 0, channel: 0, pitch: 36, velocity: 0.8, startBeat: 0, durationBeats: 1, startTick: 0, durationTick: 480, ticksPerQuarter: 480 },
       { sourceId: "source", voiceId: "bass", trackIndex: 0, channel: 0, pitch: 38, velocity: 0.8, startBeat: 7, durationBeats: 1, startTick: 3360, durationTick: 480, ticksPerQuarter: 480 },
+      { sourceId: "source", voiceId: "bass", trackIndex: 0, channel: 0, pitch: 40, velocity: 0.8, startBeat: 8, durationBeats: 1, startTick: 3840, durationTick: 480, ticksPerQuarter: 480 },
+      { sourceId: "source", voiceId: "bass", trackIndex: 0, channel: 0, pitch: 41, velocity: 0.8, startBeat: 15, durationBeats: 1, startTick: 7200, durationTick: 480, ticksPerQuarter: 480 },
     ] : [],
     controlChanges: [],
     preset: "custom",
@@ -93,6 +95,12 @@ describe("workspace source bassline (P10.0-07, was the capture card integration)
     expect(stored?.sourceKind).toBe("selected-bass-voice");
     expect(stored?.notes).toHaveLength(2);
     expect(JSON.stringify(stored)).not.toMatch(/voiceId|sourceId|displayName|path|filename|device|bytes/i);
+
+    // P17-02: after a cut, the snapshot can be read from the original bars…
+    const mapped = latest!.forSave(first, { startBar: 3, endBar: 4 });
+    expect(mapped?.notes.map((note) => note.pitch)).toEqual([40, 41]);
+    // …and a range that crosses the cut gets no bass at all.
+    expect(latest!.forSave(first, null)).toBeUndefined();
 
     // Another range (other chords): the opt-in does not carry over.
     const second = candidate("range-2", "Am7");

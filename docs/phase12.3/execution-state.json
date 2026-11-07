@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "12.3",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P12.3-01"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "9f61b1c5",
+  "lastVerifiedCommit": "837abeb5",
+  "currentBranch": "feat/p12.3-dojo-progressions",
+  "requiredGates": {
+    "P12.3-01": [
+      "p12.3-01-phase-docs",
+      "p12.3-01-builtins",
+      "p12.3-01-cards",
+      "p12.3-01-list",
+      "p12.3-01-endless",
+      "p12.3-01-e2e",
+      "p12.3-01-existing-e2e",
+      "p12.3-01-records-unchanged",
+      "p12.3-01-others-unchanged",
+      "p12.3-01-screenshots",
+      "p12.3-01-full-fresh",
+      "p12.3-01-exe",
+      "p12.3-01-report"
+    ]
+  },
+  "gateResults": {
+    "p12.3-01-phase-docs": "pass",
+    "p12.3-01-builtins": "pass",
+    "p12.3-01-cards": "pass",
+    "p12.3-01-list": "pass",
+    "p12.3-01-endless": "pass",
+    "p12.3-01-e2e": "pass",
+    "p12.3-01-existing-e2e": "pass",
+    "p12.3-01-records-unchanged": "pass",
+    "p12.3-01-others-unchanged": "pass",
+    "p12.3-01-screenshots": "pass",
+    "p12.3-01-full-fresh": "pass",
+    "p12.3-01-exe": "pass",
+    "p12.3-01-report": "pass"
+  },
+  "nextAction": "人間が EXE で確かめる（報告の 10）。merge 候補 837abeb5。merge・push・tag・release はしていない。",
+  "updatedAt": "2026-10-09"
+}

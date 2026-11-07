@@ -21,6 +21,7 @@ function service() {
   };
   return {
     value,
+    snapshot: (changes: Partial<LiveMidiServiceSnapshot>) => snapshotHandler?.({ devices: [device], status: "idle", ...changes }),
     batch: (
       events: RawLiveMidiEventBatch["events"],
       timing: Pick<RawLiveMidiEventBatch, "emittedAtMs" | "frontendReceivedAtMs"> = {},
@@ -147,6 +148,18 @@ describe("Live MIDI store", () => {
     expect(mock.value.start).not.toHaveBeenCalled();
   });
 
+  it("acknowledges an input failure only on an explicit settings choice without opening an inactive input", async () => {
+    const mock = service();
+    const store = createLiveMidiStore({ service: mock.value, loadPreferences: () => ({}), savePreferences: vi.fn() });
+    await store.getState().refreshDevices();
+    store.setState({ status: "error", error: "Synthetic input unavailable" });
+    await store.getState().refreshDevices();
+    expect(store.getState()).toMatchObject({ status: "error", error: "Synthetic input unavailable" });
+    store.getState().setPreferredDevice("one");
+    expect(store.getState()).toMatchObject({ status: "idle", active: false, error: undefined });
+    expect(mock.value.start).not.toHaveBeenCalled();
+  });
+
   it("tests a configured device and preserves the backend failure detail", async () => {
     const start = vi.fn(async () => false);
     const stop = vi.fn(async () => undefined);
@@ -172,4 +185,29 @@ describe("Live MIDI store", () => {
     expect(start).toHaveBeenCalledWith(device);
     expect(stop).toHaveBeenCalled();
   });
+});
+
+
+describe("Live MIDI activation state", () => {
+ const preferences=()=>({preferredInput:{backendId:"one",name:"Keyboard",previousIndex:0}});
+ const make=(mock:ReturnType<typeof service>)=>createLiveMidiStore({service:mock.value,loadPreferences:preferences,savePreferences:vi.fn(),setInterval:(()=>1) as never,clearInterval:vi.fn()});
+ it("marks discovery and preferred opening as initializing and subscribes only once",async()=>{
+  const mock=service();let discover!:(devices:LiveMidiDevice[])=>void,open!:()=>void;
+  mock.value.refreshDevices=vi.fn(()=>new Promise<LiveMidiDevice[]>(r=>discover=r));const original=mock.value.start;
+  mock.value.start=vi.fn(async d=>{await new Promise<void>(r=>open=r);return original(d);});
+  mock.value.subscribe=vi.fn(mock.value.subscribe);mock.value.subscribeBatches=vi.fn(mock.value.subscribeBatches);
+  const store=make(mock),ready=store.getState().activate();expect(store.getState().initializing).toBe(true);
+  await store.getState().activate();expect(mock.value.subscribe).toHaveBeenCalledTimes(1);expect(mock.value.subscribeBatches).toHaveBeenCalledTimes(1);
+  discover([device]);await vi.waitFor(()=>expect(mock.value.start).toHaveBeenCalledTimes(1));expect(store.getState().initializing).toBe(true);
+  open();await ready;expect(store.getState()).toMatchObject({active:true,initializing:false,status:"connected"});
+  await store.getState().deactivate();expect(store.getState()).toMatchObject({active:false,initializing:false});
+ });
+ it("finishes initialization when no input is present",async()=>{
+  const mock=service();mock.value.refreshDevices=vi.fn(async()=>[]);const store=make(mock);await store.getState().activate();
+  expect(store.getState()).toMatchObject({active:true,initializing:false,devices:[],status:"idle"});expect(mock.value.start).not.toHaveBeenCalled();await store.getState().deactivate();
+ });
+ it("finishes initialization without hiding a preferred-input failure",async()=>{
+  const mock=service();mock.value.start=vi.fn(async()=>{mock.snapshot({status:"error",error:"Synthetic input unavailable"});return false;});
+  const store=make(mock);await store.getState().activate();expect(store.getState()).toMatchObject({initializing:false,status:"error",error:"Synthetic input unavailable"});await store.getState().deactivate();
+ });
 });

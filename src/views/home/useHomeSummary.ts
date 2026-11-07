@@ -1,3 +1,9 @@
+import { useMidiBassActivity } from "../../features/bass-practice/midi/useActivity";
+import type { MidiBassAttempt } from "../../features/bass-practice/midi/model";
+import {useEffect} from "react";
+import {useStore} from "zustand";
+import {dojoStore} from "../../domain/chordDojo/runtime";
+import type {DojoStore} from "../../domain/chordDojo/store";
 import { useMemo } from "react";
 import type { SavedProgressionBlock, SongIdea } from "../../domain/types";
 import type { PracticeFileV2 } from "../../features/bass-practice/infra/repository/practiceRepository";
@@ -33,6 +39,8 @@ export function deriveHomeSummary(
   ideas: readonly SongIdea[],
   practiceFile: PracticeFileV2 | undefined,
   now: Date,
+  dojo?: DojoStore,
+  midiAttempts: readonly MidiBassAttempt[] = [],
 ): HomeSummary {
   const progressions = ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => ({
     id: `${idea.id}:${block.id}`,
@@ -42,7 +50,7 @@ export function deriveHomeSummary(
   })));
   const byTouch = [...progressions].sort((left, right) => right.touchedAt - left.touchedAt
     || Date.parse(right.block.capturedAt) - Date.parse(left.block.capturedAt));
-  const activity = summarizePracticeActivity(ideas, practiceFile, now);
+  const activity = summarizePracticeActivity(ideas, practiceFile, now, dojo, midiAttempts);
   const practiced = activity.latest
     ? progressions.find((entry) => entry.idea.id === activity.latest!.reference.ideaId && entry.block.id === activity.latest!.reference.blockId)
     : undefined;
@@ -63,7 +71,10 @@ export function useHomeSummary(
   practiceFile: PracticeFileV2 | undefined,
   now: Date,
 ): HomeSummary {
-  return useMemo(() => deriveHomeSummary(ideas, practiceFile, now), [ideas, now, practiceFile]);
+  const midiAttempts = useMidiBassActivity();
+  const dojo=useStore(dojoStore,s=>s.file);
+  useEffect(()=>{void dojoStore.getState().initialize();},[]);
+  return useMemo(() => deriveHomeSummary(ideas, practiceFile, now, dojo, midiAttempts), [ideas, now, practiceFile, dojo, midiAttempts]);
 }
 
 const weekdays = ["日", "月", "火", "水", "木", "金", "土"];

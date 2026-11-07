@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import type { EditableProgression } from "../progressionEditing/types";
 import { beatsPerBar } from "./timing";
+import { screenToSource, type BeatRange } from "../correction/barMap";
 
 export type LabelCorrectionEditType =
   | "accepted-rank1"
@@ -45,6 +46,8 @@ export interface BuildLabelCorrectionLogsOptions {
   analyzerMode?: string;
   occurredAt: string;
   staleEventIds?: ReadonlySet<string>;
+  /** P17-02: after whole bars were cut, record the original position when the event maps back to one span. */
+  removedBars?: readonly BeatRange[];
 }
 
 export function buildLabelCorrectionLogs(
@@ -81,8 +84,13 @@ export function buildLabelCorrectionLogs(
         const after = operation.after.slots.find((slot) => slot.id === eventId);
         return before?.currentChord.label !== after?.currentChord.label;
       });
-    const startBeat = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
-    const endBeat = startBeat + detected.durationBeats;
+    const screenStart = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
+    const screenEnd = screenStart + detected.durationBeats;
+    // P17-02: the log keeps the original MIDI position. A detected event that maps
+    // back to one span is recorded there; one that crosses a cut keeps its own span.
+    const mapped = screenToSource(screenStart, screenEnd, options.removedBars ?? []);
+    const startBeat = mapped.length === 1 ? mapped[0]!.start : screenStart;
+    const endBeat = mapped.length === 1 ? mapped[0]!.end : screenEnd;
     const eventFingerprint = stableFingerprint([
       analysis.sourceFingerprint!,
       analysis.analyzerVersion,

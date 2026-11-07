@@ -1,4 +1,5 @@
 import type { SavedProgressionBlock, SongIdea } from "../../../domain/types";
+import { supportsTextChord } from "../../../domain/textChordConsumerCapabilities";
 import {
   addExactBeat,
   capturedHarmonySignature,
@@ -121,6 +122,7 @@ function currentHarmonySpans(
   if (!Array.isArray(chords) || chords.length === 0) return undefined;
   const spans: CapturedHarmonySpan[] = [];
   for (const item of chords) {
+    if (!supportsTextChord("source-bassline-comparison", item.chord)) return undefined;
     if (!Number.isSafeInteger(item.bar) || item.bar < 1
       || !Number.isSafeInteger(item.beat) || item.beat < 1 || item.beat > 4
       || !Number.isSafeInteger(item.durationBeats) || item.durationBeats <= 0) return undefined;

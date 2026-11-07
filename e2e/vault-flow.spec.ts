@@ -22,12 +22,12 @@ test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる",
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
-  await expect(detail.getByRole("button", { name: /練習する/ })).toBeVisible();
+  await expect(detail.getByRole("button", { name: /Bass Practice/ })).toBeVisible();
 
-  await detail.getByRole("button", { name: /練習する/ }).click();
+  await detail.getByRole("button", { name: /Bass Practice/ }).click();
   await page.locator('[data-nav="chord-dojo"]').click();
   await expect(page.getByTestId("practice-layout")).toBeVisible();
-  await expect(page.getByTestId("practice-progression-overview")).toBeVisible();
+  await expect(page.getByRole("heading", {name:"今日の練習",exact:true})).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 

@@ -1,231 +1,123 @@
 # Loop Vault
 
-**A Windows desktop app for collecting, refining, hearing, practicing, and producing with chord progressions**
+A Windows app that collects MIDI and chord progressions, stores them, and lets you practise them at the keyboard until you can play them.
 
-[日本語](README.md) | [English](README.en.md)
+**[Download for Windows (latest)](https://github.com/Takuyakou/loop-vault/releases/latest)** · [日本語](README.md) | [English](README.en.md)
 
-![Loop Vault](docs/images/hero.png)
+![Voicing Loop: current and next chord, fingering, keyboard](docs/images/v2.1-voicing-loop.png)
 
-## Download
+*The screenshots use synthetic data made for this README. No personal Vault or MIDI is shown.*
 
-**Version: v2.0.0**
+## What you can do
 
-Loop Vault supports Windows. Releases include both an **NSIS** setup executable and an **MSI**
-Windows Installer package.
+| | |
+|---|---|
+| **Collect** | Import a MIDI file or type chord names, and get the progression plus the notes that actually sound. Fix mistakes on the spot while listening |
+| **Keep** | Save a progression to the Vault, find it by key, tag or chord name, and export it as MIDI for your DAW |
+| **Practise** | Loop a saved progression at the keyboard with fingerings (Voicing Loop), memorise chords and progressions (Chord Dojo), and practise the bass (Bass Practice) |
 
-[Download v2.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v2.0.0) · [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md)
+## Getting started
 
-A [direct executable (no installer)](https://github.com/Takuyakou/loop-vault/releases/download/v2.0.0/loop-vault.exe) is also available. Windows WebView2 Runtime is required. Verify downloads against `SHA256SUMS` on the release page.
+1. Open the [latest release](https://github.com/Takuyakou/loop-vault/releases/latest), download `Loop.Vault_<version>_x64-setup.exe` from "Assets" and run it
+2. Choose a MIDI file under "取り込む" (or drag and drop it). Without MIDI, type the chord names
+3. Listen to the analysis, fix anything wrong and press "Vaultに保存"
+4. Pick the progression in "Voicing Loop" and press "開始"
 
-## What is Loop Vault?
+Connect a MIDI keyboard from the MIDI button in the header; it reconnects automatically next time.
 
-Loop Vault connects finding a chord progression with everything that comes next: editing, auditioning,
-practice, and production.
+## A tour of the screens
 
-- **Analyze MIDI** — Load one or more MIDI files and extract chord-progression candidates from the music.
-- **Write chord names** — Create a bar-structured progression directly, even when you do not have a MIDI file.
-- **Save and use it** — Edit and audition progressions in the Vault, practice them, export MIDI, or drag them into a DAW.
+### 取り込む (Capture)
 
-Analysis and editing never modify the source MIDI. Vault data, settings, and practice history are stored
-locally and are not uploaded automatically. The former AI Advisor UI is no longer provided. Settings can remove an API key previously saved for that feature.
+Reads a MIDI file (.mid / .midi) or chord names typed as text.
 
-## Features
+- Before analysis you can choose which parts are bass, harmony or melody
+- The correction workspace edits notes, chord names and boundaries. Delete code cards, or cut whole bars and close the gap
+- The original MIDI file is never rewritten
 
-### MIDI Capture & Analysis
+Text looks like `| Dm7 G7 | Cmaj7 | Am7 | F G |`. Jazz notation such as `Cm(maj7)` and `G7alt` is supported.
 
-- Load one or multiple MIDI files and analyze beats, bars, chord candidates, and sections
-- Pre-analyze Voices as bass, harmony, pad, melody, percussion, mixed, and related roles; review or correct
-  High / Medium / Low confidence results
-- Standard, automatic, and custom analysis presets, plus the opt-in **Harmonic Core** mode
-- Reduce the chord-detection contribution of melody-like notes when harmony and melody share one Voice
-- Inspect cards, piano rolls and timelines; split/merge intervals and refine chords or notes in the Correction Workspace
+![Correction workspace: code cards, piano roll, saving to the Vault](docs/images/v2.1-correction-workspace.png)
 
-#### Harmonic Core
+### Vault
 
-Harmonic Core is an **optional mode for prioritizing accompaniment harmony in MIDI that also contains a
-melody**. It reduces how strongly melody-like notes contribute to chord detection. It does not delete notes
-from the source, rewrite the MIDI file, or replace the default analysis path; enable it only when it fits the material.
+Where saved progressions live.
 
-### Text Progression Entry
+- Organise with title, key, BPM, tags and a memo; search by chord name or degree
+- On a progression page you can change chords and notes, then overwrite or save as another version
+- Export as MIDI, or drag it into a DAW
 
-Create and save a progression from the Text tab in Capture without supplying a MIDI file.
-
-```text
-| Dm7 G7 | Cmaj7 | Am7 |
-```
-
-- Standard / Extended text intake parses bar separators and chord names with clear diagnostics
-- Set a key and BPM, choose an automatically generated voicing style, and audition each chord
-- Play a voicing on a MIDI keyboard and explicitly mark those notes for the selected chord
-- Continue through the shared MIDI / Text Capture and Correction Workspace to preview and Vault save
-
-### Progression Detail & Vault
-
-- Edit and organize chord progressions, key, BPM, sections, titles, and workflow status
-- Use per-chord **Voicing Memory** from source MIDI, generated voicings, or notes captured from a keyboard
-- Audition a complete progression or individual chords with adjustable sound and tempo
-- Export MIDI and use native drag-and-drop into a supported DAW
-- Search and organize the Vault by title, key, chord, tag, status, and other metadata
-
-### Chord Dojo
-
-Practice saved progressions step by step with a MIDI keyboard.
-
-- Five levels: See and Play, Play by Name, Play by Degree, Nearby Keys, and Any Key
-- Step mode for one chord at a time and Flow mode for playing through the progression
-- Voicing practice with the resolved voicing, Auto, Shell, Open, and Rootless choices
-- Mix practice with 2–5 progressions plus adjustable BPM, leniency, and cycle count
-- Store practice level and progress with the Vault entry
-
-### Bass Practice
-
-A practice workspace built around listening, singing, thinking, playing, and reviewing.
-
-- **Degree Echo** — Hear a short phrase, sing it, understand it by degree, and reproduce it on bass
-- **Rhythm Echo** — Hear and remember a rhythm, sing it, then play it
-- **Bassline Echo** — Hear and reproduce a bassline over a progression from built-in presets or the Vault
-- **Root Motion Echo** — Hear 2–8 chord-root movements, reproduce them on the fretboard, and transpose them
-- Chord Context plus 4- or 5-string, right- or left-handed, and fret-range settings
-- **Record & Compare** your performance against the reference or an earlier take
-- Review results in Practice History
+![Vault: saved progressions with filters](docs/images/v2.1-vault.png)
 
 ### Voicing Loop
 
-- Current / next chord, timeline, 88-key keyboard and transport in one practice workspace
-- Distinct saved, source MIDI, custom and generated voicings; unavailable sources are disabled and partial availability is counted
-- Basic / Core generated choices and detailed shape, left-hand, Color and Open settings
-- Session-only, chord-snapped A–B Range Loop through right-click or keyboard controls
-- Recommended fingerings, fixed personal Saved fingerings and Next Move; ranking does not change pitches or hand assignment
+Check a saved progression while it loops.
 
-### Limitations
+- The current chord large, with the next chords, the flow of the progression and an 88-key keyboard
+- Finger numbers for both hands and the movement to the next chord
+- Choose the notes from saved tones, the source MIDI, your own custom voicing, or generated voicings
+- Change BPM, key and count-in; loop only a section
+- Progressions are listed as favourites, recently used, then the rest. The star is the same favourite as the Vault, and favourites move to the top the next time you open the screen
+- Search by title, chord or key
 
-MIDI analysis can require manual correction. Unpromoted Core v2 research does not replace the current Product analyzer.
-Recommended fingerings use a relative proxy, not a guarantee of ergonomic suitability or hand-size fit.
-Text intake does not invent source MIDI notes. Practice supports its constant-meter scope; changing tempo/meter or unsupported data remains limited. Vault stays on fileVersion 2 and valid practice-incompatible records are preserved.
+### Chord Dojo
 
-### Data and localization
+Memorise chords and progressions without looking. One entry point ("今日の練習") puts the next thing to do in front of you.
 
-- Vault and practice-data persistence, backup, and recovery
-- Japanese and English UI
-- A workflow that keeps evaluation MIDI, recordings, and personal data out of the repository
+- **定番の進行**: J-POP, jazz, bossa nova and neo-soul progressions across keys; works with an empty Vault
+- **Jazz Progressions**: 21 standard jazz progressions in 12 keys, stage ① (play while looking) then ② (play from memory), repeatable
+- **保存した進行**: your own Vault progressions
+- Wrong notes never stop you; a clean lap clears the round
+- A MIDI keyboard judges your playing; without one, press "弾けた" yourself
 
-## Screenshots
+![Chord Dojo: practising a standard progression](docs/images/v2.1-chord-dojo.png)
 
-The screenshots below show the earlier v1.1.0 production UI with anonymous deterministic data. The v2.0.0 Correction Workspace and Voicing Loop have changed.
+### Bass Practice
 
-| MIDI Capture / Harmonic Core | Text Progression Entry |
-| --- | --- |
-| ![Capture with Harmonic Core](docs/images/capture.png) | ![Text Progression Entry](docs/images/text-progression.png) |
+Listen and copy degrees, rhythms, basslines and root motion; record yourself and compare.
+A bassline imported from MIDI can be practised with automatic judging.
 
-| Vault | Progression Detail |
-| --- | --- |
-| ![Vault](docs/images/vault.png) | ![Progression Detail](docs/images/progression-detail.png) |
+## Data and privacy
 
-![Bass Practice — Root Motion Echo](docs/images/bass-practice.png)
+- The Vault, settings, practice records and recordings stay on this PC. No MIDI or recording is sent anywhere
+- "設定" → "データ" shows the storage location, export/import and backup restore
+- Take a backup before upgrading or making big changes
+- The images in this README use synthetic data; no real Vault, MIDI or recording
 
-## v2.0.0 highlights
+## Upgrading from v2.0.0
 
-- Shared MIDI / Text Correction Workspace with clearer interval editing, save and audition controls
-- Extended Text intake, source-first playback and default 120 BPM for SMFs without a tempo event
-- Timeline-integrated Voicing Loop, four sources, A–B looping, saved fingerings and Next Move
-- Preserved Vault v2, explicitly saved pitches and original MIDI source timing
-- Improved restart/first-chord playback, responsive layout, accessibility and test runner reliability
+- **On first launch, your existing records are copied into the new folders and used. The originals stay.**
+- **Do not use v2.0.0 after moving.** Changes made in v2.1.0 are not reflected in v2.0.0, and changes made in v2.0.0 are not reflected in v2.1.0
+- **An export containing `alt` chords cannot be opened by v2.0.0.** Export your Vault before upgrading if you might go back
+- See the [release notes](docs/release/v2.1.0/release-notes.md) (Japanese) for details
 
-See [v2.0.0 Release Notes](docs/release/v2.0.0/release-notes.md) for details and limitations. SemVer is 2.0.0; Vault fileVersion remains 2.
+## Notes and limitations
 
-## Tech Stack
+- MIDI analysis is not perfect transcription. Melody, ornaments and complex chords may need checking on screen
+- Finger numbers are guidance; hand size can make some shapes hard
+- Windows (x64). [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) is required (included in Windows 11)
+- The builds are unsigned. If Windows warns, confirm the download came from this page and check the `SHA256SUMS` checksum
 
-| Area | Technology |
-| --- | --- |
-| Desktop foundation | Tauri v2 (Rust backend + WebView frontend) |
-| Frontend | React 18 / TypeScript |
-| Build | Vite 7 |
-| State management | Zustand 5 |
-| Schema / validation | Zod 3 |
-| Audio / MIDI playback | Tone.js 15 |
-| Native features | OS keychain, practice-data persistence, MIDI export, native drag to a DAW |
-| Testing / QA | Vitest / Playwright / axe-core / Rust tests |
+## Which file to download
 
-## Architecture / Accuracy Evaluation
+From "Assets" on the [latest release](https://github.com/Takuyakou/loop-vault/releases/latest). Usually the setup file.
 
-The React frontend and Tauri (Rust) native commands are separated at a clear boundary. Core music-theory,
-MIDI-analysis, editing, and practice logic lives in `src/domain/` or a feature domain layer, independently
-from the UI, and is verified with unit and integration tests.
+| File | Use |
+|---|---|
+| `Loop.Vault_<version>_x64-setup.exe` | **Usually this one.** Run it and follow the installer |
+| `Loop.Vault_<version>_x64_en-US.msi` | If you prefer Windows Installer |
+| `loop-vault.exe` | Run without installing |
+| `SHA256SUMS` | Check the downloaded files |
 
-```text
-src/
-├─ domain/           Music theory, MIDI analysis, progression editing, Chord Dojo
-├─ features/
-│  └─ bass-practice/ Bass Practice application / domain / infra / UI
-├─ views/            Capture / Vault / Practice / Detail / History
-├─ llm/              Tauri bridge for Progression Advisor
-└─ i18n.ts           Japanese / English
+## More
 
-src-tauri/
-└─ src/              Keychain, storage, MIDI export, native drag
-```
+- [Usage guide (Japanese)](docs/guide.md): choosing notes, text notation, section loops, keyboard control
+- [CHANGELOG](CHANGELOG.md)
+- [Developer information](docs/development.md): building and testing
 
-See [`docs/current-midi-detection-spec.md`](docs/current-midi-detection-spec.md) for the current MIDI-analysis
-contract and [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md) for the wider
-technical handoff.
+## Licence
 
-Accuracy improvements are evaluated with fixed corpora, ablation, failure taxonomy, and determinism checks,
-not by impression. New detection ideas are first measured as disconnected shadows and are promoted only when
-they clear pre-registered thresholds. Declined changes and their rationale remain documented under `docs/`.
+**This repository is not open source.** The source is published for review and evaluation.
+See [LICENSE](LICENSE) for the terms of use, running, modification and redistribution. Commercial use, modification and redistribution require the copyright holder's written permission.
 
-- Local evaluation-data setup: [`docs/local-data.md`](docs/local-data.md)
-- Ablation example: [`docs/phase3.6.1-ablation-report.md`](docs/phase3.6.1-ablation-report.md)
-- Detector research record: [`docs/stage-f/09-detector-research-report.md`](docs/stage-f/09-detector-research-report.md)
-
-Evaluation corpora are not published for licensing and privacy reasons. Normal unit tests and builds run from
-a clean clone without those corpora.
-
-## AI-Assisted Development Flow
-
-Specifications, evaluation contracts, and acceptance criteria are fixed before implementation. AI coding tools
-then work in separate roles through staged implementation, independent review, verification, and documentation.
-Reports and decision records under `docs/` preserve why an implementation or default was chosen.
-
-- [`docs/loop-vault-codex-plan.md`](docs/loop-vault-codex-plan.md)
-- [`docs/loop-vault-codex-prompts.md`](docs/loop-vault-codex-prompts.md)
-- [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)
-
-## Setup for developers
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (LTS recommended)
-- [Rust toolchain](https://www.rust-lang.org/tools/install)
-- [Tauri v2 prerequisites](https://tauri.app/start/prerequisites/), including WebView2 and the C++ Build Tools on Windows
-
-### Install and develop
-
-```bash
-npm ci
-npm run dev
-```
-
-Run the Tauri desktop app:
-
-```bash
-npm run tauri dev
-```
-
-### Verify and build
-
-```bash
-npm run lint
-npm test
-npm run test:e2e
-npm run build
-npm run tauri build
-```
-
-## License
-
-**This repository is not open source.** Its source code is published for viewing and evaluation only.
-See [LICENSE](LICENSE) for the complete terms.
-
-- Commercial use, modification, and redistribution are prohibited without prior written permission from the copyright holder (All Rights Reserved).
-- The bundled FreePats [electric-bass-YR](https://github.com/freepats/electric-bass-YR) samples are CC0-1.0 and include their license.
-- MIDI evaluation corpora and personal data are not included in the repository.
+The bundled FreePats bass sounds are CC0-1.0. Other audio and libraries keep their own licences.

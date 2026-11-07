@@ -25,3 +25,10 @@ test("failure summary retains spec, assertion, location and trace but drops succ
   assert.match(short, /trace\.zip/);
   assert.doesNotMatch(short, /another successful/);
 });
+
+
+test("summaries retain conditional skips in the discovered total, never hide them as passes", () => {
+  assert.equal(summaryCounts("Tests  5263 passed | 2 skipped (5265)", "vitest"), "5263/5265");
+  assert.equal(summaryCounts("2 skipped\n708 passed (18.6m)", "browser"), "708/710 (2 existing/conditional skips)");
+  assert.equal(summaryCounts("No tests found", "browser"), "");
+});

@@ -15,12 +15,15 @@ test("P8.9-09b 続きから strip keeps 7-character chord names whole and plays 
     await page.locator('[data-nav="home"]').click();
     const strip = page.getByTestId("home-continue").locator(".lv-home-strip");
     await expect(strip).toBeVisible();
-    const fit = await strip.evaluate((element) => {
-      const chords = [...element.querySelectorAll<HTMLElement>(".lv-home-strip-chord")].filter((chord) => chord.offsetParent !== null);
-      return { count: chords.length, clipped: chords.filter((chord) => chord.scrollWidth > chord.clientWidth).map((chord) => chord.textContent) };
-    });
-    expect(fit.count, `${width}px`).toBe(cells);
-    expect(fit.clipped, `${width}px`).toEqual([]);
+    // The cells re-fit after the viewport change through ResizeObserver; measure inside a poll so that a re-layout
+    // mid-measure (which under load read a mid-reflow count) retries until the strip settles.
+    await expect.poll(async () => {
+      const fit = await strip.evaluate((element) => {
+        const chords = [...element.querySelectorAll<HTMLElement>(".lv-home-strip-chord")].filter((chord) => chord.offsetParent !== null);
+        return `${chords.length}|${chords.filter((chord) => chord.scrollWidth > chord.clientWidth).length}`;
+      });
+      return fit;
+    }, { timeout: 10_000, message: `${width}px: the continue strip shows ${cells} whole cells` }).toBe(`${cells}|0`);
   }
 
   const chord = page.getByTestId("home-continue").getByRole("button", { name: "試聴: Dmaj7" }).first();

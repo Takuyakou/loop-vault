@@ -6,7 +6,8 @@ import { createEditableProgression } from "../progressionEditing/editableProgres
 import type { EditableProgression } from "../progressionEditing/types";
 import type { ChordSymbol, ChordTimelineItem, ChordVoicingMemory, ProgressionBlockCandidate, VoicingSnapshot } from "../types";
 import { MAX_VOICING_NOTES, normalizedChordKey, normalizeMidiNotes, resolveTimelineItemVoicing, VOICING_EXTRACTOR_VERSION } from "../voicing";
-import { EPSILON, notesByCard, type CorrectionCard, type CorrectionModel, type CorrectionNote } from "./correctionModel";
+import { EPSILON, notesByCard, removedBarsOf, type CorrectionCard, type CorrectionModel, type CorrectionNote } from "./correctionModel";
+import { screenBarsToSourceBars, screenToSource, type BeatRange } from "./barMap";
 
 /**
  * What the workspace saves (spec v2.4 §10.2), as the candidate the existing save
@@ -38,12 +39,27 @@ export interface SaveProblem {
 }
 
 export type SaveCandidateResult =
-  | { ok: true; candidate: ProgressionBlockCandidate; original: ProgressionBlockCandidate; editable: EditableProgression; userEdited: boolean; cardIds: string[]; /** P10.1 §12.4: the tempo a person set. */ bpm?: number }
+  | { ok: true; candidate: ProgressionBlockCandidate; original: ProgressionBlockCandidate; editable: EditableProgression; userEdited: boolean; cardIds: string[]; /** P10.1 §12.4: the tempo a person set. */ bpm?: number; /** P17-02: the cut spans (source beats) and whether this range crosses one. */ removedBars: readonly BeatRange[]; crossesCut: boolean; /** The source bars when the range maps back to exactly one source bar range. */ sourceBars?: { startBar: number; endBar: number } }
   | { ok: false; problems: SaveProblem[] };
 
 type CardItem = { item: ChordTimelineItem; problem?: undefined } | { item?: undefined; problem: string };
 
 const usedPitches = (notes: readonly CorrectionNote[]) => normalizeMidiNotes(notes.filter((note) => note.used).map((note) => note.pitch));
+
+/** P17-02: the source span a card shows (one range, or several when it crosses a cut). */
+export function cardSourceRanges(model: CorrectionModel, card: Pick<CorrectionCard, "start" | "duration">): BeatRange[] {
+  return screenToSource(card.start, card.start + card.duration, removedBarsOf(model));
+}
+
+/** True when the card's screen span is the same span in the original analysis. */
+export function cardSpanMatchesAnalysis(model: CorrectionModel, card: Pick<CorrectionCard, "start" | "duration">, base: Pick<ChordTimelineItem, "bar" | "beat" | "durationBeats">): boolean {
+  const ranges = cardSourceRanges(model, card);
+  if (ranges.length !== 1) return false;
+  const meter = model.context.meter;
+  const baseStart = (base.bar - 1) * meter + base.beat - 1;
+  return Math.abs(baseStart - ranges[0]!.start) < EPSILON
+    && Math.abs(base.durationBeats - (ranges[0]!.end - ranges[0]!.start)) < EPSILON;
+}
 
 function snapshot(notes: readonly number[], chord: ChordSymbol, fields: Pick<VoicingSnapshot, "source" | "extractorVersion">): VoicingSnapshot {
   return {
@@ -87,9 +103,7 @@ export function cardTimelineItem(model: CorrectionModel, card: CorrectionCard, t
   if (!parsed) return { problem: `読めない名前があります：${cardPlace(card)}` };
   const chord = parsed.label === base.chord.label ? base.chord : card.name.label === parsed.label ? card.name : parsed;
   const mine = notes ?? model.notes.filter((note) => note.cardId === card.id);
-  const meter = model.context.meter;
-  const baseStart = (base.bar - 1) * meter + base.beat - 1;
-  const sameSpan = Math.abs(baseStart - card.start) < EPSILON && Math.abs(base.durationBeats - card.duration) < EPSILON;
+  const sameSpan = cardSpanMatchesAnalysis(model, card, base);
   const { voicingMemory: baseMemory, ...rest } = base;
   const item = (memory: ChordVoicingMemory | undefined): ChordTimelineItem => ({
     ...rest,
@@ -179,10 +193,25 @@ export function buildSaveCandidate(model: CorrectionModel, range: SaveRange, tim
     const fromAlternatives = slot.alternatives.some((alternative) => alternative.chord.label === saved.label);
     return { ...slot, currentChord: saved, edited: true, editSource: fromAlternatives ? "alternative" : "manual-label" };
   });
+  const removed = removedBarsOf(model);
+  const blockRanges = screenToSource((range.startBar - 1) * meter, range.endBar * meter, removed);
+  const crossesCut = blockRanges.length > 1;
+  const sourceBars = screenBarsToSourceBars(range, meter, removed);
   const userEdited = model.tempo !== undefined || cards.some((card) => card.edited || card.nameSource !== "auto" || card.attacks > 1)
     || cards.some((card) => {
-      const base = timeline[card.timelineIndex]!;
-      return Math.abs((base.bar - 1) * meter + base.beat - 1 - card.start) > EPSILON || Math.abs(base.durationBeats - card.duration) > EPSILON;
+      const base = timeline[card.timelineIndex];
+      return !base || !cardSpanMatchesAnalysis(model, card, base);
     });
-  return { ok: true, candidate, original, editable, userEdited, cardIds: cards.map((card) => card.id), ...(model.tempo !== undefined ? { bpm: model.tempo } : {}) };
+  return {
+    ok: true,
+    candidate,
+    original,
+    editable,
+    userEdited,
+    cardIds: cards.map((card) => card.id),
+    removedBars: removed,
+    crossesCut,
+    ...(sourceBars ? { sourceBars } : {}),
+    ...(model.tempo !== undefined ? { bpm: model.tempo } : {}),
+  };
 }

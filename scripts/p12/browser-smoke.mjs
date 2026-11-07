@@ -1,0 +1,18 @@
+/* global console, process, URL, navigator, performance */
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import {mkdirSync,writeFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+const out=fileURLToPath(new URL('../../p12-generated/P12.0-01/',import.meta.url));mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const base=process.env.P12_REVIEW_URL??'http://127.0.0.1:8120';
+for(const [name,path,count]of [['recipe-table','/p12-generated/P12.0-01/recipe-table.html',224],['point-check','/p12-generated/P12.0-01/point-check.html',96]]){await page.goto(base+path);assert.equal(await page.locator('tbody>tr').count(),count);await page.screenshot({path:out+name+'.png'});await page.locator('#filter').fill('F#');assert.ok(await page.locator('tbody>tr:visible').count()>0);await page.locator('[data-notes]:visible').first().click();}
+await page.goto(base+'/p12-generated/mocks/chord-dojo-mock.html');await page.screenshot({path:out+'mock-home.png'});console.log('Mock buttons',await page.locator('button').allTextContents());console.log('Mock text', (await page.locator('body').innerText()).slice(0,1500));
+const start=page.getByRole('button',{name:'始める',exact:true});if(await start.count()){await start.first().click();await page.screenshot({path:out+'mock-practice.png'});}
+for(const [label,name]of [['2 型','mock-shape'],['3 登録した音','mock-saved'],['4 進行','mock-progression'],['おわり','mock-finish']]){await page.getByRole('button',{name:label,exact:true}).first().click();await page.screenshot({path:out+name+'.png'});}await page.getByRole('button',{name:'つながっていない',exact:true}).click();await page.getByRole('button',{name:'2 型',exact:true}).click();await page.screenshot({path:out+'mock-no-midi.png'});
+await page.addInitScript(()=>{const input={id:'synthetic-test-only',name:'合成テスト入力',onmidimessage:null};globalThis.__p12Input=input;Object.defineProperty(navigator,'requestMIDIAccess',{value:async()=>({inputs:new Map([[input.id,input]]),onstatechange:null})});});
+await page.goto(base+'/scripts/p12/midi-measure.html');await page.locator('#connect').click();await page.locator('#start').click();await page.screenshot({path:out+'midi-tool.png'});
+const names=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'],qualities=[[0,4,7],[0,3,7],[0,4,7,11],[0,3,7,10],[0,4,7,10],[0,4,7,11,2],[0,3,7,10,2],[0,4,7,10,2]];
+for(let i=0;i<30;i++){const root=(i*5)%12,notes=qualities[i%8].map(n=>60+(root+n)%12);assert.ok((await page.locator('#chord').innerText()).startsWith(names[root]));await page.evaluate(ns=>{const t=performance.now()+1000;ns.forEach((n,j)=>globalThis.__p12Input.onmidimessage({data:[0x90,n,90],timeStamp:t+j*30}));},notes);await page.locator('#finish').click();assert.ok((await page.locator('#status').innerText()).includes('全部の鍵'));await page.evaluate(ns=>ns.forEach(n=>globalThis.__p12Input.onmidimessage({data:[0x90,n,0],timeStamp:performance.now()+1500})),notes);await page.locator('#finish').click();await page.locator('#next').click();}
+assert.equal(await page.locator('#chord').innerText(),'30個 おわり');const stats=JSON.parse(await page.locator('#stats').innerText());assert.equal(stats.valid,30);assert.equal(stats.spreadMs.max,120);
+assert.deepEqual(errors,[]);writeFileSync(out+'browser-verification.json',JSON.stringify({synthetic:true,tableRows:[224,96],midiTrials:30,stats,errors},null,2));console.log('Browser verification PASS; MIDI events are synthetic, not human measurements');await browser.close();

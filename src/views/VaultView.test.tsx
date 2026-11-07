@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import {dojoStore} from "../domain/chordDojo/runtime";
+import {emptyStore,emptyItem} from "../domain/chordDojo/store";
+import {vaultKey} from "../domain/chordDojo/collect";
 
 import { act, type ComponentProps } from "react";
 import { createRoot } from "react-dom/client";
@@ -91,7 +94,7 @@ afterEach(() => {
 });
 
 describe("VaultView", () => {
-  it("shows transposition coverage in the Vault progression row", async () => {
+  it("shows new Dojo state and hides legacy level coverage", async () => {
     const practiced: SavedProgressionBlock = {
       ...progressionBlock,
       detectedKey: "C major",
@@ -102,17 +105,17 @@ describe("VaultView", () => {
         transposition: { schemaVersion: 1, clearedKeyPitchClasses: [2, 5, 7, 9], updatedAt: "2026-07-24T00:00:00.000Z" },
       },
     };
+    const dojo=emptyStore();dojo.progressions[vaultKey(practiced)]={...emptyItem(),state:"provisional"};dojoStore.setState({file:dojo,ready:true});
     const idea = makeIdea({ id: "idea-coverage", progressionBlocks: [practiced] });
     const view = await renderVault({ ideas: [idea] });
     const badge = view.container.querySelector<HTMLElement>("[data-practice-state]");
-    expect(badge?.textContent).toContain("L4 4/6");
+    expect(badge?.textContent).toContain("仮の合格");
+    expect(badge?.textContent).not.toContain("L4");
     expect(badge?.className).toContain("max-w-full");
 
-    const stale = { ...practiced, practice: { ...practiced.practice!, progressionFingerprint: "practice-v1-stale" } };
-    await view.rerender({ ideas: [{ ...idea, progressionBlocks: [stale] }] });
-    const staleBadge = view.container.querySelector<HTMLElement>('[data-practice-state="stale"]');
-    expect(staleBadge?.textContent).toContain("進行更新・要確認");
-    expect(staleBadge?.textContent).not.toContain("4/6");
+    const changed={...practiced,chords:practiced.chords.map(c=>({...c,chord:{...c.chord,root:2}}))};
+    await view.rerender({ideas:[{...idea,progressionBlocks:[changed]}]});
+    expect(view.container.querySelector('[data-practice-state]')).toBeNull();
     await view.unmount();
   });
 

@@ -1,0 +1,11940 @@
+{
+ "version": 1,
+ "set": "extra",
+ "grammar": "same as ear-progressions.json",
+ "note": "Chord sequences only; the app re-voices them. Names are generated from the content.",
+ "progressions": [
+  {
+   "id": "X1-4-001",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IV",
+     "V"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IV",
+     "V"
+    ]
+   ],
+   "no": 101
+  },
+  {
+   "id": "X1-4-002",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "V"
+    ],
+    [
+     "VIm",
+     "IV"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IV",
+     "I"
+    ]
+   ],
+   "no": 102
+  },
+  {
+   "id": "X1-4-003",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 103
+  },
+  {
+   "id": "X1-4-004",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm"
+    ]
+   ],
+   "no": 104
+  },
+  {
+   "id": "X1-4-005",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ]
+   ],
+   "no": 105
+  },
+  {
+   "id": "X1-4-006",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ]
+   ],
+   "no": 106
+  },
+  {
+   "id": "X1-4-007",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 107
+  },
+  {
+   "id": "X1-4-008",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 108
+  },
+  {
+   "id": "X1-4-009",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 109
+  },
+  {
+   "id": "X1-4-010",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm",
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 110
+  },
+  {
+   "id": "X1-4-011",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 111
+  },
+  {
+   "id": "X1-4-012",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 112
+  },
+  {
+   "id": "X1-4-013",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "Vm"
+    ]
+   ],
+   "no": 113
+  },
+  {
+   "id": "X1-4-014",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 114
+  },
+  {
+   "id": "X1-4-015",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 115
+  },
+  {
+   "id": "X1-4-016",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "Vm"
+    ],
+    [
+     "IVm",
+     "bIII"
+    ],
+    [
+     "bVII",
+     "IVm"
+    ],
+    [
+     "bVI",
+     "Im"
+    ]
+   ],
+   "no": 116
+  },
+  {
+   "id": "X1-4-017",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI",
+     "Im"
+    ],
+    [
+     "bIII",
+     "bVII"
+    ]
+   ],
+   "no": 117
+  },
+  {
+   "id": "X1-4-018",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ]
+   ],
+   "no": 118
+  },
+  {
+   "id": "X1-4-019",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 119
+  },
+  {
+   "id": "X1-4-020",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ]
+   ],
+   "no": 120
+  },
+  {
+   "id": "X1-4-021",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 121
+  },
+  {
+   "id": "X1-4-022",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "IIm",
+     "VIm"
+    ],
+    [
+     "I",
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 122
+  },
+  {
+   "id": "X1-4-023",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm",
+     "V"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IV",
+     "I"
+    ]
+   ],
+   "no": 123
+  },
+  {
+   "id": "X1-4-024",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV",
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 124
+  },
+  {
+   "id": "X1-4-025",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 125
+  },
+  {
+   "id": "X1-4-026",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 126
+  },
+  {
+   "id": "X1-4-027",
+   "level": 1,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 127
+  },
+  {
+   "id": "X1-4-028",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 128
+  },
+  {
+   "id": "X1-4-029",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 129
+  },
+  {
+   "id": "X1-4-030",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Vm"
+    ]
+   ],
+   "no": 130
+  },
+  {
+   "id": "X1-4-032",
+   "level": 1,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 131
+  },
+  {
+   "id": "X1-8-001",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "Vm",
+     "Im"
+    ],
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "Vm",
+     "Im"
+    ],
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 132
+  },
+  {
+   "id": "X2-4-001",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "IV",
+     "I/III"
+    ],
+    [
+     "IV",
+     "I/III"
+    ],
+    [
+     "V/VII",
+     "I"
+    ]
+   ],
+   "no": 133
+  },
+  {
+   "id": "X2-4-002",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm/VII"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 134
+  },
+  {
+   "id": "X2-4-003",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ディミニッシュ",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V",
+     "#Vdim"
+    ],
+    [
+     "VIm"
+    ]
+   ],
+   "no": 135
+  },
+  {
+   "id": "X2-4-004",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I/III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ]
+   ],
+   "no": 136
+  },
+  {
+   "id": "X2-4-005",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bVII",
+     "I"
+    ]
+   ],
+   "no": 137
+  },
+  {
+   "id": "X2-4-006",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "bIII/bVII"
+    ],
+    [
+     "IV/VI"
+    ]
+   ],
+   "no": 138
+  },
+  {
+   "id": "X2-4-007",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "借用コード・ベースが下がる",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "bIII"
+    ]
+   ],
+   "no": 139
+  },
+  {
+   "id": "X2-4-008",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "sus4",
+   "bars": [
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Vsus2"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 140
+  },
+  {
+   "id": "X2-4-009",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "VIIdim"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 141
+  },
+  {
+   "id": "X2-4-010",
+   "level": 2,
+   "length": 4,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "bVII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 142
+  },
+  {
+   "id": "X2-4-011",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "bVII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "Vm"
+    ]
+   ],
+   "no": 143
+  },
+  {
+   "id": "X2-8-001",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV",
+     "bVII"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 144
+  },
+  {
+   "id": "X2-8-002",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・ベースが下がる",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "Vm/bVII"
+    ],
+    [
+     "IV/VI"
+    ],
+    [
+     "IVm/bVI"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "II/bV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 145
+  },
+  {
+   "id": "X2-8-003",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bIII",
+     "IIm"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 146
+  },
+  {
+   "id": "X2-8-004",
+   "level": 2,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "III"
+    ],
+    [
+     "bII/IV"
+    ],
+    [
+     "bIII/V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "VII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ]
+   ],
+   "no": 147
+  },
+  {
+   "id": "X3-4-001",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "I",
+     "III7"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "VI7",
+     "IIm"
+    ],
+    [
+     "V7",
+     "I"
+    ]
+   ],
+   "no": 148
+  },
+  {
+   "id": "X3-4-002",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "I",
+     "IVmaj7"
+    ],
+    [
+     "V/VII",
+     "IIIm"
+    ],
+    [
+     "VIm",
+     "I/V"
+    ],
+    [
+     "#IVm7b5",
+     "IV"
+    ]
+   ],
+   "no": 149
+  },
+  {
+   "id": "X3-4-003",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "I",
+     "Im/bIII"
+    ],
+    [
+     "II7",
+     "I"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 150
+  },
+  {
+   "id": "X3-4-004",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "カノンの型",
+   "bars": [
+    [
+     "I",
+     "V"
+    ],
+    [
+     "VIm",
+     "IIIm"
+    ],
+    [
+     "IV",
+     "I/III"
+    ],
+    [
+     "IIm",
+     "V7"
+    ]
+   ],
+   "no": 151
+  },
+  {
+   "id": "X3-4-005",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "VIm",
+     "I/V"
+    ],
+    [
+     "IV",
+     "I/III"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 152
+  },
+  {
+   "id": "X3-4-006",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "VIm",
+     "I/V"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "I",
+     "V7"
+    ]
+   ],
+   "no": 153
+  },
+  {
+   "id": "X3-4-007",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "VIm7"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "I",
+     "VIm7"
+    ],
+    [
+     "IV",
+     "I"
+    ]
+   ],
+   "no": 154
+  },
+  {
+   "id": "X3-4-008",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 155
+  },
+  {
+   "id": "X3-4-009",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVmaj7",
+     "V7"
+    ]
+   ],
+   "no": 156
+  },
+  {
+   "id": "X3-4-010",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IV",
+     "V7"
+    ]
+   ],
+   "no": 157
+  },
+  {
+   "id": "X3-4-011",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 158
+  },
+  {
+   "id": "X3-4-012",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VII7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 159
+  },
+  {
+   "id": "X3-4-013",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VII7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 160
+  },
+  {
+   "id": "X3-4-014",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm",
+     "I7"
+    ],
+    [
+     "IV",
+     "IVm"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 161
+  },
+  {
+   "id": "X3-4-015",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 162
+  },
+  {
+   "id": "X3-4-016",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "IIIm"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IIIm6"
+    ],
+    [
+     "I/III"
+    ]
+   ],
+   "no": 163
+  },
+  {
+   "id": "X3-4-017",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "IIIm"
+    ],
+    [
+     "IIIm7/II"
+    ],
+    [
+     "#Im7b5"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 164
+  },
+  {
+   "id": "X3-4-018",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ]
+   ],
+   "no": 165
+  },
+  {
+   "id": "X3-4-019",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ベースが下がる",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "bII6"
+    ],
+    [
+     "IV/I"
+    ],
+    [
+     "V/VII"
+    ]
+   ],
+   "no": 166
+  },
+  {
+   "id": "X3-4-020",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ii–V–I・借用コード",
+   "bars": [
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "I",
+     "IV"
+    ],
+    [
+     "bVII",
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 167
+  },
+  {
+   "id": "X3-4-021",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ii–V–I",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 168
+  },
+  {
+   "id": "X3-4-022",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "IV6",
+     "V6"
+    ],
+    [
+     "VIm7",
+     "V6"
+    ],
+    [
+     "IIm7",
+     "IIIm7"
+    ],
+    [
+     "IV7"
+    ]
+   ],
+   "no": 169
+  },
+  {
+   "id": "X3-4-023",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "Im7"
+    ],
+    [
+     "IVm",
+     "bVI"
+    ],
+    [
+     "bIII",
+     "V7"
+    ]
+   ],
+   "no": 170
+  },
+  {
+   "id": "X3-4-024",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 171
+  },
+  {
+   "id": "X3-4-025",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "II7/I"
+    ],
+    [
+     "IIm7b5/I"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 172
+  },
+  {
+   "id": "X3-4-026",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IIm7",
+     "bVII/II"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII6",
+     "bVII7"
+    ]
+   ],
+   "no": 173
+  },
+  {
+   "id": "X3-4-027",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 174
+  },
+  {
+   "id": "X3-4-028",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm7",
+     "bVII7/II"
+    ],
+    [
+     "Vm7",
+     "Im7"
+    ],
+    [
+     "bVI",
+     "IVm7"
+    ]
+   ],
+   "no": 175
+  },
+  {
+   "id": "X3-4-029",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 176
+  },
+  {
+   "id": "X3-4-030",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bVII",
+     "bVI"
+    ],
+    [
+     "bVI",
+     "bIII"
+    ]
+   ],
+   "no": 177
+  },
+  {
+   "id": "X3-4-031",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 178
+  },
+  {
+   "id": "X3-4-032",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 179
+  },
+  {
+   "id": "X3-4-033",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 180
+  },
+  {
+   "id": "X3-4-034",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 181
+  },
+  {
+   "id": "X3-4-035",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVIIm7",
+     "bIII7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 182
+  },
+  {
+   "id": "X3-4-036",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im7",
+     "Vm7"
+    ],
+    [
+     "IVm7",
+     "Vm7"
+    ],
+    [
+     "Im7",
+     "Vm7"
+    ],
+    [
+     "IVm7",
+     "Vm7"
+    ]
+   ],
+   "no": 183
+  },
+  {
+   "id": "X3-4-037",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "Vm7"
+    ]
+   ],
+   "no": 184
+  },
+  {
+   "id": "X3-4-038",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ディミニッシュ・sus4",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "#IIdim7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7sus4",
+     "V7"
+    ]
+   ],
+   "no": 185
+  },
+  {
+   "id": "X3-4-039",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "V",
+     "IIm7"
+    ],
+    [
+     "V",
+     "IIm7"
+    ],
+    [
+     "V",
+     "IIm7"
+    ],
+    [
+     "V",
+     "IIm7"
+    ]
+   ],
+   "no": 186
+  },
+  {
+   "id": "X3-4-040",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "#IVm7b5",
+     "VII7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 187
+  },
+  {
+   "id": "X3-4-041",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 188
+  },
+  {
+   "id": "X3-4-042",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "V7/IV"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "Im/bIII"
+    ]
+   ],
+   "no": 189
+  },
+  {
+   "id": "X3-4-043",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "VII7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 190
+  },
+  {
+   "id": "X3-4-044",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "VII7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 191
+  },
+  {
+   "id": "X3-4-045",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "VIIm"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 192
+  },
+  {
+   "id": "X3-4-046",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "クリシェ",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "Vaug"
+    ],
+    [
+     "V6"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 193
+  },
+  {
+   "id": "X3-4-047",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "クリシェ",
+   "bars": [
+    [
+     "V"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 194
+  },
+  {
+   "id": "X3-4-048",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "VIm7",
+     "II7"
+    ],
+    [
+     "V",
+     "I"
+    ],
+    [
+     "VIm",
+     "IV"
+    ],
+    [
+     "V",
+     "I"
+    ]
+   ],
+   "no": 195
+  },
+  {
+   "id": "X3-4-049",
+   "level": 3,
+   "length": 4,
+   "mode": "major",
+   "name": "sus4",
+   "bars": [
+    [
+     "VIm7",
+     "IVmaj7"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IIIm7",
+     "IVmaj7"
+    ],
+    [
+     "Vsus4"
+    ]
+   ],
+   "no": 196
+  },
+  {
+   "id": "X3-4-050",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "bIII",
+     "IIIdim7"
+    ],
+    [
+     "bVII/IV",
+     "V7"
+    ],
+    [
+     "bIII",
+     "#IVdim7"
+    ],
+    [
+     "Vm"
+    ]
+   ],
+   "no": 197
+  },
+  {
+   "id": "X3-4-051",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI",
+     "bVII7/bVI"
+    ],
+    [
+     "Vm7",
+     "Im7"
+    ],
+    [
+     "bVI",
+     "bVII7/bVI"
+    ],
+    [
+     "Vm7",
+     "Im7"
+    ]
+   ],
+   "no": 198
+  },
+  {
+   "id": "X3-4-052",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IV"
+    ]
+   ],
+   "no": 199
+  },
+  {
+   "id": "X3-4-053",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII7/bVI"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 200
+  },
+  {
+   "id": "X3-4-054",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "クリシェ・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "bVII"
+    ],
+    [
+     "bVIImaj7/VI"
+    ],
+    [
+     "bVII7/bVI"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 201
+  },
+  {
+   "id": "X3-4-055",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bVII7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 202
+  },
+  {
+   "id": "X3-4-056",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "bVImaj7",
+     "bVII"
+    ],
+    [
+     "Vm7",
+     "Im7"
+    ],
+    [
+     "IVm7",
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 203
+  },
+  {
+   "id": "X3-4-057",
+   "level": 3,
+   "length": 4,
+   "mode": "minor",
+   "name": "sus4 (マイナー)",
+   "bars": [
+    [
+     "bVImaj7"
+    ],
+    [
+     "Vsus4",
+     "V7"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "Im7"
+    ]
+   ],
+   "no": 204
+  },
+  {
+   "id": "X3-8-001",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・セカンダリードミナント",
+   "bars": [
+    [
+     "I",
+     "#Idim7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "#IVm7b5"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "IIIm7",
+     "#IIdim7"
+    ],
+    [
+     "IIm7",
+     "bII7"
+    ]
+   ],
+   "no": 205
+  },
+  {
+   "id": "X3-8-002",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I",
+     "III7"
+    ],
+    [
+     "VIm",
+     "I7"
+    ],
+    [
+     "IV",
+     "IVm6"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I",
+     "VI7"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 206
+  },
+  {
+   "id": "X3-8-003",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・サブドミナントマイナー",
+   "bars": [
+    [
+     "I",
+     "III7/VII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I",
+     "IIIaug"
+    ],
+    [
+     "IV",
+     "IVm"
+    ],
+    [
+     "I",
+     "VI7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 207
+  },
+  {
+   "id": "X3-8-004",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV",
+     "I"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IV",
+     "V"
+    ],
+    [
+     "VIm",
+     "IIm"
+    ],
+    [
+     "I/V",
+     "V7"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 208
+  },
+  {
+   "id": "X3-8-005",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・セカンダリードミナント",
+   "bars": [
+    [
+     "I",
+     "Vm7"
+    ],
+    [
+     "I",
+     "Vm7"
+    ],
+    [
+     "I",
+     "Vm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "IImaj7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ],
+   "no": 209
+  },
+  {
+   "id": "X3-8-006",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント・借用コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVII/IV",
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I/V",
+     "V7"
+    ]
+   ],
+   "no": 210
+  },
+  {
+   "id": "X3-8-007",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm/VII"
+    ],
+    [
+     "IIIm7b5/bVII",
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "VIm",
+     "IVm6"
+    ]
+   ],
+   "no": 211
+  },
+  {
+   "id": "X3-8-008",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm/VII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "II7",
+     "V7"
+    ]
+   ],
+   "no": 212
+  },
+  {
+   "id": "X3-8-009",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 213
+  },
+  {
+   "id": "X3-8-010",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "VIm7b5"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 214
+  },
+  {
+   "id": "X3-8-011",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "Iaug"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "#Vaug"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 215
+  },
+  {
+   "id": "X3-8-012",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "クリシェ・サブドミナントマイナー",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I",
+     "VIm"
+    ],
+    [
+     "IIm7",
+     "II7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 216
+  },
+  {
+   "id": "X3-8-013",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "カノンの型",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 217
+  },
+  {
+   "id": "X3-8-014",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIm",
+     "VI7"
+    ],
+    [
+     "IIm",
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 218
+  },
+  {
+   "id": "X3-8-015",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・ベースが下がる",
+   "bars": [
+    [
+     "IIIm",
+     "bIIIaug"
+    ],
+    [
+     "V/II",
+     "#Im7b5"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "VIIm7",
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "VIm7",
+     "VIIm7"
+    ],
+    [
+     "Imaj7",
+     "II"
+    ]
+   ],
+   "no": 219
+  },
+  {
+   "id": "X3-8-016",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I",
+   "bars": [
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 220
+  },
+  {
+   "id": "X3-8-017",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "IIm7",
+     "IV"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "IIm7",
+     "IV"
+    ],
+    [
+     "I",
+     "V"
+    ],
+    [
+     "bVII",
+     "I"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "bVII",
+     "I"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 221
+  },
+  {
+   "id": "X3-8-018",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 222
+  },
+  {
+   "id": "X3-8-019",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "VIm",
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I",
+     "VIm"
+    ],
+    [
+     "II7",
+     "V7"
+    ]
+   ],
+   "no": 223
+  },
+  {
+   "id": "X3-8-020",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ]
+   ],
+   "no": 224
+  },
+  {
+   "id": "X3-8-021",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm",
+     "bVI"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm",
+     "bVII7"
+    ],
+    [
+     "bIII",
+     "V7"
+    ]
+   ],
+   "no": 225
+  },
+  {
+   "id": "X3-8-022",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "I7"
+    ]
+   ],
+   "no": 226
+  },
+  {
+   "id": "X3-8-023",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm7",
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "IIm7b5",
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm7",
+     "#IVdim7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 227
+  },
+  {
+   "id": "X3-8-024",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm7",
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "IVm7",
+     "bVII7"
+    ],
+    [
+     "bIII7"
+    ],
+    [
+     "bVI7",
+     "bII7"
+    ],
+    [
+     "bVmaj7",
+     "VIImaj7"
+    ],
+    [
+     "IV7",
+     "bVII7"
+    ],
+    [
+     "bIII",
+     "Im7"
+    ]
+   ],
+   "no": 228
+  },
+  {
+   "id": "X3-8-025",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7",
+     "I7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "#IVdim7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 229
+  },
+  {
+   "id": "X3-8-026",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "IVm/I"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im",
+     "bVII"
+    ],
+    [
+     "bIII",
+     "V7"
+    ],
+    [
+     "Im",
+     "IVm/I"
+    ],
+    [
+     "Im",
+     "bVI"
+    ],
+    [
+     "Im/V",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7"
+    ]
+   ],
+   "no": 230
+  },
+  {
+   "id": "X3-8-027",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7/II"
+    ],
+    [
+     "bIII6",
+     "V7/II"
+    ],
+    [
+     "Im",
+     "IVm"
+    ],
+    [
+     "V7",
+     "Im"
+    ]
+   ],
+   "no": 231
+  },
+  {
+   "id": "X3-8-028",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im",
+     "bIII"
+    ],
+    [
+     "IV",
+     "bVI"
+    ],
+    [
+     "Im",
+     "bIII"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im",
+     "bIII"
+    ],
+    [
+     "IV",
+     "bVI"
+    ],
+    [
+     "Im",
+     "V7"
+    ],
+    [
+     "Im",
+     "V7"
+    ]
+   ],
+   "no": 232
+  },
+  {
+   "id": "X3-8-029",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVm",
+     "bVII7"
+    ],
+    [
+     "bIII",
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 233
+  },
+  {
+   "id": "X3-8-030",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm",
+     "bVI"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 234
+  },
+  {
+   "id": "X3-8-031",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 235
+  },
+  {
+   "id": "X3-8-032",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 236
+  },
+  {
+   "id": "X3-8-033",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ],
+   "no": 237
+  },
+  {
+   "id": "X3-8-034",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "#IIdim7",
+     "#IVdim7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 238
+  },
+  {
+   "id": "X3-8-035",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 239
+  },
+  {
+   "id": "X3-8-036",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "VIm7b5"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bIII6/bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bIImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "bII7"
+    ]
+   ],
+   "no": 240
+  },
+  {
+   "id": "X3-8-037",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII",
+     "V7/VII"
+    ],
+    [
+     "bIII",
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII",
+     "V7/VII"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 241
+  },
+  {
+   "id": "X3-8-038",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 242
+  },
+  {
+   "id": "X3-8-039",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII6"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVIIm6",
+     "bIII7"
+    ],
+    [
+     "bVImaj7",
+     "Vm7"
+    ],
+    [
+     "IVm7",
+     "bVI/bIII"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 243
+  },
+  {
+   "id": "X3-8-040",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 244
+  },
+  {
+   "id": "X3-8-041",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "sus4 (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7sus4"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 245
+  },
+  {
+   "id": "X3-8-042",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IV7/VI",
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIImaj7",
+     "I"
+    ]
+   ],
+   "no": 246
+  },
+  {
+   "id": "X3-8-043",
+   "level": 3,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 247
+  },
+  {
+   "id": "X3-8-044",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Vm7"
+    ],
+    [
+     "Im7",
+     "IV7"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "IVm7",
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "IIm7b5",
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "II7",
+     "#IVdim"
+    ]
+   ],
+   "no": 248
+  },
+  {
+   "id": "X3-8-045",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIII"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII7"
+    ]
+   ],
+   "no": 249
+  },
+  {
+   "id": "X3-8-046",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "bIII"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "VIdim7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IV7",
+     "bVII7"
+    ],
+    [
+     "bIII",
+     "bVII7"
+    ]
+   ],
+   "no": 250
+  },
+  {
+   "id": "X3-8-047",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIII"
+    ],
+    [
+     "V7/II"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "bVI",
+     "bVII7"
+    ],
+    [
+     "Vm7",
+     "I7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bII",
+     "bVII7"
+    ]
+   ],
+   "no": 251
+  },
+  {
+   "id": "X3-8-048",
+   "level": 3,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・sus4 (マイナー)",
+   "bars": [
+    [
+     "bVIIsus4"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIII7sus4"
+    ],
+    [
+     "bIII7"
+    ],
+    [
+     "IV7sus4"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "V7sus4"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 252
+  },
+  {
+   "id": "X4-4-001",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント・分数コード",
+   "bars": [
+    [
+     "I",
+     "IIIm7"
+    ],
+    [
+     "IIm7",
+     "VI7"
+    ],
+    [
+     "IIm7",
+     "III7"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 253
+  },
+  {
+   "id": "X4-4-002",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "I",
+     "V/I"
+    ],
+    [
+     "bVII/I",
+     "IV"
+    ],
+    [
+     "IV",
+     "IIm7"
+    ],
+    [
+     "IV/V",
+     "I"
+    ]
+   ],
+   "no": 254
+  },
+  {
+   "id": "X4-4-003",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "分数コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 255
+  },
+  {
+   "id": "X4-4-004",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "IIIm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "bVm7",
+     "IV9"
+    ]
+   ],
+   "no": 256
+  },
+  {
+   "id": "X4-4-005",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "IIIm11/VI",
+     "VI7"
+    ],
+    [
+     "IIm11/V",
+     "V7"
+    ],
+    [
+     "V6/9/VI",
+     "VI7"
+    ],
+    [
+     "IIm11/V",
+     "V7"
+    ]
+   ],
+   "no": 257
+  },
+  {
+   "id": "X4-4-006",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "クリシェ・分数コード",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "IIm/bII"
+    ],
+    [
+     "IIm7/I"
+    ],
+    [
+     "VIIm7b5"
+    ]
+   ],
+   "no": 258
+  },
+  {
+   "id": "X4-4-007",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "V9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ]
+   ],
+   "no": 259
+  },
+  {
+   "id": "X4-4-008",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "セカンダリードミナント",
+   "bars": [
+    [
+     "IVmaj7",
+     "III7"
+    ],
+    [
+     "VIm",
+     "V6"
+    ],
+    [
+     "IVmaj7",
+     "IV6/9/V"
+    ],
+    [
+     "Imaj7"
+    ]
+   ],
+   "no": 260
+  },
+  {
+   "id": "X4-4-009",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bVI6/9/bVII",
+     "V7/VII"
+    ]
+   ],
+   "no": 261
+  },
+  {
+   "id": "X4-4-010",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "Imaj7",
+     "VIm9"
+    ],
+    [
+     "IIm9",
+     "IIm11/V"
+    ],
+    [
+     "Imaj7",
+     "VIm9"
+    ],
+    [
+     "IIm9",
+     "IIm11/V"
+    ]
+   ],
+   "no": 262
+  },
+  {
+   "id": "X4-4-011",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "bIII/IV"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "IV/V",
+     "V7"
+    ]
+   ],
+   "no": 263
+  },
+  {
+   "id": "X4-4-012",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "分数コード",
+   "bars": [
+    [
+     "V/I",
+     "I"
+    ],
+    [
+     "V/I",
+     "I"
+    ],
+    [
+     "IVmaj7",
+     "IV6"
+    ],
+    [
+     "IIm7",
+     "IV/V"
+    ]
+   ],
+   "no": 264
+  },
+  {
+   "id": "X4-4-013",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "分数コード",
+   "bars": [
+    [
+     "V/VI",
+     "I6/V"
+    ],
+    [
+     "V/VI",
+     "VIm7"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "IIm11/V"
+    ]
+   ],
+   "no": 265
+  },
+  {
+   "id": "X4-4-014",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "分数コード",
+   "bars": [
+    [
+     "VIm7",
+     "IIIm7"
+    ],
+    [
+     "IIm7",
+     "IV/V"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ],
+   "no": 266
+  },
+  {
+   "id": "X4-4-015",
+   "level": 4,
+   "length": 4,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "VIm7"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 267
+  },
+  {
+   "id": "X4-8-001",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・ベースが下がる",
+   "bars": [
+    [
+     "#Im7b5"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "Vadd9/VII"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "bVIIm9",
+     "bIII13"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "bVI13"
+    ]
+   ],
+   "no": 268
+  },
+  {
+   "id": "X4-8-002",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I",
+     "IIIm/VII"
+    ],
+    [
+     "VIm",
+     "IIIm"
+    ],
+    [
+     "IIm",
+     "VIm"
+    ],
+    [
+     "IV",
+     "V7"
+    ],
+    [
+     "I",
+     "IIIm/VII"
+    ],
+    [
+     "VIm",
+     "IIIm"
+    ],
+    [
+     "IIm",
+     "IIIm"
+    ],
+    [
+     "IIm11/V"
+    ]
+   ],
+   "no": 269
+  },
+  {
+   "id": "X4-8-003",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・ディミニッシュ",
+   "bars": [
+    [
+     "I",
+     "IV"
+    ],
+    [
+     "#Vdim7",
+     "I/V"
+    ],
+    [
+     "#IVm7b5",
+     "IVmaj7"
+    ],
+    [
+     "I/III",
+     "IVm6"
+    ],
+    [
+     "I",
+     "IVmaj7/III"
+    ],
+    [
+     "#Vdim7",
+     "I/V"
+    ],
+    [
+     "IVmaj7",
+     "IV/V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 270
+  },
+  {
+   "id": "X4-8-004",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I",
+     "IVm6"
+    ],
+    [
+     "I/III",
+     "#IIdim7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "IIIm7b5",
+     "VI7"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "IVmaj9/V"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm11/V",
+     "V7"
+    ]
+   ],
+   "no": 271
+  },
+  {
+   "id": "X4-8-005",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・クリシェ",
+   "bars": [
+    [
+     "I",
+     "Iaug"
+    ],
+    [
+     "I6",
+     "I7"
+    ],
+    [
+     "IV",
+     "IVm"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "IIm",
+     "bVII/II"
+    ],
+    [
+     "IIm6",
+     "IIm7"
+    ],
+    [
+     "IIm11/V",
+     "V7"
+    ],
+    [
+     "I",
+     "V7"
+    ]
+   ],
+   "no": 272
+  },
+  {
+   "id": "X4-8-006",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "分数コード・ベースが下がる",
+   "bars": [
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "VIm7",
+     "VIm7/V"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IV/V",
+     "V"
+    ],
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "VIm7",
+     "VIm7/V"
+    ],
+    [
+     "#IVm7b5",
+     "IVmaj7"
+    ],
+    [
+     "V7sus4",
+     "V"
+    ]
+   ],
+   "no": 273
+  },
+  {
+   "id": "X4-8-007",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IIm7",
+     "IIm11/V"
+    ]
+   ],
+   "no": 274
+  },
+  {
+   "id": "X4-8-008",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・ディミニッシュ",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIdim/bVII"
+    ],
+    [
+     "IV/VI"
+    ],
+    [
+     "IVm/bVI"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "II/bV"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IV/V",
+     "V7"
+    ]
+   ],
+   "no": 275
+  },
+  {
+   "id": "X4-8-009",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・ディミニッシュ",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V/I"
+    ],
+    [
+     "Vm/I"
+    ],
+    [
+     "IV/I"
+    ],
+    [
+     "IVm/I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIdim7/I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 276
+  },
+  {
+   "id": "X4-8-010",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "ディミニッシュ・分数コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VII7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "V7/IV"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "#IIdim7"
+    ],
+    [
+     "IIIm",
+     "IIIm7/II"
+    ]
+   ],
+   "no": 277
+  },
+  {
+   "id": "X4-8-011",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "bVI/I"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "bIII/bVI"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "bVmaj7"
+    ],
+    [
+     "IV/V",
+     "V/VI"
+    ]
+   ],
+   "no": 278
+  },
+  {
+   "id": "X4-8-012",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "IIIm11/VI"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V6/9/VI"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "II6/9/III"
+    ]
+   ],
+   "no": 279
+  },
+  {
+   "id": "X4-8-013",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・借用コード",
+   "bars": [
+    [
+     "IIIm7",
+     "bIII7"
+    ],
+    [
+     "IIm7",
+     "bII7"
+    ],
+    [
+     "Imaj7",
+     "IVmaj9"
+    ],
+    [
+     "IIm9",
+     "V9"
+    ],
+    [
+     "IIIm7",
+     "bIII13"
+    ],
+    [
+     "IIm9",
+     "bII9"
+    ],
+    [
+     "Imaj9",
+     "IIm9"
+    ],
+    [
+     "IIIm7",
+     "IV9"
+    ]
+   ],
+   "no": 280
+  },
+  {
+   "id": "X4-8-014",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "IIIm9",
+     "VI13"
+    ],
+    [
+     "IIm9",
+     "V13"
+    ],
+    [
+     "IIIm9",
+     "VI13"
+    ],
+    [
+     "IVm9",
+     "bVII13"
+    ],
+    [
+     "IIIm9",
+     "VI13"
+    ],
+    [
+     "IIm9",
+     "V13"
+    ],
+    [
+     "bVImaj9/bVII",
+     "Vmaj9/VI"
+    ],
+    [
+     "bVmaj9/bVI",
+     "IVmaj9/V"
+    ]
+   ],
+   "no": 281
+  },
+  {
+   "id": "X4-8-015",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "V/I"
+    ],
+    [
+     "IV/bVII"
+    ],
+    [
+     "bVII7/bVI"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "VI"
+    ]
+   ],
+   "no": 282
+  },
+  {
+   "id": "X4-8-016",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "bVmaj9/bVI"
+    ],
+    [
+     "bVI13"
+    ]
+   ],
+   "no": 283
+  },
+  {
+   "id": "X4-8-017",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "IV/V"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "bVIImaj9/I",
+     "I6/9/II"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "bVI/bVII"
+    ],
+    [
+     "bIIIm11/bVI",
+     "bIIm11/bV"
+    ]
+   ],
+   "no": 284
+  },
+  {
+   "id": "X4-8-018",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・セカンダリードミナント",
+   "bars": [
+    [
+     "IVadd9"
+    ],
+    [
+     "Iadd9/III"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "Im9",
+     "IV9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7sus4",
+     "I9"
+    ]
+   ],
+   "no": 285
+  },
+  {
+   "id": "X4-8-019",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・分数コード (マイナー)",
+   "bars": [
+    [
+     "IVadd9"
+    ],
+    [
+     "VII7/VI"
+    ],
+    [
+     "bVII7/bVI"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "bVI/bVII"
+    ],
+    [
+     "III/bV"
+    ],
+    [
+     "VII/bII"
+    ],
+    [
+     "bVII/I"
+    ]
+   ],
+   "no": 286
+  },
+  {
+   "id": "X4-8-020",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・sus4 (マイナー)",
+   "bars": [
+    [
+     "IVm11/bVII"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 287
+  },
+  {
+   "id": "X4-8-021",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm7",
+     "V7"
+    ],
+    [
+     "Im",
+     "Im7/bVII"
+    ],
+    [
+     "IVm7",
+     "V7"
+    ],
+    [
+     "bVImaj7",
+     "bII9"
+    ],
+    [
+     "Im",
+     "VIm7b5"
+    ],
+    [
+     "bVII7/bVI",
+     "bIII/V"
+    ],
+    [
+     "bIIIm/bV",
+     "IV7"
+    ],
+    [
+     "IIIm7",
+     "I9"
+    ]
+   ],
+   "no": 288
+  },
+  {
+   "id": "X4-8-022",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード・sus4 (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "VIImaj9"
+    ],
+    [
+     "bVI7sus4/III"
+    ],
+    [
+     "V7sus4/bIII"
+    ],
+    [
+     "bV13"
+    ]
+   ],
+   "no": 289
+  },
+  {
+   "id": "X4-8-023",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IIIm7",
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIm11/V"
+    ]
+   ],
+   "no": 290
+  },
+  {
+   "id": "X4-8-024",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "分数コード",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "V/VI",
+     "VIm7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVmaj9/V",
+     "V9"
+    ]
+   ],
+   "no": 291
+  },
+  {
+   "id": "X4-8-025",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・サブドミナントマイナー",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIII13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "Vm9",
+     "I9"
+    ]
+   ],
+   "no": 292
+  },
+  {
+   "id": "X4-8-026",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード",
+   "bars": [
+    [
+     "IVmaj9/V"
+    ],
+    [
+     "V6"
+    ],
+    [
+     "IVmaj9/V"
+    ],
+    [
+     "V6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIIm11/VI",
+     "VI7"
+    ],
+    [
+     "bVImaj9/bVII"
+    ],
+    [
+     "bVII9"
+    ]
+   ],
+   "no": 293
+  },
+  {
+   "id": "X4-8-027",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード・sus4 (マイナー)",
+   "bars": [
+    [
+     "IVsus4"
+    ],
+    [
+     "VII/IV"
+    ],
+    [
+     "V7/IV"
+    ],
+    [
+     "VI/IV"
+    ],
+    [
+     "IIIsus4"
+    ],
+    [
+     "bVI/III"
+    ],
+    [
+     "bVII/III"
+    ],
+    [
+     "V/bIII"
+    ]
+   ],
+   "no": 294
+  },
+  {
+   "id": "X4-8-028",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "bVII"
+    ],
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "Im",
+     "bVII"
+    ],
+    [
+     "bVI",
+     "bVII"
+    ],
+    [
+     "bIII",
+     "IVm"
+    ],
+    [
+     "bIII/V",
+     "bVI"
+    ],
+    [
+     "bVI/bVII"
+    ],
+    [
+     "bVII7"
+    ]
+   ],
+   "no": 295
+  },
+  {
+   "id": "X4-8-029",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ・分数コード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm6/I"
+    ],
+    [
+     "IVdim7/I"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm/I"
+    ],
+    [
+     "bVI/I"
+    ],
+    [
+     "V/I"
+    ],
+    [
+     "bVI/I",
+     "bVII/I"
+    ]
+   ],
+   "no": 296
+  },
+  {
+   "id": "X4-8-030",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "I7/bVII",
+     "IV7/VI"
+    ],
+    [
+     "bVI6",
+     "V7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IIm7b5",
+     "bVII9"
+    ],
+    [
+     "bIII/V",
+     "bVI"
+    ],
+    [
+     "V7/VII",
+     "V7"
+    ]
+   ],
+   "no": 297
+  },
+  {
+   "id": "X4-8-031",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7",
+     "bVImaj7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "Im7",
+     "IIm7"
+    ],
+    [
+     "bIII",
+     "IV6/9/V"
+    ]
+   ],
+   "no": 298
+  },
+  {
+   "id": "X4-8-032",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ・分数コード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "bVI/I"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Vm11/I"
+    ],
+    [
+     "IVm7/I"
+    ],
+    [
+     "VIIdim7"
+    ]
+   ],
+   "no": 299
+  },
+  {
+   "id": "X4-8-033",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "Im7",
+     "bVII/II"
+    ],
+    [
+     "bII/bIII",
+     "VII/III"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVmaj9/bVI"
+    ],
+    [
+     "Im7",
+     "bVII/II"
+    ],
+    [
+     "bII/bIII",
+     "VII/III"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "VI13"
+    ]
+   ],
+   "no": 300
+  },
+  {
+   "id": "X4-8-034",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "IV6/9/V"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ]
+   ],
+   "no": 301
+  },
+  {
+   "id": "X4-8-035",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bIIImaj7",
+     "bIImaj9/bIII"
+    ]
+   ],
+   "no": 302
+  },
+  {
+   "id": "X4-8-036",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVIm9",
+     "bII9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVIIm7",
+     "Im7"
+    ],
+    [
+     "IIm7b5",
+     "bII9"
+    ]
+   ],
+   "no": 303
+  },
+  {
+   "id": "X4-8-037",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "bIIIm9"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVmaj9"
+    ],
+    [
+     "bVmaj9/bVI",
+     "IVm11/bVII"
+    ]
+   ],
+   "no": 304
+  },
+  {
+   "id": "X4-8-038",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・セカンダリードミナント",
+   "bars": [
+    [
+     "Imaj7",
+     "VII7"
+    ],
+    [
+     "IIIm",
+     "IIIm7/II"
+    ],
+    [
+     "Imaj7",
+     "VII7"
+    ],
+    [
+     "IIIm7",
+     "bIII7"
+    ],
+    [
+     "IIm7",
+     "IIm11/V"
+    ],
+    [
+     "IIIm7",
+     "IIIm11/VI"
+    ],
+    [
+     "IIm7",
+     "bII7"
+    ],
+    [
+     "Imaj7",
+     "Vaug"
+    ]
+   ],
+   "no": 305
+  },
+  {
+   "id": "X4-8-039",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・ベースが下がる",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "Imaj9",
+     "IV9"
+    ],
+    [
+     "IIIm9",
+     "bIII9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IVmaj9/V"
+    ]
+   ],
+   "no": 306
+  },
+  {
+   "id": "X4-8-040",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・サブドミナントマイナー",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVm9",
+     "bVII9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "bVImaj9",
+     "bVImaj9/bVII"
+    ]
+   ],
+   "no": 307
+  },
+  {
+   "id": "X4-8-041",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "VIm11/II"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 308
+  },
+  {
+   "id": "X4-8-042",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VIIm7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "VIIm7",
+     "VIIm11/III"
+    ],
+    [
+     "bIIImaj9/IV"
+    ],
+    [
+     "IV6"
+    ],
+    [
+     "Im11/IV"
+    ],
+    [
+     "IV6",
+     "IV6/9/V"
+    ]
+   ],
+   "no": 309
+  },
+  {
+   "id": "X4-8-043",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・ディミニッシュ",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "#Vdim7"
+    ],
+    [
+     "Vm9",
+     "bVIImaj9/I"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9",
+     "bVII13"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IVmaj9/V"
+    ]
+   ],
+   "no": 310
+  },
+  {
+   "id": "X4-8-044",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "I6/9"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bII9"
+    ]
+   ],
+   "no": 311
+  },
+  {
+   "id": "X4-8-045",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント・分数コード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "bVIIm9",
+     "bIII13"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IV/V",
+     "V7"
+    ]
+   ],
+   "no": 312
+  },
+  {
+   "id": "X4-8-046",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー・セカンダリードミナント",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "Vm9",
+     "I9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9",
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "IIm7",
+     "IIIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVmaj9/V",
+     "V13"
+    ]
+   ],
+   "no": 313
+  },
+  {
+   "id": "X4-8-047",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "V/VI",
+     "IVmaj7/VI"
+    ],
+    [
+     "IV/V",
+     "bIIImaj7/V"
+    ],
+    [
+     "bIII/IV",
+     "IV7/bIII"
+    ],
+    [
+     "VI/II"
+    ],
+    [
+     "IV/V",
+     "V"
+    ],
+    [
+     "bVImaj7/V",
+     "Vm7"
+    ],
+    [
+     "VII/bV"
+    ],
+    [
+     "I/IV"
+    ]
+   ],
+   "no": 314
+  },
+  {
+   "id": "X4-8-048",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・セカンダリードミナント",
+   "bars": [
+    [
+     "VIIm7",
+     "VII7"
+    ],
+    [
+     "IIIm7",
+     "IVmaj7"
+    ],
+    [
+     "#IVm7b5",
+     "IV7"
+    ],
+    [
+     "IIIm7",
+     "bIII7"
+    ],
+    [
+     "IIm7",
+     "V9"
+    ],
+    [
+     "IIIm7",
+     "VI9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "V6/9/VI"
+    ]
+   ],
+   "no": 315
+  },
+  {
+   "id": "X4-8-049",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIII6"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "bIImaj7"
+    ],
+    [
+     "bIII6"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "Vsus4"
+    ]
+   ],
+   "no": 316
+  },
+  {
+   "id": "X4-8-050",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード・sus4 (マイナー)",
+   "bars": [
+    [
+     "VIsus4/IV"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "Vmaj9/VI"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "VIIm7b5"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "I9"
+    ]
+   ],
+   "no": 317
+  },
+  {
+   "id": "X4-8-051",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Vmaj7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "VIIm7"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVmaj7"
+    ],
+    [
+     "bVI13"
+    ],
+    [
+     "bVIImaj9"
+    ]
+   ],
+   "no": 318
+  },
+  {
+   "id": "X4-8-052",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント・分数コード",
+   "bars": [
+    [
+     "Vmaj9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "I/II",
+     "II9"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IIIm9",
+     "Im9"
+    ],
+    [
+     "bVIImaj9",
+     "bVImaj9"
+    ]
+   ],
+   "no": 319
+  },
+  {
+   "id": "X4-8-053",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード (マイナー)",
+   "bars": [
+    [
+     "Vmaj9"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "bIIImaj9/IV",
+     "IV9"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "VIm9",
+     "Imaj9/II"
+    ]
+   ],
+   "no": 320
+  },
+  {
+   "id": "X4-8-054",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント・借用コード",
+   "bars": [
+    [
+     "Vmaj9"
+    ],
+    [
+     "bVII/I",
+     "I9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IV6/9/V",
+     "V6/9/VI"
+    ],
+    [
+     "IImaj9"
+    ],
+    [
+     "IVmaj9/V",
+     "V13"
+    ],
+    [
+     "bIIImaj9/IV"
+    ],
+    [
+     "bVIIm9",
+     "Imaj9/II"
+    ]
+   ],
+   "no": 321
+  },
+  {
+   "id": "X4-8-055",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・分数コード (マイナー)",
+   "bars": [
+    [
+     "Vmaj9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "II13"
+    ],
+    [
+     "VII7sus4/V"
+    ],
+    [
+     "VIm9",
+     "bVImaj9"
+    ]
+   ],
+   "no": 322
+  },
+  {
+   "id": "X4-8-056",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "分数コード・sus4 (マイナー)",
+   "bars": [
+    [
+     "Vsus4",
+     "Vm"
+    ],
+    [
+     "Vm11",
+     "IV/V"
+    ],
+    [
+     "IV7/bIII",
+     "bIII"
+    ],
+    [
+     "bIII/bVI",
+     "bVI"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "bVImaj7/V"
+    ],
+    [
+     "VI7/V"
+    ],
+    [
+     "Vm7"
+    ]
+   ],
+   "no": 323
+  },
+  {
+   "id": "X4-8-057",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "bIII"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bIII/bVI"
+    ],
+    [
+     "IV/VI"
+    ],
+    [
+     "bVIIsus4"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "Isus4"
+    ],
+    [
+     "I/II"
+    ]
+   ],
+   "no": 324
+  },
+  {
+   "id": "X4-8-058",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "bIII"
+    ],
+    [
+     "V7/II",
+     "V7/VII"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bVIIm7",
+     "bIII7"
+    ],
+    [
+     "IIm7b5",
+     "V7"
+    ],
+    [
+     "Im7",
+     "IV7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVIm6",
+     "bVI6/9/bVII"
+    ]
+   ],
+   "no": 325
+  },
+  {
+   "id": "X4-8-059",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "セカンダリードミナント・ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "bIIImaj7",
+     "bIII7"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bIIImaj7",
+     "bIII7"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "#Im7b5",
+     "Im7"
+    ],
+    [
+     "VIIm7",
+     "bVIIdim7"
+    ],
+    [
+     "VIm7",
+     "VIm11/II"
+    ],
+    [
+     "V6/9",
+     "Vmaj9"
+    ]
+   ],
+   "no": 326
+  },
+  {
+   "id": "X4-8-060",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・分数コード (マイナー)",
+   "bars": [
+    [
+     "bIIImaj7"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bIIImaj7/bVI"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "III7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "V/VI"
+    ]
+   ],
+   "no": 327
+  },
+  {
+   "id": "X4-8-061",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・分数コード (マイナー)",
+   "bars": [
+    [
+     "bVI/bVII",
+     "bVII7/bVI"
+    ],
+    [
+     "Vm7",
+     "bV13"
+    ],
+    [
+     "IVm7",
+     "Vm7"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVI/bVII",
+     "bVII7/bVI"
+    ],
+    [
+     "Vm7",
+     "I9"
+    ],
+    [
+     "bIImaj9"
+    ],
+    [
+     "Vm9"
+    ]
+   ],
+   "no": 328
+  },
+  {
+   "id": "X4-8-062",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "bVII"
+    ],
+    [
+     "bVI6"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bIIIm6"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im11/IV"
+    ]
+   ],
+   "no": 329
+  },
+  {
+   "id": "X4-8-063",
+   "level": 4,
+   "length": 8,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "bVIImaj9"
+    ],
+    [
+     "bIImaj9"
+    ],
+    [
+     "IIImaj9"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "bVIImaj9/I"
+    ],
+    [
+     "bIImaj9/bIII"
+    ],
+    [
+     "IIImaj9/bV"
+    ],
+    [
+     "Vmaj9/VI"
+    ]
+   ],
+   "no": 330
+  },
+  {
+   "id": "X4-8-064",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・セカンダリードミナント",
+   "bars": [
+    [
+     "bVIm9"
+    ],
+    [
+     "VI9"
+    ],
+    [
+     "bVIm9"
+    ],
+    [
+     "Vmaj9/VI",
+     "VI9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "bVm9"
+    ],
+    [
+     "VIm9",
+     "II13"
+    ]
+   ],
+   "no": 331
+  },
+  {
+   "id": "X4-8-065",
+   "level": 4,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・分数コード",
+   "bars": [
+    [
+     "bVm9"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "IVmaj9/V"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "bVm9"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "VI6/9/VII"
+    ],
+    [
+     "V13"
+    ]
+   ],
+   "no": 332
+  },
+  {
+   "id": "X5-4-001",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "II7alt"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "I7alt",
+     "bV9/I"
+    ]
+   ],
+   "no": 333
+  },
+  {
+   "id": "X5-4-002",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ]
+   ],
+   "no": 334
+  },
+  {
+   "id": "X5-4-003",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "bIIImMaj7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 335
+  },
+  {
+   "id": "X5-8-001",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・裏コード",
+   "bars": [
+    [
+     "#IVm7b5",
+     "VII7(b9)"
+    ],
+    [
+     "IIIm7",
+     "VI7(b9)"
+    ],
+    [
+     "IIm9",
+     "V9"
+    ],
+    [
+     "Imaj9",
+     "bIIIaug/bII"
+    ],
+    [
+     "#IVm7b5",
+     "IV7"
+    ],
+    [
+     "IIIm7",
+     "bIII9"
+    ],
+    [
+     "IIm9",
+     "IIIm7"
+    ],
+    [
+     "IVm9",
+     "V7(b9)"
+    ]
+   ],
+   "no": 336
+  },
+  {
+   "id": "X5-8-002",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "#IVm7b5"
+    ],
+    [
+     "VII7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIm7",
+     "bIIIaug/bII"
+    ]
+   ],
+   "no": 337
+  },
+  {
+   "id": "X5-8-003",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・サブドミナントマイナー",
+   "bars": [
+    [
+     "I",
+     "V/VII"
+    ],
+    [
+     "VIm7",
+     "I7/V"
+    ],
+    [
+     "IV",
+     "V9/IV"
+    ],
+    [
+     "IIIm7",
+     "VI7(b9)"
+    ],
+    [
+     "IIm7",
+     "IVdim7"
+    ],
+    [
+     "IIIm7",
+     "Vdim7"
+    ],
+    [
+     "#IVm7b5",
+     "IVmaj7"
+    ],
+    [
+     "IVm6/bVI",
+     "IV6/9/V"
+    ]
+   ],
+   "no": 338
+  },
+  {
+   "id": "X5-8-004",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・オルタード",
+   "bars": [
+    [
+     "I",
+     "VI7(b13)"
+    ],
+    [
+     "IImMaj7",
+     "IIm"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Idim7",
+     "I"
+    ],
+    [
+     "IIIm7",
+     "#IIdim7"
+    ],
+    [
+     "IIm7",
+     "V13"
+    ],
+    [
+     "IIm7",
+     "V13"
+    ],
+    [
+     "I",
+     "V7"
+    ]
+   ],
+   "no": 339
+  },
+  {
+   "id": "X5-8-005",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "セカンダリードミナント・分数コード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V7/VII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V7/VII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "VIIm11",
+     "III7/bVI"
+    ],
+    [
+     "IVmMaj7/bVII",
+     "VI7"
+    ],
+    [
+     "IIm7b5/bVI",
+     "V7"
+    ]
+   ],
+   "no": 340
+  },
+  {
+   "id": "X5-8-006",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・オルタード",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "V7sus4",
+     "V7"
+    ],
+    [
+     "I",
+     "III7(b13)"
+    ],
+    [
+     "IV",
+     "#IVdim7"
+    ],
+    [
+     "I/V",
+     "VIm7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ],
+    [
+     "I",
+     "VIm7"
+    ],
+    [
+     "IIm7",
+     "V7"
+    ]
+   ],
+   "no": 341
+  },
+  {
+   "id": "X5-8-007",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "VI7(#9)"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm7",
+     "VIm7/V"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 342
+  },
+  {
+   "id": "X5-8-008",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7(b9)"
+    ]
+   ],
+   "no": 343
+  },
+  {
+   "id": "X5-8-009",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "bVm9",
+     "VII13"
+    ],
+    [
+     "bVIImaj7",
+     "VI7(b9)"
+    ],
+    [
+     "bVImaj9",
+     "V7(#9)"
+    ],
+    [
+     "Imaj7",
+     "VII7(b9)"
+    ],
+    [
+     "bVIImaj9",
+     "IIIm11/VI"
+    ],
+    [
+     "bVII7/bVI"
+    ],
+    [
+     "bIIm9"
+    ]
+   ],
+   "no": 344
+  },
+  {
+   "id": "X5-8-010",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IV7alt"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bIII9"
+    ]
+   ],
+   "no": 345
+  },
+  {
+   "id": "X5-8-011",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "借用コード・分数コード",
+   "bars": [
+    [
+     "IV6/9"
+    ],
+    [
+     "Vsus2/bVII"
+    ],
+    [
+     "Vadd9/VII"
+    ],
+    [
+     "II7sus4/I"
+    ],
+    [
+     "bIIImaj7(#11)"
+    ],
+    [
+     "IIIm11"
+    ],
+    [
+     "IV6/9"
+    ],
+    [
+     "Vsus2/bV"
+    ]
+   ],
+   "no": 346
+  },
+  {
+   "id": "X5-8-012",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "IVm",
+     "IVm7/bIII"
+    ],
+    [
+     "IIm7b5",
+     "bII9"
+    ],
+    [
+     "Im",
+     "Im7/bVII"
+    ],
+    [
+     "VIm7b5",
+     "II7(b9)"
+    ],
+    [
+     "Vm",
+     "Vm7/IV"
+    ],
+    [
+     "IIIm7b5",
+     "VI7(b9)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b13)",
+     "I7(b9)"
+    ]
+   ],
+   "no": 347
+  },
+  {
+   "id": "X5-8-013",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "IVm",
+     "V7(b9)"
+    ],
+    [
+     "Im",
+     "Im7/bVII"
+    ],
+    [
+     "bVImaj7",
+     "bII9"
+    ],
+    [
+     "Im",
+     "Im7/bVII"
+    ],
+    [
+     "VIm7b5",
+     "II7"
+    ],
+    [
+     "Vm",
+     "Vm7/IV"
+    ],
+    [
+     "IIIm7b5",
+     "VI7(b9)"
+    ],
+    [
+     "bVImaj7",
+     "bV9"
+    ]
+   ],
+   "no": 348
+  },
+  {
+   "id": "X5-8-014",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "V/VI"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIII7(b13)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "bII9"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "IV7(b13)/VII"
+    ]
+   ],
+   "no": 349
+  },
+  {
+   "id": "X5-8-015",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "bV9"
+    ],
+    [
+     "VIm7b5",
+     "II7(b13)"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVIm9"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "Im9"
+    ]
+   ],
+   "no": 350
+  },
+  {
+   "id": "X5-8-016",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "I7alt"
+    ]
+   ],
+   "no": 351
+  },
+  {
+   "id": "X5-8-017",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "I7alt"
+    ]
+   ],
+   "no": 352
+  },
+  {
+   "id": "X5-8-018",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "bIIIm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bIIm9"
+    ],
+    [
+     "V7(b13)"
+    ],
+    [
+     "bVm9"
+    ],
+    [
+     "I7(b13)",
+     "I7"
+    ]
+   ],
+   "no": 353
+  },
+  {
+   "id": "X5-8-019",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVmaj9",
+     "V7alt"
+    ],
+    [
+     "Im9",
+     "IV9"
+    ],
+    [
+     "bVIImaj9",
+     "Im7"
+    ],
+    [
+     "bIImaj9",
+     "bIII9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVIm9",
+     "bII13"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVII/I",
+     "I9"
+    ]
+   ],
+   "no": 354
+  },
+  {
+   "id": "X5-8-020",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im",
+     "V7/VII"
+    ],
+    [
+     "bVIIm",
+     "IV7/VI"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "Vm7",
+     "bV7"
+    ],
+    [
+     "bIII6/9/IV"
+    ],
+    [
+     "bVIIm9",
+     "Im9"
+    ],
+    [
+     "bIImaj9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ]
+   ],
+   "no": 355
+  },
+  {
+   "id": "X5-8-021",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI9",
+     "V7(b9)"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm9",
+     "bVII9"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ]
+   ],
+   "no": 356
+  },
+  {
+   "id": "X5-8-022",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Im",
+     "Im7/bVII"
+    ],
+    [
+     "VIm7b5"
+    ],
+    [
+     "II7(#11)",
+     "II7"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 357
+  },
+  {
+   "id": "X5-8-023",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Im7/bVII"
+    ],
+    [
+     "VIm7b5"
+    ],
+    [
+     "II7(b9)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bVII"
+    ]
+   ],
+   "no": 358
+  },
+  {
+   "id": "X5-8-024",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "クリシェ・裏コード (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "ImMaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI9"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "V7(b9)"
+    ]
+   ],
+   "no": 359
+  },
+  {
+   "id": "X5-8-025",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "bVIIm6"
+    ],
+    [
+     "I7(b13)"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "IVm7/bIII"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(#9)"
+    ]
+   ],
+   "no": 360
+  },
+  {
+   "id": "X5-8-026",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "VIIaug"
+    ],
+    [
+     "bIII/bVII"
+    ],
+    [
+     "IV7/VI"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IIm7",
+     "V7(b9)"
+    ]
+   ],
+   "no": 361
+  },
+  {
+   "id": "X5-8-027",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Im9",
+     "IV13"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "IIIm9",
+     "VI13"
+    ],
+    [
+     "VII6/9/bII"
+    ],
+    [
+     "I/II"
+    ],
+    [
+     "bII7(b13)",
+     "bII7"
+    ],
+    [
+     "Im7",
+     "IV/bVII"
+    ],
+    [
+     "bVImaj9",
+     "IIm11/V"
+    ]
+   ],
+   "no": 362
+  },
+  {
+   "id": "X5-8-028",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9",
+     "bVmaj9"
+    ],
+    [
+     "IVm7",
+     "V7alt"
+    ],
+    [
+     "Im9",
+     "bVmaj9"
+    ],
+    [
+     "IVm7",
+     "bVIIm11/bIII"
+    ],
+    [
+     "bVImaj9",
+     "V7alt"
+    ],
+    [
+     "bVmaj9",
+     "IV7alt"
+    ],
+    [
+     "IIImaj9"
+    ],
+    [
+     "bVII7alt"
+    ]
+   ],
+   "no": 363
+  },
+  {
+   "id": "X5-8-029",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IV13"
+    ],
+    [
+     "VIIm9"
+    ],
+    [
+     "III13"
+    ],
+    [
+     "V7sus4/bIII"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 364
+  },
+  {
+   "id": "X5-8-030",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b13)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bIIIm9",
+     "bVI13"
+    ],
+    [
+     "bIImaj9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b13)"
+    ],
+    [
+     "Im9",
+     "V7(b13)"
+    ]
+   ],
+   "no": 365
+  },
+  {
+   "id": "X5-8-031",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9",
+     "bIII9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVImaj7/II"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9",
+     "bII13"
+    ]
+   ],
+   "no": 366
+  },
+  {
+   "id": "X5-8-032",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bVImaj7/II",
+     "V7(b13)"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "II7(#9)"
+    ],
+    [
+     "V7(b13)"
+    ]
+   ],
+   "no": 367
+  },
+  {
+   "id": "X5-8-033",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "VII7alt"
+    ],
+    [
+     "bVII6/9"
+    ],
+    [
+     "VIm7b5",
+     "II7alt"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "I13"
+    ],
+    [
+     "IVm9",
+     "bIII13"
+    ],
+    [
+     "bVI9",
+     "V7(#9)"
+    ]
+   ],
+   "no": 368
+  },
+  {
+   "id": "X5-8-034",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "VIIdim7"
+    ],
+    [
+     "bVIIm9"
+    ],
+    [
+     "VI7(#9)"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVI6/9"
+    ],
+    [
+     "bIII6/9/IV"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 369
+  },
+  {
+   "id": "X5-8-035",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・分数コード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "IVm7",
+     "bVII/bIII"
+    ],
+    [
+     "bIImaj9",
+     "Vm11/I"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 370
+  },
+  {
+   "id": "X5-8-036",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "#Vm7b5"
+    ],
+    [
+     "bII7(b9)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Vmaj7"
+    ],
+    [
+     "bVIIm7"
+    ],
+    [
+     "bIII9"
+    ]
+   ],
+   "no": 371
+  },
+  {
+   "id": "X5-8-037",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "bVImaj7/II",
+     "V7alt"
+    ],
+    [
+     "bV6/9"
+    ],
+    [
+     "IV7alt"
+    ],
+    [
+     "bVIIm9"
+    ],
+    [
+     "bIII9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 372
+  },
+  {
+   "id": "X5-8-038",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・オルタード",
+   "bars": [
+    [
+     "Imaj7",
+     "III7"
+    ],
+    [
+     "IVmaj7",
+     "#IVdim7"
+    ],
+    [
+     "V7",
+     "#Vdim7"
+    ],
+    [
+     "VIm7",
+     "VIm7/V"
+    ],
+    [
+     "#IVm7b5",
+     "VII7(b9)"
+    ],
+    [
+     "IIIm7b5",
+     "VI7(b9)"
+    ],
+    [
+     "IIm7",
+     "V9"
+    ],
+    [
+     "Imaj7",
+     "V9"
+    ]
+   ],
+   "no": 373
+  },
+  {
+   "id": "X5-8-039",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IV13"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bIImaj9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bVIm9",
+     "V9"
+    ]
+   ],
+   "no": 374
+  },
+  {
+   "id": "X5-8-040",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "ii–V–I・オルタード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IV9"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "IIm7",
+     "V7(b13)"
+    ]
+   ],
+   "no": 375
+  },
+  {
+   "id": "X5-8-041",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "VII7(b13)"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "VI13"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "VIm11/II"
+    ],
+    [
+     "IIm11/V"
+    ],
+    [
+     "V7",
+     "bII9"
+    ]
+   ],
+   "no": 376
+  },
+  {
+   "id": "X5-8-042",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・借用コード",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "bVIm11/bII"
+    ],
+    [
+     "V/II"
+    ],
+    [
+     "bIII7(b13)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "ImMaj7/IV"
+    ],
+    [
+     "bIIm11/bV"
+    ],
+    [
+     "IIm11/V",
+     "IIIm11/VI"
+    ]
+   ],
+   "no": 377
+  },
+  {
+   "id": "X5-8-043",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・サブドミナントマイナー",
+   "bars": [
+    [
+     "Imaj9",
+     "III7alt"
+    ],
+    [
+     "IVmaj9",
+     "IVmaj9/V"
+    ],
+    [
+     "IIIm7",
+     "VI7"
+    ],
+    [
+     "IIm7",
+     "IVm6"
+    ],
+    [
+     "I/III",
+     "Im/bIII"
+    ],
+    [
+     "II7sus4",
+     "V7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IV/V",
+     "V7"
+    ]
+   ],
+   "no": 378
+  },
+  {
+   "id": "X5-8-044",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "#Im7b5",
+     "bV7(b9)"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9",
+     "III7(#9)"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "Im9",
+     "IV9"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "IIm9",
+     "V7alt"
+    ]
+   ],
+   "no": 379
+  },
+  {
+   "id": "X5-8-045",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・分数コード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "V7(b13)/IV"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "V7(b13)/IV"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IVmMaj7/bVII"
+    ],
+    [
+     "IIIm11/VI"
+    ],
+    [
+     "IIm9",
+     "bII7alt"
+    ]
+   ],
+   "no": 380
+  },
+  {
+   "id": "X5-8-046",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bII9"
+    ]
+   ],
+   "no": 381
+  },
+  {
+   "id": "X5-8-047",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "bV7alt"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "VII7alt"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "I/II"
+    ],
+    [
+     "Vmaj9"
+    ]
+   ],
+   "no": 382
+  },
+  {
+   "id": "X5-8-048",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "bVIIm9",
+     "bIII9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "VIm7b5",
+     "II7(b9)"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "IVm9",
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "II7(#9)",
+     "V7(b13)"
+    ]
+   ],
+   "no": 383
+  },
+  {
+   "id": "X5-8-049",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "bVm11/VII",
+     "IVmMaj7/bVII"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "bIII13"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "VI7(b13)"
+    ],
+    [
+     "II9"
+    ],
+    [
+     "V13"
+    ]
+   ],
+   "no": 384
+  },
+  {
+   "id": "X5-8-050",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "VIm7b5"
+    ],
+    [
+     "bVIm6"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIImaj9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ]
+   ],
+   "no": 385
+  },
+  {
+   "id": "X5-8-051",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "クリシェ (マイナー)",
+   "bars": [
+    [
+     "Vm",
+     "VmMaj7"
+    ],
+    [
+     "Vm7",
+     "Vm6"
+    ],
+    [
+     "IVm",
+     "IVmMaj7"
+    ],
+    [
+     "IVm7",
+     "IVm6"
+    ],
+    [
+     "Im/V"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 386
+  },
+  {
+   "id": "X5-8-052",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Vm9",
+     "III7alt"
+    ],
+    [
+     "IVm9",
+     "II7alt"
+    ],
+    [
+     "bIImaj9",
+     "V7alt"
+    ],
+    [
+     "Im9",
+     "IV7alt"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bIIImaj7/VI",
+     "II7alt"
+    ],
+    [
+     "Vm9",
+     "I6/9/II"
+    ]
+   ],
+   "no": 387
+  },
+  {
+   "id": "X5-8-053",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Vm9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bIIIm9",
+     "bVI9"
+    ],
+    [
+     "Vm9",
+     "bVI13"
+    ],
+    [
+     "Vm9",
+     "IVm9"
+    ],
+    [
+     "bVImaj7/II",
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "I/II"
+    ]
+   ],
+   "no": 388
+  },
+  {
+   "id": "X5-8-054",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "Vm9"
+    ],
+    [
+     "bIII9",
+     "II7(b9)"
+    ],
+    [
+     "bII9",
+     "I7(#9)"
+    ],
+    [
+     "IV13"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "VI7(b13)",
+     "bVI13"
+    ],
+    [
+     "V7(b13)",
+     "bV13"
+    ],
+    [
+     "IVm9",
+     "bII9"
+    ]
+   ],
+   "no": 389
+  },
+  {
+   "id": "X5-8-055",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "Vmaj9"
+    ],
+    [
+     "VII7alt"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "IIm9",
+     "bIImaj9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bVIIaug/bVI",
+     "V7"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "bII/bIII",
+     "I/II"
+    ]
+   ],
+   "no": 390
+  },
+  {
+   "id": "X5-8-056",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "bII13"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bII9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bII13"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IIm7b5",
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ]
+   ],
+   "no": 391
+  },
+  {
+   "id": "X5-8-057",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIII6/9",
+     "V7(b13)"
+    ],
+    [
+     "I9",
+     "IVm7"
+    ],
+    [
+     "IIm7b5",
+     "bVI6"
+    ],
+    [
+     "V7",
+     "V7/VII"
+    ],
+    [
+     "Isus4",
+     "Im7/bVII"
+    ],
+    [
+     "IV7/VI"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII7"
+    ]
+   ],
+   "no": 392
+  },
+  {
+   "id": "X5-8-058",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "bIIIadd9"
+    ],
+    [
+     "bVIm7/bIII"
+    ],
+    [
+     "bIIIadd9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "IIIm7",
+     "V/VI"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVImaj9/bVII",
+     "bVII9"
+    ]
+   ],
+   "no": 393
+  },
+  {
+   "id": "X5-8-059",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIIImaj7"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "VII7alt"
+    ],
+    [
+     "IIImaj9"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bV13"
+    ],
+    [
+     "V7(b13)"
+    ],
+    [
+     "IVm11/bVII"
+    ]
+   ],
+   "no": 394
+  },
+  {
+   "id": "X5-8-060",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIIImaj7/VI"
+    ],
+    [
+     "II7"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IV7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 395
+  },
+  {
+   "id": "X5-8-061",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "bIIImaj7/VI"
+    ],
+    [
+     "bVI9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVmaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVIm9"
+    ],
+    [
+     "V7(b13)"
+    ]
+   ],
+   "no": 396
+  },
+  {
+   "id": "X5-8-062",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIIImaj9"
+    ],
+    [
+     "II7(b9)"
+    ],
+    [
+     "Vm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im11/IV"
+    ],
+    [
+     "bVIImaj9"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 397
+  },
+  {
+   "id": "X5-8-063",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "裏コード・オルタード (マイナー)",
+   "bars": [
+    [
+     "bIIImaj9"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bIII13"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVImaj9/bVII",
+     "bVII9"
+    ]
+   ],
+   "no": 398
+  },
+  {
+   "id": "X5-8-064",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "オルタード・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bIIIm6"
+    ],
+    [
+     "II13",
+     "II7alt"
+    ],
+    [
+     "V9",
+     "V7(b9)"
+    ],
+    [
+     "I9"
+    ],
+    [
+     "Im9",
+     "IV13"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "IVm7",
+     "bVII7(b9)"
+    ]
+   ],
+   "no": 399
+  },
+  {
+   "id": "X5-8-065",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "bIIm9",
+     "Imaj9/II"
+    ],
+    [
+     "Vm9",
+     "I13"
+    ],
+    [
+     "IIIm11"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Im9",
+     "Vaug/IV"
+    ],
+    [
+     "bVIImaj9",
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bVmaj9/bVI",
+     "bVI13"
+    ]
+   ],
+   "no": 400
+  },
+  {
+   "id": "X5-8-066",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "bVII13"
+    ],
+    [
+     "bIII9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "IVm9",
+     "bVII7(b13)"
+    ],
+    [
+     "bIII9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b13)"
+    ],
+    [
+     "I9",
+     "IV7"
+    ],
+    [
+     "I9",
+     "IV7"
+    ]
+   ],
+   "no": 401
+  },
+  {
+   "id": "X5-8-067",
+   "level": 5,
+   "length": 8,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "bVIImaj9"
+    ],
+    [
+     "IIm7b5",
+     "V7(b9)"
+    ],
+    [
+     "Im9",
+     "I7alt"
+    ],
+    [
+     "IVm9",
+     "bVII7alt"
+    ],
+    [
+     "bIIImaj9",
+     "bIII9"
+    ],
+    [
+     "bVmaj7"
+    ],
+    [
+     "bVm9"
+    ],
+    [
+     "bIIImaj9/IV",
+     "IV7alt"
+    ]
+   ],
+   "no": 402
+  },
+  {
+   "id": "X5-8-068",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード",
+   "bars": [
+    [
+     "bVm9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "IIIm11/VI",
+     "VI7(b9)"
+    ],
+    [
+     "VIIm9"
+    ],
+    [
+     "Vmaj9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "IIIm11/VI",
+     "VI6/9/VII"
+    ],
+    [
+     "IVmaj9/V",
+     "V13"
+    ]
+   ],
+   "no": 403
+  },
+  {
+   "id": "X5-8-069",
+   "level": 5,
+   "length": 8,
+   "mode": "major",
+   "name": "オルタード・セカンダリードミナント",
+   "bars": [
+    [
+     "bVm9"
+    ],
+    [
+     "VII13",
+     "VII7alt"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "VI13",
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13",
+     "V7alt"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "bVIm7",
+     "bII9"
+    ]
+   ],
+   "no": 404
+  },
+  {
+   "id": "X1-8-002",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 405
+  },
+  {
+   "id": "X1-8-003",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 406
+  },
+  {
+   "id": "X1-8-004",
+   "level": 1,
+   "length": 8,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 407
+  },
+  {
+   "id": "X1-8-005",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 408
+  },
+  {
+   "id": "X1-8-006",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 409
+  },
+  {
+   "id": "X1-8-007",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 410
+  },
+  {
+   "id": "X1-8-008",
+   "level": 1,
+   "length": 8,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 411
+  },
+  {
+   "id": "X1-16-001",
+   "level": 1,
+   "length": 16,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 412
+  },
+  {
+   "id": "X1-16-002",
+   "level": 1,
+   "length": 16,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV",
+     "V"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 413
+  },
+  {
+   "id": "X1-16-003",
+   "level": 1,
+   "length": 16,
+   "mode": "major",
+   "name": "ダイアトニック",
+   "bars": [
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIIm"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 414
+  },
+  {
+   "id": "X1-16-004",
+   "level": 1,
+   "length": 16,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 415
+  },
+  {
+   "id": "X1-16-005",
+   "level": 1,
+   "length": 16,
+   "mode": "minor",
+   "name": "ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 416
+  },
+  {
+   "id": "X1-16-006",
+   "level": 1,
+   "length": 16,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Vm"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 417
+  },
+  {
+   "id": "X2-4-012",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "Im"
+    ]
+   ],
+   "no": 418
+  },
+  {
+   "id": "X2-4-013",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "ダイアトニック (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Im/bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 419
+  },
+  {
+   "id": "X2-4-014",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "ディミニッシュ (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 420
+  },
+  {
+   "id": "X2-4-015",
+   "level": 2,
+   "length": 4,
+   "mode": "minor",
+   "name": "sus4 (マイナー)",
+   "bars": [
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 421
+  },
+  {
+   "id": "X2-8-005",
+   "level": 2,
+   "length": 8,
+   "mode": "major",
+   "name": "サブドミナントマイナー",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 422
+  },
+  {
+   "id": "X2-8-006",
+   "level": 2,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ・sus4 (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Im/bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "Vsus4",
+     "V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 423
+  },
+  {
+   "id": "X2-8-007",
+   "level": 2,
+   "length": 8,
+   "mode": "minor",
+   "name": "sus4 (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 424
+  },
+  {
+   "id": "X2-8-008",
+   "level": 2,
+   "length": 8,
+   "mode": "minor",
+   "name": "ディミニッシュ・ベースが下がる (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Vm/bVII"
+    ],
+    [
+     "IV/VI"
+    ],
+    [
+     "IVm/bVI"
+    ],
+    [
+     "Im/V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 425
+  },
+  {
+   "id": "X2-16-001",
+   "level": 2,
+   "length": 16,
+   "mode": "major",
+   "name": "サブドミナントマイナー",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "I/III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "V/VII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 426
+  },
+  {
+   "id": "X2-16-002",
+   "level": 2,
+   "length": 16,
+   "mode": "major",
+   "name": "借用コード・sus4",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Vsus4",
+     "V"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 427
+  },
+  {
+   "id": "X2-16-003",
+   "level": 2,
+   "length": 16,
+   "mode": "major",
+   "name": "サブドミナントマイナー",
+   "bars": [
+    [
+     "I"
+    ],
+    [
+     "III"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I"
+    ],
+    [
+     "VI"
+    ],
+    [
+     "IIm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "I"
+    ],
+    [
+     "III"
+    ],
+    [
+     "VIm"
+    ],
+    [
+     "I/V"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "I"
+    ],
+    [
+     "I"
+    ]
+   ],
+   "no": 428
+  },
+  {
+   "id": "X2-16-004",
+   "level": 2,
+   "length": 16,
+   "mode": "minor",
+   "name": "ディミニッシュ・sus4 (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "Im/bIII"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim/IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IVm"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 429
+  },
+  {
+   "id": "X2-16-005",
+   "level": 2,
+   "length": 16,
+   "mode": "minor",
+   "name": "sus4 (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 430
+  },
+  {
+   "id": "X2-16-006",
+   "level": 2,
+   "length": 16,
+   "mode": "minor",
+   "name": "ディミニッシュ・sus4 (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "V"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "bIII"
+    ],
+    [
+     "bVII"
+    ],
+    [
+     "IV"
+    ],
+    [
+     "bVI"
+    ],
+    [
+     "IIdim"
+    ],
+    [
+     "Vsus4"
+    ],
+    [
+     "V"
+    ]
+   ],
+   "no": 431
+  },
+  {
+   "id": "X3-16-001",
+   "level": 3,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・サブドミナントマイナー",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ]
+   ],
+   "no": 432
+  },
+  {
+   "id": "X3-16-002",
+   "level": 3,
+   "length": 16,
+   "mode": "major",
+   "name": "王道進行の型・ii–V–I",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "V7sus4"
+    ]
+   ],
+   "no": 433
+  },
+  {
+   "id": "X3-16-003",
+   "level": 3,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・サブドミナントマイナー",
+   "bars": [
+    [
+     "Imaj7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "I7"
+    ],
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVm6"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm7"
+    ],
+    [
+     "V7sus4",
+     "V7"
+    ]
+   ],
+   "no": 434
+  },
+  {
+   "id": "X3-16-004",
+   "level": 3,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im6"
+    ]
+   ],
+   "no": 435
+  },
+  {
+   "id": "X3-16-005",
+   "level": 3,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVII7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 436
+  },
+  {
+   "id": "X3-16-006",
+   "level": 3,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・sus4 (マイナー)",
+   "bars": [
+    [
+     "IVm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "IVm7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7sus4"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 437
+  },
+  {
+   "id": "X4-4-016",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVIImaj7"
+    ],
+    [
+     "bIIImaj7"
+    ]
+   ],
+   "no": 438
+  },
+  {
+   "id": "X4-4-017",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "Im7"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "Im11"
+    ]
+   ],
+   "no": 439
+  },
+  {
+   "id": "X4-4-018",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj7"
+    ]
+   ],
+   "no": 440
+  },
+  {
+   "id": "X4-4-019",
+   "level": 4,
+   "length": 4,
+   "mode": "minor",
+   "name": "",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII6/9"
+    ]
+   ],
+   "no": 441
+  },
+  {
+   "id": "X4-16-001",
+   "level": 4,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・分数コード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "V/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "I6/9"
+    ]
+   ],
+   "no": 442
+  },
+  {
+   "id": "X4-16-002",
+   "level": 4,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・分数コード",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Iadd9"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IV/V"
+    ],
+    [
+     "IIIm11"
+    ],
+    [
+     "VIm9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 443
+  },
+  {
+   "id": "X4-16-003",
+   "level": 4,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・サブドミナントマイナー",
+   "bars": [
+    [
+     "I6/9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIIm9"
+    ],
+    [
+     "VI9"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V13"
+    ],
+    [
+     "I6/9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 444
+  },
+  {
+   "id": "X4-16-004",
+   "level": 4,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・セカンダリードミナント (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "Im9"
+    ]
+   ],
+   "no": 445
+  },
+  {
+   "id": "X4-16-005",
+   "level": 4,
+   "length": 16,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "Im11"
+    ],
+    [
+     "Im11"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII6/9"
+    ],
+    [
+     "Im11"
+    ],
+    [
+     "Im11"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII/I"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII6/9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII6/9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "IV/V"
+    ]
+   ],
+   "no": 446
+  },
+  {
+   "id": "X4-16-006",
+   "level": 4,
+   "length": 16,
+   "mode": "minor",
+   "name": "分数コード (マイナー)",
+   "bars": [
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII/bVI"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII/bVI"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "Vm9"
+    ],
+    [
+     "bVImaj9"
+    ],
+    [
+     "bVII6/9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7"
+    ]
+   ],
+   "no": 447
+  },
+  {
+   "id": "X5-4-004",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "ii–V–I・オルタード",
+   "bars": [
+    [
+     "IIm7"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Imaj7"
+    ],
+    [
+     "VI7(b9)"
+    ]
+   ],
+   "no": 448
+  },
+  {
+   "id": "X5-4-005",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "オルタード",
+   "bars": [
+    [
+     "IVmaj7"
+    ],
+    [
+     "IVmMaj7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7alt"
+    ]
+   ],
+   "no": 449
+  },
+  {
+   "id": "X5-4-006",
+   "level": 5,
+   "length": 4,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "IIm9"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "V7(#9)"
+    ]
+   ],
+   "no": 450
+  },
+  {
+   "id": "X5-4-007",
+   "level": 5,
+   "length": 4,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b13)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVI7(#11)"
+    ]
+   ],
+   "no": 451
+  },
+  {
+   "id": "X5-16-001",
+   "level": 5,
+   "length": 16,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "I7(b9)"
+    ],
+    [
+     "IVmaj9"
+    ],
+    [
+     "IVmMaj7"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7(b13)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 452
+  },
+  {
+   "id": "X5-16-002",
+   "level": 5,
+   "length": 16,
+   "mode": "major",
+   "name": "ii–V–I・裏コード",
+   "bars": [
+    [
+     "IVmaj9"
+    ],
+    [
+     "V/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7(b9)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7(#9)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "IVmaj7(#11)"
+    ],
+    [
+     "V/IV"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "I6/9"
+    ]
+   ],
+   "no": 453
+  },
+  {
+   "id": "X5-16-003",
+   "level": 5,
+   "length": 16,
+   "mode": "major",
+   "name": "裏コード・オルタード",
+   "bars": [
+    [
+     "Imaj9"
+    ],
+    [
+     "VI7alt"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Imaj9"
+    ],
+    [
+     "VI7(#9)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "bIII7(#11)"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "IVmaj7(#11)"
+    ],
+    [
+     "IIIm7"
+    ],
+    [
+     "IIm9"
+    ],
+    [
+     "V7(b13)"
+    ]
+   ],
+   "no": 454
+  },
+  {
+   "id": "X5-16-004",
+   "level": 5,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・オルタード (マイナー)",
+   "bars": [
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj7(#11)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj9"
+    ],
+    [
+     "bVImaj7(#11)"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "ImMaj7"
+    ]
+   ],
+   "no": 455
+  },
+  {
+   "id": "X5-16-005",
+   "level": 5,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・クリシェ (マイナー)",
+   "bars": [
+    [
+     "Im"
+    ],
+    [
+     "ImMaj7"
+    ],
+    [
+     "Im7"
+    ],
+    [
+     "Im6"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b13)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVII13"
+    ],
+    [
+     "bIIImaj7"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im"
+    ],
+    [
+     "V7alt"
+    ]
+   ],
+   "no": 456
+  },
+  {
+   "id": "X5-16-006",
+   "level": 5,
+   "length": 16,
+   "mode": "minor",
+   "name": "ii–V–I・裏コード (マイナー)",
+   "bars": [
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(b9)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IIm7b5"
+    ],
+    [
+     "V7(#9)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "bVI7(#11)"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "V7alt"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "IVm9"
+    ],
+    [
+     "bVImaj7"
+    ],
+    [
+     "bII7(#11)"
+    ],
+    [
+     "Im9"
+    ],
+    [
+     "V7(b13)"
+    ]
+   ],
+   "no": 457
+  }
+ ]
+}

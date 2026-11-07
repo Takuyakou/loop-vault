@@ -2,7 +2,7 @@
 
 確認対象: Chord Dojo L4/L5 + Mix Session
 
-確認EXE: `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
+確認EXE: `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
 
 状態: 実MIDI鍵盤で未確認。以下はユーザー実機確認用。
 
@@ -365,9 +365,9 @@ Mix確認用に、合計2〜6件の保存進行を用意する。1件は意図�
 Branch: feature/p3-9-3-l4-l5-mix-session
 PR: 未作成（T5コミット後に作成予定）
 Main: 未merge
-EXE: D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe
-MSI: D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
-NSIS: D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
+EXE: <作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe
+MSI: <作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
+NSIS: <作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
 Frontend tests: 148 files / 1027 tests PASS
 Rust tests: 24 tests PASS
 Web build: PASS

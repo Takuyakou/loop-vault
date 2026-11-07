@@ -16,7 +16,7 @@ import {
  */
 
 /** What kind of operation an edit was, for the local metrics (spec v2.5 §13). */
-export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed" | "tempo" | "segment";
+export type EditKind = "exclude" | "restore" | "add" | "delete" | "pitch" | "merge" | "merge-all" | "split" | "boundary" | "name" | "reviewed" | "tempo" | "segment" | "bar-cut";
 
 export interface EditResult {
   model: CorrectionModel;
@@ -54,7 +54,7 @@ export function deleteNotes(model: CorrectionModel, ids: Iterable<string>): Edit
   if (!hit.length) return unchanged(model);
   const touched = new Set(hit.map((note) => note.cardId));
   const notes = model.notes
-    .filter((note) => !(wanted.has(note.id) && note.provenance === "MANUAL_ADDED"))
+    .filter((note) => model.context.savedProgression || !(wanted.has(note.id) && note.provenance === "MANUAL_ADDED"))
     .map((note) => wanted.has(note.id) && note.used ? { ...note, used: false } : note);
   const added = hit.filter((note) => note.provenance === "MANUAL_ADDED");
   const label = added.length === hit.length ? describe(hit, "消した") : describe(hit, "外した");

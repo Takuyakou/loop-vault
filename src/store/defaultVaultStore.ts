@@ -1,6 +1,6 @@
-import { JsonVaultRepository } from "../domain/repository";
 import { BrowserMemoryVaultStorage } from "../storage/browserMemoryVaultStorage";
 import { TauriVaultStorage } from "../storage/tauriVaultStorage";
+import { JazzVaultRepository } from "../storage/jazzVaultStorage";
 import { createVaultStore } from "./vaultStore";
 
 function isTauriRuntime(): boolean {
@@ -8,7 +8,7 @@ function isTauriRuntime(): boolean {
 }
 
 export const defaultVaultStore = createVaultStore({
-  repository: new JsonVaultRepository(
+  repository: new JazzVaultRepository(
     isTauriRuntime() ? new TauriVaultStorage() : new BrowserMemoryVaultStorage(),
   ),
 });

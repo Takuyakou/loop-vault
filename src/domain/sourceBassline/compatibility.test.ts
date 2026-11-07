@@ -88,10 +88,11 @@ describe("P5.22 Vault compatibility", () => {
   });
 
   it("keeps versions above v2 readonly and rejects sourceBassline under a v1 envelope", () => {
-    const future = parseVaultFileJson(JSON.stringify({ ...createEmptyVault(), fileVersion: 3 }));
+    // TXT-JAZZ: fileVersion 3 is now understood (the envelope that can carry an altered chord); the first unknown one is 4.
+    const future = parseVaultFileJson(JSON.stringify({ ...createEmptyVault(), fileVersion: 4 }));
     expect(future).toEqual({
       ok: false,
-      error: { kind: "future-version", fileVersion: 3 },
+      error: { kind: "future-version", fileVersion: 4 },
     });
 
     const invalidLegacy = parseVaultFileJson(JSON.stringify({

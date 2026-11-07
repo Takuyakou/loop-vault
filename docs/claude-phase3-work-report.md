@@ -96,8 +96,8 @@ Phase 3 では、以下の基盤は変更していない。
 
 生成物:
 
-- `D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe`
-- `D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- `<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 ## 既知の制約・次フェーズへの引き継ぎ
 

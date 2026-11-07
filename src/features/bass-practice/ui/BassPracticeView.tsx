@@ -1,3 +1,5 @@
+import { Select } from "../../../components/ui/controls";
+import { EchoRail, useEchoActive, useEchoFramed } from "./EchoPracticeFrame";
 import {
   useCallback,
   useEffect,
@@ -96,6 +98,7 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
     fretRange: initialSettings.fretRange, singEnabled: initialSettings.singEnabled,
     singingReferenceMode: initialSettings.singingReferenceMode,
   } : DEFAULT_SETTINGS);
+  useEffect(() => { if (initialSettings) setSettings({ stringCount: initialSettings.stringCount, handedness: initialSettings.handedness, fretRange: initialSettings.fretRange, singEnabled: initialSettings.singEnabled, singingReferenceMode: initialSettings.singingReferenceMode }); }, [initialSettings?.stringCount, initialSettings?.handedness, initialSettings?.fretRange.min, initialSettings?.fretRange.max, initialSettings?.singEnabled, initialSettings?.singingReferenceMode]);
   const [settingsError, setSettingsError] = useState<string>();
   const [round, setRound] = useState(initialRound);
   const [queuedClaim, setQueuedClaim] = useState<ClaimedPracticeExercise | undefined>(initialClaim);
@@ -323,10 +326,12 @@ function DegreeSessionWorkspace({
     }
   })();
 
+  const active = useEchoActive();
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        event.repeat
+        !active
+        || event.repeat
         || event.isComposing
         || event.altKey
         || event.ctrlKey
@@ -351,7 +356,7 @@ function DegreeSessionWorkspace({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [applyResult, beginTransfer, nextHint, onNext, primaryAction, rate, replay, session, state.status]);
+  }, [applyResult, beginTransfer, nextHint, onNext, primaryAction, rate, replay, session, state.status, active]);
 
   const stepIndex = currentStepIndex(state.status);
   const showAnswer = state.status === "review"
@@ -559,7 +564,7 @@ function DegreeSessionWorkspace({
           </div>
         </Surface>
 
-        <aside className="space-y-4" aria-label="セッションの詳細">
+        <EchoRail><aside className="space-y-4" aria-label="セッションの詳細">
           <Surface className="p-4">
             <h3 className="text-sm font-semibold text-[var(--lv-text)]">セッション</h3>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
@@ -575,7 +580,7 @@ function DegreeSessionWorkspace({
               Space 次へ · R もう一度聴く · H ヒント · S 歌う · 1–4 評価 · N 次の問題 · T 移調 · Esc 停止
             </p>
           </Surface>
-        </aside>
+        </aside></EchoRail>
       </div>
 
       <Surface className="min-w-0 p-4 sm:p-5">
@@ -596,38 +601,40 @@ function SetupControls({
   onChange: (settings: DegreeUiSettings) => void;
   settings: DegreeUiSettings;
 }) {
+  const framed = useEchoFramed();
   return (
     <fieldset className="grid gap-4 border-t border-[var(--lv-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
       <legend className="sr-only">Degree Echo の設定</legend>
-      <Field htmlFor="degree-string-count" label="弦数">
-        <select id="degree-string-count" className="lv-input min-h-10 w-full" value={settings.stringCount} onChange={(event) => onChange({ ...settings, stringCount: Number(event.target.value) as StringCount })}>
+      {!framed ? <><Field htmlFor="degree-string-count" label="弦数">
+        <Select id="degree-string-count" className=" w-full" value={settings.stringCount} onChange={(event) => onChange({ ...settings, stringCount: Number(event.target.value) as StringCount })}>
           <option value={4}>4弦</option>
           <option value={5}>5弦</option>
-        </select>
+        </Select>
       </Field>
       <Field htmlFor="degree-handedness" label="表示">
-        <select id="degree-handedness" className="lv-input min-h-10 w-full" value={settings.handedness} onChange={(event) => onChange({ ...settings, handedness: event.target.value as Handedness })}>
+        <Select id="degree-handedness" className=" w-full" value={settings.handedness} onChange={(event) => onChange({ ...settings, handedness: event.target.value as Handedness })}>
           <option value="right">右利き</option>
           <option value="left">左利き</option>
-        </select>
+        </Select>
       </Field>
       <Field htmlFor="degree-fret-range" label="フレットの範囲">
-        <select id="degree-fret-range" className="lv-input min-h-10 w-full" value={`${settings.fretRange.min}-${settings.fretRange.max}`} onChange={(event) => {
+        <Select id="degree-fret-range" className=" w-full" value={`${settings.fretRange.min}-${settings.fretRange.max}`} onChange={(event) => {
           const [min, max] = event.target.value.split("-").map(Number);
           onChange({ ...settings, fretRange: { min, max } });
         }}>
           <option value="0-7">0–7</option>
           <option value="0-12">0–12</option>
           <option value="5-17">5–17</option>
-        </select>
+        </Select>
       </Field>
+      </> : null}
       <Field htmlFor="degree-singing-reference" label="歌う参考音">
-        <select id="degree-singing-reference" className="lv-input min-h-10 w-full" value={settings.singingReferenceMode} onChange={(event) => onChange({ ...settings, singingReferenceMode: event.target.value as SingingReferenceMode })}>
+        <Select id="degree-singing-reference" className=" w-full" value={settings.singingReferenceMode} onChange={(event) => onChange({ ...settings, singingReferenceMode: event.target.value as SingingReferenceMode })}>
           <option value="auto">自動</option>
           <option value="original">元の高さ</option>
           <option value="octave-1">+1 オクターブ</option>
           <option value="octave-2">+2 オクターブ</option>
-        </select>
+        </Select>
       </Field>
     </fieldset>
   );
@@ -678,10 +685,10 @@ function ReviewControls({
         ))}
       </div>
       <label className="mt-4 block text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="degree-main-issue">気になった点（任意・自己申告）</label>
-      <select id="degree-main-issue" className="lv-input mt-2 min-h-10 w-full max-w-sm" value={draftIssue ?? ""} onChange={(event) => onIssueChange(event.target.value ? event.target.value as PracticeIssue : undefined)}>
+      <Select id="degree-main-issue" className="mt-2  w-full max-w-sm" value={draftIssue ?? ""} onChange={(event) => onIssueChange(event.target.value ? event.target.value as PracticeIssue : undefined)}>
         <option value="">選択なし</option>
         {ISSUES.map((issue) => <option key={issue.value} value={issue.value}>{issue.label}</option>)}
-      </select>
+      </Select>
     </fieldset>
   );
 }

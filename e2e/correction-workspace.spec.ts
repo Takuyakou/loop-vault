@@ -808,7 +808,7 @@ test("P10.1 BPM sets the speed of the sound and the playhead together, can be un
   await expect(form).toBeHidden();
   await page.locator('[data-nav="vault"]').click();
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
-  await expect(page.locator("[data-progression-detail-view]")).toContainText(/BPM\s*60/);
+  await expect(page.locator("[data-progression-detail-view]").getByTestId("correction-tempo")).toHaveValue("60");
 });
 
 // ---- P10.2 playback ----------------------------------------------------------------------
@@ -878,12 +878,16 @@ test("P10.2 with no card selected the song starts at the first card in view, mar
   await expect(cue).toHaveCount(1);
   await expect(cue).toHaveAttribute("aria-label", /^1小節1拍/);
 
+  // Wait for the scroll-driven cue update before reading its start label.
+  // The old cue can already differ from the card whose head we scroll past.
+  const initialCue = (await cue.getAttribute("data-card-id"))!;
   // Scroll so a card's head is just left of the view: the next card is where it starts.
   const passed = await scroll.evaluate((element) => {
     const card = [...element.querySelectorAll<HTMLElement>('[data-testid="correction-card"]')][6]!;
     element.scrollLeft = parseFloat(card.style.left) + 3;
     return card.getAttribute("data-card-id");
   });
+  await expect(cue).not.toHaveAttribute("data-card-id", initialCue);
   await expect(cue).not.toHaveAttribute("data-card-id", passed!);
   const label = (await cue.getAttribute("aria-label"))!;
   const [, bar, beat] = /^(\d+)小節(\d+)拍/.exec(label)!;
@@ -969,6 +973,7 @@ test("P10.2 right-click a card, then another: the save range, with a pending fra
   const workspace = page.getByTestId("correction-workspace");
   const cards = workspace.getByTestId("correction-card");
   await cards.nth(1).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await expect(cards.nth(1)).toHaveAttribute("data-range-from", "true");
   await cards.nth(4).hover();
   await expect(workspace.getByTestId("correction-range-pending")).toHaveText("2〜5小節・4コード（右クリックで決める）");
@@ -981,6 +986,7 @@ test("P10.2 right-click a card, then another: the save range, with a pending fra
 
   // Backwards, then Esc: only 「ここから」 goes; the range stays.
   await cards.nth(6).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await cards.nth(5).hover();
   await expect(workspace.getByTestId("correction-range-pending")).toHaveText("6〜7小節・2コード（右クリックで決める）");
   await page.keyboard.press("Escape");
@@ -991,8 +997,9 @@ test("P10.2 right-click a card, then another: the save range, with a pending fra
   await expect(workspace.getByTestId("correction-save-range")).toContainText("8小節・1枚");
   await cards.nth(0).focus();
   await page.keyboard.press("Shift+F10");
-  await expect(cards.nth(0)).toHaveAttribute("data-range-from", "true");
+  await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
 
   // The piano roll's right-click still removes a note.
   const id = await firstNoteId(page, "harmony");
@@ -1184,6 +1191,7 @@ test("P10.2 addendum 1: the decided save range stays framed (solid, A and B) whi
   const confirmed = workspace.getByTestId("correction-range-confirmed");
   await expect(confirmed).toHaveCount(0);
   await cards.nth(1).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await cards.nth(4).click({ button: "right" });
   await expect(confirmed).toHaveText("AB保存する範囲 2〜5小節・4コード");
   await expect(workspace.getByTestId("correction-range-pending")).toHaveCount(0);
@@ -1193,6 +1201,7 @@ test("P10.2 addendum 1: the decided save range stays framed (solid, A and B) whi
 
   // A new 「ここから」 with a range: both frames, the pending one under the decided one.
   await cards.nth(6).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await cards.nth(7).hover();
   const pending = workspace.getByTestId("correction-range-pending");
   await expect(pending).toBeVisible();
@@ -1258,6 +1267,7 @@ test("P10.3 a decided range is a chip in the control bar, not a sentence; × or 
   const chip = workspace.getByTestId("correction-range-chip");
   const announce = workspace.getByTestId("correction-announce");
   await cards.nth(5).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await cards.nth(6).click({ button: "right" });
   await expect(chip.locator(".lv-cw-chip-long")).toBeVisible();
   await expect(chip.locator(".lv-cw-chip-long")).toHaveText("保存する範囲 6〜7小節・2コード");

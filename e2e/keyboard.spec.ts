@@ -57,26 +57,22 @@ test("Voice選択、プリセット、Solo、解析、保存する範囲の選�
   await openApp(page);
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 4 }), "keyboard-flow.mid");
 
-  const details = page.getByRole("button", { name: /パート詳細/ });
-  if (await details.getAttribute("aria-expanded") !== "true") {
-    await details.focus();
-    await page.keyboard.press("Enter");
-  }
-  const custom = page.locator('[data-analysis-preset="custom"]');
-  await custom.focus();
-  await page.keyboard.press("Enter");
-  await expect(custom).toHaveAttribute("aria-checked", "true");
-
   const firstVoice = page.locator("[data-voice-id]").first();
-  const solo = firstVoice.getByRole("button", { name: /Solo/ });
+  const solo = firstVoice.getByRole("button", { name: /ソロ/ });
   await solo.focus();
   await page.keyboard.press("Enter");
   await expect(solo).toHaveAttribute("aria-pressed", "true");
 
-  const role = firstVoice.getByRole("combobox");
-  await role.focus();
-  await role.selectOption("harmony");
-  await expect(role).toHaveValue("harmony");
+  const chord = firstVoice.getByRole("button", { name: "コード", exact: true });
+  await chord.focus();
+  await page.keyboard.press("Enter");
+  await expect(chord).toHaveAttribute("aria-pressed", "true");
+
+  // The part is chosen with the arrow keys, and its role with 1 / 2 / 3 / 0.
+  await page.locator("body").click({ position: { x: 1, y: 1 } });
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("2");
+  await expect(page.locator("[data-voice-id]").nth(1)).toHaveAttribute("data-role", "bass");
 
   const analyze = page.getByTestId("pre-analysis-analyze");
   await analyze.focus();
@@ -117,7 +113,7 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
   await open.focus();
   await page.keyboard.press("Enter");
   const practice = page.locator("[data-progression-detail-view]")
-    .getByRole("button", { name: /練習する/ });
+    .getByRole("button", { name: /Bass Practice/ });
   await practice.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();

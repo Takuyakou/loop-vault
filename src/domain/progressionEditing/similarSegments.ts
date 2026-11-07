@@ -328,6 +328,7 @@ function resolveFeatures(
 
 function sameCorrectionIdentity(left: ChordSymbol, right: ChordSymbol): boolean {
   return normalizePitchClass(left.root) === normalizePitchClass(right.root)
+    && left.altered === right.altered
     && left.quality === right.quality
     && effectiveBass(left) === effectiveBass(right);
 }

@@ -9,6 +9,7 @@ import {
 import { buildLabelCorrectionLogs } from "../../domain/midi/labelCorrectionLog";
 import { hasProgressionEdits, type EditableProgression } from "../../domain/progressionEditing";
 import type { SourceBasslineSnapshotV1 } from "../../domain/sourceBassline";
+import type { BeatRange } from "../../domain/correction/barMap";
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate, Status } from "../../domain/types";
 import type { AppCopy } from "../../i18n";
 import { appendAnalysisFeedback } from "../../storage/analysisFeedbackStorage";
@@ -79,11 +80,12 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
-    options?: { stayOnCapture?: boolean; bpm?: number; memoNote?: string },
+    options?: { stayOnCapture?: boolean; bpm?: number; memoNote?: string; removedBars?: readonly BeatRange[] },
   ): string | undefined {
     // The new idea's id (P10.2 addendum 2: saving by section adds the rest to it), or undefined.
     setPersistenceError(undefined);
-    const corrections = correctionEvents(original, candidate, editable);
+    const removedBars = options?.removedBars ?? [];
+    const corrections = correctionEvents(original, candidate, editable, removedBars);
     const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
     // The workspace stays on the capture screen after saving; the old screen's call is unchanged.
     const navigation = options?.stayOnCapture ? { stayOnCapture: true } : undefined;
@@ -98,7 +100,7 @@ export function useCaptureSave({
       nextAction,
       progressionBlock: candidate,
       progressionAnalysis: withTempo(analysis.result, options?.bpm),
-      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(options?.memoNote ? { memoNote: options.memoNote } : {}), ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
+      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(options?.memoNote ? { memoNote: options.memoNote } : {}), ...(removedBars.length ? { removedBars } : {}), ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
     });
     if (id) {
       persistCorrectionEvents([
@@ -110,9 +112,10 @@ export function useCaptureSave({
           editable,
           userEdited,
           userVerified,
+          removedBars,
         ),
       ]);
-      persistLabelCorrectionLogs(original, editable);
+      persistLabelCorrectionLogs(original, editable, removedBars);
       setToast(copy.capture.savedToVault, "success");
       return id;
     }
@@ -124,6 +127,7 @@ export function useCaptureSave({
     original: ProgressionBlockCandidate,
     edited: ProgressionBlockCandidate,
     editable: EditableProgression,
+    removedBars: readonly BeatRange[] = [],
   ) {
     if (!analysis.result) {
       return [];
@@ -134,6 +138,7 @@ export function useCaptureSave({
       analysis.result,
       editable.slots.map((slot) => slot.editSource),
       editable.slots.map((slot) => slot.quickCandidateSelection),
+      removedBars,
     );
   }
 
@@ -151,6 +156,7 @@ export function useCaptureSave({
     editable: EditableProgression,
     userEdited: boolean,
     userVerified: boolean,
+    removedBars: readonly BeatRange[] = [],
   ): PersistedAnalysisFeedbackEvent[] {
     if (!analysis.result) return [];
     const event = buildProgressionSaveFeedbackEvent(
@@ -162,6 +168,7 @@ export function useCaptureSave({
         occurredAt: new Date().toISOString(),
         userEdited,
         userVerified,
+        ...(removedBars.length ? { removedBars } : {}),
       },
     );
     return event ? [event] : [];
@@ -170,11 +177,13 @@ export function useCaptureSave({
   function persistLabelCorrectionLogs(
     original: ProgressionBlockCandidate,
     editable: EditableProgression,
+    removedBars: readonly BeatRange[] = [],
   ) {
     if (!analysis.result) return;
     const events = buildLabelCorrectionLogs(original, editable, analysis.result, {
       analyzerMode: "phase4-v1",
       occurredAt: new Date().toISOString(),
+      ...(removedBars.length ? { removedBars } : {}),
     });
     void appendLabelCorrectionLogs(events)
       .catch(() => setToast(copy.capture.feedbackSaveFailed, "error"));
@@ -189,13 +198,14 @@ export function useCaptureSave({
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
     sourceBassline?: SourceBasslineSnapshotV1,
-    options?: { bpm?: number; memoNote?: string },
+    options?: { bpm?: number; memoNote?: string; removedBars?: readonly BeatRange[] },
   ): boolean {
     setPersistenceError(undefined);
     if (!ideaId) {
       setToast(copy.capture.chooseIdeaFirst);
       return false;
     }
+    const removedBars = options?.removedBars ?? [];
 
     const appended = appendBlockToIdea(ideaId, candidate, withTempo(analysis.result, options?.bpm), {
       sourcePath,
@@ -203,12 +213,13 @@ export function useCaptureSave({
       userVerified,
       onPersistenceError: announcePersistenceError,
       ...(options?.memoNote ? { memoNote: options.memoNote } : {}),
+      ...(removedBars.length ? { removedBars } : {}),
       ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}),
     });
     if (appended) {
       const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
       persistCorrectionEvents([
-        ...correctionEvents(original, candidate, editable),
+        ...correctionEvents(original, candidate, editable, removedBars),
         ...propagationEvents,
         ...progressionSaveFeedback(
           original,
@@ -216,9 +227,10 @@ export function useCaptureSave({
           editable,
           userEdited,
           userVerified,
+          removedBars,
         ),
       ]);
-      persistLabelCorrectionLogs(original, editable);
+      persistLabelCorrectionLogs(original, editable, removedBars);
       setToast(copy.toast.blockSaved, "success");
       return true;
     }

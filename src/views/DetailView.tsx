@@ -111,6 +111,7 @@ export function DetailView({
   setToast,
   copy,
   recoveryPending = false,
+  metadataOnly = false,
 }: {
   idea: SongIdea;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
@@ -124,6 +125,8 @@ export function DetailView({
   setToast: ToastFn;
   copy: AppCopy;
   recoveryPending?: boolean;
+  /** P10.4: reuse all Idea editing operations from the progression header. */
+  metadataOnly?: boolean;
 }) {
 
   const titleField = useDraftSave<string>({
@@ -191,7 +194,7 @@ export function DetailView({
                 className="w-full bg-transparent pr-9 text-2xl font-semibold outline-none"
                 value={titleField.draft}
                 maxLength={80}
-                aria-label={copy.detail.fields.title}
+                aria-label={metadataOnly ? "曲の題名" : copy.detail.fields.title}
                 aria-invalid={titleField.invalid}
                 aria-errormessage={titleField.invalid ? "detail-title-error" : undefined}
                 title={copy.detail.fields.title}
@@ -212,12 +215,12 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.metadata}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="relative">
-              <input className={`${inputClass} pr-9`} type="number" min={40} max={300} step={1} value={bpmField.draft} aria-label={copy.detail.fields.bpm} aria-invalid={bpmField.invalid} aria-errormessage={bpmField.invalid ? "detail-bpm-error" : undefined} title={copy.detail.fields.bpm} onChange={(event) => bpmField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.bpm} {...bpmField.inputProps} />
+              <input className={`${inputClass} pr-9`} type="number" min={40} max={300} step={1} value={bpmField.draft} aria-label={metadataOnly ? "曲のBPM" : copy.detail.fields.bpm} aria-invalid={bpmField.invalid} aria-errormessage={bpmField.invalid ? "detail-bpm-error" : undefined} title={copy.detail.fields.bpm} onChange={(event) => bpmField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.bpm} {...bpmField.inputProps} />
               <SaveFlash visible={bpmField.saved} label={copy.detail.saveAccepted} />
               <span id="detail-bpm-error" className="sr-only">{copy.detail.validation.bpm}</span>
             </div>
             <div className="relative">
-              <input className={`${inputClass} pr-9`} list="key-options" value={keyField.draft} aria-label={copy.detail.fields.key} title={copy.detail.fields.key} onChange={(event) => keyField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.key} {...keyField.inputProps} />
+              <input className={`${inputClass} pr-9`} list="key-options" value={keyField.draft} aria-label={metadataOnly ? "曲のキー" : copy.detail.fields.key} title={copy.detail.fields.key} onChange={(event) => keyField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.key} {...keyField.inputProps} />
               <SaveFlash visible={keyField.saved} label={copy.detail.saveAccepted} />
             </div>
             <datalist id="key-options">{keySuggestions.map((key) => <option key={key} value={key} />)}</datalist>
@@ -236,7 +239,7 @@ export function DetailView({
           </Panel>
         ) : null}
 
-        <Panel>
+        {!metadataOnly ? <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.progressionBlocks}</h2>
           {(idea.progressionBlocks ?? []).length === 0 ? (
             <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.detail.noProgressionBlocks}</p>
@@ -283,7 +286,7 @@ export function DetailView({
               ))}
             </div>
           )}
-        </Panel>
+        </Panel> : null}
       </section>
       </div>
     </>

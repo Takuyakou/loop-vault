@@ -112,7 +112,8 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
     if (await expand.isVisible()) await expand.click();
     await waitForSidebarSettled(page);
     await page.locator('[data-nav="voicing-loop"]').click();
-    const heading = page.getByRole("heading", { name: "Voicing Loop", exact: true, level: 2 });
+    // VL-15: the picker's heading is 「練習する進行」; the old duplicate "Voicing Loop" heading is gone.
+    const heading = page.getByRole("heading", { name: "練習する進行", exact: true, level: 2 });
     for (const collapsed of [false, true]) {
       if (collapsed) await page.getByRole("button", { name: "サイドバーを狭める" }).click();
       await waitForSidebarSettled(page);
@@ -131,7 +132,7 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
   await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
-  const heading = page.getByRole("heading", { name: "Voicing Loop", exact: true, level: 2 });
+  const heading = page.getByRole("heading", { name: "練習する進行", exact: true, level: 2 });
   const bounds = await heading.boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   await assertNoHorizontalOverflow(page);
@@ -258,6 +259,61 @@ test("VL-07 compact Current, keyboard legend, safe area and acceptance states", 
   await page.screenshot({ path: ".local-evaluation/vl07/playing.png", fullPage: true });
 });
 
+test("VL-07 bottom safe area keeps the lowest control clear of the window bottom at every size and Windows scaling", async ({ page }) => {
+  // R-02: the sizes of §2 of the spec, including what Windows display scaling turns a 1920×1080 screen into
+  // (125% ≒ 1536×864, 150% ≒ 1280×720 — already in the list, 200% ≒ 960×540, before the taskbar strip).
+  const viewports = [
+    { width: 1280, height: 720 },
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 1920, height: 1080 },
+    { width: 1536, height: 864 },
+    { width: 960, height: 540 },
+  ];
+  for (const status of ["both-hands", "long-256"]) {
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      const workspace = await openLoop(page, status);
+      const cards = workspace.getByTestId("voicing-loop-event");
+      await expect(cards.first()).toBeVisible();
+      const safe = workspace.getByTestId("voicing-loop-bottom-safe-area");
+      // The workspace scrolls when the window is short; the strip has to be clear at the very bottom of it.
+      await safe.scrollIntoViewIfNeeded();
+      const measured = await workspace.evaluate((root) => {
+        const transport = root.querySelector("[data-testid='voicing-loop-transport']")!;
+        const safeArea = root.querySelector("[data-testid='voicing-loop-bottom-safe-area']") as HTMLElement;
+        const controls = [...root.querySelectorAll("button, select, input, a, [role='button']")]
+          .filter((element) => (element as HTMLElement).offsetParent !== null)
+          .map((element) => element.getBoundingClientRect())
+          .filter((box) => box.width > 0 && box.height > 0);
+        const heading = root.querySelector("[data-testid='voicing-loop-current-panel'] h2") as HTMLElement;
+        const keyboard = root.querySelector("[data-keyboard-layout='wide-88'] svg")!;
+        return {
+          windowHeight: window.innerHeight,
+          transportBottom: transport.getBoundingClientRect().bottom,
+          lowestControl: Math.max(...controls.map((box) => box.bottom)),
+          safeHeight: safeArea.getBoundingClientRect().height,
+          safeTop: safeArea.getBoundingClientRect().top,
+          headingFont: parseFloat(getComputedStyle(heading).fontSize),
+          keyboardHeight: keyboard.getBoundingClientRect().height,
+        };
+      });
+      // ≥16 px between the lowest control and the window bottom, and the strip really is below the transport.
+      expect(measured.windowHeight - measured.transportBottom).toBeGreaterThanOrEqual(16);
+      expect(measured.windowHeight - measured.lowestControl).toBeGreaterThanOrEqual(16);
+      expect(measured.safeHeight).toBeGreaterThanOrEqual(16);
+      expect(measured.safeTop).toBeGreaterThanOrEqual(measured.transportBottom);
+      // VL-07: the chord name and the keyboard are not made smaller to make room.
+      expect(measured.headingFont).toBeGreaterThanOrEqual(48);
+      expect(measured.keyboardHeight).toBeGreaterThanOrEqual(144);
+      await assertNoHorizontalOverflow(page);
+      if (viewport.width === 1280 && viewport.height === 720) {
+        await page.screenshot({ path: `p89-generated/r02/safe-area-${status}-1280x720.png`, fullPage: true });
+      }
+    }
+  }
+});
+
 test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/?p527Status=selector-vl07");
@@ -266,8 +322,12 @@ test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) =
   await expect(choices).toHaveCount(3);
   await expect(choices.filter({ hasText: "Public ready progression" })).toBeEnabled();
   await expect(choices.filter({ hasText: "Public missing BPM" })).toBeEnabled();
-  await expect(choices.filter({ hasText: "Public missing BPM" })).toContainText("120 BPM（練習初期値）");
-  await expect(choices.filter({ hasText: "Public capacity case" })).toContainText("256");
+  // VL-15: the picker shows the BPM number only; a provisional tempo is faded and explained on hover.
+  const provisional = choices.filter({ hasText: "Public missing BPM" }).locator("[data-tempo-origin='PRACTICE_INITIAL']");
+  await expect(provisional).toHaveText("120 BPM");
+  await expect(provisional).toHaveAttribute("title", "BPMが保存されていないため、120 BPM で始めます");
+  // VL-15: the short reason sits beside the disabled entry (the full sentence stays in its tooltip).
+  await expect(page.getByTestId("voicing-loop-progression-row").filter({ hasText: "Public capacity case" })).toContainText("256");
   await page.screenshot({ path: ".local-evaluation/vl07/selector.png", fullPage: true });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   await assertNoHorizontalOverflow(page);

@@ -182,9 +182,9 @@ UndoはUI上で削除を遅延commitするが、最終commit時のデータ変�
 2026-07-16 12:39 JSTに次を再生成した。
 
 ```text
-D:\dev\Loop Vault\src-tauri\target\release\loop-vault.exe
-D:\dev\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
-D:\dev\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
+<作業フォルダ>\Loop Vault\src-tauri\target\release\loop-vault.exe
+<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
+<作業フォルダ>\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
 ```
 
 サイズ:

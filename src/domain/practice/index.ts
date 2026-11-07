@@ -6,5 +6,4 @@ export * from "./cleanRound";
 export * from "./sessionMachine";
 export * from "./progressionFingerprint";
 export * from "./practiceProgress";
-export * from "./recommendation";
 

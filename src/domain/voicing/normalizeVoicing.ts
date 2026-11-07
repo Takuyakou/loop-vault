@@ -13,6 +13,7 @@ export function normalizedChordKey(chord: ChordSymbol): string {
     tensions || "-",
     chord.bass === undefined ? "-" : normalizePitchClass(chord.bass),
     ...(chord.omissions?.length ? [chord.omissions.slice().sort().join(",")] : []),
+    ...(chord.altered ? ["alt"] : []),
   ].join(":");
 }
 

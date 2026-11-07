@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { LiveMidiWindowRoot } from "./components/LiveMidiWindowRoot";
 import "./styles.css";
+import {installP12Fixture} from "./testing/p12DojoFixture";
+import {installPreviewFadeLab} from "./testing/previewFadeLab";
+if(import.meta.env.VITE_P527_E2E_FIXTURE === "1"){installP12Fixture();installPreviewFadeLab();}
 
 const isLiveMidiWindow = new URLSearchParams(window.location.search).get("window") === "live-midi";
 // P8.9 component gallery: `?gallery` in development builds and the p89:screens build

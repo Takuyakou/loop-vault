@@ -111,6 +111,7 @@ export function resetAllEditableChords(editable: EditableProgression): EditableP
 
 export function chordsEqual(left: ChordSymbol, right: ChordSymbol): boolean {
   return left.root === right.root
+    && left.altered === right.altered
     && left.quality === right.quality
     && left.bass === right.bass
     && left.tensions.length === right.tensions.length

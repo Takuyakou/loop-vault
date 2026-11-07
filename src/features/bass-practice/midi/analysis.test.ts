@@ -1,0 +1,12 @@
+import { describe, expect, test } from "vitest";
+import { compareBassNotes, estimateBassPitch, extractPlayedBass } from "./analysis";
+import { emptyMidiBassLibrary } from "./model";
+const settings={...emptyMidiBassLibrary().settings,autoLatencyCorrection:false};
+describe("post-record bass analysis",()=>{
+ test("recognizes four/five-string fundamentals without target-guided pitch",()=>{for(const pitch of [23,24,28,33,38,43,55,64]){const frame=Float32Array.from({length:2048},(_,i)=>.2*Math.sin(2*Math.PI*440*2**((pitch-69)/12)*i/48000));expect(estimateBassPitch(frame,48000)).toBe(pitch);}});
+ test("silence and clipping never create a graded attempt",()=>{expect(()=>extractPlayedBass(new Float32Array(48000),48000)).toThrow("音が入っていません");expect(()=>extractPlayedBass(new Float32Array(48000).fill(1),48000)).toThrow("音が割れています");});
+ test("one-to-one pairing covers pitch, early/late, missing and extra",()=>{const target=[28,33,38,43,40].map((pitch,i)=>({pitch,startBeat:i,durationBeats:.5,velocity:.8}));const played=[{pitch:28,onsetMs:0,offsetMs:100},{pitch:34,onsetMs:500,offsetMs:600},{pitch:38,onsetMs:900,offsetMs:1000},{pitch:43,onsetMs:1600,offsetMs:1700},{pitch:50,onsetMs:2400,offsetMs:2450}];const result=compareBassNotes(target,120,played,settings);expect(result.marks.map(m=>m.kind)).toEqual(["ok","pitch","early","late","miss"]);expect(result.extras).toHaveLength(1);expect(result.counts).toEqual({correct:1,wrongPitch:1,timing:2,missed:1,extra:1,total:5});});
+ test("device offset and octave allowance are explicit, bounded settings",()=>{const target=[28,33,38].map((pitch,i)=>({pitch,startBeat:i,durationBeats:.5,velocity:.8}));const played=target.map(n=>({pitch:n.pitch+12,onsetMs:n.startBeat*500+280,offsetMs:n.startBeat*500+400}));const result=compareBassNotes(target,120,played,{...settings,autoLatencyCorrection:true},40);expect(result.counts.correct).toBe(3);expect(result.latencyCorrectionMs).toBe(-240);expect(compareBassNotes(target,120,played,{...settings,octaveCountsAsCorrect:false},280).counts.wrongPitch).toBe(3);});
+});
+
+test("a short unstable attack does not invent a second note or move the sustained note onset",()=>{for(const prefixMs of [10,15,20]){const rate=48000,pcm=new Float32Array(rate/2);for(let i=0;i<rate*.3;i++){const pitch=i<rate*prefixMs/1000?25:33;pcm[i]=.25*Math.sin(2*Math.PI*440*2**((pitch-69)/12)*i/rate);}const played=extractPlayedBass(pcm,rate);expect(played).toHaveLength(1);expect(played[0].pitch).toBe(33);expect(played[0].onsetMs).toBe(0);}});

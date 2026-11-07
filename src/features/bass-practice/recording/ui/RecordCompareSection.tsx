@@ -1,5 +1,8 @@
+import { EchoRail } from "../../ui/EchoPracticeFrame";
+import type { RecordingTake } from "../application/ports";
+import type { MutableRefObject } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "../../../../components/ui";
+import { Button, Select } from "../../../../components/ui";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
@@ -14,14 +17,18 @@ import type { PersistentRecordingTakeRepository } from "../application/recording
  * additive and opt-in: it renders only when the feature flag is on, does nothing
  * (beyond a compact opt-in) until the user chooses to record, and requests
  * microphone permission only on enable — so the initial practice screen is
- * unchanged. It is a mirror for self-review: no scoring, accuracy, or analysis.
+ * unchanged. Legacy modes remain a mirror for self-review with no analysis. MIDI bass
+ * alone can observe an explicitly completed take for local post-record feedback.
  *
  * Target and My Take never play at once, and reaching Review without hearing My
  * Take forces an explicit hear-or-skip choice (contract 01).
  */
 
+export interface MidiRecordingCommands { start(): void; stop(): void; playTake(): void; playOverlay(): void; keep(): void; }
+
 export interface RecordCompareSectionProps {
-  readonly mode: "degree" | "rhythm" | "bassline" | "root-motion";
+  readonly midiRecording?: { statusText?: string; durationMs: number; startOffsetMs?: () => number; commands: MutableRefObject<MidiRecordingCommands | null>; onCompleted: (take: RecordingTake) => void; onCanceled: () => void; onCountIn?: () => void; };
+  readonly mode: "degree" | "rhythm" | "bassline" | "root-motion" | "midi-bassline";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
   /** Practice session id recorded in kept-take metadata (non-identifying). */
@@ -77,6 +84,7 @@ const RECORD_COMPARE_COPY = {
 
 export function RecordCompareSection({
   mode,
+  midiRecording,
   resetKey,
   practiceSessionId,
   targetPlayer,
@@ -96,17 +104,21 @@ export function RecordCompareSection({
   isTypeSupported,
 }: RecordCompareSectionProps) {
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
-  const copy = RECORD_COMPARE_COPY.ja;
+  const copy = mode === "midi-bassline" ? { ...RECORD_COMPARE_COPY.ja, description:"この練習だけ、録音が終わってから音の高さとタイミングを端末内で確かめます。録音は「残す」を押すまで保存しません。", privacy:"ローカルのみ・クラウド送信なし。録音後の判定は目安です。", start:"録って弾く", retake:"もう一度録る", keep:"残す" } : RECORD_COMPARE_COPY.ja;
   const [optedIn, setOptedIn] = useState(false);
   const [listenBackSkipped, setListenBackSkipped] = useState(false);
   const [preparingRecording, setPreparingRecordingState] = useState(false);
   const [channel, setChannel] = useRecordChannel();
+  const [midiRetryGeneration, setMidiRetryGeneration] = useState(0);
+  const midiRetryPending = useRef(false);
   const session = useRecordCompareSession({
     controllerFactory: controller ? () => controller : undefined,
     isTypeSupported,
-    resetKey,
+    resetKey: mode === "midi-bassline" ? `${resetKey ?? mode}:retry:${midiRetryGeneration}` : resetKey,
   });
   const sessionStatus = session.state?.status ?? "idle";
+  // A new interval owns a fresh idle controller, not the preceding opt-in.
+  useEffect(() => { if (mode === "midi-bassline") setOptedIn(false); }, [mode, resetKey]);
   // Push the shared channel into the controller whenever it can accept it, so
   // Practice Settings and the panel stay in sync without racing live capture.
   useEffect(() => {
@@ -118,7 +130,12 @@ export function RecordCompareSection({
     // session delegates to the live controller; only channel/status drive this.
   }, [channel, sessionStatus]);
   const playerRef = useRef<TakePlayer>(takePlayer ?? new BrowserTakePlayer());
+  const overlayGeneration = useRef(0);
+  const enablingRef = useRef(false);
   const activePlaybackRef = useRef<PlaybackHandle | null>(null);
+  const midiTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const midiRef = useRef(midiRecording); midiRef.current = midiRecording;
+  const [inputLevel, setInputLevel] = useState(0);
   const countInTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const onRecordingStopRef = useRef(onRecordingStop);
   const onRecordingActivityRef = useRef(onRecordingActivityChange);
@@ -132,6 +149,7 @@ export function RecordCompareSection({
   useEffect(() => { onUnkeptTakeRef.current = onUnkeptTakeChange; }, [onUnkeptTakeChange]);
 
   const stopPlayback = () => {
+    overlayGeneration.current += 1;
     activePlaybackRef.current?.stop();
     activePlaybackRef.current = null;
   };
@@ -139,6 +157,7 @@ export function RecordCompareSection({
     try { onPlaybackStart?.(); } catch { /* An owning surface cannot break Record & Compare playback. */ }
   };
   const clearCountIn = () => {
+    if (midiTimerRef.current !== undefined) { clearTimeout(midiTimerRef.current); midiTimerRef.current = undefined; }
     if (countInTimerRef.current !== undefined) {
       clearTimeout(countInTimerRef.current);
       countInTimerRef.current = undefined;
@@ -185,47 +204,49 @@ export function RecordCompareSection({
     setUnkeptTake(hasUnkeptTake);
   }, [session, sessionStatus]);
 
-  if (!enabled) return null;
-
+  useEffect(() => {
+    if (mode !== "midi-bassline" || sessionStatus !== "recording") { setInputLevel(0); return; }
+    const timer = setInterval(() => setInputLevel(session.inputLevel()), 80); return () => clearInterval(timer);
+  }, [mode, sessionStatus]);
+  useEffect(() => {
+    if (!midiRecording || !enabled) return;
+    midiRecording.commands.current = {
+      start: () => { if (controlsLocked || preparingRecordingRef.current || enablingRef.current || recordStartDisabledReason) return;
+        if (mode === "midi-bassline" && ["discarded", "error", "permission-denied", "device-missing"].includes(sessionStatus)) {
+          // Keep terminal status visible until the user retries, then recreate
+          // through the existing hook lifecycle and reuse the first-start path.
+          if (midiRetryPending.current) return;
+          setOptedIn(false); midiRetryPending.current = true;
+          setMidiRetryGeneration(generation => generation + 1); return;
+        }
+        if (status === "recorded" || status === "saved") session.retake(); if (!optedIn) { setOptedIn(true); enablingRef.current = true; void session.enable().then(beginRecordingFlow).catch(() => undefined).finally(() => { enablingRef.current = false; }); } else if (sessionStatus === "ready" || sessionStatus === "recorded" || sessionStatus === "saved") beginRecordingFlow(); },
+      stop: () => { cancelCountIn(); stopRecording(); midiRef.current?.onCanceled(); },
+      playTake: hearTake,
+      playOverlay: () => {
+        const take = session.currentTake(); if (!take || !targetPlayer || controlsLocked) return;
+        notifyPlaybackStart(); stopPlayback(); const generation = overlayGeneration.current;
+        void (async () => {
+          if (targetPlayer.prepare && !(await targetPlayer.prepare())) return;
+          if (generation !== overlayGeneration.current) return;
+          const target = targetPlayer.play(() => undefined);
+          const own = playerRef.current.play(take, () => { target.stop(); session.playbackEnded(); }, target.audioDelayMs);
+          session.playTake(); activePlaybackRef.current = { stop() { own.stop(); target.stop(); } };
+        })().catch(() => { if (generation === overlayGeneration.current) session.playbackEnded(); });
+      },
+      keep: () => { void session.keep({ practiceSessionId:practiceSessionId??"midi-bass", exerciseSignature:resetKey??"midi-bass",mode,inputDeviceName:"Input",playedBackBeforeReview:session.state?.heardTake??false }).catch(()=>undefined); },
+    };
+    return () => { midiRecording.commands.current = null; };
+  });
   const status = session.state?.status ?? "idle";
   const controlsLocked = preparingRecording || isLiveCaptureStatus(status);
+  useEffect(() => {
+    if (mode === "midi-bassline" && midiRetryPending.current && sessionStatus === "idle") {
+      midiRetryPending.current = false;
+      midiRecording?.commands.current?.start();
+    }
+  }, [mode, midiRecording, sessionStatus]);
 
-
-  if (!optedIn) {
-    return (
-      <section
-        aria-label="Record & Compare"
-        data-testid="record-compare"
-        data-record-state="off"
-        className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3 text-sm"
-      >
-        <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
-        <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
-          {copy.description}
-        </p>
-        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-          {copy.headphones}
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Button
-            variant="primary"
-            size="sm"
-            data-testid="record-compare-enable"
-            onClick={() => {
-              setOptedIn(true);
-              void session.enable().catch(() => undefined);
-            }}
-          >
-            {copy.enable}
-          </Button>
-          <span className="self-center text-xs text-[var(--lv-text-muted)]">
-            {copy.optional}
-          </span>
-        </div>
-        <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
-      </section>
-    );
-  }
+  if (!enabled) return null;
 
   const beginRecordingFlow = () => {
     setListenBackSkipped(false);
@@ -250,6 +271,7 @@ export function RecordCompareSection({
       }
       try {
         session.startCountIn();
+        midiRef.current?.onCountIn?.();
         setPreparingRecording(false);
       } catch {
         stopRecordingAccompaniment();
@@ -279,7 +301,14 @@ export function RecordCompareSection({
             stopRecordingAccompaniment();
             return;
           }
-          if (recordingGenerationRef.current !== generation) stopRecordingAccompaniment();
+          if (recordingGenerationRef.current !== generation) { stopRecordingAccompaniment(); return; }
+          const midi = midiRef.current;
+          if (mode === "midi-bassline" && midi) midiTimerRef.current = setTimeout(() => {
+            midiTimerRef.current = undefined;
+            if (recordingGenerationRef.current !== generation) return;
+            stopRecordingAccompaniment();
+            void session.stop().then(() => { if (recordingGenerationRef.current !== generation) return; const take = session.currentTake(); if (take) midiRef.current?.onCompleted(take); }).catch(() => setRecordingActivity(false));
+          }, midi.durationMs + (midi.startOffsetMs?.() ?? 0));
         })();
       };
       if (countInMs > 0) {
@@ -306,6 +335,7 @@ export function RecordCompareSection({
   };
 
   const stopRecording = () => {
+    if (mode === "midi-bassline") midiRef.current?.onCanceled();
     recordingGenerationRef.current += 1;
     clearCountIn();
     stopRecordingAccompaniment();
@@ -328,10 +358,10 @@ export function RecordCompareSection({
     notifyPlaybackStart();
     stopPlayback();
     session.playTarget();
-    activePlaybackRef.current = targetPlayer.play(() => {
-      activePlaybackRef.current = null;
-      session.playbackEnded();
-    });
+    const play = () => { activePlaybackRef.current = targetPlayer.play(() => {
+      activePlaybackRef.current = null; session.playbackEnded();
+    }); };
+    if (targetPlayer.prepare) { const generation=overlayGeneration.current; void targetPlayer.prepare().then(ready=>{if(ready&&generation===overlayGeneration.current)play();}).catch(()=>session.playbackEnded()); } else play();
   };
 
   const hearTake = () => {
@@ -364,12 +394,65 @@ export function RecordCompareSection({
     session.discard();
   };
 
+  // MIDI presents a recording-status rail. Capture is still enabled lazily by
+  // the existing bottom-bar command, so rendering never requests a microphone.
+  if (mode === "midi-bassline") {
+    return <EchoRail><section aria-label="録音" data-testid="record-compare" data-record-mode={mode} data-record-state={preparingRecording ? "preparing-accompaniment" : status} className="bass-midi-recording-rail rounded-[var(--lv-radius-md)] border border-[var(--lv-accent)] p-3 text-sm space-y-2">
+      <h3 className="font-semibold">録音</h3>
+      <label className="block text-xs">{copy.inputChannel}<Select aria-label={copy.inputChannel} wrapperClassName="mt-1 w-full" className="w-full" value={channel} disabled={controlsLocked} onChange={event=>setChannel(event.target.value as ChannelMode)}>{CHANNELS.map(option=><option key={option.value} value={option.value}>{option.label.ja}</option>)}</Select></label>
+      <label htmlFor="bass-input-meter" className="block text-xs">入力レベル</label><meter id="bass-input-meter" min={0} max={1} value={Math.min(1,inputLevel*4)} className="w-full" />
+      <p aria-live="polite" data-testid="record-compare-status" className="text-xs text-[var(--lv-text-muted)]">{midiRecording?.statusText ?? (status==="idle"?"待機中":status==="recorded"?"録音済み・まだ保存していません":statusLabel(status))}</p>
+      {status==="recorded"?<div className="flex gap-2"><Button variant="primary" size="sm" data-testid="record-keep" onClick={()=>void session.keep({practiceSessionId:practiceSessionId??"practice-session",exerciseSignature:resetKey??`${mode}-exercise`,mode,inputDeviceName:"Input",playedBackBeforeReview:session.state?.heardTake??false}).then(reference=>{if(reference)onTakeKept?.(reference);}).catch(()=>undefined)}>残す</Button><Button size="sm" data-testid="record-discard" onClick={discard}>破棄</Button></div>:null}
+      {status==="permission-denied"?<p role="alert">{copy.permissionDenied}</p>:status==="error"?<p role="alert">{copy.recordingError}</p>:null}
+      {session.state?.saveFailed?<p role="alert">{copy.saveFailed}</p>:null}
+      {recordStartDisabledReason?<p className="text-xs text-[var(--lv-warning)]">{recordStartDisabledReason}</p>:null}
+      <p className="text-xs text-[var(--lv-text-muted)]">{status==="recorded"||status==="saved"?"『残す』を押した録音だけ、端末に保存します。":"伴奏を鳴らして録る時は、ヘッドホンを使ってください。録音は端末の中だけで判定し、『残す』を押した時だけ保存します。"}</p>
+      <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
+    </section></EchoRail>;
+  }
+
+  if (!optedIn) {
+    return (
+      <EchoRail><section
+        aria-label="Record & Compare"
+        data-testid="record-compare"
+        data-record-state="off"
+        className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3 text-sm"
+      >
+        <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
+        <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
+          {copy.description}
+        </p>
+        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+          {copy.headphones}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            data-testid="record-compare-enable"
+            onClick={() => {
+              setOptedIn(true);
+              void session.enable().catch(() => undefined);
+            }}
+          >
+            {copy.enable}
+          </Button>
+          <span className="self-center text-xs text-[var(--lv-text-muted)]">
+            {copy.optional}
+          </span>
+        </div>
+        <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
+      </section></EchoRail>
+    );
+  }
+
   const needsListenChoice = status === "recorded"
     && !(session.state?.heardTake ?? false)
     && !listenBackSkipped;
 
   return (
-    <section
+    <EchoRail><section
       aria-label="Record & Compare"
       data-testid="record-compare"
       data-record-state={preparingRecording ? "preparing-accompaniment" : status}
@@ -399,9 +482,9 @@ export function RecordCompareSection({
 
       <label className="mt-2 block text-xs text-[var(--lv-text-secondary)]">
         {copy.inputChannel}
-        <select
+        <Select
           aria-label={copy.inputChannel}
-          className="lv-input mt-1 w-full max-w-xs"
+          className="mt-1 w-full max-w-xs"
           value={channel}
           disabled={controlsLocked}
           onChange={(event) => setChannel(event.target.value as ChannelMode)}
@@ -409,7 +492,7 @@ export function RecordCompareSection({
           {CHANNELS.map((channel) => (
             <option key={channel.value} value={channel.value}>{channel.label.ja}</option>
           ))}
-        </select>
+        </Select>
       </label>
 
       {status === "counting-in" ? (
@@ -457,7 +540,7 @@ export function RecordCompareSection({
       </p>
 
       <RetainedTakesPanel repository={retainedTakeRepository} enabledOverride={enabled} />
-    </section>
+    </section></EchoRail>
   );
 }
 

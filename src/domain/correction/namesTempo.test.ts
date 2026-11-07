@@ -23,18 +23,71 @@ describe("names follow the notes (P10.1 §11.2)", () => {
     expect(card(out, "card-0").name.label).toMatch(/^C7/);
   });
 
-  it("chosen: turns automatic and follows the notes after a note edit, a boundary, a merge and a split", () => {
-    const chosen = (model: CorrectionModel) => chooseName(model, "card-0", chord("Em"), "chosen").model;
-    const afterNote = addNote(chosen(fresh()), "card-0", 70).model;
+  it("chosen: turns automatic and follows the notes after a note edit", () => {
+    const chosen = chooseName(fresh(), "card-0", chord("Em"), "chosen").model;
+    const afterNote = addNote(chosen, "card-0", 70).model;
     expect(card(afterNote, "card-0")).toMatchObject({ nameSource: "auto" });
     expect(card(afterNote, "card-0").name.label).not.toBe("Em");
-    const afterBoundary = moveBoundary(chosen(fresh()), "card-0", 3).model;
-    expect(card(afterBoundary, "card-0")).toMatchObject({ nameSource: "auto" });
-    expect(card(afterBoundary, "card-0").name.label).not.toBe("Em");
-    const afterSplit = splitCard(chosen(fresh()), "card-0").model;
-    expect(afterSplit.cards.slice(0, 2).every((entry) => entry.nameSource === "auto" && entry.name.label !== "Em")).toBe(true);
-    const afterMerge = mergeWithNext(chosen(fresh()), "card-0").model; // C + Am together
-    expect(card(afterMerge, "card-0")).toMatchObject({ nameSource: "auto" });
+  });
+
+  // P5.26.1: a span edit (boundary, merge, split) changes the notes of the cards, never their names.
+  it("a span edit keeps the names: making a card longer does not turn it into another chord", () => {
+    const before = fresh();
+    const longer = moveBoundary(before, "card-0", 5); // card-0 grows from 4 to 5 beats, card-1 shrinks
+    expect(longer.changed).toBe(true);
+    expect(card(longer.model, "card-0").duration).toBeGreaterThan(card(before, "card-0").duration);
+    for (const id of ["card-0", "card-1"]) {
+      expect(card(longer.model, id).name).toEqual(card(before, id).name);
+      expect(card(longer.model, id).nameSource).toBe(card(before, id).nameSource);
+    }
+  });
+
+  it("a span edit keeps a chosen or typed name and its source", () => {
+    for (const source of ["chosen", "typed"] as const) {
+      const named = chooseName(fresh(), "card-0", chord("Em"), source).model;
+      for (const edited of [moveBoundary(named, "card-0", 5).model, moveBoundary(named, "card-0", 3).model]) {
+        expect(card(edited, "card-0")).toMatchObject({ name: chord("Em"), nameSource: source });
+      }
+      const split = splitCard(named, "card-0").model;
+      expect(split.cards.slice(0, 2).every((entry) => entry.name.label === "Em" && entry.nameSource === source)).toBe(true);
+      const merged = mergeWithNext(named, "card-0").model;
+      expect(card(merged, "card-0")).toMatchObject({ name: chord("Em"), nameSource: source });
+    }
+  });
+
+  it("a span edit only offers what the notes read as; taking it is a separate step", () => {
+    const named = chooseName(fresh(), "card-0", chord("Em"), "chosen").model;
+    const edited = moveBoundary(named, "card-0", 5).model;
+    const suggested = card(edited, "card-0").suggestedName;
+    expect(card(edited, "card-0").name).toEqual(chord("Em"));
+    if (suggested) {
+      expect(suggested.label).not.toBe("Em");
+      const taken = chooseName(edited, "card-0", suggested, "auto").model;
+      expect(card(taken, "card-0")).toMatchObject({ name: suggested, nameSource: "auto" });
+      expect(card(taken, "card-0").suggestedName).toBeUndefined();
+    }
+    // An automatic card that takes in the next card's notes keeps its name and is offered the new reading.
+    const plain = moveBoundary(fresh(), "card-0", 5).model;
+    expect(card(plain, "card-0").name).toEqual(card(fresh(), "card-0").name);
+    expect(card(plain, "card-0").suggestedName?.label).toBe("Am7");
+    // Nothing is offered while the notes still read as the name.
+    expect(card(moveBoundary(fresh(), "card-0", 3).model, "card-0").suggestedName).toBeUndefined();
+  });
+
+  it("a note edit after a span edit still renames an automatic name from the notes", () => {
+    const stretched = moveBoundary(fresh(), "card-0", 5).model;
+    const edited = addNote(stretched, "card-0", 70).model;
+    expect(card(edited, "card-0")).toMatchObject({ nameSource: "auto" });
+    expect(card(edited, "card-0").name.label).not.toBe(card(fresh(), "card-0").name.label);
+    expect(card(edited, "card-0").suggestedName).toBeUndefined();
+  });
+
+  it("Ctrl+Z after a span edit brings the span back and the name was never different", () => {
+    const start = startHistory(fresh());
+    const edited = moveBoundary(start.present, "card-0", 5);
+    const next = commitEdit(start, edited);
+    expect(undo(next).present.cards.map((entry) => [entry.id, entry.duration, entry.name.label]))
+      .toEqual(start.present.cards.map((entry) => [entry.id, entry.duration, entry.name.label]));
   });
 
   it("typed: stays through a note edit, a split and a merge, with the notes' reading offered", () => {

@@ -18,6 +18,7 @@ export interface NormalizedChordIdentity {
   omissions?: ("3" | "5")[];
   bassPitchClass?: number;
   noChord?: boolean;
+  altered?: true;
 }
 
 export type ChordTriad =
@@ -81,6 +82,7 @@ export function normalizeChordSymbol(symbol: ChordSymbol): NormalizedChordIdenti
     ...(structure.seventh ? { seventh: structure.seventh } : {}),
     extensions: [...extensions].sort((left, right) => left - right),
     alterations: [...alterations].sort(),
+    ...(symbol.altered ? { altered: true as const } : {}),
     ...(symbol.omissions?.length ? { omissions: [...symbol.omissions].sort() as ("3" | "5")[] } : {}),
     ...(bassPitchClass !== undefined && bassPitchClass !== rootPitchClass
       ? { bassPitchClass }
@@ -112,6 +114,7 @@ export function chordIdentityKey(identity: NormalizedChordIdentity): string {
     identity.alterations.join("."),
     identity.bassPitchClass ?? "-",
     ...(identity.omissions?.length ? [identity.omissions.join(".")] : []),
+    ...(identity.altered ? ["alt"] : []),
   ].join("|");
 }
 
