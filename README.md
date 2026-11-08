@@ -1,6 +1,8 @@
 # Loop Vault
 
-MIDI やコード進行を集めて保存し、鍵盤で弾けるようになるまで練習する Windows アプリです。
+コード進行を集めて保存し、聴いて直せる。聴いて弾ける。MIDI で取り出せる。
+
+コード進行を自分の語彙として残す 楽曲制作補助 Windows アプリです。
 
 **[Windows 版をダウンロード(最新版)](https://github.com/Takuyakou/loop-vault/releases/latest)** ・ [日本語](README.md) | [English](README.en.md)
 

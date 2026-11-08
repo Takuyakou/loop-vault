@@ -1,6 +1,8 @@
 # Loop Vault
 
-A Windows app that collects MIDI and chord progressions, stores them, and lets you practise them at the keyboard until you can play them.
+Collect chord progressions, keep them, and correct them by ear. Play them by ear. Export them as MIDI.
+
+A Windows app that helps you produce music by making chord progressions your own vocabulary.
 
 **[Download for Windows (latest)](https://github.com/Takuyakou/loop-vault/releases/latest)** · [日本語](README.md) | [English](README.en.md)
 
