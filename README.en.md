@@ -10,11 +10,9 @@ A Windows app that collects MIDI and chord progressions, stores them, and lets y
 
 ## What you can do
 
-| | |
-|---|---|
-| **Collect** | Import a MIDI file or type chord names, and get the progression plus the notes that actually sound. Fix mistakes on the spot while listening |
-| **Keep** | Save a progression to the Vault, find it by key, tag or chord name, and export it as MIDI for your DAW |
-| **Practise** | Loop a saved progression at the keyboard with fingerings (Voicing Loop), memorise chords and progressions (Chord Dojo), and practise the bass (Bass Practice) |
+- **Collect**: Import a MIDI file or type chord names, and get the progression plus the notes that actually sound. Fix mistakes on the spot while listening
+- **Keep**: Save a progression to the Vault, find it by key, tag or chord name, and export it as MIDI for your DAW
+- **Practise**: Loop a saved progression at the keyboard with fingerings (Voicing Loop), memorise chords and progressions (Chord Dojo), and practise the bass (Bass Practice)
 
 ## Getting started
 
