@@ -33,15 +33,32 @@ export function BpmScrubField({
   }>();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
+  const [roll, setRoll] = useState<"up" | "down" | undefined>();
+  const rollTimerRef = useRef<number | null>(null);
   const valueRef = useRef(value);
   valueRef.current = value;
 
-  function apply(next: number) {
+  useEffect(() => () => {
+    if (rollTimerRef.current !== null) window.clearTimeout(rollTimerRef.current);
+  }, []);
+
+  function triggerRoll(direction: "up" | "down") {
+    if (rollTimerRef.current !== null) window.clearTimeout(rollTimerRef.current);
+    setRoll(direction);
+    rollTimerRef.current = window.setTimeout(() => {
+      rollTimerRef.current = null;
+      setRoll(undefined);
+    }, 130);
+  }
+
+  function apply(next: number, animate = false) {
     if (disabled || !Number.isFinite(next)) return;
     const clamped = Math.max(30, Math.min(240, Math.round(next)));
     const gesture = gestureRef.current;
-    if (gesture ? clamped === gesture.lastValue : clamped === valueRef.current) return;
+    const prev = gesture ? gesture.lastValue : valueRef.current;
+    if (clamped === prev) return;
     if (gesture) gesture.lastValue = clamped;
+    if (animate) triggerRoll(clamped > prev ? "up" : "down");
     onChange(clamped);
   }
 
@@ -57,7 +74,7 @@ export function BpmScrubField({
     const wheel = (event: WheelEvent) => {
       if (disabled || !event.deltaY) return;
       event.preventDefault();
-      apply(valueRef.current + (event.deltaY < 0 ? 1 : -1));
+      apply(valueRef.current + (event.deltaY < 0 ? 1 : -1), true);
     };
     field.addEventListener("wheel", wheel, { passive: false });
     return () => field.removeEventListener("wheel", wheel);
@@ -88,7 +105,7 @@ export function BpmScrubField({
     event.preventDefault();
     const pixelsPerBpm = event.shiftKey ? 10 : 4;
     const multiplier = event.ctrlKey ? 5 : 1;
-    apply(gesture.startValue + Math.round(distance / pixelsPerBpm) * multiplier);
+    apply(gesture.startValue + Math.round(distance / pixelsPerBpm) * multiplier, true);
   }
 
   function endDrag(event: PointerEvent<HTMLDivElement>) {
@@ -128,6 +145,7 @@ export function BpmScrubField({
           ref={inputRef}
           id={idPrefix}
           data-testid={inputTestId}
+          data-roll={roll}
           disabled={disabled}
           aria-describedby={`${idPrefix}-drag-help`}
           className={`lv-field-control lv-bpm-input min-h-8 font-mono text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}

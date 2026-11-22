@@ -22,5 +22,5 @@
 [data-moment=correct] { box-shadow: 0 0 0 3px rgb(95 211 154 / 45%) !important; }
 [data-moment=miss] { box-shadow: 0 0 0 3px rgb(255 138 149 / 40%) !important; }
 @media (prefers-reduced-motion: no-preference) {
-  [data-moment] { transition: box-shadow 160ms ease-out; }
+  [data-moment] { transition: box-shadow var(--lv-motion-normal) var(--lv-ease-standard); }
 }

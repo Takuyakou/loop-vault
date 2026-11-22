@@ -106,9 +106,11 @@ test("役割の色: コード・ベース・メロディ・使わないが、凡
   await openApp(page);
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 4 }), "colors.mid");
   const summary = page.getByTestId("pre-analysis-summary");
-  await expect(summary).toContainText("コード:");
-  await expect(summary).toContainText("使わない:");
-  await expect(page.locator(".lv-pa-legend")).toContainText("メロディ");
+  // P23-12 A5: the legend and the counts are one row of chips in the play row now.
+  await expect(summary).toContainText("コード 1");
+  await expect(summary).toContainText("ベース ");
+  await expect(summary).toContainText("メロディ ");
+  await expect(summary).toContainText("使わない ");
 });
 
 /** One chord part, one file; `program` and the meter are what the tests below change. */
@@ -223,12 +225,13 @@ test("P15-04: 再生中は縦線が毎フレーム動き、画面もロールの
 
   await page.getByTestId("pre-analysis-playback-toggle").click();
   await expect(overlay).toHaveAttribute("data-sounding-count", "0");
-  await expect(page.getByTestId("pre-analysis-sounding")).toHaveText("");
+  // P23-31 P6 (form B): the line keeps the notes of the place it stopped at.
+  await expect(page.getByTestId("pre-analysis-sounding")).toHaveText(/^鳴っている音 [A-G]/);
   // The line stays where it stopped.
   expect(Number(await page.getByTestId("pre-analysis-piano-roll").getAttribute("data-playhead-beat"))).toBeGreaterThan(0);
 });
 
-test("P15-04: 再生中は色の凡例の場所に「鳴っている音」が出て（1440×900 で6音の和音が省略されない）、停止で凡例に戻る", async ({ page }) => {
+test("P15-04: 再生中も凡例（数の札）はそのままで、「鳴っている音」は下の行に出て（6音が省略されない）、停止でもその場所の音を出す", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   await loadMidiForPreAnalysis(
@@ -237,15 +240,16 @@ test("P15-04: 再生中は色の凡例の場所に「鳴っている音」が出
     "six-notes.mid",
   );
   await page.waitForTimeout(300);
-  const legend = page.locator(".lv-pa-legend");
+  // P23-31 P6: the names have their own line under the play row; the count chips stay in the play row.
+  const legend = page.getByTestId("pre-analysis-summary");
   const names = page.getByTestId("pre-analysis-sounding");
   await expect(legend).toBeVisible();
   const heightBefore = await page.locator(".lv-pa-transport").evaluate((element) => element.getBoundingClientRect().height);
 
   await page.getByTestId("pre-analysis-playback-toggle").click();
-  await expect(names).toHaveText("鳴っている音 C3 E3 G3 B3 D4 F4", { timeout: 5000 });
-  await expect(legend).toBeHidden();
-  // Not cut short, and the row has not grown.
+  await expect(names).toHaveText("鳴っている音 C3 ・ E3 ・ G3 ・ B3 ・ D4 ・ F4", { timeout: 5000 });
+  await expect(legend).toBeVisible();
+  // Not cut short, and the play row has not grown.
   const fit = await names.evaluate((element) => ({ cut: element.scrollWidth > element.clientWidth }));
   expect(fit.cut).toBe(false);
   expect(await page.locator(".lv-pa-transport").evaluate((element) => element.getBoundingClientRect().height)).toBe(heightBefore);
@@ -253,5 +257,5 @@ test("P15-04: 再生中は色の凡例の場所に「鳴っている音」が出
 
   await page.getByTestId("pre-analysis-playback-toggle").click();
   await expect(legend).toBeVisible();
-  await expect(names).toHaveText("");
+  await expect(names).toHaveText("鳴っている音 C3 ・ E3 ・ G3 ・ B3 ・ D4 ・ F4");
 });

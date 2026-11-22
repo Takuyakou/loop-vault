@@ -3,19 +3,19 @@
    :focus-visible ring in styles.css. */
 @layer components {
   .lv-button-neutral {
-    border: 1px solid var(--lv-border-strong);
-    border-radius: var(--lv-radius-sm);
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
     color: var(--lv-text-secondary);
   }
 
   .lv-button-neutral:hover {
-    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    border-color: var(--lv-accent);
     color: var(--lv-text);
   }
 
   .lv-button-state {
-    border: 1px solid var(--lv-border-strong);
-    border-radius: var(--lv-radius-sm);
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
     color: var(--lv-text-secondary);
   }
 
@@ -46,7 +46,7 @@
 
   /* Pressed feedback: a 1px sink, only while the button can act. */
   :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
-    transform: translateY(1px);
+    transform: scale(0.97);
   }
 
   .lv-tooltip-anchor {
@@ -61,11 +61,11 @@
     z-index: var(--lv-z-popover);
     max-width: 280px;
     width: max-content;
-    padding: 4px 8px;
-    border: 1px solid var(--lv-border-strong);
-    border-radius: 6px;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
     background: var(--lv-surface-overlay);
-    box-shadow: var(--lv-shadow-raised);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
     color: var(--lv-text);
     font-size: var(--lv-text-12);
     font-weight: 500;
@@ -93,23 +93,40 @@
   }
 
   .lv-segmented {
+    position: relative;
     display: inline-flex;
     gap: 2px;
     padding: 3px;
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-sm);
-    background: var(--lv-bg-subtle);
+    border: 1px solid transparent;
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-surface);
+  }
+
+  .lv-segment-pill {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 0;
+    z-index: 0;
+    border-radius: var(--lv-radius-tag);
+    background: var(--lv-accent-soft);
+    pointer-events: none;
+    transition:
+      transform var(--lv-motion-normal) var(--lv-ease-standard),
+      width var(--lv-motion-normal) var(--lv-ease-standard);
   }
 
   .lv-segment {
+    position: relative;
+    z-index: 1;
     min-height: 28px;
     padding: 0 10px;
-    border-radius: 6px;
+    border-radius: var(--lv-radius-tag);
     color: var(--lv-text-muted);
     font-size: var(--lv-text-12);
     transition:
-      background-color var(--lv-motion-fast) var(--lv-ease-standard),
-      color var(--lv-motion-fast) var(--lv-ease-standard);
+      background-color var(--lv-motion-normal) var(--lv-ease-standard),
+      color var(--lv-motion-normal) var(--lv-ease-standard);
   }
 
   .lv-segment:hover {
@@ -124,6 +141,10 @@
     background: var(--lv-accent-soft);
     color: #7fe8da;
     font-weight: 600;
+  }
+
+  .lv-segmented[data-has-pill="true"] .lv-segment[aria-checked="true"] {
+    background: transparent;
   }
 
   .lv-choice[aria-pressed="true"],
@@ -145,9 +166,9 @@
   .lv-select select {
     min-height: var(--lv-control-sm);
     padding: 0 32px 0 10px;
-    border: 1px solid var(--lv-border-strong);
-    border-radius: var(--lv-radius-sm);
-    background: var(--lv-bg-subtle);
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
     color: var(--lv-text);
     font-size: var(--lv-text-13);
     appearance: none;
@@ -155,7 +176,7 @@
   }
 
   .lv-select select:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    border-color: var(--lv-accent);
   }
 
   .lv-select select:disabled {
@@ -234,16 +255,188 @@
     z-index: var(--lv-z-popover);
     min-width: 200px;
     padding: 12px;
-    border: 1px solid var(--lv-border-strong);
+    border: 1px solid transparent;
     border-radius: var(--lv-radius-md);
     background: var(--lv-surface-raised);
-    box-shadow: var(--lv-shadow-overlay);
+    box-shadow: var(--lv-float-shadow);
   }
 
   .lv-empty-state {
     border: 1px dashed var(--lv-border-strong);
     border-radius: var(--lv-radius-md);
     background: color-mix(in srgb, var(--lv-surface) 60%, transparent);
+  }
+
+  .lv-switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: var(--lv-radius-pill);
+    background: #1f2f42;
+    transition: background-color var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-switch::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #a9b9cb;
+    content: "";
+    transition:
+      background-color var(--lv-motion-normal) var(--lv-ease-standard),
+      transform var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-switch[aria-checked="true"] {
+    background: #1b6a62;
+  }
+
+  .lv-switch[aria-checked="true"]::after {
+    background: var(--lv-accent);
+    transform: translateX(18px);
+  }
+
+  .lv-switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .lv-kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px currentColor;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 1.4;
+    opacity: 0.55;
+    white-space: nowrap;
+  }
+
+  .lv-playing-mark {
+    display: inline-flex;
+    height: 12px;
+    align-items: flex-end;
+    gap: 2px;
+    color: var(--lv-accent);
+  }
+
+  .lv-playing-mark > i {
+    width: 3px;
+    height: 4px;
+    border-radius: 1px;
+    background: currentColor;
+    animation: lvPlayingMark 600ms ease-in-out infinite;
+  }
+
+  .lv-playing-mark > i:nth-child(2) { animation-duration: 750ms; animation-delay: -200ms; }
+  .lv-playing-mark > i:nth-child(3) { animation-duration: 900ms; animation-delay: -420ms; }
+
+  /* P23-58 A1: copy button icon swap (✓ scales in for 1.1s). */
+  .lv-copy-icon {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  [data-copied="true"] .lv-copy-icon-ok {
+    color: var(--lv-accent);
+    animation: lvCopyCheck 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* P23-58 A2: favorite heart pop + 6 radial dots on add only. */
+  .lv-fav-btn {
+    position: relative;
+    overflow: visible;
+  }
+
+  .lv-fav-btn[data-pop="true"] > svg {
+    animation: lvHeartPop 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .lv-fav-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--lv-accent);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .lv-fav-btn[data-pop="true"] > .lv-fav-dot {
+    animation: lvHeartDot 260ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  /* P23-58 A3: inline save button state transitions (idle | busy | done). */
+  [data-save-state] {
+    min-width: 136px;
+    justify-content: center;
+    transition:
+      background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  [data-save-state="busy"] {
+    background: #2a5b57 !important;
+    color: #cfeee9 !important;
+  }
+
+  [data-save-state="done"] {
+    background: #0f2529 !important;
+    color: var(--lv-accent) !important;
+    box-shadow: inset 0 0 0 1px var(--lv-accent);
+  }
+
+  .lv-save-spin {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: lvSaveSpin 700ms linear infinite;
+  }
+
+  /* P23-58 A7: BPM scrub/wheel value roll. */
+  [data-roll="up"] {
+    animation: lvRollUp 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  [data-roll="down"] {
+    animation: lvRollDown 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* P23-58 A10: Chord Dojo home stat digit roll when value changed in session. */
+  [data-rolled="true"] {
+    display: inline-block;
+    animation: lvStatRoll 300ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .lv-chordname {
+    white-space: nowrap;
+  }
+
+  .lv-chordname-acc {
+    position: relative;
+    top: -0.12em;
+    margin: 0 0.02em;
+    font-size: 0.82em;
+    font-weight: 600;
+    line-height: 0;
+  }
+
+  .lv-chordname-kind {
+    margin-left: 1px;
+    font-size: 0.8em;
+    font-weight: 600;
+    opacity: 0.92;
   }
 }
 
@@ -254,7 +447,7 @@
     right: 16px;
     z-index: var(--lv-z-toast);
     display: flex;
-    width: min(340px, calc(100vw - 32px));
+    width: min(360px, calc(100vw - 32px));
     flex-direction: column;
     gap: 8px;
     pointer-events: none;
@@ -281,13 +474,13 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 9px;
     overflow: hidden;
-    padding: 12px 12px 12px 14px;
+    padding: 9px 8px 9px 12px;
     border: 1px solid var(--lv-toast-border);
     border-radius: var(--lv-radius-md);
     background: var(--lv-toast-surface);
-    box-shadow: inset 3px 0 0 var(--lv-toast-tone), var(--lv-toast-shadow);
+    box-shadow: var(--lv-toast-shadow);
     pointer-events: auto;
     animation: lvToastIn var(--lv-motion-normal) var(--lv-ease-standard);
   }
@@ -298,8 +491,8 @@
 
   .lv-toast-icon {
     display: flex;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
@@ -352,8 +545,8 @@
     bottom: 0;
     left: 0;
     height: 2px;
-    background: var(--lv-toast-tone);
-    opacity: 0.55;
+    background: var(--lv-text-muted);
+    opacity: 0.45;
     transform-origin: left center;
     animation: lvToastTime linear forwards;
   }
@@ -363,37 +556,94 @@
   }
 }
 
+@keyframes lvPlayingMark {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+
+@keyframes lvCopyCheck {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lvHeartPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+@keyframes lvHeartDot {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--lv-dot-a, 0deg)) translateY(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--lv-dot-a, 0deg)) translateY(-15px); }
+}
+
+@keyframes lvSaveSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes lvRollUp {
+  from { opacity: 0.2; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lvRollDown {
+  from { opacity: 0.2; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lvStatRoll {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes lvToastIn {
   from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
 
 @keyframes lvToastTime {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .lv-toast {
-    animation: none;
-  }
+@layer components {
+  @media (prefers-reduced-motion: reduce) {
+    .lv-playing-mark > i { height: 6px; animation: none; }
+    .lv-playing-mark > i:nth-child(2) { height: 12px; }
+    .lv-playing-mark > i:nth-child(3) { height: 8px; }
 
-  .lv-toast-bar {
-    display: none;
-  }
+    .lv-toast,
+    [data-copied="true"] .lv-copy-icon-ok,
+    .lv-fav-btn[data-pop="true"] > svg,
+    .lv-fav-btn[data-pop="true"] > .lv-fav-dot,
+    .lv-save-spin,
+    [data-roll="up"],
+    [data-roll="down"],
+    [data-rolled="true"] {
+      animation: none;
+    }
 
-  .lv-button-neutral,
-  .lv-button-state,
-  .lv-tooltip,
-  .lv-segment,
-  .lv-select select,
-  .lv-chip,
-  .lv-progress-fill {
-    transition: none;
-  }
+    .lv-toast-bar {
+      display: none;
+    }
 
-  :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
-    transform: none;
+    .lv-button-neutral,
+    .lv-button-state,
+    .lv-tooltip,
+    .lv-segment,
+    .lv-segment-pill,
+    .lv-switch,
+    .lv-switch::after,
+    .lv-select select,
+    .lv-chip,
+    .lv-progress-fill,
+    [data-save-state] {
+      transition: none;
+    }
+
+    :is(.lv-button-primary, .lv-button-secondary, .lv-button-neutral, .lv-button-ghost, .lv-button-state, .lv-button-danger):active:not(:disabled) {
+      transform: none;
+    }
   }
 }
 
@@ -402,3 +652,61 @@
    only the mark shows. */
 .lv-chord-card-review { flex-wrap: wrap; height: 16px; overflow: hidden; }
 .lv-chord-card-review-text { flex: 1 1 4em; min-width: 4em; line-height: 16px; }
+
+/* P23-59 / P23-59-fix-1: on the workspace screens (the save form on the right), the toast stack and the
+   analysis card sit at the bottom centre of the content column, above the shortcut strip, clear of the
+   name field and the save buttons. The column is worked out in CSS (no measuring): the inspector's width
+   is `--lv-cw-insp` (340 px, 300 px under 1440, and the form drops below the editor under 1220). */
+:root:has(.lv-cw-save) { --lv-toast-offset-bottom: 76px; --lv-toast-insp: 340px; }
+@media (max-width: 1439px) { :root:has(.lv-cw-save) { --lv-toast-insp: 300px; } }
+@media (max-width: 1219px) { :root:has(.lv-cw-save) { --lv-toast-insp: 0px; } }
+:root:has(.lv-cw-save) { --lv-toast-left: calc(var(--lv-sidebar-wide) + (100vw - var(--lv-sidebar-wide) - var(--lv-toast-insp, 0px)) / 2); }
+:root:has(.lv-cw-save):has(.lv-sidebar[data-sidebar="collapsed"]) { --lv-toast-left: calc(var(--lv-sidebar-narrow) + (100vw - var(--lv-sidebar-narrow) - var(--lv-toast-insp, 0px)) / 2); }
+/* P23-59-fix-1: the progression page keeps the workspace at its own width instead of filling the page,
+   so from 1220px up the formula above runs past the editor column there (at 1920 it would reach the save
+   form again). Cap it at the editor column's own centre: the menu's edge + the page padding (24px) + half
+   the editor (716px — the column keeps that width with the menu open or collapsed; only its left edge
+   moves, so 358px serves both states; measured at 1440×900). The capture workspace fills the page, so
+   there the formula already lands on the column and the cap is not used. A longer progression makes the
+   editor wider, which only moves its centre further right, so the cap never leaves the column. */
+@media (min-width: 1220px) {
+  :root:has([data-progression-detail-view] .lv-cw-save) { --lv-toast-left: min(calc(var(--lv-sidebar-wide) + (100vw - var(--lv-sidebar-wide) - var(--lv-toast-insp, 0px)) / 2), calc(var(--lv-sidebar-wide) + 24px + 358px)); }
+  :root:has([data-progression-detail-view] .lv-cw-save):has(.lv-sidebar[data-sidebar="collapsed"]) { --lv-toast-left: min(calc(var(--lv-sidebar-narrow) + (100vw - var(--lv-sidebar-narrow) - var(--lv-toast-insp, 0px)) / 2), calc(var(--lv-sidebar-narrow) + 24px + 358px)); }
+}
+:root:has(.lv-cw-save) .lv-toast-stack:not(.lv-toast-stack-dialog) {
+  right: auto;
+  left: var(--lv-toast-left);
+  transform: translateX(-50%);
+}
+
+/* P23-59-fix-1: with the Vault's preview open the toast would sit over the practice entries on the right
+   (VL・CD・BP), so it goes to the centre of the list column instead. The preview column is 340px (300px
+   under 1100px of content, and it drops under the list under 900px), with a 20px gap. */
+:root:has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 360px; }
+@media (max-width: 1379px) { :root:has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 320px; } }
+@media (max-width: 1179px) { :root:has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 0px; } }
+:root:has(.lv-sidebar[data-sidebar="collapsed"]):has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 360px; }
+@media (max-width: 1211px) { :root:has(.lv-sidebar[data-sidebar="collapsed"]):has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 320px; } }
+@media (max-width: 1011px) { :root:has(.lv-sidebar[data-sidebar="collapsed"]):has(.lv-vault-layout[data-preview="true"]) { --lv-toast-insp: 0px; } }
+:root:has(.lv-vault-layout[data-preview="true"]) { --lv-toast-left: calc(var(--lv-sidebar-wide) + (100vw - var(--lv-sidebar-wide) - var(--lv-toast-insp, 0px)) / 2); }
+:root:has(.lv-sidebar[data-sidebar="collapsed"]):has(.lv-vault-layout[data-preview="true"]) { --lv-toast-left: calc(var(--lv-sidebar-narrow) + (100vw - var(--lv-sidebar-narrow) - var(--lv-toast-insp, 0px)) / 2); }
+:root:has(.lv-vault-layout[data-preview="true"]) .lv-toast-stack:not(.lv-toast-stack-dialog) {
+  right: auto;
+  left: var(--lv-toast-left);
+  transform: translateX(-50%);
+}
+
+/* P23-59: the analysis card sits at the bottom centre of the content, clear of the right column's
+   form; while it shows, the toast stack sits above it (the card is 108px high and the gap 12px). */
+.lv-analysis-progress {
+  position: fixed;
+  bottom: 24px;
+  left: var(--lv-toast-left, calc(var(--lv-sidebar-wide) + (100vw - var(--lv-sidebar-wide)) / 2));
+  transform: translateX(-50%);
+}
+:root:has(.lv-sidebar[data-sidebar="collapsed"]) .lv-analysis-progress {
+  left: var(--lv-toast-left, calc(var(--lv-sidebar-narrow) + (100vw - var(--lv-sidebar-narrow)) / 2));
+}
+:root:has(.lv-cw-save) .lv-analysis-progress { bottom: 76px; }
+:root:has(.lv-analysis-progress) { --lv-toast-offset-bottom: 144px; }
+:root:has(.lv-cw-save):has(.lv-analysis-progress) { --lv-toast-offset-bottom: 196px; }

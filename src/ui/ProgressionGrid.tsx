@@ -1,3 +1,4 @@
+import { displayChordLabel } from "./chordText";
 import type { ChordTimelineItem } from "../domain/types";
 
 export interface ProgressionGridProps {
@@ -100,7 +101,7 @@ export function ProgressionGrid({
                       {chord.bar}.{formatBeat(chord.beat)}
                     </span>
                     <strong className="relative text-lg leading-tight text-[var(--lv-text)] [overflow-wrap:anywhere]">
-                      {chord.chord.label}
+                      {displayChordLabel(chord.chord.label)}
                     </strong>
                     <span className="relative text-[0.68rem] text-[var(--lv-text-muted)]">
                       {Math.round(chord.confidence * 100)}%

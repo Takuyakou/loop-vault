@@ -1,0 +1,244 @@
+/* P23-30 P1: the shared "something went wrong" panel. Colours come from the app's own tokens. */
+.problem-panel {
+  --problem-mark-bg: var(--lv-warning-soft);
+  --problem-mark-fg: var(--lv-warning);
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid var(--lv-border);
+  border-radius: 16px;
+  background: var(--lv-surface);
+  padding: 22px;
+}
+
+.problem-panel[data-tone="error"] {
+  --problem-mark-bg: var(--lv-danger-soft);
+  --problem-mark-fg: var(--lv-danger);
+}
+
+.problem-panel[data-tone="accent"] {
+  --problem-mark-bg: var(--lv-accent-soft);
+  --problem-mark-fg: var(--lv-accent);
+}
+
+.problem-panel[data-compact] {
+  max-width: none;
+  padding: 14px 16px;
+}
+
+.problem-panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.problem-panel-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--problem-mark-bg);
+  color: var(--problem-mark-fg);
+}
+
+.problem-panel[data-compact] .problem-panel-mark {
+  width: 32px;
+  height: 32px;
+}
+
+.problem-panel-heading {
+  min-width: 0;
+}
+
+.problem-panel-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--lv-text);
+}
+
+.problem-panel[data-compact] .problem-panel-title {
+  font-size: 14px;
+  line-height: 32px;
+}
+
+.problem-panel-desc {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--lv-text-secondary);
+}
+
+.problem-panel-rows {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  border-radius: 12px;
+  background: var(--lv-well);
+  padding: 12px 14px;
+}
+
+.problem-panel[data-compact] .problem-panel-rows {
+  margin-top: 10px;
+}
+
+.problem-panel-rows > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.problem-panel[data-compact] .problem-panel-rows > div {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.problem-panel-rows dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--lv-text-muted);
+}
+
+.problem-panel-rows dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--lv-text);
+  overflow-wrap: anywhere;
+}
+
+.problem-panel-rows dd[data-safe="true"] {
+  color: var(--lv-success);
+}
+
+.problem-panel-body {
+  margin-top: 16px;
+}
+
+.problem-panel-details {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--lv-text-muted);
+}
+
+.problem-panel-details > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+
+.problem-panel-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.problem-panel-details > summary::before {
+  content: "▸ ";
+  color: var(--lv-text-muted);
+}
+
+.problem-panel-details[open] > summary::before {
+  content: "▾ ";
+}
+
+.problem-panel-details > p {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+/* P4: the backup rows — the date, what kind it is, the newest badge and 「これに戻す」. */
+.problem-backup-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.problem-backup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--lv-border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: var(--lv-bg-subtle);
+}
+
+.problem-backup[data-newest] {
+  border-color: color-mix(in srgb, var(--lv-accent) 45%, var(--lv-border));
+}
+
+.problem-backup-text {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.problem-backup-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lv-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.problem-backup-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--lv-text-muted);
+}
+
+.problem-backup-newest {
+  flex: none;
+  border-radius: 999px;
+  background: var(--lv-accent-soft);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lv-accent);
+}
+
+/* P2: the loading screen keeps the logo, the sentence and a thin moving bar. */
+.lv-startup-loading-bar {
+  position: relative;
+  width: min(280px, 70vw);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--lv-surface-raised);
+}
+
+.lv-startup-loading-bar > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--lv-accent);
+  animation: lv-startup-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes lv-startup-slide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-startup-loading-bar > i {
+    animation: none;
+    left: 0;
+    width: 100%;
+  }
+}

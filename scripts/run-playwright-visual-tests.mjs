@@ -24,9 +24,11 @@ export function playwrightArguments(argumentsToForward = []) {
 
 export function visualTestCommandPlan(argumentsToForward = [], environment = process.env) {
   const alreadyTypechecked = environment.LV_DX_PRECHECKED_TSC === "1";
+  // FULL only: the pass before this one in the same run built the same fixture bundle from the same tree.
+  const alreadyBuilt = environment.LV_DX_PREBUILT_FIXTURE === "1";
   return [
     ...alreadyTypechecked ? [] : [["node_modules/typescript/bin/tsc"]],
-    ["node_modules/vite/bin/vite.js", "build"],
+    ...alreadyBuilt ? [] : [["node_modules/vite/bin/vite.js", "build"]],
     ["node_modules/@playwright/test/cli.js", ...playwrightArguments(argumentsToForward)],
   ];
 }

@@ -1,0 +1,405 @@
+[
+  {
+    "case": "v2-basic",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 1,
+          "language": "ja",
+          "showRomanNumerals": true
+        },
+        "ideas": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "loop",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "type": "flp",
+                "path": "C:\\Music\\night-drive.flp"
+              }
+            ],
+            "progressionBlocks": [],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z"
+          }
+        ]
+      },
+      "quarantine": []
+    }
+  },
+  {
+    "case": "v2-every-field",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 7,
+          "language": "en",
+          "showRomanNumerals": false
+        },
+        "ideas": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "done",
+            "prevStatus": "mix",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "a1a1a1a1-0000-4000-8000-000000000001",
+                "type": "midi",
+                "path": "C:\\Music\\take.mid"
+              },
+              {
+                "id": "a1a1a1a1-0000-4000-8000-000000000002",
+                "type": "audio",
+                "path": "C:\\Music\\take.wav"
+              }
+            ],
+            "progressionBlocks": [],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              },
+              {
+                "status": "hold",
+                "at": "2026-07-04T00:00:00.000Z",
+                "reason": "waiting for a vocalist"
+              },
+              {
+                "status": "done",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z",
+            "completedAt": "2026-07-04T00:00:00.000Z"
+          }
+        ]
+      },
+      "quarantine": []
+    }
+  },
+  {
+    "case": "v1-read-as-v3",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 1,
+          "language": "ja",
+          "showRomanNumerals": true
+        },
+        "ideas": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "loop",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "type": "flp",
+                "path": "C:\\Music\\night-drive.flp"
+              }
+            ],
+            "progressionBlocks": [],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z"
+          }
+        ]
+      },
+      "quarantine": []
+    }
+  },
+  {
+    "case": "v3-read-as-v3",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 1,
+          "language": "ja",
+          "showRomanNumerals": true
+        },
+        "ideas": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "loop",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "type": "flp",
+                "path": "C:\\Music\\night-drive.flp"
+              }
+            ],
+            "progressionBlocks": [],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z"
+          }
+        ]
+      },
+      "quarantine": []
+    }
+  },
+  {
+    "case": "v3-quarantines-a-broken-idea",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 1,
+          "language": "ja",
+          "showRomanNumerals": true
+        },
+        "ideas": [
+          {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "loop",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "type": "flp",
+                "path": "C:\\Music\\night-drive.flp"
+              }
+            ],
+            "progressionBlocks": [],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z"
+          }
+        ]
+      },
+      "quarantine": [
+        {
+          "index": 1,
+          "value": {
+            "id": "broken"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case": "v1-quarantines-a-source-bassline",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault",
+        "fileVersion": 2,
+        "settings": {
+          "monthlyGoal": 1,
+          "language": "ja",
+          "showRomanNumerals": true
+        },
+        "ideas": []
+      },
+      "quarantine": [
+        {
+          "index": 0,
+          "value": {
+            "id": "11111111-1111-4111-8111-111111111111",
+            "title": "Night Drive",
+            "bpm": 74,
+            "key": "F",
+            "genre": "future garage",
+            "moods": [
+              "late night"
+            ],
+            "status": "loop",
+            "nextAction": {
+              "text": "Make two drum variations",
+              "updatedAt": "2026-07-04T00:00:00.000Z"
+            },
+            "chordMemo": "Fmaj7 - Am7 - Gm7 - C7",
+            "references": [
+              {
+                "title": "Reference",
+                "url": "https://example.com/reference",
+                "memo": "Snare texture"
+              }
+            ],
+            "assets": [
+              {
+                "id": "22222222-2222-4222-8222-222222222222",
+                "type": "flp",
+                "path": "C:\\Music\\night-drive.flp"
+              }
+            ],
+            "statusHistory": [
+              {
+                "status": "idea",
+                "at": "2026-07-04T00:00:00.000Z"
+              }
+            ],
+            "createdAt": "2026-07-04T00:00:00.000Z",
+            "updatedAt": "2026-07-04T00:00:00.000Z",
+            "progressionBlocks": [
+              {
+                "id": "b1",
+                "sourceBassline": {
+                  "schemaVersion": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "case": "future-version",
+    "outcome": {
+      "ok": false,
+      "errorKind": "future-version"
+    }
+  },
+  {
+    "case": "invalid-json",
+    "outcome": {
+      "ok": false,
+      "errorKind": "invalid-json"
+    }
+  },
+  {
+    "case": "missing-app",
+    "outcome": {
+      "ok": false,
+      "errorKind": "invalid-vault"
+    }
+  },
+  {
+    "case": "unknown-settings-key",
+    "outcome": {
+      "ok": false,
+      "errorKind": "invalid-vault"
+    }
+  }
+]

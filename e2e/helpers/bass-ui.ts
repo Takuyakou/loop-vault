@@ -1,6 +1,6 @@
 import { writeMidi, type MidiEvent } from "midi-file";
 import { expect, type Page } from "@playwright/test";
-import { openApp } from "./app";
+import { openApp, openBassPractice } from "./app";
 
 /** Public synthetic notes only; no private MIDI or production library access. */
 export async function openSyntheticBass(page: Page, accompaniment = true, songs = 1) {
@@ -24,7 +24,7 @@ export async function openSyntheticBass(page: Page, accompaniment = true, songs 
   }, { accompaniment, songs });
   await openApp(page);
   await page.locator('[data-nav="bass-practice"]').click();
-  await page.getByRole("tab", { name: "MIDI のベースライン", exact: true }).click();
+  await openBassPractice(page, "MIDI のベースライン");
   if (songs) await page.getByRole("button", { name: "合成ベース A", exact: true }).click();
   await page.evaluate(() => document.fonts.ready);
 }
@@ -32,15 +32,34 @@ export async function openSyntheticBass(page: Page, accompaniment = true, songs 
 /** Uses real WebAudio -> MediaRecorder -> decoding -> analysis, with a synthetic microphone. */
 export async function syntheticMicrophone(page: Page, mistakes = false, failFirst = false) {
   await page.addInitScript(({mistakes,failFirst}) => {
-    const diagnostic = globalThis as typeof globalThis & { bassSyntheticRequests: number };
+    const diagnostic = globalThis as typeof globalThis & { bassSyntheticRequests: number; bassSyntheticShares: number; bassSyntheticSourceMatches: boolean[]; bassSyntheticPending: boolean };
     diagnostic.bassSyntheticRequests = 0;
+    diagnostic.bassSyntheticShares = 0;
+    diagnostic.bassSyntheticSourceMatches = [];
+    diagnostic.bassSyntheticPending = false;
     localStorage.setItem("loop-vault:bass-practice-record-channel:v1", "left");
     let attack = () => {};
-    Object.defineProperty(navigator.mediaDevices, "getUserMedia", { value: async () => {
+    const NativeContext = AudioContext;
+    Object.defineProperty(navigator.mediaDevices, "getUserMedia", { value: async (constraints?: MediaStreamConstraints) => {
       diagnostic.bassSyntheticRequests++;
       if(failFirst && diagnostic.bassSyntheticRequests === 1) throw new DOMException("Synthetic permission refusal", "NotAllowedError");
-      const context = new AudioContext();
+      const context = new NativeContext();
       const destination = context.createMediaStreamDestination();
+      let consumed = false;
+      const createSource = context.createMediaStreamSource.bind(context);
+      context.createMediaStreamSource = (stream) => {
+        diagnostic.bassSyntheticSourceMatches.push(stream === destination.stream && consumed);
+        return createSource(stream);
+      };
+      let sharedConstructor: typeof AudioContext | undefined;
+      for (const track of destination.stream.getTracks()) {
+        const stop = track.stop.bind(track);
+        track.stop = () => {
+          if (globalThis.AudioContext === sharedConstructor) globalThis.AudioContext = NativeContext;
+          if (!consumed) { diagnostic.bassSyntheticPending = false; void context.close(); }
+          stop();
+        };
+      }
       attack = () => {
         const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * 4.2), context.sampleRate);
         const pcm = buffer.getChannelData(0);
@@ -53,6 +72,27 @@ export async function syntheticMicrophone(page: Page, mistakes = false, failFirs
         source.connect(destination); source.start();
       };
       await context.resume();
+      // The recorder constructs its context immediately after awaiting getUserMedia.
+      // Share the synthetic input's clock for that construction only: two realtime
+      // contexts can insert a ~10ms discontinuity into MediaRecorder's encoded input.
+      // Keep the real stream source, channel routing, codec, decode and worker path.
+      // Permission probes use audio:true and must never reserve a context.
+      if (typeof constraints?.audio === "object") {
+        diagnostic.bassSyntheticPending = true;
+        sharedConstructor = class extends NativeContext {
+          constructor(options?: AudioContextOptions) {
+            if (!consumed && options === undefined) {
+              consumed = true;
+              diagnostic.bassSyntheticShares++;
+              diagnostic.bassSyntheticPending = false;
+              globalThis.AudioContext = NativeContext;
+              return context;
+            }
+            super(options);
+          }
+        };
+        globalThis.AudioContext = sharedConstructor;
+      }
       return destination.stream;
     } });
     const NativeRecorder = MediaRecorder;
@@ -61,7 +101,7 @@ export async function syntheticMicrophone(page: Page, mistakes = false, failFirs
 }
 
 export async function recordSyntheticBass(page: Page) {
-  await page.getByTestId("midi-bass-practice").getByRole("button", { name: "● 録って弾く（R）", exact: true }).click();
+  await page.getByTestId("midi-bass-practice").getByRole("button", { name: "● 録って弾く", exact: true }).click();
   await expect(page.getByTestId("midi-bass-result")).toBeVisible({ timeout: 15000 });
 }
 

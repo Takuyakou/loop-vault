@@ -36,6 +36,10 @@ interface ProgressionMidiControlProps {
   disabledReason?: string;
   setToast: ToastFn;
   actions?: ProgressionMidiControlActions;
+  /** P23-09 T3: the Home's 「MIDI を DAW へ」; a labelled control leaves out the voicing note beside it. */
+  label?: string;
+  /** P23-15b N2: the name this control goes by where it is used; the long sentence by default. */
+  ariaLabel?: string;
 }
 
 interface PointerGesture {
@@ -61,6 +65,8 @@ export function ProgressionMidiControl({
   disabledReason,
   result,
   setToast,
+  label,
+  ariaLabel,
 }: ProgressionMidiControlProps) {
   const [state, setState] = useState<
     "idle" | "preparing" | "dragging" | "saving"
@@ -188,7 +194,7 @@ export function ProgressionMidiControl({
         variant="secondary"
         size="sm"
         className="cursor-grab active:cursor-grabbing"
-        aria-label={accessibleName}
+        aria-label={ariaLabel ?? accessibleName}
         aria-describedby={statusId}
         title={disabledReason ?? tooltip}
         disabled={disabled}
@@ -210,10 +216,10 @@ export function ProgressionMidiControl({
         }}
       >
         <FileMusic aria-hidden="true" size={16} />
-        MIDI
+        <span className="lv-midi-export-label">{label ?? "MIDI"}</span>
         <GripVertical aria-hidden="true" size={16} />
       </Button>
-      {result ? (
+      {result && !label ? (
         <span className="whitespace-nowrap text-xs text-[var(--lv-text-muted)]">
           {voicingLabel(result.voicingSummary)}
         </span>

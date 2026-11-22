@@ -17,12 +17,21 @@ for (const width of [1920, 1600, 1444, 1366, 1280, 960]) {
     }
     const geometry = await controls.evaluate(element => {
       const row = element.querySelector('[data-testid="voicing-loop-controls-row"]')!;
-      const groups = Array.from(row.children).map(child => {
-        const box = child.getBoundingClientRect(); return { width: box.width, y: box.y, height: box.height };
-      });
+      // P23-32 T2: the row also carries the low-window copy of the head (display:none here) — a group is one
+      // that is actually drawn.
+      const groups = Array.from(row.children)
+        .filter(child => child.getBoundingClientRect().height > 0)
+        .map(child => {
+          const box = child.getBoundingClientRect(); return { width: box.width, y: box.y, height: box.height };
+        });
       return { rowWidth: row.getBoundingClientRect().width, groups, rowHeight: row.getBoundingClientRect().height };
     });
-    if (width >= 1444) expect(Math.max(...geometry.groups.map(g => g.y)) - Math.min(...geometry.groups.map(g => g.y))).toBeLessThanOrEqual(2);
+    // One line = the groups share a centre line (the 1px divider is shorter than the fieldsets, so their tops
+    // differ by its centring — the rule is about the line, not the top edge).
+    if (width >= 1444) {
+      const centers = geometry.groups.map(group => group.y + group.height / 2);
+      expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(2);
+    }
     await assertNoHorizontalOverflow(page);
     await controls.screenshot({ path: join(output, `${width}.png`) });
     writeFileSync(join(output, `${width}.json`), JSON.stringify(geometry, null, 2));

@@ -1,6 +1,5 @@
-/* P8.9-04 Vault: progressions only, left filter rail, search, sort.
-   No new mock; follows the design system and Vault.dc.html's content order.
-   The rail folds into a drawer when the content area is narrower than 900px. */
+/* P23-10 Vault: no left rail. Search, 「選ぶと鳴らす」 and sort; the key band (24 keys); facet chips; 58px rows
+   with date headings; the chosen progression's contents on the right. One column under 900px. */
 @layer components {
   .lv-vault {
     container-type: inline-size;
@@ -8,15 +7,13 @@
 
   .lv-vault-layout {
     display: grid;
-    grid-template-columns: 256px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: var(--lv-space-5);
   }
 
-  .lv-vault-rail {
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-md);
-    background: var(--lv-bg-subtle);
+  .lv-vault-layout[data-preview="true"] {
+    grid-template-columns: minmax(0, 1fr) 340px;
   }
 
   .lv-vault-main {
@@ -26,49 +23,206 @@
     gap: 10px;
   }
 
-  /* Filter panel (rail and drawer) */
-  .lv-vault-filters {
+  /* Toolbar */
+  .lv-vault-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* P23-47-fix-4: the three controls of the row share one height (40), one corner (10), one dark well and one line. */
+  .lv-vault-auto {
+    display: inline-flex;
+    min-height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 9px;
+    padding: 0 12px 0 10px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+    white-space: nowrap;
+    transition:
+      border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-vault-auto:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-line));
+    color: var(--lv-text);
+  }
+
+  /* The mark is the app's switch (components.css .lv-switch), a size smaller: a track and a round knob. */
+  .lv-vault-auto-mark {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: var(--lv-radius-pill);
+    background: #1f2f42;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-vault-auto-mark::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #a9b9cb;
+    content: "";
+    transition:
+      background-color var(--lv-motion-normal) var(--lv-ease-standard),
+      transform var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-vault-auto[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-line));
+    color: var(--lv-text);
+  }
+
+  .lv-vault-auto[aria-pressed="true"] .lv-vault-auto-mark {
+    background: #1b6a62;
+  }
+
+  .lv-vault-auto[aria-pressed="true"] .lv-vault-auto-mark::after {
+    background: var(--lv-accent);
+    transform: translateX(14px);
+  }
+
+  /* Key band: 2 × 12 cells; the fill grows with the number of progressions in the key. */
+  .lv-vault-keys {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 12px 8px 14px;
   }
 
-  .lv-vault-filters-head {
-    display: flex;
+  .lv-vault-key-row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) 5.5rem;
     align-items: center;
     gap: 8px;
-    padding: 2px 8px 8px;
   }
 
-  .lv-vault-count-badge {
-    min-width: 18px;
-    padding: 0 5px;
-    border-radius: 9px;
+  .lv-vault-key-cap {
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-11);
+    line-height: 1.3;
+  }
+
+  .lv-vault-key-cells {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .lv-vault-key-cell {
+    display: flex;
+    min-width: 0;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: var(--lv-radius-sm);
+    background: rgb(66 216 198 / calc(var(--lv-key-weight, 0) * 100%));
+    color: var(--lv-text);
+    font-size: var(--lv-text-12);
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    transition: box-shadow var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-vault-key-cell small {
+    color: var(--lv-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+
+  .lv-vault-key-cell:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 1px var(--lv-accent);
+  }
+
+  .lv-vault-key-cell[aria-pressed="true"] {
     background: var(--lv-accent);
     color: var(--lv-text-on-accent);
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 18px;
-    text-align: center;
   }
 
-  .lv-vault-filter-section {
+  .lv-vault-key-cell[aria-pressed="true"] small {
+    color: var(--lv-text-on-accent);
+  }
+
+  .lv-vault-key-cell:disabled {
+    background: var(--lv-bg-subtle);
+    color: var(--lv-text-muted);
+  }
+
+  .lv-vault-key-clear {
+    justify-self: start;
+    color: var(--lv-accent);
+    font-size: var(--lv-text-12);
+    white-space: nowrap;
+  }
+
+  /* Facet chips */
+  .lv-vault-facets {
+    display: flex;
+    min-height: 30px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lv-vault-facet {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-pill);
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+    white-space: nowrap;
+  }
+
+  .lv-vault-facet b {
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .lv-vault-facet[aria-pressed="true"],
+  .lv-vault-facet[aria-expanded="true"] {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent-soft);
+    color: var(--lv-text);
+  }
+
+  .lv-vault-facet-clear {
+    padding: 0 6px;
+    color: var(--lv-accent);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-vault-count {
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-vault-facet-menu {
+    min-width: 13rem;
+    max-height: 18rem;
+    overflow-y: auto;
+  }
+
+  .lv-vault-facet-options {
     display: flex;
     flex-direction: column;
     gap: 1px;
-    padding-top: 6px;
-    border-top: 1px solid var(--lv-border);
-  }
-
-  .lv-vault-filter-title {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px 6px;
-    color: var(--lv-text-secondary);
-    font-size: var(--lv-text-11);
-    font-weight: 700;
-    letter-spacing: 0.04em;
   }
 
   .lv-vault-option {
@@ -121,70 +275,9 @@
   .lv-vault-option-count {
     flex-shrink: 0;
     color: var(--lv-text-muted);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: var(--lv-text-11);
   }
-
-  .lv-vault-key-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    padding: 2px 8px 8px;
-  }
-
-  .lv-vault-key {
-    display: flex;
-    height: 38px;
-    min-width: 0;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-sm);
-    background: var(--lv-bg);
-    color: var(--lv-text);
-  }
-
-  .lv-vault-key:hover:not(:disabled) {
-    border-color: var(--lv-border-strong);
-  }
-
-  .lv-vault-key[aria-pressed="true"] {
-    border-color: var(--lv-accent);
-    background: var(--lv-accent);
-    color: var(--lv-text-on-accent);
-  }
-
-  .lv-vault-key[aria-pressed="true"] .lv-vault-option-count {
-    color: var(--lv-text-on-accent);
-  }
-
-  .lv-vault-key:disabled {
-    color: var(--lv-text-muted);
-    opacity: 0.45;
-  }
-
-  .lv-vault-key .lv-vault-option-count {
-    font-size: 9px;
-  }
-
-  /* Toolbar and conditions */
-  .lv-vault-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .lv-vault-drawer-toggle {
-    display: none;
-    min-height: 40px;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 6px;
-    padding: 0 12px;
-    font-size: var(--lv-text-12);
-  }
-
   .lv-vault-search {
     position: relative;
     min-width: 0;
@@ -194,8 +287,27 @@
   .lv-vault-search input {
     width: 100%;
     min-height: 40px;
-    padding: 0 14px 0 36px;
+    padding: 0 44px 0 36px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
+    color: var(--lv-text);
     font-size: var(--lv-text-13);
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-vault-search input::placeholder {
+    color: var(--lv-text-muted);
+  }
+
+  .lv-vault-search input:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-line));
+  }
+
+  .lv-vault-search input:focus-visible {
+    border-color: var(--lv-accent);
+    outline: 2px solid var(--lv-focus);
+    outline-offset: 1px;
   }
 
   .lv-vault-search-icon {
@@ -207,64 +319,70 @@
     transform: translateY(-50%);
   }
 
+  /* The key that jumps here (「/」), shown while the box is empty and not being typed in. */
+  .lv-vault-search .lv-vault-search-key {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    color: var(--lv-text-muted);
+    opacity: 1;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .lv-vault-search input:focus ~ .lv-vault-search-key,
+  .lv-vault-search input:not(:placeholder-shown) ~ .lv-vault-search-key {
+    display: none;
+  }
+
+  /* The order: the same dark box with the app's own arrow (no grey system box). */
   .lv-vault-sort select {
     min-height: 40px;
     min-width: 9.5rem;
-    padding: 0 10px;
-    font-size: var(--lv-text-12);
-  }
-
-  .lv-vault-conditions {
-    display: flex;
-    min-height: 26px;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .lv-vault-condition {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 4px 2px 10px;
-    border: 1px solid var(--lv-accent);
-    border-radius: var(--lv-radius-pill);
-    background: var(--lv-accent-soft);
+    padding: 0 34px 0 12px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237f90aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
     color: var(--lv-text);
-    font-size: var(--lv-text-11);
+    font-size: var(--lv-text-12);
+    appearance: none;
+    cursor: pointer;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
   }
 
-  .lv-vault-condition-remove {
-    display: grid;
-    width: 20px;
-    height: 20px;
-    place-items: center;
-    border-radius: 50%;
-    color: var(--lv-accent);
+  .lv-vault-sort select:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-line));
   }
 
-  .lv-vault-condition-remove:hover {
-    background: rgb(66 216 198 / 16%);
+  .lv-vault-sort select:focus-visible {
+    border-color: var(--lv-accent);
+    outline: 2px solid var(--lv-focus);
+    outline-offset: 1px;
+  }
+
+  .lv-vault-sort option {
+    background: var(--lv-surface);
+    color: var(--lv-text);
   }
 
   /* List */
   .lv-vault-list {
     overflow: hidden;
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-md);
-    background: var(--lv-surface);
+    border-radius: var(--lv-radius-panel);
+    background: var(--lv-panel-bg);
+    box-shadow: var(--lv-panel-shadow);
   }
 
   .lv-vault-row {
     display: grid;
-    /* The name gets about 30% (176–280px) so the chord band keeps the rest on every size. */
-    grid-template-columns: 36px minmax(0, clamp(11rem, 30%, 17.5rem)) minmax(0, 1fr) auto;
+    grid-template-columns: 36px minmax(0, clamp(10rem, 28%, 16rem)) minmax(0, 1fr) auto;
     grid-template-areas: "play main chips actions";
     box-sizing: border-box;
+    height: 58px;
     align-items: center;
-    gap: 6px 14px;
-    padding: 10px 10px 10px 14px;
-    border-bottom: 1px solid var(--lv-border);
+    gap: 0 14px;
+    padding: 0 8px 0 12px;
+    border-top: 1px solid rgb(150 170 195 / 7%);
     cursor: default;
     font-size: var(--lv-text-13);
     transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
@@ -280,10 +398,38 @@
   }
 
   .lv-vault-play { grid-area: play; }
-  .lv-vault-main-cell { grid-area: main; display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .lv-vault-progression { grid-area: main; }
   .lv-vault-chips { grid-area: chips; }
   .lv-vault-actions { grid-area: actions; display: flex; align-items: center; gap: 2px; }
 
+  /* A 58px row keeps the name and its line on one line each; long names end in …. */
+  .lv-vault-row .lv-vault-progression-primary,
+  .lv-vault-row .lv-vault-progression-secondary,
+  .lv-vault-row .lv-vault-match {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .lv-vault-source {
+    margin-right: 6px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: var(--lv-bg-subtle);
+    color: var(--lv-text-secondary);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* Role colour (T / SD / SDm / D) as a short mark under the chord name. */
+  .lv-vault-chip[data-fn] { border-bottom: 2px solid var(--lv-vault-fn); }
+  .lv-vault-chip[data-fn="T"] { --lv-vault-fn: var(--lv-fn-t); }
+  .lv-vault-chip[data-fn="SD"] { --lv-vault-fn: var(--lv-fn-sd); }
+  .lv-vault-chip[data-fn="SDm"] { --lv-vault-fn: var(--lv-fn-sdm); }
+  .lv-vault-chip[data-fn="D"] { --lv-vault-fn: var(--lv-fn-d); }
   .lv-vault-play-button {
     display: grid;
     width: 32px;
@@ -353,8 +499,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  /* P8.9-09b chord band: one line; frame widths come from chordBand.ts (12px mono = 7.2px/char). */
   .lv-vault-chips {
     display: flex;
     min-width: 0;
@@ -377,7 +521,7 @@
     border-radius: 5px;
     background: var(--lv-bg-subtle);
     color: var(--lv-text);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: var(--lv-text-12);
     font-weight: 600;
     line-height: 1.3;
@@ -443,11 +587,6 @@
     font-size: var(--lv-text-11);
     white-space: nowrap;
   }
-
-  .lv-vault-row[data-compact="true"] .lv-vault-main-cell {
-    overflow: hidden;
-  }
-
   .lv-vault-empty {
     border: 1px solid var(--lv-border);
     border-radius: var(--lv-radius-md);
@@ -496,49 +635,328 @@
     background: var(--lv-surface-raised);
   }
 
-  /* Drawer (content under 900px) */
-  .lv-vault-drawer {
-    position: fixed;
-    inset: 0;
-    z-index: var(--lv-z-dialog);
-  }
 
-  .lv-vault-drawer-scrim {
-    position: absolute;
-    inset: 0;
-    background: rgb(0 0 0 / 60%);
-  }
-
-  .lv-vault-drawer-panel {
-    position: absolute;
+  /* The chosen progression */
+  .lv-vault-preview {
+    position: sticky;
     top: 0;
-    bottom: 0;
-    left: 0;
-    width: min(20rem, 88vw);
-    overflow-y: auto;
-    padding: 12px;
-    border-right: 1px solid var(--lv-border-strong);
-    background: var(--lv-bg);
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border-radius: var(--lv-radius-panel);
+    background: var(--lv-panel-bg);
+    box-shadow: var(--lv-panel-shadow);
+    /* P23-15 Z4: never taller than the window (1280×720 included): the contents scroll, the actions stay. */
+    max-height: calc(100dvh - 128px);
   }
 
-  /* Only a very narrow list puts the band under the name; 768px and up keep one line. */
+  .lv-vault-preview-body {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+
+  /* The body scrolls instead of squeezing its parts (the title clips its overflow, so it would shrink first). */
+  .lv-vault-preview-body > * {
+    flex-shrink: 0;
+  }
+
+  .lv-vault-preview-title {
+    overflow: hidden;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .lv-vault-preview-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-vault-preview-play {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .lv-vault-preview-play-button {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--lv-accent);
+    color: var(--lv-text-on-accent);
+  }
+
+  .lv-vault-preview-chords {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .lv-vault-preview-chord {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 6px 8px;
+    border-top: 3px solid var(--lv-vault-fn, var(--lv-line));
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-surface-raised);
+    text-align: left;
+  }
+
+  .lv-vault-preview-chord[data-fn="T"] { --lv-vault-fn: var(--lv-fn-t); }
+  .lv-vault-preview-chord[data-fn="SD"] { --lv-vault-fn: var(--lv-fn-sd); }
+  .lv-vault-preview-chord[data-fn="SDm"] { --lv-vault-fn: var(--lv-fn-sdm); }
+  .lv-vault-preview-chord[data-fn="D"] { --lv-vault-fn: var(--lv-fn-d); }
+
+  .lv-vault-preview-chord small {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--lv-vault-fn, var(--lv-text-muted));
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-vault-preview-chord b {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--lv-text-14);
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-vault-preview-chord[data-current="true"] {
+    outline: 2px solid var(--lv-accent);
+  }
+
+  /* P23-15 Z1: the Home loop roll under the boxes — one cell per box, all of them (Home's narrow-width hiding does not apply). */
+  .lv-vault-preview-roll .lv-home-roll {
+    height: 44px;
+    margin-top: -6px;
+    padding: 0 4px;
+  }
+
+  .lv-vault-preview-roll .lv-home-roll-cell:nth-child(n) {
+    display: block;
+  }
+
+  .lv-vault-preview-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .lv-vault-preview-facts > div {
+    padding: 8px 10px;
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-bg-subtle);
+  }
+
+  .lv-vault-preview-facts dt {
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-11);
+  }
+
+  .lv-vault-preview-facts dd {
+    margin-top: 2px;
+    font-size: var(--lv-text-13);
+    font-weight: 600;
+  }
+
+  .lv-vault-preview-dojo:empty::after {
+    content: "まだ";
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-vault-preview-section {
+    margin-bottom: 6px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-11);
+    font-weight: 700;
+  }
+
+  .lv-vault-preview-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .lv-vault-preview-memo {
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-13);
+    overflow-wrap: anywhere;
+  }
+
+  .lv-vault-same {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .lv-vault-same-row {
+    display: flex;
+    width: 100%;
+    min-height: 32px;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    border-radius: var(--lv-radius-sm);
+    font-size: var(--lv-text-13);
+    text-align: left;
+  }
+
+  .lv-vault-same-row:hover {
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-vault-preview-actions {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lv-vault-preview-actions [data-midi-export-control],
+  .lv-vault-preview-actions > button {
+    width: 100%;
+  }
+
+  .lv-vault-preview-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .lv-vault-preview-two > button {
+    padding-inline: 10px;
+    white-space: nowrap;
+  }
+
+  .lv-vault-go {
+    justify-content: flex-start;
+  }
+
+  .lv-vault-go > svg:last-child {
+    margin-left: auto;
+  }
+
+  .lv-vault-go-mark {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .lv-vault-go-mark[data-kind="bp"] {
+    background: color-mix(in srgb, var(--lv-practice-bass) 18%, transparent);
+    color: var(--lv-practice-bass);
+  }
+
+  /* P23-59: tall windows keep the three rows; the group and the row only stack them as before. */
+  .lv-vault-go-group,
+  .lv-vault-go-row { display: flex; flex-direction: column; gap: 8px; }
+  .lv-vault-go-row > .lv-vault-go { width: 100%; }
+  .lv-vault-go-head { display: none; }
+
+  /* Short windows: one row of three, the verb and the chevron hidden (they stay in the DOM for the name). */
+  @media (max-height: 800px) {
+    .lv-vault-go-group { gap: 6px; }
+    .lv-vault-go-head {
+      display: block;
+      margin: 2px 0 0;
+      color: var(--lv-text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      /* P23-59: the small caption keeps the row inside the 720 px window (the 6 px the three entries leave). */
+      line-height: 1;
+    }
+    .lv-vault-go-row {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: 6px;
+    }
+    .lv-vault-preview-actions .lv-vault-go-row > .lv-vault-go {
+      width: auto;
+      /* P23-59-fix-3: 52 px cut the name's descenders; three lines (mark, name, verb) need 58. */
+      height: 58px;
+      min-height: 58px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 4px;
+    }
+    .lv-vault-go-name { max-width: 100%; overflow: hidden; font-size: 11px; line-height: 16px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    /* Hidden from sight only: the button's name still reads 「Voicing Loop で弾く」. */
+    .lv-vault-go-verb { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .lv-vault-go > svg:last-child { display: none; }
+
+    /* P23-59-fix-2: the two facts become one quiet line, so the practice row is never cut. */
+    .lv-vault-preview-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+    .lv-vault-preview-facts > div { display: flex; align-items: baseline; gap: 6px; padding: 0; border: 0; background: none; }
+    .lv-vault-preview-facts dt { color: var(--lv-text-muted); font-size: 11px; }
+    .lv-vault-preview-facts dd { font-size: 12px; font-weight: 600; }
+  }
+
+  /* P23-48: VL and CD use the base teal (CD was Bass's violet by mistake). */
+
+  /* One column: the band under the name on a very narrow list; the contents under the list below 900px. */
   @container (max-width: 599px) {
     .lv-vault-row {
+      height: auto;
+      min-height: 58px;
       grid-template-columns: 36px minmax(0, 1fr) auto;
       grid-template-areas:
         "play main actions"
         ". chips chips";
+      padding-block: 6px;
     }
   }
 
+  /* With the contents beside it the list is narrow: the key band drops its row names, the contents get 300px. */
+  @container (max-width: 1099px) {
+    .lv-vault-layout[data-preview="true"] { grid-template-columns: minmax(0, 1fr) 300px; }
+    .lv-vault-key-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .lv-vault-key-cap { display: none; }
+  }
+
   @container (max-width: 899px) {
-    .lv-vault-layout { grid-template-columns: minmax(0, 1fr); }
-    .lv-vault-rail { display: none; }
-    .lv-vault-drawer-toggle { display: inline-flex; }
+    .lv-vault-layout[data-preview="true"] { grid-template-columns: minmax(0, 1fr); }
+    .lv-vault-preview { position: static; max-height: none; }
+    .lv-vault-key-row { grid-template-columns: minmax(0, 1fr); }
+    .lv-vault-key-cap { display: none; }
+    .lv-vault-key-clear-space { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .lv-vault-row,
-    .lv-vault-option { transition: none; }
+    .lv-vault-option,
+    .lv-vault-key-cell,
+    .lv-vault-auto-mark, .lv-vault-auto-mark::after { transition: none; }
   }
 }

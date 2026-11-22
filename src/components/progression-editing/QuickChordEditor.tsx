@@ -1,3 +1,4 @@
+import { displayChordLabel } from "../../ui/chordText";
 import {
   useEffect,
   useLayoutEffect,
@@ -402,7 +403,7 @@ function CandidateGroup({
               title={descriptions.join(" / ")}
             >
               <span className="mr-1 text-[var(--lv-text-muted)]">{index + 1}</span>
-              {candidate.chord.label}
+              {displayChordLabel(candidate.chord.label)}
               <span className="ml-2 text-[10px] text-teal-200">
                 {candidate.sources.map((source) => sourceLabel(source, text)).join("+")}
               </span>

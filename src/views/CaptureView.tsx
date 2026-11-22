@@ -45,11 +45,12 @@ import {
 } from "../domain/textProgressionDraft";
 import { type ManualCandidateDraft } from "../domain/midi/manualDraft";
 import { PreAnalysisWorkspace } from "../components/pre-analysis/PreAnalysisWorkspace";
-import { Dumbbell, ExternalLink, FileMusic } from "lucide-react";
+import { Dumbbell, ExternalLink } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 import { useWorkspaceBassline } from "./capture/workspaceBassline";
 import { useCaptureIntake } from "./capture/useCaptureIntake";
 import { useCaptureSave } from "./capture/useCaptureSave";
+import { CaptureEntry } from "./capture/CaptureEntry";
 import { CorrectionWorkspace } from "../components/correction-workspace/CorrectionWorkspace";
 import { buildCorrectionModel } from "../domain/correction/correctionModel";
 import { restoreExcludedNotes } from "../domain/preAnalysisParts/restoreExcluded";
@@ -76,6 +77,8 @@ interface TextDraftContext {
   readonly initialTitle: string;
   readonly bpm?: number;
   readonly confirmedKey?: string;
+  /** P23-33: the effective key (manual, inherited or inferred) the save uses. */
+  readonly resolvedKey?: string;
 }
 
 interface CaptureViewProps {
@@ -121,6 +124,8 @@ interface CaptureViewProps {
   showRomanNumerals: boolean;
   controller?: PlaybackController;
   analysisInput?: AnalysisInput;
+  /** P23-11: opens Live MIDI from the first screen. Left out where it cannot be opened. */
+  onOpenLiveMidi?: () => void;
 }
 
 export interface SavedTextProgressionTarget {
@@ -385,9 +390,11 @@ export function CaptureView(props: CaptureViewProps) {
     setCaptureInputMode(nextMode);
   }
 
-  function saveExtendedTextProgression(result: ExtendedTextResult, title: string): boolean {
+  function saveExtendedTextProgression(result: ExtendedTextResult, title: string, resolvedKey?: string): boolean {
     if (!result.canConvert || !createIdeaFromTextProgression) return false;
-    const data = { ...extendedTextSaveData(result), title };
+    // P23-33: the effective key is carried beside the confirmed key; the original-text validation still
+    // compares only `confirmedKey` with the source metadata.
+    const data = { ...extendedTextSaveData(result), title, ...(resolvedKey === undefined ? {} : { resolvedKey }) };
     const saved = createIdeaFromTextProgression({
       ...data,
       nextAction: copy.capture.defaultNextAction,
@@ -410,6 +417,7 @@ export function CaptureView(props: CaptureViewProps) {
       title, nextAction: copy.capture.defaultNextAction, userVerified: true,
       ...(converted.bpm === undefined ? {} : { bpm: converted.bpm }),
       ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
+      ...(converted.resolvedKey === undefined ? {} : { resolvedKey: converted.resolvedKey }),
     });
     const saved = createIdeaFromTextProgression(payload);
     if (!saved) { setToast(copy.capture.createFailed, "error"); return false; }
@@ -428,6 +436,7 @@ export function CaptureView(props: CaptureViewProps) {
       initialTitle: converted.title,
       ...(converted.bpm === undefined ? {} : { bpm: converted.bpm }),
       ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
+      ...(converted.resolvedKey === undefined ? {} : { resolvedKey: converted.resolvedKey }),
     });
   }
 
@@ -444,6 +453,7 @@ export function CaptureView(props: CaptureViewProps) {
       userVerified,
       ...(textDraftContext.bpm === undefined ? {} : { bpm: textDraftContext.bpm }),
       ...(textDraftContext.confirmedKey === undefined ? {} : { confirmedKey: textDraftContext.confirmedKey }),
+      ...(textDraftContext.resolvedKey === undefined ? {} : { resolvedKey: textDraftContext.resolvedKey }),
     });
   }
 
@@ -739,13 +749,18 @@ export function CaptureView(props: CaptureViewProps) {
       <CaptureModeFrame stage="empty" value={captureInputMode}
         disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
         <div data-capture-midi-drop-zone {...dropHandlers}>
-        <CaptureEmptyState
-          status={intakeError ? "error" : analysis.status}
+        <CaptureEntry
+          state={isDraggingMidi
+            ? "over"
+            : analysis.status === "analyzing" || analysisProgress
+              ? "loading"
+              : intakeError || analysis.status === "error" ? "error" : "idle"}
           error={intakeError ?? analysis.error}
-          onChooseMidi={() => void chooseMidi(false)}
-          isDraggingMidi={isDraggingMidi}
-          copy={copy}
           progressStage={analysisProgress}
+          textDisabled={activeDraft !== null}
+          onChooseMidi={() => void chooseMidi(false)}
+          onOpenText={() => changeCaptureInputMode("text")}
+          onOpenLiveMidi={props.onOpenLiveMidi}
         />
         </div>
       </CaptureModeFrame>
@@ -779,6 +794,8 @@ export function CaptureView(props: CaptureViewProps) {
             onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error")}
             onChooseAnotherMidi={() => void chooseMidi(false)}
             blockCandidates={result.blockCandidates}
+            harmonyKey={result.detectedKey}
+            showDegrees={showRomanNumerals}
             tempoMissing={result.tempoDiagnostics?.provenance === "SMF_DEFAULT" || !result.bpm}
             {...(props.onWorkspaceDirtyChange ? { onDirtyChange: props.onWorkspaceDirtyChange } : {})}
             save={{
@@ -848,93 +865,6 @@ function CaptureModeFrame({ stage, value, disabled, onChange, children }: {
   </div>;
 }
 
-function CaptureEmptyState({
-  status,
-  error,
-  onChooseMidi,
-  isDraggingMidi,
-  copy,
-  progressStage,
-}: {
-  status: AnalysisState["status"];
-  error?: string;
-  onChooseMidi: () => void;
-  isDraggingMidi: boolean;
-  copy: AppCopy;
-  progressStage?: CaptureAnalysisProgressStage;
-}) {
-  return (
-    <section
-      className={`lv-surface lv-surface-primary grid min-h-[28rem] place-items-center p-5 text-center transition-colors sm:p-7 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent-soft)]" : ""}`}
-      aria-labelledby="capture-empty-title"
-      data-drop-target-state={isDraggingMidi ? "active" : "idle"}
-    >
-      <div className="w-full max-w-3xl">
-        <p className="lv-section-kicker">
-          {copy.capture.eyebrow}
-        </p>
-        <h2 id="capture-empty-title" className="mt-2 text-2xl font-bold sm:text-3xl">{copy.capture.title}</h2>
-        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[var(--lv-text-secondary)]">{copy.capture.emptyDescription}</p>
-        <div
-          className={`mx-auto mt-6 rounded-[var(--lv-radius-lg)] border-2 border-dashed px-5 py-8 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg-subtle)] text-[var(--lv-text-secondary)]"}`}
-          role="status"
-          aria-live="polite"
-        >
-          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={20} />
-          <p className="text-lg font-bold">
-            {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
-          </p>
-          <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
-          <Button
-            variant="primary"
-            className="mt-5 min-h-11 px-5"
-            data-testid="capture-choose-midi"
-            onClick={onChooseMidi}
-          >
-            {copy.capture.loadMidi}
-          </Button>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
-        </div>
-        <div className="mt-5 flex flex-col justify-center gap-2 text-left sm:flex-row sm:gap-4">
-          <StepCard index="1" text={copy.capture.emptyStepTimeline} />
-          <StepCard index="2" text={copy.capture.emptyStepCandidates} />
-          <StepCard index="3" text={copy.capture.emptyStepSave} />
-        </div>
-        {status === "analyzing" || progressStage ? (
-          <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
-            <p className="font-semibold">
-              {progressStage ? analysisProgressLabel(progressStage, copy) : copy.capture.analyzing}
-            </p>
-            <p className="mt-2 text-cyan-100/80">{copy.capture.analyzingDetail}</p>
-            <div className="mt-3 h-1.5 overflow-hidden bg-cyan-950" role="progressbar" aria-label={copy.capture.analysisProgress}>
-              <div className="h-full w-1/2 animate-pulse bg-cyan-300" />
-            </div>
-          </div>
-        ) : null}
-        {status === "error" ? (
-          <StatusMessage
-            className="mt-6 text-left"
-            tone="error"
-            title={copy.capture.loadFailed}
-            action={(
-              <Button
-                variant="secondary"
-                size="sm"
-                data-testid="capture-retry-midi"
-                onClick={onChooseMidi}
-              >
-                {copy.capture.loadMidi}
-              </Button>
-            )}
-          >
-            {error}
-          </StatusMessage>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
 export function CaptureAnalysisProgress({
   stage,
   copy,
@@ -944,7 +874,7 @@ export function CaptureAnalysisProgress({
 }) {
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 w-[min(24rem,calc(100vw-3rem))] border border-cyan-400/40 bg-[var(--lv-surface)] p-4 shadow-2xl"
+      className="lv-analysis-progress z-50 w-[min(24rem,calc(100vw-3rem))] border border-cyan-400/40 bg-[var(--lv-surface)] p-4 shadow-2xl"
       role="status"
       aria-live="polite"
       data-analysis-progress={stage}
@@ -972,17 +902,6 @@ function DropOverlay({ copy }: { copy: AppCopy }) {
         <p className="text-2xl font-semibold">{copy.capture.dropActive}</p>
         <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{copy.capture.dropHelp}</p>
       </div>
-    </div>
-  );
-}
-
-function StepCard({ index, text }: { index: string; text: string }) {
-  return (
-    <div className="flex min-w-0 items-center gap-2 rounded-[var(--lv-radius-sm)] px-2 py-1.5">
-      <span className="grid size-6 shrink-0 place-items-center rounded-full border border-[var(--lv-accent)] text-[11px] font-bold text-[var(--lv-accent)]">
-        {index}
-      </span>
-      <p className="min-w-0 text-xs text-[var(--lv-text-secondary)]">{text}</p>
     </div>
   );
 }

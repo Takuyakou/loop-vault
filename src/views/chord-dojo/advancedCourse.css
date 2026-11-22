@@ -1,0 +1,199 @@
+/* P23-45 advanced course (Lv4–8 and 総合確認). It reuses the guided-course shell classes and adds
+   only the chord-card row, the group chips, the sight chart and the level selector. */
+.ac-level-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dojo-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ac-level-select select {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  background: var(--dojo-surface);
+  color: var(--dojo-text);
+  font: inherit;
+}
+
+.ac-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ac-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 84px;
+  padding: 8px 12px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 10px;
+  background: var(--dojo-bg);
+}
+
+.ac-card[data-current="true"] {
+  border-color: var(--dojo-accent);
+  box-shadow: 0 0 0 1px var(--dojo-accent) inset;
+}
+
+.ac-card[data-state="ok"] { border-color: var(--dojo-accent); }
+.ac-card[data-state="bad"] { border-color: #ff9aa2; }
+
+.ac-card b {
+  color: var(--dojo-text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-card span {
+  color: var(--dojo-muted);
+  font-size: 11px;
+}
+
+.ac-group-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ac-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 10px;
+  background: var(--dojo-bg);
+}
+
+.ac-group[data-state="passed"] { border-color: var(--dojo-accent); }
+.ac-group[data-state="active"] { box-shadow: 0 0 0 1px var(--dojo-accent) inset; }
+
+.ac-group b { color: var(--dojo-text); font-size: 12.5px; }
+.ac-group span { color: var(--dojo-muted); font-size: 11px; }
+
+.ac-sight-chart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ac-sight-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 6px 8px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  background: var(--dojo-bg);
+}
+
+.ac-sight-bar[data-current="true"] { border-color: var(--dojo-accent); }
+.ac-sight-bar[data-state="ok"] { background: color-mix(in srgb, var(--dojo-accent) 16%, var(--dojo-bg)); }
+.ac-sight-bar[data-state="bad"] { border-color: #ff9aa2; }
+
+.ac-sight-bar b { color: var(--dojo-text); font-size: 12.5px; }
+.ac-sight-bar span { color: var(--dojo-muted); font-size: 10.5px; }
+
+@media (max-width: 860px) {
+  .ac-sight-chart {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .ac-sight-bar { min-width: 0; }
+  .ac-tempo { flex-wrap: wrap; }
+}
+
+.ac-beat {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dojo-border);
+}
+
+.ac-beat[data-on="true"] { background: var(--dojo-accent); }
+
+.ac-tempo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--dojo-secondary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ac-note {
+  margin: 0;
+  color: var(--dojo-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.gc-result-counts li {
+  color: var(--dojo-secondary);
+  font-size: 13px;
+  list-style: none;
+}
+
+.gc-result-counts li b { color: #f2f6fc; }
+
+.ac-practice-panel { display: flex; flex-direction: column; gap: 8px; }
+
+.ac-practice-materials { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.ac-practice-materials button[aria-pressed="true"] {
+  border-color: var(--dojo-accent);
+  box-shadow: inset 0 -3px var(--dojo-accent);
+}
+
+.ac-card-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ac-card-button:focus-visible { outline: 2px solid var(--dojo-accent); outline-offset: 2px; }
+
+.ac-practice-demo { margin-top: 8px; }
+
+@media (max-width: 860px) {
+  .ac-practice-materials { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.ac-demo-note {
+  margin: 0;
+  color: var(--dojo-accent);
+  font-size: 12.5px;
+  text-align: center;
+}

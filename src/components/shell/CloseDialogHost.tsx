@@ -29,7 +29,8 @@ export function CloseDialogHost() {
         secondaryLabel={blocker.onSave?blocker.confirmLabel:undefined}
         onSecondary={blocker.onSave?()=>finish(true):undefined}
         cancelLabel={blocker.cancelLabel}
-        tone="danger"
+        tone={blocker.onSave ? "default" : "danger"}
+        secondaryTone="danger"
         onConfirm={() => { if(!blocker.onSave||blocker.onSave())finish(true); }}
         onCancel={() => finish(false)}
       />

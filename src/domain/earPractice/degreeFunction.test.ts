@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { BUILTINS } from "../chordDojo/builtins";
+import { BUILTINS, buildBuiltin } from "../chordDojo/builtins";
 import { ALL_BANK } from "./bank";
-import { degreeText, functionKind, questionInfos } from "./degreeFunction";
+import { degreeFunctionKinds, degreeText, functionKind, questionInfos } from "./degreeFunction";
+import { JAZZ_PROGRESSIONS_ITEMS, buildJazzProgression } from "../chordDojo/jazzProgressions";
+import { progressionFunctions } from "../harmony/chordFunction";
 import { buildBuiltinQuestion } from "./builtinSource";
 import type { EarMode } from "./keys";
 import { buildBankQuestion } from "./question";
@@ -102,5 +104,62 @@ describe("度数と機能(P16-06)", () => {
     const entry = BUILTINS[0]!;
     const question = { ...buildBuiltinQuestion(entry.id, 0)!, keyName: "" };
     expect(questionInfos(question).every((info) => info === undefined)).toBe(true);
+  });
+});
+
+describe("P22-01 §3: 度数の文字から機能を決める(degreeFunctionKinds)", () => {
+  const kinds = (tokens: string[]) => degreeFunctionKinds(tokens, "major").map((entry) => entry.kind);
+  const dotted = (tokens: string[]) => degreeFunctionKinds(tokens, "major").map((entry) => entry.borrowedDominant);
+
+  it("メジャーの 5 つの進行", () => {
+    expect(kinds(["ii7", "V7", "Imaj7"])).toEqual(["SD", "D", "T"]);
+    expect(kinds(["IVmaj7", "V7", "iii7", "vi7"])).toEqual(["SD", "D", "T", "T"]);
+    expect(kinds(["IVmaj7", "iv7", "Imaj7"])).toEqual(["SD", "SDm", "T"]);
+  });
+
+  it("セカンダリードミナントと裏コードは点線(D のまま)", () => {
+    expect(kinds(["Imaj7", "VI7", "ii7", "V7"])).toEqual(["T", "D", "SD", "D"]);
+    expect(dotted(["Imaj7", "VI7", "ii7", "V7"])).toEqual([false, true, false, false]);
+    expect(kinds(["ii7", "♭II7", "Imaj7"])).toEqual(["SD", "D", "T"]);
+    expect(dotted(["ii7", "♭II7", "Imaj7"])).toEqual([false, true, false]);
+  });
+
+  it("読めない文字は色なしで、例外を投げない", () => {
+    expect(kinds(["???"])).toEqual([""]);
+    expect(dotted(["???"])).toEqual([false]);
+  });
+
+  it("定番の進行と Jazz の全部で例外を投げず、度数と同じ数の結果を返す", () => {
+    for (const builtin of BUILTINS) {
+      const result = degreeFunctionKinds(builtin.fullDegrees, builtin.mode);
+      expect(result, builtin.id).toHaveLength(builtin.fullDegrees.length);
+    }
+    for (const item of JAZZ_PROGRESSIONS_ITEMS) {
+      for (const id of item.progressions) {
+        const progression = buildJazzProgression(id);
+        const result = degreeFunctionKinds(progression.degrees, "major");
+        expect(result, id).toHaveLength(progression.degrees.length);
+      }
+    }
+  });
+
+  it("定番の進行は、C のキーでコード名から決めた機能と同じになる", () => {
+    const mismatches: string[] = [];
+    for (const builtin of BUILTINS) {
+      const chords = buildBuiltin(builtin.id, 0).chords.map(({ chord }) => ({
+        rootPc: chord.root, quality: chord.quality,
+        ...(chord.tensions.length ? { tensions: chord.tensions } : {}),
+        ...(chord.bass === undefined ? {} : { bassPc: chord.bass }),
+      }));
+      const fromChords = progressionFunctions(chords, { tonicPc: 0, mode: builtin.mode });
+      const fromDegrees = degreeFunctionKinds(builtin.fullDegrees, builtin.mode);
+      fromDegrees.forEach((kind, index) => {
+        const other = fromChords[index]!;
+        if (kind.kind !== other.kind || kind.borrowedDominant !== other.borrowedDominant) {
+          mismatches.push(`${builtin.id}#${index + 1} ${builtin.fullDegrees[index]}: 度数 ${kind.kind || "色なし"}/${kind.borrowedDominant} ・ コード ${other.kind || "色なし"}/${other.borrowedDominant}`);
+        }
+      });
+    }
+    expect(mismatches).toEqual([]);
   });
 });

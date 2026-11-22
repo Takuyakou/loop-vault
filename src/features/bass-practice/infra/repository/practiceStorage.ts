@@ -11,10 +11,10 @@ const BROWSER_TEMP_KEY = "loop-vault:practice-v1:tmp";
 const BROWSER_BACKUP_PREFIX = "loop-vault:practice-v1:backup:";
 const BROWSER_CORRUPT_PREFIX = "loop-vault:practice-v1:corrupt:";
 
-export type PracticeNamespace = "practice" | "bass-midi-library" | "ear-practice" | "original-practice" | "jazz-progressions";
-const NAMESPACE_APP: Record<PracticeNamespace, string> = { practice: "loopvault-practice", "bass-midi-library": "loopvault-bass-midi-library", "ear-practice": "loopvault-ear-practice", "original-practice": "loopvault-original-practice", "jazz-progressions": "loopvault-jazz-progressions" };
+export type PracticeNamespace = "practice" | "bass-midi-library" | "ear-practice" | "original-practice" | "jazz-progressions" | "voicing-drill";
+const NAMESPACE_APP: Record<PracticeNamespace, string> = { practice: "loopvault-practice", "bass-midi-library": "loopvault-bass-midi-library", "ear-practice": "loopvault-ear-practice", "original-practice": "loopvault-original-practice", "jazz-progressions": "loopvault-jazz-progressions", "voicing-drill": "loopvault-voicing-drill" };
 /** Envelopes whose file version stays 1 (everything but the practice file). */
-const VERSION_ONE_APPS = new Set(["loopvault-bass-midi-library", "loopvault-ear-practice", "loopvault-original-practice", "loopvault-jazz-progressions"]);
+const VERSION_ONE_APPS = new Set(["loopvault-bass-midi-library", "loopvault-ear-practice", "loopvault-original-practice", "loopvault-jazz-progressions", "loopvault-voicing-drill"]);
 
 interface KeyValueStorage {
   readonly length: number;
@@ -46,7 +46,7 @@ export class BrowserPracticeStorage implements PracticeStorage {
   async listRecoveryArtifacts(): Promise<readonly string[]> {
     const corrupt = this.keys(this.corruptPrefix).filter((name) => /^\d{8}-\d{6}-\d{6}$/.test(name.slice(this.corruptPrefix.length)));
     // The lap records (Original Practice, Jazz Progressions) must not mistake unsupported/corrupt backup-only data for a first run.
-    return [...corrupt, ...(this.namespace === "original-practice" || this.namespace === "jazz-progressions" ? this.keys(this.backupPrefix) : [])].sort().reverse();
+    return [...corrupt, ...(this.namespace === "original-practice" || this.namespace === "jazz-progressions" || this.namespace === "voicing-drill" ? this.keys(this.backupPrefix) : [])].sort().reverse();
   }
 
   async commit(contents: string, timestampToken: string, expectedRevision?: number, expectedToken?: string): Promise<number> {

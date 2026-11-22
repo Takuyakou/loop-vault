@@ -17,7 +17,7 @@ export function LiveMidiSettingsDialog({ copy, onClose, store }: {
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   return (
-    <Modal ariaLabelledBy="live-midi-settings-dialog-title" initialFocusRef={closeRef} onClose={onClose} panelClassName="w-full max-w-2xl p-5">
+    <Modal ariaLabelledBy="live-midi-settings-dialog-title" initialFocusRef={closeRef} onClose={onClose} panelClassName="lv-dialog-16 w-full max-w-2xl p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 id="live-midi-settings-dialog-title" className="text-lg font-semibold">Live MIDI の設定</h2>
         <Button ref={closeRef} variant="ghost" size="sm" onClick={onClose}>{copy.close}</Button>

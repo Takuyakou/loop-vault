@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
@@ -28,12 +28,14 @@ describe("TXT-JAZZ Capture registration disclosure and audition", () => {
     if (dialect === "extended") await click(query(container, "text-mode-extended"));
     const input = query<HTMLTextAreaElement>(container, dialect === "standard" ? "text-progression-input" : "extended-text-input");
     await write(input, "| G7alt | G7alt/D |");
+    // P23-17 V3: the voicing note moved into the 「?」 face.
+    await click(query(container, "text-help"));
     expect(query(container, "text-voicing-availability").textContent).toContain("1 / 2コード");
     expect(query(container, "text-voicing-unavailable").textContent).toContain("G7alt/D");
     // R-03: the per-version storage notice is no longer on the capture screen; the storage split itself is unchanged.
     expect(container.querySelector('[data-testid="text-storage-compatibility"]')).toBeNull();
     if (dialect === "standard") {
-      const cards = container.querySelectorAll<HTMLButtonElement>('[data-testid="text-progression-card"]');
+      const cards = container.querySelectorAll<HTMLButtonElement>('[data-testid="text-preview-band"]');
       await click(cards[0]!); expect(preview).toHaveBeenCalledOnce();
       await click(cards[1]!); expect(preview).toHaveBeenCalledOnce();
       expect(query<HTMLButtonElement>(container, "text-progression-preview").disabled).toBe(true);

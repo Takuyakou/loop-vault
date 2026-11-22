@@ -281,6 +281,12 @@ fn namespaced_paths_from_root(
             jazz.temp = jazz.data.with_extension("json.tmp");
             Ok(jazz)
         }
+        Some("voicing-drill") => {
+            let mut drill = paths_from_root(paths.root.join("voicing-drill-storage"));
+            drill.data = paths.root.join("voicing-drill-v1.json");
+            drill.temp = drill.data.with_extension("json.tmp");
+            Ok(drill)
+        }
         _ => Err(storage_error("unknown storage namespace")),
     }
 }
@@ -290,7 +296,7 @@ fn namespaced_paths_from_root(
 fn is_lap_record_file(paths: &PracticePaths) -> bool {
     matches!(
         paths.data.file_name().and_then(|name| name.to_str()),
-        Some("original-practice-v1.json" | "jazz-progressions-v1.json")
+        Some("original-practice-v1.json" | "jazz-progressions-v1.json" | "voicing-drill-v1.json")
     )
 }
 
@@ -404,6 +410,7 @@ fn save_document_unlocked_with_fault(
         Some("ear-practice-v1.json") => "loopvault-ear-practice",
         Some("original-practice-v1.json") => "loopvault-original-practice",
         Some("jazz-progressions-v1.json") => "loopvault-jazz-progressions",
+        Some("voicing-drill-v1.json") => "loopvault-voicing-drill",
         _ => "loopvault-practice",
     };
     if envelope["app"] != expected_app { return Err(storage_error("namespace envelope mismatch")); }
@@ -653,7 +660,7 @@ fn validate_document(contents: &str) -> Result<u64, String> {
         .ok_or_else(|| storage_error("validate JSON envelope"))?;
     let library = matches!(
         object.get("app").and_then(Value::as_str),
-        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions")
+        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions" | "loopvault-voicing-drill")
     );
     if library
         && (object.get("version").and_then(Value::as_u64) != Some(1)
@@ -684,7 +691,7 @@ fn with_current_version_and_revision(contents: &str, revision: u64) -> Result<St
         .ok_or_else(|| storage_error("validate backup envelope"))?;
     if !matches!(
         object.get("app").and_then(Value::as_str),
-        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions")
+        Some("loopvault-bass-midi-library" | "loopvault-ear-practice" | "loopvault-original-practice" | "loopvault-jazz-progressions" | "loopvault-voicing-drill")
     ) {
         object.insert("fileVersion".to_string(), Value::from(2));
     }
@@ -1135,12 +1142,13 @@ mod tests {
     /// and what is already stored is left untouched.
     #[test]
     fn every_storage_namespace_accepts_only_its_own_app() {
-        let files: [(Option<&str>, &str); 5] = [
+        let files: [(Option<&str>, &str); 6] = [
             (None, "loopvault-practice"),
             (Some("bass-midi-library"), "loopvault-bass-midi-library"),
             (Some("ear-practice"), "loopvault-ear-practice"),
             (Some("original-practice"), "loopvault-original-practice"),
             (Some("jazz-progressions"), "loopvault-jazz-progressions"),
+            (Some("voicing-drill"), "loopvault-voicing-drill"),
         ];
         let envelope = |app: &str, revision: u64| {
             if app == "loopvault-practice" {

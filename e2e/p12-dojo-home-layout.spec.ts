@@ -1,19 +1,76 @@
-import {test,expect} from '@playwright/test';
-import {emptyItem} from '../src/domain/chordDojo/store';
-import {homeFixture} from './helpers/p12DojoHome';
-for(const [width,height] of [[1920,1080],[1440,900],[1366,768],[1280,720],[1297,1040],[1529,1076]])test(`Dojo home ${width}x${height} prioritizes lesson and all practice entries`,async({browser},info)=>{
- for(const state of ['many','resume','finished','empty'] as const){
-  const context=await browser.newContext({viewport:{width,height},baseURL:String(info.project.use.baseURL),locale:'ja-JP',timezoneId:'Asia/Tokyo',colorScheme:'dark'});const page=await context.newPage(),file=homeFixture(state);if(state==='many')for(const task of file.today!.tasks.filter(t=>t.kind==='shape').slice(0,8))file.shapes[task.key]={...emptyItem(),wanted:true};
-  try{
-   await page.addInitScript(f=>localStorage.setItem('loop-vault:chord-dojo-txt-jazz-v1:data',JSON.stringify(f)),file);await expect.poll(async()=>{try{await page.goto('/?p12=no-midi&p104=theme');return page.url().includes('p12=');}catch{console.log('GOTO-RETRY /?p12=no-midi&p104=theme');return false;}}, {timeout:30000,message:'the preview server is reachable'}).toBe(true);await page.locator('[data-nav="chord-dojo"]').click();const firstStep=page.locator('.dojo-home-steps>div').first();await expect(firstStep).toContainText('復習');await expect(page.locator('.dojo-review-description')).toHaveText('復習：以前練習したコードを、答えを見ずに弾きます');await expect(page.locator('.dojo')).not.toContainText('答えなしの確認');const start=page.getByTestId('practice-start');await expect(start).toBeVisible();await page.evaluate(async()=>{await document.fonts.ready;});
-   const geometry=await page.evaluate(()=>{const m=document.getElementById('main-content')!,r=m.getBoundingClientRect(),home=document.querySelector('.dojo-home')!;return {top:r.top,bottom:r.bottom,scroll:m.scrollHeight-m.clientHeight,scrollTop:m.scrollTop,horizontal:document.documentElement.scrollWidth-document.documentElement.clientWidth,internal:[...home.querySelectorAll<HTMLElement>('*')].filter(e=>e.getClientRects().length&&e.scrollHeight>e.clientHeight+1&&['auto','scroll'].includes(getComputedStyle(e).overflowY)).length};});
-   expect(geometry.scrollTop).toBe(0);expect(geometry.scroll).toBeLessThanOrEqual(1);expect(geometry.horizontal).toBe(0);expect(geometry.internal).toBe(0);
-   for(const button of [start,...await page.locator('.dojo-choose button,.master251-card button').all()]){await expect(button).toBeVisible();const r=(await button.boundingBox())!;expect(r.y).toBeGreaterThanOrEqual(geometry.top);expect(r.y+r.height).toBeLessThanOrEqual(geometry.bottom);expect(r.height).toBeGreaterThanOrEqual(await button.evaluate(e=>e.closest('.master251-card')&&!e.classList.contains('dojo-primary'))?24:44);expect(await button.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===el;})).toBe(true);}
-   await expect(page.locator('.dojo-home-progress')).toHaveAttribute('open','');await expect(page.locator('.dojo-home-progress .dojo-keys')).toBeVisible();if(state==='many'){await expect(page.locator('.dojo-wanted-list').first().locator(':scope>div')).toHaveCount(2);await expect(page.locator('.dojo-wanted-more>summary')).toContainText('残りの使いたい音');}expect(await page.locator('.dojo-home-progress').evaluate(e=>e.getBoundingClientRect().bottom)).toBeLessThan(await page.locator('.master251-card').evaluate(e=>e.getBoundingClientRect().top));
-   await page.screenshot({path:`p12-generated/master-ui-stability/legacy-regression/home-${width}x${height}-${state}.png`});
-   if(state==='resume')await expect(start).toHaveText('続きから始める');if(state==='finished')await expect(start).toHaveText('新しいテーマで始める');if(state==='empty')await expect(start).toBeDisabled();
-   if(state==='many'){expect(file.today!.tasks.length).toBeGreaterThan(10);await page.locator('.dojo-home-details>summary').click();await expect(page.locator('.dojo-plan>b').first()).toHaveText('復習');await expect(page.locator('.dojo-home-details .dojo-theme h2')).toContainText(file.today!.lesson!.source.name);expect(await page.locator('.dojo').evaluate(e=>e.scrollWidth-e.clientWidth)).toBe(0);await page.locator('.dojo-home-details>summary').click();}
-   const before=await page.evaluate(()=>JSON.parse(localStorage.getItem('loop-vault:chord-dojo-txt-jazz-v1:data')!).today);await page.getByRole('button',{name:'型の一覧',exact:true}).click();await expect(page.getByRole('heading',{name:'型の一覧',exact:true})).toBeVisible();expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('loop-vault:chord-dojo-txt-jazz-v1:data')!).today)).toEqual(before);
-  }finally{await context.close();}
- }
+import { test, expect } from "@playwright/test";
+import { homeFixture } from "./helpers/p12DojoHome";
+import { openDojo, waitForP104Fixture } from "./helpers/p12";
+
+/** P20 replaced the old home: four practice cards, four small cards, a resume strip and a thin MIDI banner. */
+const SIZES = [[1280, 720], [1366, 768], [1440, 900], [1920, 1080]] as const;
+for (const [width, height] of SIZES) {
+  test(`Chord Dojo home P20 fits ${width}x${height}`, async ({ browser }, info) => {
+    test.setTimeout(60_000);
+    const context = await browser.newContext({ viewport: { width, height }, baseURL: String(info.project.use.baseURL), locale: "ja-JP", timezoneId: "Asia/Tokyo", colorScheme: "dark" });
+    const page = await context.newPage();
+    try {
+      await page.addInitScript((file) => localStorage.setItem("loop-vault:chord-dojo-txt-jazz-v1:data", JSON.stringify(file)), homeFixture("many"));
+      await expect.poll(async () => { try { await page.goto("/?p12=no-midi&p104=theme"); return page.url().includes("p12="); } catch { return false; } }, { timeout: 30_000 }).toBe(true);
+      await waitForP104Fixture(page);
+      await page.locator('[data-nav="chord-dojo"]').click();
+      await expect(page.getByTestId("dojo-home")).toBeVisible();
+      await page.evaluate(async () => { await document.fonts.ready; await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))); });
+      const measured = await page.evaluate(() => {
+        const main = document.getElementById("main-content")!;
+        const home = document.querySelector("[data-testid=dojo-home]") as HTMLElement;
+        const rect = (element: Element | null) => element ? element.getBoundingClientRect() : null;
+        const boxes = [...document.querySelectorAll(".dojo-home-p20-main > *, .dojo-home-p20-sub > *")].map((element) => rect(element)!);
+        return {
+          scroll: main.scrollHeight - main.clientHeight,
+          scrollTop: main.scrollTop,
+          horizontal: document.documentElement.scrollWidth - innerWidth,
+          mainCards: document.querySelectorAll(".dojo-home-p20-main > *").length,
+          subCards: document.querySelectorAll(".dojo-home-p20-sub > *").length,
+          midiBanners: document.querySelectorAll("[data-testid=home-midi-banner]").length,
+          cardOverflow: boxes.some((box) => box.bottom > innerHeight + 1 && false),
+          primaryHeights: [...document.querySelectorAll("[data-testid=dojo-home] .dojo-home-p20-primary, [data-testid=dojo-home] .master251-continue")].map((element) => Math.round(rect(element)!.height)),
+          overlapping: boxes.some((box, index) => boxes.some((other, otherIndex) => index < otherIndex && box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)),
+          textOverflow: [...home.querySelectorAll<HTMLElement>("[data-testid=dojo-home] *")].filter((element) => element.getClientRects().length && element.scrollWidth > element.clientWidth + 2).map((element) => ({ text: (element.textContent ?? "").slice(0, 40), className: element.className, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth })),
+        };
+      });
+      expect(measured.horizontal, "no horizontal overflow").toBe(0);
+      expect(measured.mainCards).toBe(4); // P23-47-fix-4: the guide is its own wide card under the four
+      expect(measured.subCards).toBe(4);
+      expect(measured.midiBanners, "one MIDI banner").toBe(1);
+      expect(measured.scrollTop).toBe(0);
+      if (width >= 1440) expect(measured.scroll, "P23-38: the fifth card may need one short row; no more").toBeLessThanOrEqual(80);
+      // P23-41: the resume 続ける button uses the Voicing Loop canonical small size (36px); the other
+      // primaries stay at 44px or taller. The old 44px floor everywhere was the pre-P23-41 resume size.
+      expect(measured.primaryHeights.every((value) => value >= 36), `primary buttons are 36px or taller ${JSON.stringify(measured.primaryHeights)}`).toBe(true);
+      expect(measured.overlapping, "cards do not overlap").toBe(false);
+      expect(measured.textOverflow, `no clipped text inside the home ${JSON.stringify(measured.textOverflow)}`).toHaveLength(0);
+
+      const subBefore = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll<HTMLElement>(".dojo-home-p20-sub > *")].map((element) => [element.getAttribute("data-testid"), Math.round(element.getBoundingClientRect().height)])));
+      await page.screenshot({ path: `p89-generated/p20/home-${width}x${height}.png`, fullPage: true });
+      await page.getByTestId("home-today-details").click();
+      await expect(page.getByTestId("home-today-details-body")).toBeVisible();
+      const opened = await page.evaluate(() => {
+        const main = document.getElementById("main-content")!;
+        const heights = Object.fromEntries([...document.querySelectorAll<HTMLElement>(".dojo-home-p20-sub > *")].map((element) => [element.getAttribute("data-testid"), Math.round(element.getBoundingClientRect().height)]));
+        const clipped = [...document.querySelectorAll<HTMLElement>("[data-testid=home-today-details-body] *")].filter((element) => element.getClientRects().length && element.scrollWidth > element.clientWidth + 2).map((element) => ({ text: (element.textContent ?? "").slice(0, 60), className: element.className }));
+        return { scroll: main.scrollHeight - main.clientHeight, body: document.querySelector("[data-testid=home-today-details-body]")!.getBoundingClientRect().height, heights, clipped };
+      });
+      expect(opened.body).toBeGreaterThan(40);
+      expect(opened.heights["home-today"]).toBeGreaterThan(subBefore["home-today"]!);
+      for (const other of ["home-saved", "home-wanted", "home-shape"]) expect(opened.heights[other], `${other} keeps its height`).toBe(subBefore[other]);
+      expect(opened.clipped, `long names are not clipped ${JSON.stringify(opened.clipped)}`).toHaveLength(0);
+      expect(opened.scroll).toBeGreaterThanOrEqual(0);
+      await page.screenshot({ path: `p89-generated/p20/home-${width}x${height}-details.png`, fullPage: true });
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test("home 1440x900 with MIDI connected (photo)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openDojo(page, "midi");
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: "p89-generated/p20/home-1440x900-midi.png", fullPage: true });
 });

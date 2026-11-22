@@ -54,9 +54,10 @@ async function keyboardGeometry(workspace: Locator): Promise<KeyboardGeometry> {
 
 function expectStableKeyboard(actual: KeyboardGeometry, expected: KeyboardGeometry): void {
   expect(Math.abs(actual.regionWidth - expected.regionWidth)).toBeLessThanOrEqual(1);
-  expect(Math.abs(actual.regionHeight - expected.regionHeight)).toBeLessThanOrEqual(1);
+  // P23-32 K2: the keys fill the panel's rest, so their height follows the content instead of a fixed clamp.
+  expect(actual.regionHeight).toBeGreaterThan(0);
+  expect(actual.svgHeight).toBeGreaterThan(0);
   expect(Math.abs(actual.svgWidth - expected.svgWidth)).toBeLessThanOrEqual(1);
-  expect(Math.abs(actual.svgHeight - expected.svgHeight)).toBeLessThanOrEqual(1);
   expect(Math.abs(actual.c4X - expected.c4X)).toBeLessThanOrEqual(1);
 }
 
@@ -72,24 +73,27 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   const workspace = await openRuleFixture(page);
   const controls = workspace.getByTestId("voicing-loop-controls");
 
-  await expect(controls.locator("legend")).toHaveText(["ソース", "生成タイプ", "表示"]);
+  await expect(controls.locator("legend")).toHaveText(["音の出どころ", "表示"]);
   await expect(controls.getByRole("button", { name: "自動生成", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toHaveAttribute("value", "teacher");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "Open配置", exact: true })).not.toBeChecked();
-  await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).toBeChecked();
+  // P23-32 T4: 最適化 is a switch now; the two legacy modifiers stay checkboxes inside 詳しい設定.
+  await expect(controls.getByRole("switch", { name: "進行に合わせて最適化", exact: true })).toHaveAttribute("aria-checked", "true");
 
   const explanation = workspace.getByTestId("voicing-loop-current-explanation");
   await expect(explanation).toContainText("Teacher Style");
   await expect(explanation).toContainText("候補");
+  // P23-32 P4: the rule's names are not visible words any more; the i carries them as its accessible name.
   await expect(explanation).not.toContainText("ルールP5.31-MIN11");
-  await expect(explanation).toContainText("ルールP5.33-GEN-TEACHER-MAJ7");
+  await expect(explanation).not.toContainText("P5.33-GEN");
+  await expect(explanation.locator(".lv-vl-rule-info")).toHaveAttribute("aria-label", /ルール P5\.33-GEN-TEACHER-MAJ7/);
   await expect(explanation).toContainText("トップトップ候補");
 
   await controls.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
     await page.getByRole("option", { name: "骨組み", exact: true }).click();
   await expect(explanation).toContainText("Family Core");
-  await expect(explanation).toContainText("ルールP5.33-GEN-CORE-MAJ7");
+  await expect(explanation.locator(".lv-vl-rule-info")).toHaveAttribute("aria-label", /ルール P5\.33-GEN-CORE-MAJ7/);
 
   await controls.getByRole("button", { name: "元MIDI", exact: true }).click();
   await expect(explanation).toHaveCount(0);
@@ -100,7 +104,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   // Disabled legacy inputs stay in the closed details DOM; fixed sources cannot open it.
   await expect(details.getByLabel("Colorを加える", { exact: true })).toBeDisabled();
   await expect(details.getByLabel("Open配置", { exact: true })).toBeDisabled();
-  await expect(controls.getByLabel("進行に合わせて最適化", { exact: true })).toBeDisabled();
+  await expect(controls.getByRole("switch", { name: "進行に合わせて最適化", exact: true })).toBeDisabled();
   await controls.getByRole("button", { name: "カスタム", exact: true }).click();
   await expect(explanation).toHaveCount(0);
 });
@@ -249,10 +253,16 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   await expect(pause).toBeVisible();
 
   await openDetails(workspace);
-  for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+  for (const label of ["Colorを加える", "Open配置"]) {
     await controls.getByRole("checkbox", { name: label, exact: true }).check();
     await expect(pause).toBeVisible();
   }
+  // P23-32 T4: 最適化 is a switch (checked when clicked, not checked by `check()`).
+  const optimize = controls.getByRole("switch", { name: "進行に合わせて最適化", exact: true });
+  const wasOptimized = await optimize.getAttribute("aria-checked");
+  await optimize.click();
+  await expect(optimize).toHaveAttribute("aria-checked", wasOptimized === "true" ? "false" : "true");
+  await expect(pause).toBeVisible();
 
   const octaveUp = transport.getByRole("button", { name: "1オクターブ上げる", exact: true });
   await expect(octaveUp).toBeEnabled();
@@ -297,13 +307,19 @@ test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clea
   await assertNoHorizontalOverflow(page);
 });
 
-test("P5.33 paused card seek persists through resume and keeps MIDI on the second transport row", async ({ page }) => {
+test("P5.33 paused card seek persists through resume", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const workspace = await openRuleFixture(page);
   const transport = workspace.getByTestId("voicing-loop-transport");
   const lastCard = workspace.getByTestId("voicing-loop-event").last();
 
   await transport.getByRole("button", { name: "開始", exact: true }).click();
+  // A: the pause must land on a started runtime. Waiting only for 再開 could pause a start that was still
+  // pending — the transport then cancels it and keeps no session, and the later card click auditions instead of
+  // seeking (the heading moves, aria-current never does). The playhead leaving 0 is the state that proves a beat
+  // has come from the running transport.
+  await expect.poll(async () => workspace.getByTestId("voicing-loop-playhead")
+    .evaluate((element) => (element as HTMLElement).style.transform), { timeout: 10_000 }).not.toBe("translateX(0px)");
   await transport.getByRole("button", { name: "一時停止", exact: true }).click();
   // R-01 §2: the state that accepts the seek is the committed pause — the transport button has become 再開 — because a
   // card click racing the (async) start/count-in commit can land on a runtime whose options are not set up yet, and
@@ -319,9 +335,6 @@ test("P5.33 paused card seek persists through resume and keeps MIDI on the secon
   await transport.getByRole("button", { name: "停止", exact: true }).click();
   await transport.getByRole("button", { name: "1オクターブ上げる", exact: true }).click();
   await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("オクターブ+1");
-  const primaryBox = await transport.getByTestId("voicing-loop-transport-primary").boundingBox();
-  const midiBox = await transport.getByTestId("voicing-loop-transport-midi-row").boundingBox();
-  expect(primaryBox && midiBox).toBeTruthy();
-  expect(midiBox!.y).toBeGreaterThanOrEqual(primaryBox!.y + primaryBox!.height);
-  expect(midiBox!.y + midiBox!.height).toBeLessThanOrEqual((await transport.boundingBox())!.y + (await transport.boundingBox())!.height + 2);
+  // P23-32 K3/K4: the bar is one row — there is no second MIDI row any more.
+  await expect(workspace.getByTestId("voicing-loop-transport-midi-row")).toHaveCount(0);
 });

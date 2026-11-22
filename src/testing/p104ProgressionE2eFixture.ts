@@ -9,6 +9,7 @@ import {makeIdea} from '../domain/testFactory';
 import type {SavedProgressionBlock,SongIdea} from '../domain/types';
 /** Synthetic data only. Loaded by App solely in fixture-enabled browser builds. */
 export function p104Ideas(long=false,text=false):SongIdea[]{
+ if(new URLSearchParams(globalThis.location?.search??'').get('p104')==='none')return [];
  if(new URLSearchParams(globalThis.location?.search??'').get('p104')==='judge')return dojoJudgeIdeas();
  if(new URLSearchParams(globalThis.location?.search??'').get('p104')==='judge-mixed')return dojoJudgeIdeas(14,'mixed');
  if(new URLSearchParams(globalThis.location?.search??'').get('p104')==='judge-generated')return dojoJudgeIdeas(14,false);
@@ -20,5 +21,7 @@ export function p104Ideas(long=false,text=false):SongIdea[]{
  chords:Array.from({length:long?70:8},(_,i)=>{const chord=parseChordLabel(labels[i%4]!)!;const pitches=[[48,60,64,67],[53,60,65,69],[43,59,62,67],[45,60,64,69]][i%4]!;return {eventId:`p104-${i}`,bar:(long?1:25)+i,beat:1,durationBeats:4,chord,confidence:1,alternatives:[{chord:parseChordLabel('Dm7')!,confidence:0.8}],warnings:[],voicingMemory:{sourceVoicing:{schemaVersion:1,source:'midi-extracted',representation:'simultaneous-voicing',midiNotes:pitches,bassNote:pitches[0],capturedForChordKey:normalizedChordKey(chord),userVerified:true},playbackChoice:'SOURCE'}};})};
  if(text){const data=extendedTextSaveData(parseExtendedTextProgression('| C % | F | G | Am |'));Object.assign(b,{chords:data.chords.map((card,i)=>({...card,eventId:`p104-${i}`})),textSource:data.textSource,sourceStartBeat:0,sourceEndBeat:data.scoreLengthBeats,startBar:1,endBar:4,lengthBars:4,memo:'区切り1（1〜4小節）; 合成テキスト'});}
  const second:SavedProgressionBlock={...b,id:'10400000-0000-4000-8000-000000000002',memo:'区切り8（33〜40小節）; 第二進行',startBar:33,endBar:40,lengthBars:8,chords:b.chords.slice(0,8).map((c,i)=>({...c,eventId:`other-${i}`,bar:33+i}))};
- return [makeIdea({id:'10400000-0000-4000-8000-000000000003',title:'P10.4 合成曲',key:'C major',bpm:240,progressionBlocks:[b,second]})];
+ const idea=makeIdea({id:'10400000-0000-4000-8000-000000000003',title:'P10.4 合成曲',key:'C major',bpm:240,progressionBlocks:[b,second]});
+ if(new URLSearchParams(globalThis.location?.search??'').get('p104')==='renamed'){idea.title='P10.4 改名した合成曲';idea.progressionBlocks![0]!.memo='改名した進行（25〜32小節）; 自由メモ';}
+ return [idea];
 }

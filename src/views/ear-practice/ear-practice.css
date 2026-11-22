@@ -2,49 +2,125 @@
 #main-content:has(.ear) { overflow-y: auto; }
 #main-content:has(.ear[data-screen="run"]) { overflow: hidden; }
 #main-content:has(.ear[data-screen="run"]) > div { height: 100%; min-height: 0; }
-.ear { --ear-staff-h: 240px; display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.ear { --ear-staff-h: 240px; --ear-card-h: 96px; display: flex; flex-direction: column; min-height: 0; height: 100%; container-type: inline-size; }
 .ear[data-screen="run"] { overflow: hidden; }
 @media (max-width: 1279px) { .ear { --ear-staff-h: 200px; } }
 @media (max-width: 1023px) { .ear { --ear-staff-h: 130px; } }
+/* P23-23a T3: the card is 96 px high, 78 px in a 1280×720 window, and lower again when the window is narrow. */
+@media (max-height: 780px) { .ear { --ear-card-h: 78px; } }
+@media (max-width: 1023px) { .ear { --ear-card-h: 62px; } }
 
 /* ---- choosing ---- */
-.ear-choose { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; padding: 20px 28px; align-items: start; }
+.ear-choose { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; padding: 13px 32px 28px; align-items: start; }
+/* P23-31b O4: under 880px the right column goes under the levels (it used to overlap them). */
+@container (max-width: 879px) {
+  .ear-choose { grid-template-columns: minmax(0, 1fr); }
+}
 .ear-choose-main { display: grid; gap: 14px; min-width: 0; }
+/* P23-21 E1: the page title and its one-line explanation share the top row. */
+.ear-choose-head { flex-wrap: wrap; align-items: baseline; }
+.ear-head-note { margin: 0; color: var(--lv-text-muted); font-size: 12.5px; }
+/* E2/E3/E6/E7: each group is one face. */
+.ear-face { border-radius: var(--lv-radius-md); background: var(--lv-surface); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.ear-face-title { margin: 0; color: var(--lv-text-secondary); font-size: 12px; font-weight: 600; }
+.ear-problem-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+.ear-problem-row .ear-hint { margin-left: auto; }
 .ear-field { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
 .ear-field legend { padding: 0; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--dojo-secondary); }
 .ear-seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.ear-seg button[data-on], .ear-levels button[data-on] { border-color: var(--dojo-accent); background: var(--dojo-accent-soft); color: var(--dojo-accent); font-weight: 600; }
+.ear-seg button[data-on], .ear-levels button[data-on] { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-accent); font-weight: 600; }
+/* E3: five low rows (46px), a number badge, the text, then the examples and the count on the right. */
 .ear-levels { display: grid; gap: 6px; }
-.dojo .ear-levels button { justify-content: flex-start; gap: 12px; text-align: left; min-height: 34px; }
-.ear-levels b { width: 18px; font-size: 14px; }
-.ear-levels span { font-size: 12.5px; }
+.dojo .ear-levels button, .ear-levels button {
+  min-width: 0;
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; height: 46px; padding: 0 12px;
+  border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-bg-subtle);
+  color: var(--lv-text-secondary); text-align: left;
+}
+.ear-levels button[data-on] { border-color: var(--lv-accent); background: var(--lv-accent-soft); }
+.ear-level-no { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 8px; background: var(--lv-surface-raised); color: var(--lv-text); font-size: 13px; font-weight: 700; }
+.ear-levels button[data-on] .ear-level-no { background: var(--lv-accent); color: var(--lv-text-on-accent); }
+.ear-level-text { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.ear-level-meta { display: inline-flex; align-items: center; gap: 14px; flex: none; }
+.ear-level-example { color: var(--lv-text-muted); font-family: var(--font-mono); font-size: 11.5px; }
+.ear-levels button[data-on] .ear-level-example, .ear-levels button[data-on] .ear-level-count { color: var(--lv-text-secondary); }
+.ear-level-count { min-width: 52px; color: var(--lv-text-secondary); font-size: 12px; text-align: right; }
+.ear-level-count[data-zero] { color: var(--lv-text-muted); }
+@media (max-width: 1023px) { .ear-level-example { display: none; } }
 .ear-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; }
+/* E6: one row inside the face, with the 「詳しい設定」 button at its right end. */
+.ear-settings-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 18px; }
+.ear-advanced-toggle { margin-left: auto; min-height: 32px; padding: 0 12px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: transparent; color: var(--lv-text-secondary); font-size: 12.5px; }
+.ear-advanced-toggle:hover { background: var(--lv-surface-raised); color: var(--lv-text); }
+.ear-advanced { display: grid; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--lv-border); }
+.ear-advanced label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--lv-text-secondary); }
+.ear-advanced button { justify-self: start; }
 .ear-inline { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dojo-secondary); }
-.ear-inline select, .ear-inline input[type="number"] { min-height: 30px; border: 1px solid var(--dojo-border-strong); border-radius: 6px; background: var(--dojo-bg-2); color: #f2f6fc; padding: 0 8px; }
+.ear-inline select, .ear-inline input[type="number"] { min-height: 30px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-well); color: var(--lv-text); padding: 0 8px; }
 .ear-inline input[type="number"] { width: 72px; }
 .ear-hint { font-size: 12px; color: var(--dojo-muted); }
-.ear-details { border: 1px solid var(--dojo-border); border-radius: 9px; padding: 8px 12px; display: grid; gap: 8px; }
-.ear-details summary { cursor: pointer; font-size: 12.5px; color: var(--dojo-secondary); }
-.ear-details label { font-size: 12.5px; color: var(--dojo-secondary); display: flex; align-items: center; gap: 8px; }
 .ear-side { display: grid; gap: 14px; align-content: start; }
 .ear-notice { border: 1px solid var(--dojo-warn); background: var(--dojo-warn-soft); color: #f7dc9a; border-radius: 9px; padding: 8px 12px; font-size: 12.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .ear-entry { display: grid; gap: 8px; }
+/* E7: the start band — ordinary height (80px at most), the value on the left, the 48×170 button on the right. */
+.ear-startband { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 14px 16px; border: 1px solid var(--lv-accent); border-radius: var(--lv-radius-md); background: color-mix(in srgb, var(--lv-accent-soft) 60%, var(--lv-surface)); }
+.ear-startband-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.ear-startband-text > b { color: var(--lv-text); font-size: 17px; font-weight: 700; }
+.ear-startband-text > span { color: var(--lv-text-secondary); font-size: 12px; }
+/* E14: on a short window the choosing screen tightens so 「始める」 needs no scroll (the rows keep their 46px). */
+@media (max-height: 780px) {
+  .ear-choose { padding-top: 8px; padding-bottom: 10px; }
+  .ear-choose-main { gap: 6px; }
+  .ear-face { padding: 6px 12px; gap: 6px; }
+  .ear-startband { padding: 10px 14px; }
+}
+.dojo .ear-start { flex: none; width: 170px; height: 48px; padding: 0; font-size: 15px; border-radius: var(--lv-radius-sm); }
+/* E11/E12: the recent results card. */
+.ear-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ear-card-head h2 { margin-bottom: 0; }
+.ear-open-records { flex: none; white-space: nowrap; min-height: 28px; padding: 0 10px; font-size: 12px; }
+.ear-recent-plays { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.ear-recent-play { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--lv-radius-sm); background: var(--lv-bg-subtle); }
+.ear-recent-play-text { display: grid; gap: 1px; min-width: 0; flex: 1; }
+.ear-recent-play-text > b { color: var(--lv-text); font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ear-recent-play-text > span { color: var(--lv-text-muted); font-size: 11px; }
+.ear-recent-play-rate { color: var(--lv-text); font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
 .ear kbd { font: inherit; font-size: 11px; opacity: .7; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 
 /* ---- practice ---- */
 .ear-run { display: flex; flex-direction: column; gap: 8px; padding: 8px 18px 10px; min-height: 0; height: 100%; box-sizing: border-box; }
-.ear-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: none; }
-.ear-head h1 { font-size: 18px; font-weight: 700; margin: 0; }
+/* P23-23a T1/T2: back, title, the facts and the flow of the practice share one row; the title keeps every word it had. */
+.ear-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; flex: none; }
+.ear-back { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px 0 6px; border: 1px solid var(--dojo-border-strong); border-radius: 9px; background: transparent; color: var(--dojo-secondary); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.ear-back:hover { border-color: var(--dojo-accent); color: var(--lv-text); }
+.ear-head h1 { display: flex; align-items: baseline; gap: 6px; margin: 0; font-size: 19px; font-weight: 700; }
+.ear-title-main { font-size: 19px; font-weight: 700; white-space: nowrap; }
+.ear-title-fact { padding: 1px 7px; border: 1px solid var(--dojo-border); border-radius: 999px; color: var(--dojo-secondary); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
 .ear-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 2px 10px; border: 1px solid var(--dojo-accent); border-radius: 999px; font-size: 12px; color: var(--dojo-accent); }
 .ear-badge-plain { border-color: var(--dojo-border-strong); color: var(--dojo-secondary); }
 .ear-note { font-size: 12px; color: var(--dojo-muted); }
-.ear-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: none; font-size: 12.5px; }
-.ear-steps > span[data-state] { padding: 4px 10px; border: 1px solid var(--dojo-border); border-radius: 8px; color: var(--dojo-muted); }
-.ear-steps > span[data-state="current"] { border-color: var(--dojo-accent); color: var(--dojo-accent); background: var(--dojo-accent-soft); }
+/* T2: the three steps as round numbers; the current one is the accent, a done one is a tick, the coming ones are faint. */
+.ear-steps { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 12px; color: var(--dojo-muted); white-space: nowrap; }
+.ear-steps > span { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 4px; border-radius: 999px; transition: background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1), color 180ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ear-steps > span > b { font-weight: inherit; }
+.ear-step-no { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; font-style: normal; font-weight: 700; box-shadow: inset 0 0 0 1px var(--dojo-border-strong); transition: background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1), color 180ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 180ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ear-steps > span[data-state="current"] { background: var(--dojo-accent-soft); color: var(--dojo-accent); font-weight: 700; }
+.ear-steps > span[data-state="current"] .ear-step-no { background: var(--dojo-accent); color: var(--lv-text-on-accent); box-shadow: none; }
 .ear-steps > span[data-state="done"] { color: var(--dojo-secondary); }
-.ear-legend { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dojo-muted); }
+.ear-steps > span[data-state="done"] .ear-step-no { background: #123a37; color: var(--dojo-accent); box-shadow: none; }
+.ear-step-line { position: relative; overflow: hidden; width: 12px; height: 2px; border-radius: 1px; background: var(--dojo-border-strong); }
+.ear-step-line::after { content: ""; position: absolute; inset: 0; background: var(--dojo-accent); transform: scaleX(0); transform-origin: left center; transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ear-step-line[data-filled="true"]::after { transform: scaleX(1); }
+.ear-step-line[data-filled="true"] + span[data-state="current"],
+.ear-step-line[data-filled="true"] + span[data-state="current"] .ear-step-no { transition-delay: 160ms; }
+@media (prefers-reduced-motion: reduce) {
+  .ear-step-line::after,
+  .ear-steps > span,
+  .ear-step-no { transition: none; transition-delay: 0ms; }
+}
+.ear-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--dojo-muted); }
 .ear-legend span { display: inline-flex; align-items: center; gap: 5px; }
-@media (max-width: 1023px) { .ear-legend { display: none; } }
+@media (max-width: 1023px) { .ear-legend { display: none; } .ear-steps { gap: 3px; } .ear-steps > span { padding: 0 4px; } .ear-step-label { display: none; } .ear-step-line { width: 6px; } }
 
 .ear-mark { font-style: normal; display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 4px; font-size: 11px; font-weight: 700; line-height: 1; }
 .ear-mark[data-mark="ok"] { color: #7bd88f; background: transparent; font-weight: 600; }
@@ -53,27 +129,97 @@
 .ear-mark[data-mark="key"] { background: #6cc7ff; color: #06192a; }
 
 .ear-cards { display: flex; gap: 8px; flex: none; min-width: 0; }
-.ear-cards-result { flex-wrap: wrap; }
-.ear-card { position: relative; flex: 1 1 0; min-width: 0; min-height: 76px; border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); padding: 6px 8px; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center; overflow: hidden; }
+.ear-cards-result { flex-wrap: wrap; row-gap: 4px; }
+/* T3: the number and the marks sit at the corners; the name, the degree and the small line are centred; the 3 px line at
+   the bottom says whose chord it is (the role's colour once it is done). */
+.ear-card { position: relative; flex: 1 1 0; min-width: 0; height: var(--ear-card-h); border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); padding: 4px 8px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; overflow: hidden; }
 .ear-cards-result .ear-card { flex: 0 1 120px; }
 .ear-card[data-current] { border-color: var(--dojo-accent); box-shadow: 0 0 0 1px var(--dojo-accent); }
 .ear-card[data-lap] { border-color: var(--dojo-accent); background: var(--dojo-accent-soft); }
 .ear-card[data-done] { background: var(--dojo-bg-2); }
-.ear-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; width: 100%; min-height: 18px; }
+.ear-card-top { position: absolute; left: 8px; right: 8px; top: 4px; display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; }
 .ear-card-no { font-size: 10.5px; color: var(--dojo-muted); }
 .ear-marks { display: flex; gap: 3px; flex-wrap: nowrap; }
-.ear-card-name { font-size: 17px; font-weight: 700; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.ear-card-name { font-size: 23px; font-weight: 700; line-height: 1.15; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .ear-card-sub { font-size: 11px; color: var(--dojo-muted); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .ear-card[data-current] .ear-card-sub { color: var(--dojo-accent); }
-.ear-position { display: flex; align-items: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--dojo-muted); min-height: 14px; }
+.ear-card-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--dojo-border); }
+.ear-card[data-done] .ear-card-bar { background: var(--dojo-accent); opacity: .9; }
+.ear-card-bar[data-kind="T"] { background: var(--lv-fn-t); }
+.ear-card-bar[data-kind="SD"] { background: var(--lv-fn-sd); }
+.ear-card-bar[data-kind="SDm"] { background: var(--lv-fn-sdm); }
+.ear-card-bar[data-kind="D"] { background: var(--lv-fn-d); }
+/* T4: the mark meanings, the place in the whole question and the switch under the cards. */
+.ear-under { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; flex: none; min-height: 18px; }
+.ear-under .ear-legend { justify-self: start; }
+.ear-under .ear-toggle { justify-self: end; }
+.ear-under-fill { justify-self: end; }
+.ear-position { display: flex; align-items: center; justify-self: center; gap: 6px; flex: none; font-size: 11.5px; color: var(--dojo-muted); min-height: 14px; }
 .ear-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dojo-border-strong); display: inline-block; }
 .ear-dot[data-state="ok"] { background: #7bd88f; }
 .ear-dot[data-state="help"] { background: #f2b84b; }
 .ear-dot[data-state="retry"] { background: #e0883a; }
 .ear-dot[data-current] { box-shadow: 0 0 0 2px var(--dojo-bg), 0 0 0 4px var(--dojo-accent); }
 
-.ear-middle { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 34%); gap: 14px; flex: none; min-height: var(--ear-staff-h); }
-.ear-controls { display: flex; flex-direction: column; gap: 8px; min-width: 0; align-content: start; }
+/* P23-23a S1-S4/S8/S20: one face, three columns — 聴く | 答える | 楽譜 — separated by thin lines. */
+.ear-stage { display: grid; grid-template-columns: minmax(0, 296px) minmax(0, 1fr) minmax(0, 280px); flex: none; min-height: var(--ear-staff-h); border: 1px solid var(--dojo-border); border-radius: 14px; background: linear-gradient(180deg, #0f1925, #0d1620); overflow: hidden; }
+@media (min-width: 1360px) { .ear-stage { grid-template-columns: 336px minmax(0, 1fr) 372px; } }
+.ear-zone { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 10px 14px; gap: 6px; }
+.ear-zone-head { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: var(--dojo-secondary); }
+.ear-zone-head b { font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.ear-zone-head small { font-size: 11.5px; font-weight: 400; color: var(--dojo-muted); }
+.ear-zone-head .ear-stats { margin-left: auto; }
+.ear-listen { border-right: 1px solid #17222f; }
+.ear-answer { border-right: 1px solid #17222f; }
+.ear-listen-body { display: flex; flex: 1 1 0; align-items: center; justify-content: center; gap: 14px; min-height: 0; }
+.ear-orb { position: relative; flex: none; width: 100px; height: 100px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--dojo-accent); }
+.ear-orb-core { position: absolute; inset: 17%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #1c4a4b, #0f2a2e 70%); box-shadow: inset 0 0 0 1px #2a6a66, 0 6px 22px rgb(0 0 0 / 40%); transition: transform .12s, box-shadow .15s; }
+.ear-orb:hover .ear-orb-core { box-shadow: inset 0 0 0 1.5px var(--dojo-accent), 0 6px 22px rgb(0 0 0 / 40%); }
+.ear-orb:active .ear-orb-core { transform: scale(.96); }
+.ear-orb-core b { font-size: 12px; white-space: nowrap; }
+.ear-orb-core small { font-size: 10.5px; color: var(--dojo-secondary); }
+.ear-orb-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ear-orb-ring-track { fill: none; stroke: #1c3a3f; stroke-width: 2; }
+.ear-orb-ring-fill { fill: none; stroke: var(--dojo-accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: ear-ring var(--ear-ring-ms, 1s) linear forwards; }
+@keyframes ear-ring { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .ear-orb-ring-fill { animation: none; stroke-dashoffset: 0; } }
+.ear-listen-list { display: flex; flex: 1 1 0; flex-direction: column; gap: 5px; min-width: 0; }
+.ear-listen-list button { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--dojo-border); border-radius: 9px; background: var(--dojo-surface); color: var(--lv-text); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.ear-listen-list button:hover:not(:disabled) { border-color: var(--dojo-accent); }
+.ear-listen-list button:disabled { opacity: .35; }
+.ear-listen-big { display: flex; flex: 1 1 0; flex-direction: column; justify-content: center; gap: 10px; min-height: 0; }
+.ear-listening { margin: 0; color: var(--lv-text); font-size: 19px; font-weight: 700; line-height: 1.4; }
+.ear-lap-count { margin: 0; color: var(--dojo-secondary); font-size: 12.5px; }
+.ear-lap-count b { margin-right: 4px; color: var(--lv-text); font-family: var(--font-mono); font-size: 34px; font-weight: 700; }
+.ear-primary { align-self: flex-start; }
+/* P23-23a S9-S17: the answer column — the number, the words of the judgement, the pressed keys, the tried shapes, the hints. */
+.ear-now { display: flex; align-items: center; gap: 12px; }
+.ear-tile { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 16px; background: #0f2529; box-shadow: inset 0 0 0 1.5px #2a6a66; }
+.ear-tile b { color: var(--dojo-accent); font-family: var(--font-mono); font-size: 30px; font-weight: 700; line-height: 1; }
+.ear-tile small { margin-top: 5px; color: var(--dojo-secondary); font-size: 10.5px; }
+.ear-tile[data-bad] { box-shadow: inset 0 0 0 1.5px #f2b84b; }
+.ear-tile[data-bad] b { color: #f2b84b; }
+.ear-now-text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.ear-sline { margin: 0; min-height: 19px; color: var(--dojo-secondary); font-size: 12.5px; }
+.ear-stage .ear-feedback { font-size: 18px; }
+.ear-held { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 30px; }
+.ear-held-k { color: var(--dojo-muted); font-size: 11.5px; white-space: nowrap; }
+.ear-chip { display: inline-grid; place-items: center; min-width: 34px; height: 28px; padding: 0 8px; border-radius: 8px; background: #1b2a44; color: #cfe0ff; box-shadow: inset 0 0 0 1px #33497a; font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.ear-chip[data-extra] { background: #3a1a20; color: #ffb3ba; box-shadow: inset 0 0 0 1px #ff5c6c; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.ear-chip[data-missing] { border: 1.5px dashed #f2b84b; background: transparent; color: #f2b84b; box-shadow: none; }
+.ear-chip-sm { min-width: 28px; height: 22px; padding: 0 6px; border-radius: 6px; font-size: 11.5px; }
+.ear-chip-none { color: #55677c; font-size: 12.5px; }
+.ear-tried { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow: hidden; }
+.ear-tried-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.ear-tried-n { flex: none; width: 46px; color: var(--dojo-muted); font-size: 11px; white-space: nowrap; }
+.ear-tried-msg { margin-left: 4px; overflow: hidden; color: var(--dojo-secondary); font-size: 11.5px; white-space: nowrap; text-overflow: ellipsis; }
+.ear-hintrow { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid #17222f; }
+.ear-hint-k { color: var(--dojo-muted); font-size: 11.5px; white-space: nowrap; }
+.ear-hintbtn { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--dojo-border-strong); border-radius: 9px; background: transparent; color: var(--lv-text); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ear-hintbtn:hover:not(:disabled) { border-color: var(--dojo-accent); }
+.ear-hintbtn[data-used] { border-color: transparent; background: var(--dojo-bg-2); color: var(--dojo-secondary); }
+.ear-hintbtn[data-todo], .ear-hintbtn:disabled { opacity: .38; }
+.ear-hint-arrow { color: #46586d; }
 .ear-line { font-size: 13px; color: var(--dojo-secondary); }
 .ear-feedback { border-left: 3px solid #e0883a; background: var(--dojo-warn-soft); border-radius: 6px; padding: 8px 12px; font-size: 13.5px; color: #f7dc9a; }
 .ear-feedback[data-ok="true"] { border-left-color: #7bd88f; background: rgb(123 216 143 / 10%); color: #bfeccb; }
@@ -93,8 +239,11 @@
 .ear-score .dojo-grand-staff { min-width: 0; height: 100% !important; width: 100%; }
 .ear-score[data-open] { position: fixed; z-index: 40; inset: 70px 6vw auto 6vw; height: min(520px, 70vh); box-shadow: 0 20px 60px rgb(0 0 0 / 60%); border-color: var(--dojo-accent); }
 .ear-score-foot { margin: 0; padding: 0 10px 6px; font-size: 11.5px; color: var(--dojo-muted); min-height: 16px; flex: none; }
+/* S20: in the stage the score is a column of the one face: its own frame goes, its height follows the face. */
+.ear-stage > .ear-score:not([data-open]) { height: auto; min-height: 0; border: 0; border-radius: 0; background: transparent; padding: 10px 12px; }
 
 .ear-keyboard { --target-keyboard-width: 0px; flex: 1 1 0; min-height: 0; padding: 8px 12px 10px; }
+.ear-keyboard .dojo-extra-swatch { background: #ff5c6c; }
 .ear-keyboard .dojo-keyboard-head { min-height: 22px; }
 .ear-range { display: inline-flex; gap: 4px; margin-left: auto; }
 .dojo .ear-range button { min-height: 22px; padding: 0 8px; font-size: 11px; }
@@ -103,29 +252,126 @@
    room, never under 112 px (92 px in a narrow window). The picture is drawn at that height: it is not stretched. */
 .ear-keyboard svg { height: var(--ear-key-h, 112px) !important; }
 
-/* ---- result ---- */
-.ear-result { gap: 14px; overflow: auto; }
-.ear-summary { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; }
-.ear-summary > div { border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); padding: 10px 16px; min-width: 120px; }
-.ear-summary dt { font-size: 11.5px; color: var(--dojo-muted); }
-.ear-summary dd { margin: 2px 0 0; font-size: 20px; font-weight: 700; }
+/* ---- P23-23b: the result ---- */
+.ear-result { overflow: hidden; gap: 8px; }
+.ear-result-body { display: flex; flex: 1 1 0; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; }
+/* X2-X6: the first-try wheel, the question's name and key, and the four figures, on one face. */
+.ear-result-top { display: grid; grid-template-columns: 110px minmax(0, 1fr); align-items: center; gap: 16px; flex: none; padding: 12px 16px; border-radius: 14px; background: linear-gradient(120deg, #0f2529, #0f1925 60%); }
+.ear-rate { position: relative; width: 110px; height: 110px; }
+.ear-rate-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ear-rate-track { fill: none; stroke: #17303a; stroke-width: 9; }
+.ear-rate-fill { fill: none; stroke: var(--dojo-accent); stroke-width: 9; stroke-linecap: round; }
+.ear-rate-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.ear-rate-center b { font-family: var(--font-mono); font-size: 26px; font-weight: 700; }
+/* P23-31b O7: a longer 「15 / 15」 gets a smaller size so it does not touch the ring. */
+.ear-rate-center b[data-len="6"], .ear-rate-center b[data-len="7"] { font-size: 19px; }
+.ear-rate-center b[data-len="8"], .ear-rate-center b[data-len="9"] { font-size: 16px; }
+.ear-rate-center span { margin-top: 3px; color: var(--dojo-secondary); font-size: 11.5px; }
+.ear-result-now { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ear-result-name { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.3; }
+.ear-result-name small { color: var(--dojo-secondary); font-size: 12px; font-weight: 500; }
+.ear-result-name b { color: var(--lv-text); }
+.ear-result-facts { margin: 0; overflow: hidden; color: var(--dojo-secondary); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.ear-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.ear-summary-card { display: grid; gap: 1px; min-width: 0; padding: 7px 10px; border: 1px solid var(--dojo-border); border-radius: 10px; background: var(--dojo-surface); }
+.ear-summary dt { color: var(--dojo-muted); font-size: 11px; }
+.ear-summary dd { margin: 0; font-family: var(--font-mono); font-size: 21px; font-weight: 700; }
+.ear-summary-note { display: flex; flex-wrap: wrap; gap: 3px; margin: 0; overflow: hidden; color: var(--dojo-muted); font-size: 10.5px; white-space: nowrap; text-overflow: ellipsis; }
+/* P23-31b O6: the small note under a figure stays small (the dd rule was making it the figure's big mono type). */
+.ear-summary dd.ear-summary-note { font-family: inherit; font-size: 10.5px; font-weight: 400; line-height: 1.4; color: var(--dojo-muted); }
+.ear-summary-note .ear-diff { font-size: 10.5px; }
+.ear-compare-line { margin: 0; color: var(--dojo-muted); font-size: 11.5px; }
+/* X7/X8: the cards one by one, with the seconds' line under each. */
+.ear-result-cards-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; flex: none; }
+.ear-result-cards-head > b { font-size: 13px; }
+.ear-result-cards-head > span { flex: 1; min-width: 0; color: var(--dojo-muted); font-size: 11.5px; }
+.ear-result-cards-head > button { flex: none; min-height: 28px; padding: 0 10px; border: 1px solid var(--dojo-border-strong); border-radius: 8px; background: transparent; color: var(--lv-text); font-size: 12px; font-weight: 600; }
+.ear-cards-result .ear-card { height: 112px; flex: 0 1 120px; }
+.ear-result-sec { position: absolute; left: 0; bottom: 4px; height: 3px; width: calc(var(--ear-sec, 0) * 100%); background: var(--dojo-secondary); opacity: .85; }
+.ear-result-sec[data-slow] { background: #f2b84b; }
+/* X9/X10: the score (as it is, at its own size) and the last twelve questions beside it. */
+.ear-result-row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; flex: none; }
+.ear-result-score-face { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ear-result-score-face .ear-help { flex: none; margin: 0; }
+.ear-result-trend { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 10px 12px; border-radius: 14px; background: var(--dojo-surface); }
+.ear-trend-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.ear-trend-head b { font-size: 12px; }
+.ear-trend-head small { color: var(--dojo-muted); font-size: 10.5px; }
+.ear-trend-chart { margin: 0; }
+.ear-trend-chart figcaption { color: var(--dojo-secondary); font-size: 11px; }
+.ear-trend-bars { display: flex; align-items: flex-end; gap: 3px; height: 46px; padding-top: 6px; }
+.ear-trend-bar { flex: 1 1 0; min-width: 2px; height: calc(var(--ear-trend, 0) * 100%); border-radius: 2px 2px 0 0; background: var(--dojo-border-strong); }
+.ear-trend-bar[data-current] { background: var(--dojo-accent); }
+.ear-trend-bar[data-empty] { background: transparent; box-shadow: inset 0 0 0 1px var(--dojo-border); }
+.ear-trend-axis { display: flex; justify-content: space-between; gap: 6px; color: var(--dojo-muted); font-size: 10.5px; }
+/* X13: the bottom row stays at the window's bottom; the body above it scrolls when it has to. */
+.ear-result-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex: none; padding-top: 8px; border-top: 1px solid var(--dojo-border); }
+.ear-result-foot .ear-help { flex: 1 1 320px; margin: 0; text-align: center; }
+.ear-result-foot-actions { display: flex; gap: 8px; flex: none; margin-left: auto; }
+@media (max-width: 1023px) {
+  .ear-result-top { grid-template-columns: 84px minmax(0, 1fr); gap: 10px; padding: 8px 10px; }
+  .ear-rate { width: 84px; height: 84px; }
+  .ear-rate-center b { font-size: 19px; }
+  /* P23-31b O7: the long counts in the smaller ring. */
+  .ear-rate-center b[data-len="6"], .ear-rate-center b[data-len="7"] { font-size: 14px; }
+  .ear-rate-center b[data-len="8"], .ear-rate-center b[data-len="9"] { font-size: 12px; }
+  .ear-rate-center span { font-size: 10.5px; }
+  .ear-result-name { font-size: 18px; }
+  .ear-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ear-result-row { grid-template-columns: minmax(0, 1fr); }
+  .ear-result-foot .ear-help { order: 3; flex-basis: 100%; text-align: left; }
+}
+/* A short window (1280×720): the summary face tightens so the score and the bottom row fit without the body scrolling. */
+@media (max-height: 780px) {
+  .ear-result-top { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; padding: 8px 12px; }
+  .ear-rate { width: 84px; height: 84px; }
+  .ear-rate-center b { font-size: 20px; }
+  /* P23-31b O7: the long counts in the smaller ring (the short window uses the same sizes as a narrow one). */
+  .ear-rate-center b[data-len="6"], .ear-rate-center b[data-len="7"] { font-size: 14px; }
+  .ear-rate-center b[data-len="8"], .ear-rate-center b[data-len="9"] { font-size: 12px; }
+  .ear-rate-center span { font-size: 10.5px; }
+  .ear-result-name { font-size: 19px; }
+  .ear-result-body { gap: 4px; }
+  .ear-summary-card { padding: 5px 8px; }
+  .ear-summary dd { font-size: 18px; }
+  .ear-summary dd.ear-summary-note { font-size: 10px; }
+}
+/* P23-58-fix-1 B6: at >= 1200px, trend moves into the top band's 3rd column so 8-bar score fits on 1 row. */
+@media (min-width: 1200px) {
+  .ear-result-body { gap: 5px; }
+  .ear-compare-line { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .ear-result-top[data-wide-trend="true"] { grid-template-columns: 110px minmax(0, 1fr) 300px; padding: 10px 16px; }
+  .ear-result-row[data-wide-trend="true"] { grid-template-columns: minmax(0, 1fr); }
+  .ear-result-row[data-wide-trend="true"] .ear-result-score-face { gap: 3px; }
+  .ear-result-trend-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: 4px 6px; padding: 0 0 0 12px; border-left: 1px solid var(--dojo-border); border-radius: 0; background: transparent; }
+  .ear-result-trend-top .ear-trend-head,
+  .ear-result-trend-top .ear-help { grid-column: 1 / -1; margin: 0; }
+  .ear-result-trend-top .ear-trend-head b { font-size: 12px; }
+  .ear-result-trend-top .ear-trend-head small,
+  .ear-result-trend-top .ear-trend-chart figcaption,
+  .ear-result-trend-top .ear-trend-axis { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ear-result-trend-top .ear-trend-bars { height: 44px; padding-top: 2px; }
+}
+@media (min-width: 1200px) and (max-height: 800px) {
+  .ear-cards-result .ear-card { height: 96px; padding-block: 4px; }
+  .ear-result-top[data-wide-trend="true"] { grid-template-columns: 92px minmax(0, 1fr) 300px; padding-block: 8px; }
+  .ear-result-top[data-wide-trend="true"] .ear-rate { width: 92px; height: 92px; }
+  .ear-result-top[data-wide-trend="true"] .ear-summary-card { padding: 1px 8px; gap: 0; }
+  .ear-result-top[data-wide-trend="true"] .ear-summary dd { line-height: 1.15; }
+  .ear-result .ear-score-card { padding-top: 6px; padding-bottom: 4px; gap: 4px; }
+  .ear-score-fn-note { margin-left: auto; color: var(--dojo-muted); font-size: 11px; white-space: nowrap; }
+}
 
 
-/* ---- room: a tall window gives the cards and the keyboard more; a small one makes everything compact ---- */
+/* ---- room: a tall window gives the practice more air; a small one makes everything compact ---- */
 @media (min-height: 860px) {
   .ear-run { gap: 12px; padding-top: 12px; }
-  .ear-card { min-height: 108px; }
-  .ear-card-name { font-size: 21px; }
 }
 @media (max-width: 1023px) {
   .ear-run { gap: 5px; padding: 6px 12px 8px; }
-  .ear-head h1 { font-size: 15px; }
-  .ear-steps { gap: 6px; }
-  .ear-steps > span[data-state] { padding: 2px 8px; }
-  .ear-card { min-height: 56px; padding: 4px 6px; }
-  .ear-card-name { font-size: 15px; }
-  .ear-middle { grid-template-columns: minmax(0, 1fr) minmax(220px, 38%); gap: 8px; }
-  .ear-controls { gap: 5px; }
+  .ear-head h1, .ear-title-main { font-size: 15px; }
+  .ear-back { height: 26px; font-size: 11.5px; }
+  .ear-badge { min-height: 20px; font-size: 11px; }
   .ear-feedback { padding: 5px 10px; font-size: 12.5px; }
   .ear-line { font-size: 12px; }
   .dojo .ear-actions button { min-height: 26px; padding: 0 8px; font-size: 12px; }
@@ -134,6 +380,46 @@
   .ear-stats { font-size: 11px; }
   .ear-keyboard { padding: 5px 10px 6px; }
   .ear-score-head { padding-top: 3px; font-size: 11px; }
+  /* S22: a narrow window stacks 答える (then 聴く) beside 楽譜. The three full rows do not fit a 640 px window with the
+     score and the keyboard on screen; the report records the measured numbers behind this. */
+  .ear-stage { grid-template-columns: minmax(0, 1fr) minmax(168px, 34%); grid-template-rows: auto auto; grid-template-areas: "answer score" "listen score"; min-height: 0; }
+  .ear-answer { grid-area: answer; border-right: 1px solid #17222f; border-bottom: 1px solid #17222f; }
+  .ear-listen { grid-area: listen; flex-direction: row; align-items: center; border-right: 1px solid #17222f; }
+  .ear-listen .ear-zone-head { flex: none; white-space: nowrap; }
+  .ear-stage > .ear-score:not([data-open]) { grid-area: score; min-height: 126px; padding: 2px 4px; }
+  .ear-score-head { padding: 0 4px; font-size: 10px; }
+  .ear-zone { padding: 4px 8px; gap: 3px; }
+  .ear-zone-head { gap: 6px; font-size: 11px; }
+  .ear-zone-head b { font-size: 11px; }
+  .ear-zone-head small { display: none; }
+  .ear-listen-body { flex: 1 1 auto; align-items: center; justify-content: flex-start; gap: 6px; }
+  .ear-orb { width: 28px; height: 28px; }
+  .ear-orb-core { inset: 12%; gap: 0; }
+  .ear-orb-core b, .ear-orb-core small { display: none; }
+  .ear-orb-core svg { width: 14px; height: 14px; }
+  .ear-listen-list { flex: 1 1 auto; flex-direction: row; flex-wrap: nowrap; gap: 3px; }
+  .ear-listen-list button { min-height: 22px; padding: 0 4px; font-size: 9.5px; }
+  .ear-listen-list kbd { display: none; }
+  .ear-listen-big { flex: 1 1 0; gap: 4px; }
+  .ear-listening { font-size: 13px; }
+  .ear-lap-count b { font-size: 20px; }
+  .ear-now { gap: 6px; }
+  .ear-tile { width: 40px; height: 40px; border-radius: 11px; }
+  .ear-tile b { font-size: 18px; }
+  .ear-tile small { margin-top: 1px; font-size: 8.5px; }
+  .ear-stage .ear-feedback { font-size: 12.5px; }
+  .ear-sline { min-height: 13px; font-size: 10.5px; }
+  .ear-held { gap: 3px; min-height: 20px; }
+  .ear-held-k { font-size: 10px; }
+  .ear-chip { min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; font-size: 10.5px; }
+  .ear-chip-sm { min-width: 20px; height: 17px; padding: 0 4px; font-size: 9.5px; }
+  .ear-tried-row { gap: 3px; }
+  .ear-tried-n { width: 34px; font-size: 9.5px; }
+  .ear-tried-msg { font-size: 10px; }
+  .ear-hintrow { gap: 3px; padding-top: 4px; }
+  .ear-hint-k { display: none; }
+  .ear-hintbtn { min-height: 24px; padding: 0 6px; gap: 3px; font-size: 10px; }
+  .ear-hint-arrow { display: none; }
 }
 
 .ear-clock { font-size: 11px; color: var(--dojo-muted); font-variant-numeric: tabular-nums; }
@@ -151,7 +437,10 @@
 
 /* ---- P16-03: records, charts, benchmark ---- */
 .ear .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.ear-records { display: grid; gap: 14px; padding: 20px 28px 28px; max-width: 1040px; margin: 0 auto; min-width: 0; }
+/* P22-01 §4B-1: the back button sits at the same top-left corner as every other screen (13px / 32px); the figures keep the reading width. */
+.ear-records { display: grid; gap: 14px; padding: 13px 32px 28px; max-width: none; margin: 0; min-width: 0; }
+/* P23-21 R14: the page uses the width; the reading width stops at 1320px. */
+.ear-records > :not(.dojo-page-head) { max-width: 1320px; width: 100%; margin-inline: auto; }
 .ear-empty { border: 1px dashed var(--dojo-border-strong); border-radius: 9px; padding: 10px 14px; color: var(--dojo-secondary); font-size: 13px; }
 .ear-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .ear-table th, .ear-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--dojo-border); }
@@ -185,6 +474,51 @@
 .ear-guide li { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
 .ear-guide-say { color: #7bd88f; font-size: 12.5px; }
 .ear-guide li[data-state="on-track"] .ear-guide-say { color: var(--dojo-secondary); }
+/* ---- P23-21 R1-R9: the records screen ---- */
+.ear-records-head { flex-wrap: wrap; align-items: baseline; }
+.ear-records-week-note { margin-left: auto; color: var(--lv-text-muted); font-size: 12px; }
+.ear-records-empty-face { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--lv-radius-md); background: var(--lv-surface); }
+.ear-records-empty-face .ear-empty { flex: 1; border: 0; padding: 0; }
+.ear-week-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 10px; }
+.ear-week-head h2 { margin: 0; }
+.ear-week-count { margin-left: auto; color: var(--lv-text-secondary); font-size: 12px; }
+.ear-week-cards { display: grid; grid-template-columns: 1.25fr repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 1023px) { .ear-week-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .ear-week-cards { grid-template-columns: minmax(0, 1fr); } }
+.ear-week-card { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-bg-subtle); min-width: 0; }
+.ear-week-name { overflow: hidden; color: var(--lv-text-secondary); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.ear-week-value { display: flex; align-items: baseline; gap: 8px; color: var(--lv-text); font-family: var(--font-mono); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ear-week-value[data-faint] { opacity: .5; }
+.ear-week-value > small { font-size: 11px; font-weight: 400; color: var(--lv-text-secondary); }
+.ear-week-value .ear-diff { font-size: 12px; }
+.ear-week-before { color: var(--lv-text-muted); font-size: 11px; }
+.ear-spark { display: block; width: 100%; height: 28px; margin-top: 4px; overflow: visible; }
+.ear-guide { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; }
+@media (max-width: 1279px) { .ear-guide { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .ear-guide { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ear-guide-card { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-sm); background: var(--lv-bg-subtle); min-width: 0; }
+.ear-guide-card[data-state="stable"] { border-color: var(--lv-accent); }
+.ear-guide-top { display: flex; align-items: center; gap: 8px; }
+.ear-guide-no { display: grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 7px; background: var(--lv-surface-raised); color: var(--lv-text); font-size: 12px; font-weight: 700; }
+.ear-guide-card[data-state="stable"] .ear-guide-no { background: var(--lv-accent); color: var(--lv-text-on-accent); }
+.ear-guide-name { color: var(--lv-text); font-size: 12.5px; font-weight: 600; }
+.ear-guide-state { margin-left: auto; color: var(--lv-accent); font-size: 11.5px; font-weight: 600; }
+.ear-guide-card[data-state="on-track"] .ear-guide-state { color: var(--lv-text-secondary); }
+.ear-guide-text { color: var(--lv-text-muted); font-size: 11px; line-height: 1.5; }
+.ear-guide-figures { display: grid; gap: 4px; }
+.ear-guide-figure { display: grid; grid-template-columns: 30px minmax(0, 1fr) 46px; align-items: center; gap: 6px; }
+.ear-guide-figure-label { color: var(--lv-text-muted); font-size: 10.5px; }
+.ear-guide-figure > b { color: var(--lv-text); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.ear-bar { position: relative; display: block; height: 6px; border-radius: 3px; background: var(--lv-well); }
+.ear-bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--lv-text-muted); }
+.ear-bar[data-met] .ear-bar-fill { background: var(--lv-accent); }
+.ear-bar-guide { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--lv-text-secondary); opacity: .8; }
+.ear-guide-counts { color: var(--lv-text-secondary); font-size: 11px; }
+.ear-guide-say { color: var(--lv-text-secondary); font-size: 11px; line-height: 1.5; }
+.ear-guide-card[data-state="stable"] .ear-guide-say { color: var(--lv-accent); }
+.ear-weeks-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 8px; }
+.ear-weeks-head h2 { margin: 0; }
+.ear-weeks-head .ear-filter { margin: 0 0 0 auto; }
 .ear-bench-result { height: auto; padding: 20px 28px; max-width: 760px; margin: 0 auto; }
 .ear-side .dojo-card { display: grid; gap: 8px; justify-items: start; }
 .ear-side .dojo-card h2 { width: 100%; margin-bottom: 0; }
@@ -227,35 +561,34 @@
 /* The degree is the main thing the card adds: 12px, the ordinary text colour, heavier than the function's size. */
 .ear-card-degree { font-size: 12px; line-height: 14px; font-weight: 700; color: #f2f6fc; }
 .ear-card-fn { font-size: 11px; line-height: 13px; font-weight: 700; }
-/* The Roman numerals are full-width characters (1em); Ⅰ and Ⅱ leave a third and a quarter of that empty beside the strokes
-   (measured with the font in use), so they are drawn closer to what stands next to them (Ⅰm, not Ⅰ m). */
-.ear-roman[data-roman="Ⅰ"] { margin-left: -0.28em; letter-spacing: -0.3em; }
-.ear-roman[data-roman="Ⅱ"] { margin-left: -0.2em; letter-spacing: -0.2em; }
-.ear-card-fn[data-kind="T"] { color: #7bd88f; }
-.ear-card-fn[data-kind="SD"] { color: #f2b84b; }
-.ear-card-fn[data-kind="SDm"] { color: #ff9f7a; }
-.ear-card-fn[data-kind="D"] { color: #8bd7ff; }
-.ear-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dojo-secondary); margin-left: 4px; }
-/* The card is as high as it was: the two lines are made to fit (the number and the marks, the name, the degree, the function, the seconds). */
-.ear-card[data-degree] { grid-template-rows: auto auto auto auto auto; align-content: center; row-gap: 0; padding-top: 3px; padding-bottom: 3px; }
-.ear-card[data-degree] .ear-card-name { line-height: 1.15; }
-.ear-card[data-degree] .ear-card-top { min-height: 14px; }
-/* A shorter or a narrower window: the seconds (or what the card says) go up beside the number, where there is no fifth line to give. */
-@media (max-height: 859px) {
-  .ear-card[data-degree] .ear-mark { height: 14px; min-width: 14px; font-size: 10px; }
-  .ear-card[data-degree] .ear-card-name { font-size: 16px; }
-  .ear-card[data-degree] .ear-card-sub { position: absolute; top: 3px; left: 22px; right: 28px; text-align: left; font-size: 10.5px; line-height: 12px; }
+.ear-card-fn[data-kind="T"] { color: var(--lv-fn-t); }
+.ear-card-fn[data-kind="SD"] { color: var(--lv-fn-sd); }
+.ear-card-fn[data-kind="SDm"] { color: var(--lv-fn-sdm); }
+.ear-card-fn[data-kind="D"] { color: var(--lv-fn-d); }
+.ear-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dojo-secondary); }
+/* T4: the switch look; the input stays a real checkbox, so the same check/uncheck works. */
+.ear-toggle input { appearance: none; position: relative; flex: none; width: 28px; height: 16px; margin: 0; border-radius: 999px; background: var(--dojo-border-strong); cursor: pointer; transition: background .15s; }
+.ear-toggle input::after { content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #9db0c4; transition: transform .15s, background .15s; }
+.ear-toggle input:checked { background: #1b5a54; }
+.ear-toggle input:checked::after { transform: translateX(12px); background: var(--dojo-accent); }
+.ear-toggle input:focus-visible { outline: 2px solid var(--dojo-accent); outline-offset: 2px; }
+/* The card's height is fixed (T3): a short or a narrow window tightens the lines inside it and moves nothing else. */
+@media (max-height: 780px) {
+  .ear-card-name { font-size: 20px; }
+  .ear-card-degree { font-size: 12px; line-height: 13px; }
+  .ear-card-fn { font-size: 10.5px; line-height: 12px; }
+  .ear-card-sub { font-size: 10.5px; }
+  .ear-card .ear-mark { height: 15px; min-width: 15px; font-size: 10px; }
+  .ear-card-top { left: 6px; right: 6px; top: 2px; }
 }
 @media (max-width: 1023px) {
-  .ear-card { min-height: 68px; }
-  .ear-card[data-degree] .ear-mark { height: 14px; min-width: 14px; font-size: 10px; }
-  .ear-card[data-degree] .ear-card-name { font-size: 15px; }
-  .ear-card[data-degree] .ear-card-sub { position: absolute; top: 3px; left: 22px; right: 28px; text-align: left; font-size: 10.5px; line-height: 12px; }
-}
-/* A tall window has room: the degree and the function are bigger. */
-@media (min-height: 860px) {
-  .ear-card-degree { font-size: 14px; line-height: 16px; }
-  .ear-card-fn { font-size: 12px; line-height: 14px; }
+  .ear-card { padding: 3px 6px 5px; }
+  .ear-card-name { font-size: 16px; }
+  .ear-card-degree { font-size: 11.5px; line-height: 12px; }
+  .ear-card-fn { font-size: 10px; line-height: 11px; }
+  .ear-card-sub { font-size: 10px; }
+  .ear-card .ear-mark { height: 14px; min-width: 14px; font-size: 10px; }
+  .ear-card-top { left: 6px; right: 6px; top: 2px; }
 }
 
 /* The thin strokes of ♭ and ♯ took the colours of the screen's sub-pixels (a ♭ looked gold, the next olive, the next blue).

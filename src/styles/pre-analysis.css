@@ -28,6 +28,18 @@
 
   .lv-pa-head { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 16px 8px; }
   .lv-pa-head h2 { margin: 0; font-size: 19px; font-weight: 700; white-space: nowrap; }
+
+  /* A1 / P23-31 P1: the three steps — a done ✓, the accent pill with its round number, the next number.
+     Narrow windows show only the step we are on. */
+  .lv-pa-steps { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+  .lv-pa-steps li { display: inline-flex; height: 32px; align-items: center; gap: 7px; padding: 0 12px 0 6px; border-radius: 16px; color: var(--lv-text-muted); white-space: nowrap; }
+  .lv-pa-step-n { display: inline-grid; width: 20px; height: 20px; flex: none; place-items: center; border: 1.5px solid var(--lv-border-strong); border-radius: 50%; font-size: 10.5px; font-weight: 700; }
+  .lv-pa-steps li[data-state="done"] { color: var(--lv-text-secondary); }
+  .lv-pa-steps li[data-state="done"] .lv-pa-step-n { border-color: var(--lv-accent); background: var(--lv-accent-soft); color: var(--lv-accent); }
+  .lv-pa-steps li[data-state="current"] { background: var(--lv-accent-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lv-accent) 55%, transparent); color: var(--lv-text); font-weight: 700; }
+  .lv-pa-steps li[data-state="current"] .lv-pa-step-n { border-color: var(--lv-accent); background: var(--lv-accent); color: var(--lv-text-on-accent, #06221f); }
+  .lv-pa-steps li + li::before { display: inline-block; width: 16px; height: 1.5px; margin: 0 3px; background: var(--lv-border-strong); content: ""; }
+  .lv-pa-steps li[data-state="current"]::before { margin: 0 3px; }
   .lv-pa-files { display: flex; min-width: 0; flex: 0 1 auto; flex-wrap: wrap; gap: 6px; }
   .lv-pa-file { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--lv-border); border-radius: 8px; background: var(--lv-surface); }
   .lv-pa-file[data-new-source] { background: var(--lv-accent-soft); }
@@ -50,7 +62,7 @@
   .lv-pa-collapsed .lv-pa-link { justify-self: start; }
   .lv-pa-parts[data-collapsed] > :not(.lv-pa-collapsed) { display: none; }
 
-  .lv-pa-main { display: grid; min-height: 0; flex: 1 1 auto; grid-template-columns: clamp(280px, 22vw, 360px) minmax(0, 1fr); border-top: 1px solid var(--lv-border); }
+  .lv-pa-main { display: grid; min-height: 0; flex: 1 1 auto; grid-template-columns: clamp(340px, 24vw, 380px) minmax(0, 1fr); border-top: 1px solid var(--lv-border); }
   .lv-pa-parts { display: flex; min-height: 0; min-width: 0; flex-direction: column; border-right: 1px solid var(--lv-border); }
   .lv-pa-parts-head { display: flex; flex: none; align-items: center; gap: 8px; padding: 8px 12px 4px; }
   .lv-pa-parts-head h3 { margin: 0; font-size: 14px; white-space: nowrap; }
@@ -58,40 +70,54 @@
   .lv-pa-link { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px; border: 0; background: none; color: var(--lv-text-muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
   .lv-pa-link:hover { color: var(--lv-text); }
 
-  .lv-pa-mix { flex: none; padding: 4px 12px 8px; }
-  .lv-pa-mix h4 { margin: 0 0 4px; color: var(--lv-text-secondary); font-size: 12px; font-weight: 600; }
+  /* P23-31 P2: the mixed-parts choice is one row; its explanation lives behind the 「?」. */
+  .lv-pa-mix { position: relative; display: flex; flex: none; align-items: center; gap: 6px; padding: 2px 12px 4px; }
+  .lv-pa-mix-label { color: var(--lv-text-secondary); font-size: 11.5px; white-space: nowrap; }
+  .lv-pa-mix-q { display: inline-grid; width: 18px; height: 18px; flex: none; place-items: center; border: 1px solid var(--lv-border-strong); border-radius: 50%; background: transparent; color: var(--lv-text-muted); font-size: 10px; font-weight: 700; cursor: help; }
+  .lv-pa-mix-q:hover, .lv-pa-mix-q:focus-visible { color: var(--lv-text); border-color: var(--lv-accent); }
+  .lv-pa-mix-note { position: absolute; z-index: 20; top: calc(100% - 1px); left: 12px; display: none; width: 280px; margin: 0; padding: 8px 10px; border: 1px solid var(--lv-border-strong); border-radius: 8px; background: var(--lv-surface-raised); box-shadow: 0 10px 30px rgb(0 0 0 / 40%); color: var(--lv-text-secondary); font-size: 11px; line-height: 1.45; }
+  .lv-pa-mix-q:hover + .lv-pa-mix-note,
+  .lv-pa-mix-q:focus-visible + .lv-pa-mix-note,
+  .lv-pa-mix-note[data-open] { display: block; }
+  .lv-pa-guide { margin: 0 12px 6px; color: var(--lv-text-secondary); font-size: 12px; line-height: 1.6; }
   .lv-pa-seg { display: flex; overflow: hidden; border: 1px solid var(--lv-border); border-radius: 6px; }
-  .lv-pa-seg button { flex: 1; padding: 5px 4px; border: 0; border-right: 1px solid var(--lv-border); background: transparent; color: var(--lv-text-secondary); font-size: 12px; cursor: pointer; }
+  .lv-pa-seg button { height: 24px; padding: 0 8px; border: 0; border-right: 1px solid var(--lv-border); background: transparent; color: var(--lv-text-secondary); font-size: 11.5px; white-space: nowrap; cursor: pointer; }
   .lv-pa-seg button:last-child { border-right: 0; }
   .lv-pa-seg button[data-on] { background: var(--lv-accent-soft); color: var(--lv-accent); font-weight: 600; }
-  .lv-pa-mix-note { margin: 4px 0 0; color: var(--lv-text-muted); font-size: 11px; line-height: 1.4; }
+  .lv-pa-mix .lv-pa-seg button { height: 28px; padding: 0 8px; }
 
   .lv-pa-plist { display: flex; min-height: 0; flex: 1 1 0; flex-direction: column; gap: 8px; padding: 0 10px 10px; overflow-x: hidden; overflow-y: auto; }
   .lv-pa-source { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .lv-pa-source[data-new-source] { border-radius: 10px; background: var(--lv-accent-soft); }
   .lv-pa-source-head { display: flex; align-items: center; gap: 2px; padding: 0 2px; }
   .lv-pa-source-name { overflow: hidden; min-width: 0; flex: 1; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .lv-pa-part { min-width: 0; padding: 10px 12px; border: 1px solid var(--lv-border); border-radius: 10px; background: var(--lv-surface); cursor: pointer; }
+  .lv-pa-part { min-width: 0; padding: 8px 10px; border: 1px solid var(--lv-border); border-radius: 10px; background: var(--lv-surface); cursor: pointer; }
   .lv-pa-part[data-selected] { border-color: var(--lv-accent); box-shadow: inset 0 0 0 1px var(--lv-accent); }
   .lv-pa-part[data-off] { opacity: .7; }
-  .lv-pa-prow { display: flex; align-items: center; gap: 8px; }
+  .lv-pa-part:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: -2px; }
+  .lv-pa-prow { display: flex; align-items: center; gap: 6px; }
   .lv-pa-dot { width: 10px; height: 10px; flex: none; border-radius: 3px; }
   .lv-pa-pname { overflow: hidden; min-width: 0; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .lv-pa-badge { margin-left: auto; padding: 0 6px; border: 1px solid var(--lv-border); border-radius: 4px; color: var(--lv-text-secondary); font-size: 11px; }
+  .lv-pa-badge { flex: none; padding: 0 6px; border: 1px solid var(--lv-border); border-radius: 4px; color: var(--lv-text-secondary); font-size: 11px; }
   .lv-pa-badge[data-changed] { border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-border)); color: var(--lv-accent); }
   .lv-pa-pmeta { margin-top: 2px; overflow: hidden; color: var(--lv-text-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
   .lv-pa-preason { color: var(--lv-text-secondary); }
-  .lv-pa-roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
-  .lv-pa-role { padding: 4px 0; border: 1px solid var(--lv-border); border-radius: 6px; background: transparent; color: var(--lv-text-secondary); font-size: 12px; cursor: pointer; }
+  .lv-pa-roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+  .lv-pa-role { padding: 3px 0; border: 1px solid var(--lv-border); border-radius: 6px; background: transparent; color: var(--lv-text-secondary); font-size: 12px; cursor: pointer; }
   .lv-pa-role:disabled { opacity: .45; cursor: not-allowed; }
-  .lv-pa-role[data-on] { border-color: transparent; color: #0b1118; font-weight: 700; }
-  .lv-pa-role[data-on][data-r="chord"] { background: var(--pa-chord); }
-  .lv-pa-role[data-on][data-r="bass"] { background: var(--pa-bass); }
-  .lv-pa-role[data-on][data-r="melody"] { background: var(--pa-melody); }
-  .lv-pa-role[data-on][data-r="off"] { background: #6b7c8f; }
-  .lv-pa-pact { display: flex; gap: 6px; margin-top: 8px; }
-  .lv-pa-mini { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid var(--lv-border); border-radius: 6px; background: transparent; color: var(--lv-text-secondary); font-size: 12px; cursor: pointer; }
+  /* P23-31 P4: the chosen role keeps its colour as a thin border and its name in that colour, on a light
+     tint of it (18%) — not a filled button. 「使わない」 mixes the colour up to reach 4.5:1. */
+  .lv-pa-role[data-r="chord"] { --pa-role: var(--pa-chord); }
+  .lv-pa-role[data-r="bass"] { --pa-role: var(--pa-bass); }
+  .lv-pa-role[data-r="melody"] { --pa-role: var(--pa-melody); }
+  .lv-pa-role[data-r="off"] { --pa-role: var(--pa-off); }
+  .lv-pa-role[data-on] { border-color: var(--pa-role); background: color-mix(in srgb, var(--pa-role) 18%, transparent); color: var(--pa-role); font-weight: 700; }
+  .lv-pa-role[data-on][data-r="off"] { color: color-mix(in srgb, var(--pa-off) 55%, var(--lv-text)); }
+  .lv-pa-pact { display: flex; flex: none; gap: 4px; margin-left: auto; }
+  .lv-pa-mini { display: inline-flex; min-width: 24px; align-items: center; justify-content: center; padding: 1px 6px; border: 1px solid var(--lv-border); border-radius: 6px; background: transparent; color: var(--lv-text-secondary); font-size: 11.5px; font-weight: 700; cursor: pointer; }
   .lv-pa-mini[data-on] { border-color: color-mix(in srgb, var(--lv-accent) 55%, var(--lv-border)); color: var(--lv-accent); }
+  /* A2: the details of the selected part, under its two lines. */
+  .lv-pa-pdetail { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--lv-border); }
 
   .lv-pa-split { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--lv-border); }
   .lv-pa-split[data-active] { border-top-color: var(--pa-melody); }
@@ -102,25 +128,47 @@
   .lv-pa-split-warn { margin: 6px 0 0; padding: 4px 8px; border: 1px solid color-mix(in srgb, var(--lv-warning) 40%, var(--lv-border)); border-radius: 6px; background: var(--lv-warning-soft); color: var(--lv-warning); font-size: 12px; line-height: 1.4; }
 
   .lv-pa-stage { display: flex; min-height: 0; min-width: 0; flex-direction: column; }
-  /* Playing: the names of the sounding notes take the place of the legend (it comes back when stopped). */
-  .lv-pa-transport[data-sounding] .lv-pa-legend { display: none; }
   .lv-pa-transport { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 14px; border-bottom: 1px solid var(--lv-border); }
   .lv-pa-time { color: var(--lv-text-secondary); font-size: 12px; white-space: nowrap; }
   .lv-pa-follow, .lv-pa-zoom { display: inline-flex; align-items: center; gap: 6px; color: var(--lv-text-secondary); font-size: 12px; white-space: nowrap; }
   .lv-pa-zoom input[type="range"] { width: 90px; accent-color: var(--lv-accent); }
   .lv-pa-legend { display: flex; gap: 12px; color: var(--lv-text-secondary); font-size: 12px; white-space: nowrap; }
   .lv-pa-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 2px; vertical-align: -1px; }
+
+  /* A5: the legend and the counts in one row of chips, on the right of the play row. */
+  .lv-pa-transport .lv-pa-sum { max-height: none; flex: 0 1 auto; flex-wrap: nowrap; gap: 4px 6px; margin-left: auto; overflow: hidden; }
+  .lv-pa-transport .lv-pa-chip { padding: 2px 8px; background: transparent; font-size: 11.5px; }
+  .lv-pa-transport .lv-pa-chip[data-role] { border-color: var(--lv-border); }
+  .lv-pa-transport .lv-pa-chip i { width: 8px; height: 8px; margin-right: 5px; }
+
+  /* A4: 「曲全体」 sits above the roll and starts where the roll's plot starts. */
+  .lv-pa-overview-head { display: flex; flex: none; align-items: baseline; gap: 8px; padding: 6px 14px 0; }
+  .lv-pa-overview-head h3 { margin: 0; color: var(--lv-text-secondary); font-size: 12px; font-weight: 700; }
+
+  /* A7: 「前回と同じ並びです」 under the part heading. */
+  .lv-pa-memory { display: grid; flex: none; gap: 6px; margin: 0 12px 6px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--lv-accent) 38%, var(--lv-border)); border-radius: 10px; background: var(--lv-accent-soft); }
+  .lv-pa-memory-text { margin: 0; color: var(--lv-text); font-size: 12px; line-height: 1.45; }
+  .lv-pa-memory-text span { display: block; color: var(--lv-text-secondary); }
+  .lv-pa-memory-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lv-pa-memory-button { padding: 3px 10px; border: 1px solid var(--lv-border-strong); border-radius: 7px; background: transparent; color: var(--lv-text); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .lv-pa-memory-button:hover { border-color: var(--lv-accent); color: var(--lv-accent); }
+
+  /* A7: while the offer is under the pointer, the parts that would change glow. */
+  .lv-pa-part[data-memory-change] { border-color: var(--lv-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--lv-accent) 45%, transparent); }
   .lv-pa-error { margin: 0; padding: 6px 14px; color: #fecaca; font-size: 12px; }
   .lv-pa-roll-area { position: relative; min-height: 0; flex: 1 1 0; }
   .lv-pa-roll-scroll { overflow-x: hidden; overflow-y: auto; }
   .lv-pa-roll-stack { position: relative; }
   .lv-pa-roll { display: block; touch-action: none; cursor: pointer; background: #0a111b; }
   .lv-pa-roll-overlay { position: absolute; top: 0; left: 0; display: block; pointer-events: none; }
-  .lv-pa-sounding { min-width: 0; flex: 1 1 0; overflow: hidden; color: var(--lv-text); font-size: 12px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+  /* P23-31 P6: 「鳴っている音 …」 is its own row just under the play row (the mock's place and size). */
+  .lv-pa-soundline { display: flex; flex: none; align-items: baseline; gap: 6px; margin: 0; padding: 0 14px 6px; overflow: hidden; color: var(--lv-text-muted); font-size: 12px; white-space: nowrap; }
+  .lv-pa-soundline b { min-width: 0; overflow: hidden; color: var(--lv-text); font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; text-overflow: ellipsis; }
   .lv-pa-roll:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: -2px; }
-  .lv-pa-overview { display: flex; flex: none; padding: 6px 14px 8px; }
+  .lv-pa-overview { display: flex; flex: none; padding: 6px 14px 8px 38px; }
 
   .lv-pa-bottom { position: relative; display: flex; flex: none; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--lv-border); background: var(--lv-surface); }
+  .lv-pa-bottom-warn { display: grid; min-width: 0; flex: 1 1 0; gap: 2px; }
   .lv-pa-sum { display: flex; min-width: 0; max-height: 54px; flex: 1 1 0; flex-wrap: wrap; align-content: flex-start; gap: 4px 8px; overflow: hidden; }
   .lv-pa-chip { display: inline-flex; max-width: 100%; align-items: center; padding: 2px 10px; overflow: hidden; border: 1px solid var(--lv-border); border-radius: 999px; background: var(--lv-bg); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
   .lv-pa-chip i { display: inline-block; width: 8px; height: 8px; flex: none; margin-right: 6px; border-radius: 2px; }
@@ -134,14 +182,28 @@
   .lv-pa-adv .lv-pa-adv-note { margin: 8px 0 0; color: var(--lv-text-muted); }
   .lv-pa-go { flex: none; padding-inline: 22px; font-weight: 800; font-size: 15px; }
 
+  @media (max-width: 1366px) {
+    /* A1: a narrow window shows only the step we are on. */
+    .lv-pa-steps li[data-state="done"],
+    .lv-pa-steps li[data-state="todo"] { display: none; }
+    .lv-pa-steps li[data-state="current"]::before { display: none; }
+  }
   @media (max-width: 1279px) {
     .lv-pa-main { grid-template-columns: 260px minmax(0, 1fr); }
     .lv-pa-keys { display: none; }
     .lv-pa-roles { grid-template-columns: repeat(2, 1fr); }
+    /* P23-31b A3: the mixed-parts row takes two lines — the words, then the full-width switch. */
+    .lv-pa-mix { flex-wrap: wrap; row-gap: 6px; }
+    .lv-pa-mix .lv-pa-spacer { display: none; }
+    .lv-pa-mix .lv-pa-seg { flex: 1 1 100%; }
+    .lv-pa-mix .lv-pa-seg button { flex: 1 1 0; min-width: 0; }
+    /* P23-31b A4: the part's name line takes the row; the badge and its buttons go under it. */
+    .lv-pa-prow { flex-wrap: wrap; row-gap: 4px; }
+    .lv-pa-pname { flex: 1 0 calc(100% - 16px); }
   }
   @media (max-width: 1023px) {
     .lv-pa-main { grid-template-columns: 220px minmax(0, 1fr); }
-    .lv-pa-parts-count, .lv-pa-legend, .lv-pa-mix-note, .lv-pa-ok, .lv-pa-sounding { display: none; }
+    .lv-pa-parts-count, .lv-pa-legend, .lv-pa-ok, .lv-pa-soundline { display: none; }
     .lv-pa-head h2 { font-size: 17px; }
     .lv-pa-part { padding: 8px 10px; }
   }

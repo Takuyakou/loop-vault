@@ -17,7 +17,7 @@ export const cellSchema=z.object({form,key:pc,status:z.enum(['new','learning','p
 export const practiceSchema=z.object({version:z.literal(1),kind:z.enum(['learning','review','mixed']),form,scope:z.enum(['all',...FORMS]).optional(),learningStages:z.object({A:z.enum(['study','recall']),B:z.enum(['study','recall']),C:z.enum(['study','recall']),D:z.enum(['study','recall'])}).strict().optional(),learningPositions:z.object({A:z.number().int().min(0).max(12),B:z.number().int().min(0).max(12),C:z.number().int().min(0).max(12),D:z.number().int().min(0).max(12)}).strict()}).strict();
 export type MasterPractice=z.infer<typeof practiceSchema>;
 const session=z.object({cell:z.string().regex(/^[ABCD]:(?:[0-9]|1[01])$/),seed:z.number().int().nonnegative(),paused:z.boolean(),mode:z.enum(['learn','recall','tempo']),bpm:z.number().min(40).max(80).optional()}).strict();
-export const progressSchema=z.object({version:z.literal(1),practice:practiceSchema.optional(),cells:z.record(cellSchema).refine(c=>Object.entries(c).every(([id,c])=>id===cellKey(c.form,c.key))),lastSessionAt:at.optional(),session:session.optional()}).strict();
+export const progressSchema=z.object({version:z.literal(1),practice:practiceSchema.optional(),cells:z.record(z.string(),cellSchema).refine(c=>Object.entries(c).every(([id,c])=>id===cellKey(c.form,c.key))),lastSessionAt:at.optional(),session:session.optional()}).strict();
 export type MasterProgress=z.infer<typeof progressSchema>;
 export const masterSchema=progressSchema.extend({selectedRange:z.enum(['original','octave-down']).optional(),octaveDown:progressSchema.optional()}).strict();
 export type MasterCell=z.infer<typeof cellSchema>;

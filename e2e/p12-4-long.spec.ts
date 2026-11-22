@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {emptyStore,emptyItem,type DojoStore} from '../src/domain/chordDojo/store';
 import {openDojo,type MidiControl} from './helpers/p12';
+import {settlePaint} from './helpers/settle';
 
 /** P12.4-03: a long progression (8 bars or more) is played through in a chosen key; it never goes on to another key by itself. */
 const KEY='loop-vault:chord-dojo-txt-jazz-v1:data';
@@ -22,20 +23,29 @@ async function playChords(page:Page,id:string,key:number,count:number){
 }
 
 test.describe('the list',()=>{
+ // P22-01 §3-1-2 (rule B): the random key is the list's 「ランダム」 switch now, not a button on each card. With it on, a short
+ // progression opens its random key; a long one (9 chords and more) still opens its own key, chosen on the card.
  test('short progressions keep the random key; 9 chords and more do not (they choose their key on the card)',async({page})=>{
   await openDojo(page);
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await expect(card(page,'王道進行').getByRole('button',{name:'ランダムキーで練習'})).toHaveCount(1);
   await expect(card(page,'バックドア')).toHaveCount(0);
-  await expect(card(page,'下降ベース').getByRole('button',{name:'ランダムキーで練習'})).toHaveCount(1);
-  // P12.5-01: the rule is the number of chords (9 or more). The 8-chord canon has its random key again.
-  await expect(card(page,'カノン進行').getByRole('button',{name:'ランダムキーで練習'})).toHaveCount(1);
   await expect(card(page,'カノン進行').getByTestId('dojo-ownkey')).toHaveCount(0);
-  for(const title of ['ジャズブルース','マイナーブルース','リズムチェンジ A']){
-   await expect(card(page,title).getByRole('button',{name:'ランダムキーで練習'}),title).toHaveCount(0);
-   await expect(card(page,title).getByRole('button',{name:'これを練習する'}),title).toHaveCount(1);
-  }
   await expect(card(page,'下降ベース').getByTestId('dojo-ownkey')).toHaveCount(0);
+  await page.getByTestId('dojo-random-toggle').click();
+  // P12.5-01: the rule is the number of chords (9 or more). The 8-chord canon has its random key again.
+  for(const title of ['王道進行','下降ベース','カノン進行']){
+   await card(page,title).getByRole('button',{name:/ を練習する$/}).click();
+   await expect(page.locator('[data-dojo-screen=endless]'),title).toBeVisible();
+   await page.keyboard.press('Escape');
+   await expect(card(page,title)).toBeVisible();
+  }
+  for(const title of ['ジャズブルース','マイナーブルース','リズムチェンジ A']){
+   await expect(card(page,title).getByRole('button', { name: / を練習する$/ }),title).toHaveCount(1);
+   await expect(card(page,title).getByTestId('dojo-ownkey'),title).toHaveCount(1);
+  }
+  await card(page,'ジャズブルース').getByRole('button',{name:/ を練習する$/}).click();
+  await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
+  await expect(page.locator('[data-dojo-screen=endless]')).toHaveCount(0);
  });
 
  test('the jazz forms offer six keys, F B♭ E♭ A♭ C G, and show a six-key table',async({page})=>{
@@ -65,7 +75,7 @@ async function openFromList(page:Page,title:string,id:string,key:number){
  await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  const target=card(page,title);
  await target.getByLabel(`${title}のキー`).selectOption(String(key));
- await target.getByRole('button',{name:'これを練習する'}).click();
+ await target.getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
  const count=expected[id]![key]!.notes.length;
  await expect(page.locator('.dojo-chord-cards>button')).toHaveCount(count);
@@ -78,6 +88,9 @@ async function openFromList(page:Page,title:string,id:string,key:number){
 }
 
 test.describe('playing one key through',()=>{
+ // P23-49: each test plays a whole form through MIDI (about 28 seconds alone). Under FULL's parallel load the 30-second
+ // budget ran out (P23-48-fix-1). test.slow() gives the long scenario three times the budget; no check is changed.
+ test.slow();
  test('playing every chord to the end records the key, and then waits: no key follows by itself',async({page})=>{
   const count=await openFromList(page,'マイナーブルース','jf-minor-blues',F);
   await playChords(page,'jf-minor-blues',F,count-1);
@@ -115,6 +128,7 @@ test.describe('playing one key through',()=>{
   await expect(page.getByTestId('dojo-keydone')).toBeVisible({timeout:10000});
   await page.getByTestId('keydone-next').click();
   await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
+  await settlePaint(page);
   await expect(page.locator('.dojo-chord-cards>button')).toHaveCount(count);
  });
 

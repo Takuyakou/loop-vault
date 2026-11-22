@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {openDojo,type MidiControl} from './helpers/p12';
+import {openDojo,type MidiControl,chooseMasterPractice} from './helpers/p12';
 import {emptyStore} from '../src/domain/chordDojo/store';
 import {emptyMaster,targetForCell,type MasterStore,type CellKey} from '../src/domain/master251/model';
 
@@ -114,7 +114,7 @@ for(const change of ['skip','choose','kind','range','exit'] as const)test(`P12.2
  const target=await setup(page,m=>{m.octaveDown={version:1,cells:structuredClone(m.cells),session:structuredClone(m.session!)};});await emit(page,target.chords[0].notes);await expect(page.getByTestId('master251')).toHaveAttribute('data-chord-index','1');await page.getByRole('button',{name:'一時停止（P）'}).click();await page.getByRole('button',{name:'再開（P）'}).click();await emit(page,target.chords[0].notes,false);await expect(page.getByTestId('master251')).toHaveAttribute('data-phase','active');
  if(change==='skip')await page.getByRole('button',{name:'とばす（S）'}).click();
  if(change==='choose'){await page.locator('.master251-records>summary').click();await page.getByRole('button',{name:'自分でセルを選ぶ'}).click();await page.getByRole('button',{name:'Form A C',exact:true}).click();await page.locator('.master251-records>summary').click();}
- if(change==='kind')await page.getByLabel('Masterの練習').selectOption('mixed');
+ if(change==='kind')await chooseMasterPractice(page,'Mixed Test');
  if(change==='range')await page.getByLabel('Masterの音域').selectOption('octave-down');
  if(change==='exit'){await page.getByTestId('dojo-back').click();await page.getByRole('button',{name:'2-5-1 Master 続きから'}).click();}
  await expect(page.getByTestId('master251')).toHaveAttribute('data-phase','active');const id=await page.getByTestId('master251').getAttribute('data-cell') as CellKey;const next=targetForCell(id),offset=change==='range'?-12:0;await completeHeld(page,{...next,chords:next.chords.map(c=>({...c,notes:c.notes.map(n=>n+offset)})) as unknown as typeof next.chords});const m=await saved(page),cell=(change==='range'?m.octaveDown!:m).cells[id];expect(cell.recent.at(-1)).toHaveProperty('recallSec');expect(cell.recent.at(-1)?.ok).toBe(true);

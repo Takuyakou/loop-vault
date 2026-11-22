@@ -5,7 +5,9 @@ import {
   capturePageErrors,
   openApp,
   openVault,
+  openBassPractice,
 } from "./helpers/app";
+import { bassPracticeFromVault, practiceFromVault } from "./helpers/practice";
 
 const textTitle = "P5.20 Text Entry E2E";
 
@@ -28,7 +30,7 @@ async function openTextCapture(page: Page) {
 async function enterEligibleProgression(page: Page) {
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
-  await expect(capture.getByTestId("text-progression-card")).toHaveCount(4);
+  await expect(capture.getByTestId("text-preview-band")).toHaveCount(4);
 
   await capture.getByTestId("text-progression-key").selectOption("C major");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
@@ -55,8 +57,9 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await textInput.fill("| C G Am |");
   await expect(textInput).toHaveAttribute("aria-invalid", "true");
   await expect(capture.getByTestId("text-progression-diagnostics")).toBeVisible();
-  await expect(capture.getByTestId("text-progression-invalid-card")).toHaveCount(3);
-  await expect(convert).toBeDisabled();
+  await expect(capture.getByTestId("text-preview-error")).toHaveCount(1);
+  // P23-17 V11: an invalid bar yields no card, so the 「音を細かく直す」 row is not there at all.
+  await expect(convert).toHaveCount(0);
 
   // Valid text is independently capable of Vault/Dojo even before the optional
   // Chord Context conditions have been confirmed.
@@ -76,9 +79,8 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.getByTestId("pre-analysis-analyze")).toHaveCount(0);
   await expect(page.locator("[data-capture-midi-drop-zone]")).toHaveCount(0);
 
-  await capture.getByTestId("standard-text-card-details").locator("summary").click();
-  const cards = capture.getByTestId("text-progression-card");
-  await cards.first().focus();
+  const cards = capture.getByTestId("text-preview-band");
+  await cards.first().locator(".lv-text-preview-chord").focus();
   await page.keyboard.press("Enter");
   await inspector.locator(":scope > summary").click();
   await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();
@@ -111,12 +113,8 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   }
 
   // Selecting a card auditions the exact voicing currently planned for save.
-  await capture.getByTestId("standard-text-card-details").locator(":scope > summary").click();
-  await cards.nth(1).click();
-  await cards.first().click();
-  await inspector.locator(":scope > summary").click();
-  await inspector.getByTestId("text-progression-preview").click();
-  await inspector.getByRole("button", { name: /\u505c\u6b62|Stop/ }).click();
+  await cards.nth(1).dispatchEvent("click");
+  await cards.first().dispatchEvent("click");
 
   // Conversion is intentionally keyboard-operable and never starts MIDI analysis.
   await convert.focus();
@@ -160,13 +158,13 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const row = page.locator(".lv-vault-row").filter({ hasText: textTitle });
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("C");
-  await expect(row).toContainText(/I.*V.*vi.*IV/);
+  await expect(row).toContainText(/Ⅰ.*Ⅴ.*Ⅵm.*Ⅳ/);
 
   await row.getByRole("button", { name: /\u9032\u884c\u3092\u958b\u304f|Open progression/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
   await expect(detail).toBeVisible();
   await expect(detail).toContainText(textTitle);
-  await detail.getByTestId("voicing-loop-handoff").click();
+  await practiceFromVault(page, "Voicing Loop", textTitle);
   await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
   await expect(page.getByTestId("voicing-loop-workspace").getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
 
@@ -176,14 +174,19 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
     .getByRole("button", { name: /\u9032\u884c\u3092\u958b\u304f|Open progression/ })
     .click();
   await expect(detail).toBeVisible();
-  await detail.getByTestId("chord-context-handoff").getByRole("button").click();
+  await bassPracticeFromVault(page, textTitle);
 
   const bassline = page.getByTestId("bassline-echo-view");
   await expect(bassline).toBeVisible();
-  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault source|\u0056ault\u9032\u884c/);
-  await expect(bassline.getByTestId("bassline-source-summary")).toContainText("C major");
-  await expect(bassline.getByTestId("bassline-source-summary")).toContainText("120 BPM");
-  await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
+  // P23-63: source/key/tempo sit in the stage's 条件 chip and meta line; progression selector is in 条件.
+  await expect(page.getByTestId("bassline-conditions")).toContainText(/Vault source|Vault進行/);
+  await expect(page.getByTestId("bassline-conditions")).toContainText("120 BPM");
+  await expect(page.getByTestId("bassline-progression-select")).toHaveValue("vault");
+  await page.getByTestId("bassline-conditions").click();
+  await expect(bassline.locator(".bp-meta")).toContainText(/C メジャー|C major/);
+  await expect(bassline.locator(".bp-meta")).toContainText("120 BPM");
+  await expect(bassline.locator("[data-testid='bp-lane']")).toBeVisible();
+  await expect(bassline.getByTestId("bassline-listen")).toBeVisible();
 
   const chordDojo = page.locator('[data-nav="chord-dojo"]');
   await chordDojo.click();
@@ -191,14 +194,20 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.getByTestId("practice-start")).toBeVisible();
 
   await page.locator('[data-nav="bass-practice"]').click();
-  await page.getByRole("tab", { name: "Bassline Echo" }).click();
+  await openBassPractice(page, "コード進行のベース");
   await expect(bassline).toBeVisible();
-  await page.getByRole("tab", { name: "Root Motion Echo" }).click();
+  await openBassPractice(page, "ルートの動き");
   const rootMotion = page.getByTestId("root-motion-echo-view");
   await expect(rootMotion).toBeVisible();
-  await rootMotion.getByTestId("root-motion-source").selectOption("vault-root-path");
-  await expect(rootMotion.getByTestId("root-motion-source")).toHaveValue("vault-root-path");
-  await expect(rootMotion).toContainText(/not an original bassline|\u5143\u306e\u30d9\u30fc\u30b9\u30e9\u30a4\u30f3\u3067\u306f\u3042\u308a\u307e\u305b\u3093/);
+  // P23-62: the source switched to the Vault's roots from the band's 「ルートの動きの条件」 panel.
+  await page.getByTestId("root-motion-conditions").click();
+  const rootMotionConditions = page.getByRole("dialog", { name: "ルートの動きの条件" });
+  const rootMotionSource = rootMotionConditions.getByTestId("root-motion-source");
+  await expect(rootMotionSource).toHaveValue("generated");
+  await rootMotionSource.selectOption("vault-root-path");
+  await expect(rootMotionSource).toHaveValue("vault-root-path");
+  await expect(rootMotionConditions).toContainText("元のベースラインではありません。");
+  await expect(page.getByTestId("root-motion-conditions")).toContainText("Vault の進行");
 
   // The Web runtime intentionally uses BrowserMemoryVaultStorage.  A browser
   // reload is therefore not presented as a durable Vault guarantee; the Tauri

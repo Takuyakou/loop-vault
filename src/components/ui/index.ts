@@ -22,7 +22,7 @@ export type {
   StatusTone,
   SurfaceProps,
 } from "./primitives";
-export { Chip, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./controls";
+export { Chip, Kbd, PlayingMark, Popover, ProgressBar, SegmentedControl, Select, Switch, Tooltip } from "./controls";
 export type {
   ChipProps,
   PopoverProps,
@@ -30,4 +30,7 @@ export type {
   SegmentOption,
   SegmentedControlProps,
   SelectProps,
+  SwitchProps,
 } from "./controls";
+export { FavoriteDots, useSaveButtonState, useTransientFlag } from "./motion";
+export type { SaveButtonState } from "./motion";

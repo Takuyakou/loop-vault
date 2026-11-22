@@ -10,6 +10,9 @@ import {
 import { createMidiFixture } from "./helpers/midiFixture";
 
 async function expectNoSeriousViolations(page: Page, label: string) {
+  // P23-03 M8: the content fades in when the view changes; measure the settled screen, not a frame of the fade.
+  await page.evaluate(() => Promise.all((document.getElementById("main-content")?.getAnimations() ?? [])
+    .map((animation) => animation.finished.catch(() => undefined))));
   // @axe-core/playwright allows a newer playwright-core range than the test
   // runner. Runtime Page APIs are compatible; isolate the dependency-only type.
   const result = await new AxeBuilder({ page: page as never })

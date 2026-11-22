@@ -35,10 +35,10 @@ test("P10.0-02 shows the analysis cards and moves between them", async ({ page }
   await expect(workspace).toBeVisible();
   const workspaceNames = await workspace.getByTestId("correction-card").locator(".lv-cw-card-name").evaluateAll((items) => items.map((item) => item.getAttribute("data-full-name") ?? ""));
 
-  // Song-wide suggestion for the melody voice; 閉じる hides it.
+  // Song-wide suggestion for the melody voice; そのままにする hides it.
   const suggestion = workspace.getByTestId("correction-suggestion");
-  await expect(suggestion).toContainText("メロディの Voice（Lead）");
-  await suggestion.getByRole("button", { name: "閉じる" }).click();
+  await expect(suggestion).toContainText("メロディの音が");
+  await suggestion.getByRole("button", { name: "そのままにする" }).click();
   await expect(suggestion).toHaveCount(0);
 
   // ] / [ walk the review cards; ← / → walk all cards; the inspector follows.
@@ -162,16 +162,26 @@ test("P10.0-03 ② adds a note with one click, and a drag moves the pitch in one
   await expect(workspace).toHaveAttribute("data-mode", "check");
 });
 
-test("P10.0-03 the melody suggestion selects every melody-voice note and Delete excludes them at once", async ({ page }) => {
+test("P10.0-03 the melody suggestion excludes every melody-voice note in one press", async ({ page }) => {
   await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
-  await workspace.getByTestId("correction-select-melody").click();
-  expect(await page.locator("[data-testid=correction-piano-roll] .lv-cw-note[data-selected]").count()).toBeGreaterThan(1);
-  await page.keyboard.press("Delete");
-  // The melody suggestion goes; neighbours that now sound the same bring the next one (spec 6.5).
   const melody = workspace.locator('[data-testid="correction-suggestion"][data-kind="melody-voice"]');
+  await expect(melody).toContainText("メロディの音が");
+  const button = workspace.getByTestId("correction-exclude-melody");
+  const count = Number(/メロディの (\d+) 音を外す/.exec((await button.textContent()) ?? "")?.[1]);
+  expect(count).toBeGreaterThan(1);
+  const excluded = page.locator('[data-testid=correction-piano-roll] .lv-cw-note[data-kind="off"], [data-testid=correction-piano-roll] .lv-cw-note[data-kind="melody"]');
+  const before = await excluded.count();
+  const melodyMarked = page.locator('[data-testid=correction-piano-roll] .lv-cw-note[data-kind="melody"]');
+  const beforeMelody = await melodyMarked.count();
+  await button.click();
+  // The melody suggestion goes (neighbours that now sound the same bring the next one, spec 6.5).
   await expect(melody).toHaveCount(0);
   await editCount(page, 1);
+  await lastEdit(page, "を外した");
+  await expect(excluded).toHaveCount(before + count);
+  // Every note the melody suggestion named is now one of the excluded (dashed / melody-outlined) notes.
+  await expect(melodyMarked).toHaveCount(beforeMelody + count);
   await page.keyboard.press("Control+z");
   await expect(melody).toBeVisible();
 });
@@ -299,7 +309,7 @@ test("P10.0-04 names: 1–4 picks a candidate, F2 types one", async ({ page }) =
 test("P10.0-04 Y moves to the next review card; the run suggestion merges after a confirm", async ({ page }) => {
   await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
-  await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
+  await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "そのままにする" }).click();
   const count = workspace.getByTestId("correction-review-count");
   const before = Number(await count.locator("b").textContent());
   const selected = () => workspace.locator('[data-testid="correction-card"][aria-pressed="true"]').getAttribute("data-card-id");
@@ -640,7 +650,7 @@ test("P10.1 Space plays and stops after any button or checkbox, without pressing
   await page.keyboard.press("Escape"); // the settings menu, still open, covers the panel's top
   await openRecommendedRanges(page);
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
-  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const title = page.locator('form[role="dialog"] input[name="progression-title"]');
   await title.fill("a");
   await title.press("Space");
@@ -801,7 +811,7 @@ test("P10.1 BPM sets the speed of the sound and the playhead together, can be un
   // Saved with the progression.
   await openRecommendedRanges(page);
   await workspace.getByTestId("correction-recommended").getByRole("button").first().click();
-  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await workspace.getByTestId("correction-save-form").getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await form.locator('input[name="progression-title"]').fill("テンポ 60");
   await form.getByRole("button", { name: /保存/, exact: true }).click();
@@ -1166,7 +1176,7 @@ test("P10.2 at 1440x900 the piano roll reaches the bottom; the panel scrolls ins
   await page.setViewportSize({ width: 1440, height: 900 });
   await importScenario(page, "melody-track-8");
   const workspace = page.getByTestId("correction-workspace");
-  await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "閉じる" }).click();
+  await workspace.getByTestId("correction-suggestion").getByRole("button", { name: "そのままにする" }).click();
   await selectCard(page, 1);
   const roll = (await workspace.getByTestId("correction-piano-roll").boundingBox())!;
   const legend = (await workspace.getByTestId("correction-legend").boundingBox())!;

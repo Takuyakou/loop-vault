@@ -52,7 +52,7 @@ describe("selectMidiConnection (P14 §3)", () => {
 
   it("missing: never connected in this run, a saved input exists, and it is not in the list", () => {
     const preferences = { alwaysOnTop: true, showHistory: true, preferredInput: saved };
-    expect(selectMidiConnection(live({ devices: [synth], preferences }), on)).toMatchObject({ kind: "missing", label: "Digital Piano が見つかりません" });
+    expect(selectMidiConnection(live({ devices: [synth], preferences }), on)).toMatchObject({ kind: "missing", label: "Digital Piano 未接続" });
     expect(selectMidiConnection(live({ devices: [], preferences }), on).kind).toBe("missing");
   });
 

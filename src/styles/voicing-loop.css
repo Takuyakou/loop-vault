@@ -1,9 +1,74 @@
+/* P23-66: range loop indicator colour (amber like DAW loop markers; current card / playhead stay cyan). */
+:root { --lv-vl-range: #f2c14e; }
+/* P23-48: the finished part of the progress bar (was a fixed teal class). */
+.lv-vl-progress-done { background: color-mix(in srgb, var(--lv-accent) 45%, var(--lv-surface)); }
+
 /* P8.9-09 Voicing Loop bars. Bottom bar: at narrow widths the words beside the controls are hidden
    visually (they stay as accessible names) so every control fits on one row without a hidden
    horizontal scroll. Order and behavior are unchanged. */
 @layer components {
   .lv-vl-transport {
     container-type: inline-size;
+  }
+
+  /* P23-20 L6: the bar keeps its 92px while its row fits, and grows only where the row has to wrap
+     (at 768×640 with the left menu open the bar is about 500px wide). It used to scroll sideways inside
+     the bar instead, which cut 「区間解除」 off at the right edge. */
+  .lv-vl-transport-frame {
+    height: 92px;
+    min-height: 92px;
+    overflow: visible;
+  }
+
+  /* Below a wide window the bar is narrower than its controls, so it is allowed to grow with its rows. */
+  @media (max-width: 1200px) {
+    .lv-vl-transport-frame {
+      height: auto;
+    }
+  }
+
+  .lv-vl-transport-grid {
+    min-height: 88px;
+  }
+
+  .lv-vl-transport-row {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    overflow: visible;
+  }
+
+  /* 1440×900: the bar itself is about 1160px and the words beside the controls pushed the range button
+     past its right edge. The words are hidden from 1200px of bar (tooltips and accessible names keep
+     them) — the same rule the bar already used under 1000px. */
+  @container (max-width: 1200px) {
+    .lv-vl-transport .lv-vl-label-text,
+    .lv-vl-transport .lv-vl-button-text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  @container (max-width: 1000px) {
+    /* The permanent range shortcut shares the existing compact transport row. */
+    .lv-vl-transport .lv-vl-range-clear {
+      padding-inline: 0.4rem;
+      font-size: 0.75rem;
+    }
+
+    /* P23-61 9: the field keeps the 144px of its wrapper (`w-36`) so 「F♯マイナー (元)」 is never cut. */
+    .lv-vl-transport .lv-vl-key-select {
+      width: 9rem;
+    }
+  }
+
+  /* P23-61 9: the widest label (「F♯マイナー (元)」 is 101px at 12px) keeps 110px of letters in the 144px field
+     (`w-36`); 24px on the right still clears the chevron (right 10px, 14px wide). */
+  .lv-vl-transport .lv-vl-key-select {
+    padding-right: 24px;
   }
 
   /* The source / study / display row above: same idea. Under 1500px of row the words of the
@@ -45,8 +110,9 @@
       white-space: nowrap;
     }
 
+    /* P23-61 9: the field keeps the 144px of its wrapper (`w-36`) so 「F♯マイナー (元)」 is never cut. */
     .lv-vl-transport .lv-vl-key-select {
-      width: 7rem;
+      width: 9rem;
     }
   }
 
@@ -84,18 +150,544 @@
 }
 
 @layer components {
-  /* Content budget, not viewport-proportional height: readable hands fill spare space.
-     Long content grows naturally rather than scrolling or clipping the current panel. */
+  /* P23-20 L6: 768×640 with the left menu open leaves about 500px for the strip. Its header used to be
+     cut off (the words and the 8/12/16 buttons ran past the right edge); it wraps to a second line and the
+     cards keep their full height. Above 640px of strip nothing changes. */
+  .lv-vl-timeline {
+    container-type: inline-size;
+  }
+
+  /* P23-32 L3: the strip's height follows its content (the whole screen no longer fits at 953px). */
+  .lv-vl-timeline-head {
+    white-space: nowrap;
+  }
+
+  @container (max-width: 700px) {
+    .lv-vl-timeline-head {
+      flex-wrap: wrap;
+      row-gap: 2px;
+    }
+  }
+}
+
+@layer components {
+  /* P23-32: both panels are as tall as their content. The old 400/360px budgets (and the 460px one under
+     600px) held the screen taller than the window at 1280×720; the spare height now goes to the keyboard. */
   .lv-vl-current-next { container-type: inline-size; }
   .lv-vl-current-next-grid { grid-template-columns: minmax(0, 1fr); }
-  .lv-vl-current-panel { min-height: 400px; }
-  .lv-vl-next-column { min-height: 360px; }
 
   @container (min-width: 900px) {
     .lv-vl-current-next-grid { grid-template-columns: minmax(0, 1fr) minmax(22rem, 440px); }
-    .lv-vl-next-column { min-height: 0; }
   }
-  @container (max-width: 600px) {
-    .lv-vl-current-panel { min-height: 460px; }
+}
+
+@layer components {
+  /* P22-02: the picker (the list of Vault progressions) only. The practice screen below is untouched. */
+  .lv-vl-picker-title {
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-font-sm);
+    font-weight: 700;
+    line-height: 1.3;
   }
+
+  .lv-vl-picker-search:focus-visible {
+    outline-color: var(--lv-focus);
+  }
+
+  .lv-vl-picker-row[data-unavailable] {
+    opacity: 0.55;
+  }
+}
+
+@layer components {
+  /* P23-58 E2: match Chord Dojo home's `.dojo-home-p20-resume` live geometry and styling. */
+  .lv-vl-resume { display: flex; flex: none; align-items: center; gap: 12px; min-width: 0; min-height: 0; padding: 8px 12px; border: 1px solid var(--lv-border); border-radius: 14px; background: var(--lv-surface); box-shadow: inset 0 0 0 1px transparent; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .lv-vl-resume:hover { border-color: var(--lv-accent); background: color-mix(in srgb, var(--lv-surface) 92%, var(--lv-accent) 5%); box-shadow: inset 0 0 0 1px var(--lv-accent), inset 0 0 0 999px rgb(255 255 255 / 3%); }
+  .lv-vl-resume:has(:focus-visible) { border-color: var(--lv-accent); box-shadow: inset 0 0 0 1px var(--lv-accent); }
+  .lv-vl-resume-mark { display: grid; flex: none; width: 30px; height: 30px; place-items: center; border: 1px solid color-mix(in srgb, var(--lv-accent) 45%, var(--lv-border)); border-radius: 8px; background: color-mix(in srgb, var(--lv-accent) 18%, transparent); color: var(--lv-accent); font-size: 11px; font-weight: 700; line-height: 1.55; letter-spacing: .02em; }
+  .lv-vl-resume-main { display: flex; flex: 1; flex-direction: column; gap: 0; min-width: 0; }
+  .lv-vl-resume-label { color: var(--lv-accent); font-size: 12px; font-weight: 700; letter-spacing: .04em; line-height: 1.55; }
+  .lv-vl-resume-line { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
+  .lv-vl-resume-title { flex: none; color: #f2f6fc; font-size: 14px; font-weight: 700; line-height: 20px; }
+  .lv-vl-resume-meta { min-width: 0; overflow: hidden; color: var(--lv-text-secondary); font-size: 12.5px; line-height: 17.5px; text-overflow: ellipsis; }
+  .lv-vl-resume-go { display: inline-flex; flex: none; align-items: center; height: 36px; min-height: 36px; padding: 0 12px; border: 1px solid var(--lv-accent); border-radius: 10px; background: var(--lv-accent); color: #06221f; font-size: 12px; font-weight: 500; line-height: 16px; transition: background-color .18s ease; }
+  .lv-vl-resume-go:hover { background: color-mix(in srgb, var(--lv-accent) 88%, #fff); }
+  .lv-vl-resume-go:focus-visible { outline: 2px solid #8bd7ff; outline-offset: 2px; }
+
+  .lv-vl-kbd {
+    margin-left: 6px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .lv-vl-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-font-sm);
+  }
+
+  .lv-vl-filter:hover {
+    color: var(--lv-text);
+  }
+
+  .lv-vl-filter.is-on {
+    border-color: var(--lv-border-strong);
+    background: var(--lv-surface-raised);
+    color: var(--lv-text);
+    font-weight: 700;
+  }
+
+  .lv-vl-filter-count {
+    color: var(--lv-text-muted);
+    font-size: 11px;
+  }
+
+  .lv-vl-picker-grid {
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+
+  /* L4: below 1024px the chosen progression goes under the list (not a stacked window). The two cards keep
+     their own heights and the column scrolls, so a short window cannot squeeze the list away. */
+  @media (max-width: 1023px) {
+    .lv-vl-picker-grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      overflow-y: auto;
+    }
+  }
+
+  .lv-vl-picker-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: var(--lv-radius-sm);
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+
+  .lv-vl-picker-row:hover {
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-vl-picker-row.is-selected {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent-soft);
+  }
+
+  /* C5: the day keeps 4.5:1 on the picked row's accent background. */
+  .lv-vl-picker-row.is-selected .lv-vl-row-day {
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-vl-row-heart {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-muted);
+  }
+
+  .lv-vl-row-heart:hover {
+    color: var(--lv-text);
+  }
+
+  .lv-vl-row-heart.is-on {
+    color: var(--lv-accent);
+  }
+
+  .lv-vl-row-chords {
+    margin-top: 2px;
+  }
+
+  .lv-vl-row-chord {
+    display: inline-flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 3px;
+    border-bottom: 2px solid var(--lv-vl-row-fn, var(--lv-border-strong));
+    border-radius: 4px 4px 0 0;
+    background: var(--lv-bg-subtle);
+    padding: 0 5px;
+    color: var(--lv-text-secondary);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .lv-vl-row-chord small {
+    color: var(--lv-vl-row-fn, var(--lv-text-muted));
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+
+  .lv-vl-row-chord[data-fn="T"] { --lv-vl-row-fn: var(--lv-fn-t); }
+  .lv-vl-row-chord[data-fn="SD"] { --lv-vl-row-fn: var(--lv-fn-sd); }
+  .lv-vl-row-chord[data-fn="SDm"] { --lv-vl-row-fn: var(--lv-fn-sdm); }
+  .lv-vl-row-chord[data-fn="D"] { --lv-vl-row-fn: var(--lv-fn-d); }
+
+  .lv-vl-row-more {
+    color: var(--lv-text-muted);
+    font-size: 11px;
+  }
+
+  .lv-vl-row-day {
+    min-width: 3.5em;
+    text-align: right;
+  }
+
+  .lv-vl-picker-preview {
+    background: var(--lv-surface);
+  }
+
+  .lv-vl-preview-chip {
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 4px;
+    padding: 0 6px;
+    color: var(--lv-text-secondary);
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  .lv-vl-preview-chords {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .lv-vl-preview-chord {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    border: 1px solid var(--lv-border);
+    border-top: 2px solid var(--lv-vl-row-fn, var(--lv-border-strong));
+    border-radius: 6px;
+    background: var(--lv-surface-raised);
+    padding: 4px 6px;
+    text-align: left;
+  }
+
+  .lv-vl-preview-chord:hover {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-vl-preview-chord small {
+    color: var(--lv-vl-row-fn, var(--lv-text-muted));
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+
+  .lv-vl-preview-chord b {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--lv-text);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-vl-preview-chord[data-fn="T"] { --lv-vl-row-fn: var(--lv-fn-t); }
+  .lv-vl-preview-chord[data-fn="SD"] { --lv-vl-row-fn: var(--lv-fn-sd); }
+  .lv-vl-preview-chord[data-fn="SDm"] { --lv-vl-row-fn: var(--lv-fn-sdm); }
+  .lv-vl-preview-chord[data-fn="D"] { --lv-vl-row-fn: var(--lv-fn-d); }
+
+  .lv-vl-preview-facts {
+    grid-template-columns: auto minmax(0, 1fr);
+    color: var(--lv-text-muted);
+  }
+
+  .lv-vl-preview-facts dd {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--lv-text-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* P23-20 L1: one hand = five fixed slots (P24 decision 案2). A finger that is not used keeps its
+     place as a faint empty frame, so the panel does not move between chords. */
+  .voicing-hand {
+    --vh-color: var(--lv-accent);
+    border-color: color-mix(in srgb, var(--vh-color) 45%, var(--lv-border));
+    background: color-mix(in srgb, var(--vh-color) 8%, transparent);
+  }
+
+  .voicing-hand-left {
+    --vh-color: #f59e0b;
+  }
+
+  /* P23-48: the right hand keeps the keyboard's right-hand colour (GUIDE_HAND_COLORS.right), not the screen colour. */
+  .voicing-hand-right {
+    --vh-color: #22d3ee;
+  }
+
+  .voicing-hand-name {
+    color: var(--vh-color);
+  }
+
+  .voicing-hand-slots {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .voicing-hand-slot {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 0 5px;
+    border-radius: 8px;
+    background: var(--lv-surface-raised);
+    text-align: center;
+  }
+
+  .voicing-hand-slot.is-unused {
+    background: transparent;
+    border: 1px solid var(--lv-border);
+  }
+
+  .voicing-hand-slot-finger {
+    font-size: 10.5px;
+    line-height: 1.2;
+    color: var(--vh-color);
+  }
+
+  .voicing-hand-slot.is-unused .voicing-hand-slot-finger {
+    color: var(--lv-text-secondary);
+  }
+
+  .voicing-hand-slot-pitch {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--lv-text);
+  }
+
+  .voicing-hand-slot-degree {
+    font-size: 10.5px;
+    line-height: 1.2;
+    color: var(--lv-text-secondary);
+  }
+
+  .voicing-hand-slot-degree[data-chord-tone="false"] {
+    font-style: italic;
+    color: var(--lv-text-muted);
+  }
+
+  .voicing-hand[data-compact] .voicing-hand-slot {
+    padding: 2px 0 3px;
+    border-radius: 6px;
+  }
+
+  /* P23-20 L1: the next chord's hand stays quieter than the current one (the same rule the panels had before). */
+  .voicing-hand[data-compact] {
+    background: color-mix(in srgb, var(--vh-color) 4%, transparent);
+  }
+
+  .voicing-hand[data-compact] .voicing-hand-slot-pitch {
+    font-size: 11.5px;
+  }
+}
+
+@layer components {
+  /* P23-20 L3: the degree beside a chord name, coloured by the role in the key. The badge (T / SD / SDm / D)
+     stays when 「度数を表示」 is off, so the colour is never lost. */
+  .lv-vl-degree {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-vl-degree[data-fn="T"] { color: var(--lv-fn-t); }
+  .lv-vl-degree[data-fn="SD"] { color: var(--lv-fn-sd); }
+  .lv-vl-degree[data-fn="SDm"] { color: var(--lv-fn-sdm); }
+  .lv-vl-degree[data-fn="D"] { color: var(--lv-fn-d); }
+
+  .lv-vl-degree-text {
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .lv-vl-degree[data-size="lg"] .lv-vl-degree-text { font-size: 1.125rem; }
+  .lv-vl-degree[data-size="sm"] .lv-vl-degree-text { font-size: 0.875rem; }
+  .lv-vl-degree[data-size="xs"] .lv-vl-degree-text { font-size: 0.75rem; }
+
+  .lv-vl-degree-role {
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    padding: 0 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+  }
+
+  /* P23-31b O3: a narrow finger slot shows the arrow and the semitones instead of the interval's name. */
+  [data-testid="voicing-loop-finger-slot"] {
+    container-type: inline-size;
+  }
+
+  .lv-vl-move-short {
+    display: none;
+  }
+
+  .lv-vl-move-long,
+  .lv-vl-move-short {
+    white-space: nowrap;
+  }
+
+  @container (max-width: 44px) {
+    .lv-vl-move-long { display: none; }
+    .lv-vl-move-short { display: inline; }
+  }
+}
+
+/* ===== P23-32: Voicing Loop practice (mock A′) =====
+   This block is in the components layer like the rest of this file: unlayered rules are emitted before the
+   layer, so an unlayered copy would lose to the older `.lv-vl-transport-frame { height: 92px }` and friends
+   (the cascade decides by layer, then by order). Last in the file, so it wins where the two overlap. */
+@layer components {
+.lv-vl-head {display:flex;align-items:center;gap:10px;min-width:0;height:36px;flex:none;}
+.lv-vl-back {display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 12px 0 8px;border:1px solid var(--lv-border-strong);border-radius:9px;color:var(--lv-text-secondary);font-size:13px;font-weight:600;white-space:nowrap;}
+.lv-vl-back:hover {border-color:var(--lv-accent);color:var(--lv-text);}
+.lv-vl-head-title {font-size:17px;font-weight:700;white-space:nowrap;}
+.lv-vl-head-facts {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--lv-text-muted);}
+.lv-vl-head-inline {display:none;}
+.lv-vl-controls {height:40px;padding:0 10px;border-radius:12px;}
+.lv-vl-controls-row {flex-wrap:nowrap;height:38px;align-items:center;gap:10px;}
+.lv-vl-seg {display:inline-flex;gap:2px;padding:2px;border-radius:8px;background:var(--lv-bg);}
+.lv-vl-seg .lv-choice {height:28px;min-height:28px;padding:0 10px;border:0;border-radius:6px;background:transparent;font-size:12.5px;}
+.lv-vl-seg .lv-choice[aria-pressed="true"] {background:var(--lv-accent-soft);color:var(--lv-accent);font-weight:700;box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--lv-accent) 45%, transparent);}
+.lv-vl-switch {display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--lv-text-secondary);white-space:nowrap;}
+.lv-vl-rule-info {display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--lv-border-strong);border-radius:50%;font-size:11px;color:var(--lv-text-muted);cursor:help;}
+.lv-vl-then {margin-top:auto;padding-top:10px;border-top:1px solid var(--lv-border);}
+[data-testid="voicing-loop-detail"] {flex:1 1 auto;min-height:110px;display:flex;flex-direction:column;}
+[data-testid="voicing-loop-detail"] [data-keyboard-event-index] {flex:1 1 auto;min-height:0;}
+/* P23-61 5: the keyboard stops growing at a real piano's key shape (a white key 6.5 times as tall as it is
+   wide: 12.5% of the pane's width + the frame's 10px), at most 210px. The rest stays free below. */
+@media (min-height: 761px) {
+  [data-testid="voicing-loop-detail"] {flex:0 1 auto;}
+  [data-testid="voicing-loop-detail"] [data-keyboard-event-index] {flex:0 1 min(210px, calc(10px + 12.5cqw));max-height:min(210px, calc(10px + 12.5cqw));}
+}
+/* The pane is a container so the two rows below can wrap by the width they really have. */
+[data-testid="voicing-loop-workspace"] {container-type:inline-size;}
+.lv-vl-transport-frame {height:48px;min-height:48px;display:flex;align-items:center;}
+/* The keyboard box's top row is 28px (the mock's is 26): the audition button follows it, so the keys take the
+   rest. This drops the panel-to-keys overhead from 76px to about 50px, which is where the mock sits. */
+.lv-vl-legend-row .lv-button-secondary {height:28px;min-height:28px;padding-block:0;}
+.lv-vl-divider {width:1px;height:20px;flex:none;background:var(--lv-border-strong);}
+.lv-vl-timeline-head {height:24px;}
+.lv-vl-current-chord {font-size:52px;line-height:1.05;}
+.lv-vl-next-chord {font-size:30px;line-height:1.05;}
+@media (max-height: 760px) {
+  .lv-vl-head {display:none;}
+  .lv-vl-head-inline {display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}
+  .lv-vl-head-inline .lv-vl-back {height:28px;padding:0 8px;}
+  .lv-vl-head-inline .lv-vl-back-label {display:none;}
+  .lv-vl-head-inline .lv-vl-head-title {font-size:14px;max-width:140px;overflow:hidden;text-overflow:ellipsis;}
+  .lv-vl-head-inline .lv-vl-head-facts {display:none;}
+  .lv-vl-controls .lv-section-kicker {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  .lv-vl-controls-row {gap:8px;}
+  .lv-vl-seg .lv-choice {padding:0 8px;}
+  /* The keyboard keeps its drawn height: the box no longer gives way to the panels above, the workspace
+     scrolls instead (1280×720 shows the keys and the transport together at the bottom of that scroll). */
+  [data-testid="voicing-loop-detail"] {min-height:72px;flex-shrink:0;}
+  .lv-vl-transport-frame {height:42px;min-height:42px;}
+  .lv-vl-transport .lv-vl-button-text,.lv-vl-transport .lv-vl-label-text {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  .lv-vl-current-chord {font-size:34px;line-height:1.05;}
+  .lv-vl-next-chord {font-size:26px;line-height:1.05;}
+}
+  /* P23-32 L2: the chord cards are 54px (42 in a low window) with the role's 2px line on top. One source for
+     that height: the classes on the card carry no `h-[…]`, so this rule is not fought by a utility. */
+  .lv-vl-event { height: 54px; min-height: 54px; border-top: 2px solid var(--lv-vl-row-fn, var(--lv-border-strong)); }
+  /* P23-61 4: the card carries its role in the key — a 2px line on top and the degree in the role's colour.
+     The line is drawn inside the card, so the border utilities on the button do not hide it. */
+  .lv-vl-event[data-fn="T"] { --lv-vl-row-fn: var(--lv-fn-t); }
+  .lv-vl-event[data-fn="SD"] { --lv-vl-row-fn: var(--lv-fn-sd); }
+  .lv-vl-event[data-fn="SDm"] { --lv-vl-row-fn: var(--lv-fn-sdm); }
+  .lv-vl-event[data-fn="D"] { --lv-vl-row-fn: var(--lv-fn-d); }
+  .lv-vl-event[data-fn]::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: var(--lv-vl-row-fn); }
+  .lv-vl-event-degree { display: inline-flex; line-height: 12px; }
+  .lv-vl-event-degree .lv-vl-degree { gap: 4px; }
+  .lv-vl-event-degree .lv-vl-degree-text { font-size: 10.5px; line-height: 12px; }
+  /* The badge's size classes are [`[data-size]` + class + class] = 0,3,0, so the card's own size repeats them. */
+  .lv-vl-event-degree .lv-vl-degree[data-size="xs"] .lv-vl-degree-text { font-size: 10.5px; line-height: 12px; }
+  .lv-vl-event-degree .lv-vl-degree-role { padding: 0 3px; font-size: 8.5px; line-height: 11px; }
+  .lv-vl-event-degree[data-badge="off"] .lv-vl-degree-role { display: none; }
+  /* P23-32 P3/P5/P6: the practice's finger slots take the table's heights as a floor — when the three lines fit
+     they are exactly 52/50/44px, and a frame grows instead of clipping when they do not. The low window also
+     tightens the lines so 40/42/36 really holds the three readable lines. (The same slot rules draw the
+     fingering ranker, so everything here is scoped to this screen.) */
+  [data-testid="voicing-loop-workspace"] .voicing-hand-slots { gap: 5px; }
+  [data-testid="voicing-loop-workspace"] .voicing-hand-slot { min-height: 52px; padding: 0; justify-content: center; }
+  [data-testid="voicing-loop-workspace"] .voicing-hand[data-compact] .voicing-hand-slot { min-height: 44px; }
+  [data-testid="voicing-loop-workspace"] .lv-vl-move { min-height: 68px; }
+  [data-testid="voicing-loop-workspace"] .lv-vl-move-slot { min-height: 50px; }
+  @media (max-height: 760px) {
+    .lv-vl-event { height: 42px; min-height: 42px; }
+    [data-testid="voicing-loop-workspace"] .voicing-hand-slot { min-height: 40px; gap: 0; }
+    [data-testid="voicing-loop-workspace"] .voicing-hand[data-compact] .voicing-hand-slot { min-height: 36px; }
+    [data-testid="voicing-loop-workspace"] .voicing-hand-slot-finger,
+    [data-testid="voicing-loop-workspace"] .voicing-hand-slot-pitch,
+    [data-testid="voicing-loop-workspace"] .voicing-hand-slot-degree { line-height: 1.05; }
+    [data-testid="voicing-loop-workspace"] .lv-vl-move { min-height: 60px; }
+    [data-testid="voicing-loop-workspace"] .lv-vl-move-slot { min-height: 42px; }
+    /* The drawn keyboard keeps 70px where the workspace scrolls (1280×720): its box is 80px because the
+       keyboard's own frame (p-1 + 1px border) takes 10 of them. The panel no longer squeezes this box. */
+    [data-testid="voicing-loop-detail"] [data-keyboard-event-index] { height: 80px; min-height: 80px; }
+  }
+  /* The pane's real width decides the wrapping, not the window's: 1024 with the left menu open leaves about
+     700px for the practice, which no longer holds the source / study / display groups on one line (1440 and
+     1280 do, 768 with the menu open does not either). Both the row and the box's height switch together. */
+  @container (max-width: 960px) {
+    [data-testid="voicing-loop-controls"] { height: auto; min-height: 40px; }
+    .lv-vl-controls-row { flex-wrap: wrap; height: auto; min-height: 38px; padding-block: 2px; row-gap: 2px; }
+    /* The source group takes a line of its own and never shrinks below its four buttons, so nothing is drawn
+       over the next group. Each group also wraps inside itself for a 320px window. */
+    [data-testid="voicing-loop-source-group"] { flex-basis: 100%; flex-shrink: 0; flex-wrap: wrap; row-gap: 2px; }
+    [data-testid="voicing-loop-display-group"] { flex-shrink: 1; flex-wrap: wrap; row-gap: 2px; }
+  }
+  /* Same idea for the transport bar, whose status word ran 39px past a 504px pane. */
+  @container (max-width: 560px) {
+    [data-testid="voicing-loop-transport"] { height: auto; min-height: 42px; padding-block: 2px; }
+    .lv-vl-transport-frame > [data-testid="voicing-loop-transport-primary"] { flex-wrap: wrap; row-gap: 2px; }
+  }
+}
+
+.lv-vl-resume:has(:focus-visible) {border-color:var(--lv-accent);box-shadow:var(--lv-shadow-raised),inset 0 0 0 1px color-mix(in srgb,var(--lv-accent) 50%,transparent);}
+.lv-vl-resume [data-testid="voicing-loop-resume-go"]:hover {filter:brightness(1.06);}
+.lv-vl-resume [data-testid="voicing-loop-resume-go"]:focus-visible {outline:2px solid var(--lv-focus);outline-offset:2px;}
+
+/* P23-66: range loop amber indicator (unlayered so it wins over Tailwind border/shadow utilities). */
+.lv-vl-event[data-range="inside"],
+.lv-vl-event[data-range="a"],
+.lv-vl-event[data-range="b"],
+.lv-vl-event[data-range="a-b"] {
+  box-shadow: inset 0 -3px 0 var(--lv-vl-range);
+}
+.lv-vl-event[aria-current="step"][data-range="inside"],
+.lv-vl-event[aria-current="step"][data-range="a"],
+.lv-vl-event[aria-current="step"][data-range="b"],
+.lv-vl-event[aria-current="step"][data-range="a-b"] {
+  box-shadow: inset 0 -3px 0 var(--lv-vl-range), inset 0 0 0 1px rgba(59, 224, 206, 0.12);
+}
+.lv-vl-event[data-range="pending-a"] {
+  border-bottom: 2px dashed var(--lv-vl-range);
 }

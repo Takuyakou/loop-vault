@@ -8,7 +8,7 @@ export const lapKeys=z.record(z.string().regex(/^(?:[0-9]|1[01])$/),count);
  * Laps (完奏) of a set of progressions, kept in a record file of their own: strict version-1 envelope, progression id × tonic.
  * Original Practice and Jazz Progressions each have one (same shape, own `app` and own ids); the normal Dojo record is never touched.
  */
-export const lapRecordsSchema=(app:string,ids:readonly string[])=>z.object({app:z.literal(app),fileVersion:z.literal(1),version:z.literal(1),revision:z.number().int().positive(),laps:z.record(z.enum(ids as [string,...string[]]),lapKeys),operations:z.array(z.string().min(1).max(128)).max(10000)}).strict();
+export const lapRecordsSchema=(app:string,ids:readonly string[])=>z.object({app:z.literal(app),fileVersion:z.literal(1),version:z.literal(1),revision:z.number().int().positive(),laps:z.partialRecord(z.enum(ids as [string,...string[]]),lapKeys),operations:z.array(z.string().min(1).max(128)).max(10000)}).strict();
 export type LapRecordsSchema=ReturnType<typeof lapRecordsSchema>;
 export type LapRecords=z.infer<LapRecordsSchema>;
 export const emptyLapRecords=(app:string):LapRecords=>({app,fileVersion:1,version:1,revision:1,laps:{},operations:[]});
@@ -52,7 +52,7 @@ export class LapRecordsRepository{
   });
  }
  importLegacy(laps:LapRecords['laps']):Promise<LapRecords>{
-  return this.mutate(file=>{const merged=structuredClone(file);for(const [id,byKey] of Object.entries(laps))for(const [key,value] of Object.entries(byKey)){const prior=merged.laps[id]?.[key];if(!prior||prior.count<value.count){merged.laps[id]??={};merged.laps[id]![key]=value;}}return merged;});
+  return this.mutate(file=>{const merged=structuredClone(file);for(const [id,byKey] of Object.entries(laps))for(const [key,value] of Object.entries(byKey??{})){const prior=merged.laps[id]?.[key];if(!prior||prior.count<value.count){merged.laps[id]??={};merged.laps[id]![key]=value;}}return merged;});
  }
  private mutate(update:(file:LapRecords)=>LapRecords){
   const result=this.queue.then(async()=>{const file=await this.load();if(this.blocked)throw new Error('完奏記録の復旧が必要です。');const next=update(file);if(JSON.stringify(file)===JSON.stringify(next))return file;return this.persist(next);});

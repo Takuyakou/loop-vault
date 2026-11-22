@@ -94,8 +94,7 @@ test.describe("Phase 5.13 visual evidence", () => {
     await evidence(page, testInfo, "progression-detail-editing");
     await page.keyboard.press("Escape");
 
-    await page.locator("[data-progression-detail-view]")
-      .getByRole("button", { name: /Bass Practice/ }).click();
+    await page.locator('[data-nav="bass-practice"]').click();
     await page.locator('[data-nav="chord-dojo"]').click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, testInfo, "practice");

@@ -37,8 +37,12 @@ export function extractPlayedBass(pcm:Float32Array,sampleRate:number):PlayedBass
   }
   return notes;
 }
-export function compareBassNotes(target:readonly MidiBassNote[],bpm:number,played:readonly PlayedBassNote[],settings:MidiBassSettings,startOffsetMs=0):BassAnalysis {
-  const times=target.map(n=>n.startBeat*60000/bpm);const equal=(a:number,b:number)=>settings.octaveCountsAsCorrect?(a-b)%12===0:a===b;
+/** P23-62: what counts as the same note. `octave` = the same pitch class; `ignore` = timing only (rhythm). */
+export type BassPitchRule = "exact" | "octave" | "ignore";
+export type BassJudgeSettings = Pick<MidiBassSettings,"timingToleranceMs"|"octaveCountsAsCorrect"|"autoLatencyCorrection"> & { readonly pitchRule?: BassPitchRule };
+export function compareBassNotes(target:readonly MidiBassNote[],bpm:number,played:readonly PlayedBassNote[],settings:BassJudgeSettings,startOffsetMs=0):BassAnalysis {
+  const rule:BassPitchRule=settings.pitchRule??(settings.octaveCountsAsCorrect?"octave":"exact");
+  const times=target.map(n=>n.startBeat*60000/bpm);const equal=(a:number,b:number)=>rule==="ignore"?true:rule==="octave"?(a-b)%12===0:a===b;
   let latency=0;
   if(settings.autoLatencyCorrection){const used=new Set<number>();const shifts:number[]=[];for(let i=0;i<target.length;i++){let best=-1,distance=Infinity;played.forEach((p,j)=>{const d=Math.abs(p.onsetMs-startOffsetMs-times[i]);if(!used.has(j)&&equal(p.pitch,target[i].pitch)&&d<=500&&d<distance){best=j;distance=d;}});if(best>=0){used.add(best);shifts.push(played[best].onsetMs-startOffsetMs-times[i]);}}latency=Math.max(-250,Math.min(250,median(shifts)));}
   const corrected=played.map(n=>({...n,onsetMs:n.onsetMs-startOffsetMs-latency,offsetMs:n.offsetMs-startOffsetMs-latency}));const used=new Set<number>();const marks:BassMark[]=[];

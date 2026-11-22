@@ -18,16 +18,20 @@ async function chooseVoicingLoop(page: Page) {
 }
 
 test("P5.32 shows the resolved two-hand plan, edits personal fingering, and preserves playback", async ({ page }) => {
+  // P23-06: the practice starts at the app-wide BPM; set it to the fixture progression's 96 (the drag below adds 8).
+  await page.addInitScript(() => localStorage.setItem("loop-vault:global-bpm:v1", JSON.stringify({ version: 1, bpm: 96 })));
   const workspace = await openPopulatedVoicingLoop(page);
   await expect(page.locator('[data-nav="voicing-loop"]')).toBeVisible();
-  await expect(workspace.getByTestId("voicing-loop-current-degree")).toHaveText("Ⅰ");
-  await expect(workspace.getByTestId("voicing-loop-next-degree")).toHaveText("Ⅱ");
+  await expect(workspace.getByTestId("voicing-loop-current-degree")).toHaveText("Ⅰmaj7");
+  await expect(workspace.getByTestId("voicing-loop-next-degree")).toHaveText("Ⅱm7");
   await expect(workspace.getByTestId("voicing-loop-event-degree")).toHaveText(["Ⅰ", "Ⅱ"]);
-  await expect(workspace.getByRole("checkbox", { name: "おすすめ運指を表示" })).toBeChecked();
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("音名");
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("構成音");
-  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("指");
-  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("指");
+  // P23-32 T4: 「おすすめ運指を表示」 is a switch now.
+  await expect(workspace.getByRole("switch", { name: "おすすめ運指を表示" })).toHaveAttribute("aria-checked", "true");
+  // P23-20 L1: the note and the chord tone sit in each used slot card; the finger names are the card heads.
+  await expect(workspace.getByTestId("voicing-loop-left-hand").locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
+  await expect(workspace.getByTestId("voicing-loop-left-hand").locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
+  await expect(workspace.getByTestId("voicing-loop-left-hand").locator(".voicing-hand-slot-finger").first()).toHaveText("L5");
+  await expect(workspace.getByTestId("voicing-loop-right-hand").locator(".voicing-hand-slot-finger").first()).toHaveText("R1");
   await expect(workspace.getByTestId("voicing-loop-next-left-hand")).toBeVisible();
   await expect(workspace.getByTestId("voicing-loop-next-right-hand")).toBeVisible();
   await expect(workspace).not.toContainText("DEGREE");
@@ -50,15 +54,9 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
   await cards.nth(1).click();
   await expect(workspace.locator('[data-midi-note="52"]')).toHaveAttribute("data-visual-state", "guide");
 
-  const bpmDrag = workspace.getByTestId("voicing-loop-bpm-drag");
-  await bpmDrag.scrollIntoViewIfNeeded();
-  const bpmBox = await bpmDrag.boundingBox();
-  expect(bpmBox).not.toBeNull();
-  await page.mouse.move(bpmBox!.x + bpmBox!.width / 2, bpmBox!.y + bpmBox!.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(bpmBox!.x + bpmBox!.width / 2, bpmBox!.y + bpmBox!.height / 2 - 30, { steps: 5 });
-  await page.mouse.up();
-  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("104");
+  // P23-32 K4: the practice has no BPM field of its own any more (the header's 共通 BPM applies).
+  await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
+  await expect(page.getByTestId("voicing-loop-bpm-drag")).toHaveCount(0);
 
   await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "運指を編集" });
@@ -75,12 +73,17 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
     .getByRole("button", { name: "キャンセル", exact: true }).click();
   await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("おすすめ");
 
-  await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).uncheck();
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).not.toContainText("指");
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("音名");
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("構成音");
+  // P23-32 T4: 「おすすめ運指を表示」 is a switch now (aria-checked, not a checkbox).
+  const fingeringSwitch = workspace.getByRole("switch", { name: "おすすめ運指を表示" });
+  await fingeringSwitch.click();
+  await expect(fingeringSwitch).toHaveAttribute("aria-checked", "false");
+  // P23-20 L1: with the fingering hidden the cards keep the notes and tones, and their finger names go away.
+  await expect(workspace.getByTestId("voicing-loop-current-voicing").locator(".voicing-hand-slot-finger").first()).toHaveText("");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing").locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
+  await expect(workspace.getByTestId("voicing-loop-current-voicing").locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
   await expect(workspace.locator("[data-finger-label]")).toHaveCount(0);
-  await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).check();
+  await fingeringSwitch.click();
+  await expect(fingeringSwitch).toHaveAttribute("aria-checked", "true");
 
   await page.getByLabel("カウントイン").selectOption("0");
   await workspace.getByRole("button", { name: /開始/ }).click();

@@ -35,7 +35,7 @@ export function PracticeWorkspace({
         aria-label="練習の作業領域"
         role="tabpanel"
         tabIndex={-1}
-        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : dojo ? "min-h-0 flex-1" : ""}`}
+        className={`min-w-0 outline-none ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : dojo ? "min-h-0 flex-1" : ""}`}
       >
         {mode === "bass-practice"
           ? bassPractice
@@ -92,9 +92,9 @@ export function PracticeModeTabs({
     selectMode(next);
   }
 
-  const tabClassName = "min-h-10 px-4 text-sm";
+  const tabClassName = "min-h-10 whitespace-nowrap px-4 text-sm";
   return (
-      <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="練習モード" role="tablist">
+      <nav className="flex w-fit max-w-full flex-none shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="練習モード" role="tablist">
         <button
           id={`${idPrefix}-chord-dojo`}
           ref={chordTabRef}
@@ -128,7 +128,7 @@ export function PracticeModeTabs({
           id={`${idPrefix}-bass-practice`}
           ref={bassTabRef}
           type="button"
-          className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "bass-practice" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
+          className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "bass-practice" ? "bg-[var(--lv-practice-bass-soft)] text-[var(--lv-practice-bass)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
           aria-controls="practice-workspace-panel"
           aria-selected={mode === "bass-practice"}
           onClick={() => selectMode("bass-practice")}

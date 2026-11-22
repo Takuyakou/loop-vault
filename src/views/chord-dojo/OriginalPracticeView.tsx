@@ -1,4 +1,5 @@
 import {useMemo,useRef,useState} from 'react';
+import {Select} from '../../components/ui';
 import {useStore} from 'zustand';
 import {ChordCardMark,cardResult} from '../../components/practice/ChordCardResult';
 import {playbackController} from '../../audio/playbackController';
@@ -9,11 +10,13 @@ import {targetSnapshot} from '../../domain/chordDojo/targetSnapshot';
 import {whiteKeysIn} from '../ear-practice/earKeyboardHeight';
 import {answerKeyboardRange} from './keyboardRange';
 import {usePracticeLayout} from './practiceLayout';
-import {PracticeCard,PracticeHead,PracticeSafeArea,RepeatToggle,type StageItem} from './PracticeFrame';
+import {PracticeActions,PracticeCard,PracticeConditions,PracticeGuide,PracticeHead,PracticeLap,PracticeResult,PracticeSafeArea,RepeatToggle,STAFF_HELP,keyed,type StageItem} from './PracticeFrame';
+import {degreeFunctionKinds} from '../../domain/earPractice/degreeFunction';
 import {readRepeatSetting,writeRepeatSetting} from './practiceRepeat';
 import {CHOICE_NAMES} from './dojoNav';
 import {HeldCardBoard,heldStaffExtent,HeldCardNotices,heldCardHint} from './HeldCardParts';
 import {useHeldCardRun} from './useHeldCardRun';
+import {rememberRecent} from './dojoRecent';
 
 /**
  * P12.5-02: Original Practice. The cards show the real voicing (left and right hand) taken from the player's own MIDI.
@@ -38,7 +41,9 @@ export function OriginalPracticeView({originalId,shift:initialShift,onBack}:{ori
  const [repeat,writeRepeat]=useState(()=>readRepeatSetting('c'));
  const repeatRef=useRef(repeat);repeatRef.current=repeat;
  const toggleRepeat=()=>writeRepeat(r=>{writeRepeatSetting('c',!r);return !r;});
- const run=useHeldCardRun({kind:'original',lapStore:originalLapStore,onBack,target:()=>({cards:progRef.current.cards,tonic:originalTonicOf(shiftRef.current),lapId:originalId}),stopAtLap:()=>!repeatRef.current});
+ const run=useHeldCardRun({kind:'original',lapStore:originalLapStore,onBack,target:()=>({cards:progRef.current.cards,tonic:originalTonicOf(shiftRef.current),lapId:originalId}),stopAtLap:()=>!repeatRef.current,
+  // P20: the first key of a condition is what 「続きから」 remembers.
+  onFirstInput:()=>rememberRecent({kind:'original',id:originalId,key:shiftRef.current})});
  const {index,session,lastLap,manual,waiting,playingIndex,playedNotes,view,playCard,yes}=run;
  const restart=(next?:number)=>run.restart(()=>{if(next!==undefined){shiftRef.current=next;setShift(next);}});
  const randomKey=()=>restart(pickOriginalShift(run.sessionRef.current,shiftRef.current,Math.random()));
@@ -56,10 +61,11 @@ export function OriginalPracticeView({originalId,shift:initialShift,onBack}:{ori
  const lapNo=(session[tonic]??0)+1;
  const keysDone=ORIGINAL_KEYS.map(k=>({...k,count:saved?.[k.tonic]?.count??0}));
  const inputMode=run.inputMode;
+ const back=()=>{playbackController.stop();onBack();};
  return <section className="dojo" data-testid="dojo-original" data-dojo-screen="original" data-practice-frame="c" data-original-card={index} data-original-key={shift} data-original-lap={lapNo} data-lap-stop={run.lapStop||undefined} data-midi-kind={view.kind} data-input-mode={inputMode} data-paused={waiting||undefined} data-played-notes={playedNotes}>
   <div className="dojo-practice dojo-endless" ref={practice} data-practice-layout={layout.kind} style={layoutStyle}>
-   <PracticeHead backLabel={CHOICE_NAMES['builtin-progressions']} onBack={()=>{playbackController.stop();onBack();}} kind={ORIGINAL_GROUP_NAME} title={originalTitle(originalId)} degrees={prog.degrees.join('–')}
-    stages={STAGES} progressLabel="この画面の周回" onQuit={()=>{playbackController.stop();onBack();}}
+   <PracticeHead backLabel={CHOICE_NAMES['builtin-progressions']} onBack={back} kind={ORIGINAL_GROUP_NAME} title={originalTitle(originalId)} degrees={prog.degrees.join('–')}
+    stages={STAGES} progressLabel="この画面の周回"
     progress={<>
      <span>① <em>{lapNo}</em>周目 · <em>{index+1}/{prog.cards.length}</em></span>
      <span>完奏 <em>{session[tonic]??0}</em></span>
@@ -67,31 +73,35 @@ export function OriginalPracticeView({originalId,shift:initialShift,onBack}:{ori
     </>}/>
    <div className="dojo-endless-center">
     <HeldCardNotices run={run} lapStore={originalLapStore}/>
-    <div className="dojo-original-key dojo-practice-set">
-     <label><span>キー</span><select aria-label="Original Practice のキー" value={shift} onChange={e=>restart(Number(e.target.value))}>{ORIGINAL_KEYS.map(k=><option value={k.shift} key={k.tonic}>{NAMES[k.tonic]}{k.shift===0?'（元のキー）':''}</option>)}</select></label>
+    <PracticeConditions className="dojo-original-key" help={STAFF_HELP}>
+     <label><span>キー</span><Select aria-label="Original Practice のキー" value={shift} onChange={e=>restart(Number(e.target.value))}>{ORIGINAL_KEYS.map(k=><option value={k.shift} key={k.tonic}>{NAMES[k.tonic]}{k.shift===0?'（元のキー）':''}</option>)}</Select></label>
      <button type="button" data-testid="original-random" onClick={randomKey}>ランダムキー</button>
      <button type="button" data-testid="original-restart" onClick={()=>restart()}>最初から</button>
      <RepeatToggle on={repeat} onToggle={toggleRepeat} testId="original-repeat"/>
-    </div>
+    </PracticeConditions>
     <div className="dojo-endless-cards dojo-original-cards">{prog.cards.map((c,i)=>{
      const done=i<index,current=i===index;
+     const fn=degreeFunctionKinds(prog.cards.map(x=>x.degree),'major')[i];
      return <PracticeCard key={i} label={`${c.label}（${c.degree}）を聴く`} onPress={()=>void playCard(i)} state={done?'done':current?'current':'todo'} playing={playingIndex===i} testId="original-card" notesTestId="original-notes"
-      degree={c.degree} name={c.label} mark={done?<ChordCardMark result={cardResult(true,manual)} layer="set" corner/>:null}
+      degree={c.degree} name={c.label} fn={fn?.kind||undefined} fnBorrowed={fn?.borrowedDominant} mark={done?<ChordCardMark result={cardResult(true,manual)} layer="set" corner/>:null}
       notes={<><i>左</i> {names(c.left)}<br/><i>右</i> {names(c.right)}</>}/>;})}</div>
-    <div className="dojo-practice-say">
-    {run.lapStop&&lastLap
-     ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="original-lap-stop"><b>完奏！ {NAMES[lastLap.tonic]}</b> {lastLap.n}周 · 「もう一度 ① を弾く（R）」で続けます</p>
-     :lastLap&&index===0
-     ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="original-lap"><b>完奏！ {NAMES[lastLap.tonic]}</b> {lastLap.n}周 · 続けて、もう1周弾けます</p>
-     :<p className="dojo-endless-result" role="status" data-testid="original-hint">{hint}</p>}
-    </div>
-    <div className="dojo-actions dojo-endless-actions">
-     <button type="button" onClick={()=>void playCard(index)}>お手本を聴く（L）</button>
-     {run.lapStop?<button type="button" className="dojo-primary" data-testid="original-lap-again" onClick={run.againLap}>もう一度 ① を弾く（R）</button>:null}
-     {manual&&!run.lapStop?<button type="button" className="dojo-primary" onClick={yes}>弾けた（Y）</button>:null}
-    </div>
+    <PracticeResult>
+     {run.lapStop&&lastLap
+      ?<PracticeLap summary={<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="original-lap-stop"><b>完奏！ {NAMES[lastLap.tonic]}</b> {lastLap.n}周 · 「もう一度 ① を弾く（R）」で続けます</p>}>
+       <button type="button" className="dojo-primary" data-testid="original-lap-again" onClick={run.againLap} {...keyed('もう一度 ① を弾く','R')}/>
+       <button type="button" onClick={back}>一覧へ</button>
+      </PracticeLap>
+      :lastLap&&index===0
+      ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="original-lap"><b>完奏！ {NAMES[lastLap.tonic]}</b> {lastLap.n}周 · 続けて、もう1周弾けます</p>
+      :null}
+    </PracticeResult>
+    <PracticeGuide>{lastLap&&(run.lapStop||index===0)?null:<p className="dojo-endless-result" role="status" data-testid="original-hint">{hint}</p>}</PracticeGuide>
+    <PracticeActions>
+     {manual&&!run.lapStop?<button type="button" className="dojo-primary" onClick={yes} {...keyed('弾けた','Y')}/>:null}
+     <button type="button" onClick={()=>void playCard(index)} {...keyed('お手本を聴く','L')}/>
+    </PracticeActions>
    </div>
-   <HeldCardBoard snapshot={snapshot} left={shown.left} right={shown.right} staffExtent={staffExtent} keyHeight={layout.keyHeight} markScale={layout.markScale} caption={playingIndex!==undefined?`${snapshot.chordSymbol} を聴いています`:undefined}
+   <HeldCardBoard quiet snapshot={snapshot} left={shown.left} right={shown.right} staffExtent={staffExtent} keyHeight={layout.keyHeight} markScale={layout.markScale} caption={playingIndex!==undefined?`${snapshot.chordSymbol} を聴いています`:undefined}
     headExtra={<span className="dojo-jazz-keys" data-testid="original-record" aria-label="完奏の記録"><span>完奏したキー：</span>{keysDone.map(r=><span className="dojo-endless-chip" key={r.shift} data-kind={r.count>0?'ok':'skipped'} data-done={r.count>0||undefined}>{NAMES[r.tonic]}{r.count>0?` ${r.count}`:''}</span>)}</span>}/>
    <PracticeSafeArea/>
   </div>

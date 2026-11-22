@@ -3,16 +3,18 @@ import { useStore } from "zustand";
 import { usePreviewSound } from "../../components/PreviewSoundProvider";
 import { PracticeKeyboard } from "../../components/practice/PracticeKeyboard";
 import {
-  EarAnswerTaker, EarSession, answerSpecOf, functionKind, keySignatureOf, questionInfos, recentComparison, type EarChordInfo, type EarChordRecord, type EarMark, type EarQuestion,
+  EarAnswerTaker, EarSession, answerSpecOf, FEW_CHORDS, functionKind, keySignatureOf, questionInfos, recentComparison, recentPlaySeries,
+  type EarChordInfo, type EarChordRecord, type EarFigures, type EarMark, type EarQuestion, type EarSummary,
 } from "../../domain/earPractice";
 import { heldNotes } from "../../domain/liveMidi";
+import { judgeEarAnswer, type EarJudgement } from "../../domain/earPractice/judgement";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import { liveMidiService } from "../../liveMidi/liveMidiService";
 import { openMidiPanel } from "../../liveMidi/midiPanel";
 import type { MidiPreviewNote } from "../../audio/chordPreview";
 import { GrandStaff } from "../chord-dojo/GrandStaff";
 import { useDojoMidi } from "../chord-dojo/useDojoMidi";
-import { createEarPlayback, type EarPlayback, type EarPlayHandle } from "./earPlayback";
+import { createEarPlayback, playAnswerListen, type EarPlayback, type EarPlayHandle } from "./earPlayback";
 import { earKeyboardRange } from "./earRange";
 import { keyboardKeyHeight, whiteKeysIn } from "./earKeyboardHeight";
 import { chordSnapshot, heldSnapshot } from "./earStaff";
@@ -20,8 +22,9 @@ import { diffRate, diffSeconds, pct, secText } from "./earFormat";
 import { displayChordLabel } from "./label";
 import type { EarSettings } from "./earSettings";
 import { ResultScore } from "./ResultScore";
+import { secondsLines } from "./earResultLines";
 
-const NAMES = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
+const NAMES = ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
 const noteName = (note: number) => `${NAMES[((note % 12) + 12) % 12]}${Math.floor(note / 12) - 1}`;
 /** How long a single chord is sounded when it is played by itself (seconds). */
 const CHORD_SECONDS = 1.6;
@@ -70,7 +73,12 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
     [injected],
   );
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string }>();
+  /** S11-S15: the last judgement of this card, with the shape that was played (to leave that shape out of さっき試した形). */
+  const [last, setLast] = useState<{ notes: readonly number[]; verdict: EarJudgement }>();
   const [lapIndex, setLapIndex] = useState<number>();
+  /** S3: the wheel of the big listen button runs for as long as the sound does; nothing is measured here. */
+  const [ring, setRing] = useState<{ ms: number; token: number }>();
+  const ringToken = useRef(0);
   const [soundedIndex, setSoundedIndex] = useState<number>();
   const [revealed, setRevealed] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
@@ -134,18 +142,36 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
   const chordNotes = useCallback((index: number, startBeat = 0, beats = CHORD_SECONDS * question.bpm / 60): MidiPreviewNote[] =>
     question.chords[index]!.notes.map((pitch) => ({ pitch, startBeat, durationBeats: beats, velocity: 90 })), [question]);
 
+  /** S3: a new sound restarts the wheel; the end of an older sound does not stop the newer one. */
+  const startRing = useCallback((ms: number) => {
+    ringToken.current += 1;
+    const token = ringToken.current;
+    setRing({ ms, token });
+    return token;
+  }, []);
+  const endRing = useCallback((token: number) => {
+    if (ringToken.current === token) setRing(undefined);
+  }, []);
+
   const playChord = useCallback((index: number) => {
     const beats = CHORD_SECONDS * question.bpm / 60;
-    return play(`ear:chord:${index}`, chordNotes(index, 0, beats), beats);
-  }, [chordNotes, play, question.bpm]);
+    const handle = play(`ear:chord:${index}`, chordNotes(index, 0, beats), beats);
+    const token = startRing(CHORD_SECONDS * 1000);
+    void handle.ended.then(() => endRing(token));
+    return handle;
+  }, [chordNotes, endRing, play, question.bpm, startRing]);
 
   const playPair = useCallback((index: number) => {
     const each = 2;
     const first = Math.max(0, index - 1);
     const notes = [first, index].filter((value, position, all) => all.indexOf(value) === position)
       .flatMap((chordIndex, position) => chordNotes(chordIndex, position * each, each * 0.95));
-    return play(`ear:pair:${index}`, notes, each * (index === first ? 1 : 2));
-  }, [chordNotes, play]);
+    const endBeat = each * (index === first ? 1 : 2);
+    const handle = play(`ear:pair:${index}`, notes, endBeat);
+    const token = startRing(endBeat * 60000 / question.bpm);
+    void handle.ended.then(() => endRing(token));
+    return handle;
+  }, [chordNotes, endRing, play, question.bpm, startRing]);
 
   const beginPlayRef = useRef<() => void>(() => undefined);
   const playLap = useCallback((purpose: "first" | "again") => {
@@ -153,6 +179,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
     const notes = question.chords.flatMap((chord) =>
       chord.notes.map((pitch) => ({ pitch, startBeat: chord.startBeat, durationBeats: chord.durationBeats * 0.92, velocity: 90 })));
     const handle = play("ear:lap", notes, question.length * question.beatsPerBar);
+    const ringId = startRing(question.length * question.beatsPerBar * 60000 / question.bpm);
     let timer: ReturnType<typeof setInterval> | undefined;
     void handle.started.then((info) => {
       if (!info || tokenRef.current !== token) return;
@@ -165,11 +192,12 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
     });
     void handle.ended.then((reason) => {
       if (timer) globalThis.clearInterval(timer);
+      endRing(ringId);
       if (tokenRef.current !== token) return;
       setLapIndex(undefined);
       if (reason === "completed" && purpose === "first") beginPlayRef.current();
     });
-  }, [play, question]);
+  }, [endRing, play, question, startRing]);
 
   // ---- the card whose turn it is ---------------------------------------------------------------------
   const newTaker = useCallback((index: number) => {
@@ -223,8 +251,11 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
   // ---- answers ----------------------------------------------------------------------------------------
   const handleAnswer = useCallback((notes: number[], completedAt: number) => {
     const result = session.answer(notes, completedAt);
+    const chordNow = session.currentChord;
+    const verdict = judgeEarAnswer({ symbol: chordNow.symbol, judge: chordNow.judge, notes: chordNow.notes }, notes);
     setFeedback({ ok: result.ok, text: result.message });
     if (result.ok) {
+      setLast(undefined);
       soundedAtRef.current = perfNow();
       setSoundedIndex(session.index);
       session.next();
@@ -232,6 +263,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
       if (session.phase === "result") playback.stop();
       else armCard(session.index);
     } else {
+      setLast({ notes: [...notes].sort((left, right) => left - right), verdict });
       newTaker(session.index);
       bump();
     }
@@ -267,6 +299,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
   const selfJudge = useCallback((ok: boolean) => {
     const result = session.selfAnswer(ok);
     setFeedback({ ok, text: ok ? "合いました(自分で判定)" : "答えを見て、もう一度(自分で判定)" });
+    setLast(undefined);
     setRevealed(false);
     if (ok) {
       setSoundedIndex(session.index);
@@ -279,7 +312,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
   }, [armCard, playback, session]);
 
   // ---- keys ---------------------------------------------------------------------------------------------
-  const listen = useCallback((kind: "chord" | "pair" | "lap") => {
+  const listen = useCallback((kind: "chord" | "pair" | "lap" | "bass" | "spread") => {
     if (session.phase === "listen") {
       if (kind === "lap") playLap("first");
       return;
@@ -289,8 +322,16 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
     bump();
     if (kind === "chord") void playChord(session.index);
     else if (kind === "pair") void playPair(session.index);
-    else playLap("again");
-  }, [playChord, playLap, playPair, session]);
+    else if (kind === "bass" || kind === "spread") {
+      // S5/S6: the answer of this card, its lowest note alone or its notes one at a time. A listen like any other.
+      const chordNow = session.currentChord;
+      const beats = CHORD_SECONDS * question.bpm / 60;
+      const handle = playAnswerListen(play, `ear:${kind}:${session.index}`, chordNow.notes, kind, { chordBeats: beats });
+      const lengthBeats = kind === "bass" ? beats : [...new Set(chordNow.notes)].length;
+      const token = startRing(lengthBeats * 60000 / question.bpm);
+      void handle.ended.then(() => endRing(token));
+    } else playLap("again");
+  }, [endRing, play, playChord, playLap, playPair, question.bpm, session, startRing]);
 
   /** A card was pressed: its chord sounds, and nothing else moves (the card being played, the answer, the hints, the seconds). */
   const pressCard = useCallback((index: number) => {
@@ -331,6 +372,8 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
       } else if (k === "l") listen("chord");
       else if (k === "k") listen("pair");
       else if (k === "r") listen("lap");
+      else if (k === "b") listen("bass");
+      else if (k === "a") listen("spread");
       else if (event.key === " ") { event.preventDefault(); if (connected) hint(); else if (session.phase === "play") setRevealed(true); }
       else if (!connected && session.phase === "play" && revealed && k === "y") selfJudge(true);
       else if (!connected && session.phase === "play" && revealed && k === "n") selfJudge(false);
@@ -363,6 +406,21 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
     : question.source === "builtin" ? "定番の進行" : "自分の進行";
   const answerNotes = showAnswer ? chord.notes : [];
   const answerPcs = answerNotes.map((note) => note % 12);
+  // S11-S15: what the last judgement says, in the words the screen adds around it.
+  const pcOf = (note: number) => ((note % 12) + 12) % 12;
+  const verdictNow = phase === "play" && last && !last.verdict.ok ? last.verdict : undefined;
+  const extraPcs = verdictNow?.extra ?? [];
+  const namedMissing = verdictNow?.namedMissing;
+  const guide = !feedback || feedback.ok || !verdictNow ? undefined
+    : verdictNow.extra.length ? "赤い音を外して、もう一度押さえてください。"
+      : verdictNow.missing.length ? "音を足して、もう一度押さえてください。"
+        : verdictNow.bassWrong ? "一番下の音を替えて、もう一度押さえてください。"
+          : undefined;
+  // S15: the shape of the judgement on show is not repeated under さっき試した形.
+  const newestFormIsShown = Boolean(verdictNow && last && session.triedForms[0] && session.triedForms[0]!.notes.join(",") === last.notes.join(","));
+  const triedShown = connected ? (newestFormIsShown ? session.triedForms.slice(1) : session.triedForms).slice(0, 2) : [];
+  // B2: the pressed keys whose note names the last judgement called extra.
+  const foreignKeys = extraPcs.length ? held.filter((note) => extraPcs.includes(pcOf(note))) : [];
 
   const cardCount = question.chords.length;
   const ref = useRef<HTMLDivElement>(null);
@@ -411,7 +469,14 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
   return (
     <div className="ear-run" data-testid="ear-run" data-phase={phase} data-question-id={question.id} data-tonic={question.tonic} data-sounded={soundedIndex} data-clock-spread-ms={clock?.spreadMs.toFixed(1)} data-output-latency-ms={clock?.outputLatencyMs.toFixed(1)}>
       <div className="ear-head">
-        <h1 data-testid="ear-title">{title}・レベル{question.level}・{question.length}小節</h1>
+        <button type="button" className="ear-back" data-testid="ear-back" onClick={onExit} aria-label="耳で弾くに戻る">
+          <span aria-hidden="true">‹</span> 耳で弾く
+        </button>
+        <h1 data-testid="ear-title">
+          <span className="ear-title-main">{title}</span>
+          <span className="ear-title-fact">・レベル{question.level}</span>
+          <span className="ear-title-fact">・{question.length}小節</span>
+        </h1>
         {settings.showFirstName ? (
           <span className="ear-badge" data-testid="ear-key">
             {keyKnown ? `キー ${displayChordLabel(question.keyName)} ・ ` : ""}1つ目 {displayChordLabel(question.chords[0]!.label)}
@@ -419,23 +484,21 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
         ) : null}
         <span className="ear-badge ear-badge-plain">テンポ {question.bpm}</span>
         {benchmarkStep ? <span className="ear-badge" data-testid="ear-benchmark-step">腕試し {benchmarkStep.index + 1} / {benchmarkStep.total}</span> : null}
-        <span className="ear-note">名前は弾いて合うと出ます</span>
-      </div>
-
-      <div className="ear-steps" role="group" aria-label="練習の流れ">
-        <span data-state={phase === "listen" ? "current" : "done"}>① 1周聴く</span>
-        <span data-state={phase === "play" ? "current" : "todo"}>② 1コードずつ弾く {phase === "play" ? ` ${session.index + 1} / ${cardCount}` : ""}</span>
-        <span data-state="todo">③ 結果</span>
-        {onShowDegrees && !benchmarkStep && known ? (
-          <label className="ear-toggle" title="合う前から、度数と機能を全部のカードに出します(出したコードは、一発などの成績に入りません)">
-            <input type="checkbox" data-testid="ear-degree-toggle" checked={settings.showDegrees} onChange={(event) => onShowDegrees(event.target.checked)} />
-            度数と機能を見せる
-          </label>
-        ) : null}
-        <div className="ear-legend" aria-label="印の意味">
-          {(["ok", "retry", "name", "key"] as EarMark[]).map((mark) => (
-            <span key={mark}><i className="ear-mark" data-mark={mark}>{MARK_TEXT[mark]}</i>{MARK_LABEL[mark]}</span>
-          ))}
+        <div className="ear-steps" role="group" aria-label="練習の流れ">
+          <span data-state={phase === "listen" ? "current" : "done"}>
+            <i className="ear-step-no" aria-hidden="true">{phase === "listen" ? "1" : "✓"}</i>
+            <b className="ear-step-label">1周聴く</b>
+          </span>
+          <em className="ear-step-line" data-filled={phase !== "listen" ? "true" : undefined} aria-hidden="true" />
+          <span data-state={phase === "play" ? "current" : "todo"}>
+            <i className="ear-step-no" aria-hidden="true">2</i>
+            <b className="ear-step-label">1コードずつ弾く{phase === "play" ? ` ${session.index + 1} / ${cardCount}` : ""}</b>
+          </span>
+          <em className="ear-step-line" aria-hidden="true" />
+          <span data-state="todo">
+            <i className="ear-step-no" aria-hidden="true">3</i>
+            <b className="ear-step-label">結果</b>
+          </span>
         </div>
       </div>
 
@@ -474,20 +537,63 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
                     : isCurrent ? (card.mistakes > 0 ? "♪ 今のコード・弾き直し中" : "♪ 今のコード")
                       : lapIndex === index ? "♪" : ""}
               </small>
+              <i className="ear-card-bar" data-kind={card.done && showInfo && info ? functionKind(info.fn) : undefined} aria-hidden="true" />
             </div>
           );
         })}
       </div>
-      <div className="ear-position" aria-label="全体の位置" data-testid="ear-position">
-        <span>{Math.min(session.index + 1, cardCount)} / {cardCount}</span>
-        {session.cards.map((card, index) => (
-          <i key={index} className="ear-dot" data-current={(phase === "play" && index === session.index) || undefined}
-            data-state={card.done ? (card.mistakes > 0 || card.hint > 0 ? "help" : "ok") : card.mistakes > 0 ? "retry" : "todo"} />
-        ))}
+      <div className="ear-under">
+        <div className="ear-legend" aria-label="印の意味">
+          {(["ok", "retry", "name", "key"] as EarMark[]).map((mark) => (
+            <span key={mark}><i className="ear-mark" data-mark={mark}>{MARK_TEXT[mark]}</i>{MARK_LABEL[mark]}</span>
+          ))}
+        </div>
+        <div className="ear-position" aria-label="全体の位置" data-testid="ear-position">
+          <span>{Math.min(session.index + 1, cardCount)} / {cardCount}</span>
+          {session.cards.map((card, index) => (
+            <i key={index} className="ear-dot" data-current={(phase === "play" && index === session.index) || undefined}
+              data-state={card.done ? (card.mistakes > 0 || card.hint > 0 ? "help" : "ok") : card.mistakes > 0 ? "retry" : "todo"} />
+          ))}
+        </div>
+        {onShowDegrees && !benchmarkStep && known ? (
+          <label className="ear-toggle" title="合う前から、度数と機能を全部のカードに出します(出したコードは、一発などの成績に入りません)">
+            <input type="checkbox" data-testid="ear-degree-toggle" checked={settings.showDegrees} onChange={(event) => onShowDegrees(event.target.checked)} />
+            度数と機能を見せる
+          </label>
+        ) : <span className="ear-under-fill" aria-hidden="true" />}
       </div>
 
-      <div className="ear-middle">
-        <div className="ear-controls">
+      <div className="ear-stage">
+        <section className="ear-zone ear-listen" aria-label="聴く">
+          <div className="ear-zone-head"><b>聴く</b><small>何度でも。印は付きません</small></div>
+          <div className="ear-listen-body">
+            <button type="button" className="ear-orb" data-testid={phase === "listen" ? "ear-lap-again" : "ear-listen-chord"}
+              title={phase === "play" ? "今のコードを聴く(L)" : "全体をもう一度聴く(R)"}
+              aria-label={phase === "play" ? "今のコードを聴く" : "全体をもう一度聴く"}
+              onClick={() => listen(phase === "listen" ? "lap" : "chord")}>
+              <svg className="ear-orb-ring" viewBox="0 0 100 100" aria-hidden="true">
+                <circle className="ear-orb-ring-track" cx="50" cy="50" r="46" />
+                {ring ? <circle key={ring.token} className="ear-orb-ring-fill" style={{ "--ear-ring-ms": `${ring.ms}ms` } as CSSProperties} cx="50" cy="50" r="46" pathLength={100} /> : null}
+              </svg>
+              <span className="ear-orb-core">
+                <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" />
+                  <path d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.5 8.5 0 0 1 0 12" />
+                </svg>
+                <b>{phase === "listen" ? "全体を聴く" : "今のコード"}</b>
+                <small><kbd>{phase === "listen" ? "R" : "L"}</kbd></small>
+              </span>
+            </button>
+            <div className="ear-listen-list">
+              <button type="button" data-testid="ear-listen-pair" disabled={phase !== "play"} onClick={() => listen("pair")}><span>前のコードから</span><kbd>K</kbd></button>
+              <button type="button" data-testid="ear-listen-lap" onClick={() => listen("lap")}><span>全体をもう一度</span><kbd>R</kbd></button>
+              <button type="button" data-testid="ear-listen-bass" disabled={phase !== "play"} onClick={() => listen("bass")}><span>ベースだけ</span><kbd>B</kbd></button>
+              <button type="button" data-testid="ear-listen-spread" disabled={phase !== "play"} onClick={() => listen("spread")}><span>ばらして聴く</span><kbd>A</kbd></button>
+            </div>
+          </div>
+        </section>
+
+        <section className="ear-zone ear-answer" aria-label={phase === "listen" ? "まず聴く" : "答える"}>
           {!connected ? (
             <p className="ear-notice" role="status" data-testid="ear-no-midi">
               MIDI キーボードがつながっていません。聴いて、自分で判定して進められます。
@@ -495,27 +601,89 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
             </p>
           ) : null}
           {phase === "listen" ? (
-            <p className="ear-line" data-testid="ear-listening">進行を聴いています… {settings.showFirstName ? "(1つ目のコード名は見えています)" : ""}</p>
-          ) : feedback ? (
-            <p className="ear-feedback" data-ok={feedback.ok} role="status" data-testid="ear-feedback">{feedback.ok ? "✓ " : "× "}{feedback.text}</p>
+            <>
+              <div className="ear-zone-head"><b>まず聴く</b></div>
+              <div className="ear-listen-big">
+                <p className="ear-listening" data-testid="ear-listening">進行を聴いています… {settings.showFirstName ? "(1つ目のコード名は見えています)" : ""}</p>
+                <p className="ear-lap-count"><b>{Math.min(cardCount, (lapIndex ?? 0) + 1)}</b> / {cardCount} 小節</p>
+                <button type="button" className="dojo-primary ear-primary" data-testid="ear-start-playing" onClick={beginPlay}>弾き始める <kbd>Enter</kbd></button>
+              </div>
+            </>
           ) : (
-            <p className="ear-line">{connected ? "聴いたコードを鍵盤で弾いてください" : "頭の中で決めて弾いてから、「答え合わせ」を押してください"}</p>
-          )}
-          <div className="ear-actions">
-            {phase === "listen" ? (
-              <>
-                <button type="button" className="dojo-primary" data-testid="ear-start-playing" onClick={beginPlay}>弾き始める <kbd>Enter</kbd></button>
-                <button type="button" data-testid="ear-lap-again" onClick={() => listen("lap")}>もう一度聴く <kbd>R</kbd></button>
-              </>
-            ) : (
-              <>
-                <button type="button" data-testid="ear-listen-chord" onClick={() => listen("chord")}>今のコードを聴く <kbd>L</kbd></button>
-                <button type="button" data-testid="ear-listen-pair" onClick={() => listen("pair")}>前のコードから続けて聴く <kbd>K</kbd></button>
-                <button type="button" data-testid="ear-listen-lap" onClick={() => listen("lap")}>全体をもう一度 <kbd>R</kbd></button>
+            <>
+              <div className="ear-zone-head">
+                <b>答える</b>
+                <span className="ear-stats" data-testid="ear-stats">
+                  聴き直し {session.listens}回{current.firstAnswerSec !== undefined ? ` 最初の答えまで ${current.firstAnswerSec.toFixed(1)}s` : ""}
+                </span>
+              </div>
+              <div className="ear-now">
+                <div className="ear-tile" data-bad={verdictNow && !verdictNow.ok || undefined}>
+                  <b>{session.index + 1}</b>
+                  <small>つ目</small>
+                </div>
+                <div className="ear-now-text">
+                  {feedback ? (
+                    <p className="ear-feedback" data-ok={feedback.ok} role="status" data-testid="ear-feedback">{feedback.ok ? "✓ " : "× "}{feedback.text}</p>
+                  ) : (
+                    <p className="ear-line">{connected ? "聴いたコードを鍵盤で弾いてください" : "頭の中で決めて弾いてから、「答え合わせ」を押してください"}</p>
+                  )}
+                  {guide ? <p className="ear-sline" data-testid="ear-feedback-guide">{guide}</p> : null}
+                </div>
+              </div>
+              {connected ? (
+                <>
+                  <div className="ear-held" data-testid="ear-held-chips">
+                    <span className="ear-held-k">押している音</span>
+                    {held.length ? held.map((note, position) => (
+                      <span key={note} className="ear-chip" data-extra={extraPcs.includes(pcOf(note)) || undefined}>{heldNames[position] ?? NAMES[pcOf(note)]}</span>
+                    )) : <span className="ear-chip-none">—</span>}
+                    {namedMissing !== undefined ? <span className="ear-chip" data-missing="true">{NAMES[namedMissing]}</span> : null}
+                  </div>
+                  {triedShown.length ? (
+                    <div className="ear-tried" data-testid="ear-tried">
+                      <span className="ear-held-k">さっき試した形</span>
+                      {triedShown.map((form) => {
+                        const formVerdict = judgeEarAnswer({ symbol: chord.symbol, judge: chord.judge, notes: chord.notes }, form.notes);
+                        return (
+                          <div className="ear-tried-row" key={`${form.attempt}:${form.notes.join(",")}`}>
+                            <span className="ear-tried-n">{form.attempt} 回目</span>
+                            {form.notes.map((note) => (
+                              <span key={note} className="ear-chip ear-chip-sm" data-extra={formVerdict.extra.includes(pcOf(note)) || undefined}>{NAMES[pcOf(note)]}</span>
+                            ))}
+                            <span className="ear-tried-msg">{form.message}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+              {settings.showClock ? (
+                <p className="ear-clock" data-testid="ear-clock" data-bad={(clock?.spreadMs ?? 0) > 100 || undefined}>
+                  {clock
+                    ? `時計: 音の時計とページの時計の読みのばらつき ${clock.spreadMs.toFixed(1)} ms ・ 出力の遅れ ${clock.outputLatencyMs.toFixed(1)} ms${clock.spreadMs > 100 ? " ・ ばらつきが 100 ms を超えています(秒数が信用できません)" : ""}`
+                    : "時計: コードを鳴らすと表示されます"}
+                </p>
+              ) : null}
+              <div className="ear-hintrow">
+                <span className="ear-hint-k">ヒント</span>
                 {connected ? (
-                  <button type="button" data-testid="ear-hint" disabled={current.hint >= 2} onClick={hint}>
-                    ヒント:{current.hint === 0 ? "名前を見る" : current.hint === 1 ? "鍵盤で答えを見る" : "答えを表示中"} <kbd>Space</kbd>
-                  </button>
+                  <>
+                    {current.hint === 0 ? (
+                      <button type="button" className="ear-hintbtn" data-testid="ear-hint" onClick={hint}>① 名前を見る <kbd>Space</kbd><i className="ear-mark" data-mark="name">名</i></button>
+                    ) : (
+                      <span className="ear-hintbtn" data-used="true">① 名前を見る <i className="ear-mark" data-mark="name">名</i></span>
+                    )}
+                    <span className="ear-hint-arrow" aria-hidden="true">→</span>
+                    {current.hint === 0 ? (
+                      <span className="ear-hintbtn" data-todo="true">② 鍵盤で答えを見る <i className="ear-mark" data-mark="key">鍵</i></span>
+                    ) : current.hint === 1 ? (
+                      <button type="button" className="ear-hintbtn" data-testid="ear-hint" onClick={hint}>② 鍵盤で答えを見る <kbd>Space</kbd><i className="ear-mark" data-mark="key">鍵</i></button>
+                    ) : (
+                      <button type="button" className="ear-hintbtn" data-testid="ear-hint" disabled>② 答えを表示中 <i className="ear-mark" data-mark="key">鍵</i></button>
+                    )}
+                  </>
                 ) : revealed ? (
                   <>
                     <button type="button" className="dojo-primary" data-testid="ear-self-yes" onClick={() => selfJudge(true)}>弾けた <kbd>Y</kbd></button>
@@ -524,21 +692,10 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
                 ) : (
                   <button type="button" className="dojo-primary" data-testid="ear-reveal" onClick={() => setRevealed(true)}>答え合わせ <kbd>Space</kbd></button>
                 )}
-              </>
-            )}
-          </div>
-          <p className="ear-stats" data-testid="ear-stats">
-            聴き直し {session.listens}回{current.firstAnswerSec !== undefined && phase === "play" ? ` 最初の答えまで ${current.firstAnswerSec.toFixed(1)}s` : ""}
-          </p>
-          {settings.showClock ? (
-            <p className="ear-clock" data-testid="ear-clock" data-bad={(clock?.spreadMs ?? 0) > 100 || undefined}>
-              {clock
-                ? `時計: 音の時計とページの時計の読みのばらつき ${clock.spreadMs.toFixed(1)} ms ・ 出力の遅れ ${clock.outputLatencyMs.toFixed(1)} ms${clock.spreadMs > 100 ? " ・ ばらつきが 100 ms を超えています(秒数が信用できません)" : ""}`
-                : "時計: コードを鳴らすと表示されます"}
-            </p>
-          ) : null}
-          <p className="ear-help">聴き直しは何度でも。印は付きません。ヒントは「名前を見る」→「鍵盤で答えを見る」の順。</p>
-        </div>
+              </div>
+            </>
+          )}
+        </section>
 
         <div className="ear-score" data-testid="ear-score" data-open={scoreOpen || undefined}>
           <div className="ear-score-head">
@@ -573,6 +730,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
         <div className="dojo-keyboard-head">
           <b>鍵盤</b>
           <span><i className="dojo-held-swatch" />押している音</span>
+          <span><i className="dojo-extra-swatch" />余分な音</span>
           <span><i className="dojo-answer-swatch" />答え(ヒントの2段目で出る)</span>
           <span className="ear-range">
             <button type="button" aria-label="1オクターブ下げる" data-testid="ear-range-down" onClick={() => onShiftKeyboard(-1)}>◀</button>
@@ -594,6 +752,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
           level={showAnswer ? 1 : 2}
           matchState="empty"
           concealNoteNames={!showAnswer}
+          {...(foreignKeys.length ? { foreignNotes: foreignKeys } : {})}
           {...(keyHeight === undefined ? {} : { dojoHeight: keyHeight })}
         />
         <div ref={keyboardEndRef} aria-hidden="true" style={{ height: 0 }} />
@@ -621,6 +780,27 @@ function DegreeLines({ info, index, result = false }: { info: EarChordInfo; inde
 
 // ---- the result ----------------------------------------------------------------------------------------
 
+/** X11: the figures of a run that is not in the records yet, from the session's own summary (one point, the newest). */
+function figuresFromSession(session: EarSession, summary: EarSummary): EarFigures {
+  const counted = session.cards.filter((card) => !card.shownFromStart && !card.self && card.done);
+  const rateOf = (part: number) => (summary.counted ? part / summary.counted : undefined);
+  const noHint = counted.filter((card) => card.hint === 0).length;
+  const clean = counted.filter((card) => card.mistakes === 0 && card.hint === 0 && card.listens === 0).length;
+  return {
+    chords: session.cards.length,
+    measured: summary.counted,
+    firstTry: summary.firstTry,
+    noHint,
+    cleanFirstTry: clean,
+    firstTryRate: rateOf(summary.firstTry),
+    noHintRate: rateOf(noHint),
+    cleanRate: rateOf(clean),
+    ...(summary.medianSec !== undefined ? { medianSec: summary.medianSec } : {}),
+    ...(summary.counted ? { replayAvg: counted.reduce((sum, card) => sum + card.listens, 0) / summary.counted } : {}),
+    few: summary.counted < FEW_CHORDS,
+  };
+}
+
 function EarResult({ session, records, playId, resultName, onAgain, onNext, onExit, clock, play, stop, infos }: {
   session: EarSession;
   records: readonly EarChordRecord[];
@@ -646,6 +826,13 @@ function EarResult({ session, records, playId, resultName, onAgain, onNext, onEx
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setPressed(undefined), CHORD_SECONDS * 1000);
   };
+  /** X7: the whole progression once, as the score plays it (nothing is counted). */
+  const playAll = () => {
+    const total = question.length * question.beatsPerBar;
+    const notes = question.chords.flatMap((chord) =>
+      chord.notes.map((pitch) => ({ pitch, startBeat: chord.startBeat, durationBeats: chord.durationBeats * 0.92, velocity: 90 })));
+    void play("ear:result:all", notes, total);
+  };
   const anyInfo = infos.some((info) => info !== undefined && info.fn !== "");
   const summary = session.summary();
   const title = question.source === "bank" ? `耳の課題 ${String(question.displayNumber ?? 0).padStart(3, "0")}`
@@ -655,56 +842,207 @@ function EarResult({ session, records, playId, resultName, onAgain, onNext, onEx
   const rateNow = summary.counted ? summary.firstTry / summary.counted : undefined;
   const rateDiff = diffRate(rateNow, compared.figures.firstTryRate);
   const secDiff = diffSeconds(summary.medianSec, compared.figures.medianSec);
+  const nameHints = session.cards.filter((card) => card.hint >= 1).length;
+  const keyHints = session.cards.filter((card) => card.hint >= 2).length;
+  // X8: a card shown from the start or judged by the player has no seconds' line, even though it was timed.
+  const lines = secondsLines(session.cards.map((card) => ({ sec: card.shownFromStart || card.self ? undefined : card.sec })), summary.medianSec);
+  const degrees = infos.every((info) => info !== undefined) ? infos.map((info) => info!.degree).join(" → ") : "";
+  const keyName = question.keyName !== "" ? displayChordLabel(question.keyName) : "";
+  // X10/X11: the last questions of this level and length, the current one at the right end.
+  const series = useMemo(() => {
+    const points = recentPlaySeries(records, { level: question.level, length: question.length });
+    if (points.some((point) => point.play === playId)) return points;
+    return [...points, { play: playId, at: "", figures: figuresFromSession(session, summary) }].slice(-12);
+  }, [playId, question.length, question.level, records, session, summary]);
+  const currentIndex = series.length - 1;
+  const previous = series.slice(0, currentIndex);
+  const meanOf = (values: ReadonlyArray<number | undefined>) => {
+    const present = values.filter((value): value is number => value !== undefined);
+    return present.length ? present.reduce((sum, value) => sum + value, 0) / present.length : undefined;
+  };
+  const rateMean = meanOf(previous.map((point) => point.figures.firstTryRate));
+  const secMean = meanOf(previous.map((point) => point.figures.medianSec));
+  const maxTrendSec = Math.max(1, ...series.map((point) => point.figures.medianSec ?? 0));
+  const rateLabel = `一発の割合。直近 ${series.length} 問。今回 ${pct(rateNow)}${rateMean === undefined ? "" : `、これまでの平均 ${pct(rateMean)}`}`;
+  const secLabel = `秒数の中央値。直近 ${series.length} 問。今回 ${secText(summary.medianSec)}${secMean === undefined ? "" : `、これまでの平均 ${secText(secMean)}`}`;
+  const ring = 2 * Math.PI * 50;
+  // P23-58-fix-1 B6: at >= 1200px wide, move 「これまでとの比べ」 into the top band's 3rd column so the score takes full width.
+  const [wideTrend, setWideTrend] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1200 : false));
+  const [shortWide, setShortWide] = useState(() => (typeof window !== "undefined" ? window.innerWidth >= 1200 && window.innerHeight <= 800 : false));
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mqWide = window.matchMedia("(min-width: 1200px)");
+    const mqShort = window.matchMedia("(min-width: 1200px) and (max-height: 800px)");
+    const sync = () => {
+      setWideTrend(mqWide.matches);
+      setShortWide(mqShort.matches);
+    };
+    sync();
+    mqWide.addEventListener("change", sync);
+    mqShort.addEventListener("change", sync);
+    return () => {
+      mqWide.removeEventListener("change", sync);
+      mqShort.removeEventListener("change", sync);
+    };
+  }, []);
+  const trendAside = (
+    <aside className={`ear-result-trend${wideTrend ? " ear-result-trend-top" : ""}`} data-testid="ear-result-trend">
+      <div className="ear-trend-head"><b>これまでとの比べ</b><small>同じレベル・長さの直近 12 問</small></div>
+      <figure className="ear-trend-chart" data-testid="ear-trend-rate" role="img" aria-label={rateLabel}>
+        <figcaption>一発の割合</figcaption>
+        <div className="ear-trend-bars">
+          {series.map((point, index) => (
+            <i key={point.play || index} className="ear-trend-bar" data-current={index === currentIndex || undefined}
+              data-empty={point.figures.firstTryRate === undefined || undefined}
+              style={{ "--ear-trend": point.figures.firstTryRate ?? 0 } as CSSProperties} />
+          ))}
+        </div>
+        <div className="ear-trend-axis"><span>{series.length - 1} 問前</span><span>今回 {pct(rateNow)}</span></div>
+      </figure>
+      <figure className="ear-trend-chart" data-testid="ear-trend-seconds" role="img" aria-label={secLabel}>
+        <figcaption title="秒数の中央値(低いほど速い)">秒数の中央値</figcaption>
+        <div className="ear-trend-bars">
+          {series.map((point, index) => (
+            <i key={point.play || index} className="ear-trend-bar" data-current={index === currentIndex || undefined}
+              data-empty={point.figures.medianSec === undefined || undefined}
+              style={{ "--ear-trend": (point.figures.medianSec ?? 0) / maxTrendSec } as CSSProperties} />
+          ))}
+        </div>
+        <div className="ear-trend-axis"><span>{series.length - 1} 問前</span><span>今回 {secText(summary.medianSec)}</span></div>
+      </figure>
+      {series.length <= 1 ? <p className="ear-help">同じレベル・長さの記録がまだありません。</p> : null}
+    </aside>
+  );
   return (
     <div className="ear-run ear-result" data-testid="ear-result" data-clock-spread-ms={clock?.spreadMs.toFixed(1)} data-output-latency-ms={clock?.outputLatencyMs.toFixed(1)}>
       <div className="ear-head">
-        <h1>{title}・レベル{question.level}・{question.length}小節</h1>
+        <button type="button" className="ear-back" data-testid="ear-back" onClick={onExit} aria-label="耳で弾くに戻る">
+          <span aria-hidden="true">‹</span> 耳で弾く
+        </button>
+        <h1>
+          <span className="ear-title-main">{title}</span>
+          <span className="ear-title-fact">・レベル{question.level}</span>
+          <span className="ear-title-fact">・{question.length}小節</span>
+        </h1>
         {question.keyName ? <span className="ear-badge">キー {displayChordLabel(question.keyName)}</span> : null}
         <span className="ear-badge ear-badge-plain">テンポ {question.bpm}</span>
+        <div className="ear-steps" role="group" aria-label="練習の流れ">
+          <span data-state="done"><i className="ear-step-no" aria-hidden="true">✓</i><b className="ear-step-label">1周聴く</b></span>
+          <em className="ear-step-line" data-filled="true" aria-hidden="true" />
+          <span data-state="done"><i className="ear-step-no" aria-hidden="true">✓</i><b className="ear-step-label">1コードずつ弾く</b></span>
+          <em className="ear-step-line" data-filled="true" aria-hidden="true" />
+          <span data-state="current"><i className="ear-step-no" aria-hidden="true">3</i><b className="ear-step-label">結果</b></span>
+        </div>
       </div>
-      {resultName ? <p className="ear-line" data-testid="ear-result-name">この進行は <b>{resultName}</b> でした</p> : null}
-      <div className="ear-cards ear-cards-result" data-testid="ear-result-cards">
-        {names.map((card) => (
-          <div
-            className="ear-card"
-            key={card.index}
-            role="button"
-            aria-label={`${card.index + 1}つ目のコードを鳴らす`}
-            title="押すと鳴ります"
-            data-pressable
-            data-pressed={pressed === card.index || undefined}
-            data-degree={infos[card.index] ? true : undefined}
-            data-done={card.done || undefined}
-            data-testid={`ear-result-card-${card.index}`}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => pressCard(card.index)}
-          >
-            <span className="ear-card-top"><span className="ear-card-no">{card.index + 1}</span><span className="ear-marks">{session.marks(card).map((mark) => <i key={mark} className="ear-mark" data-mark={mark} title={MARK_LABEL[mark]}>{MARK_TEXT[mark]}</i>)}</span></span>
-            <b className="ear-card-name">{displayChordLabel(card.label)}</b>
-            {infos[card.index] ? <DegreeLines info={infos[card.index]!} index={card.index} result /> : null}
-            <small className="ear-card-sub">{card.self ? "自分で判定" : card.shownFromStart ? "最初から表示" : card.sec !== undefined ? `${card.sec.toFixed(1)}s` : ""}</small>
+
+      <div className="ear-result-body">
+        {/* X2-X6: one face — the first-try wheel, the question's name and key, the four figures (and trend at >=1200px). */}
+        <div className="ear-result-top" data-wide-trend={wideTrend || undefined}>
+          <div className="ear-rate">
+            <svg className="ear-rate-ring" viewBox="0 0 110 110" aria-hidden="true">
+              <circle className="ear-rate-track" cx="55" cy="55" r="50" />
+              {rateNow !== undefined && rateNow > 0 ? <circle className="ear-rate-fill" cx="55" cy="55" r="50" strokeDasharray={`${ring * rateNow} ${ring}`} /> : null}
+            </svg>
+            <div className="ear-rate-center">
+              <b data-len={(summary.counted ? `${summary.firstTry} / ${summary.counted}` : "— / 0").length}>{summary.counted ? `${summary.firstTry} / ${summary.counted}` : "— / 0"}</b>
+              <span>一発</span>
+            </div>
           </div>
-        ))}
+          <div className="ear-result-now">
+            {resultName ? <p className="ear-result-name" data-testid="ear-result-name"><small>この進行は</small> <b>{resultName}</b> <small>でした</small></p> : null}
+            {(keyName || degrees) ? (
+              <p className="ear-result-facts">{keyName ? `キー ${keyName}` : ""}{keyName && degrees ? " ・ " : ""}{degrees}</p>
+            ) : null}
+            <dl className="ear-summary" data-testid="ear-summary">
+              <div className="ear-summary-card">
+                <dt title="最初の答えで合った(聴き直しは何回でもよい・ヒントなし)">一発</dt>
+                <dd data-testid="ear-summary-first">{summary.firstTry} / {summary.counted}</dd>
+                {compared.plays ? <dd className="ear-summary-note">{rateDiff ? <span className="ear-diff" data-better={rateDiff.better}>{rateDiff.text}</span> : null}これまで {pct(compared.figures.firstTryRate)}</dd> : null}
+              </div>
+              <div className="ear-summary-card">
+                <dt>秒数の中央値</dt>
+                <dd data-testid="ear-summary-median">{summary.medianSec === undefined ? "—" : `${summary.medianSec.toFixed(1)}s`}</dd>
+                {compared.plays ? <dd className="ear-summary-note">{secDiff ? <span className="ear-diff" data-better={secDiff.better}>{secDiff.text}</span> : null}これまで {secText(compared.figures.medianSec)}</dd> : null}
+              </div>
+              <div className="ear-summary-card">
+                <dt>ヒント</dt>
+                <dd data-testid="ear-summary-hints">{summary.hints}</dd>
+                <dd className="ear-summary-note">名前 {nameHints} ・ 鍵盤 {keyHints}</dd>
+              </div>
+              <div className="ear-summary-card">
+                <dt>聴き直し</dt>
+                <dd data-testid="ear-summary-listens">{summary.listens}回</dd>
+                <dd className="ear-summary-note">印は付きません</dd>
+              </div>
+            </dl>
+          </div>
+          {wideTrend ? trendAside : null}
+        </div>
+        <p className="ear-line ear-compare-line" data-testid="ear-compare">
+          {compared.plays === 0 ? "前回までとの比べ: 同じレベル・長さの記録がまだありません。" : (
+            <>前回までとの比べ({compared.plays}問と比べて): 一発 {pct(rateNow)}(これまで {pct(compared.figures.firstTryRate)}){rateDiff ? ` ${rateDiff.text}` : ""}
+              ・ 秒数 {secText(summary.medianSec)}(これまで {secText(compared.figures.medianSec)}){secDiff ? ` ${secDiff.text}` : ""}</>
+          )}
+        </p>
+
+        {/* X7/X8: one card per chord, with the seconds' line under it. */}
+        <div className="ear-result-cards-head">
+          <b>1 コードずつ</b>
+          <span>押すと鳴ります。下の線は、かかった秒数です(黄色は時間がかかった所)。</span>
+          <button type="button" data-testid="ear-result-play-all" onClick={playAll}>通して聴く</button>
+        </div>
+        <div className="ear-cards ear-cards-result" data-testid="ear-result-cards">
+          {names.map((card) => {
+            const line = lines[card.index];
+            return (
+              <div
+                className="ear-card ear-result-card"
+                key={card.index}
+                role="button"
+                aria-label={`${card.index + 1}つ目のコードを鳴らす`}
+                title="押すと鳴ります"
+                data-pressable
+                data-pressed={pressed === card.index || undefined}
+                data-degree={infos[card.index] ? true : undefined}
+                data-done={card.done || undefined}
+                data-testid={`ear-result-card-${card.index}`}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => pressCard(card.index)}
+              >
+                <span className="ear-card-top"><span className="ear-card-no">{card.index + 1}</span><span className="ear-marks">{session.marks(card).map((mark) => <i key={mark} className="ear-mark" data-mark={mark} title={MARK_LABEL[mark]}>{MARK_TEXT[mark]}</i>)}</span></span>
+                <b className="ear-card-name">{displayChordLabel(card.label)}</b>
+                {infos[card.index] ? <DegreeLines info={infos[card.index]!} index={card.index} result /> : null}
+                <small className="ear-card-sub">{card.self ? "自分で判定" : card.shownFromStart ? "最初から表示" : card.sec !== undefined ? `${card.sec.toFixed(1)}s` : ""}</small>
+                <i className="ear-card-bar" data-kind={infos[card.index] ? functionKind(infos[card.index]!.fn) : undefined} aria-hidden="true" />
+                {line ? <i className="ear-result-sec" data-slow={line.slow || undefined} style={{ "--ear-sec": line.ratio } as CSSProperties} aria-hidden="true" /> : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* X9/X10: the score and, beside it (under it when narrow; in top band when >=1200px), the last twelve questions. */}
+        <div className="ear-result-row" data-wide-trend={wideTrend || undefined}>
+          <div className="ear-result-score-face">
+            <ResultScore
+              session={session}
+              play={play}
+              stop={stop}
+              compactHeader={shortWide}
+              functionNote={shortWide && anyInfo ? "機能はコードの並びから自動で推定したものです。" : undefined}
+            />
+            {anyInfo && !shortWide ? <p className="ear-help" data-testid="ear-function-note">機能はコードの並びから自動で推定したものです。</p> : null}
+          </div>
+          {wideTrend ? null : trendAside}
+        </div>
       </div>
-      <dl className="ear-summary" data-testid="ear-summary">
-        <div><dt title="最初の答えで合った(聴き直しは何回でもよい・ヒントなし)">一発</dt><dd data-testid="ear-summary-first">{summary.firstTry} / {summary.counted}</dd></div>
-        <div><dt>秒数の中央値</dt><dd data-testid="ear-summary-median">{summary.medianSec === undefined ? "—" : `${summary.medianSec.toFixed(1)}s`}</dd></div>
-        <div><dt>ヒント</dt><dd data-testid="ear-summary-hints">{summary.hints}</dd></div>
-        <div><dt>聴き直し</dt><dd data-testid="ear-summary-listens">{summary.listens}回</dd></div>
-      </dl>
-      <p className="ear-line" data-testid="ear-compare">
-        {compared.plays === 0 ? "前回までとの比べ: 同じレベル・長さの記録がまだありません。" : (
-          <>前回までとの比べ({compared.plays}問と比べて): 一発 {pct(rateNow)}(これまで {pct(compared.figures.firstTryRate)}){rateDiff ? ` ${rateDiff.text}` : ""}
-            ・ 秒数 {secText(summary.medianSec)}(これまで {secText(compared.figures.medianSec)}){secDiff ? ` ${secDiff.text}` : ""}</>
-        )}
-      </p>
-      {anyInfo ? <p className="ear-help" data-testid="ear-function-note">機能はコードの並びから自動で推定したものです。</p> : null}
-      <ResultScore session={session} play={play} stop={stop} />
-      <p className="ear-help">「一発」は、最初の答えで合った(聴き直しは何度でも可・ヒントなし)コードの数です。最初から名前が見えていたコードと、自分で判定したコードは数えません。</p>
-      <div className="ear-actions">
-        <button type="button" data-testid="ear-again" onClick={onAgain}>同じ進行をもう一度</button>
-        <button type="button" className="dojo-primary" data-testid="ear-next" onClick={onNext}>次の問題 <kbd>Enter</kbd></button>
+
+      <div className="ear-result-foot">
         <button type="button" data-testid="ear-to-choose" onClick={onExit}>選ぶ画面へ <kbd>Esc</kbd></button>
+        <p className="ear-help">「一発」は、最初の答えで合った(聴き直しは何度でも可・ヒントなし)コードの数です。最初から名前が見えていたコードと、自分で判定したコードは数えません。</p>
+        <div className="ear-result-foot-actions">
+          <button type="button" data-testid="ear-again" onClick={onAgain}>同じ進行をもう一度</button>
+          <button type="button" className="dojo-primary" data-testid="ear-next" onClick={onNext}>次の問題 <kbd>Enter</kbd></button>
+        </div>
       </div>
     </div>
   );

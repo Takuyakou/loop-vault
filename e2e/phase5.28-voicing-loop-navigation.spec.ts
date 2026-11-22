@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers/app";
+import { startPracticeNamed } from "./helpers/voicingLoopPicker";
 
 async function openEmptyApp(page: Page) {
   await page.goto("/?p528Direct=1");
@@ -32,12 +33,13 @@ test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallba
 
   await expect(page.getByRole("heading", { name: "練習する進行" })).toBeVisible();
   await expect(page.getByRole("searchbox", { name: "進行を検索" })).toBeVisible();
-  await expect(page.getByText("練習できる保存済み進行はまだありません。")).toBeVisible();
+  await expect(page.getByText("まだ進行がありません")).toBeVisible();
   await expect(page.getByRole("button", { name: "元MIDI" })).toHaveCount(0);
   await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 
-  const textCta = page.getByRole("button", { name: /テキストで新しい進行を入力/ });
+  // P23-61 §3: with no progression at all the empty screen's テキストで入力 is the next step.
+  const textCta = page.getByRole("button", { name: "テキストで入力", exact: true });
   await textCta.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-capture-stage='text']")).toBeVisible();
@@ -56,7 +58,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   test.setTimeout(60_000);
   await openEmptyApp(page);
   await openDirectVoicingLoopWithKeyboard(page);
-  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: "テキストで入力", exact: true }).click();
 
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
@@ -78,7 +80,9 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
   await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "false");
-  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
+  // P23-32 K4: no practice BPM field; the saved 120 goes to the header's 共通 BPM.
+  await expect(workspace.locator("#voicing-loop-bpm")).toHaveCount(0);
+  await expect(page.getByTestId("global-bpm-value")).toHaveAttribute("aria-valuenow", "120");
 
   await page.locator('[data-nav="voicing-loop"]').click();
   await expect(page.getByRole("heading", { name: "最近使った" })).toBeVisible();
@@ -86,18 +90,19 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
 
   const search = page.getByRole("searchbox", { name: "進行を検索" });
   await search.fill("P5.28 Direct Entry E2E");
-  const row = page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" });
-  await expect(row).toHaveCount(1);
-  await row.focus();
+  // P23-29 L6/L7: the main practice button is the right column's; Enter on it starts the picked row.
+  const practice = page.getByTestId("voicing-loop-preview-practice");
+  await expect(practice).toHaveCount(1);
+  await practice.focus();
   await page.keyboard.press("Enter");
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
-  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
+  await expect(page.getByTestId("global-bpm-value")).toHaveAttribute("aria-valuenow", "120");
 
   await page.locator('[data-nav="home"]').click();
   await page.locator('[data-nav="voicing-loop"]').click();
   await expect(page.getByRole("heading", { name: "最近使った" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
-  await page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" }).click();
+  await startPracticeNamed(page, "P5.28 Direct Entry E2E");
   await page.locator('[data-nav="voicing-loop"]').click();
   expect(await page.evaluate(() => {
     const raw = localStorage.getItem("loop-vault:voicing-loop-recents:v1");

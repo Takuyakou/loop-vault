@@ -254,3 +254,75 @@ export function recentComparison(
     .slice(0, options.limit ?? 10);
   return { plays: latest.length, figures: figuresOf(latest.flat()) };
 }
+
+/**
+ * P23-23b X11: the last questions of the same level and length, oldest first, newest at the end.
+ * One point per run (`play`); benchmark runs are left out; at most `count` points (the newest ones).
+ */
+export interface EarPlaySeriesPoint {
+  play: string;
+  /** The newest chord of the run. */
+  at: string;
+  figures: EarFigures;
+}
+
+export function recentPlaySeries(
+  records: readonly EarChordRecord[],
+  options: { level: EarLevel; length: number; count?: number },
+): EarPlaySeriesPoint[] {
+  const plays = new Map<string, EarChordRecord[]>();
+  for (const record of records) {
+    if (record.level !== options.level || record.length !== options.length) continue;
+    plays.set(record.play, [...(plays.get(record.play) ?? []), record]);
+  }
+  return [...plays.entries()]
+    .filter(([, own]) => own.every((record) => record.benchmark === undefined))
+    .map(([play, own]) => ({
+      play,
+      at: own.reduce((newest, record) => (record.at > newest ? record.at : newest), own[0]!.at),
+      figures: figuresOf(own),
+    }))
+    .sort((a, b) => a.at.localeCompare(b.at))
+    .slice(-(options.count ?? 12));
+}
+
+/** One run through one question (its chords share a `play`). */
+export interface EarRecentPlay {
+  /** The run's id, `EarChordRecord.play`. */
+  play: string;
+  /** The newest chord of the run. */
+  at: string;
+  level: EarLevel;
+  /** Bars of the question. */
+  length: number;
+  source: EarChordRecord["source"];
+  /** One of the four questions of a benchmark. */
+  benchmark: boolean;
+  figures: EarFigures;
+}
+
+/**
+ * P23-21 E13: the [count] questions played last, newest first, one entry per run through a question.
+ * A run's time is the newest `at` of its chords, and its rate is `figuresOf` over those same chords.
+ */
+export function recentPlays(records: readonly EarChordRecord[], count = 3): EarRecentPlay[] {
+  const plays = new Map<string, EarChordRecord[]>();
+  for (const record of records) {
+    plays.set(record.play, [...(plays.get(record.play) ?? []), record]);
+  }
+  return [...plays.entries()]
+    .map(([play, chords]) => {
+      const latest = chords.reduce((newest, record) => (record.at > newest.at ? record : newest));
+      return {
+        play,
+        at: latest.at,
+        level: latest.level,
+        length: latest.length,
+        source: latest.source,
+        benchmark: latest.benchmark !== undefined,
+        figures: figuresOf(chords),
+      };
+    })
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, Math.max(0, count));
+}

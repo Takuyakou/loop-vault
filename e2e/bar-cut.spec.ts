@@ -26,7 +26,7 @@ async function cutBarFromRuler(page: Page, bar: number) {
 }
 
 async function saveNewIdea(page: Page, title: string) {
-  await saveForm(page).getByRole("button", { name: /Vaultに保存|曲全体を保存/, exact: true }).click();
+  await saveForm(page).getByRole("button", { name: /Vault に保存|曲全体を保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
   await form.locator('input[name="progression-title"]').fill(title);

@@ -6,6 +6,7 @@
 .dojo-grand-staff text {font-family:var(--font-ui);fill:currentColor;}
 .dojo-score-staff line,.dojo-score-ledger {stroke:#758797;stroke-width:1;}
 .dojo-score-clef,.dojo-score-brace {stroke:#c8d4df;stroke-width:2.6;fill:none;}
+.dojo-score [data-score-clef="bass"] circle {fill:#c8d4df;}
 .dojo-score-clef-label {font-size:12px;}
 .dojo-score-note {color:#eef0f4;fill:currentColor;}
 .dojo-score-accidental {font-size:23px;}

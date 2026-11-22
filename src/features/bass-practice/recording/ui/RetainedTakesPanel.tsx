@@ -23,7 +23,7 @@ export interface RetainedTakesPanelProps {
 
 const RETAINED_TAKES_COPY = {
   ja: {
-    sectionLabel: "保存した録音", heading: "保存した録音（ローカルのみ）", empty: "保存した録音はありません。「テイクを保持」で明示的に保存したものだけがここに残ります。",
+    sectionLabel: "保存した録音", heading: "保存した録音（ローカルのみ）", empty: "保存した録音はありません。「録音を残す」を押したものだけがここに残ります。",
     playedBefore: " · レビュー前に試聴済み", notPlayedBefore: " · レビュー前は未試聴", unavailable: "録音を利用できません。削除は可能です。",
     playing: "再生中…", play: "再生", confirmDelete: "削除を確定", cancel: "やめる", remove: "削除",
     privacy: "ローカルのみ・クラウド送信なし。残した録音はここで管理できます。機能をOFFにしても保存済みデータは自動削除されません。",
@@ -31,10 +31,10 @@ const RETAINED_TAKES_COPY = {
 } as const;
 
 const MODE_LABELS: Record<StoredRecordingMetadata["mode"], string> = {
-  degree: "Degree Echo",
-  rhythm: "Rhythm Echo",
-  bassline: "Bassline Echo",
-  "root-motion": "Root Motion Echo",
+  degree: "度数",
+  rhythm: "リズム",
+  bassline: "コード進行のベース",
+  "root-motion": "ルートの動き",
   "midi-bassline": "MIDI のベースライン",
 };
 

@@ -33,4 +33,9 @@ ignore = [
   "RUSTSEC-2026-0370", # zvariant is unmaintained
   "RUSTSEC-2026-0371", # zbus_names is unmaintained
   "RUSTSEC-2026-0372", # zvariant_derive is unmaintained
+
+  # --- In Cargo.lock only, not compiled: serde_with -> chrono 0.4.45 (an optional feature entry) ---
+  # Unmaintained only (no vulnerability). `cargo tree -i chrono --locked --target all` prints nothing,
+  # so chrono is not part of any build of this app. Revisit: when Tauri or serde_with is upgraded.
+  "RUSTSEC-2026-0543", # chrono is unmaintained
 ]

@@ -10,6 +10,7 @@ describe('practiceRepeat',()=>{
   expect(readRepeatSetting('a')).toBe(false);
   expect(readRepeatSetting('c')).toBe(true);
   expect(readRepeatSetting('d')).toBe(true);
+  expect(readRepeatSetting('e')).toBe(false);
  });
  it('a written value is read back, and each screen kind keeps its own',()=>{
   writeRepeatSetting('a',true);

@@ -29,7 +29,7 @@ test("Vault save form stays visible with the sidebar expanded at the reported na
   // P10.0-07: the workspace's save form (the narrow panel opens first).
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
-  await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await page.getByTestId("correction-save-form").getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
 

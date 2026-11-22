@@ -50,7 +50,7 @@ import {
   visibleNotes,
 } from "./PreAnalysisPianoRoll";
 import { harmonicCoreNoteMultipliers } from "./harmonicCorePreview";
-import { buildSoundingIndex, soundingAt, soundingText } from "./playbackView";
+import { buildSoundingIndex, soundingAt, soundingLineIndex, soundingText } from "./playbackView";
 import {
   ROLE_COLOR,
   ROLE_LABEL,
@@ -90,7 +90,16 @@ interface PreAnalysisWorkspaceProps {
 
 const NO_SPLITS: PartSplits = {};
 const MAX_ZOOM = 8;
-const MAX_NAMES_PER_ROLE = 4;
+
+/** P23-31 P5: keyboard focus (Tab) — a mouse press focuses too, but not with `:focus-visible`. */
+function isFocusVisible(target: EventTarget | null): boolean {
+  if (!(target instanceof Element) || typeof target.matches !== "function") return false;
+  try {
+    return target.matches(":focus-visible");
+  } catch {
+    return false;
+  }
+}
 
 /**
  * 取り込み前の確認 (P15-01). Three things are taught to the app before it analyses:
@@ -120,10 +129,16 @@ export function PreAnalysisWorkspace({
   const [framesRunning, setFramesRunning] = useState(false);
   const [playbackError, setPlaybackError] = useState<string>();
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [mixNoteOpen, setMixNoteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [partsOpen, setPartsOpen] = useState(false);
   /** What the screen had before 「前回の設定を使う」, so that 「元に戻す」 can put it back. */
   const [memoryUndo, setMemoryUndo] = useState<{ session: AnalysisSession; splits: PartSplits }>();
+  /** A7: 「使わない」 hides the offer for this session; hovering the offer lights the parts that would change. */
+  const [memoryDismissed, setMemoryDismissed] = useState(false);
+  const [memoryHover, setMemoryHover] = useState(false);
+  /** A3: the part under the pointer (or the keyboard's part) lights its notes in the roll. */
+  const [hoveredVoiceId, setHoveredVoiceId] = useState<string>();
   const [highlightedSourceId, setHighlightedSourceId] = useState(session.latestSourceId);
   const [rollSize, setRollSize] = useState({ width: 760, height: 320 });
   const rollAreaRef = useRef<HTMLDivElement>(null);
@@ -137,12 +152,13 @@ export function PreAnalysisWorkspace({
   const rollApiRef = useRef<PianoRollOverlayApi | null>(null);
   const overviewApiRef = useRef<OverviewApi | null>(null);
   const barRef = useRef<HTMLSpanElement>(null);
-  const soundingRef = useRef<HTMLSpanElement>(null);
+  const soundingRef = useRef<HTMLElement>(null);
   const { sound: previewSound } = usePreviewSound();
 
   const contribution = analysisSessionVoiceContributionPreset(session);
   const names = useMemo(() => partNames(session), [session.voices]);
   const analyzedCount = analyzedVoiceCount(session);
+  const hasChordPart = session.voices.some((voice) => isAnalyzedVoice(voice) && voiceRoleView(voice) === "chord");
   // The parts whose line is really in effect (something below it, something above it).
   const activeLines = useMemo(() => {
     const lines: Record<string, number> = {};
@@ -174,12 +190,30 @@ export function PreAnalysisWorkspace({
   const beatsPerBar = sessionBeatsPerBar(session);
   // The notes that sound when the session is played, in the order they start (for the lights).
   const soundingIndex = useMemo(() => buildSoundingIndex(session), [session]);
+  // P23-31 P6: the same, for the 「鳴っている音」 line — a part hidden with the eye is not named.
+  const soundingLine = useMemo(() => soundingLineIndex(session), [session]);
+  const soundingLineRef = useRef(soundingLine);
+  soundingLineRef.current = soundingLine;
   // The frame loop reads the latest of these (it is not recreated when they change).
   const live = useRef({ index: soundingIndex, totalBeats, beatsPerBar, visibleBeats, maxStart, follow, viewportStart: viewportStartBeat });
   live.current = { index: soundingIndex, totalBeats, beatsPerBar, visibleBeats, maxStart, follow, viewportStart: viewportStartBeat };
   useEffect(() => {
     if (!playingRef.current) playheadRef.current = playheadBeat;
   }, [playheadBeat]);
+
+  /** P23-31 P6: the notes of 「鳴っている音」 at a place (the line keeps them while stopped). */
+  const writeSoundingLine = useCallback((beat: number) => {
+    if (!soundingRef.current) return;
+    const text = soundingText(soundingAt(soundingLineRef.current, beat));
+    soundingRef.current.textContent = text;
+    soundingRef.current.title = text;
+  }, []);
+
+  // Stopped: the line names what sounds at the playhead (while playing, the frame loop writes it).
+  useEffect(() => {
+    if (playingRef.current) return;
+    writeSoundingLine(playheadBeat);
+  }, [playheadBeat, soundingLine, writeSoundingLine]);
 
   // Only the roles and the notes matter for Harmonic Core's weights; solo / mute / visibility do not.
   const roleSignature = session.voices
@@ -255,11 +289,9 @@ export function PreAnalysisWorkspace({
     setFramesRunning(false);
     setPlayheadBeat(playheadRef.current);
     rollApiRef.current?.rest(playheadRef.current);
-    if (soundingRef.current) {
-      soundingRef.current.textContent = "";
-      soundingRef.current.removeAttribute("title");
-    }
-  }, []);
+    // P23-31 P6: the line keeps the notes of the place it stopped at.
+    writeSoundingLine(playheadRef.current);
+  }, [writeSoundingLine]);
 
   const stopSessionPlayback = useCallback(() => {
     onStop?.();
@@ -286,7 +318,7 @@ export function PreAnalysisWorkspace({
         sounding = next;
         if (soundingRef.current) {
           // The whole list is in the tooltip: on a narrow row the text is cut short.
-          soundingRef.current.textContent = soundingText(next) || "鳴っている音 なし";
+          soundingRef.current.textContent = soundingText(next);
           soundingRef.current.title = soundingRef.current.textContent;
         }
       }
@@ -548,10 +580,17 @@ export function PreAnalysisWorkspace({
     () => (memoryEntry ? applyPreAnalysisMemory(session, splits, memoryEntry) : undefined),
     [session, splits, memoryEntry],
   );
+  // A7: the parts whose role (or whether they are used) the remembered settings would change.
+  const memoryChangedIds = useMemo(() => {
+    if (!memoryApplied?.changed) return [] as string[];
+    const before = new Map(session.voices.map((voice) => [voice.id, `${voice.assignedRole}:${voice.included}`]));
+    return memoryApplied.session.voices
+      .filter((voice) => before.get(voice.id) !== `${voice.assignedRole}:${voice.included}`)
+      .map((voice) => voice.id);
+  }, [memoryApplied, session.voices]);
   const notices = buildNotices({
     session,
     names,
-    memoryOffer: memoryApplied?.changed === true && memoryUndo === undefined,
   });
   const allClear = notices.length === 0 && !meterUnusual && !tempoVaries && memoryUndo === undefined;
 
@@ -567,6 +606,14 @@ export function PreAnalysisWorkspace({
   const collapsedText = onlyPart
     ? `${names.get(onlyPart.id) ?? onlyPart.displayName} 1パートをコードとして解析します`
     : "";
+
+  useEffect(() => {
+    setMemoryDismissed(false);
+    setMemoryHover(false);
+  }, [session.latestSourceId]);
+
+  // A7: after applying, the offer gives way to the line that says what happened and 「元に戻す」.
+  const memoryOfferShown = memoryApplied?.changed === true && memoryUndo === undefined && !memoryDismissed;
 
   function applyMemory() {
     if (!memoryApplied?.changed) return;
@@ -595,7 +642,23 @@ export function PreAnalysisWorkspace({
       aria-label="取り込み前の確認"
     >
       <header className="lv-pa-head">
-        <h2>取り込み前の確認</h2>
+        {/* A1: the three steps take the place of the heading; the heading stays for screen readers. */}
+        <h2 className="sr-only">取り込み前の確認</h2>
+        <ol className="lv-pa-steps" aria-label="取り込みの流れ">
+          <li data-state="done">
+            <span className="lv-pa-step-n" aria-hidden="true">✓</span>
+            MIDI を落とす
+            <span className="sr-only">（済み）</span>
+          </li>
+          <li data-state="current" aria-current="step">
+            <span className="lv-pa-step-n" aria-hidden="true">2</span>
+            パートを確かめる
+          </li>
+          <li data-state="todo">
+            <span className="lv-pa-step-n" aria-hidden="true">3</span>
+            選んで保存
+          </li>
+        </ol>
         <div className="lv-pa-files">
           {session.sources.map((source) => (
             <div
@@ -624,6 +687,9 @@ export function PreAnalysisWorkspace({
           {helpOpen ? (
             <p className="lv-pa-popover lv-pa-help-text" role="note">
               解析の前に、使うパートと役割を確かめます。ファイル名とMIDIの内容は、この画面の中だけで使います。
+              <span className="lv-pa-help-keys">
+                ↑↓ パート ・ 1 コード 2 ベース 3 メロディ 0 使わない ・ S ソロ ・ M 消音 ・ Space 再生 ・ Enter 解析
+              </span>
             </p>
           ) : null}
         </div>
@@ -637,31 +703,13 @@ export function PreAnalysisWorkspace({
         </Button>
       </header>
 
-      {requiresReanalysis || notices.length || memoryUndo ? (
+      {requiresReanalysis || notices.length ? (
         <div className="lv-pa-notices" data-testid="pre-analysis-notices">
           {requiresReanalysis ? (
             <p className="lv-pa-notice" data-testid="pre-analysis-reanalysis-required" role="status">
               <span title="再解析が必要です。変更した設定はまだ結果に反映されていません。「解析する」を押してください。">
                 ⚠ 再解析が必要です。変更した設定はまだ結果に反映されていません。「解析する」を押してください。
               </span>
-            </p>
-          ) : null}
-          {memoryUndo ? (
-            <p className="lv-pa-notice" data-tone="info" data-testid="pre-analysis-memory-applied" role="status">
-              <span>前回の役割を使いました。今回の曲にも合っているか、色で確かめてください</span>
-              <button
-                type="button"
-                className="lv-pa-notice-button"
-                data-testid="pre-analysis-memory-undo"
-                onClick={() => {
-                  stopSessionPlayback();
-                  onSessionChange(memoryUndo.session);
-                  onSplitsChange?.(memoryUndo.splits);
-                  setMemoryUndo(undefined);
-                }}
-              >
-                元に戻す
-              </button>
             </p>
           ) : null}
           {notices.map((notice) => (
@@ -716,8 +764,91 @@ export function PreAnalysisWorkspace({
             </button>
           </div>
 
-          <div className="lv-pa-mix">
-            <h4 id="pre-analysis-voice-contribution">コードとメロディが混ざっていたら（全パート共通）</h4>
+          {/* A7: 「前回と同じ並びです」 lives under the part heading, not in the notice band. */}
+          {memoryOfferShown || memoryUndo ? (
+            <div
+              className="lv-pa-memory"
+              data-testid={memoryUndo ? "pre-analysis-memory-applied" : "pre-analysis-memory-offer"}
+              role="status"
+            >
+              {memoryUndo ? (
+                <>
+                  <p className="lv-pa-memory-text">
+                    前回の役割を使いました。今回の曲にも合っているか、色で確かめてください
+                  </p>
+                  <button
+                    type="button"
+                    className="lv-pa-memory-button"
+                    data-testid="pre-analysis-memory-undo"
+                    onClick={() => {
+                      stopSessionPlayback();
+                      onSessionChange(memoryUndo.session);
+                      onSplitsChange?.(memoryUndo.splits);
+                      setMemoryUndo(undefined);
+                    }}
+                  >
+                    元に戻す
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="lv-pa-memory-text">
+                    前に取り込んだ MIDI と、パートの並びが同じです
+                    <span>前回の役割を使うと、{memoryChangedIds.length} つのパートが変わります</span>
+                  </p>
+                  <div className="lv-pa-memory-actions">
+                    <button
+                      type="button"
+                      className="lv-pa-memory-button"
+                      data-testid="pre-analysis-offer-memory"
+                      onMouseEnter={() => setMemoryHover(true)}
+                      onMouseLeave={() => setMemoryHover(false)}
+                      onFocus={() => setMemoryHover(true)}
+                      onBlur={() => setMemoryHover(false)}
+                      onClick={applyMemory}
+                    >
+                      前回の役割を使う
+                    </button>
+                    <button
+                      type="button"
+                      className="lv-pa-memory-button"
+                      data-testid="pre-analysis-memory-dismiss"
+                      onClick={() => setMemoryDismissed(true)}
+                    >
+                      使わない
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          {/* P23-31 P3: the mock's one-line guide under 「パート n つ」 (the memory offer takes its place). */}
+          {!memoryOfferShown && !memoryUndo ? (
+            <p className="lv-pa-guide">色を見て、役割が合っているか確かめてください。合っていれば、そのまま「解析する」へ。</p>
+          ) : null}
+
+          <div className="lv-pa-mix" data-testid="pre-analysis-mix">
+            <h4 className="sr-only" id="pre-analysis-voice-contribution">コードとメロディが混ざっていたら（全パート共通）</h4>
+            <span className="lv-pa-mix-label">混ざったパートの扱い</span>
+            <button
+              type="button"
+              className="lv-pa-mix-q"
+              aria-label="混ざったパートの扱いの説明"
+              aria-describedby="pre-analysis-mix-note"
+              aria-expanded={mixNoteOpen}
+              onFocus={() => setMixNoteOpen(true)}
+              onBlur={() => setMixNoteOpen(false)}
+              onClick={() => setMixNoteOpen(true)}
+            >
+              ?
+            </button>
+            <p id="pre-analysis-mix-note" className="lv-pa-mix-note" data-open={mixNoteOpen || undefined}>
+              {contribution === "harmonic-core"
+                ? "和音の名前の決め方を変えます。曲によっては結果が変わらないこともあります"
+                : "すべてコードの音として扱います（今までの「標準」）"}
+            </p>
+            <span className="lv-pa-spacer" />
             <div
               className="lv-pa-seg"
               role="radiogroup"
@@ -740,11 +871,6 @@ export function PreAnalysisWorkspace({
                 </button>
               ))}
             </div>
-            <p id="pre-analysis-mix-note" className="lv-pa-mix-note">
-              {contribution === "harmonic-core"
-                ? "和音の名前の決め方を変えます。曲によっては結果が変わらないこともあります"
-                : "すべてコードの音として扱います（今までの「標準」）"}
-            </p>
           </div>
 
           <div className="lv-pa-plist" data-testid="pre-analysis-part-list">
@@ -820,8 +946,18 @@ export function PreAnalysisWorkspace({
                         data-role={role}
                         data-selected={selected || undefined}
                         data-off={role === "off" || undefined}
+                        data-memory-change={memoryHover && memoryChangedIds.includes(voice.id) || undefined}
+                        tabIndex={0}
+                        onMouseEnter={() => setHoveredVoiceId(voice.id)}
+                        onMouseLeave={() => setHoveredVoiceId(undefined)}
+                        onFocus={(event) => {
+                          // P23-31 P5: only a keyboard focus (Tab) lights the roll; a mouse press does not.
+                          if (isFocusVisible(event.target)) setHoveredVoiceId(voice.id);
+                        }}
+                        onBlur={() => setHoveredVoiceId(undefined)}
                         onClick={() => setSelectedVoiceId(voice.id)}
                       >
+                        {/* A2: the row is a name line (dot, name, 自動/変更, S, M, the eye) and a role line. */}
                         <div className="lv-pa-prow">
                           <span
                             className="lv-pa-dot"
@@ -836,12 +972,48 @@ export function PreAnalysisWorkspace({
                           >
                             {auto ? "自動" : "変更"}
                           </span>
+                          <span className="lv-pa-pact">
+                            <button
+                              type="button"
+                              className="lv-pa-mini"
+                              data-on={voice.solo || undefined}
+                              aria-pressed={voice.solo}
+                              aria-label={`${name}をソロ`}
+                              title="ソロ"
+                              onClick={(event) => { event.stopPropagation(); toggleSolo(voice.id); }}
+                            >
+                              S
+                            </button>
+                            <button
+                              type="button"
+                              className="lv-pa-mini"
+                              data-on={voice.muted || undefined}
+                              aria-pressed={voice.muted}
+                              aria-label={voice.muted ? `${name}の消音を解除` : `${name}を消音`}
+                              title="消音"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                updateVoice(voice.id, { muted: !voice.muted });
+                              }}
+                            >
+                              M
+                            </button>
+                            <button
+                              type="button"
+                              className="lv-pa-mini"
+                              data-on={!voice.visible || undefined}
+                              aria-pressed={!voice.visible}
+                              aria-label={voice.visible ? `${name}を非表示` : `${name}を表示`}
+                              title={voice.visible ? "非表示" : "表示"}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                updateVoice(voice.id, { visible: !voice.visible });
+                              }}
+                            >
+                              {voice.visible ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
+                            </button>
+                          </span>
                         </div>
-                        {multiSource ? (
-                          <div className="lv-pa-pmeta lv-pa-pfile" title={source.displayName}>{source.displayName}</div>
-                        ) : null}
-                        <div className="lv-pa-pmeta">{voiceMetadata(voice)}</div>
-                        {reason ? <div className="lv-pa-pmeta lv-pa-preason">{reason}</div> : null}
                         <div className="lv-pa-roles" role="group" aria-label={`${name}の役割`}>
                           {ROLE_ORDER.map((candidate) => (
                             <button
@@ -862,53 +1034,25 @@ export function PreAnalysisWorkspace({
                             </button>
                           ))}
                         </div>
-                        <div className="lv-pa-pact">
-                          <button
-                            type="button"
-                            className="lv-pa-mini"
-                            data-on={voice.solo || undefined}
-                            aria-pressed={voice.solo}
-                            aria-label={`${name}をソロ`}
-                            onClick={(event) => { event.stopPropagation(); toggleSolo(voice.id); }}
-                          >
-                            ソロ
-                          </button>
-                          <button
-                            type="button"
-                            className="lv-pa-mini"
-                            data-on={voice.muted || undefined}
-                            aria-pressed={voice.muted}
-                            aria-label={voice.muted ? `${name}の消音を解除` : `${name}を消音`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              updateVoice(voice.id, { muted: !voice.muted });
-                            }}
-                          >
-                            消音
-                          </button>
-                          <button
-                            type="button"
-                            className="lv-pa-mini"
-                            data-on={!voice.visible || undefined}
-                            aria-pressed={!voice.visible}
-                            aria-label={voice.visible ? `${name}を非表示` : `${name}を表示`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              updateVoice(voice.id, { visible: !voice.visible });
-                            }}
-                          >
-                            {voice.visible ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
-                          </button>
-                        </div>
-                        {canSplitPart(voice) ? (
-                          <SplitTool
-                            name={name}
-                            line={splits[voice.id]?.melodyFrom}
-                            notes={notesByVoice.get(voice.id) ?? []}
-                            onStart={() => startSplit(voice.id)}
-                            onMove={(pitch) => moveSplit(voice.id, pitch)}
-                            onRemove={() => removeSplit(voice.id)}
-                          />
+                        {/* A2: only the selected part opens its details. */}
+                        {selected ? (
+                          <div className="lv-pa-pdetail" data-testid="pre-analysis-part-detail">
+                            {multiSource ? (
+                              <div className="lv-pa-pmeta lv-pa-pfile" title={source.displayName}>{source.displayName}</div>
+                            ) : null}
+                            <div className="lv-pa-pmeta">{voiceMetadata(voice)}</div>
+                            {reason ? <div className="lv-pa-pmeta lv-pa-preason">{reason}</div> : null}
+                            {canSplitPart(voice) ? (
+                              <SplitTool
+                                name={name}
+                                line={splits[voice.id]?.melodyFrom}
+                                notes={notesByVoice.get(voice.id) ?? []}
+                                onStart={() => startSplit(voice.id)}
+                                onMove={(pitch) => moveSplit(voice.id, pitch)}
+                                onRemove={() => removeSplit(voice.id)}
+                              />
+                            ) : null}
+                          </div>
                         ) : null}
                       </div>
                     );
@@ -959,18 +1103,46 @@ export function PreAnalysisWorkspace({
               />
               <span>{zoom}x</span>
             </label>
-            <span className="lv-pa-sounding" ref={soundingRef} data-testid="pre-analysis-sounding" />
-            <div className="lv-pa-legend" aria-label="色の意味">
-              {ROLE_ORDER.map((role) => (
-                <span key={role}><i style={{ background: ROLE_COLOR[role] }} />{ROLE_LABEL[role]}</span>
+            {/* A5: the colour legend and the count per role are one row of chips on the right. */}
+            <div className="lv-pa-sum" data-testid="pre-analysis-summary" aria-live="polite">
+              {summary.map((group) => (
+                <span
+                  className="lv-pa-chip"
+                  key={group.role}
+                  data-role={group.role}
+                  title={`${ROLE_LABEL[group.role]}: ${group.names.length > 0 ? group.names.join("、") : "なし"}`}
+                >
+                  <i style={{ background: ROLE_COLOR[group.role] }} />
+                  {ROLE_LABEL[group.role]} {group.names.length}
+                </span>
               ))}
             </div>
           </div>
+          {/* P23-31 P6: the notes sounding at the playhead, just under the play row (the mock's line). */}
+          <p className="lv-pa-soundline" data-testid="pre-analysis-sounding">
+            <span>鳴っている音</span>{" "}
+            <b ref={soundingRef} className="lv-pa-soundline-notes" />
+          </p>
           {playbackError ? <p className="lv-pa-error" role="alert">{playbackError}</p> : null}
+          {/* A4: 「曲全体」 sits above the roll, with the same beat grid as the roll's plot. */}
+          <div className="lv-pa-overview-head">
+            <h3>曲全体</h3>
+          </div>
+          <OverviewBand
+            session={session}
+            totalBeats={totalBeats}
+            visibleBeats={visibleBeats}
+            viewportStartBeat={viewportStartBeat}
+            playheadBeat={playheadBeat}
+            apiRef={overviewApiRef}
+            onSeek={setTimelinePosition}
+            onMoveWindow={setViewportPosition}
+          />
           <div className="lv-pa-roll-area" ref={rollAreaRef}>
             <PreAnalysisPianoRoll
               session={session}
               selectedVoiceId={selectedVoiceId}
+              {...(hoveredVoiceId ? { highlightVoiceId: hoveredVoiceId } : {})}
               width={rollSize.width}
               height={rollSize.height}
               pixelsPerBeat={pixelsPerBeat}
@@ -989,40 +1161,21 @@ export function PreAnalysisWorkspace({
               onZoomStep={zoomStep}
             />
           </div>
-          <OverviewBand
-            session={session}
-            totalBeats={totalBeats}
-            visibleBeats={visibleBeats}
-            viewportStartBeat={viewportStartBeat}
-            playheadBeat={playheadBeat}
-            apiRef={overviewApiRef}
-            onSeek={setTimelinePosition}
-            onMoveWindow={setViewportPosition}
-          />
         </section>
       </div>
 
       <footer className="lv-pa-bottom">
-        <div className="lv-pa-sum" data-testid="pre-analysis-summary" aria-live="polite">
+        {/* A6: the bottom band is 「詳しい設定」, the warnings and 「解析する」 — nothing else. */}
+        <div className="lv-pa-bottom-warn">
           {analyzedCount === 0 ? (
             <p id="pre-analysis-disabled-reason" className="lv-pa-warn">
               解析するパートを1つ以上選んでください。
             </p>
-          ) : summary.map((group) => {
-            const shown = group.names.slice(0, MAX_NAMES_PER_ROLE);
-            const rest = group.names.length - shown.length;
-            return (
-              <span
-                className="lv-pa-chip"
-                key={group.role}
-                data-role={group.role}
-                title={`${ROLE_LABEL[group.role]}: ${group.names.join("、")}`}
-              >
-                <i style={{ background: ROLE_COLOR[group.role] }} />
-                {ROLE_LABEL[group.role]}: {shown.join("、")}{rest > 0 ? ` ほか ${rest} 件` : ""}
-              </span>
-            );
-          })}
+          ) : hasChordPart ? null : (
+            <p className="lv-pa-warn" data-testid="pre-analysis-no-chord">
+              コードのパートがありません。パートを1つ「コード」にしてください。
+            </p>
+          )}
         </div>
         <div className="lv-pa-adv-wrap">
           <Button
@@ -1073,9 +1226,7 @@ export function PreAnalysisWorkspace({
             </div>
           ) : null}
         </div>
-        <span className="lv-pa-keys">
-          ↑↓ パート ・ 1 コード 2 ベース 3 メロディ 0 使わない ・ S ソロ ・ M 消音 ・ Space 再生 ・ Enter 解析
-        </span>
+        {/* P23-31 P7: 「詳しい設定」 sits immediately left of 「解析する」; the warnings stay on the left. */}
         <Button
           variant="primary"
           className="lv-pa-go"
@@ -1358,7 +1509,6 @@ interface Notice {
 function buildNotices(input: {
   session: AnalysisSession;
   names: ReadonlyMap<string, string>;
-  memoryOffer: boolean;
 }): Notice[] {
   const { session, names } = input;
   const notices: Notice[] = [];
@@ -1441,13 +1591,5 @@ function buildNotices(input: {
     notices.push({ id: `${warning.code}:${second ?? ""}`, text, tone: "warning", actions: [] });
   }
 
-  if (input.memoryOffer) {
-    notices.push({
-      id: "memory",
-      text: "前回と同じ並びです",
-      tone: "info",
-      actions: [{ label: "前回の設定を使う", kind: "use-memory", testId: "pre-analysis-offer-memory" }],
-    });
-  }
   return notices;
 }

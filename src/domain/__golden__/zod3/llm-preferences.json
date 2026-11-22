@@ -1,0 +1,78 @@
+[
+  {
+    "case": "empty-object-defaults",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "provider": "local",
+        "local": {
+          "baseUrl": "http://127.0.0.1:11434",
+          "model": "",
+          "timeoutSeconds": 30
+        },
+        "openai": {
+          "model": "gpt-5-mini",
+          "confirmBeforePaidRequest": true
+        },
+        "language": "ja"
+      }
+    }
+  },
+  {
+    "case": "full",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "provider": "openai",
+        "local": {
+          "baseUrl": "http://127.0.0.1:1234",
+          "model": "m",
+          "timeoutSeconds": 60
+        },
+        "openai": {
+          "model": "gpt-x",
+          "confirmBeforePaidRequest": false
+        },
+        "language": "en"
+      }
+    }
+  },
+  {
+    "case": "timeout-too-small",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "provider": "local",
+        "local": {
+          "baseUrl": "http://127.0.0.1:11434",
+          "model": "",
+          "timeoutSeconds": 30
+        },
+        "openai": {
+          "model": "gpt-5-mini",
+          "confirmBeforePaidRequest": true
+        },
+        "language": "ja"
+      }
+    }
+  },
+  {
+    "case": "unknown-key",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "provider": "local",
+        "local": {
+          "baseUrl": "http://127.0.0.1:11434",
+          "model": "",
+          "timeoutSeconds": 30
+        },
+        "openai": {
+          "model": "gpt-5-mini",
+          "confirmBeforePaidRequest": true
+        },
+        "language": "ja"
+      }
+    }
+  }
+]

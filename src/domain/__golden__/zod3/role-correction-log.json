@@ -1,0 +1,74 @@
+[
+  {
+    "case": "one-line",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "events": [
+          {
+            "schemaVersion": 1,
+            "sourcePosition": "master",
+            "autoRole": "bass",
+            "autoRoleConfidence": 0.9,
+            "assignedRole": "bass",
+            "dominantProgram": 33,
+            "channel": 1,
+            "noteCount": 16,
+            "minPitch": 28,
+            "maxPitch": 43,
+            "averageDurationBeats": 0.5,
+            "averagePolyphony": 1,
+            "preset": "auto",
+            "manuallyChanged": false,
+            "includedForAnalysis": true,
+            "exactDuplicateExcluded": false,
+            "analyzeExecuted": true,
+            "occurredAt": "2026-07-04T00:00:00.000Z"
+          }
+        ],
+        "invalidLineCount": 0
+      }
+    }
+  },
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "events": [],
+        "invalidLineCount": 0
+      }
+    }
+  },
+  {
+    "case": "broken-line",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "events": [
+          {
+            "schemaVersion": 1,
+            "sourcePosition": "master",
+            "autoRole": "bass",
+            "autoRoleConfidence": 0.9,
+            "assignedRole": "bass",
+            "dominantProgram": 33,
+            "channel": 1,
+            "noteCount": 16,
+            "minPitch": 28,
+            "maxPitch": 43,
+            "averageDurationBeats": 0.5,
+            "averagePolyphony": 1,
+            "preset": "auto",
+            "manuallyChanged": false,
+            "includedForAnalysis": true,
+            "exactDuplicateExcluded": false,
+            "analyzeExecuted": true,
+            "occurredAt": "2026-07-04T00:00:00.000Z"
+          }
+        ],
+        "invalidLineCount": 1
+      }
+    }
+  }
+]

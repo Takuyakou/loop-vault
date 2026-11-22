@@ -1,0 +1,509 @@
+/* P23-25: the Bass Practice home (pick a practice, the instrument, the week). The accent of this screen is purple. */
+/* P23-28: the practice's frame uses the same purple; one value (--bp-accent on the shell) feeds both. */
+.lv-bh {
+  --bh-accent: var(--bp-accent, #a79cff);
+  --bh-accent-soft: var(--bp-accent-soft, #2a2550);
+  --bh-on-accent: var(--bp-on-accent, #17123a);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 332px;
+  /* P23-36: the resume band is row 1; the cards and the instrument panel share row 2, so the
+     「楽器」 panel starts at the cards' top by the layout itself. */
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  gap: 10px 16px;
+}
+
+/* The cards (and the MIDI card) and the right panel are the two items of the shared row. */
+.lv-bh-main {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.lv-bh-aside {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+}
+
+.lv-bh-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- 続きから ---- */
+.lv-bh-resume {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #1c1840, #101a26 55%);
+}
+
+.lv-bh-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--bh-accent);
+  color: var(--bh-on-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.lv-bh-resume-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.lv-bh-resume-kicker {
+  color: var(--bh-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.lv-bh-resume-line {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+}
+
+.lv-bh-resume-line > b {
+  color: var(--lv-text);
+  font-size: 15px;
+}
+
+.lv-bh-resume-button {
+  height: 38px;
+  flex: none;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--bh-accent);
+  color: var(--bh-on-accent);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* P23-36: the Enter hint on 続ける, the same shape the Chord Dojo home uses. */
+.lv-bh-enter-key {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: inherit;
+}
+
+/* ---- The cards ---- */
+.lv-bh-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 4px 0 0;
+  color: var(--lv-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lv-bh-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lv-bh-card {
+  display: grid;
+  min-height: 172px;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--lv-surface);
+  box-shadow: inset 0 0 0 1px transparent;
+  color: var(--lv-text);
+  text-align: left;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.lv-bh-card:hover {
+  background: var(--lv-well-hover);
+  /* P23-36: the same purple accent as the rest of Bass Practice (never a new fixed colour); the inset ring keeps the
+     card's size and position, so nothing moves under the pointer. */
+  box-shadow: inset 0 0 0 1px var(--bh-accent);
+}
+
+.lv-bh-card:focus-visible,
+.lv-bh-resume-button:focus-visible,
+.lv-bh-segment > button:focus-visible {
+  outline: 2px solid var(--lv-focus);
+  outline-offset: 2px;
+}
+
+.lv-bh-card[data-wide] {
+  min-height: 124px;
+  grid-template-columns: 230px minmax(0, 1fr);
+}
+
+.lv-bh-art {
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 10px;
+  background: #0a121b;
+}
+
+.lv-bh-art > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lv-bh-card-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 2px 0;
+}
+
+.lv-bh-card-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.lv-bh-chevron {
+  flex: none;
+  margin-left: auto;
+  color: #4a5d74;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.lv-bh-card:hover .lv-bh-chevron {
+  color: var(--bh-accent);
+  transform: translateX(3px);
+}
+
+.lv-bh-card-text {
+  margin-top: 4px;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.lv-bh-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.lv-bh-tags > span {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--lv-well);
+  color: var(--lv-text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.lv-bh-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 8px;
+  color: var(--lv-text-secondary);
+  font-size: 11.5px;
+}
+
+.lv-bh-days {
+  display: flex;
+  gap: 3px;
+}
+
+.lv-bh-days > i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: #1b2838;
+}
+
+.lv-bh-days > i[data-on] {
+  background: var(--bh-accent);
+}
+
+/* ---- The pictures move while the pointer is on the card ---- */
+.lv-bh-dot { fill: #22344a; }
+.lv-bh-cell { fill: #1b2838; }
+.lv-bh-cell.h { fill: #5a4fcf; }
+.lv-bh-cell.acc { fill: var(--bh-accent); }
+.lv-bh-head,
+.lv-bh-run,
+.lv-bh-scan { opacity: 0; }
+.lv-bh-scan { fill: var(--bh-accent); }
+.lv-bh-line { stroke-dasharray: 240; stroke-dashoffset: 0; }
+.lv-bh-ok { opacity: 0.25; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lv-bh-card:hover .lv-bh-dot { animation: lv-bh-lit 1.8s infinite; }
+  .lv-bh-card:hover .lv-bh-dot.d2 { animation-delay: 0.45s; }
+  .lv-bh-card:hover .lv-bh-dot.d3 { animation-delay: 0.9s; }
+  .lv-bh-card:hover .lv-bh-head { opacity: 1; animation: lv-bh-sweep 1.8s linear infinite; }
+  .lv-bh-card:hover .lv-bh-run { opacity: 1; animation: lv-bh-run 2.2s ease-in-out infinite; }
+  .lv-bh-card:hover .lv-bh-line { animation: lv-bh-draw 1.8s ease-out infinite; }
+  .lv-bh-card:hover .lv-bh-ok { animation: lv-bh-ok 2s infinite; }
+  .lv-bh-card:hover .lv-bh-ok.o2 { animation-delay: 0.3s; }
+  .lv-bh-card:hover .lv-bh-ok.o3 { animation-delay: 0.6s; }
+  .lv-bh-card:hover .lv-bh-ok.o4 { animation-delay: 0.9s; }
+  /* P23-37: the MIDI picture — a reading line passes left to right (2.4s) and the two note rows light as it
+     reaches them. It is decoration: no sound, recording, judging or record. */
+  .lv-bh-card:hover .lv-bh-scan { opacity: 0.9; animation: lv-bh-scan 2.4s linear infinite; }
+  .lv-bh-card:hover .lv-bh-note { animation: lv-bh-note 2.4s linear infinite; }
+}
+
+@keyframes lv-bh-lit {
+  0%, 60%, 100% { fill: #22344a; }
+  15%, 40% { fill: #a79cff; }
+}
+
+@keyframes lv-bh-sweep {
+  from { transform: translateX(0); }
+  to { transform: translateX(128px); }
+}
+
+@keyframes lv-bh-run {
+  0% { transform: translate(0, 0); }
+  45% { transform: translate(44px, -22px); }
+  55% { transform: translate(44px, -22px); }
+  100% { transform: translate(88px, -8px); }
+}
+
+@keyframes lv-bh-draw {
+  0% { stroke-dashoffset: 240; }
+  70%, 100% { stroke-dashoffset: 0; }
+}
+
+@keyframes lv-bh-ok {
+  0%, 10% { opacity: 0.15; }
+  25%, 100% { opacity: 1; }
+}
+
+@keyframes lv-bh-scan {
+  from { transform: translateX(0); }
+  to { transform: translateX(180px); }
+}
+
+@keyframes lv-bh-note {
+  0%, 100% { filter: brightness(1); }
+  3% { filter: brightness(1.9); }
+  9% { filter: brightness(1.2); }
+  15% { filter: brightness(1); }
+}
+
+/* ---- The right column ---- */
+.lv-bh-side {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--lv-surface);
+}
+
+.lv-bh-side > h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  color: var(--lv-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.lv-bh-side > h2 > small {
+  color: var(--lv-text-secondary);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.lv-bh-fretboard-box {
+  margin: 10px 0 4px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  background: #0a121b;
+}
+
+.lv-bh-fretboard {
+  display: block;
+  width: 100%;
+}
+
+.lv-bh-fret-range { fill: rgb(167 156 255 / 22%); }
+.lv-bh-fret-line { stroke: #2b3c50; stroke-width: 1; }
+.lv-bh-fret-line[data-nut] { stroke: #8496aa; stroke-width: 2.5; }
+.lv-bh-string { stroke: #56687d; stroke-width: 1.2; }
+.lv-bh-fret-dot { fill: #56687d; }
+.lv-bh-fret-number { fill: var(--bh-accent); font-family: var(--font-mono); font-size: 9px; }
+
+.lv-bh-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+}
+
+.lv-bh-segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--lv-well);
+}
+
+.lv-bh-segment > button {
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 8px;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+/* P23-37: the chosen setting is the Bass purple (the app-wide teal accent is not changed). The unselected state
+   keeps its own text colour, and the focus ring below is untouched. */
+.lv-bh-segment > button[aria-pressed="true"] {
+  background: var(--bh-accent);
+  color: var(--bh-on-accent);
+}
+
+.lv-bh-week {
+  display: flex;
+  height: 92px;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.lv-bh-week-day {
+  display: flex;
+  height: 100%;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.lv-bh-week-day > i {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--bh-accent-soft);
+}
+
+.lv-bh-week-day[data-today] > i {
+  background: var(--bh-accent);
+}
+
+.lv-bh-week-day > span {
+  color: var(--lv-text-secondary);
+  font-size: 11px;
+}
+
+.lv-bh-week-day[data-today] > span {
+  color: var(--lv-text);
+  font-weight: 700;
+}
+
+.lv-bh-week-sum {
+  margin: 10px 0 0;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+}
+
+.lv-bh-week-sum > b {
+  color: var(--lv-text);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 1199px) {
+  .lv-bh {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  /* One column: the cards, then the instrument panel and 「この 7 日」 — no empty top space. */
+  .lv-bh-main,
+  .lv-bh-aside {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 899px) {
+  .lv-bh-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lv-bh-card[data-wide] {
+    grid-template-columns: 148px minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* P23-37: the chosen setting changes at once; the colour itself still moves to the Bass purple. */
+  .lv-bh-segment > button {
+    transition: none;
+  }
+}
+
+/* P23-41: the resume band uses the Voicing Loop's sizes; its hover/focus is the Bass purple. */
+.lv-bh-resume {min-height:0;padding:8px 12px;gap:12px;box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .18s ease;}
+.lv-bh-resume:hover,.lv-bh-resume:focus-within {box-shadow:inset 0 0 0 1px var(--bh-accent),inset 0 0 0 999px rgb(255 255 255 / 3%);}
+.lv-bh-mark {width:30px;height:30px;border-radius:8px;font-size:11px;font-weight:700;}
+.lv-bh-resume-kicker {font-size:12px;line-height:1.55;}
+.lv-bh-resume-line > b {font-size:14px;line-height:20px;}
+.lv-bh-resume-button {height:36px;min-height:36px;padding:0 12px;border-radius:10px;font-size:12px;line-height:16px;font-weight:500;transition:background-color .18s ease;}
+.lv-bh-resume-button:hover {background:color-mix(in srgb,var(--bh-accent) 88%,#fff);}
+.lv-bh-enter-key {margin-left:6px;padding:0 4px;border-radius:4px;font-size:10px;line-height:16px;font-weight:700;}
+.lv-bh-resume {border:1px solid transparent;transition:border-color .18s ease,box-shadow .18s ease;}
+.lv-bh-resume:hover,.lv-bh-resume:focus-within {border-color:var(--bh-accent);}
+.lv-bh-mark {line-height:1.55;}
+
+/* P23-43: the resume band is a full-width row, from column 1's left edge to the instrument panel's right edge.
+   When there is no resume, the two-row layout leaves no empty row. */
+.lv-bh { grid-template-rows: auto 1fr; }
+.lv-bh[data-resume="false"] { grid-template-rows: 1fr; }
+.lv-bh-resume { grid-column: 1 / -1; grid-row: 1; width: 100%; min-width: 0; }
+.lv-bh-main { grid-column: 1; grid-row: 2; }
+.lv-bh-aside { grid-column: 2; grid-row: 2; }
+.lv-bh[data-resume="false"] .lv-bh-main,
+.lv-bh[data-resume="false"] .lv-bh-aside { grid-row: 1; }
+
+@media (max-width: 1199px) {
+  .lv-bh { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+  .lv-bh-resume, .lv-bh-main, .lv-bh-aside { grid-column: 1; grid-row: auto; }
+  .lv-bh[data-resume="false"] .lv-bh-main,
+  .lv-bh[data-resume="false"] .lv-bh-aside { grid-column: 1; grid-row: auto; }
+}

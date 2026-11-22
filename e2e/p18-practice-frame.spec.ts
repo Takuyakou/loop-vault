@@ -7,20 +7,22 @@ import {openDojo,type MidiControl} from './helpers/p12';
  */
 const SIZES=[[1280,720],[1366,768],[1440,900],[1920,1080],[768,640]] as const;
 const connect=(page:Page)=>page.evaluate(async()=>(window as typeof window&{__p12Midi:MidiControl}).__p12Midi.connect());
+/** The head is measured by its children's centres, so its metrics must be final: the web font and two paint frames. */
+const settle=async(page:Page)=>page.evaluate(async()=>{await document.fonts.ready;await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));});
 const emit=(page:Page,notes:readonly number[],on=true)=>page.evaluate(({notes,on})=>(window as typeof window&{__p12Midi:MidiControl}).__p12Midi.emit(notes,on),{notes:[...notes],on});
 const answer=(page:Page)=>page.locator('.dojo-keyboard [data-midi-note]:has([data-answer-marker])').evaluateAll(es=>es.map(e=>Number(e.getAttribute('data-midi-note'))).sort((a,b)=>a-b));
 async function list(page:Page){await openDojo(page,'midi');await page.getByRole('button',{name:'定番の進行',exact:true}).click();await expect(page.locator('.dojo-builtin-jump')).toBeVisible();}
 const builtinCard=(page:Page)=>page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})});
 
 const OPEN:Record<string,(page:Page)=>Promise<void>>={
- async 'A ① 見て弾く'(page){await list(page);await builtinCard(page).getByRole('button',{name:'これを練習する'}).click();await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();await connect(page);await expect(page.locator('.dojo-chord-cards>button').first()).toBeVisible();},
+ async 'A ① 見て弾く'(page){await list(page);await builtinCard(page).getByRole('button', { name: / を練習する$/ }).click();await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();await connect(page);await expect(page.locator('.dojo-chord-cards>button').first()).toBeVisible();},
  async 'A ② 覚えて弾く'(page){
   await OPEN['A ① 見て弾く']!(page);
   for(let i=0;i<4;i+=1){const notes=await answer(page);await emit(page,notes);await emit(page,notes,false);if(i<3)await expect(page.locator('.dojo')).toHaveAttribute('data-dojo-cursor',new RegExp(`:see:0:${i+1}$`),{timeout:10000});}
   await page.getByRole('button',{name:'② 覚えて弾くへ（Enter）'}).click();await expect(page.locator('.dojo')).toHaveAttribute('data-dojo-cursor',/:recall:0:0$/,{timeout:10000});
  },
- async 'B ランダムキー'(page){await list(page);await builtinCard(page).getByRole('button',{name:'ランダムキーで練習'}).click();await expect(page.getByTestId('dojo-endless')).toBeVisible();await connect(page);await expect(page.getByTestId('dojo-endless')).toHaveAttribute('data-endless-phase','active',{timeout:10000});},
- async 'C Original Practice'(page){await list(page);await page.locator('.dojo-original-card[data-original=op-traditional-passing]').getByRole('button',{name:'これを練習する'}).click();await expect(page.getByTestId('dojo-original')).toBeVisible();await connect(page);},
+ async 'B ランダムキー'(page){await list(page);await page.getByTestId('dojo-random-toggle').click();await builtinCard(page).getByRole('button',{name:/ を練習する$/}).click();await expect(page.getByTestId('dojo-endless')).toBeVisible();await connect(page);await expect(page.getByTestId('dojo-endless')).toHaveAttribute('data-endless-phase','active',{timeout:10000});},
+ async 'C Original Practice'(page){await list(page);await page.locator('.dojo-original-card[data-original=op-traditional-passing]').getByRole('button', { name: / を練習する$/ }).click();await expect(page.getByTestId('dojo-original')).toBeVisible();await connect(page);},
  async 'D Jazz Progressions'(page){await list(page);await page.locator('[data-jazz-item=jazz-progressions-001]').getByTestId('jazz-open').click();await expect(page.getByTestId('dojo-jazz')).toBeVisible();await connect(page);},
  async 'D ② 覚えて弾く'(page){await OPEN['D Jazz Progressions']!(page);await page.getByTestId('dojo-stage-2').click();await expect(page.getByTestId('dojo-jazz')).toHaveAttribute('data-jazz-stage','recall');},
 };
@@ -29,7 +31,7 @@ for(const [name,open] of Object.entries(OPEN))for(const [w,h] of SIZES)test(`${n
  test.setTimeout(90000);
  await page.setViewportSize({width:w,height:h});
  await open(page);
- await page.waitForTimeout(400);
+ await settle(page);
  const tall=!(w===768);
  const m=await page.evaluate(()=>{
   const q=(s:string)=>document.querySelector(s) as HTMLElement|null,rect=(e:Element|null)=>e?e.getBoundingClientRect():null;
@@ -73,7 +75,7 @@ for(const [w,h] of [[1280,720],[1366,768],[1440,900]] as const)test(`D ② with 
  await OPEN['D ② 覚えて弾く']!(page);
  await page.getByTestId('jazz-reveal').click();
  await expect(page.getByTestId('jazz-card').first()).toHaveAttribute('data-hint','true');
- await page.waitForTimeout(400);
+ await settle(page);
  const m=await page.evaluate(()=>{
   const q=(s:string)=>document.querySelector(s) as HTMLElement|null,rect=(e:Element|null)=>e?e.getBoundingClientRect():null;
   const center=q('.dojo-endless-center')!,staff=q('[data-testid=dojo-score]')!,cards=[...document.querySelectorAll('.dojo-endless-cards>button')] as HTMLElement[];

@@ -33,11 +33,17 @@ interface PracticeKeyboardProps {
   keyboardLayout?: "default" | "wide-61" | "wide-88";
   compactSummary?: boolean;
   hideLegend?: boolean;
+  /** P23-32 K1: fill the box's remaining height (only the wide 88-key layout). */
+  fillHeight?: boolean;
   appearance?: "default" | "dojo";
   colorGuideHands?: boolean;
   markScale?: number;
   /** Dojo appearance: the height the keys are drawn at, in pixels (128 when not given). */
   dojoHeight?: number;
+  /** P23-23a B2: MIDI note numbers to draw red (the pressed keys the caller knows are wrong). Not given: as before. */
+  foreignNotes?: readonly number[];
+  /** P23-51: marks after a wrong answer (dojo appearance). */
+  resultMarks?: ReadonlyMap<number, "hit" | "wrong" | "miss">;
 }
 
 const copy = {
@@ -70,10 +76,13 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   keyboardLayout = "default",
   compactSummary = false,
   hideLegend = false,
+  fillHeight = false,
   appearance = "default",
   colorGuideHands = false,
   markScale = 1,
   dojoHeight,
+  foreignNotes: forcedForeignNotes,
+  resultMarks,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -88,7 +97,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   const missingPitchClasses = interactionMode === "neutral-monitor" ? [] : requiredPitchClasses.filter(
     (pitchClass) => !heldPitchClasses.has(positivePitchClass(pitchClass)),
   );
-  const foreignNotes = interactionMode === "neutral-monitor" ? [] : currentHeldNotes.filter(
+  const foreignHeldNotes = interactionMode === "neutral-monitor" ? [] : currentHeldNotes.filter(
     (note) => !allowedPitchClasses.includes(positivePitchClass(note)),
   );
   const heldBassNote = currentHeldNotes[0];
@@ -98,8 +107,11 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   const visualMatchState = matchState === "empty" ? "idle" : matchState;
 
   const compactWideLayout = keyboardLayout !== "default";
+  // P23-32 K1: the wrapper has to pass the box's height down too, otherwise `h-full` inside the visualizer
+  // resolves against an auto height and the keyboard falls back to its intrinsic 160–200px picture.
+  const fillsHeight = fillHeight && keyboardLayout === "wide-88";
   return (
-    <div className={compactWideLayout ? "min-w-0" : ""}>
+    <div className={compactWideLayout ? (fillsHeight ? "h-full min-w-0" : "min-w-0") : ""}>
       <PianoKeyboardVisualizer
         minMidiNote={range.minMidiNote}
         maxMidiNote={range.maxMidiNote}
@@ -123,10 +135,13 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         fingerLabels={fingerLabels}
         layout={keyboardLayout}
         hideLegend={hideLegend}
+        fillHeight={fillHeight}
         appearance={appearance}
         colorGuideHands={colorGuideHands}
         markScale={markScale}
         {...(dojoHeight === undefined ? {} : { dojoHeight })}
+        {...(forcedForeignNotes === undefined ? {} : { foreignNotes: forcedForeignNotes })}
+        {...(resultMarks === undefined ? {} : { resultMarks })}
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">
@@ -136,14 +151,14 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
       ) : null}
       <p
         className={`${compactSummary ? "sr-only" : compactWideLayout ? "mt-1 min-h-4 text-xs" : "mt-3 min-h-5 text-sm"} ${
-          foreignNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"
+          foreignHeldNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"
         }`}
         aria-live="polite"
       >
         {inputSummary({
           octaveConvention,
           accidentalStyle,
-          foreignCount: foreignNotes.length,
+          foreignCount: foreignHeldNotes.length,
           guideNotes,
           heldNotes: currentHeldNotes,
           level,

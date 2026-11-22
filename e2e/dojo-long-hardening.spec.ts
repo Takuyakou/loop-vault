@@ -7,7 +7,7 @@ async function list(page:Page){await openDojo(page,'no-midi&p104=dojo-long');awa
 const card=(page:Page,bars:number)=>page.locator('.dojo-saved-card').filter({has:page.locator('.dojo-saved-size',{hasText:`全${bars}小節`})});
 for(const [width,height] of [[1168,764],[1280,720],[1920,1080],[1024,768],[768,900],[375,812]])test(`saved progression list and expanded controls are readable ${width}x${height}`,async({page})=>{
  await page.setViewportSize({width,height});await list(page);mkdirSync(output,{recursive:true});
- await expect(page.getByRole('spinbutton')).toHaveCount(0);
+ await expect(page.locator('#main-content').getByRole('spinbutton')).toHaveCount(0);
  await expect(page.locator('.dojo-saved-list')).not.toContainText('練習範囲1');
  await expect(card(page,4).locator('h2')).toHaveText('合成進行 4小節');
  await expect(card(page,12).locator('h2')).toContainText('ユーザー名 ambiguous-bass');

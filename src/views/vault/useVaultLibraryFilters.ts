@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ProgressionIndexEntry } from "../../domain/progressionClassification/mod";
 import type { SongIdea } from "../../domain/types";
 import {
@@ -42,6 +42,8 @@ export function useVaultLibraryFilters(ideas: SongIdea[], progressionIndex: Prog
     }
   }, [filters]);
 
+  const setKeys = useCallback((keys: string[]) => setFilters((current) => ({ ...current, keys })), []);
+
   function toggle<K extends "keys" | "lengths" | "tags" | "sources">(facet: K, value: VaultFilters[K][number]) {
     setFilters((current) => {
       const values = current[facet] as string[];
@@ -53,11 +55,14 @@ export function useVaultLibraryFilters(ideas: SongIdea[], progressionIndex: Prog
     filters,
     toggle,
     setFavorite: (favorite: boolean) => setFilters((current) => ({ ...current, favorite })),
+    /** P23-10: the key band chooses one key at a time (every saved spelling of it). */
+    setKeys,
     clearFilters: () => setFilters(emptyVaultFilters),
     activeCount: activeFilterCount(filters),
     query, setQuery,
     sort, setSort,
     total: rows.length,
+    rows,
     visible: result.rows,
     counts: result.counts,
   };

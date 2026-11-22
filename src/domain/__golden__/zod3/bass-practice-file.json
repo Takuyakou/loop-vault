@@ -1,0 +1,55 @@
+[
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-practice",
+        "fileVersion": 2,
+        "revision": 0,
+        "settings": {
+          "version": 1,
+          "singEnabled": true,
+          "singingReferenceMode": "auto",
+          "stringCount": 4,
+          "handedness": "right",
+          "fretRange": {
+            "min": 0,
+            "max": 12
+          },
+          "sessionTargetCount": 8,
+          "rootMotionNoteCount": 2,
+          "sourceBasslineWindowBars": 2
+        },
+        "exercises": [],
+        "attempts": [],
+        "sessions": [],
+        "reviewQueue": [],
+        "rhythmAttempts": [],
+        "rhythmSessions": [],
+        "chordContextHistory": [],
+        "rootMotionHistory": [],
+        "sourceBasslineHistory": [],
+        "updatedAt": "2026-01-01T00:00:00.000Z"
+      }
+    }
+  },
+  {
+    "case": "wrong-app",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "future-version",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "empty-object",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

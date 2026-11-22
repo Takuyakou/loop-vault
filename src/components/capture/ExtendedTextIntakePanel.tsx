@@ -1,5 +1,11 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Check } from "lucide-react";
+import { useSaveButtonState } from "../ui";
+import { cardHarmony } from "../correction-workspace/cardHarmony";
+import { displayChordLabel } from "../../ui/chordText";
 import { displayKey } from "../../domain/displayLabels";
+import { importKeyLabel, resolveImportKey, type ImportKeyChoice } from "../../domain/importKeyResolution";
+import { confirmedTextProgressionKeyState } from "../../domain/textProgression";
 import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
@@ -21,9 +27,13 @@ import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
 import { usePreviewSound } from "../PreviewSoundProvider";
 import { useMetronome } from "../MetronomeProvider";
+import { useGlobalBpm } from "../GlobalBpmProvider";
 import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
 import { TextCapturePreviewStatus } from "./TextCapturePreviewStatus";
-import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, TextSaveControls, textSaveBlockedReason } from "./TextCaptureFields";
+import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, textSaveBlockedReason } from "./TextCaptureFields";
+
+/** P23-17 V4/C10: the example in the empty input; it must read with no errors. */
+export const EXTENDED_TEXT_PLACEHOLDER = "例: | Cmaj7 | Dm7 G7 | Cmaj7 % | Am7 _ |";
 
 interface Props {
   readonly input: string;
@@ -32,9 +42,12 @@ interface Props {
   readonly onEditorSelection: (start: number, end: number) => void;
   readonly disabled: boolean;
   readonly onInput: (value: string) => void;
-  readonly onSave: (result: ExtendedTextResult, title: string) => boolean;
+  /** P23-33: the third argument is the effective (auto/inherited/manual) key for display and save. */
+  readonly onSave: (result: ExtendedTextResult, title: string, resolvedKey?: string) => boolean;
   readonly controller?: PlaybackController;
   readonly sound?: PreviewSound;
+  /** P23-17 V8: the 「度数を表示」 setting (the extended gets the same degree cards). */
+  readonly showRomanNumerals?: boolean;
 }
 
 const japaneseDiagnostic: Readonly<Record<ExtendedTextReasonCode, string>> = {
@@ -60,19 +73,39 @@ export function detectExtendedTextMetadataHints(input: string): { key?: string; 
 }
 
 export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, editorSelection, onEditorSelection, modeSelector,
-  controller = playbackController, sound }: Props) {
+  controller = playbackController, sound, showRomanNumerals = true }: Props) {
   const { sound: globalSound } = usePreviewSound();
   const { enabled: metronome } = useMetronome();
+  const { bpm: globalBpm } = useGlobalBpm();
   const selectedSound = sound ?? globalSound;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!helpOpen) return undefined;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setHelpOpen(false); } };
+    const onDown = (event: MouseEvent) => {
+      if (helpRef.current && event.target instanceof Node && !helpRef.current.contains(event.target)) setHelpOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); };
+  }, [helpOpen]);
   const [beat, setBeat] = useState("4/4");
-  const [key, setKey] = useState<string>();
+  // P23-33: the select's three states; the manual key is the one the parse and the original-text
+  // validation use, the resolved key is what the save and the preview use.
+  const [keyChoice, setKeyChoice] = useState<ImportKeyChoice>({ kind: "auto" });
+  const manualKey = keyChoice.kind === "manual" ? keyChoice.key : undefined;
   const [bpm, setBpm] = useState<number>();
-  const [practiceBpm, setPracticeBpm] = useState(120);
+  const [matchGlobalBpm, setMatchGlobalBpm] = useState(false);
+  /** V6: the field's value, or the common BPM when the field is empty or matched. */
+  const playbackBpm = bpm === undefined || matchGlobalBpm ? globalBpm : bpm;
   const [playError, setPlayError] = useState<string>();
   const { transport, state: transportState } = useTextTransport(controller, selectedSound, "extended-text-whole");
+  useEffect(() => { transport.setBpm(playbackBpm); }, [playbackBpm, transport]);
   const [name, setName] = useState(TEXT_CAPTURE_DEFAULT_NAME);
   const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
+  const saveBtn = useSaveButtonState();
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const gutterRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -82,10 +115,31 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
   const hints = useMemo(() => detectExtendedTextMetadataHints(input), [input]);
   const metadata: ExtendedTextMetadata = useMemo(() => ({
     beat,
-    ...(key === undefined ? {} : { key, confirmed: true }),
+    ...(manualKey === undefined ? {} : { key: manualKey, confirmed: true }),
     ...(bpm === undefined ? {} : { bpm }),
-  }), [beat, key, bpm]);
+  }), [beat, manualKey, bpm]);
   const result = useMemo(() => parseExtendedTextProgression(input, metadata), [input, metadata]);
+  const keyChords = useMemo(() => result.harmonicSpans.map(span => span.chord), [result]);
+  const keyDecision = useMemo(() => resolveImportKey({
+    mode: keyChoice.kind,
+    ...(keyChoice.kind === "manual" ? { manualKey: keyChoice.key } : {}),
+    chords: keyChords,
+  }), [keyChoice, keyChords]);
+  // P23-17 V8 / P23-33: the degree and role of the extended preview cards, from the effective key.
+  const harmony = useMemo(() => cardHarmony(
+    result.harmonicSpans.map(span => ({ id: String(span.sourceSpan.start), name: span.chord, start: span.sourceSpan.start })),
+    keyDecision.key,
+  ), [result, keyDecision.key]);
+  const harmonyFor = (start: number) => {
+    const own = keyDecision.key && showRomanNumerals ? harmony.get(String(start)) : undefined;
+    const span = result.harmonicSpans.find(item => item.sourceSpan.start === start);
+    if (!own && !span) return undefined;
+    return {
+      ...(own?.degree ? { degree: own.degree } : {}),
+      ...(own?.role ? { role: own.role } : {}),
+      ...(span ? { name: displayChordLabel(span.writtenChord) } : {}),
+    };
+  };
   const scoreItems = useMemo(() => buildTextPreviewScore(result), [result]);
   const registration = useMemo(() => textVoicingAvailability(result.harmonicSpans), [result]);
   const playbackSnapshot = useMemo(() => ({
@@ -97,17 +151,23 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
   useTextScorePlayhead(previewRef, transport, transportState,
     result.beatsPerBar, result.bars.length, sourceMatches);
   const practiceStatus = useMemo(() => result.canConvert
-    ? evaluateExtendedTextPractice(result, practiceBpm) : undefined, [result, practiceBpm]);
+    ? evaluateExtendedTextPractice(result, playbackBpm) : undefined, [result, playbackBpm]);
   const errors = result.diagnostics.filter(issue => issue.severity === "ERROR");
   const warnings = result.diagnostics.filter(issue => issue.severity === "WARNING");
   const annotationCount = result.sections.filter(section => section.kind === "comment"
     && !/^\s*#\s*(Key|BPM)\s*:/i.test(section.raw)).length;
   const statusModel = textCaptureStatus({
     bars: result.bars.length, annotations: annotationCount, meterLabel: beat, bpm: bpm ?? null,
-    keyLabel: key ?? null, errors: input.trim() ? errors.length : 0,
+    keyLabel: keyDecision.key === undefined ? null : displayKey(keyDecision.key) ?? keyDecision.key,
+    errors: input.trim() ? errors.length : 0,
     warnings: input.trim() ? warnings.length : 0,
     practiceLimits: practiceStatus?.ready === false ? 1 : 0, hasSource: Boolean(input.trim()),
   });
+  const chooseKeyChoice = (choice: string | undefined) => {    if (!choice || choice === "auto") { setKeyChoice({ kind: "auto" }); return; }
+    if (choice === "unset") { setKeyChoice({ kind: "unset" }); return; }
+    const state = confirmedTextProgressionKeyState(choice);
+    setKeyChoice(state.kind === "confirmed" ? { kind: "manual", key: state.key } : { kind: "auto" });
+  };
   const saveReason = textCaptureSaveReason(statusModel);
   const saveBlocked = textSaveBlockedReason(result.canConvert, saveReason, name);
   const lines = input.split(/\r\n|\r|\n/);
@@ -138,12 +198,15 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
   function save() {
     if (disabled || !result.canConvert || !name.trim()) return;
     try {
-      const success = onSave(result, name.trim());
+      const success = onSave(result, name.trim(), keyDecision.key);
       setSaveFailed(!success);
       setSaved(success);
+      if (success) saveBtn.succeed();
+      else saveBtn.reset();
     } catch {
       setSaveFailed(true);
       setSaved(false);
+      saveBtn.reset();
     }
   }
 
@@ -170,31 +233,51 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
 
   return (
     <div data-testid="extended-text-intake" className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]">
-      <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
-        {modeSelector}
-
-        <TextMeterSelect testId="extended-text-meter" value={beat} disabled={disabled}
-          options={Array.from({ length: 12 }, (_, index) => String(index + 1) + "/4")} onChange={setBeat} />
-        <TextKeySelect testId="extended-text-key" value={key} disabled={disabled} onChange={setKey} />
-        <div className="lv-text-toolbar-bpm"><BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
-          dragLabel={"上下にドラッグしてBPMを変更"}
-          value={practiceBpm} onChange={value => {
-            transport.setBpm(value); setPracticeBpm(value); setBpm(value);
-          }} onExplicitInput={value => {
-            transport.setBpm(value); setPracticeBpm(value); setBpm(value);
-          }} />
-        {bpm === undefined ? <span className="text-xs text-[var(--lv-text-muted)]">{"試聴120"}</span> : null}</div>
-        <TextTransportBar transport={transport} state={transportState}
-          snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
-          sourceMatches={sourceMatches} primaryTestId="extended-text-play"
-          frozenTestId="extended-text-frozen-playback" />
-        <TextSaveControls nameTestId="extended-text-name" saveTestId="extended-text-save" reasonId="extended-text-save-reason"
-          name={name} blockedReason={saveBlocked} disabled={disabled}
-          onName={value => { setName(value); setSaved(false); setSaveFailed(false); }} onSave={save} />
-        {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
+      <div className="lv-text-capture-toolbar lv-text-topbar" data-testid="text-capture-toolbar">
+        <section className="lv-text-topgroup" aria-label="読み方の設定">
+          <span className="lv-text-toplabel">{"読み方の設定"}</span>
+          {modeSelector}
+          <TextMeterSelect testId="extended-text-meter" value={beat} disabled={disabled}
+            options={Array.from({ length: 12 }, (_, index) => String(index + 1) + "/4")} onChange={setBeat} />
+          <TextKeySelect testId="extended-text-key" value={keyChoice.kind === "manual" ? keyChoice.key : keyChoice.kind}
+            disabled={disabled} allowAuto autoLabel={importKeyLabel(keyDecision)} onChange={chooseKeyChoice} />
+          <div className="lv-text-toolbar-bpm"><BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
+            dragLabel={"上下にドラッグしてBPMを変更"}
+            value={bpm ?? globalBpm} onChange={value => {
+              setMatchGlobalBpm(false); setBpm(value);
+            }} onExplicitInput={value => {
+              setMatchGlobalBpm(false); setBpm(value);
+            }} />
+          {bpm === undefined ? <span className="text-xs text-[var(--lv-text-muted)]">{`試聴 ${globalBpm}`}</span> : (
+            <button type="button" className="lv-text-bpm-match" aria-pressed={matchGlobalBpm}
+              aria-label={matchGlobalBpm ? "曲の BPM に戻す" : "共通の BPM に合わせる"}
+              title={matchGlobalBpm ? `曲の BPM（${bpm}）で鳴らす` : `上の帯の共通 BPM（${globalBpm}）で鳴らす。保存する BPM は変わりません`}
+              data-testid="text-match-global-bpm" onClick={() => setMatchGlobalBpm(value => !value)}>
+              {matchGlobalBpm ? "曲の BPM に戻す" : "共通の BPM に合わせる"}
+            </button>
+          )}</div>
+          <div className="lv-text-top-help" ref={helpRef}>
+            <button type="button" className="lv-text-help-button" data-testid="text-help" aria-expanded={helpOpen}
+              aria-label="説明" title="説明" onClick={() => setHelpOpen(open => !open)}>{"?"}</button>
+            {helpOpen ? (
+              <div className="lv-text-help-face" role="dialog" aria-label="説明" data-testid="text-help-face">
+                {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
+                <p className="lv-text-help-line">{"拍子は 1/4 から 12/4 まで選べます。小節は | で区切り、コードは空白で区切ります。% は再発音、_ は休符、= は再発音せず保持します。"}</p>
+                <p className="lv-text-help-line">{"# Key: や # BPM: の行は案として出るだけで、選ぶまで使いません。明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。"}</p>
+              </div>
+            ) : null}
+          </div>
+        </section>
+        <section className="lv-text-topgroup" aria-label="試聴">
+          <span className="lv-text-toplabel">{"試聴"}</span>
+          <TextTransportBar transport={transport} state={transportState}
+            snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
+            sourceMatches={sourceMatches} primaryTestId="extended-text-play"
+            frozenTestId="extended-text-frozen-playback" />
+          {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
+        </section>
       </div>
 
-      {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
       <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
         aria-label={"テキスト作業領域"}>
         <button type="button" role="tab" aria-selected={visiblePane === "input"}
@@ -209,18 +292,20 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
         <section className={"lv-text-intake-pane min-w-0 border-r border-[var(--lv-border)] p-3" + (visiblePane === "input" ? " lv-text-intake-pane-active" : "")}
           aria-label={"元テキストの入力"} data-testid="extended-text-editor">
           <div className="lv-text-pane-head mb-3 flex flex-wrap items-center justify-between gap-2">
-            <label htmlFor="extended-text-input" className="text-sm font-semibold">{"進行テキスト"}</label>
+            <label htmlFor="extended-text-input" className="flex flex-wrap items-baseline gap-2 text-sm font-semibold">{"進行テキスト"}
+              <span className="text-xs font-normal text-[var(--lv-text-muted)]">{"小節は | で区切る。コードは空白で区切る。% は再発音、_ は休符、= は保持。1/4〜12/4"}</span>
+            </label>
             <div className="flex flex-wrap gap-2">
-              {hints.key ? <button type="button" className={key === hints.key ? appliedClass : pendingClass}
-                disabled={disabled || key === hints.key} onClick={() => setKey(hints.key)}>
-                {key === hints.key
+              {hints.key ? <button type="button" className={manualKey === hints.key ? appliedClass : pendingClass}
+                disabled={disabled || manualKey === hints.key} onClick={() => chooseKeyChoice(hints.key)}>
+                {manualKey === hints.key
                   ? ("キー " + (displayKey(hints.key) ?? hints.key) + " 使用中")
                   : ("キー " + (displayKey(hints.key) ?? hints.key) + "を使う")}
               </button> : null}
               {hints.bpm !== undefined ? <button type="button" className={bpm === hints.bpm ? appliedClass : pendingClass}
                 disabled={disabled || bpm === hints.bpm}
                 onClick={() => { if (hints.bpm !== undefined) {
-                  transport.setBpm(hints.bpm); setBpm(hints.bpm); setPracticeBpm(hints.bpm);
+                  setMatchGlobalBpm(false); setBpm(hints.bpm);
                 } }}>
                 {bpm === hints.bpm
                   ? ("BPM " + hints.bpm + " 使用中")
@@ -241,6 +326,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
             </div>
             <textarea id="extended-text-input" data-testid="extended-text-input" value={input} ref={textareaRef}
               disabled={disabled} spellCheck={false}
+              placeholder={EXTENDED_TEXT_PLACEHOLDER}
               aria-invalid={errors.length > 0}
               aria-describedby="extended-text-diagnostics"
               onScroll={event => { if (gutterRef.current) gutterRef.current.scrollTop = event.currentTarget.scrollTop; }}
@@ -248,11 +334,16 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
                 selectPreviewAtCaret(event.currentTarget.selectionStart); }}
               onClick={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
               onKeyUp={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
-              onChange={event => { setSaveFailed(false); setSaved(false); onInput(event.currentTarget.value); }}
+              onChange={event => {
+                const value = event.currentTarget.value;
+                // P23-17 V14: after a save, clearing the whole input starts the next progression from the first values.
+                if (saved && value.trim() === "") { setKeyChoice({ kind: "auto" }); setBpm(undefined); setName(TEXT_CAPTURE_DEFAULT_NAME); }
+                setSaveFailed(false); setSaved(false); saveBtn.reset(); onInput(value);
+              }}
               className="lv-text-intake-textarea min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
           </div>
-          {(key || bpm !== undefined) ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="extended-text-metadata">
-            {key ? "キー " + (displayKey(key) ?? key) : ""}{key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? "BPM " + String(bpm) : ""}
+          {(keyDecision.key || bpm !== undefined) ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="extended-text-metadata">
+            {keyDecision.key ? "キー " + (displayKey(keyDecision.key) ?? keyDecision.key) : ""}{keyDecision.key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? "BPM " + String(bpm) : ""}
           </p> : null}
         </section>
         <section ref={previewRef} aria-label={"入力中のプレビュー"}
@@ -277,6 +368,7 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
             : <div key={index} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
                 {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar}
                   selectedStart={selectedStart} onSelect={selectSource} onAudition={auditionSpan}
+                  harmonyFor={harmonyFor} disabled={disabled}
                   onBarSelect={span => { selectSource(span); if (sourceMatches) {
                     transport.seek((bar.number - 1) * result.beatsPerBar);
                   } }}
@@ -299,22 +391,35 @@ export function ExtendedTextIntakePanel({ input, disabled, onInput, onSave, edit
         </section>
       </div>
 
-      <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
+      <footer className="lv-text-intake-savebar lv-text-status-bar flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] px-2 py-1 text-xs">
+        <label className="lv-text-footer-name flex items-center gap-1.5">{"名前"}
+          <input className="lv-field-control min-h-8 w-28 px-2" maxLength={80} data-testid="extended-text-name"
+            value={name} onChange={event => { setName(event.target.value); setSaved(false); saveBtn.reset(); setSaveFailed(false); }} />
+        </label>
         <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-text-status-summary>
           {textCaptureSummary(statusModel)}
         </span>
         {/* Same place as in 通常; the capability list and the Draft editor exist only for 通常. */}
         <button type="button" className="lv-button-ghost ml-auto whitespace-nowrap text-xs" disabled
-          title={"拡張の読み方では表示できません（通常の読み方で使えます）"} data-testid="extended-text-capabilities-unavailable">{"使える機能"}</button>
+          aria-label="使える機能" title={"拡張の読み方では表示できません（通常の読み方で使えます）"} data-testid="extended-text-capabilities-unavailable">{"?"}</button>
         <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" disabled data-testid="extended-text-convert-unavailable"
-          title={"拡張の読み方では使えません（通常の読み方で使えます）"}>{"詳細編集"}</button>
-        {saved ? <span role="status" className="text-[var(--lv-accent)]">{"保存しました"}</span> : null}
+          title={"拡張の読み方では使えません（通常の読み方で使えます）"}>{"音を細かく直す"}</button>
         {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">
           {"保存できませんでした。入力内容は保持されています。"}
         </span> : null}
         <span id="extended-text-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">
           {saveReason}
         </span>
+        {saveBlocked !== undefined ? <span tabIndex={0} role="note" aria-describedby="extended-text-save-reason" title={saveBlocked}
+          className="cursor-help text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">{"ⓘ"}</span> : null}
+        <button type="button" className="lv-button-primary min-h-9 whitespace-nowrap px-3 text-xs" data-testid="extended-text-save"
+          data-save-state={saveBtn.state}
+          disabled={disabled || saveBlocked !== undefined} title={saveBlocked}
+          aria-describedby={saveBlocked !== undefined ? "extended-text-save-reason" : undefined} onClick={save}>
+          {saveBtn.state === "busy" ? <><span className="lv-save-spin" aria-hidden="true" /><span>保存中…</span></>
+            : saveBtn.state === "done" ? <><Check aria-hidden="true" size={16} /><span>保存しました</span></>
+            : "Vault に保存"}
+        </button>
       </footer>
     </div>
   );

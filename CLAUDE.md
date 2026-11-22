@@ -22,7 +22,7 @@ is a pointer, not a second rulebook: the canonical safety rules live in
 5. Reconcile `execution-state.json` against Git; when they disagree, trust Git
    and record the difference in a report.
 6. Resume from the first incomplete stage or gate.
-7. Do not advance to an unassigned stage, the next phase, a merge, or a push.
+7. Do not advance to an unassigned stage, the next phase, or a push. Merge into local master only after the lead's review passes (AGENTS.md, "Merge / push").
 
 The short prompt to paste at the start of a session lives in
 [`docs/phase-workflow/CODEX-START-PROMPT.md`](docs/phase-workflow/CODEX-START-PROMPT.md).
@@ -58,7 +58,9 @@ asking the human for approval. The rules live in
   the Read tool or with shell commands such as `cat`, `grep`, `find`. Never
   open anything else under it.
 - Tests: follow `docs/test-dx/README.md` — `npm run test:fast|feature|ui` while
-  working, one fresh `npm run test:full` for the merge candidate.
+  working. Run `npm run test:full` only when the instruction for the stage says
+  to run it (it names the stages that end with a full run); otherwise the
+  checks listed in the instruction are the gate for the merge candidate.
 - Generated screenshots go to `p89-generated/` (ignored, never committed).
 - Stage reports are written in Japanese under `docs/phase8.9/reports/`.
-- Stop at the merge candidate. Never push, tag, or release.
+- When the lead's review passes, merge the candidate into local master; otherwise stop at the merge candidate. Never push, tag, or release.

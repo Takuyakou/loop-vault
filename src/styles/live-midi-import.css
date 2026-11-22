@@ -1,0 +1,198 @@
+/* P23-19: the dialog that saves what was played in Live MIDI. */
+@layer components {
+  .lv-live-import {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+  }
+
+  .lv-live-import-title {
+    margin: 0;
+    color: var(--lv-text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .lv-live-import-text {
+    margin: -8px 0 0;
+    color: var(--lv-text-secondary);
+    font-size: 13px;
+  }
+
+  .lv-live-import-text > b {
+    color: var(--lv-text);
+  }
+
+  .lv-live-import-kicker {
+    padding: 0;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .lv-live-import-range {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lv-live-import-quick {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--lv-radius-tag);
+    background: var(--lv-well-hover);
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .lv-live-import-quick:hover {
+    color: var(--lv-text);
+  }
+
+  .lv-live-import-quick:focus-visible,
+  .lv-live-import-chord:focus-visible {
+    outline: 2px solid var(--lv-focus);
+    outline-offset: 1px;
+  }
+
+  .lv-live-import-summary {
+    margin-left: auto;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .lv-live-import-grid {
+    display: grid;
+    overflow-y: auto;
+    max-height: 208px;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+    padding: 2px;
+  }
+
+  .lv-live-import-chord {
+    display: flex;
+    min-width: 0;
+    height: 44px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    border: 1.5px solid transparent;
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
+    color: var(--lv-text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+  }
+
+  .lv-live-import-chord:hover {
+    background: var(--lv-well-hover);
+  }
+
+  .lv-live-import-chord[data-in-range] {
+    border-color: rgb(66 216 198 / 35%);
+    background: var(--lv-accent-soft);
+    color: var(--lv-text);
+  }
+
+  .lv-live-import-chord[data-edge],
+  .lv-live-import-chord[data-anchor] {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-live-import-chord-n {
+    flex: none;
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .lv-live-import-chord[data-in-range] > .lv-live-import-chord-n {
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-live-import-chord > .lv-chordname {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-live-import-listen {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .lv-live-import-hint {
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+  }
+
+  .lv-live-import-target {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid var(--lv-line);
+  }
+
+  .lv-live-import-option {
+    display: grid;
+    grid-template-columns: auto 9em minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    color: var(--lv-text);
+    font-size: 13px;
+  }
+
+  .lv-live-import-option > input[type="radio"] {
+    accent-color: var(--lv-accent);
+  }
+
+  .lv-live-import-input {
+    min-width: 0;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
+    color: var(--lv-text);
+    font-size: 13px;
+  }
+
+  .lv-live-import-input:disabled {
+    opacity: 0.5;
+  }
+
+  .lv-live-import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .lv-live-import-actions > :first-child {
+    margin-right: auto;
+  }
+
+  @media (max-width: 520px) {
+    .lv-live-import-option {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .lv-live-import-input {
+      grid-column: 1 / -1;
+    }
+  }
+}

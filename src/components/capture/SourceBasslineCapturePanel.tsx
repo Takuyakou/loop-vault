@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Select } from "../ui";
 import type { AnalysisSessionVoice } from "../../domain/midi/preAnalysis/types";
 import type { SourceBasslineCaptureAssessment } from "../../domain/sourceBassline";
 
@@ -47,8 +48,9 @@ export function SourceBasslineCapturePanel({
       <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
         <label className="min-w-0 text-xs font-semibold text-[var(--lv-text-secondary)]">
           {"Bass Voiceを選択"}
-          <select
-            className="mt-1 block min-h-10 w-full max-w-full rounded border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 text-sm text-[var(--lv-text)]"
+          <Select
+            wrapperClassName="mt-1 w-full"
+            className="w-full max-w-full"
             value={selectedVoiceId}
             disabled={voices.length === 0}
             aria-describedby={`${ids.description} ${ids.voiceReason}`}
@@ -58,12 +60,13 @@ export function SourceBasslineCapturePanel({
             {voices.map((voice) => (
               <option key={voice.id} value={voice.id}>{voice.displayName}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="min-w-0 text-xs font-semibold text-[var(--lv-text-secondary)]">
           {"保存する範囲"}
-          <select
-            className="mt-1 block min-h-10 w-full max-w-full rounded border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 text-sm text-[var(--lv-text)] disabled:opacity-50"
+          <Select
+            wrapperClassName="mt-1 w-full"
+            className="w-full max-w-full"
             value={rangeSelected ? assessment.rangeKey : ""}
             disabled={!canSelectRange}
             aria-describedby={`${ids.rangeReason} ${ids.status}`}
@@ -75,7 +78,7 @@ export function SourceBasslineCapturePanel({
                 {`${assessment.bars}小節`}
               </option>
             ) : null}
-          </select>
+          </Select>
         </label>
       </div>
       <p id={ids.voiceReason} className="mt-2 break-words text-xs text-[var(--lv-text-muted)]">

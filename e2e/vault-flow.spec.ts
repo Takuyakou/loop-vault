@@ -6,6 +6,7 @@ import {
   openApp,
   openVault,
 } from "./helpers/app";
+import { bassPracticeFromVault } from "./helpers/practice";
 
 test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる", async ({ page }) => {
   const pageErrors = await capturePageErrors(page);
@@ -15,19 +16,19 @@ test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる",
 
   const search = page.getByRole("textbox", { name: /検索/ });
   await search.fill("Midnight E2E");
-  await expect(page.getByText(/Midnight E2E Progression/)).toBeVisible();
-  await expect(page.locator("#main-content").getByRole("status")).toContainText(/1件/i);
+  await expect(page.locator(".lv-vault-row").getByText(/Midnight E2E Progression/)).toBeVisible();
+  await expect(page.getByTestId("vault-facets").getByRole("status")).toContainText(/1件/i);
 
   const row = page.locator(".lv-vault-row").first();
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
-  await expect(detail.getByRole("button", { name: /Bass Practice/ })).toBeVisible();
+  await expect(detail.getByRole("button", { name: /Bass Practice/ })).toHaveCount(0);
 
-  await detail.getByRole("button", { name: /Bass Practice/ }).click();
+  await bassPracticeFromVault(page, "Midnight E2E Progression");
   await page.locator('[data-nav="chord-dojo"]').click();
   await expect(page.getByTestId("practice-layout")).toBeVisible();
-  await expect(page.getByRole("heading", {name:"今日の練習",exact:true})).toBeVisible();
+  await expect(page.getByTestId("dojo-home")).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 
@@ -58,18 +59,24 @@ test("検索・絞り込み・並び替えを組み合わせられる", async ({
   await createSavedProgression(page, "Filter Target");
   await openVault(page);
 
-  const filters = page.locator(".lv-vault-rail");
+  // P23-10 V1: the facets are chips above the list; each opens its values.
+  const filters = page.getByTestId("vault-facets");
+  const facet = async (name: string) => {
+    const menu = page.getByRole("dialog", { name });
+    if (!(await menu.isVisible())) await filters.getByRole("button", { name: new RegExp(`^${name}`) }).click();
+    return menu;
+  };
   await page.getByRole("textbox", { name: /検索/ }).fill("Filter Target");
-  await filters.getByRole("button", { name: /〜4小節/ }).click();
+  await (await facet("長さ")).getByRole("button", { name: /〜4小節/ }).click();
   await page.getByLabel(/並び順/).selectOption("name");
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
 
   // Options that would leave nothing are counted 0 and disabled (OR/AND is covered by unit tests).
-  await filters.getByRole("button", { name: /MIDI/ }).first().click();
+  await (await facet("取り込み元")).getByRole("button", { name: /MIDI/ }).first().click();
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
-  await expect(filters.getByRole("button", { name: /テキスト/ })).toBeDisabled();
-  await expect(filters.getByRole("button", { name: /5〜8小節/ })).toBeDisabled();
-  await filters.getByRole("button", { name: "すべて解除" }).click();
+  await expect((await facet("取り込み元")).getByRole("button", { name: /テキスト/ })).toBeDisabled();
+  await expect((await facet("長さ")).getByRole("button", { name: /5〜8小節/ })).toBeDisabled();
+  await filters.getByRole("button", { name: "すべて外す" }).click();
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
 
   await page.getByRole("textbox", { name: /検索/ }).fill("6-4-5");
@@ -107,7 +114,7 @@ test("P8.9-09b Vault row chords are one band: length-wide frames, merged repeats
         first: chips.slice(0, 2).map((chip) => chip.textContent),
         degrees: element.querySelectorAll(".lv-vault-chip-degree").length,
         more: element.querySelector(".lv-vault-chip-more")?.textContent ?? "",
-        nameWidth: element.querySelector(".lv-vault-main-cell")!.getBoundingClientRect().width,
+        nameWidth: element.querySelector(".lv-vault-progression")!.getBoundingClientRect().width,
         bandWidth: bandBox.width,
       };
     });
@@ -116,7 +123,7 @@ test("P8.9-09b Vault row chords are one band: length-wide frames, merged repeats
     expect(band.tops, `${width} one line`).toBe(1);
     expect(band.clipped, `${width} clipped`).toEqual([]);
     expect(band.outside, `${width} outside`).toBe(0);
-    expect(band.first[1], `${width} merged`).toMatch(/^Ebadd9\/G×3/);
+    expect(band.first[1], `${width} merged`).toMatch(/^E♭add9\/G×3/);
     expect(band.degrees, `${width} degrees`).toBe(band.count);
     expect(band.more, `${width} more`).toMatch(/^\+\d+小節$/);
   }

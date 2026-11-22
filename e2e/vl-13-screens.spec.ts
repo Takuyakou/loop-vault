@@ -43,7 +43,8 @@ test("VL-13 screenshots", async ({ page }) => {
   await expect(connected).toHaveAttribute("data-midi-audio", "ready", { timeout: 20_000 });
   await expect.poll(() => page.evaluate(() => (window as unknown as { __dojoMonitorCount: number }).__dojoMonitorCount)).toBe(1);
   await page.screenshot({ path: `${dir}/midi-connected-1440x900.png` });
-  await connected.getByTestId("voicing-loop-transport-midi-row").screenshot({ path: `${dir}/midi-status-1440x900.png` });
+  // P23-32 K4: the band's MIDI row is gone; the bar itself is the screenshot (the header chip shows the kind).
+  await connected.getByTestId("voicing-loop-transport").screenshot({ path: `${dir}/midi-status-1440x900.png` });
 
   // A: the load failure notice and its retry button.
   await page.route("**/*.mp3", (route) => route.abort());

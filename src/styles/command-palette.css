@@ -1,0 +1,123 @@
+/* P23-07: the search palette (Ctrl+K). It sits near the top of the window, not in the middle. */
+@layer components {
+  .lv-palette {
+    width: min(560px, 100%);
+    margin-top: 10vh;
+    align-self: start;
+    overflow: hidden;
+  }
+
+  .lv-palette-input {
+    display: flex;
+    height: 46px;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--lv-border);
+    color: var(--lv-text-muted);
+  }
+
+  .lv-palette-input > input {
+    min-width: 0;
+    flex: 1 1 auto;
+    border: 0;
+    background: transparent;
+    color: var(--lv-text);
+    font-size: 15px;
+    line-height: 1.4;
+    outline: none;
+  }
+
+  .lv-palette-input > input::placeholder {
+    color: var(--lv-text-muted);
+    font-size: 13px;
+  }
+
+  .lv-palette-list {
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    padding-bottom: 6px;
+  }
+
+  .lv-palette-group {
+    padding: 8px 14px 3px;
+    color: var(--lv-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+  }
+
+  .lv-palette-item {
+    display: flex;
+    min-height: 36px;
+    align-items: center;
+    gap: 12px;
+    margin: 0 6px;
+    padding: 0 8px;
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .lv-palette-item[aria-selected="true"] {
+    background: var(--lv-accent-soft);
+    color: var(--lv-text);
+  }
+
+  .lv-palette-item-title {
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+    color: var(--lv-text);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-palette-item-chords {
+    min-width: 0;
+    flex: 1 1 0;
+    overflow: hidden;
+    color: var(--lv-text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: pre;
+  }
+
+  .lv-palette-item-detail {
+    flex-shrink: 0;
+    color: var(--lv-text-muted);
+    font-size: 11px;
+  }
+
+  .lv-palette-none {
+    padding: 22px 14px;
+    color: var(--lv-text-muted);
+    font-size: 12.5px;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .lv-palette-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--lv-border);
+    color: var(--lv-text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* P23-07 §5-3 E10: the shared Kbd is 55% opaque and fails the contrast check on this panel; inside the palette
+     the key hints are drawn at full strength (axe: 4 color-contrast nodes before, none after). */
+  .lv-palette .lv-kbd {
+    opacity: 1;
+    color: var(--lv-text-secondary);
+  }
+}

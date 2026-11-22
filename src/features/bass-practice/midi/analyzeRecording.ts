@@ -1,8 +1,8 @@
 import type { RecordingTake } from "../recording/application/ports";
-import type { MidiBassNote, MidiBassSettings } from "./model";
-import type { BassAnalysis } from "./analysis";
+import type { MidiBassNote } from "./model";
+import type { BassAnalysis, BassJudgeSettings } from "./analysis";
 /** The recorder already routes the selected interface channel into a mono stream. */
-export async function analyzeMidiBassRecording(take:RecordingTake,target:readonly MidiBassNote[],bpm:number,settings:MidiBassSettings,signal:AbortSignal):Promise<BassAnalysis> {
+export async function analyzeMidiBassRecording(take:RecordingTake,target:readonly MidiBassNote[],bpm:number,settings:BassJudgeSettings,signal:AbortSignal):Promise<BassAnalysis> {
   const context=new AudioContext();let audio:AudioBuffer;
   try{const bytes=take.data instanceof Blob?await take.data.arrayBuffer():take.data.slice().buffer as ArrayBuffer;audio=await context.decodeAudioData(bytes);}finally{await context.close();}
   if(signal.aborted)throw new Error("判定を取り消しました");

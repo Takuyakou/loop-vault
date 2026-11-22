@@ -23,11 +23,11 @@ const schema = z.object({
     baseUrl: z.string().url().default("http://127.0.0.1:11434"),
     model: z.string().max(200).default(""),
     timeoutSeconds: z.number().int().min(5).max(120).default(30),
-  }).strict().default({ baseUrl: "http://127.0.0.1:11434", model: "", timeoutSeconds: 30 }),
+  }).strict().prefault({ baseUrl: "http://127.0.0.1:11434", model: "", timeoutSeconds: 30 }),
   openai: z.object({
     model: z.string().min(1).max(200).default("gpt-5-mini"),
     confirmBeforePaidRequest: z.boolean().default(true),
-  }).strict().default({ model: "gpt-5-mini", confirmBeforePaidRequest: true }),
+  }).strict().prefault({ model: "gpt-5-mini", confirmBeforePaidRequest: true }),
   language: z.enum(["ja", "en"]).default("ja"),
 }).strict();
 

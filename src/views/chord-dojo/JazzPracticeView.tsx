@@ -12,16 +12,19 @@ import {jazzBagKey,nextJazzKey,startJazzKeyBag,type JazzKeyBag} from '../../doma
 import {jazzLapStore} from '../../domain/chordDojo/jazzRecords';
 import {dojoStore} from '../../domain/chordDojo/runtime';
 import {BpmScrubField} from '../../components/BpmScrubField';
+import {useAnnounceSongBpm,useGlobalBpm} from '../../components/GlobalBpmProvider';
 import {heardContextTime,listenBeat,listenCardIndex,listenProgress} from '../../domain/chordDojo/listenPosition';
 import {CHOICE_NAMES} from './dojoNav';
 import {HeldCardBoard,heldStaffExtent,HeldCardNotices,heldCardHint} from './HeldCardParts';
 import {RECALL_LISTENED,RECALL_FOCUS_FOLDED,RECALL_FOCUS_OPENED,recallAnswerVisible} from './heldCardRecall';
 import {answerKeyboardRange} from './keyboardRange';
 import {usePracticeLayout} from './practiceLayout';
-import {PracticeCard,PracticeHead,PracticeSafeArea,RepeatToggle,type StageItem} from './PracticeFrame';
+import {PracticeActions,PracticeCard,PracticeConditions,PracticeGuide,PracticeHead,PracticeLap,PracticeResult,PracticeSafeArea,RepeatToggle,STAFF_HELP,keyed,type StageItem} from './PracticeFrame';
+import {degreeFunctionKinds} from '../../domain/earPractice/degreeFunction';
 import {readRepeatSetting,writeRepeatSetting} from './practiceRepeat';
 import {whiteKeysIn} from '../ear-practice/earKeyboardHeight';
 import {useHeldCardRun} from './useHeldCardRun';
+import {rememberRecent} from './dojoRecent';
 
 /**
  * Jazz Progressions: the cards show the recommended voicing (the notes of each hand with the finger, as the data writes them;
@@ -37,8 +40,6 @@ const plain=(card:JazzCard,pitches:readonly number[])=>pitches.map(n=>card.names
 const degreeOf=(card:JazzCard,key:string)=>card.keyContext===key?card.degree:`${card.degree} · ${card.keyContext}`;
 /** 𝄪 and 𝄫 are drawn small and high by the fonts that have them: the character stays in the text, and is drawn as a double sharp / double flat mark. */
 function Glyphs({text}:{text:string}){return <>{text.split(/(𝄪|𝄫)/).map((part,i)=>part==='𝄪'?<span key={i} className="dojo-dsharp">𝄪</span>:part==='𝄫'?<span key={i} className="dojo-dflat">𝄫</span>:part)}</>;}
-/** The tempo chosen for the listening (kept while the app is open, for every progression); undefined until one is chosen. */
-let jazzListenBpm:number|undefined;
 /** The octave chosen (0 as written, 1 one octave up): kept while the app is open, for every progression. */
 let jazzOctave=0;
 /** The notes of a hand: a name with its finger is never broken across lines; a line may break only between notes. */
@@ -47,10 +48,10 @@ const lapsOf=(laps:Record<string,{count:number}>|undefined)=>Object.values(laps?
 const TONICS=Array.from({length:12},(_,t)=>t);
 const newSeed=()=>Math.floor(Math.random()*2**30);
 
-export function JazzPracticeView({progressionId,onBack,random=false}:{progressionId:string;onBack:()=>void;/** Begin with the random key on (the first key is the first of a shuffled round). */random?:boolean}){
+export function JazzPracticeView({progressionId,onBack,random=false,initialKey,initialStage}:{progressionId:string;onBack:()=>void;/** Begin with the random key on (the first key is the first of a shuffled round). */random?:boolean;/** P20: resume the last key and stage at the start of the lap. */initialKey?:number;initialStage?:'see'|'recall'}){
  const item=jazzItemOf(progressionId)!;
  const mainTonic=jazzItemMainTonic(item);
- const [start]=useState(()=>{const bag=random?startJazzKeyBag(newSeed()):undefined;return {tonic:bag?jazzBagKey(bag):mainTonic,bag};});
+ const [start]=useState(()=>{const bag=random?startJazzKeyBag(newSeed(),initialKey):undefined;return {tonic:initialKey??(bag?jazzBagKey(bag):mainTonic),bag};});
  const [activeId,setActiveId]=useState(progressionId);
  const [itemTonic,setItemTonic]=useState(start.tonic);
  /** The random key: defined while it is on. */
@@ -86,7 +87,9 @@ export function JazzPracticeView({progressionId,onBack,random=false}:{progressio
   // again on the same key and is not counted; the clean ② rounds feed ② ヒントなし n.
   lap:()=>({stage:stageRef.current,hinted:()=>hintsRef.current.length>0||listenHintedRef.current,clean:()=>writeRecallCleanLaps(n=>n+1)}),
   // P18-02: Space in ② shows the answer of the current card (the same guards as L and R).
-  onSpace:()=>{if(stageRef.current==='recall')showAnswerRef.current();}});
+  onSpace:()=>{if(stageRef.current==='recall')showAnswerRef.current();},
+  // P20: the first key of a condition is what 「続きから」 remembers.
+  onFirstInput:()=>rememberRecent({kind:'jazz',id:idRef.current,stage:stageRef.current,key:tonicRef.current,random:Boolean(bagRef.current)})});
  // P18-01 Stage 2: the switch on the row of the settings, remembered for this screen kind.
  const [repeat,writeRepeat]=useState(()=>readRepeatSetting('d'));
  const repeatRef=useRef(repeat);repeatRef.current=repeat;
@@ -95,7 +98,7 @@ export function JazzPracticeView({progressionId,onBack,random=false}:{progressio
  // P18-02: the ② 覚えて弾く stage. Kept on this screen only: the key, the version, the octave, the random key and
  // くり返す stay when it changes. The hints of the round, the answer shown (until the current card moves) and the
  // counts of this screen (② ヒントなし n; the round numbers of the top row use the laps of the key as ① does) live here too.
- const [stage,writeStage]=useState<'see'|'recall'>('see');
+ const [stage,writeStage]=useState<'see'|'recall'>(initialStage??'see');
  const stageRef=useRef(stage);stageRef.current=stage;
  const [hints,writeHints]=useState<readonly number[]>([]),hintsRef=useRef<readonly number[]>([]);hintsRef.current=hints;
  const [listenHinted,writeListenHinted]=useState(false),listenHintedRef=useRef(false);listenHintedRef.current=listenHinted;
@@ -195,16 +198,19 @@ const focusButton=<button type="button" className="dojo-jazz-focus-more" data-te
  const cardStartAt=useRef(performance.now());
  useEffect(()=>{cardStartAt.current=performance.now();},[index,stage]);
 
- // The tempo of the whole-progression listening: the progression's own until it is chosen, then the chosen one for as long as the app is open (every progression).
- const [chosenBpm,setChosenBpm]=useState(jazzListenBpm);
- const bpm=chosenBpm??prog.tempoBpm;
+ // P23-06: the whole-progression listening plays at the app-wide BPM; the progression's own tempo is announced as the song's BPM.
+ const {bpm,setBpm:setGlobalBpm}=useGlobalBpm();
+ useAnnounceSongBpm(prog.tempoBpm);
  const listening=playing&&playback.source?.id===allId;
  /** The audio time of beat 0 of the listening that is on: where the seek bar starts from (set when the sound starts). */
  const listenStart=useRef<number>();
  const seek=useRef<HTMLDivElement>(null);
  const plan=useMemo(()=>jazzListenPlan(prog,bpm),[prog,bpm]);
- /** A new tempo: what is sounding stops (the next listening is at the new tempo). */
- const changeBpm=(value:number)=>{if(listening)playbackController.stop();jazzListenBpm=value;setChosenBpm(value);};
+ const changeBpm=(value:number)=>setGlobalBpm(value);
+ // A new tempo (from the field here or from the header): what is sounding stops (the next listening is at the new tempo).
+ const listeningRef=useRef(listening);listeningRef.current=listening;
+ const lastBpm=useRef(bpm);
+ useEffect(()=>{if(lastBpm.current===bpm)return;lastBpm.current=bpm;if(listeningRef.current)playbackController.stop();},[bpm]);
  const listenAll=async()=>{
   if(listening){playbackController.stop();return;}
   if(recall){const first=!listenHintedRef.current;writeListenHinted(true);if(first)writeHintNotice('listen');} // P18-02: the whole progression can be heard, so this round cannot be a clean one
@@ -245,11 +251,12 @@ const focusButton=<button type="button" className="dojo-jazz-focus-more" data-te
   return()=>{cancelAnimationFrame(frame);setListeningIndex(undefined);};
  },[listening,prog,plan]);
  // The keys that have been played through (this progression, this version), in the line above the keyboard.
+ const back=()=>{playbackController.stop();onBack();};
  const keysDone=TONICS.map(t=>({t,name:keyName(t),count:saved?.[transposeJazzProgression(activeId,t).tonic]?.count??0}));
  return <section className="dojo" data-testid="dojo-jazz" data-dojo-screen="original" data-held-kind="jazz" data-practice-frame="d" data-focus-place={focusBelow?'below':'staff'} data-jazz-id={activeId} data-jazz-card={index} data-jazz-stage={stage} data-jazz-lap={lapNo} data-jazz-key={itemTonic} data-jazz-random={bag?'on':undefined} data-jazz-octave={octave} data-lap-stop={run.lapStop||undefined} data-midi-kind={view.kind} data-input-mode={run.inputMode} data-paused={waiting||undefined} data-played-notes={playedNotes}>
   <div className="dojo-practice dojo-endless" ref={practice} data-practice-layout={layout.kind} style={layoutStyle}>
-   <PracticeHead backLabel={CHOICE_NAMES['builtin-progressions']} onBack={()=>{playbackController.stop();onBack();}} kind={`${JAZZ_PROGRESSIONS_GROUP_NAME} ${item.no}`} title={prog.title}
-    degrees={prog.cards.map(c=>degreeOf(c,prog.key)).join('–')} degreesTestId="jazz-degrees" stages={jazzStages} progressLabel="この画面の周回" onQuit={()=>{playbackController.stop();onBack();}}
+   <PracticeHead backLabel={CHOICE_NAMES['builtin-progressions']} onBack={back} kind={`${JAZZ_PROGRESSIONS_GROUP_NAME} ${item.no}`} title={prog.title}
+    degrees={prog.cards.map(c=>degreeOf(c,prog.key)).join('–')} degreesTestId="jazz-degrees" stages={jazzStages} progressLabel="この画面の周回"
     progress={<>
      {bag?<span data-testid="jazz-round"><em>{bag.round}</em>巡目 <em>{Math.max(0,bag.pos+1)}/12</em> · </span>:null}
      <span data-testid="jazz-progress-stage">{stage==='see'?'①':'②'} <em>{lapNo}</em>周目 · <em>{index+1}/{prog.cards.length}</em></span>
@@ -259,7 +266,7 @@ const focusButton=<button type="button" className="dojo-jazz-focus-more" data-te
     </>}/>
    <div className="dojo-endless-center">
     <div className="dojo-jazz-notices"><HeldCardNotices run={run} lapStore={jazzLapStore}/></div>
-    <div className="dojo-jazz-bar dojo-practice-set">
+    <PracticeConditions className="dojo-jazz-bar" help={STAFF_HELP}>
      {item.progressions.length>1
       ?<div className="dojo-jazz-versions" role="group" aria-label="進行の版">{item.progressions.map(id=>{const v=buildJazzProgression(id);
        return <button type="button" key={id} aria-pressed={id===activeId} data-testid="jazz-version" data-jazz-version={id} onClick={()=>switchTo(id)}>{v.variantLabel}</button>;})}</div>
@@ -271,13 +278,14 @@ const focusButton=<button type="button" className="dojo-jazz-focus-more" data-te
      <BpmScrubField idPrefix="jazz-bpm" inputTestId="jazz-bpm-input" label="BPM" dragLabel="上下にドラッグしてBPMを変更" value={bpm} onChange={changeBpm}/>
      <div className="dojo-jazz-octave" role="group" aria-label="オクターブ" data-testid="jazz-octave"><span>オクターブ</span>{[0,1].map(o=><button type="button" key={o} aria-pressed={octave===o} data-testid={`jazz-octave-${o}`} onClick={()=>chooseOctave(o)}>{o===0?'標準':'+1'}</button>)}</div>
      <RepeatToggle on={repeat} onToggle={toggleRepeat} testId="jazz-repeat"/>
-    </div>
+    </PracticeConditions>
     <div className="dojo-endless-cards dojo-original-cards dojo-jazz-cards">{prog.cards.map((c,i)=>{
      const done=i<index,current=i===index;
      // P18-02 ②: the degree and the name of the chord stay; the notes of the hands are ? until the card was played through or its answer was shown (until the current card moves).
      const showNotes=!recall||recallAnswerVisible(i,index,revealed?.card);
+     const fn=degreeFunctionKinds(prog.cards.map(x=>degreeOf(x,prog.key)),'major')[i];
      return <PracticeCard key={i} label={`${c.display}（${degreeOf(c,prog.key)}）を聴く`} onPress={()=>void playCardHinted(i)} state={done?'done':current?'current':'todo'} playing={playingIndex===i} extra={{'data-listening':listeningIndex===i||undefined}}
-      testId="jazz-card" degreeTestId="jazz-degree" nameTestId="jazz-chord" notesTestId="jazz-notes" degree={degreeOf(c,prog.key)} name={c.display}
+      testId="jazz-card" degreeTestId="jazz-degree" nameTestId="jazz-chord" notesTestId="jazz-notes" degree={degreeOf(c,prog.key)} name={c.display} fn={fn?.kind||undefined} fnBorrowed={fn?.borrowedDominant}
       hint={recall&&hints.includes(i)||undefined}
       mark={recall&&hints.includes(i)?<span className="dojo-jazz-hint-chip">ヒント</span>:done?<ChordCardMark result={cardResult(true,manual)} layer="set" corner/>:null}
       notes={showNotes?<><i>左</i> <Notes card={c} pitches={c.left}/><br/><i>右</i> <Notes card={c} pitches={c.right}/></>:<><i>左</i> {c.left.map((_,k)=><Fragment key={k}>{k>0?' ':null}?</Fragment>)}<br/><i>右</i> {c.right.map((_,k)=><Fragment key={k}>{k>0?' ':null}?</Fragment>)}</>}/>;})}</div>
@@ -285,32 +293,37 @@ const focusButton=<button type="button" className="dojo-jazz-focus-more" data-te
      <div className="dojo-jazz-seek-fill"/>
      {prog.cards.slice(1).map(c=><i key={c.startBeat} style={{left:`${c.startBeat/(prog.cards[prog.cards.length-1]!.startBeat+prog.cards[prog.cards.length-1]!.durationBeats)*100}%`}}/>)}
     </div>
-    <div className="dojo-jazz-status dojo-practice-say">
+    <PracticeResult>
     {run.lapStop&&lastLap
-     ?(lapStopStage==='recall'
-      ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap-stop"><b>② をヒントなしで通しました</b>{lapNote?.to?` · ${lapNote.from} → 次は ${lapNote.to}`:''} · 完奏 {total} · 「もう一度 ② を弾く（R）」で続けます</p>
-      :<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap-stop"><b>完奏！{lapNote?.to?` ${lapNote.from} → 次は ${lapNote.to}`:` ${lapNote?.from??''}`}</b> · {lastLap.n}周 · 「もう一度 ① を弾く（R）」で続けます</p>)
+     ?<PracticeLap summary={lapStopStage==='recall'
+       ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap-stop"><b>② をヒントなしで通しました</b>{lapNote?.to?` · ${lapNote.from} → 次は ${lapNote.to}`:''} · 完奏 {total} · 「もう一度 ② を弾く（R）」で続けます</p>
+       :<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap-stop"><b>完奏！{lapNote?.to?` ${lapNote.from} → 次は ${lapNote.to}`:` ${lapNote?.from??''}`}</b> · {lastLap.n}周 · 「もう一度 ① を弾く（R）」で続けます</p>}>
+      <button type="button" className="dojo-primary" data-testid="jazz-lap-again" onClick={run.againLap} {...keyed(lapStopStage==='recall'?'もう一度 ② を弾く':'もう一度 ① を弾く','R')}/>
+      {lapStopStage==='see'?<button type="button" data-testid="jazz-lap-next" onClick={()=>switchStage('recall')} {...keyed('② 覚えて弾くへ','Enter')}/>:null}
+      <button type="button" onClick={back}>一覧へ</button>
+     </PracticeLap>
      :lastLap&&index===0&&lapNote
      ?(recall
       ?<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap"><b>② をヒントなしで通しました</b> · 完奏！{lapNote.to?` ${lapNote.from} → 次は ${lapNote.to}`:` ${lapNote.from}`} · {lapNote.to?'続けて、次のキーで':'続けて、もう1周'}弾けます</p>
       :<p className="dojo-endless-result dojo-original-lap" role="status" data-testid="jazz-lap"><b>完奏！{lapNote.to?` ${lapNote.from} → 次は ${lapNote.to}`:''}</b> · {lastLap.n}周 · {lapNote.to?'続けて、次のキーで弾けます':'続けて、もう1周弾けます'}</p>)
-      :<p className="dojo-endless-result" role="status" data-testid={recall&&hintNotice==='listen'?'jazz-listen-hint':recall&&hintNotice==='focus'?'jazz-focus-hint':'jazz-hint'}><Glyphs text={recall&&hintNotice==='listen'?RECALL_LISTENED:recall&&hintNotice==='focus'?RECALL_FOCUS_OPENED:hint}/></p>}
+     :null}
+    </PracticeResult>
+    <PracticeGuide>
+     {run.lapStop&&lastLap||lastLap&&index===0&&lapNote?null:<p className="dojo-endless-result" role="status" data-testid={recall&&hintNotice==='listen'?'jazz-listen-hint':recall&&hintNotice==='focus'?'jazz-focus-hint':'jazz-hint'}><Glyphs text={recall&&hintNotice==='listen'?RECALL_LISTENED:recall&&hintNotice==='focus'?RECALL_FOCUS_OPENED:hint}/></p>}
      <small className="dojo-jazz-note" data-testid="jazz-note">{JAZZ_PROGRESSIONS_NOTE}</small>
-    </div>
-    <div className="dojo-actions dojo-endless-actions">
-     {recall?<button type="button" data-testid="jazz-reveal" disabled={revealed!==undefined} onClick={()=>showAnswer()}>答えを見る（Space）</button>:null}
-     <button type="button" onClick={()=>void playCardHinted(index)}>お手本を聴く（L）</button>
+    </PracticeGuide>
+    <PracticeActions>
+     {manual&&!run.lapStop?<button type="button" className="dojo-primary" onClick={yes} {...keyed('弾けた','Y')}/>:null}
+     <button type="button" onClick={()=>void playCardHinted(index)} {...keyed('お手本を聴く','L')}/>
      <button type="button" data-testid="jazz-listen-all" aria-pressed={listening} onClick={()=>void listenAll()}>{listening?'止める':'通して聴く'}</button>
-     {run.lapStop?<button type="button" className="dojo-primary" data-testid="jazz-lap-again" onClick={run.againLap}>{lapStopStage==='recall'?'もう一度 ② を弾く（R）':'もう一度 ① を弾く（R）'}</button>:null}
-     {run.lapStop&&lapStopStage==='see'?<button type="button" data-testid="jazz-lap-next" onClick={()=>switchStage('recall')}>② 覚えて弾くへ（Enter）</button>:null}
-     {manual&&!run.lapStop?<button type="button" className="dojo-primary" onClick={yes}>弾けた（Y）</button>:null}
-    </div>
+     {recall?<button type="button" data-testid="jazz-reveal" disabled={revealed!==undefined} onClick={()=>showAnswer()} {...keyed('答えを見る','Space')}/>:null}
+    </PracticeActions>
      {focusBelow?(foldedFocus
       ?<div className="dojo-jazz-focus" data-testid="jazz-focus">{focusButton}</div>
       :<div className="dojo-jazz-focus" data-testid="jazz-focus" data-open={focusOpen||undefined}><b>この進行で学ぶこと</b><p ref={focusText}>{prog.focus}</p>{focusClipped||focusOpen?<button type="button" className="dojo-jazz-focus-more" aria-expanded={focusOpen} onClick={()=>setFocusOpen(o=>!o)}>{focusOpen?'閉じる':'続き'}</button>:null}{recall&&!run.lapStop?<button type="button" className="dojo-jazz-focus-more" onClick={()=>setFocusOpen(false)}>畳む</button>:null}</div>)
       :null}
     </div>
-    <HeldCardBoard snapshot={snapshot} concealed={recall&&playingIndex===undefined&&listeningIndex===undefined&&revealed===undefined} left={shown.left} right={shown.right}
+    <HeldCardBoard quiet snapshot={snapshot} concealed={recall&&playingIndex===undefined&&listeningIndex===undefined&&revealed===undefined} left={shown.left} right={shown.right}
      caption={playingIndex!==undefined||listeningIndex!==undefined?`${snapshot.chordSymbol} を聴いています`:foldedFocus?undefined:focusBelow?undefined:`この進行で学ぶこと:${prog.focus}`}
      captionNode={!foldedFocus&&recall&&!run.lapStop&&focusOpen&&!focusBelow?<>この進行で学ぶこと:{prog.focus}<button type="button" className="dojo-jazz-focus-more" onClick={()=>setFocusOpen(false)}>畳む</button></>:foldedFocus&&!focusBelow?focusButton:undefined}
      keyHeight={layout.keyHeight} markScale={layout.markScale} fingerLayout="aligned" staffExtent={staffExtent}

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { CHOICE_NAMES, HOME_NAME, parentOf, placeKey } from "./dojoNav";
+import { CHOICE_NAMES, HOME_BACK_LABEL, parentOf, placeKey } from "./dojoNav";
 
 describe("Chord Dojo places (P12.4-01)", () => {
   it("the top has no parent; every list, the finish and Master go up to the top", () => {
     expect(parentOf({ screen: "home" })).toBeUndefined();
-    for (const choose of Object.keys(CHOICE_NAMES) as (keyof typeof CHOICE_NAMES)[]) expect(parentOf({ screen: "choose", choose })).toEqual({ place: { screen: "home" }, label: HOME_NAME });
+    for (const choose of Object.keys(CHOICE_NAMES) as (keyof typeof CHOICE_NAMES)[]) expect(parentOf({ screen: "choose", choose })).toEqual({ place: { screen: "home" }, label: HOME_BACK_LABEL });
     expect(parentOf({ screen: "finish" })?.place).toEqual({ screen: "home" });
     expect(parentOf({ screen: "master251" })?.place).toEqual({ screen: "home" });
     expect(parentOf({ screen: "ear" })?.place).toEqual({ screen: "home" });
-    expect(parentOf({ screen: "ear" })?.label).toBe("今日の練習");
+    expect(parentOf({ screen: "ear" })?.label).toBe("Chord Dojo");
   });
 
   it("random key goes up to the standard-progression list, named for it", () => {
@@ -17,7 +17,7 @@ describe("Chord Dojo places (P12.4-01)", () => {
 
   it("a practice goes up to the list it was opened from, or to the top when it is today's plan", () => {
     expect(parentOf({ screen: "practice", from: "shape" })).toEqual({ place: { screen: "choose", choose: "shape" }, label: "型の一覧" });
-    expect(parentOf({ screen: "practice" })).toEqual({ place: { screen: "home" }, label: HOME_NAME });
+    expect(parentOf({ screen: "practice" })).toEqual({ place: { screen: "home" }, label: HOME_BACK_LABEL });
   });
 
   it("places have distinct stable keys", () => {

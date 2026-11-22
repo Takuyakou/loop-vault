@@ -1,0 +1,873 @@
+{
+  "version": "p23-39.bank.lv1-3.v1",
+  "policyVersion": "p23-39.policy.lv1-3.v1",
+  "pairId": "p23-39.bank.lv1-3.v1+p23-39.policy.lv1-3.v1",
+  "seed": 2338,
+  "items": [
+    {
+      "id": "lv1-01",
+      "level": 1,
+      "quality": "maj",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@0"
+    },
+    {
+      "id": "lv1-02",
+      "level": 1,
+      "quality": "min",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@0"
+    },
+    {
+      "id": "lv1-03",
+      "level": 1,
+      "quality": "maj",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@7"
+    },
+    {
+      "id": "lv1-04",
+      "level": 1,
+      "quality": "min",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@7"
+    },
+    {
+      "id": "lv1-05",
+      "level": 1,
+      "quality": "maj",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@5"
+    },
+    {
+      "id": "lv1-06",
+      "level": 1,
+      "quality": "min",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@5"
+    },
+    {
+      "id": "lv1-07",
+      "level": 1,
+      "quality": "maj",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@9"
+    },
+    {
+      "id": "lv1-08",
+      "level": 1,
+      "quality": "min",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@9"
+    },
+    {
+      "id": "lv1-09",
+      "level": 1,
+      "quality": "maj",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@2"
+    },
+    {
+      "id": "lv1-10",
+      "level": 1,
+      "quality": "min",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@2"
+    },
+    {
+      "id": "lv1-11",
+      "level": 1,
+      "quality": "maj",
+      "root": 4,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@4"
+    },
+    {
+      "id": "lv1-12",
+      "level": 1,
+      "quality": "min",
+      "root": 4,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@4"
+    },
+    {
+      "id": "lv1-13",
+      "level": 1,
+      "quality": "maj",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@0"
+    },
+    {
+      "id": "lv1-14",
+      "level": 1,
+      "quality": "min",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@0"
+    },
+    {
+      "id": "lv1-15",
+      "level": 1,
+      "quality": "maj",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@7"
+    },
+    {
+      "id": "lv1-16",
+      "level": 1,
+      "quality": "min",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@7"
+    },
+    {
+      "id": "lv1-17",
+      "level": 1,
+      "quality": "maj",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@5"
+    },
+    {
+      "id": "lv1-18",
+      "level": 1,
+      "quality": "min",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@5"
+    },
+    {
+      "id": "lv1-19",
+      "level": 1,
+      "quality": "maj",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@9"
+    },
+    {
+      "id": "lv1-20",
+      "level": 1,
+      "quality": "min",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@9"
+    },
+    {
+      "id": "lv2-21",
+      "level": 2,
+      "quality": "maj7",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@0"
+    },
+    {
+      "id": "lv2-22",
+      "level": 2,
+      "quality": "maj7",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@7"
+    },
+    {
+      "id": "lv2-23",
+      "level": 2,
+      "quality": "maj7",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@5"
+    },
+    {
+      "id": "lv2-24",
+      "level": 2,
+      "quality": "maj7",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@9"
+    },
+    {
+      "id": "lv2-25",
+      "level": 2,
+      "quality": "maj7",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@2"
+    },
+    {
+      "id": "lv2-26",
+      "level": 2,
+      "quality": "min7",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@0"
+    },
+    {
+      "id": "lv2-27",
+      "level": 2,
+      "quality": "min7",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@7"
+    },
+    {
+      "id": "lv2-28",
+      "level": 2,
+      "quality": "min7",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@5"
+    },
+    {
+      "id": "lv2-29",
+      "level": 2,
+      "quality": "min7",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@9"
+    },
+    {
+      "id": "lv2-30",
+      "level": 2,
+      "quality": "min7",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@2"
+    },
+    {
+      "id": "lv2-31",
+      "level": 2,
+      "quality": "dom7",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@0"
+    },
+    {
+      "id": "lv2-32",
+      "level": 2,
+      "quality": "dom7",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@7"
+    },
+    {
+      "id": "lv2-33",
+      "level": 2,
+      "quality": "dom7",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@5"
+    },
+    {
+      "id": "lv2-34",
+      "level": 2,
+      "quality": "dom7",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@9"
+    },
+    {
+      "id": "lv2-35",
+      "level": 2,
+      "quality": "dom7",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@2"
+    },
+    {
+      "id": "lv2-36",
+      "level": 2,
+      "quality": "min7b5",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@0"
+    },
+    {
+      "id": "lv2-37",
+      "level": 2,
+      "quality": "min7b5",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@7"
+    },
+    {
+      "id": "lv2-38",
+      "level": 2,
+      "quality": "min7b5",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@5"
+    },
+    {
+      "id": "lv2-39",
+      "level": 2,
+      "quality": "min7b5",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@9"
+    },
+    {
+      "id": "lv2-40",
+      "level": 2,
+      "quality": "min7b5",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@2"
+    },
+    {
+      "id": "lv3-41",
+      "level": 3,
+      "quality": "maj",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@0"
+    },
+    {
+      "id": "lv3-42",
+      "level": 3,
+      "quality": "maj",
+      "root": 1,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@1"
+    },
+    {
+      "id": "lv3-43",
+      "level": 3,
+      "quality": "maj",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@2"
+    },
+    {
+      "id": "lv3-44",
+      "level": 3,
+      "quality": "maj",
+      "root": 3,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@3"
+    },
+    {
+      "id": "lv3-45",
+      "level": 3,
+      "quality": "maj",
+      "root": 4,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj@4"
+    },
+    {
+      "id": "lv3-46",
+      "level": 3,
+      "quality": "min",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@5"
+    },
+    {
+      "id": "lv3-47",
+      "level": 3,
+      "quality": "min",
+      "root": 6,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@6"
+    },
+    {
+      "id": "lv3-48",
+      "level": 3,
+      "quality": "min",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@7"
+    },
+    {
+      "id": "lv3-49",
+      "level": 3,
+      "quality": "min",
+      "root": 8,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@8"
+    },
+    {
+      "id": "lv3-50",
+      "level": 3,
+      "quality": "min",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min@9"
+    },
+    {
+      "id": "lv3-51",
+      "level": 3,
+      "quality": "maj7",
+      "root": 10,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@10"
+    },
+    {
+      "id": "lv3-52",
+      "level": 3,
+      "quality": "maj7",
+      "root": 11,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@11"
+    },
+    {
+      "id": "lv3-53",
+      "level": 3,
+      "quality": "maj7",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@0"
+    },
+    {
+      "id": "lv3-54",
+      "level": 3,
+      "quality": "maj7",
+      "root": 1,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@1"
+    },
+    {
+      "id": "lv3-55",
+      "level": 3,
+      "quality": "maj7",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "maj7@2"
+    },
+    {
+      "id": "lv3-56",
+      "level": 3,
+      "quality": "min7",
+      "root": 3,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@3"
+    },
+    {
+      "id": "lv3-57",
+      "level": 3,
+      "quality": "min7",
+      "root": 4,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@4"
+    },
+    {
+      "id": "lv3-58",
+      "level": 3,
+      "quality": "min7",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@5"
+    },
+    {
+      "id": "lv3-59",
+      "level": 3,
+      "quality": "min7",
+      "root": 6,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@6"
+    },
+    {
+      "id": "lv3-60",
+      "level": 3,
+      "quality": "min7",
+      "root": 7,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7@7"
+    },
+    {
+      "id": "lv3-61",
+      "level": 3,
+      "quality": "dom7",
+      "root": 8,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@8"
+    },
+    {
+      "id": "lv3-62",
+      "level": 3,
+      "quality": "dom7",
+      "root": 9,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@9"
+    },
+    {
+      "id": "lv3-63",
+      "level": 3,
+      "quality": "dom7",
+      "root": 10,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@10"
+    },
+    {
+      "id": "lv3-64",
+      "level": 3,
+      "quality": "dom7",
+      "root": 11,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@11"
+    },
+    {
+      "id": "lv3-65",
+      "level": 3,
+      "quality": "dom7",
+      "root": 0,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "dom7@0"
+    },
+    {
+      "id": "lv3-66",
+      "level": 3,
+      "quality": "min7b5",
+      "root": 1,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@1"
+    },
+    {
+      "id": "lv3-67",
+      "level": 3,
+      "quality": "min7b5",
+      "root": 2,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@2"
+    },
+    {
+      "id": "lv3-68",
+      "level": 3,
+      "quality": "min7b5",
+      "root": 3,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@3"
+    },
+    {
+      "id": "lv3-69",
+      "level": 3,
+      "quality": "min7b5",
+      "root": 4,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@4"
+    },
+    {
+      "id": "lv3-70",
+      "level": 3,
+      "quality": "min7b5",
+      "root": 5,
+      "prompt": "name",
+      "judge": "core",
+      "source": "synthetic-public",
+      "family": "min7b5@5"
+    }
+  ],
+  "order": [
+    "lv2-38",
+    "lv2-36",
+    "lv2-28",
+    "lv3-42",
+    "lv2-35",
+    "lv3-44",
+    "lv3-45",
+    "lv3-62",
+    "lv3-46",
+    "lv3-48",
+    "lv1-07",
+    "lv2-40",
+    "lv2-34",
+    "lv3-63",
+    "lv1-01",
+    "lv2-31",
+    "lv2-27",
+    "lv1-04",
+    "lv2-26",
+    "lv1-14",
+    "lv1-16",
+    "lv3-47",
+    "lv3-66",
+    "lv2-37",
+    "lv2-21",
+    "lv3-67",
+    "lv3-59",
+    "lv1-02",
+    "lv3-58",
+    "lv3-50",
+    "lv3-65",
+    "lv2-23",
+    "lv2-30",
+    "lv3-52",
+    "lv2-22",
+    "lv3-70",
+    "lv3-55",
+    "lv1-19",
+    "lv2-25",
+    "lv1-13",
+    "lv2-39",
+    "lv1-05",
+    "lv2-33",
+    "lv1-08",
+    "lv1-11",
+    "lv3-69",
+    "lv3-64",
+    "lv1-03",
+    "lv2-32",
+    "lv3-49",
+    "lv1-06",
+    "lv1-17",
+    "lv3-51",
+    "lv3-41",
+    "lv3-53",
+    "lv1-12",
+    "lv1-15",
+    "lv3-60",
+    "lv1-18",
+    "lv3-61",
+    "lv3-56",
+    "lv1-09",
+    "lv2-29",
+    "lv1-10",
+    "lv2-24",
+    "lv3-43",
+    "lv3-54",
+    "lv1-20",
+    "lv3-68",
+    "lv3-57"
+  ],
+  "counts": {
+    "total": 70,
+    "byLevel": [
+      {
+        "level": 1,
+        "count": 20
+      },
+      {
+        "level": 2,
+        "count": 20
+      },
+      {
+        "level": 3,
+        "count": 30
+      }
+    ],
+    "byQuality": [
+      {
+        "quality": "maj",
+        "count": 15
+      },
+      {
+        "quality": "min",
+        "count": 15
+      },
+      {
+        "quality": "maj7",
+        "count": 10
+      },
+      {
+        "quality": "min7",
+        "count": 10
+      },
+      {
+        "quality": "dom7",
+        "count": 10
+      },
+      {
+        "quality": "min7b5",
+        "count": 10
+      }
+    ],
+    "byRoot": [
+      {
+        "root": 0,
+        "count": 11
+      },
+      {
+        "root": 1,
+        "count": 3
+      },
+      {
+        "root": 2,
+        "count": 9
+      },
+      {
+        "root": 3,
+        "count": 3
+      },
+      {
+        "root": 4,
+        "count": 5
+      },
+      {
+        "root": 5,
+        "count": 11
+      },
+      {
+        "root": 6,
+        "count": 2
+      },
+      {
+        "root": 7,
+        "count": 10
+      },
+      {
+        "root": 8,
+        "count": 2
+      },
+      {
+        "root": 9,
+        "count": 10
+      },
+      {
+        "root": 10,
+        "count": 2
+      },
+      {
+        "root": 11,
+        "count": 2
+      }
+    ]
+  }
+}

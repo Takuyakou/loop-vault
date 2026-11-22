@@ -5,8 +5,8 @@
  * It is kept in localStorage and not in a record: the Dojo document and the lap records are `.strict()` schemas whose
  * shape must not change (an older app could no longer read them). Without a storage, or with a broken one, the first
  * value comes back. */
-export type RepeatScreen='a'|'c'|'d';
-const FIRST_VALUE:{[k in RepeatScreen]:boolean}={a:false,c:true,d:true};
+export type RepeatScreen='a'|'c'|'d'|'e';
+const FIRST_VALUE:{[k in RepeatScreen]:boolean}={a:false,c:true,d:true,e:false};
 const storageKey=(k:RepeatScreen)=>`loop-vault:practice-repeat:${k}`;
 export function readRepeatSetting(screen:RepeatScreen):boolean{
  try{

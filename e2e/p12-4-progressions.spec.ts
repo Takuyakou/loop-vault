@@ -23,20 +23,20 @@ test('the list has the four added groups, each progression with its use under th
  await expect(page.locator('.dojo-builtin-card')).toHaveCount(45);
  for(const name of ['ジャズ基礎 3','ジャズの仕掛け 6','ジャズ・フォーム 3','ネオソウル・ボサ・モーダル 6'])await expect(page.getByRole('button',{name,exact:true})).toBeVisible();
  const card=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'ペダルの上で動かす',exact:true})});
- await expect(card.locator('.dojo-builtin-degrees')).toHaveText('Imaj7/V – ♭VIImaj7/V – ♭VImaj7/V – V7sus4');
+ await expect(card.locator('.dojo-builtin-degrees')).toHaveText('Ⅰmaj7/Ⅴ – ♭Ⅶmaj7/Ⅴ – ♭Ⅵmaj7/Ⅴ – Ⅴ7sus4');
  await expect(card.locator('.dojo-builtin-usage')).toHaveText('ベースを固定して上だけ動かす。ネオソウルの浮遊感');
  await expect(card.locator('.dojo-builtin-chords')).toHaveText('C：Cmaj7/G → B♭maj7/G → A♭maj7/G → G7sus4');
  // an older progression has no use line, and is unchanged
  const older=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'ii–V–I',exact:true})});
  await expect(older.locator('.dojo-builtin-usage')).toHaveCount(0);
- await expect(older.locator('.dojo-builtin-degrees')).toHaveText('ii7 – V7 – Imaj7');
+ await expect(older.locator('.dojo-builtin-degrees')).toHaveText('Ⅱm7 – Ⅴ7 – Ⅰmaj7');
 });
 
 test('a 7alt is written 7(♭9) and says so in its use line',async({page})=>{
  await openDojo(page);
  await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  const card=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'マイナー 2-5-1',exact:true})});
- await expect(card.locator('.dojo-builtin-degrees')).toHaveText('iiø7 – V7(♭9) – i(maj7) – i(maj7)');
+ await expect(card.locator('.dojo-builtin-degrees')).toHaveText('Ⅱø7 – Ⅴ7(♭9) – Ⅰm(maj7) – Ⅰm(maj7)');
  await expect(card.locator('.dojo-builtin-usage')).toContainText('7alt は 7(b9) で代用');
  await expect(card.locator('.dojo-builtin-chords')).toHaveText('Cm：Dm7♭5 → G7(♭9) → Cm(maj7) → Cm(maj7)');
 });

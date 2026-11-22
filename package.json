@@ -2,7 +2,7 @@
   "name": "loop-vault",
   "private": true,
   "license": "UNLICENSED",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,8 @@
     "test:feature": "node scripts/test-dx/run.mjs feature",
     "test:ui": "node scripts/test-dx/run.mjs ui",
     "test:full": "node scripts/test-dx/run.mjs full",
+    "test:full:all": "node scripts/test-dx/run.mjs full-all",
+    "test:e2e:extended": "node scripts/test-dx/run.mjs extended",
     "p89:screens": "node scripts/p89/screens.mjs",
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-playwright-visual-tests.mjs",
@@ -132,7 +134,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tone": "^15.1.22",
-    "zod": "^3.25.0",
+    "zod": "^4.6.7",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -148,11 +150,11 @@
     "eslint": "^10.6.0",
     "ffmpeg-static": "5.2.0",
     "jsdom": "^26.0.0",
-    "postcss": "^8.4.0",
+    "postcss": "^8.5.33",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.63.0",
-    "vite": "^7.0.0",
-    "vitest": "^3.2.0"
+    "vite": "^7.3.8",
+    "vitest": "^4.1.12"
   }
 }

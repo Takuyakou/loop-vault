@@ -2,15 +2,18 @@
 @import "./styles/tokens.css";
 @import "./styles/components.css";
 @import "./styles/shell.css";
+@import "./styles/command-palette.css";
 @import "./styles/transport-button.css";
 @import "./styles/text-intake.css";
 @import "./styles/home.css";
 @import "./styles/vault.css";
 @import "./styles/settings.css";
 @import "./styles/live-midi.css";
+@import "./styles/live-midi-import.css";
 @import "./styles/voicing-loop.css";
 @import "./styles/correction-workspace.css";
 @import "./styles/pre-analysis.css";
+@import "./styles/capture-entry.css";
 
 @tailwind base;
 @tailwind components;
@@ -29,7 +32,8 @@ body,
 #root {
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  /* P23-31b O2: clip (not hidden) so the page can never be scrolled, not even by focus/scrollIntoView. */
+  overflow: clip;
 }
 
 body {
@@ -128,7 +132,7 @@ button {
   summary,
   [tabindex]:not([tabindex="-1"])
 ):focus-visible {
-  outline: 2px solid var(--lv-accent);
+  outline: 2px solid var(--lv-focus);
   outline-offset: 2px;
 }
 
@@ -237,3 +241,6 @@ button {
 [data-sidebar-collapsed="false"] [data-practice-workspace-tabs] {
   display: none;
 }
+
+/* P23-31b O1: the work area is a tabIndex=-1 container, not a keyboard stop, so it never draws a frame. */
+#main-content { outline: none; }

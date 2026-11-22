@@ -31,8 +31,10 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     const movement = panel.getByTestId("voicing-loop-next-move");
     await expect(movement).toBeVisible();
     const movementBox = (await movement.boundingBox())!;
-    expect(movementBox.height).toBeGreaterThanOrEqual(68);
-    expect(movementBox.height).toBeLessThanOrEqual(69);
+    // P23-32 P5: one finger slot is 50px (42 in a low window), so the box is 68 / 60.
+    const lowWindow = height! <= 760;
+    expect(movementBox.height).toBeGreaterThanOrEqual(lowWindow ? 60 : 68);
+    expect(movementBox.height).toBeLessThanOrEqual(lowWindow ? 63 : 69);
     const slots = movement.getByTestId("voicing-loop-finger-slot");
     await expect(slots).toHaveCount(10);
     const boxes = await slots.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));
@@ -41,10 +43,17 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     expect(movementBox.y + movementBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height - 12);
     for (const hand of ["left", "right"]) {
       const card = panel.getByTestId(`voicing-loop-${hand}-hand`);
-      for (const fact of ["指", "音名", "構成音", "おすすめ"]) await expect(card).toContainText(fact);
+      // P23-20 L1: five slot cards (finger name, note, chord tone) and the 「おすすめ」 badge.
+      await expect(card.locator('[data-testid="voicing-loop-hand-slot"]')).toHaveCount(5);
+      await expect(card).toContainText("おすすめ");
+      await expect(card.locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
+      await expect(card.locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
     }
     const info = panel.getByTestId("voicing-loop-current-explanation");
-    for (const fact of ["Teacher Style", "Literal", "候補", "ルール", "省略", "トップ"]) await expect(info).toContainText(fact);
+    for (const fact of ["Teacher Style", "Literal", "候補", "省略", "トップ"]) await expect(info).toContainText(fact);
+    // P23-32 P4: the rule's name is in the i's accessible name, not in the visible row.
+    await expect(info).not.toContainText("ルール");
+    await expect(info.locator(".lv-vl-rule-info")).toHaveAttribute("aria-label", /ルール P5\./);
     if (width! >= 1440) {
       const left = (await panel.getByTestId("voicing-loop-left-hand").boundingBox())!;
       const right = (await panel.getByTestId("voicing-loop-right-hand").boundingBox())!;

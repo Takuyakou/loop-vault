@@ -3,10 +3,13 @@ import type { TextTransport, TextTransportState } from "../../audio/textTranspor
 import type { TextProgressionEvent, TextProgressionParseResult } from "../../domain/textProgression";
 import type { TextSourceRange } from "../../domain/extendedTextProgression";
 import { buildStandardTextPreviewScore } from "../../domain/standardTextPreviewScore";
-import { TextPreviewBar } from "./TextPreviewBar";
+import { TextPreviewBar, type PreviewHarmony } from "./TextPreviewBar";
 import { useTextScorePlayhead } from "./useTextScorePlayhead";
 import { TextCapturePreviewStatus } from "./TextCapturePreviewStatus";
 import type { TextCaptureStatusModel } from "./textCaptureStatus";
+
+/** P23-17 V4/C10: the example in the empty input; it must read with no errors. */
+export const STANDARD_TEXT_PLACEHOLDER = "例: | Fmaj7 | Em7 A7 | Dm7 G7 | Cmaj7 |\n(ここに貼り付けるか、続けて書けます)";
 
 interface Props {
   readonly input: string;
@@ -20,11 +23,13 @@ interface Props {
   readonly onSeekBar: (bar: number) => void;
   readonly transport: TextTransport;
   readonly transportState: TextTransportState;
+  /** P23-17 V8/V9: the degree, role and voicing mark of a band. */
+  readonly harmonyFor?: (sourceStart: number) => PreviewHarmony | undefined;
 }
 
 /** Standard syntax retains its parser but shares the score workspace primitives. */
 export function StandardTextScoreWorkspace({ input, result, disabled, onInput, onSelectEvent,
-  onSeekBar, transport, transportState, editorSelection, onEditorSelection, statusModel }: Props) {
+  onSeekBar, transport, transportState, editorSelection, onEditorSelection, statusModel, harmonyFor }: Props) {
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const [selectedStart, setSelectedStart] = useState<number>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -72,8 +77,9 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
       <section className={"lv-text-intake-pane min-w-0 border-r border-[var(--lv-border)] p-3" +
         (visiblePane === "input" ? " lv-text-intake-pane-active" : "")}
         aria-label={"元テキストの入力"}>
-        <label className="lv-text-pane-head mb-3 flex items-center text-sm font-semibold" htmlFor="text-progression-input">
+        <label className="lv-text-pane-head mb-3 flex items-center gap-2 text-sm font-semibold" htmlFor="text-progression-input">
           {"進行テキスト"}
+          <span className="text-xs font-normal text-[var(--lv-text-muted)]">{"小節は | で区切る。1 小節に 1・2・4 個まで"}</span>
         </label>
         <div className="lv-text-intake-editor relative flex overflow-hidden bg-[var(--lv-surface)]">
           <div aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
@@ -81,6 +87,7 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
           </div>
           <textarea id="text-progression-input" data-testid="text-progression-input" ref={textareaRef}
             value={input} disabled={disabled} spellCheck={false}
+            placeholder={STANDARD_TEXT_PLACEHOLDER}
             aria-invalid={Boolean(input.trim()) && result.diagnostics.length > 0}
             aria-describedby={result.diagnostics.length ? "text-progression-format text-progression-diagnostics" : "text-progression-format"}
             {...(result.diagnostics.length ? { "aria-errormessage": "text-progression-diagnostics" } : {})}
@@ -104,6 +111,8 @@ export function StandardTextScoreWorkspace({ input, result, disabled, onInput, o
           <div key={row} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
             {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar}
               selectedStart={selectedStart}
+              disabled={disabled}
+              {...(harmonyFor ? { harmonyFor } : {})}
               onSelect={span => selectSource(span, true)}
               onBarSelect={span => { selectSource(span, false); if (transportState.status === "stopped"
                 || transportState.snapshot?.sourceText === input) onSeekBar(bar.number); }}

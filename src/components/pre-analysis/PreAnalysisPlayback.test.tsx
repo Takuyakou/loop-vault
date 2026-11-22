@@ -12,7 +12,7 @@ import {
 } from "../../domain/midi/preAnalysis";
 import { PIANO_ROLL_GUTTER, PLAYHEAD_COLOR, drawPlaybackOverlay, pianoRollLayout } from "./PreAnalysisPianoRoll";
 import { PreAnalysisWorkspace } from "./PreAnalysisWorkspace";
-import { audibleNotes, buildSoundingIndex, soundingAt, soundingText } from "./playbackView";
+import { audibleNotes, buildSoundingIndex, soundingAt, soundingLineIndex, soundingText } from "./playbackView";
 
 vi.mock("../../audio/chordPreview", async (importOriginal) => ({
   ...await importOriginal<typeof import("../../audio/chordPreview")>(),
@@ -262,29 +262,34 @@ describe("再生中の縦線 (P15-04)", () => {
 // ---- tests 5, 6: the lights ---------------------------------------------------------------------
 
 describe("鳴っている音 (P15-04)", () => {
-  it("6. lists the pitches that sound, lowest first, while playing, and clears on stop", async () => {
+  it("6. lists the pitches that sound, lowest first, while playing, and keeps them at the stop place", async () => {
     const { container, unmount } = await mount(song());
     const names = container.querySelector("[data-testid='pre-analysis-sounding']")!;
-    expect(names.textContent).toBe("");
+    // P23-31 P6: stopped at the start, the line already names what sounds there.
+    expect(names.textContent).toBe("鳴っている音 C2 ・ C3 ・ E3 ・ G3");
     await press(toggle());
     await advance(1, 0);
     // beat 0: bass C2, keys C3 E3 G3 (the lead is silent until beat 1)
-    expect(names.textContent).toBe("鳴っている音 C2 C3 E3 G3");
+    expect(names.textContent).toBe("鳴っている音 C2 ・ C3 ・ E3 ・ G3");
     await advance(1, 750); // 1.5 beats: the lead D5 sounds too
-    expect(names.textContent).toBe("鳴っている音 C2 C3 E3 G3 D5");
+    expect(names.textContent).toBe("鳴っている音 C2 ・ C3 ・ E3 ・ G3 ・ D5");
     await press(toggle());
-    expect(names.textContent).toBe("");
+    // P23-31 P6: the line keeps the notes of the place it stopped at.
+    expect(names.textContent).toBe("鳴っている音 C2 ・ C3 ・ E3 ・ G3 ・ D5");
     await unmount();
   });
 
-  it("6b. while playing the names take the place of the colour legend; stopped, the legend is back", async () => {
+  it("6b. the count chips stay in the play row; the sound line is its own row under it", async () => {
     const { container, unmount } = await mount(song());
     const transport = container.querySelector(".lv-pa-transport")!;
-    expect(transport.hasAttribute("data-sounding")).toBe(false);
-    expect(container.querySelector(".lv-pa-legend")).not.toBeNull();
+    expect(container.querySelector(".lv-pa-soundline")).not.toBeNull();
+    // P23-30 A5: the colour legend and the counts are one row of chips in the play row.
+    expect(container.querySelector(".lv-pa-transport [data-testid='pre-analysis-summary']")).not.toBeNull();
     await press(toggle());
     await advance(1, 0);
-    expect(transport.hasAttribute("data-sounding")).toBe(true); // the stylesheet hides the legend on this
+    expect(transport.hasAttribute("data-sounding")).toBe(true);
+    // P23-31 P6: the chips no longer give their place to the names (the names have their own row).
+    expect(container.querySelector(".lv-pa-transport [data-testid='pre-analysis-summary']")).not.toBeNull();
     await press(toggle());
     expect(transport.hasAttribute("data-sounding")).toBe(false);
     await unmount();
@@ -302,7 +307,7 @@ describe("鳴っている音 (P15-04)", () => {
     await press(toggle());
     await advance(1, 0);
     // (the part that has no sound at all cannot be played; this part has one note, far away)
-    expect(container.querySelector("[data-testid='pre-analysis-sounding']")!.textContent).toBe("鳴っている音 なし");
+    expect(container.querySelector("[data-testid='pre-analysis-sounding']")!.textContent).toBe("鳴っている音 —");
     await unmount();
   });
 
@@ -324,25 +329,42 @@ describe("鳴っている音 (P15-04)", () => {
     const lead = base0.voices.find((voice) => voice.channel === 2)!;
     const muted: AnalysisSession = updateAnalysisSessionVoice(base0, lead.id, { muted: true });
     const index = buildSoundingIndex(muted);
-    expect(soundingText(soundingAt(index, 1.5))).toBe("鳴っている音 C2 C3 E3 G3");
+    expect(soundingText(soundingAt(index, 1.5))).toBe("C2 ・ C3 ・ E3 ・ G3");
 
     const soloOnBass: AnalysisSession = {
       ...base0,
       voices: base0.voices.map((voice) => ({ ...voice, solo: voice.channel === 1 })),
     };
-    expect(soundingText(soundingAt(buildSoundingIndex(soloOnBass), 1.5))).toBe("鳴っている音 C2");
+    expect(soundingText(soundingAt(buildSoundingIndex(soloOnBass), 1.5))).toBe("C2");
 
     const unused: AnalysisSession = updateAnalysisSessionVoice(base0, lead.id, { assignedRole: "exclude", included: false });
-    expect(soundingText(soundingAt(buildSoundingIndex(unused), 1.5))).toBe("鳴っている音 C2 C3 E3 G3");
+    expect(soundingText(soundingAt(buildSoundingIndex(unused), 1.5))).toBe("C2 ・ C3 ・ E3 ・ G3");
 
     // the same on the screen
     const { container, unmount } = await mount(muted);
     await press(toggle());
     await advance(1, 750);
     expect(container.querySelector("[data-testid='pre-analysis-sounding']")!.textContent)
-      .toBe("鳴っている音 C2 C3 E3 G3");
+      .toBe("鳴っている音 C2 ・ C3 ・ E3 ・ G3");
     expect(overlay().dataset.soundingCount).toBe("4");
     await unmount();
+  });
+
+  it("5d. P23-31 P6: the line leaves out a hidden part, and names at most six notes, lowest first", () => {
+    const base0 = song();
+    // Playback keeps a hidden part's sound (only the roll and the line leave it out).
+    const keys = base0.voices.find((voice) => voice.channel === 0)!;
+    const hidden = updateAnalysisSessionVoice(base0, keys.id, { visible: false });
+    expect(soundingText(soundingAt(buildSoundingIndex(hidden), 0))).toBe("C2 ・ C3 ・ E3 ・ G3");
+    expect(soundingText(soundingAt(soundingLineIndex(hidden), 0))).toBe("C2");
+
+    // Six names at most, the lowest six.
+    const voice = base0.voices[0]!;
+    const many: AnalysisSession = { ...base0, notes: [60, 62, 64, 65, 67, 69, 71, 72].map((pitch) => ({
+      sourceId: voice.sourceId, voiceId: voice.id, trackIndex: voice.trackIndex, channel: voice.channel,
+      pitch, velocity: 80, startBeat: 0, durationBeats: 4,
+    })) };
+    expect(soundingText(soundingAt(soundingLineIndex(many), 0))).toBe("C4 ・ D4 ・ E4 ・ F4 ・ G4 ・ A4");
   });
 
   it("5c. a note sounds from its start up to, not including, its end", () => {

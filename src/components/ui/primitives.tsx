@@ -18,8 +18,10 @@ import {
  * everything else), `ghost` (no fill), `state` (purple only while
  * `aria-pressed` is true). `secondary` is the legacy name of `neutral`.
  * `danger` is for the confirm dialog's destructive action only.
+ * P23-30 D4: `danger-solid` is the same action as a filled red button, for the windows that have
+ * only 「取り消す」 and 「消える方」.
  */
-type ButtonVariant = "primary" | "neutral" | "secondary" | "ghost" | "state" | "danger";
+type ButtonVariant = "primary" | "neutral" | "secondary" | "ghost" | "state" | "danger" | "danger-solid";
 type ButtonSize = "sm" | "md";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -271,7 +273,7 @@ export function StatusMessage({
   const Icon = statusIcons[tone];
   return (
     <div
-      className={`lv-status-${tone} flex min-w-0 gap-3 border p-4 ${className}`}
+      className={`lv-status lv-status-${tone} flex min-w-0 gap-3 border p-4 ${className}`}
       role={tone === "error" ? "alert" : "status"}
       aria-live={tone === "error" ? "assertive" : "polite"}
       aria-atomic="true"

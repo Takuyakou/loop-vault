@@ -20,6 +20,7 @@ import {
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
 import { GlobalPreviewSoundSelector } from "./GlobalPreviewSoundSelector";
 import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
+import { GlobalBpmField } from "./GlobalBpmField";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { TitleBar } from "./shell/TitleBar";
 import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
@@ -54,6 +55,8 @@ interface AppShellProps {
   settingsOpen?: boolean;
   /** 「標準のタイトルバーを使う」: the OS draws the title bar, so the shell does not. */
   standardTitleBar?: boolean;
+  /** P23-02 §3: the number of progressions, shown beside Vault. */
+  vaultCount?: number;
   copy: AppCopy;
   saveStatus: SaveStatus;
   masterVolume: number;
@@ -96,6 +99,7 @@ export function AppShell({
   voicingLoopActive = false,
   bassPracticeActive = false,
   bassPracticeAvailable = true,
+  vaultCount,
 }: AppShellProps) {
   const playback = usePlaybackState(controller);
   const [manualCollapsed, setManualCollapsed] = useState(() => loadSidebarCollapsed());
@@ -145,16 +149,19 @@ export function AppShell({
         >
           <nav className="lv-sidebar-nav" aria-label="メインメニュー">
             <NavItem nav="home" label="ホーム" icon={HomeIcon} collapsed={collapsed} active={!settingsOpen && view === "home"} onClick={() => setView("home")} />
+            <p className="lv-sidebar-heading" role={collapsed ? "separator" : undefined} aria-label={collapsed ? "集める" : undefined}>
+              <span aria-hidden={collapsed || undefined}>集める</span>
+            </p>
             <NavItem nav="capture" label="取り込む" icon={ImportIcon} collapsed={collapsed} active={!settingsOpen && view === "capture"} onClick={() => setView("capture")} />
-            <NavItem nav="vault" label="Vault" icon={VaultIcon} collapsed={collapsed} active={!settingsOpen && (view === "library" || view === "detail" || view === "progression-detail")} onClick={() => setView("library")} />
+            <NavItem nav="vault" label="Vault" icon={VaultIcon} collapsed={collapsed} active={!settingsOpen && (view === "library" || view === "detail" || view === "progression-detail")} onClick={() => setView("library")} count={vaultCount} />
             {/* One block for both states so nothing below moves: the heading fades into a rule. */}
             <p className="lv-sidebar-heading" role={collapsed ? "separator" : undefined} aria-label={collapsed ? "練習" : undefined}>
               <span aria-hidden={collapsed || undefined}>練習</span>
             </p>
-            <NavItem nav="voicing-loop" label="Voicing Loop" icon={VoicingLoopIcon} collapsed={collapsed} active={!settingsOpen && voicingLoopActive} onClick={openVoicingLoop} />
-            <NavItem nav="chord-dojo" label="Chord Dojo" icon={ChordDojoIcon} collapsed={collapsed} active={!settingsOpen && chordDojoActive} onClick={openChordDojo ?? (() => setView("practice"))} />
+            <NavItem nav="voicing-loop" label="Voicing Loop" icon={VoicingLoopIcon} collapsed={collapsed} active={!settingsOpen && voicingLoopActive} onClick={openVoicingLoop} mark="VL" />
+            <NavItem nav="chord-dojo" label="Chord Dojo" icon={ChordDojoIcon} collapsed={collapsed} active={!settingsOpen && chordDojoActive} onClick={openChordDojo ?? (() => setView("practice"))} mark="CD" />
             {bassPracticeAvailable ? (
-              <NavItem nav="bass-practice" label="Bass Practice" icon={BassPracticeIcon} collapsed={collapsed} active={!settingsOpen && bassPracticeActive} onClick={openBassPractice ?? (() => setView("practice"))} />
+              <NavItem nav="bass-practice" label="Bass Practice" icon={BassPracticeIcon} collapsed={collapsed} active={!settingsOpen && bassPracticeActive} onClick={openBassPractice ?? (() => setView("practice"))} mark="BP" />
             ) : null}
             <div className="lv-sidebar-rule" role="separator" />
             <NavItem nav="live-midi" label="Live MIDI" icon={LiveMidiIcon} collapsed={collapsed} active={false} onClick={openLiveMidi} />
@@ -181,11 +188,12 @@ export function AppShell({
               <p className="lv-app-header-title">{pageTitle}</p>
               {pageSubtitle ? <span className="lv-app-header-subtitle">{pageSubtitle}</span> : null}
               {view === "capture" ? <div id="capture-mode-tabs-host" data-testid="capture-mode-tabs-frame" className="shrink-0" /> : null}
-              {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
+              {pageNavigation && collapsed ? <div className="lv-header-practice-tabs hidden min-w-0 lg:block">{pageNavigation}</div> : null}
             </div>
             <div className="lv-app-header-actions" data-global-actions>
               <MidiConnectionButton openLiveMidi={openLiveMidi} openSettings={openMidiSettings} />
               <GlobalPreviewSoundSelector copy={copy} />
+              <GlobalBpmField />
               <GlobalMetronomeButton />
               <div className="lv-volume-group" role="group" aria-label={copy.nav.masterVolume}>
                 <MasterVolumeKnob value={masterVolume} onChange={onMasterVolumeChange} label={copy.nav.masterVolume} />
@@ -214,6 +222,8 @@ function NavItem({
   label,
   nav,
   onClick,
+  mark,
+  count,
 }: {
   active: boolean;
   collapsed: boolean;
@@ -221,6 +231,8 @@ function NavItem({
   label: string;
   nav: string;
   onClick: () => void;
+  mark?: "VL" | "CD" | "BP";
+  count?: number;
 }) {
   // The tooltip is position: fixed (the nav scrolls, so an absolute one would widen it); place it on hover/focus.
   const placeTooltip = (event: { currentTarget: HTMLButtonElement }) => {
@@ -232,15 +244,22 @@ function NavItem({
       type="button"
       className={`lv-nav-item${collapsed ? " lv-tooltip-host" : ""}`}
       aria-current={active ? "page" : undefined}
+      // P23-09 X1: while narrow the label is the row's accessible name (the visible name is hidden then).
       aria-label={collapsed ? label : undefined}
       data-nav={nav}
       onClick={onClick}
       onPointerEnter={collapsed ? placeTooltip : undefined}
       onFocus={collapsed ? placeTooltip : undefined}
     >
-      <Icon size={19} />
+      {mark ? (
+        <svg className="lv-nav-mark" data-mark={mark} width={24} height={24} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect width="24" height="24" rx="7" />
+          <text x="12" y="15.6" textAnchor="middle">{mark}</text>
+        </svg>
+      ) : <Icon size={19} />}
       {/* Always rendered so it can fade with the width; icons never move sideways. */}
       <span className="lv-nav-label" aria-hidden={collapsed || undefined}>{label}</span>
+      {count !== undefined && count > 0 ? <span className="lv-nav-count" aria-hidden="true" data-testid={`nav-${nav}-count`}>{count}</span> : null}
       {collapsed ? <span aria-hidden="true" className="lv-tooltip lv-tooltip-right">{label}</span> : null}
     </button>
   );

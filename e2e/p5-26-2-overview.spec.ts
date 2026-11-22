@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
 import { dropMidi, openApp, openCapture } from "./helpers/app";
+import { settleScroll } from "./helpers/settle";
 
 /**
  * P5.26.2-01 (rev1): the saved progression's 「曲全体」 is the same strip as the import screen's
@@ -57,12 +58,15 @@ test.describe("P5.26.2-01 the saved progression's whole-song strip", () => {
 
     // Roll → window.
     await roll.evaluate((element) => { element.scrollLeft = 0; });
+    await settleScroll(page, roll);
     const start = await windowFractions(page);
     await roll.evaluate((element) => { element.scrollLeft = element.scrollWidth; });
+    await settleScroll(page, roll);
     await expect.poll(async () => (await windowFractions(page)).left).toBeGreaterThan(start.left + 0.1);
 
     // Strip click → roll: the window centres on the click.
     await roll.evaluate((element) => { element.scrollLeft = 0; });
+    await settleScroll(page, roll);
     const box = (await overview(page).boundingBox())!;
     const before = await scrollLeft(page);
     await page.mouse.click(box.x + box.width * 0.6, box.y + box.height / 2);
@@ -78,7 +82,9 @@ test.describe("P5.26.2-01 the saved progression's whole-song strip", () => {
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2, { steps: 6 });
     await page.mouse.up();
-    expect(await scrollLeft(page)).toBeGreaterThan(from);
+    // P23-32-fix-1: the drag scrolls with `behavior: smooth`, so the offset moves over the next frames.
+    // Poll the same value in the same direction instead of reading it once on the release frame.
+    await expect.poll(() => scrollLeft(page)).toBeGreaterThan(from);
   });
 
   test("playing draws the strip's playhead without redrawing the cards, and a manual scroll stops following", async ({ page }) => {

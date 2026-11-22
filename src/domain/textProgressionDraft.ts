@@ -39,6 +39,8 @@ export interface TextProgressionDraftSavePayload {
   readonly userVerified: boolean;
   readonly bpm?: number;
   readonly confirmedKey?: string;
+  /** P23-33: the effective key for display and save (manual, inherited or inferred in this session). */
+  readonly resolvedKey?: string;
   readonly scoreLengthBeats?: number;
 }
 
@@ -51,6 +53,8 @@ export interface CreateTextProgressionDraftSavePayloadInput {
   readonly bpm?: number;
   /** Omit unless the person explicitly confirmed this key. */
   readonly confirmedKey?: string;
+  /** P23-33: the effective key (manual, inherited or automatically inferred) the save uses. */
+  readonly resolvedKey?: string;
 }
 
 /**
@@ -174,6 +178,7 @@ export function textProgressionDraftSavePayload(
     userVerified: input.userVerified,
     ...(isExplicitBpm(input.bpm) ? { bpm: input.bpm } : {}),
     ...(input.confirmedKey?.trim() ? { confirmedKey: input.confirmedKey.trim() } : {}),
+    ...(input.resolvedKey?.trim() ? { resolvedKey: input.resolvedKey.trim() } : {}),
   };
 }
 

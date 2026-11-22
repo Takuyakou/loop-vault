@@ -24,7 +24,8 @@ test("offers honest retry and selected validated-backup recovery controls", asyn
   expect(container.textContent).toContain("置き換える前にすべて検証します");
   expect(container.textContent).not.toMatch(/accuracy|automatic score/i);
   const buttons = [...container.querySelectorAll("button")];
-  await act(async () => buttons.find(({ textContent }) => textContent?.includes("バックアップ r7 を復元"))?.click());
+  // P23-30 P4/P7: every backup row is 「これに戻す」; the date we cannot read stays 「バックアップ r{n}」.
+  await act(async () => buttons.find((button) => button.getAttribute("aria-label") === "バックアップ r7 に戻す")?.click());
   expect(restore).toHaveBeenCalledWith("practice-20260802-123456-000000.json");
   await act(async () => buttons.find(({ textContent }) => textContent?.includes("もう一度読み込む"))?.click());
   expect(retry).toHaveBeenCalledOnce();

@@ -77,8 +77,9 @@ test("P11 acceptance: timeline right-click snapping, old range, Escape, one-card
   const workspace = await openLoop(page);
   const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
   const cards = workspace.getByTestId("voicing-loop-event");
-  const clear = workspace.getByRole("button", { name: "区間解除", exact: true });
-  await expect(clear).toBeDisabled();
+  // P23-32 L1/K4: the bar's 区間解除 is gone; the × beside 「ここから n」 exists only while a start is pending.
+  const clear = workspace.getByTestId("voicing-loop-range-clear");
+  await expect(clear).toHaveCount(0);
   async function mark(index: number, surface: "overview" | "ruler", shift = false) {
     await viewport.evaluate((element, ordinal) => {
       const card = element.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-event']")[ordinal]!;
@@ -92,7 +93,7 @@ test("P11 acceptance: timeline right-click snapping, old range, Escape, one-card
   }
   await mark(3, "ruler");
   await expect(cards.nth(3)).toHaveAttribute("data-range", "pending-a");
-  await expect(clear).toBeEnabled();
+  await expect(clear).toBeVisible();
   await mark(1, "overview");
   await expect(workspace.getByTestId("voicing-loop-range-chip")).toContainText("2〜4");
   await mark(11, "ruler");
@@ -107,13 +108,13 @@ test("P11 acceptance: timeline right-click snapping, old range, Escape, one-card
   await page.keyboard.press("Space");
   await expect(workspace.getByRole("button", { name: "一時停止", exact: true })).toBeVisible();
   await expect(cards.nth(11)).toHaveAttribute("aria-current", "step");
-  await clear.click();
-  await expect(clear).toBeDisabled();
+  // An active range is cleared by its chip's own ×.
+  await workspace.getByTestId("voicing-loop-range-chip").click();
   await expect(workspace.getByTestId("voicing-loop-range-chip")).toHaveCount(0);
   await workspace.getByRole("button", { name: "停止", exact: true }).click();
   await mark(0, "overview");
   await expect(cards.nth(0)).toHaveAttribute("data-range", "pending-a");
   await clear.click();
-  await expect(clear).toBeDisabled();
+  await expect(clear).toHaveCount(0);
   await expect(cards.nth(0)).toHaveAttribute("data-range", "none");
 });

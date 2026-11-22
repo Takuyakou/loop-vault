@@ -1,0 +1,72 @@
+{
+  "version": "p23-39.policy.lv1-3.v1",
+  "bankVersion": "p23-39.bank.lv1-3.v1",
+  "pairId": "p23-39.bank.lv1-3.v1+p23-39.policy.lv1-3.v1",
+  "levels": {
+    "1": {
+      "questions": 20,
+      "pass": 18,
+      "roots": 6,
+      "delay": {
+        "questions": 10,
+        "pass": 8
+      },
+      "ear": {
+        "questions": 10,
+        "pass": 8
+      }
+    },
+    "2": {
+      "questions": 20,
+      "pass": 18,
+      "perQuality": {
+        "min": 4,
+        "of": 5
+      },
+      "roots": 6,
+      "delay": {
+        "questions": 10,
+        "pass": 8
+      }
+    },
+    "3": {
+      "questions": 30,
+      "pass": 27,
+      "perQuality": {
+        "min": 4,
+        "of": 5
+      },
+      "roots": 12,
+      "speed": {
+        "limitMs": 3000,
+        "ofCorrect": 0.8
+      },
+      "delay": {
+        "questions": 12,
+        "pass": 10
+      }
+    }
+  },
+  "superseded": {
+    "lv3": {
+      "questions": 24,
+      "pass": 22,
+      "perQuality": "4 per quality would need 4/4 for 80%, contradicting 22/24"
+    }
+  },
+  "rules": {
+    "pass": "overall >= pass AND every quality block >= perQuality.min/perQuality.of; no averaging across qualities",
+    "speed": "only the Lv3 name-recall level; 80% of *correct* attempts must complete within 3000 ms; device-invalid trials are excluded",
+    "delay": "a different day (>= 24h and >= 12h apart is not enough alone); the delayed set uses items not in the same-day set",
+    "hint": "an audition/name hint marks the trial assisted; it counts as practice success, never as an independent confirmation",
+    "selfCheck": "MIDI confirmation and self-confirmation are stored as different evidence; self-confirmation never promotes to MIDI-verified",
+    "duplicate": "the delayed set uses different (quality, root) cells than the same-day set where the level has enough cells; a same-day repeat is counted once toward coverage",
+    "invalid": "disconnected / prepare-failed / clock-jump / capability trials are excluded from every denominator, recorded with their reason",
+    "noInput": "no captured notes within 1500 ms is an attempt with result no-input, never a wrong answer or a device-invalid"
+  },
+  "answerPolicy": {
+    "nameRecall": "required quality tones with the source voicing's bass; omissions/tensions follow the course recipe, never a single fixed MIDI set",
+    "savedVoicing": "the authored notes are the gold; no theory-derived additions",
+    "ear": "accepted harmony + specified bass; exact voicing is a separate labelled policy"
+  }
+}

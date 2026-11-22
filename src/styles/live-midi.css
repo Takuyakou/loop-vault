@@ -1,12 +1,22 @@
-/* P8.9-08 Live MIDI mini window (separate window and the browser preview): design-system colors,
-   type and parts. Window settings (always on top, standard title bar) and behavior are unchanged. */
+/* P23-18 Live MIDI mini window (the separate window and the browser preview): one row of controls, the chord,
+   an 88-key strip and the trail of played chords. Window settings (always on top, title bar) are unchanged. */
 @layer components {
   .lv-live-mini {
+    display: flex;
+    overflow: hidden;
+    height: 100vh;
+    min-width: 280px;
+    min-height: 10rem;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
     background: var(--lv-bg);
     color: var(--lv-text);
     font-size: var(--lv-text-13);
+    container: lv-live-mini / size;
   }
 
+  /* The browser preview is a box inside the main window: fill the box, not the window. */
   .lv-live-mini-web {
     overflow: hidden;
     border: 1px solid var(--lv-border-strong);
@@ -14,54 +24,365 @@
     box-shadow: var(--lv-shadow-overlay);
   }
 
+  .lv-live-mini-web > .lv-live-mini {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* ---- The top row ---- */
+  .lv-live-mini-head {
+    display: flex;
+    height: 32px;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lv-live-mini-device {
+    display: flex;
+    min-width: 0;
+    height: 32px;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px 0 10px;
+    border-radius: 8px;
+    background: var(--lv-well);
+    box-shadow: inset 0 0 0 1px var(--lv-line);
+  }
+
+  .lv-live-mini-device:hover,
+  .lv-live-mini-device:focus-within {
+    box-shadow: inset 0 0 0 1px var(--lv-accent);
+  }
+
+  /* P23-61 6: the field is a `Select` now (a `.lv-select` wrapper), so the outer box must draw the only frame. */
+  /* was: .lv-live-mini-device > select */
+  .lv-live-mini-device .lv-select { min-width: 0; flex: 1; }
+
+  .lv-live-mini-device .lv-select select {
+    min-width: 0;
+    width: 100%;
+    height: 30px;
+    min-height: 30px;
+    padding: 0 22px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--lv-text);
+    font-size: 12.5px;
+    outline: none;
+    text-overflow: ellipsis;
+  }
+
+  .lv-live-mini-device .lv-select > svg { right: 4px; }
+
+  /* was: .lv-live-mini-device > select > option */
+  .lv-live-mini-device .lv-select select > option {
+    background: var(--lv-surface);
+    color: var(--lv-text);
+  }
+
   .lv-live-mini-dot {
     width: 7px;
     height: 7px;
+    flex: none;
     border-radius: 50%;
     background: var(--lv-text-muted);
   }
 
-  .lv-live-mini-status[data-status="connected"] .lv-live-mini-dot {
+  .lv-live-mini-device[data-status="connected"] .lv-live-mini-dot {
     background: var(--lv-success);
     box-shadow: 0 0 0 3px rgb(54 201 144 / 18%);
   }
 
-  .lv-live-mini-status[data-status="connecting"] .lv-live-mini-dot {
+  .lv-live-mini-device[data-status="connecting"] .lv-live-mini-dot {
     background: var(--lv-info);
   }
 
-  .lv-live-mini-status[data-status="error"] .lv-live-mini-dot {
+  .lv-live-mini-device[data-status="error"] .lv-live-mini-dot {
     background: var(--lv-danger);
   }
 
+  /* ---- The chord ---- */
   .lv-live-mini-chord {
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-md);
-    background: var(--lv-surface);
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   .lv-live-mini-badge {
-    padding: 1px 9px;
-    border: 1px solid var(--lv-border-strong);
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 2px 9px;
     border-radius: var(--lv-radius-pill);
+    background: var(--lv-well-hover);
     color: var(--lv-text-secondary);
     font-size: var(--lv-text-11);
-    font-weight: 600;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .lv-live-mini-label-row {
+    /* Normal 54px at 260px tall; 40px at the smallest window, 72px at a large one. */
+    --lv-live-chord-size: clamp(40px, 22.5cqh, 72px);
+
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--lv-live-chord-size) * 0.2);
+  }
+
+  .lv-live-mini-piano {
+    width: calc(var(--lv-live-chord-size) * 0.5);
+    height: calc(var(--lv-live-chord-size) * 0.5);
+    flex: none;
+    color: var(--lv-accent);
   }
 
   .lv-live-mini-label {
+    overflow: hidden;
+    min-width: 0;
     color: var(--lv-text);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
+    font-size: var(--lv-live-chord-size);
+    font-weight: 600;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-live-mini-label[data-waiting] {
+    color: var(--lv-text-muted);
+  }
+
+  .lv-live-mini-notes {
+    overflow: hidden;
+    max-width: 100%;
+    margin: 6px 0 0;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-live-mini-notes-gap {
+    margin: 0 8px;
+    color: var(--lv-text-muted);
+  }
+
+  .lv-live-mini-message {
+    display: flex;
+    max-width: 92%;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lv-live-mini-message-title {
+    margin: 0;
+    color: var(--lv-text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .lv-live-mini-message-text {
+    margin: 0;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* ---- The 88 keys ---- */
+  .lv-live-mini-keys {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    height: 18px;
+    flex: none;
+    gap: 1px;
+    border-radius: 4px;
+    background: #0d141d;
+  }
+
+  .lv-live-mini-key {
+    flex: 1;
+    border-radius: 0 0 2px 2px;
+    background: #243242;
+  }
+
+  .lv-live-mini-key[data-c] {
+    background: #2b3b4e;
+  }
+
+  .lv-live-mini-key[data-black] {
+    position: absolute;
+    top: 0;
+    width: 1.15%;
+    height: 58%;
+    flex: none;
+    background: #0a1018;
+    transform: translateX(-50%);
+  }
+
+  .lv-live-mini-key[data-key-state="on"] {
+    background: var(--lv-accent);
+  }
+
+  .lv-live-mini-key[data-black][data-key-state="on"] {
+    box-shadow: 0 0 0 1px #0a1018;
+  }
+
+  /* The lowest sounding note is white. */
+  .lv-live-mini-key[data-key-state="bass"] {
+    background: #fff;
+  }
+
+  /* ---- The bottom row ---- */
+  .lv-live-mini-foot {
+    display: flex;
+    height: 32px;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lv-live-mini-trail {
+    display: flex;
+    overflow: hidden;
+    min-width: 0;
+    height: 28px;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    mask-image: linear-gradient(90deg, transparent, #000 34px);
+  }
+
+  .lv-live-mini-trail-empty {
+    margin-right: auto;
+    padding-left: 34px;
+    color: var(--lv-text-muted);
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .lv-live-mini-history-chip {
     flex-shrink: 0;
-    padding: 3px 9px;
-    border: 1px solid var(--lv-border);
+    padding: 2px 8px;
     border-radius: 7px;
-    background: var(--lv-surface);
+    background: var(--lv-well-hover);
     color: var(--lv-text-secondary);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
+    font-size: 12px;
     font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .lv-live-mini-history-chip[data-last] {
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+  }
+
+  .lv-live-mini-count {
+    flex: none;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .lv-live-mini-count > b {
+    color: var(--lv-text);
+    font-family: var(--font-mono);
+  }
+
+  /* A narrow window: the back button keeps its arrow only. */
+  @container (max-width: 359px) {
+    .lv-live-mini-back-text {
+      display: none;
+    }
+  }
+
+  /* P23-47-fix-4: a large window (720 × 420 and up). The content keeps a 1280px column in the middle, the chord
+     grows with the height, and the 88 keys are drawn as a piano (ivory keys, C labels) instead of the thin strip. */
+  @container lv-live-mini (min-width: 720px) and (min-height: 420px) {
+    .lv-live-mini-head,
+    .lv-live-mini-chord,
+    .lv-live-mini-keys,
+    .lv-live-mini-foot {
+      width: 100%;
+      max-width: 1280px;
+      margin-inline: auto;
+    }
+
+    .lv-live-mini-head { height: 40px; }
+    .lv-live-mini-device { max-width: 420px; height: 36px; }
+    .lv-live-mini-device .lv-select select { height: 34px; min-height: 34px; font-size: 13.5px; }
+
+    .lv-live-mini-label-row { --lv-live-chord-size: clamp(72px, 19cqh, 168px); }
+    .lv-live-mini-notes { margin-top: 14px; font-size: 16px; }
+    /* The state word sits just above the chord, not in the far corner. */
+    .lv-live-mini-badge { position: static; margin-bottom: 10px; padding: 3px 12px; font-size: 12.5px; }
+    .lv-live-mini-message-title { font-size: 18px; }
+    .lv-live-mini-message-text { font-size: 14px; }
+
+    .lv-live-mini-keys {
+      height: clamp(72px, 13cqh, 132px);
+      gap: 2px;
+      padding: 0;
+      border-radius: 6px;
+      background: #05080c;
+    }
+
+    .lv-live-mini-key {
+      position: relative;
+      border-radius: 0 0 4px 4px;
+      background: #dfe6ee;
+    }
+
+    .lv-live-mini-key[data-c] { background: #dfe6ee; }
+
+    .lv-live-mini-key[data-label]::after {
+      position: absolute;
+      right: 0;
+      bottom: 5px;
+      left: 0;
+      color: #5b6b80;
+      content: attr(data-label);
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .lv-live-mini-key[data-black] {
+      position: absolute;
+      width: 1.15%;
+      height: 62%;
+      border-radius: 0 0 3px 3px;
+      background: #141c26;
+    }
+
+    .lv-live-mini-key[data-key-state="on"] { background: var(--lv-accent); }
+    .lv-live-mini-key[data-black][data-key-state="on"] { background: var(--lv-accent-strong); box-shadow: none; }
+    /* The lowest sounding note: amber on the ivory piano (the thin strip keeps white). */
+    .lv-live-mini-key[data-key-state="bass"] { background: #f2c14e; }
+    .lv-live-mini-key[data-black][data-key-state="bass"] { background: #c99a2e; }
+    .lv-live-mini-key[data-key-state]::after { color: #0a1019; }
+
+    .lv-live-mini-foot { height: 40px; }
+    .lv-live-mini-history-chip { padding: 4px 10px; font-size: 14px; }
+    .lv-live-mini-trail-empty,
+    .lv-live-mini-count { font-size: 13px; }
   }
 }

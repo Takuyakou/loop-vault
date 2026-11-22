@@ -3,6 +3,12 @@
 .bass-modebar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex:none; }
 .bass-practice-shell > .bass-mode-panel { flex:1; min-height:0; }
 .bass-mode-panel[hidden] { display:none; }
+/* P23-25: the home and the practice are two stages of one bounded column. The practice stage keeps the
+   definite height the old tab bar handed to `.bass-mode-panel`, so the frame still scrolls inside it. */
+.bass-practice-shell > .bass-stage { display:flex; flex-direction:column; flex:1; min-height:0; gap:12px; }
+.bass-practice-shell > .bass-stage[hidden] { display:none; }
+.bass-stage > .bass-mode-panel { flex:1; min-height:0; }
+.bass-home-stage { overflow-y:auto; scrollbar-gutter:stable; }
 .bass-echo-frame { display:grid; grid-template-columns:minmax(0,1fr) 300px; height:100%; min-height:0; gap:14px; }
 .bass-echo-main, .bass-echo-rail { min-width:0; min-height:0; overflow-y:auto; scrollbar-gutter:stable; }
 .bass-echo-rail { display:flex; flex-direction:column; gap:12px; padding:12px; border-left:1px solid var(--lv-border); background:var(--lv-surface); }
@@ -25,7 +31,11 @@
 @media (max-width:1100px) { .bass-echo-frame { grid-template-columns:minmax(0,1fr); height:auto; } .bass-practice-shell { height:auto; } .bass-echo-rail { border-left:0; border-top:1px solid var(--lv-border); } .bass-library-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:640px) { .bass-library-grid { grid-template-columns:minmax(0,1fr); } }
 
-.bass-modebar > span { border-radius:999px; background:var(--lv-accent-soft); padding:4px 8px; }
+.bass-modebar > .bass-mode-badge { border-radius:999px; background:var(--lv-accent-soft); padding:4px 8px; }
+/* P23-37: the self-evaluation badge keeps its text, pill shape and place, and takes the Bass purple soft ground
+   (its border and text were already purple; the teal ground under them was the mix). The MIDI badge — auto-judged —
+   is not touched. */
+.bass-modebar > .bass-mode-badge[data-midi-feedback="false"] { background:var(--bp-accent-soft, #2a2550); }
 .bass-modebar [data-midi-feedback="true"] { color:var(--lv-success); }
 .bass-echo-main > [data-testid] > .bass-echo-task { margin-bottom:8px; }
 
@@ -85,12 +95,30 @@
 .bass-midi-actions { padding:10px 14px; }
 .bass-midi-actions .lv-button-secondary, .bass-midi-actions .lv-button-primary { white-space:nowrap; }
 
+/* P23-64: MIDI bassline stage shell (compact 1-row bar + 20px overview above StageFrame). */
+.bass-midi-shell { flex:1; min-width:0; min-height:0; height:100%; width:100%; display:flex; flex-direction:column; gap:8px; }
+.bass-midi-bar { flex:none; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; min-height:36px; padding:2px 0; }
+.bass-midi-bar-song, .bass-midi-bar-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; }
+.bass-midi-bar-song h2 { margin:0; font-size:14px; font-weight:700; line-height:1.25; color:var(--lv-text); max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bass-midi-bar-song span, .bass-midi-bar-controls { font-size:11.5px; color:var(--lv-text-muted); }
+.bass-midi-bar .lv-segmented, .bass-midi-bar .lv-select select, .bass-midi-bar .lv-chip, .bass-midi-bar .lv-button-secondary { height:28px; min-height:28px; font-size:12px; }
+.bass-midi-bar .lv-chip { padding-inline:9px; }
+.bass-midi-bar .lv-segment { padding-inline:7px; font-size:12px; }
+.bass-midi-bar .lv-select select { min-width:74px; padding-block:0; padding-left:8px; padding-right:22px; }
+.bass-midi-bar .bass-midi-step-btn { width:26px; min-width:26px; padding:0; }
+.bass-midi-bar + .bass-midi-overview { flex:none; height:20px; }
+.bass-midi-bar + .bass-midi-overview button { display:flex; align-items:center; justify-content:center; gap:2px; padding:0 2px; font-size:9px; line-height:1; }
+.bass-midi-bar + .bass-midi-overview button span { display:inline; line-height:1; }
+.bass-midi-result-head { width:100%; display:flex; flex-direction:column; align-items:center; gap:18px; }
+.bass-midi-shell .bp-note { padding-inline:5px; gap:4px; font-size:12px; }
+@media (max-width:1100px) { .bass-midi-shell { height:auto; } }
+
 /* Bass-owned inputs only; no global input or other surface CSS is changed. */
-.bass-input { height:var(--lv-control-sm); min-height:var(--lv-control-sm); border:1px solid var(--lv-border-strong); border-radius:var(--lv-radius-sm); background:var(--lv-bg-subtle); color:var(--lv-text); padding:0 12px; font-size:13px; max-width:100%; }
-.bass-input:hover:not(:disabled) { border-color:color-mix(in srgb,var(--lv-accent) 58%,var(--lv-border-strong)); }
+.bass-input { height:var(--lv-control-sm); min-height:var(--lv-control-sm); border:1px solid var(--lv-line); border-radius:var(--lv-radius-sm); background:var(--lv-well); color:var(--lv-text); padding:0 12px; font-size:13px; max-width:100%; }
+.bass-input:hover:not(:disabled) { border-color:var(--lv-accent); }
 .bass-input:focus-visible { outline:2px solid var(--lv-accent); outline-offset:2px; }
-.bass-settings-shortcuts { display:flex; align-items:center; flex-wrap:wrap; gap:8px; flex:none; }
-.bass-settings-shortcuts .lv-popover { width:min(320px,calc(100vw - 48px)); }
+.bass-mode-tools { display:flex; align-items:center; flex-wrap:wrap; gap:8px; flex:none; }
+.bass-mode-tools .lv-popover { width:min(320px,calc(100vw - 48px)); }
 .bass-search { position:relative; width:320px; max-width:100%; }
 .bass-search .bass-input { width:100%; padding-left:36px; }
 .bass-search > svg { position:absolute; left:12px; top:10px; color:var(--lv-text-muted); pointer-events:none; }
@@ -100,8 +128,80 @@
 .bass-song .lv-popover-anchor { position:static; }
 .bass-song .lv-popover { left:0; right:auto; top:100%; max-width:100%; }
 
-.bass-settings-shortcuts { position:relative; }
-.bass-settings-shortcuts .lv-popover-anchor { position:static; }
-.bass-settings-shortcuts .lv-popover { left:0; right:auto; top:100%; }
+.bass-mode-tools { position:relative; }
+.bass-mode-tools .lv-popover-anchor { position:static; }
+.bass-mode-tools .lv-popover { left:0; right:auto; top:100%; }
 
 .bass-midi-note[data-mark="ok"] { padding-inline:0; }
+
+/* P23-25 P4: the top row is ‹ Bass Practice, the practice's name and its badge (the stage stays in the practice). */
+.bass-mode-back { display:inline-flex; align-items:center; gap:4px; height:34px; padding:0 12px 0 8px; border:1px solid var(--lv-border-strong); border-radius:9px; color:var(--lv-text-secondary); font-weight:600; }
+.bass-mode-back:hover { border-color:var(--lv-accent); color:var(--lv-text); }
+.bass-mode-name { margin:0; font-size:1.05rem; font-weight:700; color:var(--lv-text); }
+.bass-modebar > .bass-mode-badge { border-radius:999px; background:var(--lv-accent-soft); padding:4px 8px; }
+
+/* P23-28 F1/F3: the top band is one line; the steps are a numbered flow. */
+.bass-mode-name {font-size:19px;font-weight:700;line-height:1.2;color:var(--lv-text);white-space:nowrap;}
+.bass-mode-badge {font-size:12px;border-radius:999px;background:var(--lv-accent-soft);padding:4px 8px;white-space:nowrap;}
+.bass-mode-desc {flex:1;min-width:0;font-size:12.5px;line-height:1.4;color:var(--lv-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bass-mode-tools {display:flex;align-items:center;gap:8px;margin-left:auto;}
+.bass-mode-tools > * {flex:none;}
+@media (max-width:1100px) { .bass-mode-desc {display:none;} }
+.bass-echo-steps {display:flex;align-items:center;gap:6px;margin:0;padding:0;list-style:none;}
+.bass-echo-line {position:relative;overflow:hidden;flex:1 1 auto;min-width:10px;height:2px;border-radius:1px;background:var(--lv-border);}
+.bass-echo-line::after {content:"";position:absolute;inset:0;background:var(--bp-accent);transform:scaleX(0);transform-origin:left center;transition:transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1);}
+.bass-echo-line[data-filled="true"]::after {transform:scaleX(1);}
+.bass-echo-step {flex:none;display:flex;align-items:center;gap:6px;min-width:0;padding:4px 10px 4px 6px;border-radius:999px;transition:background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1);}
+.bass-echo-step-no {flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:999px;border:1px solid var(--lv-border);font-size:11px;font-weight:700;color:var(--lv-text-muted);font-variant-numeric:tabular-nums;transition:background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),border-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),color 180ms cubic-bezier(0.2, 0.7, 0.2, 1);}
+.bass-echo-step-name {min-width:0;font-size:11.5px;font-weight:600;color:var(--lv-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color 180ms cubic-bezier(0.2, 0.7, 0.2, 1);}
+.bass-echo-line[data-filled="true"] + .bass-echo-step[data-state=current],
+.bass-echo-line[data-filled="true"] + .bass-echo-step[data-state=current] .bass-echo-step-no,
+.bass-echo-line[data-filled="true"] + .bass-echo-step[data-state=current] .bass-echo-step-name {transition-delay:160ms;}
+@media (prefers-reduced-motion: reduce) {
+  .bass-echo-line::after,
+  .bass-echo-step,
+  .bass-echo-step-no,
+  .bass-echo-step-name {transition:none;transition-delay:0ms;}
+}
+.bass-echo-step[data-state=done] .bass-echo-step-no {border-color:var(--bp-accent);color:var(--bp-accent);}
+.bass-echo-step[data-state=done] .bass-echo-step-name {color:var(--lv-text-secondary);}
+.bass-echo-step[data-state=current] {background:var(--bp-accent-soft);}
+.bass-echo-step[data-state=current] .bass-echo-step-no {border-color:var(--bp-accent);background:var(--bp-accent);color:var(--bp-on-accent);}
+.bass-echo-step[data-state=current] .bass-echo-step-name {color:#e8e3ff;}
+.bass-echo-step-no::before {content:attr(data-no);}
+
+/* P23-28 F4/F6/F7: the Bass purple (the same value as the home's --bh-accent), one shape for the boxes,
+   and the practice's own 7 days at the bottom of the right column. */
+.bass-practice-shell { --bp-accent:#a79cff; --bp-accent-soft:#2a2550; --bp-on-accent:#17123a; --bp-accent-deep:#5a4fcf; }
+
+/* F4: every box in the right column is 14px corners, the surface, 14px inside, with a 14px heading.
+   The column itself stops painting a face so the boxes read as boxes on the page. */
+.bass-echo-rail { background:transparent; }
+.bass-echo-rail > section,
+.bass-echo-rail > aside > section { border-radius:14px; background:var(--lv-surface); padding:14px; }
+.bass-echo-rail > section > h3,
+.bass-echo-rail > aside > section > h3 { font-size:14px; line-height:1.35; }
+
+/* F4: a run of numbers (Degree Echo's セッション) becomes two columns of small tiles. */
+.bass-echo-rail dl.grid-cols-2 { gap:8px; margin-top:10px; }
+.bass-echo-rail dl.grid-cols-2 > div { border-radius:10px; background:var(--lv-well); padding:8px 10px; }
+.bass-echo-rail dl.grid-cols-2 dt { font-size:11px; }
+.bass-echo-rail dl.grid-cols-2 dd { margin-top:2px; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+/* F7: the practice's own big boxes (the task, the fretboard, Chord Context) take the same corners and face.
+   The order inside them, their sizes and their behaviour are untouched. */
+.bass-echo-main .lv-surface,
+.bass-echo-main .bass-echo-task,
+.bass-echo-main .bass-echo-box { border-radius:14px; background:var(--lv-surface); }
+
+/* F6: 「{practice} のこの 7 日」 — thin bars, the weekday labels, today in purple with white letters. */
+.bass-echo-rail > [data-testid="bass-mode-week"] { order:99; }
+.bass-mode-week-title { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px; margin:0; font-size:14px; font-weight:600; color:var(--lv-text); }
+.bass-mode-week-title small { font-size:11px; font-weight:500; color:var(--lv-text-muted); }
+.bass-mode-week-bars { display:grid; grid-template-columns:repeat(7,1fr); align-items:end; gap:4px; height:52px; margin-top:8px; }
+.bass-mode-week-bars > span { display:flex; align-items:flex-end; justify-content:center; height:100%; }
+.bass-mode-week-bars i { display:block; width:10px; height:100%; border-radius:3px 3px 0 0; background:var(--bp-accent); }
+.bass-mode-week-labels { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:4px; font-size:10.5px; color:var(--lv-text-muted); text-align:center; }
+.bass-mode-week-labels span { line-height:1.5; }
+.bass-mode-week-labels span[data-today] { border-radius:5px; background:var(--bp-accent-deep); color:#fff; font-weight:700; }
+.bass-mode-week-empty { margin:6px 0 0; font-size:11.5px; color:var(--lv-text-muted); }

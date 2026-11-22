@@ -6,7 +6,16 @@ import { cancelVoicingLoopRangePending, emptyVoicingLoopRangeSelection,
   rangeBeatBounds, rangeContainsCard, selectVoicingLoopRangeCard } from "./rangeLoop";
 
 describe("Voicing Loop range selection", () => {
-  it("keeps the old range until a second right-click atomically replaces it", () => {
+  it("clears the active range on right-click inside, keeps it until the 2nd click when outside, and handles Shift", () => {
+    const active = { active: { first: 1, last: 3 } }; // cards 2〜4 in an 8-card progression
+    expect(selectVoicingLoopRangeCard(active, 2, 8)).toEqual(emptyVoicingLoopRangeSelection); // card 3 inside 2〜4 → cleared
+    const pending = selectVoicingLoopRangeCard(active, 5, 8); // card 6 outside 2〜4 → keep 2〜4 + pending 6
+    expect(pending).toEqual({ active: { first: 1, last: 3 }, pendingStart: 5 });
+    expect(selectVoicingLoopRangeCard(pending, 2, 8)).toEqual({ active: { first: 2, last: 5 } }); // card 3 → 3〜6
+    expect(selectVoicingLoopRangeCard(active, 2, 8, true)).toEqual({ active: { first: 2, last: 2 } }); // Shift+right-click 3 → 3〜3
+  });
+
+  it("keeps the old range until a second right-click outside atomically replaces it", () => {
     const old = { active: { first: 1, last: 3 } };
     const pending = selectVoicingLoopRangeCard(old, 4, 6);
     expect(pending).toEqual({ ...old, pendingStart: 4 });

@@ -9,10 +9,11 @@ export function EchoRail({ children }: { children: ReactNode }) {
   const rail = useContext(RailContext);
   return rail ? createPortal(children, rail) : <>{children}</>;
 }
-export function EchoPracticeFrame({ children, active = true }: { children: ReactNode; active?: boolean }) {
+/** P23-62: `rail={false}` is the practice stage — one column, no right rail (the stage owns every control). */
+export function EchoPracticeFrame({ children, active = true, rail: withRail = true }: { children: ReactNode; active?: boolean; rail?: boolean }) {
   const [rail, setRail] = useState<HTMLElement | null>(null);
-  return <ActiveContext.Provider value={active}><FramedContext.Provider value={true}><RailContext.Provider value={rail}>
-    <div className="bass-echo-frame"><div className="bass-echo-main">{children}</div>
-    <aside ref={setRail} className="bass-echo-rail" aria-label="録音と練習記録" /></div>
+  return <ActiveContext.Provider value={active}><FramedContext.Provider value={true}><RailContext.Provider value={withRail ? rail : null}>
+    <div className="bass-echo-frame" data-rail={withRail ? undefined : "false"}><div className="bass-echo-main">{children}</div>
+    {withRail ? <aside ref={setRail} className="bass-echo-rail" aria-label="録音と練習記録" /> : null}</div>
   </RailContext.Provider></FramedContext.Provider></ActiveContext.Provider>;
 }

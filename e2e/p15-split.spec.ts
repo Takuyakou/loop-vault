@@ -49,7 +49,13 @@ test("線を引いて解析すると、線より上の音が「使わない」�
   await page.getByTestId("pre-analysis-split-start").click();
   await expect(page.getByTestId("pre-analysis-split-pitch")).toHaveText("A5");
   await expect(page.getByTestId("pre-analysis-split-none")).toHaveCount(0);
-  await expect(page.getByTestId("pre-analysis-summary")).toContainText("解析には使わない");
+  // P23-12 A5: the row of chips counts the parts; what the line does is the chip's tooltip.
+  await expect(page.getByTestId("pre-analysis-summary")).toContainText("コード 1");
+  await expect(page.getByTestId("pre-analysis-summary")).toContainText("メロディ 1");
+  const chipTitles = await page.getByTestId("pre-analysis-summary").locator("[data-role]").evaluateAll(
+    (chips) => chips.map((chip) => chip.getAttribute("title") ?? "").join(" "),
+  );
+  expect(chipTitles).toContain("解析には使わない");
 
   await analyzeCurrentMidi(page);
   await expect(page.getByTestId("capture-analysis-preset-summary")).toContainText("線で分けたパートあり");

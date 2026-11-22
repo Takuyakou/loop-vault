@@ -20,6 +20,9 @@ export function selectVoicingLoopRangeCard(
   if (!Number.isInteger(cardIndex) || cardIndex < 0 || cardIndex >= cardCount) return selection;
   if (immediate) return Object.freeze({ active: Object.freeze({ first: cardIndex, last: cardIndex }) });
   if (selection.pendingStart === undefined) {
+    if (selection.active && rangeContainsCard(selection.active, cardIndex)) {
+      return emptyVoicingLoopRangeSelection;
+    }
     return Object.freeze({ ...selection, pendingStart: cardIndex });
   }
   return Object.freeze({ active: Object.freeze({

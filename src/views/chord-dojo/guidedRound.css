@@ -1,0 +1,145 @@
+/*
+ * P23-51 (mocks ③ ⑤ ⑥): the round dots in the top bar, the marks' legend and the second line of a wrong
+ * answer, and the pause after each round of five. Values are the mock's.
+ */
+.gc-round { display: inline-flex; align-items: center; gap: 14px; }
+.gc-round-dots { display: flex; gap: 7px; }
+.gc-round-dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgb(150 170 195 / 28%); }
+.gc-round-dots i[data-dot="ok"] { background: #36c990; box-shadow: none; }
+.gc-round-dots i[data-dot="bad"] { background: #ee6b73; box-shadow: none; }
+.gc-round-dots i[data-dot="now"] { box-shadow: inset 0 0 0 2px var(--dojo-accent), 0 0 0 4px rgb(66 216 198 / 16%); }
+.gc-round-bars { display: flex; gap: 4px; }
+.gc-round-bars i { width: 22px; height: 5px; border-radius: 3px; background: #1b2b43; }
+.gc-round-bars i[data-bar="full"] { background: var(--dojo-accent); }
+.gc-round-bars i[data-bar="part"] { background: linear-gradient(90deg, var(--dojo-accent) 40%, #1b2b43 40%); }
+
+/* The legend takes the keyboard head's place while the marks are shown. */
+.guided-course .gc-legend { display: flex; gap: 18px; justify-content: center; color: var(--dojo-secondary); font-size: 12px; }
+.guided-course .gc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.guided-course .gc-legend i { width: 11px; height: 11px; border-radius: 50%; }
+.guided-course .gc-legend i[data-mark="hit"] { background: #36c990; }
+.guided-course .gc-legend i[data-mark="wrong"] { background: #ee6b73; }
+.guided-course .gc-legend i[data-mark="miss"] { background: rgb(66 216 198 / 18%); box-shadow: inset 0 0 0 2px var(--dojo-accent); }
+
+/* Mock ⑤'s second line: the chord's tones. It hangs under the verdict without moving the keyboard. */
+.guided-course .gc-why { max-width: 640px; height: 0; margin: 0 auto; overflow: visible; color: var(--dojo-secondary); font-size: 14px; line-height: 1.7; text-align: center; }
+.guided-course[data-stage] .gc-why + .gc-answer-guide { margin-top: 24px; }
+
+/* ---- the pause (mock ⑥) ---- */
+.guided-course[data-stage="break"] { grid-template-rows: auto minmax(0, 1fr); }
+.gc-break { width: min(760px, 100%); margin: auto; padding: 24px 0 32px; }
+.gc-break-lead { margin: 0; color: var(--dojo-secondary); font-size: 14px; }
+.dojo .guided-course .gc-break h2 { display: block; margin: 4px 0 0; color: #f2f6fc; font-size: 44px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+.dojo .guided-course .gc-break h2 small { display: inline; margin-left: 12px; color: var(--dojo-secondary); font-size: 0.45em; font-weight: 600; letter-spacing: 0; }
+.gc-tip { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; margin-top: 22px; padding: 18px 20px; border: 1px solid rgb(150 170 195 / 14%); border-radius: 16px; background: #111b2a; }
+.gc-tip[data-has-compare] { grid-template-columns: 1fr 250px; }
+.gc-tip h3 { margin: 0 0 6px; color: var(--dojo-accent); font-size: 13px; }
+.gc-tip p { margin: 0; color: #f2f6fc; font-size: 15px; line-height: 1.75; }
+.gc-tip p b { color: #f2c14e; }
+.gc-tip-listen { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; color: var(--dojo-muted); font-size: 13px; }
+.gc-chip { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid rgb(150 170 195 / 28%); border-radius: 999px; background: transparent; color: #f2f6fc; font-weight: 600; }
+.gc-chip:hover { border-color: var(--dojo-accent); }
+.gc-tip-keys { display: grid; gap: 8px; justify-items: center; }
+.gc-tip-keys > div { display: flex; gap: 10px; align-items: center; }
+.gc-tip-keys b { width: 56px; color: #f2f6fc; font-size: 13px; }
+.gc-break-acts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 22px; }
+.gc-break-acts .dojo-primary { min-height: 48px; padding: 0 24px; border-radius: 12px; font-size: 15px; }
+.gc-break-acts .gc-note { margin-left: 6px; }
+
+/* The key word of the tip: a soft line drawn left to right once, when the pause opens (0.5s). */
+.gc-marker {
+  background-image: linear-gradient(rgb(66 216 198 / 22%), rgb(66 216 198 / 22%));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 100% 0.5em;
+  animation: gc-marker-draw 0.5s var(--lv-ease-standard, ease-out) 0.15s both;
+}
+@keyframes gc-marker-draw { from { background-size: 0 0.5em; } to { background-size: 100% 0.5em; } }
+
+@media (max-width: 1023px) {
+  .gc-break { padding-inline: 0; }
+  .dojo .guided-course .gc-break h2 { font-size: 34px; }
+  .gc-tip[data-has-compare] { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-marker { animation: none; }
+}
+
+/* ---- the demo's comparison (mock ②) ---- */
+.gc-compare { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: min(1000px, 100%); margin: 6px auto 0; }
+.dojo .guided-course .gc-cmp {
+  display: flex; flex-direction: column; align-items: stretch; gap: 0; min-height: 0; padding: 12px 12px 10px;
+  border: 1px solid rgb(150 170 195 / 14%); border-radius: 14px; background: #111b2a; color: #f2f6fc; text-align: left;
+  transition: border-color var(--lv-motion-fast, 0.15s) var(--lv-ease-standard, ease);
+}
+.dojo .guided-course .gc-cmp:hover { border-color: rgb(150 170 195 / 28%); background: #111b2a; }
+.dojo .guided-course .gc-cmp[aria-pressed="true"] { border-color: var(--dojo-accent); background: #162338; box-shadow: inset 0 0 0 1px rgb(66 216 198 / 35%); }
+.gc-cmp b { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.gc-cmp-note { margin: 2px 0 10px; color: var(--dojo-secondary); font-size: 13px; }
+.gc-cmp-note u { margin-right: 4px; color: #f2c14e; font-weight: 700; text-decoration: none; }
+.gc-cmp .gc-mini-keys { display: block; width: 100%; height: auto; }
+
+/* Read along: while the example sounds, its note names and the keyboard's marks light up; 0.2s back after. */
+.gc-demo-notes i { color: var(--dojo-muted); font-style: normal; }
+.gc-read-note { transition: color 0.2s var(--lv-ease-standard, ease), text-shadow 0.2s var(--lv-ease-standard, ease); }
+.gc-demo-notes[data-playing] .gc-read-note { color: #f2f6fc; text-shadow: 0 0 12px rgb(66 216 198 / 55%); }
+.guided-course [data-answer-marker] { transition: filter 0.2s var(--lv-ease-standard, ease); }
+.guided-course[data-demo-playing] [data-answer-marker] { filter: brightness(1.35) drop-shadow(0 0 4px rgb(66 216 198 / 70%)); }
+
+@media (max-width: 1023px) {
+  .gc-compare { gap: 8px; }
+  .dojo .guided-course .gc-cmp { padding: 8px 8px 6px; }
+  .gc-cmp b { font-size: 20px; }
+  .gc-cmp-note { margin-bottom: 6px; font-size: 12px; }
+}
+@media (max-height: 760px) {
+  .dojo .guided-course .gc-cmp { padding: 8px 10px 8px; }
+  .gc-cmp b { font-size: 22px; }
+  .gc-cmp-note { margin-bottom: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-read-note, .guided-course [data-answer-marker], .dojo .guided-course .gc-cmp { transition: none; }
+}
+
+/* Low windows (768×640): after a wrong answer the two lines need the room of the instruction and the card's hint. */
+@media (max-height: 700px) {
+  .guided-course[data-stage]:has(.gc-why) .gc-instruction,
+  .guided-course[data-stage]:has(.gc-why) .gc-chord-card-hint { display: none; }
+  .guided-course[data-stage]:has(.gc-why) .gc-chord-card-name { font-size: 60px; }
+  /* The demo cards keep their names and lines; the big keyboard below shows the chosen one. */
+  .gc-cmp .gc-mini-keys { display: none; }
+  .gc-cmp-note { margin-bottom: 0; }
+}
+
+/* ---- the ear question (mock ⑦) ---- */
+.gc-ear { display: grid; justify-items: center; }
+.dojo .guided-course .gc-disc {
+  position: relative; display: grid; place-items: center; width: 150px; height: 150px; min-height: 0; padding: 0;
+  border: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #1c3a4a, #122033);
+  box-shadow: 0 0 0 1px rgb(150 170 195 / 28%), 0 0 0 14px rgb(66 216 198 / 7%), 0 0 0 30px rgb(66 216 198 / 4%);
+}
+.dojo .guided-course .gc-disc:hover:not(:disabled) { background: radial-gradient(circle at 50% 40%, #22465a, #142538); }
+.dojo .guided-course .gc-disc:disabled { opacity: 1; cursor: default; }
+.gc-disc::after { position: absolute; inset: -30px; border: 1px solid rgb(66 216 198 / 35%); border-radius: 50%; content: ""; opacity: 0; }
+.gc-disc[data-playing]::after { animation: gc-disc-pulse 1.8s ease-out infinite; }
+@keyframes gc-disc-pulse { from { transform: scale(0.75); opacity: 0.9; } to { transform: scale(1.15); opacity: 0; } }
+.dojo .guided-course .gc-rootchip { display: inline-flex; align-items: center; gap: 10px; height: 40px; margin-top: 20px; padding: 0 16px; border-radius: 999px; background: #162338; color: #f2f6fc; font-size: 15px; }
+.gc-rootchip b { font-size: 20px; }
+@media (max-height: 760px) {
+  .dojo .guided-course .gc-disc { width: 112px; height: 112px; }
+  .dojo .guided-course .gc-rootchip { margin-top: 12px; }
+}
+@media (max-height: 700px) {
+  .dojo .guided-course .gc-disc { box-shadow: 0 0 0 1px rgb(150 170 195 / 28%), 0 0 0 8px rgb(66 216 198 / 7%); }
+  .gc-disc::after { inset: -16px; }
+  /* Disc and chip side by side, so the verdict stays above the keyboard. */
+  .gc-ear { grid-auto-flow: column; align-items: center; gap: 18px; }
+  .dojo .guided-course .gc-disc { width: 72px; height: 72px; }
+  .dojo .guided-course .gc-rootchip { height: 34px; margin-top: 0; }
+  /* The disc itself replays; the separate replay row would push the verdict under the keyboard. */
+  .guided-course[data-stage]:has(.gc-disc) .gc-listen-row { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-disc[data-playing]::after { animation: none; opacity: 0.6; }
+}

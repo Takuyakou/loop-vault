@@ -67,6 +67,18 @@ describe("workspace geometry (P10.0-05)", () => {
     expect(cardLabel("C#m7b5(9)", 74)).toEqual({ text: "C#…" });
   });
 
+  it("P23-16 W7: where the browser measures, a name that fits is never cut (the shown name, ♯ ♭, and the 8px padding)", () => {
+    const widths: Record<string, number> = { "E♭maj7": 52.8, "A♭maj7": 55, "F♯m7♭5": 63.7, "C♯…": 20 };
+    const measure = (text: string, px: number) => (widths[text] ?? text.length * 8) * px / 16;
+    expect(cardLabel("Ebmaj7", 72.6, measure)).toEqual({ text: "Ebmaj7" }); // 52.8 + 18 ≤ 72.6 (the estimate said 「E♭…」)
+    expect(cardLabel("Abmaj7", 72.5, measure)).toEqual({ text: "Abmaj7", small: true }); // 55 + 18 > 72.5: a full card at 13px
+    expect(cardLabel("F#m7b5", 66, measure)).toEqual({ text: "F#m7b5" }); // a narrow card measures at 13px (51.8 + 12)
+    expect(cardLabel("F#m7b5", 50, measure)).toEqual({ text: "F#…" });
+    expect(cardLabel("Ebmaj7", 10, measure)).toEqual({ text: "" });
+    // Nothing to measure with (jsdom): the old estimate.
+    expect(cardLabel("Ebmaj7", 72.6, () => undefined)).toEqual({ text: "Eb…" });
+  });
+
   it("builds the 300-bar, 5,000-note song in well under a second", () => {
     expect(buildScenarioMidi(p10Scenario("long-300-5k")).byteLength).toBeGreaterThan(0);
     const input = analyzeScenario(p10Scenario("long-300-5k"));

@@ -49,7 +49,12 @@ import { CorrectionInspector } from "./CorrectionInspector";
 import { CardContextMenu, BarContextMenu } from "./CardContextMenu";
 import { NoSaveRange, RecommendedRanges, rangeKey, useRecommendedOpen, WorkspaceSaveForm, type WorkspaceSaveActions } from "./WorkspaceSaveForm";
 import { PianoRoll, ROW_PX } from "./PianoRoll";
-import { cardLabel, cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
+import { ChordCard } from "./ChordCard";
+import { cardHarmony } from "./cardHarmony";
+import { useGlobalBpm } from "../GlobalBpmProvider";
+import { Popover } from "../ui";
+import { PlaybackRow } from "../PlaybackRow";
+import { cardSize, followScrollLeft, leftCardInView, overlaps, playheadBeatAt, visibleBeatRange, zoomScrollLeft } from "./workspaceGeometry";
 import { getCardClickAudition, setCardClickAudition } from "../../storage/cardClickAuditionSettings";
 import { getLegendVisible, setLegendVisible as storeLegendVisible } from "../../storage/workspaceLegendSettings";
 import { usedNotes, guardProgressionNotes, replaceProgressionName, changedProgressionCards, progressionChanges, deleteProgressionCard, resetProgressionCard } from "../../domain/progressionWorkspace/progressionWorkspace";
@@ -100,6 +105,10 @@ export interface CorrectionWorkspaceProps {
   onDirtyChange?: (unsavedCount: number) => void;
   /** The MIDI has no tempo of its own (P10.1 §12.1). */
   tempoMissing?: boolean;
+  /** P23-14: the key the cards' degrees and role colours are read in. Without it none are drawn. */
+  harmonyKey?: string | undefined;
+  /** P23-14: false hides the degree text on the cards (the setting 「度数を表示」); the dots stay. Default true. */
+  showDegrees?: boolean;
 }
 
 export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
@@ -108,6 +117,13 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const { timeline, controller, previewSound, fullSource, onPlaybackError } = props;
   const loopTimer=useRef<ReturnType<typeof setTimeout>>();
   const [loopWaiting,setLoopWaiting]=useState(false);
+  // P23-16 W7: the card names are measured in the page's font; draw them again once the fonts have loaded.
+  const [, setFontsLoaded] = useState(0);
+  useEffect(() => {
+    let live = true;
+    void document.fonts?.ready.then(() => { if (live) setFontsLoaded((value) => value + 1); });
+    return () => { live = false; };
+  }, []);
   const stopPlayback=useCallback(()=>{clearTimeout(loopTimer.current);loopTimer.current=undefined;setLoopWaiting(false);controller.stop();},[controller]);
   useEffect(()=>()=>{clearTimeout(loopTimer.current);},[]);
   const [history, setHistory] = useState<CorrectionHistory>(() => startHistory(props.model));
@@ -115,6 +131,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const present = history.present;
   const shown = preview ?? present;
   const meter = beatsPerBarFor(present.timeSignature);
+  // P23-14: the degree and the role of each card in the key (empty without a key).
+  const harmonyByCard = useMemo(() => cardHarmony(shown.cards, props.harmonyKey), [shown.cards, props.harmonyKey]);
   const totalBars = Math.ceil(present.totalBeats / meter);
   const firstBeat = progression ? present.cards[0]?.start ?? 0 : 0;
   const durationBars = Math.ceil((present.totalBeats-firstBeat)/meter);
@@ -292,6 +310,40 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     });
   }, []);
 
+  // P23-16 W4: the key help. `line` items are the one line under the workspace; 「?」 lists `all`.
+  const keyHelp = (() => {
+    const entries: [string, ReactNode, boolean][] = mode === "edit" ? [
+      ["add", <>空いた所をクリック：足す</>, true],
+      ["remove", <>右クリック・なぞる：外す</>, true],
+      ["pitch", <>上下ドラッグ・<kbd>↑</kbd><kbd>↓</kbd>：高さ</>, true],
+      ["delete", <><kbd>Delete</kbd> 外す・消す</>, true],
+      ["restore", <><kbd>R</kbd> 戻す</>, false],
+      ["marquee", <><kbd>Ctrl</kbd>＋ドラッグ 範囲で選ぶ</>, false],
+      ["done", <><kbd>Enter</kbd> 直し終わる</>, true],
+      ["undo", <><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</>, true],
+    ] : [
+      ["cards", <><kbd>←</kbd><kbd>→</kbd> 前後のカード</>, true],
+      ...(!progression ? [["review", <><kbd>[</kbd><kbd>]</kbd> 前後の要確認</>, false] as [string, ReactNode, boolean]] : []),
+      ["fix", <><kbd>N</kbd> 音を直す</>, true],
+      ["join", <><kbd>M</kbd> つなぐ・<kbd>S</kbd> 分ける</>, false],
+      ["delete", <><kbd>Delete</kbd> カードを消す</>, true],
+      ["names", <><kbd>1</kbd>〜<kbd>4</kbd> {progression ? "コードを替える" : <>名前・<kbd>Y</kbd> このままでよい</>}</>, false],
+      ["roll", <>{progression ? "音を直す：押して外す・空いた所で足す・上下にドラッグ" : "ロールの右クリック：外す・ダブルクリック：足す"}</>, false],
+      ["menu", <>カードの右クリック：メニュー（消す・つなぐ・保存する範囲）</>, false],
+      ...(!progression ? [["bar", <>小節の行の右クリック：その小節を消して詰める</>, false] as [string, ReactNode, boolean]] : []),
+      ["ab", <><kbd>A</kbd><kbd>B</kbd> 聴き比べ</>, false],
+      ["play", <><kbd>Space</kbd> 再生・停止（どこでも）</>, true],
+      ["home", <><kbd>Home</kbd> 曲の先頭へ</>, false],
+      ["enter", <><kbd>Enter</kbd> フォーカスのあるボタンを押す</>, false],
+      ["undo", <><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</>, true],
+      ["sheet", <><kbd>?</kbd> ショートカット一覧</>, false],
+    ];
+    return {
+      line: entries.filter(([, , inLine]) => inLine).map(([key, node]) => <span key={key}>{node}</span>),
+      all: entries.map(([key, node]) => <span key={key}>{node}</span>),
+    };
+  })();
+
   // ---- playback --------------------------------------------------------------------------
   const songPlaying = loopWaiting || (playback.status !== "idle" && samePlaybackSource(playback.source, fullSource));
   // Moving the view by hand (wheel, overview, keys) while the song plays stops following (spec 7.3).
@@ -303,6 +355,18 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const [playStartBeat, setPlayStartBeat] = useState(songStartBeat);
   // One tempo for the sound, the playhead and saving (P10.1 §12; 96 = the player's own default).
   const songBpm = effectiveTempo(present);
+  /**
+   * P23-16 W2: the preview starts at the song's BPM; 「共通の BPM に合わせる」 plays it at the header's app-wide BPM
+   * instead (the saved BPM stays the song's). A song without a BPM of its own plays at the app-wide BPM from the start.
+   */
+  const { bpm: globalBpm } = useGlobalBpm();
+  const [matchGlobalBpm, setMatchGlobalBpm] = useState(false);
+  const hasSongBpm = present.tempo !== undefined || (Boolean(present.bpm) && !props.tempoMissing);
+  const playBpm = hasSongBpm && !matchGlobalBpm ? songBpm : globalBpm;
+  // W1: 「↻ ループ」 loops the save range (on at first on the progression page, as before; off at first in capture).
+  const [loop, setLoop] = useState(Boolean(progression));
+  const loopRef = useRef(loop);
+  loopRef.current = loop;
   const playheadRef = useRef<HTMLSpanElement>(null);
   const playTagRef = useRef<HTMLSpanElement>(null);
   const overviewPlayheadRef = useRef<HTMLSpanElement>(null);
@@ -398,7 +462,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 
   // P10.2 §3: with no card selected, the song starts at the first card in view (「▶ ここから」).
   const cueCard = selected ? undefined : leftCardInView(present.cards, scrollLeft / pxPerBeat, (scrollLeft + viewportWidth) / pxPerBeat);
-  const playFrom = progression && saveRange ? Math.max(songStartBeat, (saveRange.startBar - 1) * meter) : selected?.start ?? (progression ? songStartBeat : cueCard?.start) ?? songStartBeat;
+  const playFrom = (progression || loop) && saveRange ? Math.max(songStartBeat, (saveRange.startBar - 1) * meter) : selected?.start ?? (progression ? songStartBeat : cueCard?.start) ?? songStartBeat;
   // Where the playhead is now (the rAF loop keeps it), for carrying on after a tempo or metronome change.
   const playBeatRef = useRef(songStartBeat);
 
@@ -409,21 +473,22 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
    */
   const playSongRef=useRef<(beat:number,bpm?:number,clicks?:boolean)=>void>();
   const loopRangeRef=useRef(saveRange);loopRangeRef.current=saveRange;
-  const playSong = useCallback((fromBeat: number, bpm = songBpm, clicks = metronome) => {
+  const playSong = useCallback((fromBeat: number, bpm = playBpm, clicks = metronome) => {
     clearTimeout(loopTimer.current);loopTimer.current=undefined;setLoopWaiting(false);
     let loopStarted=performance.now();
-    const loopDuration=saveRange ? (Math.min(saveRange.endBar*meter,present.totalBeats)-fromBeat)*60000/bpm : 0;
-    const request: PlaybackRequest = { type: "notes", notes: progression ? progressionSongNotes(present, fromBeat, bpm, clicks, saveRange) : songPlaybackNotes(present, timeline, fromBeat, bpm, clicks), bpm, sound: previewSound };
+    const looping = loop && saveRange ? saveRange : undefined;
+    const loopDuration=looping ? (Math.min(looping.endBar*meter,present.totalBeats)-fromBeat)*60000/bpm : 0;
+    const request: PlaybackRequest = { type: "notes", notes: progression ? progressionSongNotes(present, fromBeat, bpm, clicks, saveRange) : captureSongNotes(present, timeline, fromBeat, bpm, clicks, looping), bpm, sound: previewSound };
     if (import.meta.env.VITE_P527_E2E_FIXTURE === "1") (window as { __lvWorkspaceSong?: unknown }).__lvWorkspaceSong = { fromBeat, ...request };
     playBeatRef.current = fromBeat;
     if(progression&&import.meta.env.VITE_P527_E2E_FIXTURE==='1') {const target=window as typeof window&{__lvProgressionPlayback?:{count:number;request:PlaybackRequest}};target.__lvProgressionPlayback={count:(target.__lvProgressionPlayback?.count??0)+1,request};}
     setPlayStartBeat(fromBeat);
     setFollow(true);
-    void controller.play(fullSource, request, progression && saveRange ? { onStarted:()=>{loopStarted=performance.now();}, onEnded: (reason) => { if (reason === "completed" && loopRangeRef.current) {
+    void controller.play(fullSource, request, looping ? { onStarted:()=>{loopStarted=performance.now();}, onEnded: (reason) => { if (reason === "completed" && loopRangeRef.current && loopRef.current) {
       setLoopWaiting(true);
       loopTimer.current=setTimeout(()=>{setLoopWaiting(false);if(loopRangeRef.current)playSongRef.current?.(Math.max(songStartBeat,(loopRangeRef.current.startBar-1)*meter));},Math.max(0,loopDuration-(performance.now()-loopStarted)));
     } } } : undefined).catch(onPlaybackError);
-  }, [controller, fullSource, metronome, onPlaybackError, present, previewSound, songBpm, timeline, progression, saveRange]);
+  }, [controller, fullSource, metronome, onPlaybackError, present, previewSound, playBpm, timeline, progression, saveRange, loop]);
   playSongRef.current=playSong;
   const toggleSong = useCallback(() => {
     if (playingRef.current) stopPlayback();
@@ -434,7 +499,17 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   // P10.2 §6: the header's metronome switched while the song plays → carry on from the sounding card.
   const metronomeRef = useRef(metronome);
   const resumeRef = useRef<(clicks: boolean) => void>(() => undefined);
-  resumeRef.current = (clicks) => { const at = soundingCardStart(); if (at !== undefined) playSong(at, songBpm, clicks); };
+  resumeRef.current = (clicks) => { const at = soundingCardStart(); if (at !== undefined) playSong(at, playBpm, clicks); };
+  // P23-16 W2: a new playing speed (the tempo field, 「共通の BPM に合わせる」, the header's BPM while matched) carries on
+  // from the sounding card, as a tempo change always did.
+  const playBpmRef = useRef(playBpm);
+  const resumeAtBpmRef = useRef<(bpm: number) => void>(() => undefined);
+  resumeAtBpmRef.current = (bpm) => { const at = soundingCardStart(); if (at !== undefined) playSong(at, bpm); };
+  useEffect(() => {
+    if (playBpmRef.current === playBpm) return;
+    playBpmRef.current = playBpm;
+    resumeAtBpmRef.current(playBpm);
+  }, [playBpm]);
   useEffect(() => {
     if (metronomeRef.current === metronome) return;
     metronomeRef.current = metronome;
@@ -700,7 +775,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     const canvas = scrollRef.current;
     const unmark = () => canvas?.querySelectorAll("[data-playing]").forEach((element) => element.removeAttribute("data-playing"));
     const step = () => {
-      const beat = playheadBeatAt(performance.now(), startedAt, songBpm, playStartBeat);
+      const beat = playheadBeatAt(performance.now(), startedAt, playBpm, playStartBeat);
       playBeatRef.current = beat;
       // P10.2 §5: the sounding card and its notes are marked only when the card changes
       // (or when its element is drawn again after scrolling), never by re-rendering.
@@ -712,8 +787,8 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         if (card && canvas) {
           canvas.querySelectorAll(`.lv-cw-note[data-card="${card.id}"]`).forEach((element) => element.setAttribute("data-playing", ""));
           if (cardElement) {
-            cardElement.style.setProperty("--lv-cw-play-ms", `${card.duration * 60000 / songBpm}ms`);
-            cardElement.style.setProperty("--lv-cw-play-at", `${-(beat - card.start) * 60000 / songBpm}ms`);
+            cardElement.style.setProperty("--lv-cw-play-ms", `${card.duration * 60000 / playBpm}ms`);
+            cardElement.style.setProperty("--lv-cw-play-at", `${-(beat - card.start) * 60000 / playBpm}ms`);
             cardElement.setAttribute("data-playing", "");
           }
         }
@@ -737,7 +812,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
     };
     frame = requestAnimationFrame(step);
     return () => { cancelAnimationFrame(frame); unmark(); };
-  }, [playStartBeat, pxPerBeat, present.totalBeats, songBpm, startedAt]);
+  }, [playStartBeat, pxPerBeat, present.totalBeats, playBpm, startedAt]);
   // P10.2 §10.2: the bars and the tempo are in the control bar, not repeated here.
   const fileMeta = [present.timeSignature ?? "4/4", props.analysisModeLabel, props.analysisTargetLabel]
     .filter(Boolean).join("・");
@@ -748,11 +823,14 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   const tempoMissing = props.tempoMissing || !present.bpm;
   /** A tempo from the field, the drag, the wheel or ↺ MIDI: one edit; playing, it carries on from the sounding card. */
   const commitTempo = (bpm: number) => {
+    // P23-16: with no BPM of its own the field shows the app-wide BPM; a typed BPM becomes the song's, even the default's value.
+    if (!hasSongBpm) {
+      apply({ model: { ...present, tempo: bpm }, changed: true, label: `テンポを ${playBpm} → ${bpm}`, kind: "tempo" });
+      return;
+    }
     const result = setTempo(present, bpm);
     if (!result.changed) return;
-    const resumeAt = soundingCardStart();
-    apply(result);
-    if (resumeAt !== undefined) playSong(resumeAt, bpm);
+    apply(result); // playing at the song's BPM, the speed changes and carries on (the playBpm effect)
   };
   /** P10.2 §12: back to the workspace as it was right after the import; the history goes too. */
   const restart = () => {
@@ -885,7 +963,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
   };
   const rangeHandle=(end:'a'|'b')=>progression?<button type="button" className="lv-cw-range-handle" data-end={end} aria-label={`範囲の${end==='a'?'始まり':'終わり'}`} onPointerDown={event=>{rangeDrag.current={end,pointer:event.pointerId};event.currentTarget.setPointerCapture(event.pointerId);event.preventDefault();}} onPointerMove={moveRange} onPointerUp={()=>{rangeDrag.current=undefined;}} onPointerCancel={()=>{rangeDrag.current=undefined;}} onKeyDown={event=>{if(!saveRange||!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();event.stopPropagation();const delta=event.key==='ArrowLeft'?-1:1;if(end==='a')setSaveRange({...saveRange,startBar:Math.max(Math.floor(firstBeat/meter)+1,Math.min(saveRange.endBar,saveRange.startBar+delta))});else setSaveRange({...saveRange,endBar:Math.min(totalBars,Math.max(saveRange.startBar,saveRange.endBar+delta))});}}>{end.toUpperCase()}</button>:<i data-end={end}>{end.toUpperCase()}</i>;
   // P10.2 addendum 1 §1.2: with a pending range as well, its frame goes under the decided one.
-  const cardsRowHeight = saveRange && pendingRange ? 94 : 80;
+  const cardsRowHeight = saveRange && pendingRange ? 94 : progression ? 76 : 80;
   const barNumbers = Array.from({ length: totalBars }, (_, index) => index + 1)
     .filter((bar) => (bar - 1) % barStep === 0 && overlaps((bar - 1) * meter, meter * barStep, range));
   // P17-02: the bars a card covers (the card menu's 「◯小節を消して詰める」).
@@ -920,18 +998,18 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
 
       {suggestion?.kind === "melody-voice" ? (
         <div className="lv-cw-suggestion" role="status" data-testid="correction-suggestion" data-kind={suggestion.kind}>
-          <span>メロディの Voice（{suggestion.voiceLabel}）の音が {suggestion.cardCount} 枚のカードに入っています。まとめて選んで、外すかどうかを決められます（外すのは <kbd>Delete</kbd> か右の欄）。</span>
+          <span>メロディの音が {suggestion.cardCount} 枚のカードに混ざっています。</span>
           <span className="lv-cw-actions">
-            <button type="button" className="lv-cw-btn" data-kind="accent" onClick={() => selectNotes(suggestion.noteIds, "replace")} data-testid="correction-select-melody">まとめて選ぶ（{suggestion.noteIds.length}）</button>
-            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>閉じる</button>
+            <button type="button" className="lv-cw-btn" data-kind="accent" onClick={() => edit((model) => deleteNotes(model, suggestion.noteIds))} data-testid="correction-exclude-melody">メロディの {suggestion.noteIds.length} 音を外す</button>
+            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>そのままにする</button>
           </span>
         </div>
       ) : suggestion?.kind === "same-notes-run" ? (
         <div className="lv-cw-suggestion" role="status" data-testid="correction-suggestion" data-kind={suggestion.kind}>
-          <span>同じ音が続く所が {suggestion.count} か所あります。つなぐと1枚のカードになります（打ち直しは ×n で残ります）。</span>
+          <span>同じ音が続く所が {suggestion.count} か所あります。つなぐと 1 枚のカード（×n）になります。</span>
           <span className="lv-cw-actions">
             <button type="button" className="lv-cw-btn" data-kind="accent" onClick={askMergeRuns} data-testid="correction-confirm-runs">確認してつなぐ</button>
-            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>閉じる</button>
+            <button type="button" className="lv-cw-btn" onClick={() => closeSuggestion(suggestion.kind)}>そのままにする</button>
           </span>
         </div>
       ) : null}
@@ -939,33 +1017,51 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         <div className="lv-cw-bar" role="toolbar" aria-label="操作" data-testid="correction-control-bar" data-review={reviewCards.length ? true : undefined}>
           {/* P10.1 §1: 再生 and 表示 always share the first line. P10.2: the bar spans the workspace (one line from 1280). */}
           <div className="lv-cw-bar-lead">
-          <div className="lv-cw-group" role="group" aria-label="再生">
-            <button type="button" className="lv-cw-btn lv-cw-icon" onClick={goToStart} aria-label="曲の先頭へ（Home）" title="曲の先頭へ（Home）" data-testid="correction-go-start">⏮</button>
-            <button
-              type="button"
-              className="lv-cw-btn"
-              data-kind="accent"
-              aria-pressed={songPlaying}
-              aria-label={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
-              title={songPlaying ? "停止（Space）" : `${position} から再生（Space）`}
-              onClick={toggleSong}
-              data-testid="correction-play-song"
-            >
-              {songPlaying ? "■ 停止" : "▶ 再生"}
-            </button>
+          <PlaybackRow
+            className="lv-cw-group"
+            label="再生"
+            status={songPlaying ? "playing" : "stopped"}
+            pausable={false}
+            onPrimary={toggleSong}
+            onBeginning={goToStart}
+            loop={loop}
+            onLoop={setLoop}
+            loopDisabled={!saveRange}
+            primaryProps={{
+              "aria-pressed": songPlaying,
+              "aria-label": songPlaying ? "停止（Space）" : `${position} から再生（Space）`,
+              title: songPlaying ? "停止（Space）" : `${position} から再生（Space）`,
+              "data-testid": "correction-play-song",
+            }}
+            beginningProps={{ "aria-label": "曲の先頭へ（Home）", title: "曲の先頭へ（Home）", "data-testid": "correction-go-start" }}
+            loopProps={{ title: saveRange ? "保存する範囲をくり返す" : "保存する範囲を選ぶと、くり返せます", "data-testid": "correction-loop" }}
+          >
             <button type="button" className="lv-cw-btn" aria-pressed={follow} onClick={() => setFollow((value) => !value)} data-testid="correction-follow">追従</button>
             <TempoField
-              value={songBpm}
+              value={hasSongBpm ? songBpm : playBpm}
               title={`テンポ（BPM）。上下にドラッグ・ホイールで変える。ダブルクリックで入力${tempoMissing ? "。MIDI にテンポの情報がありません" : ""}`}
               onCommit={commitTempo}
             />
             {present.tempo !== undefined ? (
               <button type="button" className="lv-cw-btn lv-cw-tempo-midi" onClick={() => commitTempo(midiBpm)} title={`MIDI の値（${midiBpm}${tempoMissing ? "・MIDI にテンポなし" : ""}）に戻す`} data-testid="correction-tempo-midi">↺ MIDI</button>
             ) : null}
+            {hasSongBpm ? (
+              <button
+                type="button"
+                className="lv-cw-btn lv-cw-match-bpm"
+                aria-pressed={matchGlobalBpm}
+                aria-label={matchGlobalBpm ? "曲の BPM に戻す" : "共通の BPM に合わせる"}
+                title={matchGlobalBpm ? `曲の BPM（${songBpm}）で鳴らす` : `上の帯の共通 BPM（${globalBpm}）で鳴らす。保存する BPM は変わりません`}
+                onClick={() => setMatchGlobalBpm((value) => !value)}
+                data-testid="correction-match-global-bpm"
+              >
+                {matchGlobalBpm ? "曲の BPM に戻す" : <><span className="lv-cw-word-long">共通の BPM に合わせる</span><span className="lv-cw-word-short" data-text="共通 BPM" /></>}
+              </button>
+            ) : null}
             <span className="lv-cw-time" data-testid="correction-position">
-              {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`} ／ {durationBars}小節
+              {startedAt !== undefined ? <span ref={timeRef} /> : `${position} から`}<span className="lv-cw-time-total"> ／ {durationBars}小節</span>
             </span>
-          </div>
+          </PlaybackRow>
           <div className="lv-cw-group" role="group" aria-label="表示">
             <span className="lv-cw-seg">
               {([["all", "全体", "全体"], ["16", "16", "16小節"], ["8", "8", "8小節"], ["4", "4", "4小節"]] as const).map(([value, text, label]) => (
@@ -999,7 +1095,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
             return (
               <span className="lv-cw-range-chip" data-testid="correction-range-chip" title={rangeChipText(saveRange, chords)}>
                 <button type="button" className="lv-cw-range-chip-text" onClick={() => { stopFollow(); scrollToBeat((saveRange.startBar - 1) * meter, "left"); }}>
-                  <span className="lv-cw-chip-long">{rangeChipText(saveRange, chords)}{progression ? "・くり返し" : ""}</span>
+                  <span className="lv-cw-chip-long">{rangeChipText(saveRange, chords)}{loop ? "・くり返し" : ""}</span>
                   <span className="lv-cw-chip-short" aria-hidden="true">{rangeChipText(saveRange, chords, true)}</span>
                 </button>
                 <button type="button" className="lv-cw-range-chip-clear" aria-label="範囲を外す（Esc）" title="範囲を外す（Esc）" onClick={() => setSaveRange(undefined)} data-testid="correction-range-chip-clear">×</button>
@@ -1181,77 +1277,64 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                   {segmentTip ? <span className="lv-cw-pitch-tip" style={{ left: segmentTip.x, top: 12 }} data-testid="correction-segment-tip">{segmentTip.text}</span> : null}
                 </div>
                 <div className="lv-cw-cards" data-progression-card-stage={progression ? true : undefined} style={{ height: cardsRowHeight }}>
-                  {shown.cards.filter((card) => overlaps(card.start, card.duration, range)).map((card) => {
-                    const width = card.duration * pxPerBeat - 2;
-                    const size = cardSize(width);
-                    const label = cardLabel(card.name.label, width);
-                    const review = card.reviewReasons.length > 0;
-                    return (
-                      <button
-                        key={card.id}
-                        type="button"
-                        className="lv-cw-card"
-                        data-size={size === "full" ? undefined : size}
-                        data-review={review || undefined}
-                        data-edited={card.edited || undefined}
-                        data-name-unreadable={card.nameUnreadable || undefined}
-                        data-testid="correction-card"
-                        data-chord-card={progression ? true : undefined}
-                        aria-pressed={card.id === selected?.id}
-                        aria-label={`${card.bar}小節${card.beat}拍 ${card.name.label}${review ? "（要確認）" : ""}`}
-                        title={card.name.label}
-                        style={{ left: card.start * pxPerBeat + 1, width: Math.max(2, width) }}
-                        data-card-id={card.id}
-                        data-out-of-range={!inSaveRange(card) || undefined}
-                        data-in-range={(saveRange && inSaveRange(card)) || undefined}
-                        data-start-cue={(!songPlaying && !rangeFrom && card.id === cueCard?.id) || undefined}
-                        data-range-from={card.id === rangeFrom || undefined}
-                        onPointerEnter={() => { if (rangeFrom) setRangeHover(card.id); }}
-                        onContextMenu={(event) => {
-                          // P17-01 §3.2: the card's menu; while a save range start is pending, another card decides the range.
+                  {shown.cards.filter((card) => overlaps(card.start, card.duration, range)).map((card) => (
+                    <ChordCard
+                      key={card.id}
+                      card={card}
+                      pxPerBeat={pxPerBeat}
+                      meter={meter}
+                      harmony={harmonyByCard.get(card.id)}
+                      showDegree={props.showDegrees ?? true}
+                      selected={card.id === selected?.id}
+                      progression={Boolean(progression)}
+                      change={progression && changedCards.some(c=>c.id===card.id) ? (props.model.cards.some(c=>c.id===card.id)?"変更":"追加") : undefined}
+                      outOfRange={!inSaveRange(card)}
+                      inRange={Boolean(saveRange && inSaveRange(card))}
+                      startCue={!songPlaying && !rangeFrom && card.id === cueCard?.id}
+                      rangeFrom={card.id === rangeFrom}
+                      onPointerEnter={() => { if (rangeFrom) setRangeHover(card.id); }}
+                      onContextMenu={(event) => {
+                        // P17-01 §3.2: the card's menu; while a save range start is pending, another card decides the range.
+                        event.preventDefault();
+                        const keyboard = keyboardMenuRef.current;
+                        keyboardMenuRef.current = undefined;
+                        if (event.detail === 0 && keyboard?.cardId === card.id && performance.now() - keyboard.at < 500) return;
+                        if (event.shiftKey) { markRange(card, true); return; }
+                        if (rangeFrom && card.id !== rangeFrom) { markRange(card, false); return; }
+                        openCardMenu(card, event.clientX, event.clientY, event.currentTarget);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "ContextMenu" || event.key === "Menu" || (event.shiftKey && event.key === "F10")) {
                           event.preventDefault();
-                          const keyboard = keyboardMenuRef.current;
-                          keyboardMenuRef.current = undefined;
-                          if (event.detail === 0 && keyboard?.cardId === card.id && performance.now() - keyboard.at < 500) return;
-                          if (event.shiftKey) { markRange(card, true); return; }
-                          if (rangeFrom && card.id !== rangeFrom) { markRange(card, false); return; }
-                          openCardMenu(card, event.clientX, event.clientY, event.currentTarget);
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "ContextMenu" || event.key === "Menu" || (event.shiftKey && event.key === "F10")) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            keyboardMenuRef.current = { cardId: card.id, at: performance.now() };
-                            const box = event.currentTarget.getBoundingClientRect();
-                            openCardMenu(card, box.left + 24, box.bottom, event.currentTarget);
-                          }
-                        }}
-                        onClick={(event) => {
-                          // Shift+click: the range from the selected card to this one, in whole bars.
-                          if (event.shiftKey && selected) setSaveRange(cardsBarRange(selected, card, meter));
-                          selectCardRow(card, false);
-                          // 「押して鳴らす」: only a plain click, never while the song plays; the last audition stops.
-                          if (clickAudition && !event.shiftKey && !songPlaying) auditionCard(card);
-                        }}
-                        onDoubleClick={() => openNameEditor(card.id)}
-                      >
-                        <span className="lv-cw-card-name" data-full-name={card.name.label} data-small={label.small}>{label.text}</span>
-                        <span className="lv-cw-card-sub">
-                          {review ? <span className="lv-cw-flag" aria-hidden="true" /> : null}
-                          {/* P10.2 §1.1: a card exactly one bar long does not say 「4拍」. */}
-                          {Math.abs(card.duration - meter) > 1e-6 ? <span>{formatBeats(card.duration)}拍</span> : null}
-                          {progression && changedCards.some(c=>c.id===card.id) ? <span className="lv-cw-change">{props.model.cards.some(c=>c.id===card.id)?"変更":"追加"}</span> : null}
-                          {card.attacks > 1 ? <span className="lv-cw-x">×{card.attacks}</span> : null}
-                        </span>
-                      </button>
-                    );
-                  })}
+                          event.stopPropagation();
+                          keyboardMenuRef.current = { cardId: card.id, at: performance.now() };
+                          const box = event.currentTarget.getBoundingClientRect();
+                          openCardMenu(card, box.left + 24, box.bottom, event.currentTarget);
+                        }
+                      }}
+                      onClick={(event) => {
+                        // Shift+click: the range from the selected card to this one, in whole bars.
+                        if (event.shiftKey && selected) setSaveRange(cardsBarRange(selected, card, meter));
+                        selectCardRow(card, false);
+                        // 「押して鳴らす」: only a plain click, never while the song plays; the last audition stops.
+                        if (clickAudition && !event.shiftKey && !songPlaying) auditionCard(card);
+                      }}
+                      onDoubleClick={() => openNameEditor(card.id)}
+                    />
+                  ))}
                   {shown.cards.map((card, index) => {
                     const next = shown.cards[index + 1];
                     if (!next || Math.abs(card.start + card.duration - next.start) > 1e-6 || next.start < range.from || next.start > range.to) return null;
+                    // P23-16 W6: a thin card (tiny, bare) keeps its middle free: the 「＋」 is not drawn beside it, and the
+                    // boundary handle reaches at most a fifth of its width into it (4px into a wider card, as before).
+                    const leftWidth = card.duration * pxPerBeat - 2;
+                    const rightWidth = next.duration * pxPerBeat - 2;
+                    const thin = cardSize(leftWidth) === "tiny" || cardSize(leftWidth) === "bare" || cardSize(rightWidth) === "tiny" || cardSize(rightWidth) === "bare";
+                    const leftReach = Math.min(4, Math.max(1, leftWidth / 5));
+                    const rightReach = Math.min(4, Math.max(1, rightWidth / 5));
                     return (
                       <Fragment key={`edge-${card.id}`}>
-                      {progression ? <button type="button" className="lv-cw-insert" aria-label={`${card.name.label}の後に分けて足す`} style={{left:next.start*pxPerBeat-9}} onClick={()=>edit(model=>splitCard(model,card.id))}>＋</button> : null}
+                      {progression && !thin ? <button type="button" className="lv-cw-insert" aria-label={`${card.name.label}の後に分けて足す`} style={{left:next.start*pxPerBeat-9}} onClick={()=>edit(model=>splitCard(model,card.id))}>＋</button> : null}
                       <span
                         key={`edge-${card.id}`}
                         className="lv-cw-handle"
@@ -1259,7 +1342,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
                         aria-label={`${positionLabel(next.start, meter)} の境目（ドラッグで動かす・Alt で ¼拍）`}
                         data-testid="correction-boundary"
                         data-left-card={card.id}
-                        style={{ left: next.start * pxPerBeat - 4 }}
+                        style={{ left: next.start * pxPerBeat - leftReach, width: leftReach + rightReach, ["--lv-cw-handle-mid" as string]: `${leftReach - 1}px` }}
                         onPointerDown={(event) => startBoundary(event, card.id)}
                         onPointerMove={dragBoundary}
                         onPointerUp={endBoundary}
@@ -1420,37 +1503,18 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         </aside>
       </div>
 
-      <div className="lv-cw-keys-help">
-        {mode === "edit" ? (
-          <>
-            <span>空いた所をクリック：足す</span>
-            <span>右クリック・なぞる：外す</span>
-            <span>上下ドラッグ・<kbd>↑</kbd><kbd>↓</kbd>：高さ</span>
-            <span><kbd>Delete</kbd> 外す・消す</span>
-            <span><kbd>R</kbd> 戻す</span>
-            <span><kbd>Ctrl</kbd>＋ドラッグ 範囲で選ぶ</span>
-            <span><kbd>Enter</kbd> 直し終わる</span>
-            <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
-          </>
-        ) : (
-          <>
-            <span><kbd>←</kbd><kbd>→</kbd> 前後のカード</span>
-            {!progression ? <span><kbd>[</kbd><kbd>]</kbd> 前後の要確認</span> : null}
-            <span><kbd>N</kbd> 音を直す</span>
-            <span><kbd>M</kbd> つなぐ・<kbd>S</kbd> 分ける</span>
-            <span><kbd>Delete</kbd> カードを消す</span>
-            <span><kbd>1</kbd>〜<kbd>4</kbd> {progression ? "コードを替える" : <>名前・<kbd>Y</kbd> このままでよい</>}</span>
-            <span>{progression ? "音を直す：押して外す・空いた所で足す・上下にドラッグ" : "ロールの右クリック：外す・ダブルクリック：足す"}</span>
-            <span>カードの右クリック：メニュー（消す・つなぐ・保存する範囲）</span>
-            {!progression ? <span>小節の行の右クリック：その小節を消して詰める</span> : null}
-            <span><kbd>A</kbd><kbd>B</kbd> 聴き比べ</span>
-            <span><kbd>Space</kbd> 再生・停止（どこでも）</span>
-            <span><kbd>Home</kbd> 曲の先頭へ</span>
-            <span><kbd>Enter</kbd> フォーカスのあるボタンを押す</span>
-            <span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 元に戻す</span>
-            <span><kbd>?</kbd> ショートカット一覧</span>
-          </>
-        )}
+      {/* P23-16 W4: the keys in one line; 「?」 shows them all (Esc or a click outside closes it). */}
+      <div className="lv-cw-keys-help" data-testid="correction-keys-help">
+        <Popover
+          label="キーの操作"
+          className="lv-cw-keys-all"
+          trigger={(triggerProps) => (
+            <button type="button" className="lv-cw-keys-more" aria-label="キーの操作を全部見る" title="キーの操作を全部見る" data-testid="correction-keys-more" {...triggerProps}>?</button>
+          )}
+        >
+          <div className="lv-cw-keys-list">{keyHelp.all}</div>
+        </Popover>
+        <span className="lv-cw-keys-line">{keyHelp.line}</span>
       </div>
 
       {helpOpen ? <ShortcutSheet onClose={() => setHelpOpen(false)} /> : null}
@@ -1461,6 +1525,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         confirmLabel="保存せずに開く"
         cancelLabel="戻る"
         tone="danger"
+        changeCount={unsavedCount}
         onCancel={() => setPendingLeave(undefined)}
         onConfirm={() => { const action = pendingLeave; setPendingLeave(undefined); action?.(); }}
       />
@@ -1496,8 +1561,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         open={confirm === "runs"}
         title="同じ音が続く所をつなぐ"
         description={confirm === "runs" ? runsDescription(present) : ""}
-        confirmLabel="つなぐ（Enter）"
-        cancelLabel="やめる（Esc）"
+        confirmLabel="つなぐ"
+        cancelLabel="やめる"
+        confirmKey="enter"
         onConfirm={runConfirm}
         onCancel={() => setConfirm(undefined)}
       />
@@ -1505,8 +1571,9 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
         open={confirm === "same-fix" && Boolean(selected && rename)}
         title="同じ直しを他にも反映"
         description={selected && rename ? `同じ音で名前が「${rename.before}」の他の ${sameFix.length} か所も「${selected.name.label}」にします。` : ""}
-        confirmLabel="反映する（Enter）"
-        cancelLabel="やめる（Esc）"
+        confirmLabel="反映する"
+        cancelLabel="やめる"
+        confirmKey="enter"
         onConfirm={runConfirm}
         onCancel={() => setConfirm(undefined)}
       />
@@ -1744,10 +1811,6 @@ function pct(value: number, total: number): string {
   return `${(Math.max(0, value) / Math.max(1, total)) * 100}%`;
 }
 
-function formatBeats(beats: number): string {
-  return Number.isInteger(beats) ? String(beats) : beats.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-}
-
 function verticalScroller(from: HTMLElement): Element {
   for (let element = from.parentElement; element; element = element.parentElement) {
     const overflow = getComputedStyle(element).overflowY;
@@ -1782,4 +1845,12 @@ function progressionSongNotes(model: CorrectionModel, from: number, bpm: number,
     const start = Math.max(from,card.start); const stop = Math.min(end,card.start+card.duration);
     return stop <= start || card.name.label === "N.C." ? [] : usedNotes(model,card.id).map(pitch=>({pitch,startBeat:start-from,durationBeats:Math.min(stop-start,Math.max(0.4*bpm/60,(stop-start)*0.9)),velocity:89}));
   }), ...(clicks ? songClicks(from,end,model.context.meter) : [])];
+}
+
+/** P23-16 W1: the capture song; with ↻ ループ on, only up to the end of the save range (then it starts over). */
+function captureSongNotes(model: CorrectionModel, timeline: readonly ChordTimelineItem[], from: number, bpm: number, clicks: boolean, range?: SaveRange) {
+  const notes = songPlaybackNotes(model, timeline, from, bpm, clicks);
+  if (!range) return notes;
+  const end = Math.min(range.endBar * model.context.meter, model.totalBeats) - from;
+  return notes.filter((note) => note.startBeat < end - 1e-6).map((note) => ({ ...note, durationBeats: Math.min(note.durationBeats, end - note.startBeat) }));
 }

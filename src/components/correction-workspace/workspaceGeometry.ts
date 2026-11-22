@@ -4,6 +4,8 @@
  * where Ctrl+wheel keeps the pointer.
  */
 
+import { displayChordLabel } from "../../ui/chordText";
+
 export interface BeatRange {
   from: number;
   to: number;
@@ -27,20 +29,46 @@ export function cardSize(widthPx: number): CardSize {
   return widthPx < 14 ? "bare" : widthPx < 40 ? "tiny" : widthPx < 72 ? "narrow" : "full";
 }
 
-// Estimated bold glyph widths at 16 / 13 / 10px (E2E checks that no drawn name is clipped).
+// Estimated bold glyph widths at 16 / 13 / 10px, used where nothing can measure (jsdom, a missing canvas).
 const charPx: Record<CardSize, number> = { full: 10.5, narrow: 8.6, tiny: 6.8, bare: 0 };
 const padPx: Record<CardSize, number> = { full: 22, narrow: 12, tiny: 6, bare: 0 };
+/** P23-16 W7: the font size of each size class, and its left + right padding in the CSS (`.lv-cw-card`) plus 2px to spare. */
+const fontPx: Record<CardSize, number> = { full: 16, narrow: 13, tiny: 10, bare: 0 };
+const measuredPadPx: Record<CardSize, number> = { full: 18, narrow: 12, tiny: 6, bare: 0 };
+
+/** The drawn width of `text` (as shown, ♯ ♭) in the card's bold font at `px`; undefined where nothing can measure. */
+export type MeasureText = (text: string, px: number) => number | undefined;
+
+let context: CanvasRenderingContext2D | null | undefined;
+/** P23-16 W7: the browser's own width of the shown name (a canvas, the page's font), so a name that fits is never cut. */
+export const measureCardText: MeasureText = (text, px) => {
+  if (context === undefined) {
+    const jsdom = typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent);
+    try {
+      context = jsdom || typeof document === "undefined" ? null : document.createElement("canvas").getContext("2d");
+    } catch {
+      context = null;
+    }
+  }
+  if (!context) return undefined;
+  context.font = `700 ${px}px ${getComputedStyle(document.body).fontFamily}`;
+  return context.measureText(text).width;
+};
 
 /**
  * What a card shows (P10.2 §10.4): the whole name; if it does not fit, the whole name in
  * the smaller letters (13px); if that does not fit either, the root with 「…」 (「Bmaj9」→
  * 「B…」, never a bare 「B」, which reads as another chord). Tiny cards keep the old rule
  * (the name, else the root, else nothing; spec v2.4 §6.2); bare ones show nothing.
+ * P23-16 W7: in the browser the fit is measured (the shown name, ♯ ♭) instead of estimated.
  */
-export function cardLabel(label: string, widthPx: number): { text: string; small?: true } {
+export function cardLabel(label: string, widthPx: number, measure: MeasureText = measureCardText): { text: string; small?: true } {
   const size = cardSize(widthPx);
   if (size === "bare") return { text: "" };
-  const fits = (text: string, letters: CardSize = size) => text.length * charPx[letters] + padPx[size] <= widthPx;
+  const fits = (text: string, letters: CardSize = size) => {
+    const drawn = measure(displayChordLabel(text), fontPx[letters]);
+    return drawn === undefined ? text.length * charPx[letters] + padPx[size] <= widthPx : drawn + measuredPadPx[size] <= widthPx;
+  };
   if (fits(label)) return { text: label };
   const root = /^[A-G][#b♯♭]?/.exec(label)?.[0] ?? label.slice(0, 1);
   if (size === "tiny") return { text: fits(root) ? root : "" };

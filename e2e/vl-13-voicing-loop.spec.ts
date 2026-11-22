@@ -162,7 +162,9 @@ test.describe("VL-13 A: the Voicing Loop plays the MIDI keyboard", () => {
     });
     // The same state indication Chord Dojo uses while the audio context is still stopped.
     await expect(workspace).toHaveAttribute("data-midi-audio", "suspended");
-    await workspace.getByTestId("voicing-loop-midi-status").click();
+    // P23-32 K4: the MIDI status line left the bar; the pane's own pointer input resumes the audio context
+    // now (the workspace captures pointer down for exactly this).
+    await workspace.getByTestId("voicing-loop-keyboard-legend").click();
     await expect(workspace).toHaveAttribute("data-midi-audio", "ready");
     await midi(page).emit([60]);
     await expect.poll(() => monitorNotes(page)).toEqual([60]);
@@ -335,15 +337,15 @@ test.describe("VL-13 B: the whole-song fill moves with the playhead", () => {
   test("a loop restarts the fill with the head, not backwards", async ({ page }) => {
     const workspace = await openLoop(page, "both-hands");
     await workspace.getByRole("button", { name: "開始", exact: true }).click();
-    await expect.poll(async () => (await navigatorValues(page)).head, { timeout: 15_000 }).toBeGreaterThan(40);
-    await expect.poll(async () => (await navigatorValues(page)).head, { timeout: 15_000 }).toBeLessThan(10);
-    // After the restart the head and the whole-song fill must move together near the start. Assert both properties at
-    // the same instant inside the poll: separate polls followed by one more read raced the continuing loop (the fill
-    // read 12.5 once while the head had already passed 10 — the two one-shot reads were not the same instant).
+    // One stateful wait for the whole transition: the head must pass 40, then restart under 10 with the fill on it.
+    // Waiting for the restart first and then for the fill in a second poll raced the continuing loop (the second poll
+    // started after the fill had already passed 10).
+    let sawHigh = false;
     await expect.poll(async () => {
       const value = await navigatorValues(page);
-      return `${Math.abs(value.fill - value.head) <= 1 ? "on" : "off"}/${value.fill < 10 ? "start" : "past"}`;
-    }, { timeout: 15_000, message: "after the loop restarts, the fill must be on the head near the start" }).toBe("on/start");
+      if (value.head > 40) sawHigh = true;
+      return sawHigh && value.head < 10 && Math.abs(value.fill - value.head) <= 1;
+    }, { timeout: 30_000, intervals: [100], message: "after the loop restarts, the fill must be on the head near the start" }).toBe(true);
   });
 
   test("a section loop keeps the fill inside the section, on the head", async ({ page }) => {

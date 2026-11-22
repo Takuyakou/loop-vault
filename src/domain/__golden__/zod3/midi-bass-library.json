@@ -1,0 +1,34 @@
+[
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-bass-midi-library",
+        "fileVersion": 1,
+        "revision": 1,
+        "version": 1,
+        "songs": [],
+        "settings": {
+          "timingToleranceMs": 70,
+          "octaveCountsAsCorrect": true,
+          "autoLatencyCorrection": true,
+          "defaultWindowBars": 2,
+          "defaultTempoPercent": 100
+        }
+      }
+    }
+  },
+  {
+    "case": "wrong-file-version",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "extra-key",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

@@ -42,7 +42,8 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
         const area = measured.find(item => item.selector === selector)!;
         expect(area.scroll).toBe(area.client);
       }
-      expect(measured.find(area => area.selector.includes("midi-row"))!.bottom).toBeLessThanOrEqual(height!);
+      // P23-32 K4/K6: the bar is the pane's last thing — no MIDI row and no 16px safe area below it.
+      expect(measured.find(area => area.selector.includes('"voicing-loop-transport"'))!.bottom).toBeLessThanOrEqual(height!);
     }
   });
 }

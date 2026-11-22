@@ -1,6 +1,10 @@
 :root {
-  --font-sans: "IBM Plex Sans JP", "Yu Gothic UI", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "LV Symbols", "Inter", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  --font-mono: "LV Symbols", "IBM Plex Mono", ui-monospace, monospace;
+  --lv-fn-t: #6aa8ff;    /* tonic: blue */
+  --lv-fn-sd: #f5dc4a;   /* subdominant: yellow */
+  --lv-fn-sdm: #b9a03a;  /* subdominant minor: dark yellow */
+  --lv-fn-d: #ff6b7d;    /* dominant: red */
   --lv-bg: #0a1019;
   --lv-bg-subtle: #0d1522;
   --lv-sidebar: #0d1522;
@@ -15,6 +19,8 @@
   --lv-accent-soft: #123b3a;
   --lv-accent-secondary: #746df4;
   --lv-accent-secondary-soft: #25234d;
+  --lv-practice-bass: #a79cff;
+  --lv-practice-bass-soft: #2a2550;
   --lv-info: #78c8f5;
   --lv-info-soft: #102d40;
   --lv-success: #36c990;
@@ -85,6 +91,23 @@
   --lv-toast-surface: rgb(22 35 56 / 96%);
   --lv-toast-border: rgb(150 170 195 / 18%);
   --lv-toast-shadow: 0 16px 40px rgb(0 0 0 / 45%);
+  /* P23-03: surfaces without outlines, unified part shapes. */
+  --lv-radius-panel: 14px;
+  --lv-radius-control: 10px;
+  --lv-radius-tag: 7px;
+  --lv-line: #2b3c50;
+  --lv-well: #0c141e;
+  --lv-well-hover: #142130;
+  --lv-panel-bg: linear-gradient(180deg, #131f2d, #101a26);
+  --lv-panel-shadow: inset 0 1px 0 rgb(255 255 255 / 4.5%), 0 8px 24px rgb(0 0 0 / 18%);
+  --lv-float-shadow: 0 16px 40px rgb(0 0 0 / 45%), 0 0 0 1px var(--lv-line);
+  --lv-modal-shadow: 0 24px 70px rgb(0 0 0 / 65%), 0 0 0 1px var(--lv-line);
+  --lv-primary-bg: linear-gradient(180deg, #52e3d1, #36cdbb);
+  --lv-primary-glow: 0 4px 14px rgb(66 216 198 / 22%);
+  --lv-primary-glow-hover: 0 6px 20px rgb(66 216 198 / 32%);
+  --lv-bg-glow:
+    radial-gradient(700px 320px at 85% -20%, rgb(66 216 198 / 10%), transparent 60%),
+    radial-gradient(520px 300px at -10% 110%, rgb(116 109 244 / 9%), transparent 60%);
 }
 
 @layer base {
@@ -110,19 +133,21 @@
 
 @layer components {
   .lv-button-primary {
-    background: var(--lv-accent);
-    border-radius: var(--lv-radius-sm);
+    background: var(--lv-primary-bg);
+    border-radius: var(--lv-radius-control);
+    box-shadow: var(--lv-primary-glow);
     color: var(--lv-text-on-accent);
+    font-weight: 700;
   }
 
   .lv-button-secondary {
-    border: 1px solid var(--lv-border-strong);
-    border-radius: var(--lv-radius-sm);
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
     color: var(--lv-text-secondary);
   }
 
   .lv-button-ghost {
-    border-radius: var(--lv-radius-sm);
+    border-radius: var(--lv-radius-control);
     color: var(--lv-text-secondary);
   }
 
@@ -132,9 +157,9 @@
   }
 
   .lv-button-danger {
-    border: 1px solid color-mix(in srgb, var(--lv-danger) 58%, transparent);
-    border-radius: var(--lv-radius-sm);
-    color: var(--lv-danger);
+    border: 1px solid rgb(238 107 115 / 50%);
+    border-radius: var(--lv-radius-control);
+    color: #ffb3ba;
   }
 
   .lv-button-danger:hover {
@@ -142,29 +167,53 @@
     color: #fff;
   }
 
+  /* P23-30 D4: the destructive choice as a filled button (windows with only 「取り消す」 and it). */
+  .lv-button-danger-solid {
+    border: 1px solid var(--lv-danger);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-danger);
+    color: #1b0a0d;
+    font-weight: 700;
+  }
+
+  .lv-button-danger-solid:hover {
+    background: color-mix(in srgb, var(--lv-danger) 84%, #fff);
+    color: #1b0a0d;
+  }
+
   .lv-button-primary,
   .lv-button-secondary,
   .lv-button-ghost,
-  .lv-button-danger {
+  .lv-button-danger,
+  .lv-button-danger-solid {
     transition:
       background-color var(--lv-motion-fast) var(--lv-ease-standard),
       border-color var(--lv-motion-fast) var(--lv-ease-standard),
-      color var(--lv-motion-fast) var(--lv-ease-standard);
+      box-shadow var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard),
+      filter var(--lv-motion-fast) var(--lv-ease-standard),
+      transform var(--lv-motion-fast) var(--lv-ease-standard);
   }
 
-  .lv-button-primary:hover {
-    background: var(--lv-accent-strong);
+  .lv-button-primary:hover:not(:disabled) {
+    box-shadow: var(--lv-primary-glow-hover);
+    filter: brightness(1.07);
+  }
+
+  .lv-button-primary:disabled {
+    box-shadow: none;
   }
 
   .lv-button-secondary:hover {
-    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    border-color: var(--lv-accent);
     color: var(--lv-text);
   }
 
   .lv-button-primary:disabled,
   .lv-button-secondary:disabled,
   .lv-button-ghost:disabled,
-  .lv-button-danger:disabled {
+  .lv-button-danger:disabled,
+  .lv-button-danger-solid:disabled {
     cursor: not-allowed;
     opacity: 0.48;
   }
@@ -172,9 +221,9 @@
   .lv-field-control {
     width: 100%;
     min-height: var(--lv-control-md);
-    border: 1px solid var(--lv-border-strong);
-    border-radius: var(--lv-radius-sm);
-    background: var(--lv-bg-subtle);
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
     color: var(--lv-text);
   }
 
@@ -183,9 +232,10 @@
   }
 
   .lv-surface {
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-md);
-    background: var(--lv-surface);
+    border: 1px solid transparent;
+    border-radius: var(--lv-radius-panel);
+    background: var(--lv-panel-bg);
+    box-shadow: var(--lv-panel-shadow);
   }
 
   .lv-surface-raised {
@@ -193,8 +243,8 @@
   }
 
   .lv-surface-primary {
-    border-color: color-mix(in srgb, var(--lv-accent) 28%, var(--lv-border));
-    border-radius: var(--lv-radius-lg);
+    border-color: color-mix(in srgb, var(--lv-accent) 28%, transparent);
+    border-radius: var(--lv-radius-panel);
     background: var(--lv-surface-raised);
     box-shadow: var(--lv-shadow-raised);
   }
@@ -271,6 +321,10 @@
     font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
     text-wrap: pretty;
+  }
+
+  .lv-status {
+    border-radius: var(--lv-radius-control);
   }
 
   .lv-status-info {

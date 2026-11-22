@@ -1,5 +1,5 @@
 import { median } from "./earClock";
-import { earJudge } from "./judge";
+import { judgeEarAnswer } from "./judgement";
 import type { EarQuestion, EarQuestionChord } from "./question";
 
 export type EarPhase = "listen" | "play" | "result";
@@ -36,6 +36,18 @@ export interface EarCard {
   degreeShown?: boolean;
 }
 
+/** P23-22 J2: one shape that was tried and did not fit, kept while this card is being answered. */
+export interface EarTriedForm {
+  /** The notes that were down, lowest first. */
+  notes: readonly number[];
+  /** The words the judgement said at that moment. */
+  message: string;
+  /** When it was tried (the clock the session is given). */
+  at: number;
+  /** P23-23a S16: which answer this was for the card (1 is the first; a folded repeat keeps the newer number). */
+  attempt: number;
+}
+
 export interface EarSessionOptions {
   question: EarQuestion;
   /** Show the name of the first chord from the start (the first chord is still played, but is kept out of the figures). */
@@ -66,6 +78,11 @@ export class EarSession {
   readonly cards: EarCard[];
   /** Times L, K or R was used (the first lap is not counted). */
   listens = 0;
+  /**
+   * P23-22 J2: the shapes that did not fit on the card being answered, newest first, at most three. Consecutive
+   * repeats are one entry. It is emptied when the next card comes. This run only: never written to a file.
+   */
+  readonly triedForms: EarTriedForm[] = [];
   private measureStartAt: number | undefined;
 
   constructor(options: EarSessionOptions) {
@@ -155,7 +172,7 @@ export class EarSession {
     const card = this.current;
     const chord = this.currentChord;
     if (this.phase !== "play" || card.done) return { ok: false, message: "", finished: false };
-    const verdict = earJudge({ symbol: chord.symbol, judge: chord.judge, notes: chord.notes }, notes);
+    const verdict = judgeEarAnswer({ symbol: chord.symbol, judge: chord.judge, notes: chord.notes }, notes);
     const sec = this.secondsAt(completedAt);
     card.firstAnswerSec ??= sec;
     card.attempts.push({ ok: verdict.ok, sec, message: verdict.message });
@@ -165,6 +182,7 @@ export class EarSession {
       card.playedNotes = [...notes].sort((a, b) => a - b);
     } else {
       card.mistakes += 1;
+      this.rememberTriedForm(notes, verdict.message, completedAt, card.attempts.length);
     }
     return { ok: verdict.ok, message: verdict.message, finished: verdict.ok && this.index === this.cards.length - 1 };
   }
@@ -188,6 +206,19 @@ export class EarSession {
       return;
     }
     this.index += 1;
+    this.triedForms.length = 0;
+  }
+
+  /** Keeps a shape that did not fit: newest first, at most three, a repeat of the newest folded into it. */
+  private rememberTriedForm(notes: readonly number[], message: string, at: number, attempt: number): void {
+    const sorted = [...notes].sort((left, right) => left - right);
+    const newest = this.triedForms[0];
+    if (newest && newest.notes.join(",") === sorted.join(",")) {
+      this.triedForms[0] = { notes: sorted, message, at, attempt };
+      return;
+    }
+    this.triedForms.unshift({ notes: sorted, message, at, attempt });
+    this.triedForms.length = Math.min(this.triedForms.length, 3);
   }
 
   /** The marks of a card (✓ at the first try with no hint; △ after a mistake; 名 / 鍵 for the hints). */

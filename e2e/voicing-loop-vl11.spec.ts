@@ -69,16 +69,25 @@ test("P11 compact movement strip retains current and next hand surfaces at scali
     await expect(strip).toBeVisible();
     await expect(strip.getByTestId("voicing-loop-finger-slot")).toHaveCount(10);
     const facts = workspace.getByTestId("voicing-loop-current-voicing");
-    await expect(facts).toContainText("指");
-    await expect(facts).toContainText("音名");
-    await expect(facts).toContainText("構成音");
+    // P23-20 L1: the fields are five slot cards per hand — finger, note and chord tone in each card.
+    await expect(facts.locator("[data-testid='voicing-loop-hand-slot']")).toHaveCount(10);
+    await expect(facts.locator(".voicing-hand-slot-finger").first()).toHaveText(/^[LR][1-5]$/);
+    await expect(facts.locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
+    await expect(facts.locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
     const left = workspace.getByTestId("voicing-loop-left-hand");
     const nextLeft = workspace.getByTestId("voicing-loop-next-left-hand");
     await expect(left).toBeVisible();
     await expect(nextLeft).toBeVisible();
     const alphas = await Promise.all([left, nextLeft].map((element) => element.evaluate((node) => {
-      const background = getComputedStyle(node).backgroundColor;
-      return Number(background.match(/,\s*([\d.]+)\)$/)?.[1] ?? 0);
+      const value = getComputedStyle(node).backgroundColor;
+      // P23-20 L1: the hand surfaces are tinted with color-mix, which Chrome reports as `color(srgb … / α)`.
+      const rgba = value.match(/rgba?\(([^)]+)\)/);
+      if (rgba) {
+        const parts = rgba[1]!.split(",").map((part) => Number(part.trim()));
+        return parts.length === 4 ? parts[3]! : 1;
+      }
+      const modern = value.match(/\/\s*([\d.]+)\s*\)/);
+      return modern ? Number(modern[1]) : 0;
     })));
     expect(alphas[0]).toBeGreaterThan(alphas[1]!);
   }

@@ -85,3 +85,61 @@ export function createEarPlayback(deps: EarPlaybackDeps = {}): EarPlayback {
     },
   };
 }
+
+
+/** P23-22 J3: how the answer of a card can be sounded. */
+export type EarAnswerListenMode = "chord" | "bass" | "spread";
+
+export interface EarAnswerListenOptions {
+  /** How long the whole chord sounds (beats). */
+  readonly chordBeats: number;
+  /** The gap between the notes of 「ばらして聴く」 (beats). Default 1. */
+  readonly spreadBeats?: number;
+  /** Where the sound begins (beats). Default 0. */
+  readonly startBeat?: number;
+}
+
+/**
+ * P23-22 J3: the notes of one answer, in the three ways a card can be heard.
+ *  - `chord`  all the notes together, as long as `chordBeats`;
+ *  - `bass`   only the lowest note of the answer;
+ *  - `spread` the notes one at a time from the lowest, `spreadBeats` apart.
+ */
+export function answerListenNotes(
+  answer: readonly number[],
+  mode: EarAnswerListenMode,
+  options: EarAnswerListenOptions,
+): { notes: MidiPreviewNote[]; endBeat: number } {
+  const start = options.startBeat ?? 0;
+  const notes = [...new Set(answer)].sort((left, right) => left - right);
+  if (notes.length === 0) return { notes: [], endBeat: start };
+  if (mode === "bass") {
+    return { notes: [{ pitch: notes[0]!, startBeat: start, durationBeats: options.chordBeats, velocity: 90 }], endBeat: start + options.chordBeats };
+  }
+  if (mode === "spread") {
+    const each = options.spreadBeats ?? 1;
+    return {
+      notes: notes.map((pitch, index) => ({ pitch, startBeat: start + index * each, durationBeats: each * 0.95, velocity: 90 })),
+      endBeat: start + notes.length * each,
+    };
+  }
+  return {
+    notes: notes.map((pitch) => ({ pitch, startBeat: start, durationBeats: options.chordBeats, velocity: 90 })),
+    endBeat: start + options.chordBeats,
+  };
+}
+
+/**
+ * P23-22 J3: sounds one answer in the chosen way and returns the handle. It never counts a listen (no session is
+ * touched), which is what 「ばらして聴く」 needs: the figures must not move.
+ */
+export function playAnswerListen(
+  play: (id: string, notes: MidiPreviewNote[], endBeat: number) => EarPlayHandle,
+  id: string,
+  answer: readonly number[],
+  mode: EarAnswerListenMode,
+  options: EarAnswerListenOptions,
+): EarPlayHandle {
+  const { notes, endBeat } = answerListenNotes(answer, mode, options);
+  return play(id, notes, endBeat);
+}

@@ -37,7 +37,8 @@ test("VL-03 seeks by card, overview, ruler, and shortcuts without previewing", a
   await page.keyboard.press("m");
   await expect(metronome).toHaveAttribute("aria-pressed", previousMetronome === "true" ? "false" : "true");
   await page.keyboard.press("r");
-  await expect(workspace.getByRole("checkbox", { name: "お手本音" })).not.toBeChecked();
+  // P23-32 K3: the reference sound is a switch named 「お手本の音」.
+  await expect(workspace.getByRole("switch", { name: "お手本の音" })).toHaveAttribute("aria-checked", "false");
 });
 
 test("VL-03 rollback OFF retains the prior card audition path", async ({ page }) => {
@@ -92,8 +93,11 @@ test("VL-05 preserves the C v3 hierarchy across desktop sizes without a height c
       keyboardHeight: element.querySelector("[data-keyboard-layout='wide-88'] svg")!.getBoundingClientRect().height,
     }));
     expect(metrics.overflowY).toBe("auto");
-    expect(metrics.currentFontSize).toBeGreaterThanOrEqual(48);
-    expect(metrics.keyboardHeight).toBeGreaterThanOrEqual(144);
+    // P23-32 P2/K2: the chord is 52px (34 in a low window) and the keys take the panel's rest — at least 85px
+    // in a normal window and the 70px floor the low window keeps while the workspace scrolls.
+    const lowWindow = viewport.height <= 760;
+    expect(metrics.currentFontSize, `${viewport.width}x${viewport.height} chord`).toBeGreaterThanOrEqual(lowWindow ? 34 : 52);
+    expect(metrics.keyboardHeight, `${viewport.width}x${viewport.height} keys`).toBeGreaterThanOrEqual(lowWindow ? 70 : 85);
     await transport.scrollIntoViewIfNeeded();
     await expect(transport).toBeVisible();
     await assertNoHorizontalOverflow(page);
@@ -112,12 +116,13 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
     if (await expand.isVisible()) await expand.click();
     await waitForSidebarSettled(page);
     await page.locator('[data-nav="voicing-loop"]').click();
-    // VL-15: the picker's heading is 「練習する進行」; the old duplicate "Voicing Loop" heading is gone.
-    const heading = page.getByRole("heading", { name: "練習する進行", exact: true, level: 2 });
+    // P23-29 L2: the picker's own heading is not drawn (the tool row names the screen); the tool row is what
+    // has to stay inside the content area now.
+    const band = page.getByTestId("voicing-loop-picker-tools");
     for (const collapsed of [false, true]) {
       if (collapsed) await page.getByRole("button", { name: "サイドバーを狭める" }).click();
       await waitForSidebarSettled(page);
-      const bounds = await heading.boundingBox();
+      const bounds = await band.boundingBox();
       const main = await page.getByRole("main").boundingBox();
       expect(bounds && main).toBeTruthy();
       expect(bounds!.x).toBeGreaterThanOrEqual(main!.x);
@@ -132,8 +137,8 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
   await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
-  const heading = page.getByRole("heading", { name: "練習する進行", exact: true, level: 2 });
-  const bounds = await heading.boundingBox();
+  const band = page.getByTestId("voicing-loop-picker-tools");
+  const bounds = await band.boundingBox();
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   await assertNoHorizontalOverflow(page);
 });
@@ -237,19 +242,19 @@ test("VL-07 256 PracticeGroups keep every chord, precise seek, and smooth visual
   await expect(playhead).toHaveAttribute("style", /translateX\(0px\)/);
 });
 
-test("VL-07 compact Current, keyboard legend, safe area and acceptance states", async ({ page }) => {
+test("VL-07 compact Current, keyboard legend and acceptance states", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   const workspace = await openLoop(page, "both-hands");
   const current = workspace.getByTestId("voicing-loop-current-panel");
   const next = workspace.getByTestId("voicing-loop-next-panel");
   const then = workspace.getByTestId("voicing-loop-then-next");
-  const safe = workspace.getByTestId("voicing-loop-bottom-safe-area");
   const transport = workspace.getByTestId("voicing-loop-transport");
-  const boxes = await Promise.all([current.boundingBox(), next.boundingBox(), then.boundingBox(), safe.boundingBox(), transport.boundingBox()]);
+  const boxes = await Promise.all([current.boundingBox(), next.boundingBox(), then.boundingBox(), transport.boundingBox()]);
   expect(boxes.every(Boolean)).toBe(true);
   expect(boxes[0]!.height).toBeLessThan(boxes[1]!.height + boxes[2]!.height + 60);
-  expect(boxes[3]!.y).toBeGreaterThanOrEqual(boxes[4]!.y + boxes[4]!.height);
-  expect(boxes[3]!.height).toBeGreaterThanOrEqual(16);
+  // P23-32 K6: the 16px strip under the bar is gone — the bar is the pane's last child.
+  await expect(workspace.getByTestId("voicing-loop-bottom-safe-area")).toHaveCount(0);
+  expect(boxes[3]!.y).toBeGreaterThanOrEqual(boxes[1]!.y + boxes[1]!.height);
   await expect(workspace.getByTestId("voicing-loop-keyboard-legend")).toContainText("ペダル保持");
   await page.screenshot({ path: ".local-evaluation/vl07/stopped.png", fullPage: true });
   await workspace.locator("#voicing-loop-count-in").selectOption("0");
@@ -259,7 +264,7 @@ test("VL-07 compact Current, keyboard legend, safe area and acceptance states", 
   await page.screenshot({ path: ".local-evaluation/vl07/playing.png", fullPage: true });
 });
 
-test("VL-07 bottom safe area keeps the lowest control clear of the window bottom at every size and Windows scaling", async ({ page }) => {
+test("VL-07 the bar is the pane's last thing at every size and Windows scaling", async ({ page }) => {
   // R-02: the sizes of §2 of the spec, including what Windows display scaling turns a 1920×1080 screen into
   // (125% ≒ 1536×864, 150% ≒ 1280×720 — already in the list, 200% ≒ 960×540, before the taskbar strip).
   const viewports = [
@@ -274,41 +279,33 @@ test("VL-07 bottom safe area keeps the lowest control clear of the window bottom
     for (const viewport of viewports) {
       await page.setViewportSize(viewport);
       const workspace = await openLoop(page, status);
-      const cards = workspace.getByTestId("voicing-loop-event");
-      await expect(cards.first()).toBeVisible();
-      const safe = workspace.getByTestId("voicing-loop-bottom-safe-area");
-      // The workspace scrolls when the window is short; the strip has to be clear at the very bottom of it.
-      await safe.scrollIntoViewIfNeeded();
+      await expect(workspace.getByTestId("voicing-loop-event").first()).toBeVisible();
+      // P23-32 K6: no 16px safe area under the bar; the bar is the last child and the pane scrolls to it.
+      await expect(workspace.getByTestId("voicing-loop-bottom-safe-area")).toHaveCount(0);
       const measured = await workspace.evaluate((root) => {
         const transport = root.querySelector("[data-testid='voicing-loop-transport']")!;
-        const safeArea = root.querySelector("[data-testid='voicing-loop-bottom-safe-area']") as HTMLElement;
-        const controls = [...root.querySelectorAll("button, select, input, a, [role='button']")]
-          .filter((element) => (element as HTMLElement).offsetParent !== null)
-          .map((element) => element.getBoundingClientRect())
-          .filter((box) => box.width > 0 && box.height > 0);
+        root.scrollTop = root.scrollHeight;
+        const pane = root.getBoundingClientRect();
+        const bar = transport.getBoundingClientRect();
         const heading = root.querySelector("[data-testid='voicing-loop-current-panel'] h2") as HTMLElement;
         const keyboard = root.querySelector("[data-keyboard-layout='wide-88'] svg")!;
         return {
-          windowHeight: window.innerHeight,
-          transportBottom: transport.getBoundingClientRect().bottom,
-          lowestControl: Math.max(...controls.map((box) => box.bottom)),
-          safeHeight: safeArea.getBoundingClientRect().height,
-          safeTop: safeArea.getBoundingClientRect().top,
+          lastChild: root.lastElementChild === transport,
+          barVisible: bar.bottom <= pane.bottom + 1 && bar.top >= pane.top - 1,
+          barHeight: bar.height,
           headingFont: parseFloat(getComputedStyle(heading).fontSize),
           keyboardHeight: keyboard.getBoundingClientRect().height,
         };
       });
-      // ≥16 px between the lowest control and the window bottom, and the strip really is below the transport.
-      expect(measured.windowHeight - measured.transportBottom).toBeGreaterThanOrEqual(16);
-      expect(measured.windowHeight - measured.lowestControl).toBeGreaterThanOrEqual(16);
-      expect(measured.safeHeight).toBeGreaterThanOrEqual(16);
-      expect(measured.safeTop).toBeGreaterThanOrEqual(measured.transportBottom);
-      // VL-07: the chord name and the keyboard are not made smaller to make room.
-      expect(measured.headingFont).toBeGreaterThanOrEqual(48);
-      expect(measured.keyboardHeight).toBeGreaterThanOrEqual(144);
+      expect(measured.lastChild, `${viewport.width}x${viewport.height} last child`).toBe(true);
+      expect(measured.barVisible, `${viewport.width}x${viewport.height} bar at the end of the scroll`).toBe(true);
+      expect(measured.barHeight, `${viewport.width}x${viewport.height} bar height`).toBeGreaterThanOrEqual(41);
+      // VL-07 / P23-32 P2: the chord name follows the window (52 / 34) and the keys keep a drawn height.
+      expect(measured.headingFont, `${viewport.width}x${viewport.height} chord`).toBeGreaterThanOrEqual(viewport.height <= 760 ? 34 : 52);
+      expect(measured.keyboardHeight, `${viewport.width}x${viewport.height} keys`).toBeGreaterThan(0);
       await assertNoHorizontalOverflow(page);
       if (viewport.width === 1280 && viewport.height === 720) {
-        await page.screenshot({ path: `p89-generated/r02/safe-area-${status}-1280x720.png`, fullPage: true });
+        await page.screenshot({ path: `p89-generated/r02/bar-${status}-1280x720.png`, fullPage: true });
       }
     }
   }
@@ -319,15 +316,22 @@ test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) =
   await page.goto("/?p527Status=selector-vl07");
   await page.locator('[data-nav="voicing-loop"]').click();
   const choices = page.getByTestId("voicing-loop-progression-choice");
+  const rows = page.getByTestId("voicing-loop-progression-row");
   await expect(choices).toHaveCount(3);
-  await expect(choices.filter({ hasText: "Public ready progression" })).toBeEnabled();
-  await expect(choices.filter({ hasText: "Public missing BPM" })).toBeEnabled();
+  // P23-29 L6/L7: a row has no practice button of its own; the right column's main button is the one.
+  await expect(rows.locator("button[data-testid='voicing-loop-progression-practice']")).toHaveCount(0);
+  await expect(page.getByTestId("voicing-loop-preview-practice")).toBeEnabled();
+  // P23-29 L8: the list's top playable row is picked at open — 「Public capacity case」 is newer but unavailable,
+  // so the missing-BPM row (the next in the list) is the first one that can be practised.
+  await expect(rows.filter({ hasText: "Public missing BPM" })).toHaveAttribute("data-selected", "true");
   // VL-15: the picker shows the BPM number only; a provisional tempo is faded and explained on hover.
   const provisional = choices.filter({ hasText: "Public missing BPM" }).locator("[data-tempo-origin='PRACTICE_INITIAL']");
   await expect(provisional).toHaveText("120 BPM");
-  await expect(provisional).toHaveAttribute("title", "BPMが保存されていないため、120 BPM で始めます");
-  // VL-15: the short reason sits beside the disabled entry (the full sentence stays in its tooltip).
-  await expect(page.getByTestId("voicing-loop-progression-row").filter({ hasText: "Public capacity case" })).toContainText("256");
+  await expect(provisional).toHaveAttribute("title", "BPMが保存されていないため、仮の 120 BPM です");
+  // P22-02 §1-6: the reason sits on the chords line (the full sentence stays in its tooltip).
+  const capacity = page.getByTestId("voicing-loop-progression-row").filter({ hasText: "Public capacity case" });
+  await expect(capacity).toContainText("長すぎるため、ここでは練習できません(範囲を分けて保存してください)");
+  await expect(capacity.getByTestId("voicing-loop-progression-reason")).toHaveAttribute("title", /256/);
   await page.screenshot({ path: ".local-evaluation/vl07/selector.png", fullPage: true });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   await assertNoHorizontalOverflow(page);

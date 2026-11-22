@@ -1,5 +1,5 @@
 import { Select } from "../../../components/ui/controls";
-import { EchoRail, useEchoActive, useEchoFramed } from "./EchoPracticeFrame";
+import { useEchoActive } from "./EchoPracticeFrame";
 import {
   useCallback,
   useEffect,
@@ -8,27 +8,21 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { Popover, StatusMessage } from "../../../components/ui";
+import { Chip } from "../../../components/ui/controls";
 import {
-  ArrowRight,
-  Ear,
-  Lightbulb,
-  Music2,
-  RotateCcw,
-  Square,
-} from "lucide-react";
-import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
-import {
+  degreeContour,
   degreeDifficultyPreset,
   createCompletedAttempt,
   deriveTransferExercise,
   formatDegree,
   generateDegreeExercise,
+  midiNoteName,
   STANDARD_BASS_TUNINGS,
   type GeneratorSnapshot,
   type Handedness,
   type PracticeExercise,
   type PracticeAttempt,
-  type PracticeIssue,
   type PracticeRating,
   type PracticeSettings,
   type SingingReferenceMode,
@@ -36,14 +30,31 @@ import {
 } from "../domain";
 import {
   type ClaimedPracticeExercise,
-  degreeHintDisclosure,
   DegreePracticeSession,
 } from "../application";
-import { DegreeFretboard } from "./DegreeFretboard";
-import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
-import { createTargetPlayer } from "../recording/application/playback";
-import { previewMidiNotes, stopPreview } from "../../../audio/chordPreview";
-import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
+import {
+  displayNoteName,
+  sharpNoteName,
+  keyLabel,
+  StageButton,
+  StageCount,
+  StageFrame,
+  StageFretboard,
+  StageHints,
+  StageLane,
+  StageMeter,
+  StagePlayButton,
+  StageRatingChoice,
+  StageResultHead,
+  StageTools,
+  STAGE_RATINGS,
+  type LaneNote,
+  type ResultFact,
+  type StageStep,
+} from "../stage/Stage";
+import { suggestedRating, takeNotes, useJudgedTake } from "../stage/useJudgedTake";
+import { noteName } from "../midi/noteName";
+import type { BassAnalysis } from "../midi/analysis";
 
 export interface DegreeUiSettings {
   readonly stringCount: StringCount;
@@ -59,25 +70,6 @@ const DEFAULT_SETTINGS: DegreeUiSettings = {
   fretRange: { min: 0, max: 12 },
   singEnabled: true,
   singingReferenceMode: "auto",
-};
-
-const RATINGS: readonly { value: PracticeRating; label: string; key: string }[] = [
-  { value: "again", label: "もう一度", key: "1" },
-  { value: "hard", label: "難しい", key: "2" },
-  { value: "good", label: "良い", key: "3" },
-  { value: "easy", label: "簡単", key: "4" },
-];
-
-const ISSUES: readonly { value: PracticeIssue; label: string }[] = [
-  { value: "pitch", label: "音程（自己申告）" },
-  { value: "rhythm", label: "リズム" },
-  { value: "duration", label: "音の長さ" },
-  { value: "recall", label: "思い出し" },
-  { value: "fretboard", label: "指板" },
-];
-
-const FLOW_STEPS: Record<"ja", readonly string[]> = {
-  ja: ["聴く", "歌う", "考える", "演奏", "レビュー", "移調"],
 };
 
 export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
@@ -105,10 +97,15 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
   const [sessionCompletedCount, setSessionCompletedCount] = useState(Math.max(0, initialRound - 1));
   const activeSessionId = useMemo(() => sessionId ?? uniqueId("session"), [sessionId]);
   const abandonHandlerRef = useRef(onSessionAbandoned);
+  /** P23-28 F8-2: a session nobody practised in leaves no 「途中でやめた」 behind. */
+  const sessionTouchedRef = useRef(false);
   const advancingRef = useRef(false);
   useEffect(() => { if (initialClaim) setQueuedClaim(initialClaim); }, [initialClaim]);
   useEffect(() => { abandonHandlerRef.current = onSessionAbandoned; }, [onSessionAbandoned]);
-  useEffect(() => () => { void abandonHandlerRef.current?.(activeSessionId); }, [activeSessionId]);
+  useEffect(() => {
+    sessionTouchedRef.current = false;
+    return () => { if (sessionTouchedRef.current) void abandonHandlerRef.current?.(activeSessionId); };
+  }, [activeSessionId]);
   const generation = useMemo(
     () => queuedClaim ? { ok: true as const, exercise: queuedClaim.exercise } : generateDegreeExercise(createGeneratorSnapshot(settings, round)),
     [queuedClaim, round, settings],
@@ -116,7 +113,7 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
 
   if (!generation.ok) {
     return (
-      <StatusMessage title="Degree Echoを準備できませんでした" tone="error">
+      <StatusMessage title="度数の練習を準備できませんでした" tone="error">
         {generation.error.message}
       </StatusMessage>
     );
@@ -156,16 +153,25 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
       sessionId={activeSessionId}
       sessionCompletedCount={sessionCompletedCount}
       sessionTargetCount={sessionTargetCount}
+      onSessionStarted={() => { sessionTouchedRef.current = true; }}
     />
   );
 }
 
+/**
+ * P23-62: 度数 on the shared stage. 1 聴く (listen up to the limit, open hints in order, an optional singing
+ * reference) → 2 弾く (a bar of count-in, record with the click, judged on this PC) → 3 結果 (お手本 and 自分
+ * note by note, the rating it suggests, 別のキーで / 録り直す / 次のフレーズ). Without a microphone the same flow
+ * runs with 「録らずに弾く」 and the player rates it. The Degree state machine is unchanged: the moves the stage
+ * no longer shows as steps (singing, thinking, playing) are passed through when the take ends.
+ */
 function DegreeSessionWorkspace({
   claimedTransferOfAttemptId,
   exercise,
   externalError,
   onAttemptCompleted,
   onNext,
+  onSessionStarted,
   onSettingsChange,
   reviewQueueClaimId,
   settings,
@@ -178,6 +184,8 @@ function DegreeSessionWorkspace({
   externalError?: string;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNext: () => void;
+  /** P23-28 F8-2: told once the session leaves its first state, so an untouched session is not 「途中でやめた」. */
+  onSessionStarted?: () => void;
   onSettingsChange: (settings: DegreeUiSettings) => void;
   reviewQueueClaimId?: string;
   settings: DegreeUiSettings;
@@ -195,49 +203,83 @@ function DegreeSessionWorkspace({
   const state = sessionSnapshot.state;
   const activeExercise = sessionSnapshot.exercise;
   const [draftRating, setDraftRating] = useState<PracticeRating>();
-  const [draftIssue, setDraftIssue] = useState<PracticeIssue>();
-  const [savedAttempt, setSavedAttempt] = useState<PracticeAttempt>();
   const [savingReview, setSavingReview] = useState(false);
   const savingReviewRef = useRef(false);
   const attemptStartedAt = useMemo(() => new Date().toISOString(), [activeExercise.id]);
   const [error, setError] = useState<string>();
+  const [selfPlaying, setSelfPlaying] = useState(false);
+  /** The result came from the player, not from a take (no microphone, or 「録らずに弾く」). */
+  const [selfRated, setSelfRated] = useState(false);
   const [transferRelation, setTransferRelation] = useState<{
     readonly sourceAttemptId: string;
     readonly sourceKey: string;
     readonly targetKey: string;
   }>();
-  const disclosure = useMemo(
-    () => degreeHintDisclosure(activeExercise, state.hintLevel),
-    [activeExercise, state.hintLevel],
-  );
 
   useEffect(() => () => session.dispose(), [session]);
+  // The stage has no 「練習を準備」 screen: the session is ready as soon as it is on screen.
+  useEffect(() => { if (session.getState().status === "setup") session.configure(); }, [session]);
+  // P23-28 F8-2: listening for the first time is what makes this session a practice worth recording.
+  useEffect(() => {
+    if (state.status !== "setup" && state.status !== "ready") onSessionStarted?.();
+  }, [onSessionStarted, state.status]);
+
+  const target = useMemo(() => activeExercise.targetEvents.map((event) => ({
+    pitch: event.midiNote, startBeat: event.startBeat, durationBeats: event.durationBeats, velocity: event.velocity,
+  })), [activeExercise]);
+  const phraseBeats = Math.max(activeExercise.difficulty.phraseLengthBeats, ...target.map((note) => note.startBeat + note.durationBeats));
+  const take = useJudgedTake({
+    mode: "degree",
+    resetKey: `degree:${activeExercise.id}`,
+    practiceSessionId: sessionId,
+    target,
+    bpm: activeExercise.tempo,
+    lengthBeats: phraseBeats + 1,
+    beatsPerBar: 4,
+    pitchRule: "octave",
+  });
 
   const applyResult = useCallback((result: ReturnType<typeof session.configure>) => {
-    if (result.ok) {
-      setError(undefined);
-      return true;
-    }
+    if (result.ok) { setError(undefined); return true; }
     setError(result.error.message);
     return false;
   }, []);
 
   const runPlayback = useCallback(async (operation: () => Promise<ReturnType<typeof session.configure>>) => {
-    try {
-      applyResult(await operation());
-    } catch (caught) {
+    try { applyResult(await operation()); } catch (caught) {
       setError(caught instanceof Error ? caught.message : "再生を開始できませんでした。");
     }
   }, [applyResult]);
 
-  const rate = useCallback(async (rating: PracticeRating) => {
-    if (savingReviewRef.current) return;
-    setDraftRating(rating);
+  /** The moves the stage passes through when the playing ends: (歌う) → 考える → 弾く → 答え. */
+  const finishPlaying = useCallback(() => {
+    const status = session.getState().status;
+    if (status === "transfer") { applyResult(session.completeTransferUserAttempt()); return; }
+    if (status === "review") return;
+    if (status === "recall") applyResult(session.beginSinging());
+    if (session.getState().status === "singing") {
+      applyResult(session.isSingingCompletionAvailable() ? session.completeSinging() : session.skipSinging());
+    }
+    if (session.getState().status === "thinking") applyResult(session.transitionAction({ type: "START_PLAY" }));
+    if (session.getState().status === "playing") applyResult(session.transitionAction({ type: "COMPLETE_PLAY" }));
+  }, [applyResult, session]);
+
+  // A judged take is in: show the answer and the rating it suggests.
+  useEffect(() => {
+    if (take.phase !== "done" || !take.result) return;
+    setSelfRated(false);
+    finishPlaying();
+    setDraftRating(suggestedRating(take.result.counts.correct, take.result.counts.total, hintsOpened(state.hintLevel)));
+    // state.hintLevel is read at the moment the take ends, on purpose.
+  }, [take.phase, take.result]);
+
+  const rate = useCallback(async (rating: PracticeRating): Promise<boolean> => {
+    if (savingReviewRef.current) return false;
     const completedAt = new Date().toISOString();
     const attempt = createCompletedAttempt({
       id: uniqueId("attempt"), sessionId, startedAt: attemptStartedAt, completedAt,
       listenCount: state.listenCount, hintLevel: state.hintLevel, singSkipped: state.singSkipped,
-      singGateCompleted: state.singGateCompleted, rating, mainIssue: draftIssue,
+      singGateCompleted: state.singGateCompleted, rating, mainIssue: undefined,
       transferOfAttemptId: transferRelation?.sourceAttemptId ?? claimedTransferOfAttemptId,
       reviewQueueClaimId: transferRelation ? undefined : reviewQueueClaimId,
       exercise: activeExercise,
@@ -246,451 +288,301 @@ function DegreeSessionWorkspace({
     savingReviewRef.current = true;
     try {
       await onAttemptCompleted?.(attempt);
-      setSavedAttempt(attempt);
-      applyResult(session.transitionAction({ type: "RATE", rating, mainIssue: draftIssue }));
+      lastSavedAttempt.current = attempt;
+      return applyResult(session.transitionAction({ type: "RATE", rating }));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "練習の記録を保存できませんでした。自己評価は残っています。");
+      setError(caught instanceof Error ? caught.message : "練習の記録を保存できませんでした。評価はそのまま残っています。");
+      return false;
     } finally {
       setSavingReview(false);
       savingReviewRef.current = false;
     }
-  }, [activeExercise, applyResult, attemptStartedAt, claimedTransferOfAttemptId, draftIssue, onAttemptCompleted, reviewQueueClaimId, savingReview, session, sessionId, state, transferRelation]);
+  }, [activeExercise, applyResult, attemptStartedAt, claimedTransferOfAttemptId, onAttemptCompleted, reviewQueueClaimId, session, sessionId, state, transferRelation]);
+  const lastSavedAttempt = useRef<PracticeAttempt>();
 
-  const nextHint = useCallback(() => {
-    applyResult(session.nextHint());
-  }, [applyResult, session]);
+  const sessionFull = sessionCompletedCount + 1 >= sessionTargetCount;
+  const canTransfer = state.status === "review" && !state.transferAttempted && !sessionFull
+    && (draftRating === "good" || draftRating === "easy");
 
-  const replay = useCallback(() => {
-    void runPlayback(() => session.replay());
-  }, [runPlayback, session]);
+  /** 次のフレーズ: keep the rating, then the next phrase (or the next session after the last one). */
+  const commitAndNext = useCallback(async () => {
+    if (state.status !== "review" || !draftRating || savingReviewRef.current) return;
+    take.stopPlayback();
+    if (!(await rate(draftRating))) return;
+    if (session.getState().status === "transfer-offer") applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" }));
+    onNext();
+  }, [applyResult, draftRating, onNext, rate, session, state.status, take]);
 
-  const beginTransfer = useCallback(() => {
-    if (sessionCompletedCount >= sessionTargetCount) return;
-    if (state.rating !== "good" && state.rating !== "easy") return;
-    const sourceAttempt = savedAttempt;
-    if (!sourceAttempt) return;
+  /** 別のキーで: keep the rating, then the same degrees in another key that fits the frets. */
+  const commitAndTransfer = useCallback(async () => {
+    if (!canTransfer || !draftRating) return;
+    take.stopPlayback();
+    if (!(await rate(draftRating))) return;
+    const sourceAttempt = lastSavedAttempt.current;
+    if (!sourceAttempt || session.getState().status !== "transfer-offer") return;
     const transfer = ["G", "D", "A", "F", "Bb"]
       .filter((key) => key !== exercise.tonalContext.key)
       .map((targetKey) => deriveTransferExercise(sourceAttempt, { targetKey }))
       .find((candidate) => candidate.ok);
     if (!transfer?.ok) {
-      setError("設定中のフレット範囲では、別のキーの移調問題を作れませんでした。");
+      applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" }));
+      setError("この指板の範囲では、別のキーの問題を作れませんでした。");
+      onNext();
       return;
     }
     setDraftRating(undefined);
-    setDraftIssue(undefined);
-    setTransferRelation({
-      sourceAttemptId: transfer.sourceAttemptId,
-      sourceKey: exercise.tonalContext.key,
-      targetKey: transfer.exercise.tonalContext.key,
-    });
+    setSelfRated(false);
+    setTransferRelation({ sourceAttemptId: transfer.sourceAttemptId, sourceKey: exercise.tonalContext.key, targetKey: transfer.exercise.tonalContext.key });
     applyResult(session.beginTransfer(transfer.exercise));
-  }, [applyResult, exercise, savedAttempt, session, sessionCompletedCount, sessionTargetCount, state]);
+  }, [applyResult, canTransfer, draftRating, exercise.tonalContext.key, onNext, rate, session, take]);
 
-  const primaryAction = (() => {
-    switch (state.status) {
-      case "setup":
-        return { label: "練習を準備", disabled: false, action: () => applyResult(session.configure()) };
-      case "ready":
-        return { label: "フレーズを再生", disabled: false, action: () => void runPlayback(() => session.startListen()) };
-      case "listening":
-        return { label: "再生中…", disabled: true, action: () => undefined };
-      case "recall":
-        return { label: settings.singEnabled ? "歌唱へ" : "度数で考える", disabled: false, action: () => applyResult(session.beginSinging()) };
-      case "singing":
-        return { label: "歌えた", disabled: !session.isSingingCompletionAvailable(), action: () => applyResult(session.completeSinging()) };
-      case "thinking":
-        return { label: "ベースで演奏開始", disabled: false, action: () => applyResult(session.transitionAction({ type: "START_PLAY" })) };
-      case "playing":
-        return { label: "演奏終了・答えを見る", disabled: false, action: () => applyResult(session.transitionAction({ type: "COMPLETE_PLAY" })) };
-      case "review":
-        return {
-          label: "自己評価を確定",
-          disabled: draftRating === undefined || savingReview,
-          action: () => draftRating ? void rate(draftRating) : undefined,
-        };
-      case "transfer-offer":
-        return sessionCompletedCount >= sessionTargetCount
-          ? { label: "セッション結果を見る", disabled: false, action: () => applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" })) }
-          : { label: "別のキーへ移調", disabled: false, action: beginTransfer };
-      case "transfer":
-        return {
-          label: "移調した演奏を完了",
-          disabled: sessionSnapshot.transferPlaybackActive,
-          action: () => applyResult(session.completeTransferUserAttempt()),
-        };
-      case "completed":
-        return { label: sessionCompletedCount >= sessionTargetCount ? "次のセッションを始める" : "次の問題", disabled: false, action: onNext };
-      case "abandoned":
-        return undefined;
+  const listening = state.status === "listening" || sessionSnapshot.transferPlaybackActive;
+  const inListen = state.status === "ready" || state.status === "listening" || state.status === "recall"
+    || state.status === "singing" || state.status === "thinking" || state.status === "transfer";
+  const takeRunning = take.phase === "preparing" || take.phase === "counting" || take.phase === "recording" || take.phase === "analyzing";
+  const reviewed = state.status === "review" || state.status === "transfer-offer" || state.status === "completed";
+  const step: StageStep = takeRunning || selfPlaying || take.phase === "failed" ? 1 : reviewed ? 2 : 0;
+  const heard = state.listenCount > 0 || state.status === "transfer";
+  const listensLeft = Math.max(0, state.listenLimit - state.listenCount);
+  const canListen = state.status === "transfer"
+    ? !sessionSnapshot.transferPlaybackActive
+    : state.status === "ready" || ((state.status === "recall" || state.status === "thinking") && listensLeft > 0);
+  const maxChips = Math.max(0, Math.min(3, state.maximumHintLevel - 1));
+  const chipsOpen = hintsOpened(state.hintLevel);
+  const canHint = ["recall", "singing", "thinking", "playing"].includes(state.status) && chipsOpen < maxChips;
+
+  const listen = useCallback(() => {
+    if (listening) { session.stopPlayback(); return; }
+    if (state.status === "transfer") { void runPlayback(() => session.playTransferReference()); return; }
+    if (state.status === "ready") { void runPlayback(() => session.startListen()); return; }
+    if (canListen) void runPlayback(() => session.replay());
+  }, [canListen, listening, runPlayback, session, state.status]);
+
+  const openHint = useCallback(() => {
+    if (!canHint) return;
+    const targetLevel = chipsOpen + 2;
+    while (session.getState().hintLevel < targetLevel && session.getState().hintLevel < session.getState().maximumHintLevel) {
+      if (!applyResult(session.nextHint())) break;
     }
-  })();
+  }, [applyResult, canHint, chipsOpen, session]);
+
+  const record = useCallback(() => {
+    if (!heard || takeRunning || listening) return;
+    if (inListen || reviewed && state.status === "review") { setSelfPlaying(false); take.start(); }
+  }, [heard, inListen, listening, reviewed, state.status, take, takeRunning]);
+
+  const playWithoutTake = useCallback(() => {
+    if (!heard || takeRunning || listening) return;
+    take.reset();
+    setSelfPlaying(true);
+  }, [heard, listening, take, takeRunning]);
+
+  const showAnswer = useCallback(() => {
+    setSelfPlaying(false);
+    setSelfRated(true);
+    setDraftRating(undefined);
+    take.reset();
+    finishPlaying();
+  }, [finishPlaying, take]);
 
   const active = useEchoActive();
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        !active
-        || event.repeat
-        || event.isComposing
-        || event.altKey
-        || event.ctrlKey
-        || event.metaKey
-        || event.shiftKey
-        || isEditableTarget(event.target)
-      ) return;
-
+      if (!active || event.repeat || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isEditableTarget(event.target)) return;
       const key = event.key.toLowerCase();
       let handled = true;
-      if (key === " " && primaryAction && !primaryAction.disabled) primaryAction.action();
-      else if (key === "r" && (state.status === "recall" || state.status === "thinking")) replay();
-      else if (key === "h" && ["recall", "singing", "thinking", "playing"].includes(state.status)) nextHint();
-      else if (key === "s" && state.status === "singing" && session.isSingingCompletionAvailable()) applyResult(session.completeSinging());
-      else if (["1", "2", "3", "4"].includes(key) && state.status === "review") void rate(RATINGS[Number(key) - 1].value);
-      else if (key === "n" && state.status === "completed") onNext();
-      else if (key === "t" && state.status === "transfer-offer") beginTransfer();
-      else if (key === "escape") session.stopPlayback();
+      if (key === "escape") { if (takeRunning) take.stop(); else { take.stopPlayback(); session.stopPlayback(); } }
+      else if (takeRunning) handled = false;
+      else if (key === " ") { if (selfPlaying) showAnswer(); else if (step === 0) listen(); else if (step === 2) take.playTarget(); else handled = false; }
+      else if (key === "h" && step === 0) openHint();
+      else if (key === "r" && (step === 0 || state.status === "review" && !selfRated)) record();
+      else if (key === "n" && step === 2) void commitAndNext();
+      else if (key === "t" && step === 2) void commitAndTransfer();
+      else if (["1", "2", "3", "4"].includes(key) && state.status === "review") setDraftRating(STAGE_RATINGS[Number(key) - 1]);
       else handled = false;
-
       if (handled) event.preventDefault();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [applyResult, beginTransfer, nextHint, onNext, primaryAction, rate, replay, session, state.status, active]);
+  }, [active, commitAndNext, commitAndTransfer, listen, openHint, record, selfPlaying, selfRated, session, showAnswer, state.status, step, take, takeRunning]);
 
-  const stepIndex = currentStepIndex(state.status);
-  const showAnswer = state.status === "review"
-    || state.status === "transfer-offer"
-    || state.status === "transfer"
-    || state.status === "completed";
-  const canHint = ["recall", "singing", "thinking", "playing"].includes(state.status)
-    && state.hintLevel < state.maximumHintLevel;
-  const canReplay = (state.status === "recall" || state.status === "thinking")
-    && state.listenCount < state.listenLimit;
+  const key = keyLabel(activeExercise.tonalContext.key, activeExercise.tonalContext.scale);
+  const meta = `${key} · ${activeExercise.tempo} BPM · ${activeExercise.difficulty.phraseLengthBeats} 拍`;
+  const degrees = activeExercise.targetEvents.map((event) => formatDegree(event.degree));
+  // A lowered degree is spelled with ♭ and a raised one with ♯, whatever the key prefers (♭3 in G is B♭, not A♯).
+  const names = activeExercise.targetEvents.map((event) => event.degree.accidental === -1 ? noteName(event.midiNote)
+    : event.degree.accidental === 1 ? sharpNoteName(event.midiNote)
+      : displayNoteName(midiNoteName(event.midiNote, activeExercise.tonalContext.key, activeExercise.tonalContext.scale)));
+  const hiddenNotes: LaneNote[] = activeExercise.targetEvents.map((event, index) => ({
+    startBeat: event.startBeat, durationBeats: event.durationBeats, kind: "hide",
+    text: chipsOpen >= 2 ? degrees[index] : "?",
+    ...(chipsOpen >= 3 ? { sub: names[index] } : {}),
+    label: chipsOpen >= 2 ? `${index + 1} 音目 ${degrees[index]}${chipsOpen >= 3 ? ` ${names[index]}` : ""}` : `${index + 1} 音目`,
+  }));
+  const answerNotes: LaneNote[] = activeExercise.targetEvents.map((event, index) => ({
+    startBeat: event.startBeat, durationBeats: event.durationBeats, kind: "ref",
+    text: degrees[index], sub: names[index], label: `お手本 ${index + 1} 音目 ${degrees[index]} ${names[index]}`,
+  }));
+  const contourLabel = { same: "同じ高さ", up: "上がる", down: "下がる", mixed: "上下する" }[degreeContour(activeExercise)];
+  const chips = [
+    { id: "contour", label: "輪郭", openLabel: `輪郭 ${activeExercise.targetEvents.length} 音・${contourLabel}` },
+    { id: "degree", label: "度数" },
+    { id: "names", label: "音名と指板" },
+  ].slice(0, maxChips);
+  const fretDots = (marks?: BassAnalysis["marks"]) => activeExercise.targetEvents.map((event, index) => ({
+    midiNote: event.midiNote, label: degrees[index],
+    ...(marks && marks[index]?.kind !== "ok" ? { tone: "warn" as const } : {}),
+  }));
+  const fretboard = (marks?: BassAnalysis["marks"]) => (
+    <StageFretboard dots={fretDots(marks)} stringCount={settings.stringCount} fretRange={settings.fretRange} handedness={settings.handedness} />
+  );
+  const transferBanner = transferRelation && (state.status === "transfer" || reviewed)
+    ? <p className="bp-banner" data-testid="degree-transfer-relation" data-source-attempt-id={transferRelation.sourceAttemptId}>別のキーで：{keyLabel(transferRelation.sourceKey, activeExercise.tonalContext.scale)} → {keyLabel(transferRelation.targetKey, activeExercise.tonalContext.scale)}</p>
+    : null;
+  const errorLine = error ?? externalError;
 
-  return (
-    <div
-      className="min-w-0 space-y-4"
-      data-testid="degree-echo-view"
-      data-practice-state={state.status}
-    >
-      <EchoPracticeHeader
-        kicker="Bass Practice"
-        title="Degree Echo"
-        description="短いフレーズを聴き、歌い、度数で捉えてからベースで再現します。"
-        badge="自己評価 · 自動採点ではありません"
-      />
+  const tools = (
+    <StageTools>
+      <Popover label="度数の条件" trigger={(props) => <Chip {...props} data-testid="degree-conditions">歌う参考音 {SINGING_LABELS[settings.singingReferenceMode]}</Chip>}>
+        <div className="bp-tools-panel">
+          <label>歌う参考音の高さ
+            <Select aria-label="歌う参考音の高さ" value={settings.singingReferenceMode} onChange={(event) => onSettingsChange({ ...settings, singingReferenceMode: event.target.value as SingingReferenceMode })}>
+              {(Object.keys(SINGING_LABELS) as SingingReferenceMode[]).map((mode) => <option key={mode} value={mode}>{SINGING_LABELS[mode]}</option>)}
+            </Select>
+          </label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={settings.singEnabled} onChange={(event) => onSettingsChange({ ...settings, singEnabled: event.target.checked })} />聴いたあとに「歌う参考音」を出す</label>
+          <p>歌うのは任意です。弾く前に声でなぞると、度数が頭に残りやすくなります。</p>
+        </div>
+      </Popover>
+    </StageTools>
+  );
 
-      <EchoPracticeProgress
-        ariaLabel={"Degree Echoの進行"}
-        currentIndex={stepIndex}
-        steps={FLOW_STEPS.ja}
-      />
-
-      {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
-        <Surface className="p-4" data-testid="degree-session-summary">
-          <p className="lv-section-kicker">セッションのまとめ · 自己評価</p>
-          <h3 className="mt-1 font-semibold">{sessionCompletedCount} / {sessionTargetCount} 問完了</h3>
-          <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">この PC に保存しました。自動採点ではなく、自分で付けた評価の記録です。</p>
-        </Surface>
-      ) : null}
-
-      <p
-        className="sr-only"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        data-testid="degree-status-announcement"
-      >
-        {transferRelation && state.status === "transfer"
-          ? `Degree Echo: 移調 ${transferRelation.sourceKey} → ${transferRelation.targetKey}。移調先は${transferRelation.targetKey}です。`
-          : statusAnnouncement(state.status)}
-      </p>
-
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <Surface variant="primary" className="min-w-0 overflow-hidden p-4 sm:p-5">
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--lv-border)] pb-4">
-            <div>
-              <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">今回の課題</p>
-              <h3 className="mt-1 text-lg font-semibold text-[var(--lv-text)]">未知のフレーズを耳から再現</h3>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs text-[var(--lv-text-secondary)]">
-              {state.hintLevel >= 1 ? (
-                <span data-testid="degree-tonal-context">{activeExercise.tonalContext.key} {activeExercise.tonalContext.scale}</span>
-              ) : null}
-              <span>{activeExercise.tempo} BPM</span>
-              {state.hintLevel >= 2 ? (
-                <span data-testid="degree-note-count">· {activeExercise.targetEvents.length}音</span>
-              ) : null}
-              <span>· {activeExercise.difficulty.phraseLengthBeats}拍</span>
-            </div>
-          </div>
-
-          {transferRelation ? (
-            <div
-              className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] p-3 text-sm text-[var(--lv-text-secondary)]"
-              data-testid="degree-transfer-relation"
-              data-source-attempt-id={transferRelation.sourceAttemptId}
-            >
-              移調: <strong className="text-[var(--lv-text)]">{transferRelation.sourceKey}</strong>
-              {" → "}
-              <strong className="text-[var(--lv-accent)]">{transferRelation.targetKey}</strong>
-              <span className="ml-2 text-xs">同じ度数・同じリズム</span>
-            </div>
-          ) : null}
-
-          <div className="py-7 text-center sm:py-9">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]">
-              {state.status === "listening" ? <Ear aria-hidden="true" size={28} /> : <Music2 aria-hidden="true" size={28} />}
-            </span>
-            <p className="mt-4 text-lg font-semibold text-[var(--lv-text)]">{promptForStatus(state.status)}</p>
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[var(--lv-text-secondary)]">
-              {descriptionForStatus(state.status, state.listenCount, state.listenLimit)}
-            </p>
-
-            {showAnswer || state.hintLevel >= 3 ? (
-              <div className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2" data-testid="degree-answer">
-                {activeExercise.targetEvents.map((event) => (
-                  <span key={event.index} className="grid h-11 min-w-11 place-items-center rounded-full border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-3 text-sm font-bold text-[var(--lv-accent)]">
-                    {showAnswer
-                      ? formatDegree(event.degree)
-                      : disclosure.degrees?.[event.index] ?? "?"}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          {state.status === "setup" ? (
-            <SetupControls settings={settings} onChange={onSettingsChange} />
-          ) : null}
-
-          {state.hintLevel > 0 ? (
-            <HintDisclosure
-              exercise={activeExercise}
-              level={state.hintLevel as 1 | 2 | 3 | 4}
-            />
-          ) : null}
-
-          {state.status === "review" ? (
-            <ReviewControls
-              draftIssue={draftIssue}
-              draftRating={draftRating}
-              onIssueChange={setDraftIssue}
-              onRatingChange={setDraftRating}
-            />
-          ) : null}
-
-          {state.status === "thinking" || state.status === "playing" || state.status === "review" ? (
-            <RecordCompareSection
-              mode="degree"
-              resetKey={`degree:${activeExercise.id}`}
-              countInMs={Math.round((4 * 60_000) / activeExercise.tempo)}
-              targetPlayer={createTargetPlayer(
-                (onEnded) => void previewMidiNotes(
-                  activeExercise.targetEvents.map((event) => ({
-                    pitch: event.midiNote,
-                    startBeat: event.startBeat,
-                    durationBeats: event.durationBeats,
-                    velocity: event.velocity,
-                  })),
-                  activeExercise.tempo,
-                  "freepats-finger-bass",
-                  { onEnded },
-                ),
-                stopPreview,
-              )}
-            />
-          ) : null}
-
-          {error || externalError ? <StatusMessage className="mt-4" title="操作を完了できませんでした" tone="error">{error ?? externalError}</StatusMessage> : null}
-
-          <div className="mt-5 flex flex-col-reverse gap-3 border-t border-[var(--lv-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button variant="ghost" size="sm" disabled={!canReplay} onClick={replay}>
-                <RotateCcw aria-hidden="true" size={15} /> もう一度聴く <kbd>R</kbd>
-              </Button>
-              <Button variant="ghost" size="sm" disabled={!canHint} onClick={nextHint}>
-                <Lightbulb aria-hidden="true" size={15} /> ヒント {state.hintLevel}/{state.maximumHintLevel} <kbd>H</kbd>
-              </Button>
-              {state.status === "singing" ? (
-                <Button variant="ghost" size="sm" onClick={() => applyResult(session.skipSinging())}>
-                  歌唱をスキップ
-                </Button>
-              ) : null}
-              {state.status === "recall" ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void runPlayback(() => (
-                    session.playSingingReference(settings.singingReferenceMode)
-                  ))}
-                >
-                  歌う参考音を聴く
-                </Button>
-              ) : null}
-              {state.status === "transfer-offer" ? (
-                <Button variant="ghost" size="sm" onClick={() => applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" }))}>
-                  今回は完了
-                </Button>
-              ) : null}
-              {state.status === "transfer" ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={sessionSnapshot.transferPlaybackActive}
-                  data-transfer-reference-action
-                  onClick={() => void runPlayback(() => session.playTransferReference())}
-                >
-                  {sessionSnapshot.transferPlaybackActive
-                    ? "移調後の音を再生中…"
-                    : "移調後の音を聴く"}
-                </Button>
-              ) : null}
-            </div>
-            {primaryAction ? (
-              <Button
-                variant="primary"
-                className="min-w-48"
-                disabled={primaryAction.disabled}
-                onClick={primaryAction.action}
-                data-primary-action
-              >
-                {state.status === "listening" ? <Square aria-hidden="true" size={15} /> : null}
-                {primaryAction.label}
-                <ArrowRight aria-hidden="true" size={15} />
-              </Button>
-            ) : null}
-          </div>
-        </Surface>
-
-        <EchoRail><aside className="space-y-4" aria-label="セッションの詳細">
-          <Surface className="p-4">
-            <h3 className="text-sm font-semibold text-[var(--lv-text)]">セッション</h3>
-            <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div><dt className="text-[var(--lv-text-muted)]">状態</dt><dd className="mt-1 font-semibold">{STATUS_LABELS[state.status]}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">聴いた回数</dt><dd className="mt-1 font-semibold">{state.listenCount} / {state.listenLimit}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">ヒント</dt><dd className="mt-1 font-semibold">レベル {state.hintLevel}</dd></div>
-              <div><dt className="text-[var(--lv-text-muted)]">モード</dt><dd className="mt-1 font-semibold">度数</dd></div>
-            </dl>
-          </Surface>
-          <Surface className="p-4">
-            <h3 className="text-sm font-semibold text-[var(--lv-text)]">キーボード操作</h3>
-            <p className="mt-2 text-xs leading-5 text-[var(--lv-text-muted)]">
-              Space 次へ · R もう一度聴く · H ヒント · S 歌う · 1–4 評価 · N 次の問題 · T 移調 · Esc 停止
-            </p>
-          </Surface>
-        </aside></EchoRail>
-      </div>
-
-      <Surface className="min-w-0 p-4 sm:p-5">
-        <DegreeFretboard
-          exercise={activeExercise}
-          handedness={settings.handedness}
-          hintLevel={state.hintLevel}
+  // ── 2 弾く: the take is running (or failed), or the player plays without a take ──
+  if (step === 1) {
+    const recordingNow = take.phase === "recording";
+    return (
+      <StageFrame step={1} keys={takeRunning ? "Esc 止める" : selfPlaying ? "Space 答えを見る" : "R もう一度録る"} testId="degree-echo-view" state={state.status}>
+        {tools}{take.recorder}
+        <p className="bp-meta">{meta}</p>
+        {transferBanner}
+        {take.phase === "counting" ? <StageCount beats={4} current={take.count} /> : null}
+        <p className="bp-say">{
+          take.phase === "analyzing" ? "判定しています…"
+            : take.phase === "failed" ? "うまく録れませんでした"
+              : selfPlaying ? "ベースで弾いてください"
+                : take.phase === "counting" || take.phase === "preparing" ? "カウントのあとに弾き始めます"
+                  : "クリックに合わせて弾いてください"
+        }</p>
+        {selfPlaying ? <p className="bp-sub">録音はしません。弾き終えたら答えを見て、自分で評価します。</p> : null}
+        <StageLane
+          lengthBeats={phraseBeats}
+          beatsPerBar={4}
+          rows={selfPlaying ? [{ label: "お手本", notes: hiddenNotes }] : [{ label: "お手本", notes: hiddenNotes }, { label: "自分", notes: [] }]}
+          {...(recordingNow && take.beat !== undefined ? { playhead: take.beat } : {})}
         />
-      </Surface>
-    </div>
-  );
-}
+        {take.phase === "failed" ? <p className="bp-note-line" role="alert">{take.error}</p> : null}
+        {recordingNow ? (
+          <p className="bp-note-line" data-testid="degree-input-line"><StageMeter level={take.inputLevel} />{take.inputLevel > 0.004 ? "入力に音が届いています" : "入力に音が来ていません。機器とチャンネルを確かめてください"} · 録音は判定にだけ使い、保存しません</p>
+        ) : null}
+        <div className="bp-actions">
+          {takeRunning ? <StageButton tone="record" keyHint="Esc" onClick={take.stop} data-testid="degree-stop">■ 止める</StageButton> : null}
+          {selfPlaying ? <StageButton tone="primary" keyHint="Space" onClick={showAnswer} data-testid="degree-show-answer">弾けた・答えを見る</StageButton> : null}
+          {take.phase === "failed" ? <>
+            <StageButton onClick={showAnswer} data-testid="degree-self-rate">録らずに評価する</StageButton>
+            {!take.unavailable ? <StageButton tone="primary" keyHint="R" onClick={record} data-testid="degree-record-again">● もう一度録る</StageButton> : null}
+          </> : null}
+        </div>
+      </StageFrame>
+    );
+  }
 
-function SetupControls({
-  onChange,
-  settings,
-}: {
-  onChange: (settings: DegreeUiSettings) => void;
-  settings: DegreeUiSettings;
-}) {
-  const framed = useEchoFramed();
-  return (
-    <fieldset className="grid gap-4 border-t border-[var(--lv-border)] pt-4 sm:grid-cols-2 lg:grid-cols-4">
-      <legend className="sr-only">Degree Echo の設定</legend>
-      {!framed ? <><Field htmlFor="degree-string-count" label="弦数">
-        <Select id="degree-string-count" className=" w-full" value={settings.stringCount} onChange={(event) => onChange({ ...settings, stringCount: Number(event.target.value) as StringCount })}>
-          <option value={4}>4弦</option>
-          <option value={5}>5弦</option>
-        </Select>
-      </Field>
-      <Field htmlFor="degree-handedness" label="表示">
-        <Select id="degree-handedness" className=" w-full" value={settings.handedness} onChange={(event) => onChange({ ...settings, handedness: event.target.value as Handedness })}>
-          <option value="right">右利き</option>
-          <option value="left">左利き</option>
-        </Select>
-      </Field>
-      <Field htmlFor="degree-fret-range" label="フレットの範囲">
-        <Select id="degree-fret-range" className=" w-full" value={`${settings.fretRange.min}-${settings.fretRange.max}`} onChange={(event) => {
-          const [min, max] = event.target.value.split("-").map(Number);
-          onChange({ ...settings, fretRange: { min, max } });
-        }}>
-          <option value="0-7">0–7</option>
-          <option value="0-12">0–12</option>
-          <option value="5-17">5–17</option>
-        </Select>
-      </Field>
-      </> : null}
-      <Field htmlFor="degree-singing-reference" label="歌う参考音">
-        <Select id="degree-singing-reference" className=" w-full" value={settings.singingReferenceMode} onChange={(event) => onChange({ ...settings, singingReferenceMode: event.target.value as SingingReferenceMode })}>
-          <option value="auto">自動</option>
-          <option value="original">元の高さ</option>
-          <option value="octave-1">+1 オクターブ</option>
-          <option value="octave-2">+2 オクターブ</option>
-        </Select>
-      </Field>
-    </fieldset>
-  );
-}
+  // ── 3 結果 ──
+  if (step === 2) {
+    const result = !selfRated ? take.result : undefined;
+    const counts = result?.counts;
+    const facts: ResultFact[] = counts ? [
+      { text: `合った ${counts.correct}`, tone: "ok" },
+      { text: `音が違う ${counts.wrongPitch}`, tone: "ng" },
+      { text: `早い・遅い ${counts.timing}`, tone: "warn" },
+      ...(counts.missed ? [{ text: `抜け ${counts.missed}`, tone: "mute" as const }] : []),
+      ...(counts.extra ? [{ text: `余分な音 ${counts.extra}`, tone: "ng" as const }] : []),
+      { text: `タイミング 平均 ${result.meanOffsetMs >= 0 ? "+" : ""}${Math.round(result.meanOffsetMs)}ms` },
+      { text: chipsOpen ? `ヒント ${chipsOpen} 段` : "ヒントなし" },
+    ] : [
+      { text: "録音なし・自分で評価" },
+      { text: chipsOpen ? `ヒント ${chipsOpen} 段` : "ヒントなし" },
+    ];
+    const good = Boolean(counts && counts.total && counts.correct / counts.total >= 0.75);
+    const kept = take.recorderStatus === "saved";
+    return (
+      <StageFrame step={2} keys="Space お手本 · R 録り直す · 1–4 評価 · N 次のフレーズ" tone={good ? "good" : undefined} testId="degree-echo-view" state={state.status}>
+        {tools}{take.recorder}
+        {transferBanner}
+        {counts
+          ? <StageResultHead big={`${counts.correct} / ${counts.total}`} label="音が合いました" facts={facts} />
+          : <StageResultHead big="答え" label="お手本と比べて、自分で評価してください" facts={facts} />}
+        <StageLane
+          lengthBeats={phraseBeats}
+          beatsPerBar={4}
+          rows={result ? [{ label: "お手本", notes: answerNotes }, { label: "自分", notes: takeNotes(result, activeExercise.tempo, phraseBeats + 1, activeExercise.targetEvents) }] : [{ label: "お手本", notes: answerNotes }]}
+          {...(take.beat !== undefined && take.playing ? { playhead: take.beat } : {})}
+        />
+        {fretboard(result?.marks)}
+        <StageRatingChoice value={draftRating} onChange={setDraftRating} prompt={result ? "評価（判定は目安。変えられます）" : "評価"} />
+        <div className="bp-actions" data-testid="degree-result-actions">
+          <StageButton onClick={take.playTarget} aria-pressed={take.playing === "target"}>▶ お手本</StageButton>
+          {result ? <>
+            <StageButton onClick={take.playTake} aria-pressed={take.playing === "take"}>▶ 自分</StageButton>
+            <StageButton onClick={take.playOverlay} aria-pressed={take.playing === "overlay"}>▶ 重ねて</StageButton>
+            <StageButton onClick={take.keep} disabled={kept} data-testid="degree-keep-take">{kept ? "残しました" : "録音を残す"}</StageButton>
+          </> : null}
+          <span className="bp-actions-gap" aria-hidden="true" />
+          {!state.transferAttempted && !sessionFull ? <StageButton keyHint="T" disabled={!canTransfer || savingReview} onClick={() => void commitAndTransfer()} data-testid="degree-transfer">別のキーで</StageButton> : null}
+          {!selfRated ? <StageButton keyHint="R" onClick={record} data-testid="degree-retake">● 録り直す</StageButton> : null}
+          <StageButton tone="primary" keyHint="N" disabled={!draftRating || savingReview} onClick={() => void commitAndNext()} data-testid="degree-next">
+            {sessionFull ? `次の ${sessionTargetCount} 問へ` : "次のフレーズ"}
+          </StageButton>
+        </div>
+        <p className="bp-note-line">このセッション {Math.min(sessionTargetCount, sessionCompletedCount + 1)} / {sessionTargetCount} 問</p>
+        {errorLine ? <p className="bp-note-line" role="alert">{errorLine}</p> : null}
+      </StageFrame>
+    );
+  }
 
-function HintDisclosure({ exercise, level }: { exercise: PracticeExercise; level: 1 | 2 | 3 | 4 }) {
-  const disclosure = degreeHintDisclosure(exercise, level);
+  // ── 1 聴く ──
   return (
-    <div className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-4" role="status">
-      <p className="text-xs font-semibold text-[var(--lv-accent)]">ヒント {level}</p>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">
-        {level === 1 ? `キー: ${disclosure.tonalContext?.key} ${disclosure.tonalContext?.scale}` : null}
-        {level === 2 ? `${disclosure.noteCount}音 · 音の動き: ${disclosure.contour}` : null}
-        {level === 3 ? `度数: ${disclosure.degrees?.join(" → ")}` : null}
-        {level === 4 ? `音名: ${disclosure.noteNames?.join(" → ")} · 指板の印を表示` : null}
-      </p>
-    </div>
-  );
-}
-
-function ReviewControls({
-  draftIssue,
-  draftRating,
-  onIssueChange,
-  onRatingChange,
-}: {
-  draftIssue?: PracticeIssue;
-  draftRating?: PracticeRating;
-  onIssueChange: (issue: PracticeIssue | undefined) => void;
-  onRatingChange: (rating: PracticeRating) => void;
-}) {
-  return (
-    <fieldset className="border-t border-[var(--lv-border)] pt-4">
-      <legend className="text-sm font-semibold text-[var(--lv-text)]">自己評価</legend>
-      <p className="mt-1 text-xs text-[var(--lv-text-muted)]">演奏の測定結果ではありません。自分の感触を選んでください。</p>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {RATINGS.map((rating) => (
-          <button
-            key={rating.value}
-            type="button"
-            data-review-rating={rating.value}
-            className={`min-h-11 rounded-[var(--lv-radius-sm)] border px-3 text-sm font-semibold ${draftRating === rating.value ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "border-[var(--lv-border)] bg-[var(--lv-surface)] text-[var(--lv-text-secondary)]"}`}
-            aria-pressed={draftRating === rating.value}
-            onClick={() => onRatingChange(rating.value)}
-          >
-            {rating.label} <kbd>{rating.key}</kbd>
-          </button>
-        ))}
+    <StageFrame step={0} keys="Space 聴く · H ヒント · R 録って弾く" testId="degree-echo-view" state={state.status}>
+      {tools}{take.recorder}
+      <p className="bp-meta">{meta}</p>
+      {transferBanner}
+      <p className="bp-say">{state.status === "transfer" ? "同じ度数を、このキーで弾きます" : "聴いて、同じフレーズを弾きます"}</p>
+      <StageLane lengthBeats={phraseBeats} beatsPerBar={4} rows={[{ label: "お手本", notes: hiddenNotes }]} />
+      <div className="bp-playrow">
+        {settings.singEnabled && state.status === "recall" ? (
+          <StageButton onClick={() => void runPlayback(() => session.playSingingReference(settings.singingReferenceMode))} data-testid="degree-singing-reference">歌う参考音</StageButton>
+        ) : <span style={{ width: 96 }} aria-hidden="true" />}
+        <StagePlayButton playing={listening} label={listening ? "止める" : "お手本を聴く"} disabled={!listening && !canListen} onClick={listen} data-testid="degree-listen" />
+        <span className="bp-note-line" style={{ width: 120 }} data-testid="degree-listens-left">{state.status === "transfer" ? "何度でも聴けます" : listensLeft > 0 ? `あと ${listensLeft} 回聴ける` : "もう聴けません"}</span>
       </div>
-      <label className="mt-4 block text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="degree-main-issue">気になった点（任意・自己申告）</label>
-      <Select id="degree-main-issue" className="mt-2  w-full max-w-sm" value={draftIssue ?? ""} onChange={(event) => onIssueChange(event.target.value ? event.target.value as PracticeIssue : undefined)}>
-        <option value="">選択なし</option>
-        {ISSUES.map((issue) => <option key={issue.value} value={issue.value}>{issue.label}</option>)}
-      </Select>
-    </fieldset>
+      {chips.length && state.status !== "transfer" ? <StageHints chips={chips} open={chipsOpen} disabled={!canHint} onOpen={openHint} /> : null}
+      {chipsOpen >= 3 ? fretboard() : null}
+      <div className="bp-actions">
+        <StageButton disabled={!heard || listening} onClick={playWithoutTake} data-testid="degree-play-without-take">録らずに弾く</StageButton>
+        <StageButton tone="primary" keyHint="R" disabled={!heard || listening} onClick={record} data-testid="degree-record">● 録って弾く</StageButton>
+      </div>
+      {!heard ? <p className="bp-note-line">まず ▶ でお手本を聴きます（{state.listenLimit} 回まで）</p> : null}
+      {errorLine ? <p className="bp-note-line" role="alert">{errorLine}</p> : null}
+    </StageFrame>
   );
+}
+
+const SINGING_LABELS: Readonly<Record<SingingReferenceMode, string>> = {
+  auto: "自動", original: "元の高さ", "octave-1": "+1 オクターブ", "octave-2": "+2 オクターブ",
+};
+
+/** How many hint chips are open for a Degree hint level (level 1, the key, is always on screen now). */
+function hintsOpened(level: number): number {
+  return level >= 4 ? 3 : level >= 3 ? 2 : level >= 2 ? 1 : 0;
 }
 
 function createGeneratorSnapshot(settings: DegreeUiSettings, round: number): GeneratorSnapshot {
@@ -716,64 +608,6 @@ function createGeneratorSnapshot(settings: DegreeUiSettings, round: number): Gen
     singingReferenceMode: settings.singingReferenceMode,
     maxAttempts: 64,
   };
-}
-
-function currentStepIndex(status: ReturnType<DegreePracticeSession["getState"]>["status"]): number {
-  if (status === "setup" || status === "ready" || status === "listening" || status === "recall") return 0;
-  if (status === "singing") return 1;
-  if (status === "thinking") return 2;
-  if (status === "playing") return 3;
-  if (status === "review") return 4;
-  return 5;
-}
-
-const STATUS_LABELS: Record<ReturnType<DegreePracticeSession["getState"]>["status"], string> = {
-  setup: "設定",
-  ready: "準備完了",
-  listening: "再生中",
-  recall: "思い出す",
-  singing: "歌う",
-  thinking: "考える",
-  playing: "演奏",
-  review: "レビュー",
-  "transfer-offer": "移調の確認",
-  transfer: "移調",
-  completed: "完了",
-  abandoned: "中断",
-};
-
-function promptForStatus(status: ReturnType<DegreePracticeSession["getState"]>["status"]): string {
-  const prompts = {
-    setup: "演奏条件を選びましょう",
-    ready: "答えを見ずに、まず耳で聴きます",
-    listening: "フレーズを再生しています",
-    recall: "頭の中でフレーズを再現してください",
-    singing: "楽器を持たずに歌ってください",
-    thinking: "度数として並びを考えてください",
-    playing: "ベースでフレーズを弾いてください",
-    review: "答えと比べて自己評価してください",
-    "transfer-offer": "同じ度数を別Keyでも試しますか？",
-    transfer: "別Keyへ移したつもりで演奏してください",
-    completed: "この問題は完了です",
-    abandoned: "セッションを終了しました",
-  } as const;
-  return prompts[status];
-}
-
-function descriptionForStatus(
-  status: ReturnType<DegreePracticeSession["getState"]>["status"],
-  listenCount: number,
-  listenLimit: number,
-): string {
-  if (status === "listening") return `Listen ${listenCount} / ${listenLimit}。再生終了まで次へ進みません。`;
-  if (status === "singing") return "マイクや録音は使いません。最低時間を歌った後に「歌えた」が有効になります。";
-  if (status === "review") return "Good / Easyは自己評価です。Pitchなどの項目も自動測定ではありません。";
-  if (status === "setup") return "4/5弦、利き手表示、フレット範囲、歌う参考音を設定できます。";
-  return "ヒントは必要なときだけ1段ずつ開けます。";
-}
-
-function statusAnnouncement(status: ReturnType<DegreePracticeSession["getState"]>["status"]): string {
-  return `Degree Echo: ${promptForStatus(status)}`;
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

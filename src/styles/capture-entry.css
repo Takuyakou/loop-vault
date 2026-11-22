@@ -1,0 +1,547 @@
+/* P23-11: the first screen of 取り込む (the box, the three steps, the other ways in) and the MIDI / テキスト switch. */
+@layer components {
+  /* ---- The MIDI / テキスト switch in the header ---- */
+  .lv-capture-mode {
+    position: relative;
+    display: inline-grid;
+    height: 38px;
+    grid-template-columns: 1fr 1fr;
+    padding: 3px;
+    border-radius: 12px;
+    background: var(--lv-well);
+    box-shadow: inset 0 0 0 1px var(--lv-line);
+  }
+
+  .lv-capture-mode-thumb {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    border-radius: 9px;
+    background: var(--lv-accent-soft);
+    box-shadow: inset 0 0 0 1px rgb(66 216 198 / 35%), 0 2px 8px rgb(0 0 0 / 40%);
+    pointer-events: none;
+    transition: transform 0.22s cubic-bezier(0.3, 0.8, 0.3, 1);
+  }
+
+  .lv-capture-mode[data-value="text"] > .lv-capture-mode-thumb {
+    transform: translateX(100%);
+  }
+
+  .lv-capture-mode-button {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 16px;
+    border-radius: 9px;
+    color: var(--lv-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: color 0.18s;
+  }
+
+  .lv-capture-mode-button:hover:not(:disabled) {
+    color: var(--lv-text);
+  }
+
+  .lv-capture-mode-button[aria-pressed="true"],
+  .lv-capture-mode-button[aria-pressed="true"]:hover:not(:disabled) {
+    color: var(--lv-accent);
+  }
+
+  .lv-capture-mode-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .lv-capture-mode-button:focus-visible {
+    outline: 2px solid var(--lv-focus);
+    outline-offset: 1px;
+  }
+
+  /* Below 1280px the header is tight: no pictures, the same width as before P23-11. */
+  @media (max-width: 1279px) {
+    .lv-capture-mode-button {
+      padding: 0 12px;
+    }
+
+    .lv-capture-mode-button > svg {
+      display: none;
+    }
+  }
+
+  /* ---- The first screen ---- */
+  .lv-capture-entry {
+    --ce-chord: #f2b84b;
+    --ce-melody: #6cc7ff;
+    --ce-bass: #b79cff;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .lv-capture-hero {
+    display: grid;
+    min-height: 30rem;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: 26px;
+    padding: 22px 24px;
+    border-radius: 20px;
+    background: radial-gradient(120% 90% at 0% 0%, #123235 0%, #101c2a 46%, #0f1926 100%);
+    box-shadow: var(--lv-panel-shadow);
+  }
+
+  .lv-capture-story {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  .lv-capture-title {
+    margin: 8px 0 14px;
+    color: var(--lv-text);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .lv-capture-lead {
+    margin: 0 0 6px;
+    color: var(--lv-text-secondary);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .lv-capture-flow-caption {
+    margin: auto 0 8px 2px;
+    padding-top: 18px;
+    color: var(--lv-text-muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .lv-capture-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lv-capture-step {
+    --ce-delay: 0s;
+
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    align-items: center;
+    gap: 4px 14px;
+    padding: 10px 13px 11px;
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+    background: rgb(11 19 28 / 60%);
+    transition: border-color 0.2s var(--ce-delay);
+  }
+
+  .lv-capture-step[data-step="2"] { --ce-delay: 0.12s; }
+  .lv-capture-step[data-step="3"] { --ce-delay: 0.24s; }
+
+  .lv-capture-step + .lv-capture-step::before {
+    position: absolute;
+    top: -18px;
+    left: 19px;
+    color: var(--lv-line);
+    font-size: 12px;
+    line-height: 18px;
+    content: "↓";
+  }
+
+  .lv-capture-step-head {
+    display: flex;
+    grid-column: 1;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lv-capture-step-n {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    place-items: center;
+    border: 1.5px solid var(--lv-accent);
+    border-radius: 50%;
+    color: var(--lv-accent);
+    font-size: 11px;
+    font-weight: 700;
+    transition: background-color 0.2s var(--ce-delay), color 0.2s var(--ce-delay);
+  }
+
+  .lv-capture-step-name {
+    color: var(--lv-text);
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  .lv-capture-step-text {
+    grid-column: 1;
+    color: var(--lv-text-muted);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  .lv-capture-step-pic,
+  .lv-capture-step-chips {
+    height: 40px;
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .lv-capture-step-pic {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: repeating-linear-gradient(180deg, #0e1823 0 8px, #101c29 8px 16px);
+  }
+
+  .lv-capture-step-pic > i {
+    position: absolute;
+    height: 3px;
+    border-radius: 2px;
+    background: #5d7186;
+    transition: background-color 0.25s var(--ce-delay);
+  }
+
+  .lv-capture-step-pic[data-pic="lanes"] > i {
+    height: 4px;
+  }
+
+  .lv-capture-step-chips {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .lv-capture-step-chips > span {
+    flex: 1;
+    padding: 6px 0;
+    border-top: 2.5px solid var(--lv-fn-t);
+    border-radius: 6px;
+    background: var(--lv-well-hover);
+    color: var(--lv-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    transition: color 0.2s var(--ce-delay);
+  }
+
+  .lv-capture-step-chips > span[data-fn="sd"] { border-top-color: var(--lv-fn-sd); }
+  .lv-capture-step-chips > span[data-fn="d"] { border-top-color: var(--lv-fn-d); }
+
+  /* The three steps light up one after another: pointer on the box or on the steps, a file over the box, reading. */
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step,
+  .lv-capture-flow:hover .lv-capture-step,
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step,
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step {
+    border-color: rgb(66 216 198 / 35%);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-n,
+  .lv-capture-flow:hover .lv-capture-step-n,
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-n,
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-n {
+    background-color: var(--lv-accent);
+    color: var(--lv-text-on-accent);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-pic > i,
+  .lv-capture-flow:hover .lv-capture-step-pic > i,
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-pic > i,
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-pic > i {
+    background-color: var(--lv-accent);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-pic > i[data-part="chord"],
+  .lv-capture-flow:hover .lv-capture-step-pic > i[data-part="chord"],
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-pic > i[data-part="chord"],
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-pic > i[data-part="chord"] {
+    background-color: var(--ce-chord);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-pic > i[data-part="melody"],
+  .lv-capture-flow:hover .lv-capture-step-pic > i[data-part="melody"],
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-pic > i[data-part="melody"],
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-pic > i[data-part="melody"] {
+    background-color: var(--ce-melody);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-pic > i[data-part="bass"],
+  .lv-capture-flow:hover .lv-capture-step-pic > i[data-part="bass"],
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-pic > i[data-part="bass"],
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-pic > i[data-part="bass"] {
+    background-color: var(--ce-bass);
+  }
+
+  .lv-capture-hero:has(.lv-capture-zone:hover) .lv-capture-step-chips > span,
+  .lv-capture-flow:hover .lv-capture-step-chips > span,
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-step-chips > span,
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-step-chips > span {
+    color: var(--lv-text);
+  }
+
+  /* ---- The dashed box ---- */
+  .lv-capture-zone {
+    display: flex;
+    min-width: 0;
+    min-height: 18rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border: 2px dashed var(--lv-border-strong);
+    border-radius: 18px;
+    background: rgb(11 19 28 / 40%);
+    text-align: center;
+    transition:
+      border-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 180ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .lv-capture-hero[data-zone-state="idle"] .lv-capture-zone:hover {
+    border-color: #5a7692;
+  }
+
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-zone {
+    border-style: solid;
+    border-color: var(--lv-accent);
+    background: #0f2529;
+    transform: scale(1.01);
+  }
+
+  .lv-capture-hero[data-zone-state="loading"] .lv-capture-zone {
+    border-style: solid;
+    border-color: #25455a;
+  }
+
+  .lv-capture-hero[data-zone-state="error"] .lv-capture-zone {
+    border-style: solid;
+    border-color: #7a3a44;
+    background: rgb(238 107 115 / 6%);
+  }
+
+  .lv-capture-zone-arrow {
+    color: var(--lv-accent);
+    transition: transform 0.2s;
+  }
+
+  .lv-capture-hero[data-zone-state="idle"] .lv-capture-zone:hover .lv-capture-zone-arrow {
+    transform: translateY(4px);
+  }
+
+  .lv-capture-hero[data-zone-state="over"] .lv-capture-zone-arrow {
+    animation: lv-capture-bob 0.7s ease-in-out infinite alternate;
+  }
+
+  .lv-capture-hero[data-zone-state="error"] .lv-capture-zone-arrow {
+    color: var(--lv-danger);
+  }
+
+  .lv-capture-zone-title {
+    margin: 0;
+    color: var(--lv-text);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .lv-capture-zone-help {
+    margin: 0;
+    color: var(--lv-text-secondary);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  .lv-capture-zone-button {
+    min-height: 44px;
+    margin-top: 8px;
+    padding-inline: 22px;
+  }
+
+  .lv-capture-zone-ease {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .lv-capture-zone-ease > i {
+    width: 6px;
+    height: 6px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--lv-accent);
+  }
+
+  .lv-capture-zone-progress {
+    position: relative;
+    overflow: hidden;
+    width: min(420px, 80%);
+    height: 4px;
+    margin-top: 10px;
+    border-radius: 2px;
+    background: var(--lv-well-hover);
+  }
+
+  .lv-capture-zone-progress > i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 38%;
+    border-radius: 2px;
+    background: var(--lv-accent);
+    animation: lv-capture-run 1.3s ease-in-out infinite;
+  }
+
+  /* ---- The other ways in ---- */
+  .lv-capture-ways {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: var(--lv-panel-bg);
+    box-shadow: var(--lv-panel-shadow);
+  }
+
+  .lv-capture-ways-title {
+    margin: 0;
+    padding-right: 4px;
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .lv-capture-way {
+    display: flex;
+    min-width: 0;
+    min-height: 56px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1.5px dashed var(--lv-line);
+    border-radius: 12px;
+    background: var(--lv-well);
+    color: var(--lv-text);
+    text-align: left;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+
+  .lv-capture-way > svg {
+    flex: none;
+    color: var(--lv-accent);
+  }
+
+  .lv-capture-way:hover:not(:disabled) {
+    border-color: rgb(66 216 198 / 55%);
+    background: var(--lv-well-hover);
+  }
+
+  .lv-capture-way:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .lv-capture-way:focus-visible {
+    outline: 2px solid var(--lv-focus);
+    outline-offset: 2px;
+  }
+
+  .lv-capture-way-body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .lv-capture-way-name {
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  .lv-capture-way-text {
+    color: var(--lv-text-secondary);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 1099px) {
+    .lv-capture-hero {
+      min-height: 0;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .lv-capture-zone {
+      min-height: 15rem;
+      order: -1;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .lv-capture-ways {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @keyframes lv-capture-bob {
+    from { transform: translateY(-2px); }
+    to { transform: translateY(8px); }
+  }
+
+  @keyframes lv-capture-run {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(270%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lv-capture-mode-thumb,
+    .lv-capture-step,
+    .lv-capture-step-n,
+    .lv-capture-step-pic > i,
+    .lv-capture-step-chips > span,
+    .lv-capture-zone,
+    .lv-capture-zone-arrow {
+      transition: none;
+    }
+
+    .lv-capture-hero[data-zone-state="over"] .lv-capture-zone {
+      transform: none;
+    }
+
+    .lv-capture-hero[data-zone-state="over"] .lv-capture-zone-arrow,
+    .lv-capture-zone-progress > i {
+      animation: none;
+    }
+
+    .lv-capture-zone-progress > i {
+      width: 100%;
+      opacity: 0.6;
+    }
+  }
+}

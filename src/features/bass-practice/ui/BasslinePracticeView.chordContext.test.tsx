@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 
-import { act, StrictMode } from "react";
+import { act, StrictMode, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GlobalBpmProvider, useGlobalBpm } from "../../../components/GlobalBpmProvider";
+import { StageToolsSlot } from "../stage/Stage";
 
 const playback = vi.hoisted(() => ({
-  sessions: [] as { events: { layer: string; notes?: readonly number[] }[]; stopped: number; disposed: number; complete: () => void }[],
+  sessions: [] as { events: { layer: string; notes?: readonly number[]; pitch?: number }[]; stopped: number; disposed: number; complete: () => void }[],
   driversDisposed: 0,
   prepareFails: false,
   driverOptions: [] as unknown[],
@@ -13,13 +15,13 @@ const playback = vi.hoisted(() => ({
 const recordCompare = vi.hoisted(() => ({
   props: undefined as undefined | {
     readonly resetKey?: string;
+    readonly presentation?: string;
     readonly onRecordingPrepare?: () => boolean | void | Promise<boolean | void>;
     readonly onRecordingStart?: () => boolean | void | Promise<boolean | void>;
+    readonly onRecordingStop?: () => void;
     readonly onTakeKept?: (retainedTakeReference: string) => void;
-    readonly onUnkeptTakeChange?: (hasUnkeptTake: boolean) => void;
-    readonly onRecordingActivityChange?: (active: boolean) => void;
-    readonly recordStartDisabledReason?: string;
-    readonly targetPlayer?: { play(onEnded: () => void): { stop(): void } };
+    readonly onStatusChange?: (status: string) => void;
+    readonly midiRecording?: { commands: { current: unknown }; onCompleted?(take: unknown): void; onCanceled?(): void; onCountIn?(): void };
   },
 }));
 const preview = vi.hoisted(() => ({
@@ -45,10 +47,30 @@ vi.mock("../../../audio/chordPreview", () => ({
   }),
 }));
 
+/**
+ * P23-63: the stage's headless take renders RecordCompareSection. jsdom has no recorder, so this probe keeps the
+ * props useJudgedTake hands it: the practice's own preparation/start callbacks, and the commands the stage's ■ uses.
+ */
 vi.mock("../recording/ui/RecordCompareSection", () => ({
   RecordCompareSection: (props: NonNullable<typeof recordCompare.props>) => {
     recordCompare.props = props;
+    const commands = props.midiRecording?.commands as { current: unknown } | undefined;
+    if (commands) commands.current = { start: () => {}, stop: () => {}, playTake: () => {}, playOverlay: () => {}, keep: () => {} };
     return <div data-testid="record-compare-probe" />;
+  },
+}));
+
+/**
+ * P23-63: the take's clock is `MidiBassPlayback`, which needs Tone's audio graph — jsdom cannot build one
+ * (「param must be an AudioParam」). The Chord Context engine under test is untouched; only the click/playhead clock
+ * below it is replaced.
+ */
+vi.mock("../midi/playback", () => ({
+  MidiBassPlayback: class {
+    prepare() { return Promise.resolve(true); }
+    start() { return 0; }
+    countIn() { /* the count-in click is not under test */ }
+    stop() { /* nothing to release */ }
   },
 }));
 
@@ -88,6 +110,7 @@ import { BasslinePracticeView } from "./BasslinePracticeView";
 let root: Root | undefined;
 
 beforeEach(() => {
+  window.localStorage.setItem("loop-vault:global-bpm:v1", JSON.stringify({ version: 1, bpm: 96 }));
   playback.sessions = [];
   playback.driversDisposed = 0;
   playback.prepareFails = false;
@@ -103,6 +126,7 @@ afterEach(async () => {
   await act(async () => root?.unmount());
   root = undefined;
   document.body.replaceChildren();
+  window.localStorage.clear();
 });
 
 describe("Bassline Echo Chord Context", () => {
@@ -113,32 +137,71 @@ describe("Bassline Echo Chord Context", () => {
     const container=await renderView({chordContextSnapshot:snapshot,resolveSavedChordNotes,onChordContextHistoryRecorded});
     await clickStart(container);expect(resolveSavedChordNotes).toHaveBeenCalledWith(snapshot);
     expect(playback.sessions[0]!.events.find(event=>event.layer==='chords')?.notes).toEqual([36,73,85]);
-    await chooseRadio(container,'chord-context-practice-mode','演奏');await clickStart(container);
+    // 弾く: the take's own accompaniment uses the same current-Vault pitches.
+    await startTake();
     expect(playback.sessions[playback.sessions.length-1]!.events.find(event=>event.layer==='chords')?.notes).toEqual([36,73,85]);
-    await act(async()=>{findButton(container,'レビュー')?.click();await Promise.resolve();});
-    await act(async()=>{container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();await Promise.resolve();await Promise.resolve();});
+    await cancelTake();
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded).toHaveBeenCalledOnce();expect(JSON.stringify(onChordContextHistoryRecorded.mock.calls[0])).not.toMatch(/savedMidiNotes|midiNotes/);
   });
 
   it("ships accessible Listen and Play controls with the locked defaults and clean labels", async () => {
     const container = await renderView();
 
-    expect(container.querySelector("[data-testid='chord-context-controls']")).not.toBeNull();
-    expect(container.querySelector("[aria-label='Bassline Echoの進行']")?.textContent).toContain("設定聴く演奏レビュー");
-    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("設定");
+    // P23-63/P23-64-fix-1: the 3-step stage, the 条件 chip (showing the chord progression), and every setting in the popover.
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent)
+      .toBe("Dm7–G7–Cmaj7 · C · レベル 1 · 96 BPM");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).not.toContain("既定の生成進行");
+    expect(container.querySelector(".bp-steps")?.textContent).toContain("1聴く2弾く3結果");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("1聴く");
     expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-timbre']")?.value).toBe("electric");
-    expect(checkedLabel(container, "chord-context-practice-mode")).toContain("聴く");
-    expect(checkedLabel(container, "chord-context-listen-mode")).toContain("ベース + コード");
-    expect(container.textContent).toContain("ベースのみ");
-    expect(container.textContent).toContain("ベース + コード + メトロノーム");
-    expect(container.textContent).toContain("1 - ルート");
-    for (let index = 0; index < 4; index += 1) await act(async () => findButton(container, "ヒント")?.click());
-    expect(container.textContent).toContain("お手本の音名");
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-listen-mode']")?.value).toBe("bass-and-chords");
+    expect(container.querySelector("[data-testid='chord-context-listen-mode']")?.textContent).toContain("ベースのみ");
+    expect(container.querySelector("[data-testid='chord-context-listen-mode']")?.textContent).toContain("ベース + コード + メトロノーム");
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")?.value).toBe("chords-only");
+    expect(container.querySelector("[data-testid='chord-context-play-mode']")?.textContent).toContain("コード + メトロノーム");
+    expect(container.querySelector<HTMLSelectElement>("#bassline-level")?.options[0]?.textContent).toBe("1 - ルート");
+    // The listen chip shows the value that will be played, and ▶ is beside it.
+    expect(container.querySelector("[data-testid='bassline-listen-mode']")?.textContent).toBe("ベース + コード");
+    expect(container.querySelector("[data-testid='bassline-listen']")).not.toBeNull();
+    // ヒント: 「音の数」→「音名と指板」 (the names land in the lane and on the fretboard).
+    const hints = () => Array.from(container.querySelectorAll<HTMLButtonElement>(".bp-hint"));
+    expect(hints().map((button) => button.textContent)).toEqual(["音の数", "音名と指板"]);
+    const laneNoteCount = container.querySelectorAll("[data-testid='bp-lane'] .bp-note").length;
+    await act(async () => { hints()[0]?.click(); await Promise.resolve(); });
+    expect(hints()[0]?.textContent).toBe(`${laneNoteCount} 音`);
+    await act(async () => { hints()[1]?.click(); await Promise.resolve(); });
+    expect(container.querySelector("[data-testid='bp-lane'] [aria-label='お手本の段'] .bp-note")?.textContent).toMatch(/^[A-G]/);
+    expect(container.querySelector("[data-testid='bp-fretboard']")).not.toBeNull();
+  });
 
-    await chooseRadio(container, "chord-context-practice-mode", "演奏");
-    expect(checkedLabel(container, "chord-context-play-mode")).toContain("コードのみ");
-    expect(container.textContent).toContain("メトロノームのみ");
-    expect(container.textContent).toContain("伴奏なし");
+  it("drives 1 聴く and 3 結果 from the keyboard (Space · H · Esc · N)", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    const press = async (key: string) => {
+      await act(async () => {
+        window.dispatchEvent(new KeyboardEvent("keydown", { key }));
+        for (let tick = 0; tick < 6; tick += 1) await Promise.resolve();
+      });
+    };
+
+    // Space starts 1 聴く, Esc stops it — and hearing it once unlocks 2 弾く.
+    await press(" ");
+    expect(playback.sessions).toHaveLength(1);
+    await press("Escape");
+    expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-play-without-take']")?.disabled).toBe(false);
+
+    // H opens the count hint.
+    await press("h");
+    expect(container.querySelector<HTMLButtonElement>(".bp-hint")?.textContent).toBe(`${container.querySelectorAll("[data-testid='bp-lane'] .bp-note").length} 音`);
+
+    // N records the result and returns to 1 聴く.
+    await showAnswer(container);
+    await press("n");
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
   });
 
   it("uses a confirmation transaction when switching to a saved Vault progression", async () => {
@@ -169,14 +232,14 @@ describe("Bassline Echo Chord Context", () => {
     const openPicker = container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']")!;
 
     expect(openPicker.textContent).toContain("Vaultから選ぶ");
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(laneChords(container)).toContain("Dm7G7Cmaj7");
 
     await clickStart(container);
     await act(async () => {
       openPicker.click();
       await Promise.resolve();
     });
-    expect(document.querySelector("[role='dialog']")?.textContent).toContain("Vaultからコード進行を選ぶ");
+    expect(document.querySelector("[data-testid='vault-progression-picker']")?.textContent).toContain("Vaultからコード進行を選ぶ");
     expect(document.querySelector("[data-testid='vault-progression-picker-candidate-title']")?.textContent).toBe("Live Vault Title");
     expect(document.querySelector("[data-testid='vault-progression-picker-preview-title']")?.textContent).toBe("Live Vault Title");
     expect(document.querySelector("[data-testid='vault-progression-picker-preview-chords']")?.textContent).toContain("Dmaj7");
@@ -189,15 +252,15 @@ describe("Bassline Echo Chord Context", () => {
     expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(1);
     expect(JSON.stringify(vaultPickerCandidates[0]!.safeSnapshot)).not.toContain("Live Vault Title");
     expect(document.body.textContent).not.toContain("Private title must not enter Practice");
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(laneChords(container)).toContain("Dm7G7Cmaj7");
     expect(playback.sessions[0]!.stopped).toBe(0);
 
     await act(async () => {
       findButton(document.body, "キャンセル")?.click();
       await Promise.resolve();
     });
-    expect(document.querySelector("[role='dialog']")).toBeNull();
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(document.querySelector("[data-testid='vault-progression-picker']")).toBeNull();
+    expect(laneChords(container)).toContain("Dm7G7Cmaj7");
     expect(playback.sessions[0]!.stopped).toBe(0);
 
     await act(async () => {
@@ -212,15 +275,15 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
     expect(playback.sessions[0]!.disposed).toBeGreaterThan(0);
     expect(playback.driversDisposed).toBe(1);
-    expect(container.querySelector("[data-testid='bassline-source']")?.textContent).toContain("Vault進行 · D major · bars 1-1");
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("Dmaj7");
-    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("112");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("Vault進行 · D major · bars 1-1");
+    expect(laneChords(container)).toBe("Dmaj7");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>("[data-testid='bassline-progression-use-default']")?.click();
       await Promise.resolve();
     });
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(laneChords(container)).toContain("Dm7G7Cmaj7");
   });
 
   it("integrates preset sources with key changes across Bassline, Chord Context, Record & Compare, and factual History", async () => {
@@ -230,15 +293,16 @@ describe("Bassline Echo Chord Context", () => {
 
     expect(sourceSelect.value).toBe("generated");
     expect(sourceSelect.options).toHaveLength(10);
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("既定の生成進行");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("Dm7–G7–Cmaj7");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).not.toContain("既定の生成進行");
 
     await chooseSelect(sourceSelect, "pop-four-chords");
     expect(sourceSelect.value).toBe("pop-four-chords");
-    expect(container.querySelector("[data-testid='bassline-source-kind']")?.textContent).toContain("プリセット進行 · Pop Four Chords");
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("C major");
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("92 BPM");
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("CGAmF");
-    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("92");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("Pop Four Chords");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("C");
+    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("元のテンポ: 92 BPM");
+    expect(laneChords(container)).toBe("CGAmF");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
 
     await clickStart(container);
     const presetSession = playback.sessions[playback.sessions.length - 1]!;
@@ -248,18 +312,14 @@ describe("Bassline Echo Chord Context", () => {
     await chooseSelect(keySelect, "D major");
     expect(presetSession.stopped).toBeGreaterThan(0);
     expect(presetSession.disposed).toBeGreaterThan(0);
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("DABmG");
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("D major");
+    expect(laneChords(container)).toBe("DABmG");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("D");
 
-    await act(async () => findButton(container, "レビュー")?.click());
+    await showAnswer(container);
     const expectedPreset = buildBasslinePresetSnapshot({ presetId: "pop-four-chords", key: "D major" });
     if (!expectedPreset.ok) throw new Error(expectedPreset.error.message);
     expect(recordCompare.props?.resetKey).toContain(expectedPreset.snapshot.signature);
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({
       source: {
         kind: "preset",
@@ -269,13 +329,13 @@ describe("Bassline Echo Chord Context", () => {
       },
       section: { startBar: 1, endBar: 4, lengthBeats: 16 },
       originalBpm: 92,
-      effectiveBpm: 92,
+      effectiveBpm: 96,
     });
 
     await chooseSelect(sourceSelect, "generated");
     expect(sourceSelect.value).toBe("generated");
     expect(container.querySelector("[data-testid='bassline-preset-key-select']")).toBeNull();
-    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("Dm7G7Cmaj7");
+    expect(laneChords(container)).toBe("Dm7G7Cmaj7");
     expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
   });
   it("uses the full twelve-bar preset section without clipping in Chord Context", async () => {
@@ -283,8 +343,8 @@ describe("Bassline Echo Chord Context", () => {
     const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
 
     await chooseSelect(sourceSelect, "twelve-bar-blues");
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("1〜12小節");
-    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("96 BPM");
+    expect(container.querySelector(".bp-meta")?.textContent).toContain("12 小節");
+    expect(container.querySelector(".bp-meta")?.textContent).toContain("96 BPM");
     expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
 
     await clickStart(container);
@@ -304,8 +364,8 @@ describe("Bassline Echo Chord Context", () => {
     await clickStart(container);
 
     expect(playback.driverOptions[playback.driverOptions.length - 1]).toEqual({ chordTimbre: "piano" });
-    expect(container.querySelector("[aria-label='Bassline Echoの進行']")?.textContent).toContain("設定聴く演奏レビュー");
-    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("聴く");
+    expect(container.querySelector(".bp-steps")?.textContent).toContain("1聴く2弾く3結果");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("1聴く");
   });
   it("uses bass only in Listen, replaces playback on a layer switch, and cleans up on unmount", async () => {
     const container = await renderView();
@@ -316,13 +376,14 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.sessions[0]!.events.map((event) => event.layer)).toContain("chords");
     expect(playback.sessions[0]!.events.map((event) => event.layer)).not.toContain("metronome");
 
-    await chooseRadio(container, "chord-context-practice-mode", "演奏");
+    // A layer switch replaces the running playback: BASS ONLY in Listen means chords-only here.
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-listen-mode']")!, "chords-only");
     expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
     await clickStart(container);
 
     expect(playback.sessions).toHaveLength(2);
     expect(playback.sessions[1]!.events.map((event) => event.layer)).toEqual(["chords", "chords", "chords"]);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("演奏を再生中です");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.getAttribute("aria-label")).toBe("止める");
 
     await act(async () => root?.unmount());
     root = undefined;
@@ -330,22 +391,22 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.driversDisposed).toBeGreaterThan(0);
   });
 
-  it("releases every driver across repeated replay, layer-switch, and play-stop cycles", async () => {
+  it("releases every driver across repeated replay and layer-switch cycles", async () => {
     const container = await renderView();
-    const modes = ["演奏", "聴く", "演奏", "聴く"] as const;
-    for (const mode of modes) {
+    const listenModes = ["bass-and-chords", "bass-only", "chords-only", "bass-chords-and-metronome"] as const;
+    for (const listenMode of listenModes) {
       await clickStart(container);
       await act(async () => {
-        container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")?.click();
+        container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.click();
         await Promise.resolve();
       });
-      await chooseRadio(container, "chord-context-practice-mode", mode);
+      await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-listen-mode']")!, listenMode);
     }
 
-    expect(playback.sessions).toHaveLength(modes.length);
+    expect(playback.sessions).toHaveLength(listenModes.length);
     expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
-    expect(playback.driversDisposed).toBe(modes.length);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Contextは停止しています");
+    expect(playback.driversDisposed).toBe(listenModes.length);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.getAttribute("aria-label")).toBe("お手本を聴く");
   });
   it("releases every active session across each generated and preset source switch", async () => {
     const container = await renderView();
@@ -360,7 +421,7 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.sessions).toHaveLength(sources.length);
     expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
     expect(playback.driversDisposed).toBe(sources.length);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Contextは停止しています");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.getAttribute("aria-label")).toBe("お手本を聴く");
   });
   it("fails closed and releases the prepared driver when an unsupported chord reaches playback", async () => {
     const built = buildGeneratedChordContextSnapshot({
@@ -384,18 +445,7 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.querySelector("[role='alert']")?.textContent).toContain("cannot voice this chord safely");
     expect(playback.sessions).toHaveLength(0);
     expect(playback.driversDisposed).toBe(1);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Contextは停止しています");
-  });
-  it("immediately releases the prepared driver for Play with no accompaniment", async () => {
-    const container = await renderView();
-    await chooseRadio(container, "chord-context-practice-mode", "演奏");
-    await chooseRadio(container, "chord-context-play-mode", "伴奏なし");
-    await clickStart(container);
-
-    expect(playback.sessions).toHaveLength(0);
-    expect(playback.driversDisposed).toBe(1);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Contextは停止しています");
-    expect(container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")?.textContent).toContain("伴奏を開始");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.getAttribute("aria-label")).toBe("お手本を聴く");
   });
   it("clears the running UI and disposes the prepared driver after natural completion", async () => {
     const container = await renderView();
@@ -407,44 +457,38 @@ describe("Bassline Echo Chord Context", () => {
     expect(session.stopped).toBeGreaterThan(0);
     expect(session.disposed).toBeGreaterThan(0);
     expect(playback.driversDisposed).toBe(1);
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Contextは停止しています");
-    expect(container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")?.textContent).toContain("お手本を再生");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.getAttribute("aria-label")).toBe("お手本を聴く");
+    // P23-63: hearing the phrase once unlocks 2 弾く.
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-record']")?.disabled).toBe(false);
   });
 
-  it("keeps legacy target preview and Chord Context mutually exclusive, including Review", async () => {
-    const container = await renderView();
+  it("uses the legacy preview when the Chord Context rollback is explicit", async () => {
+    const container = await renderView({ chordContextEnabled: false });
     const legacy = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")!;
+    expect(container.querySelector("[data-testid='bassline-listen-mode']")).toBeNull();
     await act(async () => legacy.click());
     expect(preview.started).toBe(1);
-    expect(legacy.textContent).toContain("停止");
-
-    await clickStart(container);
-    expect(preview.stopped).toBeGreaterThan(0);
-    expect(legacy.textContent).toContain("お手本を聴く");
-    expect(playback.sessions).toHaveLength(1);
+    expect(legacy.getAttribute("aria-label")).toBe("止める");
+    expect(playback.sessions).toHaveLength(0);
 
     await act(async () => legacy.click());
-    expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
-    expect(preview.started).toBe(2);
-
-    await act(async () => findButton(container, "レビュー")?.click());
-    expect(preview.stopped).toBeGreaterThan(1);
-    expect(legacy.textContent).toContain("お手本を聴く");
+    expect(preview.stopped).toBeGreaterThan(0);
+    expect(legacy.getAttribute("aria-label")).toBe("お手本を聴く");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-record']")?.disabled).toBe(false);
   });
 
-  it("ignores a delayed legacy preview callback after Chord Context has taken ownership", async () => {
+  it("ignores a delayed legacy preview callback after the level changed", async () => {
     preview.delayStart = true;
-    const container = await renderView();
+    const container = await renderView({ chordContextEnabled: false });
     const legacy = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")!;
     await act(async () => legacy.click());
     expect(preview.pendingStart).toBeTypeOf("function");
 
-    await clickStart(container);
+    await chooseSelect(container.querySelector<HTMLSelectElement>("#bassline-level")!, "2");
     expect(preview.stopped).toBeGreaterThan(0);
     await act(async () => preview.pendingStart?.());
 
-    expect(legacy.textContent).toContain("お手本を聴く");
-    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("お手本を再生中です");
+    expect(legacy.getAttribute("aria-label")).toBe("お手本を聴く");
   });
 
   it("keeps tempo session-only and saves factual Chord Context History", async () => {
@@ -477,20 +521,16 @@ describe("Bassline Echo Chord Context", () => {
       await Promise.resolve();
     });
     expect(tempo.value).toBe("100");
-    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("Vaultは変更されません");
+    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("Vault は変わりません");
 
-    await act(async () => findButton(container, "レビュー")?.click());
-    expect(checkedLabel(container, "record-accompaniment")).toContain("コードのみ");
-    await chooseRadio(container, "record-accompaniment", "コード + メトロノーム");
-    expect(checkedLabel(container, "record-accompaniment")).toContain("コード + メトロノーム");
-    expect(container.querySelector("[data-testid='record-accompaniment']")?.textContent)
-      .toContain("内部ミックスされません");
+    await showAnswer(container);
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep, "result stage before saving").toBe("2");
+    // 弾く時に鳴らす: the take's accompaniment (P23-63 moved the old 録音時の伴奏 here).
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")?.value).toBe("chords-only");
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")!, "chords-and-metronome");
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")?.value).toBe("chords-and-metronome");
 
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
     const entry = onChordContextHistoryRecorded.mock.calls[0]![0];
     expect(entry).toMatchObject({
@@ -498,89 +538,71 @@ describe("Bassline Echo Chord Context", () => {
       originalBpm: 96,
       effectiveBpm: 100,
       listenMode: "bass-and-chords",
-      playMode: "chords-only",
+      playMode: "chords-and-metronome",
       metronomeUsed: false,
       recordCompareUsed: false,
     });
     expect(entry).not.toHaveProperty("retainedTakeReference");
     expect(JSON.stringify(entry)).not.toMatch(/rawMidi|sourcePath|targetEvents|score/i);
+    // 記録して次へ returns to 1 聴く; pressing it twice in one go still writes once.
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
+    await showAnswer(container);
     await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
+      container.querySelector<HTMLButtonElement>("[data-testid='bassline-next']")?.click();
+      container.querySelector<HTMLButtonElement>("[data-testid='bassline-next']")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
       await Promise.resolve();
     });
-    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
-    expect(container.querySelector("[data-testid='chord-context-save-history']")?.textContent)
-      .toContain("履歴へ保存済み");
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(2);
   });
 
   it("records metronome use only after successful scheduled playback", async () => {
     const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
     const container = await renderView({ onChordContextHistoryRecorded });
-    await chooseRadio(container, "chord-context-practice-mode", "演奏");
-    await chooseRadio(container, "chord-context-play-mode", "コード + メトロノーム");
-    await clickStart(container);
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")!, "chords-and-metronome");
+    await startTake();
     expect(playback.sessions[playback.sessions.length - 1]?.events.map((event) => event.layer)).toContain("metronome");
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await cancelTake();
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({ metronomeUsed: true });
   });
 
   it("does not record metronome use when preparation fails", async () => {
-    playback.prepareFails = true;
     const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
     const container = await renderView({ onChordContextHistoryRecorded });
-    await chooseRadio(container, "chord-context-practice-mode", "演奏");
-    await chooseRadio(container, "chord-context-play-mode", "コード + メトロノーム");
-    await clickStart(container);
-    expect(playback.sessions).toHaveLength(0);
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")!, "chords-and-metronome");
+    // A good listen first (so 2 弾く is unlocked), then the take's own preparation fails.
+    await listenOnce(container);
+    playback.prepareFails = true;
+    const sessionsBefore = playback.sessions.length;
+    await startTake(false);
+    expect(playback.sessions).toHaveLength(sessionsBefore);
+    await cancelTake();
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({ metronomeUsed: false });
   });
 
-  it("requires Keep before factual History can retain a take and clears it after BPM or recording-mode changes", async () => {
+  it("keeps the take's facts and the kept reference in History, and clears them after a tempo or accompaniment change", async () => {
     const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
     const container = await renderView({ onChordContextHistoryRecorded });
-    await act(async () => findButton(container, "レビュー")?.click());
     expect(recordCompare.props).toBeDefined();
     const firstResetKey = recordCompare.props?.resetKey;
-    const save = container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")!;
     const tempo = container.querySelector<HTMLInputElement>("[data-testid=chord-context-effective-bpm]")!;
-    await act(async () => { recordCompare.props?.onRecordingActivityChange?.(true); });
+    await startTake();
     expect(tempo.disabled).toBe(true);
-    expect(save.disabled).toBe(true);
-    await act(async () => { recordCompare.props?.onRecordingActivityChange?.(false); });
-
-    await act(async () => {
-      const prepared = await recordCompare.props?.onRecordingPrepare?.();
-      expect(prepared).toBe(true);
-      await recordCompare.props?.onRecordingStart?.();
-      recordCompare.props?.onUnkeptTakeChange?.(true);
-    });
-    expect(save.disabled).toBe(true);
-    expect(container.textContent).toContain("録音したテイクを保持するか破棄してください");
-
-    await act(async () => {
-      recordCompare.props?.onTakeKept?.("take-opaque-id");
-      recordCompare.props?.onUnkeptTakeChange?.(false);
-    });
-    expect(save.disabled).toBe(false);
-    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(recordCompare.props?.resetKey).toBeDefined();
+    await act(async () => { recordCompare.props?.onTakeKept?.("take-opaque-id"); await Promise.resolve(); });
+    await cancelTake();
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
     expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({
       recordCompareUsed: true,
       retainedTakeReference: "take-opaque-id",
     });
-    await act(async () => { save.click(); await Promise.resolve(); });
-    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       setNumberInputValue(tempo, "104");
@@ -588,25 +610,28 @@ describe("Bassline Echo Chord Context", () => {
       await Promise.resolve();
     });
     expect(recordCompare.props?.resetKey).not.toBe(firstResetKey);
-    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(2);
     expect(onChordContextHistoryRecorded.mock.calls[1]![0]).toMatchObject({ recordCompareUsed: false });
     expect(onChordContextHistoryRecorded.mock.calls[1]![0]).not.toHaveProperty("retainedTakeReference");
 
     const bpmResetKey = recordCompare.props?.resetKey;
-    await chooseRadio(container, "record-accompaniment", "コード + メトロノーム");
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-play-mode']")!, "chords-and-metronome");
     expect(recordCompare.props?.resetKey).not.toBe(bpmResetKey);
-    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(3);
     expect(onChordContextHistoryRecorded.mock.calls[2]![0]).toMatchObject({ recordCompareUsed: false });
     expect(onChordContextHistoryRecorded.mock.calls[2]![0]).not.toHaveProperty("retainedTakeReference");
   });
-
   it("keeps the P5.16 Bassline surface when the Chord Context rollback is explicit", async () => {
     const container = await renderView({ chordContextEnabled: false });
 
-    expect(container.querySelector("[data-testid='chord-context-controls']")).toBeNull();
+    expect(container.querySelector("[data-testid='bassline-progression-select']")).toBeNull();
     expect(container.querySelector("[data-testid='vault-progression-picker-open']")).toBeNull();
+    expect(container.querySelector("[data-testid='chord-context-effective-bpm']")).toBeNull();
+    expect(container.querySelector("#bassline-level")).not.toBeNull();
     expect(container.querySelector("[data-testid='bassline-listen']")).not.toBeNull();
   });
 
@@ -643,33 +668,25 @@ describe("Bassline Echo Chord Context", () => {
     await act(async () => previous.click());
     expect(document.activeElement).toBe(previous);
     expect(container.querySelector("[data-testid='source-bassline-projection-facts']")?.textContent).toContain("切り出しノート 3 / 単音投影 2 / レベル対象 2 / 同時発音の省略 1");
-    expect(container.textContent).toContain("Transferは元ベースラインでは利用できません");
 
-    const listen = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")!;
-    await act(async () => listen.click());
-    expect(preview.lastNotes).toEqual([
-      expect.objectContaining({ pitch: 43, startBeat: 0, durationBeats: 0.5 }),
-      expect.objectContaining({ pitch: 45, startBeat: 0.5 }),
-    ]);
-    const stoppedBeforeMove = preview.stopped;
+    await clickStart(container);
+    expect(bassPitchesOfLastSession()).toEqual([43, 45]);
+    const stoppedBeforeMove = lastSession().stopped;
     const next = container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-next']")!;
     next.focus();
     await act(async () => next.click());
     expect(document.activeElement).toBe(next);
-    expect(preview.stopped).toBeGreaterThan(stoppedBeforeMove);
+    expect(lastSession().stopped).toBeGreaterThan(stoppedBeforeMove);
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("2〜2小節");
     const emptyReason = container.querySelector<HTMLElement>("[data-testid='source-bassline-empty']")!;
-    const reviewButton = findButton(container, "レビュー")!;
-    const hintButton = findButton(container, "ヒント")!;
-    const contextButton = container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")!;
+    const playWithoutTake = container.querySelector<HTMLButtonElement>("[data-testid='bassline-play-without-take']")!;
+    const hintButton = container.querySelector<HTMLButtonElement>(".bp-hint")!;
+    const recordButton = container.querySelector<HTMLButtonElement>("[data-testid='bassline-record']")!;
     expect(emptyReason.id).toBe("source-bassline-empty");
-    expect(listen.disabled).toBe(true);
-    expect(listen.getAttribute("aria-describedby")).toBe("source-bassline-empty");
-    expect(reviewButton.disabled).toBe(true);
-    expect(reviewButton.getAttribute("aria-describedby")).toBe("source-bassline-empty");
-    expect(hintButton.getAttribute("aria-describedby")).toBe("source-bassline-empty");
-    expect(contextButton.disabled).toBe(true);
-    expect(contextButton.getAttribute("aria-describedby")).toBe("source-bassline-empty");
+    expect(playWithoutTake.disabled).toBe(true);
+    expect(recordButton.disabled).toBe(true);
+    expect(recordButton.getAttribute("aria-describedby")).toBe("bassline-record-reason");
+    expect(hintButton.disabled).toBe(true);
 
     next.focus();
     await act(async () => next.click());
@@ -695,12 +712,12 @@ describe("Bassline Echo Chord Context", () => {
     expect(finalPrevious.getAttribute("aria-disabled")).toBe("true");
 
     await act(async () => windowButton(windowLength, 1)?.click());
-    await act(async () => findButton(container, "レビュー")?.click());
+    await listenOnce(container);
+    await act(async () => { findButton(container, "録らずに弾く")?.click(); await Promise.resolve(); });
     expect(recordCompare.props?.resetKey).toContain("source-bassline:");
     expect(recordCompare.props?.resetKey).toContain(fixture.sourceCatalogEntry.sourceBassline.snapshotSignature);
-    recordCompare.props?.targetPlayer?.play(() => undefined);
-    expect(preview.lastNotes).toEqual(expect.arrayContaining([expect.objectContaining({ pitch: 43 })]));
-    expect(container.querySelector("[data-testid='chord-context-history-save']")).toBeNull();
+    await act(async () => { findButton(container, "弾けた・答えを見る")?.click(); await Promise.resolve(); });
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("2");
   });
 
   it("keeps Level 3 eligible when the current Chord Context catalog becomes unsupported", async () => {
@@ -713,10 +730,7 @@ describe("Bassline Echo Chord Context", () => {
     const container = await renderView({ ...shared, vaultPickerCandidates: [fixture] });
     await chooseSourceBassline(container);
 
-    await act(async () => {
-      root?.render(<BasslinePracticeView {...shared} vaultPickerCandidates={[]} />);
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView {...shared} vaultPickerCandidates={[]} />);
 
     const source = container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")!;
     expect(source.value).toBe("source-bassline");
@@ -747,24 +761,16 @@ describe("Bassline Echo Chord Context", () => {
 
     const reloadedSource = structuredClone(fixture.sourceCatalogEntry);
     const unrelatedContext = replacementChordContextSnapshot({ ideaId: "current-idea", blockId: "current-block" });
-    await act(async () => {
-      root?.render(<BasslinePracticeView
-        chordContextSnapshot={unrelatedContext}
-        chordContextSnapshots={[unrelatedContext]}
-        vaultPickerCandidates={[]}
-        vaultSourceBasslines={[reloadedSource, other]}
-      />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView
+      chordContextSnapshot={unrelatedContext}
+      chordContextSnapshots={[unrelatedContext]}
+      vaultPickerCandidates={[]}
+      vaultSourceBasslines={[reloadedSource, other]}
+    />);
     expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("1〜1小節");
 
-    await act(async () => {
-      root?.render(<BasslinePracticeView vaultPickerCandidates={[]} chordContextSnapshots={[]} vaultSourceBasslines={[other]} />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView vaultPickerCandidates={[]} chordContextSnapshots={[]} vaultSourceBasslines={[other]} />);
     const afterRemoval = container.querySelector<HTMLSelectElement>("[data-testid='source-bassline-vault-select']")!;
     const expectedMissingKey = `${encodeURIComponent(fixture.sourceCatalogEntry.reference.ideaId)}:${encodeURIComponent(fixture.sourceCatalogEntry.reference.blockId)}`;
     expect(afterRemoval.value).toBe(expectedMissingKey);
@@ -788,18 +794,18 @@ describe("Bassline Echo Chord Context", () => {
     const tempo = container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")!;
     const tempoControls = container.querySelector<HTMLElement>("[data-testid='chord-context-tempo']")!;
     expect(current.originalBpm).toBe(104);
-    expect(tempo.value).toBe("104");
+    expect(tempo.value).toBe("96");
     expect(tempoControls.textContent).toContain("元のテンポ: 104 BPM");
     await chooseSourceBassline(container);
     expect(tempo.value).toBe("96");
-    expect(tempoControls.textContent).toContain("セッション既定: 96 BPM");
+    expect(tempoControls.textContent).toContain("目安: 96 BPM");
     expect(tempoControls.textContent).not.toContain("元のテンポ: 104 BPM");
     await act(async () => findButton(container, "+4 BPM")?.click());
     expect(tempo.value).toBe("100");
-    await act(async () => findButton(container, "セッション既定に戻す")?.click());
+    await act(async () => findButton(container, "目安に戻す")?.click());
     expect(tempo.value).toBe("96");
   });
-  it("invalidates active review when the external Chord Context snapshot is replaced or deleted", async () => {
+  it("invalidates the result when the external Chord Context snapshot is replaced or deleted", async () => {
     const fixture = sourceBasslineFixture(true);
     const replacement = replacementChordContextSnapshot(fixture.safeSnapshot.source.reference);
     const sourceCatalog = [fixture.sourceCatalogEntry] as const;
@@ -810,40 +816,31 @@ describe("Bassline Echo Chord Context", () => {
       vaultSourceBasslines: sourceCatalog,
     });
     await chooseSourceBassline(container);
-    await act(async () => findButton(container, "レビュー")?.click());
-    recordCompare.props?.targetPlayer?.play(() => undefined);
-    const stoppedBeforeReplacement = preview.stopped;
+    await showAnswer(container);
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("2");
 
-    await act(async () => {
-      root?.render(<BasslinePracticeView
-        chordContextSnapshot={replacement}
-        chordContextSnapshots={[replacement]}
-        vaultPickerCandidates={[{ displayTitle: "Replacement", searchableTitle: "replacement", safeSnapshot: replacement }]}
-        vaultSourceBasslines={sourceCatalog}
-      />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView
+      chordContextSnapshot={replacement}
+      chordContextSnapshots={[replacement]}
+      vaultPickerCandidates={[{ displayTitle: "Replacement", searchableTitle: "replacement", safeSnapshot: replacement }]}
+      vaultSourceBasslines={sourceCatalog}
+    />);
 
-    expect(preview.stopped).toBeGreaterThan(stoppedBeforeReplacement);
-    expect(container.querySelector("[data-testid='record-compare-probe']")).toBeNull();
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
     expect(container.querySelector<HTMLOptionElement>("option[value='source-bassline']")?.disabled).toBe(false);
 
-    await act(async () => findButton(container, "レビュー")?.click());
-    const stoppedBeforeDeletion = preview.stopped;
-    await act(async () => {
-      root?.render(<BasslinePracticeView vaultSourceBasslines={sourceCatalog} />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-    expect(preview.stopped).toBeGreaterThan(stoppedBeforeDeletion);
-    expect(container.querySelector("[data-testid='record-compare-probe']")).toBeNull();
+    // A listen that is sounding stops when the snapshot is removed.
+    await clickStart(container);
+    const playing = lastSession();
+    await rerenderView(<BasslinePracticeView vaultSourceBasslines={sourceCatalog} />);
+    expect(playing.stopped).toBeGreaterThan(0);
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
     expect(container.querySelector<HTMLOptionElement>("option[value='source-bassline']")?.disabled).toBe(false);
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("1〜1小節");
   });
-  it("stops playback and clears review when deletion or global quarantine removes the strict source catalog item", async () => {
+  it("stops the take's playback and clears the result when the strict source catalog item disappears", async () => {
     const fixture = sourceBasslineFixture(true);
     const base = {
       chordContextSnapshot: fixture.safeSnapshot,
@@ -852,29 +849,16 @@ describe("Bassline Echo Chord Context", () => {
     } as const;
     const container = await renderView({ ...base, vaultSourceBasslines: [fixture.sourceCatalogEntry] });
     await chooseSourceBassline(container);
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => {
-      recordCompare.props?.onRecordingActivityChange?.(true);
-      recordCompare.props?.onUnkeptTakeChange?.(true);
-      await recordCompare.props?.onRecordingPrepare?.();
-      await recordCompare.props?.onRecordingStart?.();
-      recordCompare.props?.targetPlayer?.play(() => undefined);
-      await Promise.resolve();
-    });
-    const activePlayback = playback.sessions[playback.sessions.length - 1]!;
-    const stoppedBefore = preview.stopped;
-    expect(container.querySelector("[data-testid='record-compare-probe']")).not.toBeNull();
+    await startTake();
+    const activePlayback = lastSession();
+    expect(activePlayback).toBeDefined();
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("1");
 
-    await act(async () => {
-      root?.render(<BasslinePracticeView {...base} vaultSourceBasslines={[]} />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView {...base} vaultSourceBasslines={[]} />);
 
-    expect(preview.stopped).toBeGreaterThan(stoppedBefore);
     expect(activePlayback.stopped).toBeGreaterThan(0);
     expect(activePlayback.disposed).toBeGreaterThan(0);
-    expect(container.querySelector("[data-testid='record-compare-probe']")).toBeNull();
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     const source = container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")!;
     expect(source.value).toBe("source-bassline");
     expect(source.disabled).toBe(false);
@@ -887,7 +871,7 @@ describe("Bassline Echo Chord Context", () => {
     expect(listen.getAttribute("aria-describedby")).toBe("source-bassline-unavailable");
   });
 
-  it("invalidates review and safely returns to bar 1 when the external source range/signature is replaced", async () => {
+  it("invalidates the result and safely returns to bar 1 when the external source range/signature is replaced", async () => {
     const fixture = sourceBasslineFixture(true);
     const replacement = replacementSourceCatalogEntry(fixture.safeSnapshot.source.reference);
     const base = {
@@ -900,20 +884,14 @@ describe("Bassline Echo Chord Context", () => {
     const next = container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-next']")!;
     await act(async () => next.click());
     await act(async () => next.click());
-    await act(async () => findButton(container, "レビュー")?.click());
-    recordCompare.props?.targetPlayer?.play(() => undefined);
-    const stoppedBefore = preview.stopped;
+    await showAnswer(container);
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("2");
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("3〜3小節");
     expect(replacement.sourceBassline.snapshotSignature).not.toBe(fixture.sourceCatalogEntry.sourceBassline.snapshotSignature);
 
-    await act(async () => {
-      root?.render(<BasslinePracticeView {...base} vaultSourceBasslines={[replacement]} />);
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await rerenderView(<BasslinePracticeView {...base} vaultSourceBasslines={[replacement]} />);
 
-    expect(preview.stopped).toBeGreaterThan(stoppedBefore);
-    expect(container.querySelector("[data-testid='record-compare-probe']")).toBeNull();
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("1〜1小節");
     expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
   });
@@ -922,8 +900,8 @@ describe("Bassline Echo Chord Context", () => {
     const resolveSavedChordNotes = vi.fn(() => ({"chord:0": [36,73,85]}));
     const container = await renderView({ resolveSavedChordNotes, chordContextSnapshot: fixture.safeSnapshot, chordContextSnapshots: [fixture.safeSnapshot], vaultPickerCandidates: [fixture], vaultSourceBasslines: [fixture.sourceCatalogEntry] });
     await chooseSourceBassline(container);
-    const start = container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")!;
-    expect(start.disabled).toBe(false);
+    const listen = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")!;
+    expect(listen.disabled).toBe(false);
     await clickStart(container);
     expect(resolveSavedChordNotes).not.toHaveBeenCalled();
     expect(playback.sessions[playback.sessions.length - 1]?.events.map((event) => event.layer)).toEqual(expect.arrayContaining(["bass", "chords"]));
@@ -933,22 +911,26 @@ describe("Bassline Echo Chord Context", () => {
     const fixture = sourceBasslineFixture(false);
     const container = await renderView({ chordContextSnapshot: fixture.safeSnapshot, chordContextSnapshots: [fixture.safeSnapshot], vaultPickerCandidates: [fixture], vaultSourceBasslines: [fixture.sourceCatalogEntry] });
     await chooseSourceBassline(container);
-    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("セッション既定: 96 BPM");
-    expect(findButton(container, "セッション既定に戻す")).toBeDefined();
-    const contextStart = container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")!;
-    expect(contextStart.disabled).toBe(true);
-    expect(contextStart.getAttribute("aria-describedby")).toBe("source-bassline-context-reason");
-    expect(container.textContent).toContain("正確な保存済み和声がないため、Chord Contextは利用できません");
-    await act(async () => findButton(container, "レビュー")?.click());
-    expect(container.textContent).toContain("録音中の伴奏: なし");
+    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("目安: 96 BPM");
+    expect(findButton(container, "目安に戻す")).toBeDefined();
+    // No captured harmony: the panel says 伴奏なし, the listen falls back to the legacy preview and the take records dry.
+    expect(container.textContent).toContain("伴奏なし(ヘッドホンで)");
+    expect(container.querySelector("[data-testid='source-bassline-context-reason']")?.textContent).toContain("正確な保存済み和声がないため、Chord Contextは利用できません");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.disabled).toBe(false);
     let prepared: boolean | void | undefined;
     let started: boolean | void | undefined;
     await act(async () => {
       prepared = await recordCompare.props?.onRecordingPrepare?.();
       started = await recordCompare.props?.onRecordingStart?.();
+      await Promise.resolve();
     });
     expect(prepared).toBe(true);
-    expect(started).toBe(true);
+    // The take starts without an accompaniment session (nothing is played by Chord Context).
+    expect(started).not.toBe(false);
+    expect(playback.sessions).toHaveLength(0);
+    await cancelTake();
+    await showAnswer(container);
+    expect(container.querySelector("[data-testid='bp-result-facts']")?.textContent).toContain("伴奏 なし");
   });
 
   it("selects deterministic Level 1/2 targets, discloses replacements, and keeps the source immutable", async () => {
@@ -963,41 +945,35 @@ describe("Bassline Echo Chord Context", () => {
       { value: "3", disabled: false },
     ]);
 
+    const bassPitches = () => bassPitchesOfLastSession();
     await chooseSelect(level, "1");
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.click());
-    expect(preview.lastNotes).toEqual([
-      expect.objectContaining({ pitch: 48, startBeat: 0 }),
-      expect.objectContaining({ pitch: 48, startBeat: 0.5 }),
-    ]);
+    await clickStart(container);
+    expect(bassPitches()).toEqual([48, 48]);
     expect(container.querySelector("[data-testid='source-bassline-projection-facts']")?.textContent).toContain("pitch置換 2");
 
     await chooseSelect(level, "2");
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.click());
-    expect(preview.lastNotes).toEqual([
-      expect.objectContaining({ pitch: 43, startBeat: 0 }),
-      expect.objectContaining({ pitch: 43, startBeat: 0.5 }),
-    ]);
+    await clickStart(container);
+    expect(bassPitches()).toEqual([43, 43]);
     expect(container.querySelector("[data-testid='source-bassline-harmony-comparison']")?.textContent).toContain("一致");
     expect(JSON.stringify(fixture.sourceCatalogEntry.sourceBassline)).toBe(before);
   });
 
-  it("changes Record & Compare identity and target when Source Level changes from 1 to 2", async () => {
+  it("changes the take's identity and target when Source Level changes from 1 to 2", async () => {
     const fixture = sourceBasslineFixture(true);
     const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry] });
     await chooseSourceBassline(container);
     const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
+    const bassPitches = () => bassPitchesOfLastSession();
 
     await chooseSelect(level, "1");
-    await act(async () => findButton(container, "レビュー")?.click());
+    await clickStart(container);
     const level1ResetKey = recordCompare.props?.resetKey;
-    recordCompare.props?.targetPlayer?.play(() => undefined);
-    const level1Target = (preview.lastNotes as readonly { readonly pitch: number }[]).map(({ pitch }) => pitch);
+    const level1Target = bassPitches();
 
     await chooseSelect(level, "2");
-    await act(async () => findButton(container, "レビュー")?.click());
+    await clickStart(container);
     const level2ResetKey = recordCompare.props?.resetKey;
-    recordCompare.props?.targetPlayer?.play(() => undefined);
-    const level2Target = (preview.lastNotes as readonly { readonly pitch: number }[]).map(({ pitch }) => pitch);
+    const level2Target = bassPitches();
 
     expect(level2ResetKey).not.toBe(level1ResetKey);
     expect(level1Target).toEqual([48, 48]);
@@ -1026,12 +1002,8 @@ describe("Bassline Echo Chord Context", () => {
       onSourceBasslineHistoryRecorded,
     });
     await chooseSourceBassline(container);
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await showAnswer(container);
+    await saveAndNext(container);
 
     const entry = onSourceBasslineHistoryRecorded.mock.calls[0]?.[0];
     expect(entry?.source).not.toHaveProperty("capturedHarmonySignature");
@@ -1046,12 +1018,8 @@ describe("Bassline Echo Chord Context", () => {
     });
     await chooseSourceBassline(container);
     await chooseSelect(container.querySelector<HTMLSelectElement>("#bassline-level")!, "2");
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => {
-      container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await showAnswer(container);
+    await saveAndNext(container);
     expect(onSourceBasslineHistoryRecorded).toHaveBeenCalledTimes(1);
     const entry = onSourceBasslineHistoryRecorded.mock.calls[0]![0];
     expect(entry).toMatchObject({
@@ -1063,11 +1031,14 @@ describe("Bassline Echo Chord Context", () => {
       facts: { croppedSourceNoteCount: 3, projectedNoteCount: 2, pitchReplacementCount: 1 },
     });
     expect(JSON.stringify(entry)).not.toMatch(/"(?:notes|capturedHarmony|path|title|fileName|device|audio|voice)"\s*:/i);
+    // The next window follows the save (P23-63: 最後の区間なら最初へ).
+    expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("2〜2小節");
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
 
-    await act(async () => root?.render(<BasslinePracticeView
+    await rerenderView(<BasslinePracticeView
       vaultSourceBasslines={[fixture.sourceCatalogEntry]}
       sourceBasslineHistory={[entry]}
-    />));
+    />);
     const restart = findButton(container, "この条件を再開")!;
     await act(async () => restart.click());
     expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
@@ -1150,20 +1121,21 @@ describe("Bassline Echo Chord Context", () => {
     await chooseSourceBassline(container);
     const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
     await chooseSelect(level, "2");
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click());
-    expect(container.textContent).toContain("練習履歴を保存しています。");
+    await showAnswer(container);
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-next']")?.click());
+    expect(container.querySelector("[data-testid='bassline-next']")?.textContent).toContain("記録しています…");
 
     await chooseSelect(level, "1");
-    await act(async () => findButton(container, "レビュー")?.click());
-    expect(container.textContent).toContain("このセッションはまだ履歴へ保存されていません。");
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     await act(async () => {
       resolveSave?.();
       await pending;
       await Promise.resolve();
     });
-    expect(container.textContent).toContain("このセッションはまだ履歴へ保存されていません。");
-    expect(container.textContent).not.toContain("練習履歴へ保存しました。");
+    // The stale completion neither advances the window nor reports a failure.
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
+    expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("1〜1小節");
+    expect(container.querySelector("[data-testid='bassline-history-error']")).toBeNull();
   });
 
   it("drops stale Chord Context History rejection after the target changes", async () => {
@@ -1171,18 +1143,19 @@ describe("Bassline Echo Chord Context", () => {
     const pending = new Promise<void>((_resolve, reject) => { rejectSave = reject; });
     const onChordContextHistoryRecorded = vi.fn(() => pending);
     const container = await renderView({ onChordContextHistoryRecorded });
-    await act(async () => findButton(container, "レビュー")?.click());
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click());
-    expect(container.textContent).toContain("練習履歴を保存しています。");
+    await showAnswer(container);
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-next']")?.click());
+    expect(container.querySelector("[data-testid='bassline-next']")?.textContent).toContain("記録しています…");
 
     await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='chord-context-bpm-plus-four']")?.click());
-    expect(container.textContent).toContain("このセッションはまだ履歴へ保存されていません。");
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
     await act(async () => {
       rejectSave?.(new Error("synthetic stale rejection"));
       await pending.catch(() => undefined);
       await Promise.resolve();
     });
-    expect(container.textContent).toContain("このセッションはまだ履歴へ保存されていません。");
+    expect(container.querySelector<HTMLElement>("[data-testid='bassline-echo-view']")?.dataset.stageStep).toBe("0");
+    expect(container.querySelector("[data-testid='bassline-history-error']")).toBeNull();
     expect(container.querySelector("[role='alert']")).toBeNull();
   });
 
@@ -1279,12 +1252,14 @@ describe("Bassline Echo Chord Context", () => {
     await act(async () => windowButton(group, 8)?.click());
     const bpm = container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")!;
     await act(async () => { setNumberInputValue(bpm, "32"); bpm.dispatchEvent(new Event("change", { bubbles: true })); });
-    await act(async () => findButton(container, "レビュー")?.click());
-    expect(recordCompare.props?.recordStartDisabledReason).toBeUndefined();
+    await listenOnce(container);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-record']")?.disabled).toBe(false);
     await act(async () => { setNumberInputValue(bpm, "31"); bpm.dispatchEvent(new Event("change", { bubbles: true })); });
-    expect(recordCompare.props?.recordStartDisabledReason).toContain("60秒を超える");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-record']")?.disabled).toBe(true);
+    expect(container.querySelector("[data-testid='bassline-record-reason']")?.textContent).toContain("60秒を超える");
+    // The over-limit window still plays (listening is not a recording).
     expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.disabled).toBe(false);
-    expect(container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.disabled).toBe(false);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-play-without-take']")?.disabled).toBe(false);
   });
 
   it("returns to persisted two when rapid 4/8 saves both fail", async () => {
@@ -1323,7 +1298,7 @@ describe("Bassline Echo Chord Context", () => {
       rejectSave?.(new Error("late failure"));
       await pending.catch(() => undefined);
     });
-    expect(container.childElementCount).toBe(0);
+    expect(container.querySelector("[data-testid='bassline-echo-view']")).toBeNull();
   });
 
   it("keeps confirmed preference rollback correct under StrictMode effect replay", async () => {
@@ -1396,6 +1371,89 @@ describe("Bassline Echo Chord Context", () => {
   });
 });
 
+describe("Bassline Echo and the app-wide BPM (P23-06b)", () => {
+  it("T7 starts at the app-wide BPM", async () => {
+    const container = await renderWithGlobalBpm(132);
+    expect(effectiveBpmInput(container).value).toBe("132");
+  });
+
+  it("T8 choosing a preset keeps the app-wide BPM and announces the song's", async () => {
+    const container = await renderWithGlobalBpm(132);
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    await chooseSelect(sourceSelect, "pop-four-chords");
+    expect(effectiveBpmInput(container).value).toBe("132");
+    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("元のテンポ: 92 BPM");
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent).toContain("Pop Four Chords");
+    expect(sharedBpm.songBpm).toBe(92);
+  });
+
+  it("T9 the generated progression and a source bassline announce no song BPM", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const container = await renderWithGlobalBpm(132, { vaultSourceBasslines: [fixture.sourceCatalogEntry] });
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    await chooseSelect(sourceSelect, "pop-four-chords");
+    expect(sharedBpm.songBpm).toBe(92);
+    await chooseSelect(sourceSelect, "generated");
+    expect(sharedBpm.songBpm).toBeUndefined();
+    await chooseSourceBassline(container);
+    expect(sharedBpm.songBpm).toBeUndefined();
+  });
+
+  it("T10 +4 BPM and going back to the original tempo move the app-wide BPM", async () => {
+    const container = await renderWithGlobalBpm(132);
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    await chooseSelect(sourceSelect, "pop-four-chords");
+    await act(async () => findButton(container, "+4 BPM")?.click());
+    expect(sharedBpm.bpm).toBe(136);
+    expect(effectiveBpmInput(container).value).toBe("136");
+    await act(async () => findButton(container, "元のテンポに戻す")?.click());
+    expect(sharedBpm.bpm).toBe(92);
+    expect(effectiveBpmInput(container).value).toBe("92");
+  });
+
+  it("T11 a change from outside reaches the field and stops the playback", async () => {
+    const container = await renderWithGlobalBpm(132);
+    await clickStart(container);
+    expect(playback.sessions[0]!.stopped).toBe(0);
+    await act(async () => sharedBpm.setBpm(110));
+    expect(effectiveBpmInput(container).value).toBe("110");
+    expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
+  });
+
+  it("T12 a take keeps its speed until it ends", async () => {
+    const container = await renderWithGlobalBpm(132);
+    await startTake();
+    const before = recordCompare.props?.resetKey;
+    expect(before).toBeDefined();
+    await act(async () => sharedBpm.setBpm(140));
+    expect(effectiveBpmInput(container).value).toBe("132");
+    expect(recordCompare.props?.resetKey).toBe(before);
+    const pending = container.querySelector<HTMLElement>("[data-testid='chord-context-tempo-pending']");
+    expect(pending?.textContent).toContain("132");
+    expect(pending?.textContent).toContain("140");
+    // The notice still says what happens to a take that was not kept when the speed changes.
+    expect(pending?.textContent).toContain("残していない録音は消えます。");
+    await cancelTake();
+    expect(effectiveBpmInput(container).value).toBe("140");
+    expect(recordCompare.props?.resetKey).not.toBe(before);
+    expect(container.querySelector("[data-testid='chord-context-tempo-pending']")).toBeNull();
+  });
+
+  it("T13 the saved history keeps the speed the take was played at", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderWithGlobalBpm(132, { onChordContextHistoryRecorded });
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    await chooseSelect(sourceSelect, "pop-four-chords");
+    await listenOnce(container);
+    await startTake();
+    await cancelTake();
+    await showAnswer(container);
+    await saveAndNext(container);
+    const entry = onChordContextHistoryRecorded.mock.calls[0]?.[0] as { effectiveBpm?: number };
+    expect(entry?.effectiveBpm).toBe(132);
+  });
+});
+
 function sourceBasslineFixture(withHarmony: boolean, bars = 3) {
   const sourceId = "synthetic-source";
   const voiceId = "synthetic-bass";
@@ -1457,29 +1515,127 @@ function replacementChordContextSnapshot(reference: { readonly ideaId: string; r
     ],
   });
   return Object.freeze({ displayTitle: "Synthetic replacement", reference, sourceBassline });
-}async function renderView(props: Partial<Parameters<typeof BasslinePracticeView>[0]> = {}, strictMode = false) {
+}const withGlobalBpm = (view: React.ReactElement) => <GlobalBpmProvider>{view}</GlobalBpmProvider>;
+
+/** P23-06b: the app-wide BPM, reachable from a test the way the top bar reaches it. */
+const sharedBpm = { bpm: 0, songBpm: undefined as number | undefined, setBpm: (_next: number): void => undefined };
+function BpmProbe() {
+  const { bpm, songBpm, setBpm } = useGlobalBpm();
+  sharedBpm.bpm = bpm;
+  sharedBpm.songBpm = songBpm;
+  sharedBpm.setBpm = setBpm;
+  return null;
+}
+
+async function renderWithGlobalBpm(
+  bpm: number,
+  props: Partial<Parameters<typeof BasslinePracticeView>[0]> = {},
+) {
+  window.localStorage.setItem("loop-vault:global-bpm:v1", JSON.stringify({ version: 1, bpm }));
   const container = document.createElement("div");
   document.body.append(container);
-  root = createRoot(container);
-  const view = <BasslinePracticeView initialWindowBars={1} {...props} />;
-  await act(async () => root?.render(strictMode ? <StrictMode>{view}</StrictMode> : view));
+  toolsHost = document.createElement("div");
+  container.append(toolsHost);
+  const app = document.createElement("div");
+  container.append(app);
+  root = createRoot(app);
+  viewContainer = container;
+  await act(async () => root?.render(
+    <StageToolsSlot value={toolsHost!}>
+      <GlobalBpmProvider>
+        <BpmProbe />
+        <BasslinePracticeView initialWindowBars={1} {...props} />
+      </GlobalBpmProvider>
+    </StageToolsSlot>,
+  ));
+  await openConditions(container);
   return container;
 }
 
+const effectiveBpmInput = (container: HTMLElement) =>
+  container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")!;
+
+/**
+ * P23-63: the 条件 chip lives in the top band, so the harness gives the stage the slot the app shell owns — without
+ * it `StageTools` draws nothing (as in the app's hidden practice). The panel only exists while it is open.
+ */
+let toolsHost: HTMLElement | undefined;
+let viewContainer: HTMLElement | undefined;
+
+async function openConditions(container: HTMLElement) {
+  if (container.querySelector("#bassline-level")) return;
+  const chip = container.querySelector<HTMLButtonElement>("[data-testid='bassline-conditions']");
+  if (!chip) throw new Error("Missing conditions chip");
+  await act(async () => { chip.click(); await Promise.resolve(); });
+}
+
+async function rerenderView(element: ReactNode) {
+  await act(async () => root?.render(<StageToolsSlot value={toolsHost ?? null}>{withGlobalBpm(element as React.ReactElement)}</StageToolsSlot>));
+  await openConditions(viewContainer ?? document.body);
+}
+
+async function renderView(props: Partial<Parameters<typeof BasslinePracticeView>[0]> = {}, strictMode = false) {
+  const container = document.createElement("div");
+  document.body.append(container);
+  toolsHost = document.createElement("div");
+  container.append(toolsHost);
+  const app = document.createElement("div");
+  container.append(app);
+  root = createRoot(app);
+  viewContainer = container;
+  const view = withGlobalBpm(<BasslinePracticeView initialWindowBars={1} {...props} />);
+  await act(async () => root?.render(<StageToolsSlot value={toolsHost!}>{strictMode ? <StrictMode>{view}</StrictMode> : view}</StageToolsSlot>));
+  await openConditions(container);
+  return container;
+}
+
+/** ▶ in 1 聴く (the stage's listen button); the `useLegacyListen` paths use the legacy preview instead. */
 async function clickStart(container: HTMLElement) {
-  const button = container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']");
+  const button = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']");
   await act(async () => {
     button?.click();
-    await Promise.resolve();
-    await Promise.resolve();
+    // prepare → schedule → the stage's 「聴いた」 flag: let every microtask settle inside act.
+    for (let tick = 0; tick < 6; tick += 1) await Promise.resolve();
   });
 }
 
-async function chooseRadio(container: HTMLElement, name: string, label: string) {
-  const input = Array.from(container.querySelectorAll<HTMLInputElement>(`input[name='${name}']`))
-    .find((candidate) => candidate.parentElement?.textContent?.trim() === label);
+/** Load the practice's own accompaniment and start the take, as the stage's 「録って弾く」 does. */
+async function startTake(expectPrepared = true) {
+  let prepared: boolean | void | undefined;
+  await act(async () => { prepared = await recordCompare.props?.onRecordingPrepare?.(); await Promise.resolve(); });
+  expect(prepared).toBe(expectPrepared);
+  await act(async () => { await recordCompare.props?.onRecordingStart?.(); await Promise.resolve(); });
+}
+
+/** jsdom has no recorder: the take is abandoned through the recorder's own cancel path. */
+async function cancelTake() {
+  await act(async () => { recordCompare.props?.midiRecording?.onCanceled?.(); await Promise.resolve(); });
+}
+
+/** ▶ and ■ again: one listen long enough for the stage to unlock 2 弾く, with the sound stopped afterwards. */
+async function listenOnce(container: HTMLElement) {
+  await clickStart(container);
+  const listenButton = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']");
+  if (listenButton?.getAttribute("aria-label") === "止める") {
+    await act(async () => { listenButton.click(); for (let tick = 0; tick < 4; tick += 1) await Promise.resolve(); });
+  }
+}
+
+/** 録らずに弾く → 弾けた・答えを見る: 段 3 without a take. The stage requires one listen first, and the buttons stay
+ * locked while the お手本 is sounding. */
+async function showAnswer(container: HTMLElement) {
+  const play = () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-play-without-take']");
+  if (play()?.disabled) await listenOnce(container);
+  await act(async () => { play()?.click(); await Promise.resolve(); });
+  await act(async () => { findButton(container, "弾けた・答えを見る")?.click(); await Promise.resolve(); });
+}
+
+/** 記録して次へ: the same history write the old review screen's save button made. */
+async function saveAndNext(container: HTMLElement) {
   await act(async () => {
-    input?.click();
+    container.querySelector<HTMLButtonElement>("[data-testid='bassline-next']")?.click();
+    await Promise.resolve();
+    await Promise.resolve();
     await Promise.resolve();
   });
 }
@@ -1507,9 +1663,12 @@ function setNumberInputValue(input: HTMLInputElement, value: string) {
   setter.call(input, value);
 }
 
-function checkedLabel(container: HTMLElement, name: string): string | undefined {
-  const input = container.querySelector<HTMLInputElement>(`input[name='${name}']:checked`);
-  return input?.parentElement?.textContent;
+/** The lane's chord row: the chord names the stage draws above お手本 (without the 「コード」 row label). */
+function laneChords(container: HTMLElement): string | undefined {
+  const names = Array.from(container.querySelectorAll<HTMLElement>("[aria-label='コードの段'] .bp-lane-chord"))
+    .map((element) => element.textContent?.trim() ?? "")
+    .join("");
+  return names || undefined;
 }
 
 function findButton(container: HTMLElement, text: string): HTMLButtonElement | undefined {
@@ -1525,4 +1684,12 @@ function setTextInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
   if (!setter) throw new Error("Missing HTMLInputElement value setter.");
   setter.call(input, value);
+}
+
+/** The Chord Context session the mock driver opened last, and the bass pitches it was asked to play. */
+function lastSession() {
+  return playback.sessions[playback.sessions.length - 1]!;
+}
+function bassPitchesOfLastSession(): (number | undefined)[] {
+  return lastSession().events.filter((event) => event.layer === "bass").map((event) => event.pitch);
 }

@@ -1,8 +1,8 @@
 import { expect, it } from "vitest";
 import { commonToneCostModel } from "../../scripts/p11-13/commonTone";
 import { eRankerCostModel, E_RANKER_POLICY } from "./eRankerFingering";
+import { p21ERankerCostModel } from "./p21SingleNoteFingering";
 import { generateFingeringCandidates, rankCyclicFingerings, type ProgressionFingeringEvent } from "./progressionFingering";
-import { preferredFingeringDistance } from "./progressionFingering";
 import { handPositionProxy } from "./handPositionFingering";
 import { syntheticSnapshots } from "../../scripts/p11-12/integration";
 import { resolveProgressionPracticeVoicings } from "./progressionVoicingPractice";
@@ -51,16 +51,15 @@ it("keeps contradictory Saved anchors fixed and segment/empty-hand timing intact
   expect(result[4]!.status).toBe("unavailable"); expect(new Set(seconds)).toEqual(new Set([1, 2]));
 });
 
-it("keeps slow Bass preferred while fast Bass responds to available time deterministically", () => {
-  const model = eRankerCostModel();
+it("P21 keeps the hand position for a slow or fast Bass line (L5 L4 L3 L2)", () => {
+  const model = p21ERankerCostModel();
   const slow = events([[48], [50], [52], [53]], 2, "left"), fast = events([[48], [50], [52], [53]], 0.125, "left");
   const solve = (input: ProgressionFingeringEvent[]) => rankCyclicFingerings(input, { costModel: model });
-  const a = solve(slow), b = solve(fast);
-  expect(a).toMatchObject([{ fingers: [5] }, { fingers: [5] }, { fingers: [5] }, { fingers: [5] }]);
-  expect(b).not.toEqual(a); expect(solve(fast)).toEqual(b);
-  const distance = b.reduce((sum, r, i) => sum + (r.status === "supported" ? preferredFingeringDistance(fast[i]!, r.fingers) : 0), 0);
-  expect(distance).toBeGreaterThan(0);
-  expect(b.every(r => r.status === "supported" && handPositionProxy("left", r.pitches, r.fingers) === 28)).toBe(true);
+  const expected = [{ fingers: [5] }, { fingers: [4] }, { fingers: [3] }, { fingers: [2] }];
+  expect(solve(slow)).toMatchObject(expected);
+  expect(solve(fast)).toMatchObject(expected);
+  expect(solve(fast)).toEqual(solve(slow));
+  expect(solve(fast).every(r => r.status === "supported" && handPositionProxy("left", r.pitches, r.fingers) === 28)).toBe(true);
 });
 
 it("all fixed/generated sources retain notes, hands and full-progression Range scope; Next Move consumes selected IDs", () => {

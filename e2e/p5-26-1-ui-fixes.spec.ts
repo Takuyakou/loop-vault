@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
 import { dropMidi, openApp, openCapture } from "./helpers/app";
+import { settlePaint, settleScroll } from "./helpers/settle";
 
 /**
  * P5.26.1: two UI fixes, written against the screens as they are now.
@@ -30,6 +31,7 @@ const names = (page: Page) => cards(page).evaluateAll((entries) => entries.map((
 
 /** Where the workspace scrolls: the page column (down) and the piano roll (across). */
 async function layout(page: Page) {
+  await settlePaint(page);
   return page.evaluate(() => {
     const main = document.querySelector("#main-content") as HTMLElement;
     const roll = document.querySelector(".lv-cw-scroll") as HTMLElement;
@@ -85,6 +87,7 @@ test.describe("02 the editor scrolls and does not push sideways", () => {
     const metrics = await layout(page);
     expect(metrics.mainDown).toBeGreaterThan(0);
     await page.evaluate(() => { const roll = document.querySelector(".lv-cw-scroll") as HTMLElement; roll.scrollLeft = roll.scrollWidth; });
+    await settleScroll(page, page.locator(".lv-cw-scroll"));
     const lastInView = await page.evaluate(() => {
       const roll = document.querySelector(".lv-cw-scroll") as HTMLElement;
       const all = Array.from(document.querySelectorAll<HTMLElement>('[data-testid="correction-card"]'));
@@ -101,15 +104,14 @@ test.describe("02 the editor scrolls and does not push sideways", () => {
     await page.keyboard.press("Enter");
     for (let step = 0; step < 36; step += 1) {
       await page.keyboard.press("ArrowRight");
-      await page.waitForTimeout(40);
-      const visible = await page.evaluate(() => {
+      await settlePaint(page);
+      await expect.poll(() => page.evaluate(() => {
         const roll = document.querySelector(".lv-cw-scroll") as HTMLElement;
         const chosen = document.querySelector('.lv-cw-card[aria-pressed="true"]') as HTMLElement | null;
         if (!chosen) return false;
         const box = roll.getBoundingClientRect(), at = chosen.getBoundingClientRect();
         return at.left >= box.left - 1 && at.right <= box.right + 1;
-      });
-      expect(visible, `after ${step + 1} presses`).toBe(true);
+      }), { message: `after ${step + 1} presses` }).toBe(true);
     }
   });
 

@@ -1,4 +1,5 @@
 import { beatsPerBar } from "../../domain/midi";
+import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../../domain/textProgression";
 import type { SavedProgressionBlock, SongIdea } from "../../domain/types";
 
 export type ProgressionSourceKind = "midi" | "text" | "live-midi";
@@ -34,7 +35,9 @@ export function progressionBpm(idea: SongIdea, block: SavedProgressionBlock): nu
 
 export function progressionSourceKind(block: SavedProgressionBlock): ProgressionSourceKind {
   if (block.origin === "live-midi") return "live-midi";
-  if (block.textSource) return "text";
+  // P23-10 V10: every text save path (standard, workspace, extended) stamps the text parser's analyzer version;
+  // only the extended one also keeps `textSource`, so the version is the mark that also covers the saves already made.
+  if (block.textSource || block.analyzerVersion === TEXT_PROGRESSION_ANALYZER_VERSION) return "text";
   return "midi";
 }
 

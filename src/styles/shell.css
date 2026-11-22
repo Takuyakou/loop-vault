@@ -27,6 +27,7 @@
     flex: 1 1 auto;
     flex-direction: column;
     overflow: hidden;
+    background: var(--lv-bg-glow), var(--lv-bg);
   }
 
   /* ---- title bar ---- */
@@ -59,7 +60,7 @@
   }
 
   .lv-titlebar-brand > span {
-    transition: opacity 120ms var(--lv-ease-standard) 120ms;
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard) 120ms;
   }
 
   .lv-titlebar-brand > * {
@@ -191,7 +192,7 @@
   }
 
   .lv-sidebar-heading > span {
-    transition: opacity 120ms var(--lv-ease-standard) 120ms;
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard) 120ms;
   }
 
   /* Collapsed: the same block shows a rule instead of the words. */
@@ -204,7 +205,7 @@
     background: rgb(150 170 195 / 10%);
     content: "";
     opacity: 0;
-    transition: opacity 120ms var(--lv-ease-standard);
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard);
   }
 
   .lv-sidebar[data-sidebar="collapsed"] .lv-sidebar-heading > span {
@@ -245,16 +246,56 @@
     color: var(--lv-text);
   }
 
+  /* P23-48: Bass Practice's entry carries its own purple (bar, dot, mark, row tint). Voicing Loop and Chord Dojo use the base teal. */
+  .lv-nav-item[data-nav="bass-practice"] {
+    --lv-accent: var(--lv-practice-bass);
+    --lv-accent-soft: var(--lv-practice-bass-soft);
+    --lv-text-on-accent: #17123a;
+  }
+
   .lv-nav-item[aria-current="page"] {
-    background: var(--lv-accent-soft);
-    box-shadow: inset 0 0 0 1px rgb(66 216 198 / 22%);
+    background: color-mix(in srgb, var(--lv-accent) 9%, transparent);
     color: var(--lv-text);
     font-weight: 600;
+  }
+
+  .lv-nav-item[aria-current="page"]::before {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--lv-accent);
+    content: "";
   }
 
   .lv-nav-item > svg {
     flex: none;
   }
+
+  /* P23-02: the practice marks (VL / CD / BP). 24px wide; the negative margin keeps the centre where the 19px icons are. */
+  .lv-nav-mark {
+    margin: 0 -2.5px;
+  }
+
+  .lv-nav-mark rect { fill: var(--lv-accent-soft); }
+  .lv-nav-mark text {
+    fill: var(--lv-accent);
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .lv-nav-mark[data-mark="CD"] rect { fill: var(--lv-accent-soft); }
+  .lv-nav-mark[data-mark="BP"] rect { fill: var(--lv-practice-bass-soft); }
+  .lv-nav-mark[data-mark="BP"] text { fill: var(--lv-practice-bass); }
+
+  .lv-nav-item[aria-current="page"] .lv-nav-mark rect { fill: var(--lv-accent); }
+  .lv-nav-item[aria-current="page"] .lv-nav-mark text { fill: var(--lv-text-on-accent); }
+  .lv-nav-item[aria-current="page"] .lv-nav-mark[data-mark="BP"] rect { fill: var(--lv-practice-bass); }
+  .lv-nav-item[aria-current="page"] .lv-nav-mark[data-mark="BP"] text { fill: #17123a; }
 
   .lv-nav-label {
     min-width: 0;
@@ -262,13 +303,28 @@
     overflow: hidden;
     text-align: left;
     white-space: nowrap;
-    transition: opacity 120ms var(--lv-ease-standard) 120ms;
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard) 120ms;
   }
 
   .lv-sidebar[data-sidebar="collapsed"] .lv-nav-label {
     opacity: 0;
     transition-delay: 0ms;
   }
+
+  .lv-nav-count {
+    flex: none;
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-12);
+    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard) 120ms;
+  }
+
+  .lv-sidebar[data-sidebar="collapsed"] .lv-nav-count {
+    opacity: 0;
+    transition-delay: 0ms;
+  }
+
+  /* P23-61 §7: the side menu has no 今日弾きました dot (the Home's records say it). */
 
   /* Fixed so it is not clipped by (or widening) the scrolling nav; top comes from AppShell. */
   .lv-tooltip.lv-tooltip-right {
@@ -574,6 +630,127 @@
     font-weight: 600;
   }
 
+  /* P23-05 the one app-wide BPM, left of the metronome button. */
+  .lv-global-bpm {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lv-global-bpm-value {
+    display: inline-flex;
+    height: 30px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px 0 10px;
+    border: 1px solid var(--lv-line);
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-well);
+    color: var(--lv-text);
+    cursor: ns-resize;
+    touch-action: none;
+    user-select: none;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-global-bpm-value:hover,
+  .lv-global-bpm-value[data-open="true"] {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-global-bpm-label {
+    color: var(--lv-text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  .lv-global-bpm-number,
+  .lv-global-bpm-input {
+    width: 3ch;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--lv-text);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .lv-global-bpm-input {
+    outline: none;
+    cursor: text;
+  }
+
+  .lv-global-bpm-arrows {
+    display: inline-flex;
+    color: var(--lv-text-muted);
+  }
+
+  .lv-global-bpm-song {
+    height: 26px;
+    padding: 0 10px;
+    border: 1px dashed var(--lv-line);
+    border-radius: var(--lv-radius-pill);
+    color: var(--lv-text-secondary);
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-global-bpm-song:hover {
+    border-color: var(--lv-accent);
+    color: var(--lv-accent);
+  }
+
+  .lv-global-bpm-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: var(--lv-z-popover);
+    width: 290px;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface-raised);
+    box-shadow: var(--lv-float-shadow);
+  }
+
+  .lv-global-bpm-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .lv-global-bpm-presets > button {
+    min-height: 28px;
+    height: 28px;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .lv-global-bpm-presets > button[aria-pressed="true"] {
+    border-color: var(--lv-accent);
+    background: var(--lv-accent-soft);
+    color: #7fe8da;
+  }
+
+  .lv-global-bpm-hint {
+    margin-top: 8px;
+    color: var(--lv-text-muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
   /* P8.9-09b header volume: an always-visible knob (drag up/down) beside the level meter. */
   .lv-volume-group {
     display: inline-flex;
@@ -669,7 +846,9 @@
     opacity: 1;
   }
 
+  /* P23-05: its screen-reader label is absolutely placed; keep it inside the header so a wider header row cannot widen the page. */
   .lv-volume-group .lv-level-meter {
+    position: relative;
     width: 36px;
     height: 26px;
     padding: 0;
@@ -732,6 +911,15 @@
   .lv-app-header .lv-midi-chip {
     padding: 0 10px;
   }
+
+  .lv-app-header .lv-global-bpm-label,
+  .lv-app-header .lv-global-bpm-arrows {
+    display: none;
+  }
+
+  .lv-app-header .lv-global-bpm-value {
+    padding: 0 8px;
+  }
 }
 
 /* Very narrow (browser-only reflow; the desktop window is at least 768px): keep
@@ -761,6 +949,7 @@
 @media (prefers-reduced-motion: reduce) {
   .lv-nav-item,
   .lv-nav-label,
+  .lv-nav-count,
   .lv-sidebar,
   .lv-sidebar-heading > span,
   .lv-sidebar-heading::after,
@@ -770,4 +959,18 @@
   .lv-titlebar-search {
     transition: none;
   }
+}
+
+/* P23-05: at narrow widths the date beside the Home title gives its room to the title. */
+@media (max-width: 899px) {
+  .lv-app-header-subtitle {
+    display: none;
+  }
+}
+
+/* P23-31b O8: the header title and the practice tabs stay on one line; the tabs hide when they cannot fit. */
+.lv-app-header-title {flex:none;white-space:nowrap;}
+.lv-app-header-leading {container:lv-lead / inline-size;}
+@container lv-lead (max-width:470px) {
+  .lv-header-practice-tabs {display:none !important;}
 }

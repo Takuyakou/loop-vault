@@ -25,7 +25,7 @@ async function openList(page:Page,mode='midi'){
 }
 async function openOriginal(page:Page,mode='midi'){
  await openList(page,mode);
- await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.getByTestId('dojo-original')).toBeVisible();
 }
 /** Plays card i as a pianist would: let go of everything that is not carried, then press the struck notes. */
@@ -79,7 +79,7 @@ test('a lap with a melody on top goes round, counts as 完奏 and is kept as lap
  expect(dojo.progressions[`builtin:${ID}:1`]).toBeUndefined();
  await page.reload();await page.locator('[data-nav=chord-dojo]').click();await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  await expect(page.locator(`.dojo-original-card[data-original=${ID}] .dojo-badge`)).toHaveText('完奏 1周');
- await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button', { name: / を練習する$/ }).click();
  // back in the list the record is read as laps
  await page.getByTestId('dojo-back').click();
  await expect(page.locator(`.dojo-original-card[data-original=${ID}] .dojo-badge`)).toHaveText('完奏 1周');
@@ -153,7 +153,7 @@ test('another key moves every note by the same amount, and the random key leaves
  await expect(page.getByTestId('dojo-original')).toHaveAttribute('data-original-key','2');
  await expect(page.getByTestId('original-card').nth(0)).toContainText('Gm11');
  await expect(page.getByTestId('original-card').nth(0).getByTestId('original-notes')).toContainText('左 G2 D3');
- await expect(page.getByTestId('original-card').nth(5)).toContainText('F#dim7');
+ await expect(page.getByTestId('original-card').nth(5)).toContainText('F♯dim7');
  await page.getByTestId('original-random').click();
  await expect(page.getByTestId('dojo-original')).not.toHaveAttribute('data-original-key','2');
  await at(page,0);
@@ -198,7 +198,7 @@ test('disconnect near the final card pauses, repeated reconnects clear history, 
 test('closing before the last card writes no lap and key changes never mix counts',async({page})=>{
  await openOriginal(page);await playCard(page,0);await at(page,1);await page.getByTestId('dojo-back').click();
  const before=await page.evaluate(k=>localStorage.getItem(k),KEY);expect(before).toBeNull();
- await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator(`.dojo-original-card[data-original=${ID}]`).getByRole('button', { name: / を練習する$/ }).click();
  await page.getByRole('combobox',{name:'Original Practice のキー'}).selectOption('2');
  await expect(page.getByTestId('dojo-original')).toHaveAttribute('data-original-card','0');
  await page.getByTestId('dojo-back').click();expect(await page.evaluate(k=>localStorage.getItem(k),KEY)).toBeNull();

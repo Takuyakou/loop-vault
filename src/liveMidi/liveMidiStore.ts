@@ -62,6 +62,7 @@ export interface LiveMidiStoreState {
   setPreferredDevice: (backendId: string) => void;
   testDevice: (backendId: string) => Promise<LiveMidiDeviceTestResult>;
   setShowHistory: (show: boolean) => void;
+  setAlwaysOnTop: (alwaysOnTop: boolean) => void;
   clearSession: () => void;
   resetLatencyMetrics: () => void;
 }
@@ -213,6 +214,12 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
 
     setShowHistory(show) {
       const preferences = { ...get().preferences, showHistory: show };
+      set({ preferences });
+      savePreferences(preferences);
+    },
+
+    setAlwaysOnTop(alwaysOnTop) {
+      const preferences = { ...get().preferences, alwaysOnTop };
       set({ preferences });
       savePreferences(preferences);
     },

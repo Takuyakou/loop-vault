@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, type ReactNode } from "react";
 import { parseChordLabel } from "../domain/chords";
 import { rankCyclicFingerings } from "../domain/progressionFingering";
 import { assignPracticeHandsAcrossProgression } from "../voicingPractice/fingeringDisplay";
@@ -18,13 +18,16 @@ import type {
   ProgressionVoicingTransportPort,
   ProgressionVoicingTransportStartOptions,
 } from "../practice/ProgressionVoicingTransport";
+import type { SavedProgressionBlock } from "../domain/types";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { connectionController } from "../liveMidi/connectionController";
-import { closeMidiPanel, midiPanelStore } from "../liveMidi/midiPanel";
+import { closeMidiPanel } from "../liveMidi/midiPanel";
 import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
 import { MetronomeProvider } from "../components/MetronomeProvider";
 import { GlobalMetronomeButton } from "../components/GlobalMetronomeButton";
 import { saveMetronomeEnabled } from "../audio/metronomePreference";
+import { GlobalBpmProvider, useGlobalBpm } from "../components/GlobalBpmProvider";
+import { loadGlobalBpm, saveGlobalBpm } from "../audio/globalBpmPreference";
 import { savePreviewSound } from "../audio/previewSoundPreference";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
 import {
@@ -50,7 +53,7 @@ afterEach(async () => {
 });
 
 describe("ProgressionVoicingPracticeView", () => {
-  it("shows bulk SOURCE counts before one explicit Vault action", async () => {
+  it("shows bulk 元MIDI counts before one explicit Vault action", async () => {
     const onBulkSourceApply = vi.fn(() => true);
     const container = await renderView(new FakeTransport(), { "source-midi": snapshot("source-midi") }, "source-midi", false, {
       onSelectProgression: vi.fn(() => true),
@@ -58,8 +61,8 @@ describe("ProgressionVoicingPracticeView", () => {
       bulkSourcePreview: { eligible: 3, changed: 2, skippedCustom: 1, skippedMissingSource: 1 },
       onBulkSourceApply,
     });
-    await act(async () => button(container, "この進行をSOURCEに").click());
-    expect(document.body.textContent).toContain("対象 3・変更 2・CUSTOM維持 1・元の音なし 1");
+    await act(async () => button(container, "この進行を元MIDIに").click());
+    expect(document.body.textContent).toContain("対象 3・変更 2・カスタムはそのまま 1・元の音なし 1");
     expect(onBulkSourceApply).not.toHaveBeenCalled();
     await act(async () => button(document.body, "切り替える").click());
     expect(onBulkSourceApply).toHaveBeenCalledOnce();
@@ -131,16 +134,16 @@ describe("ProgressionVoicingPracticeView", () => {
       );
       await act(async () => { await Promise.resolve(); });
 
-      expect(container.querySelector("h2")?.textContent).toBe("練習する進行");
-      expect(container.textContent).toContain("練習する進行");
-      expect(container.textContent).toContain("練習できる保存済み進行はまだありません。");
+      // P23-29 L2: the picker names itself on the list itself (`aria-label`), not with a heading.
+      expect(container.querySelector("[aria-label='練習する進行']")).not.toBeNull();
+      expect(container.textContent).toContain("まだ進行がありません");
       expect(container.querySelector("#voicing-loop-progression-search")).not.toBeNull();
       expect(container.textContent).not.toContain("元MIDI");
       expect(container.querySelector("fieldset")).toBeNull();
       expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
       expect(activate).not.toHaveBeenCalled();
 
-      await act(async () => button(container, "テキストで新しい進行を入力").click());
+      await act(async () => button(container, "テキストで入力").click());
       expect(onSelectProgression).not.toHaveBeenCalled();
       expect(onEnterText).toHaveBeenCalledOnce();
     } finally {
@@ -192,7 +195,8 @@ describe("ProgressionVoicingPracticeView", () => {
       search.dispatchEvent(new Event("input", { bubbles: true }));
     });
     expect(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']")).toHaveLength(1);
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+    // P23-29 L6/L6b: the one visible row is picked already, so one press starts the practice.
+    await act(async () => container.querySelector<HTMLElement>("[data-testid='voicing-loop-progression-row']")!.click());
     expect(onSelectProgression).toHaveBeenCalledWith(candidates[5]!.sourceReference);
     expect(loadRecentVoicingLoopProgressions()).toEqual([candidates[5]!.sourceReference]);
   });
@@ -202,9 +206,11 @@ describe("ProgressionVoicingPracticeView", () => {
     const onSelectProgression = vi.fn(() => true);
     const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
       { onSelectProgression, onEnterText: vi.fn() }, [long]);
-    const choice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!;
-    expect(choice.disabled).toBe(false);
-    await act(async () => choice.click());
+    const row = container.querySelector("[data-testid='voicing-loop-progression-row']")!;
+    // P23-29 L7: the one main practice button lives in the chosen progression's column now.
+    const practice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-preview-practice']")!;
+    expect(row.getAttribute("aria-disabled")).toBeNull();
+    await act(async () => practice.click());
     expect(onSelectProgression).toHaveBeenCalledWith(long.sourceReference);
   });
 
@@ -213,10 +219,12 @@ describe("ProgressionVoicingPracticeView", () => {
     const onSelectProgression = vi.fn(() => true);
     const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
       { onSelectProgression, onEnterText: vi.fn() }, [unavailable]);
-    const choice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!;
-    expect(choice.disabled).toBe(true);
+    const choice = container.querySelector("[data-testid='voicing-loop-progression-choice']")!;
+    const row = choice.closest("[data-testid='voicing-loop-progression-row']")!;
+    expect(row.getAttribute("aria-disabled")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-progression-practice']")).toBeNull();
     expect(rowText(choice)).toContain("再生時間・拍数・イベント数の安全上限");
-    await act(async () => choice.click());
+    await act(async () => (row as HTMLElement).click());
     expect(onSelectProgression).not.toHaveBeenCalled();
   });
 
@@ -234,9 +242,9 @@ describe("ProgressionVoicingPracticeView", () => {
     ];
     const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
       { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, candidates);
-    const choices = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']"));
+    const choices = Array.from(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']"));
     expect(choices).toHaveLength(2);
-    expect(choices.every((choice) => choice.disabled)).toBe(true);
+    expect(choices.every((choice) => choice.closest("[data-testid='voicing-loop-progression-row']")?.getAttribute("aria-disabled") === "true")).toBe(true);
     expect(choices.map((choice) => rowText(choice)).join(" ")).toContain("BPMが対応範囲外");
     expect(choices.map((choice) => rowText(choice)).join(" ")).toContain("この拍子");
   });
@@ -249,19 +257,22 @@ describe("ProgressionVoicingPracticeView", () => {
     ];
     const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
       { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, candidates);
-    const choices = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']"));
+    const choices = Array.from(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']"));
     expect(choices).toHaveLength(3);
-    expect(choices.every((choice) => !choice.disabled)).toBe(true);
-    // The picker no longer names the origin ("SMF既定" / "練習初期値"); the loaded practice screen still does.
+    expect(choices.every((choice) => choice.closest("[data-testid='voicing-loop-progression-row']")?.getAttribute("aria-disabled") === null)).toBe(true);
+    // P23-29 L6: a row has no practice button of its own; the main one is in the right column.
+    expect(container.querySelectorAll("[data-testid='voicing-loop-progression-practice']")).toHaveLength(0);
+    expect(container.querySelectorAll("[data-testid='voicing-loop-preview-practice']")).toHaveLength(1);
+    // The picker does not name the origin ("SMF既定" / "練習初期値"); since P23-06 the practice screen does not either.
     expect(container.textContent).not.toContain("SMF既定");
     expect(container.textContent).not.toContain("練習初期値");
     const tempos = Array.from(container.querySelectorAll<HTMLElement>("[data-tempo-origin]"));
     expect(tempos.map((element) => element.textContent).sort()).toEqual(["120 BPM", "120 BPM", "96 BPM"]);
     const tempoOf = (origin: string) => tempos.find((element) => element.dataset.tempoOrigin === origin)!;
     expect(tempoOf("SMF_DEFAULT").className).toContain("text-[var(--lv-text-muted)]");
-    expect(tempoOf("SMF_DEFAULT").getAttribute("title")).toBe("MIDIにテンポが無いため、120 BPM で始めます");
+    expect(tempoOf("SMF_DEFAULT").getAttribute("title")).toBe("MIDIにテンポが無いため、仮の 120 BPM です");
     expect(tempoOf("PRACTICE_INITIAL").className).toContain("text-[var(--lv-text-muted)]");
-    expect(tempoOf("PRACTICE_INITIAL").getAttribute("title")).toBe("BPMが保存されていないため、120 BPM で始めます");
+    expect(tempoOf("PRACTICE_INITIAL").getAttribute("title")).toBe("BPMが保存されていないため、仮の 120 BPM です");
     expect(tempoOf("SAVED_BPM").className).not.toContain("text-[var(--lv-text-muted)]");
     expect(tempoOf("SAVED_BPM").getAttribute("title")).toBeNull();
   });
@@ -285,7 +296,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
       { onSelectProgression: vi.fn(), onEnterText: vi.fn(), onToggleFavorite }, candidates);
     const titles = () => Array.from(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']"))
-      .map((choice) => choice.textContent?.split("C major")[0]?.trim());
+      .map((choice) => choice.querySelector("span[title]")?.textContent?.trim());
     expect(titles()).toEqual(["Progression 2", "Progression 1", "Progression 0"]);
 
     const star = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-favorite']")!;
@@ -336,7 +347,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(onSelectProgression).toHaveBeenCalledWith(vaultCandidate(0).sourceReference);
   });
 
-  it("shows the SMF default origin after a Vault progression is loaded", async () => {
+  it("P23-06: shows no tempo-origin mark after a Vault progression with the SMF default tempo is loaded", async () => {
     const loaded = snapshot("source-midi");
     const candidate = {
       ...vaultCandidate(0),
@@ -346,8 +357,10 @@ describe("ProgressionVoicingPracticeView", () => {
     };
     const container = await renderView(new FakeTransport(), { "source-midi": loaded }, "source-midi", false,
       { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [candidate]);
-    expect(container.querySelector("[data-testid='voicing-loop-tempo-origin']")?.textContent)
-      .toBe("SMF既定");
+    // P23-32 K4: the practice has no BPM field of its own (the header's 共通 BPM is the one).
+    expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-tempo-origin']")).toBeNull();
+    expect(container.textContent).not.toContain("SMF既定");
   });
 
   it("does not record an invalid or deleted source when click-time validation fails", async () => {
@@ -360,7 +373,8 @@ describe("ProgressionVoicingPracticeView", () => {
       { onSelectProgression: vi.fn(() => false), onEnterText: vi.fn() },
       [candidate],
     );
-    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+    // P23-29 L6b: the only row is picked already, so one press starts the practice.
+    await act(async () => container.querySelector<HTMLElement>("[data-testid='voicing-loop-progression-row']")!.click());
     expect(loadRecentVoicingLoopProgressions()).toEqual([]);
   });
 
@@ -397,10 +411,10 @@ describe("ProgressionVoicingPracticeView", () => {
       const onSelectProgression = vi.fn(() => true);
       await render(undefined, [nextCandidate], onSelectProgression);
       await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-      expect(container.textContent).toContain("練習する進行");
+      expect(container.querySelector("[data-testid='voicing-loop-progression-row']")).not.toBeNull();
       expect(loadRecentVoicingLoopProgressions()).toEqual([]);
       expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeSelector);
-      await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+      await act(async () => container.querySelector<HTMLElement>("[data-testid='voicing-loop-progression-row']")!.click());
       expect(onSelectProgression).toHaveBeenCalledWith(nextCandidate.sourceReference);
     } finally {
       await act(async () => root?.unmount());
@@ -516,8 +530,9 @@ describe("ProgressionVoicingPracticeView", () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
     expect(button(container, "開始").disabled).toBe(false);
-    expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
-      .toContain("MIDI 入力：MIDI に接続");
+    // P23-32 K4: the MIDI state row is gone (the top band shows the same thing once).
+    expect(container.querySelector("[data-testid='voicing-loop-midi-status']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-transport-midi-row']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-beat-progress-fill']")).toBeNull();
     expect(container.querySelector("[data-keyboard-layout='wide-88']")).not.toBeNull();
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
@@ -525,8 +540,12 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-midi-note='96']")).not.toBeNull();
     expect(container.querySelector("[data-c-label='C1']")).not.toBeNull();
     expect(container.querySelector("[data-c-label='C8']")).not.toBeNull();
-    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰ");
-    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
+    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰmaj7");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱm7");
+    // P23-20 L3: the role in the key colours the degree and keeps its badge.
+    expect(container.querySelector("[data-testid='voicing-loop-current-degree-wrap']")?.getAttribute("data-fn")).toBe("T");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree-wrap']")?.getAttribute("data-fn")).toBe("SD");
+    expect(container.querySelector("[data-testid='voicing-loop-current-role']")?.textContent).toBe("Tトニック");
     expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-degree']")).map((node) => node.textContent)).toEqual(["Ⅰ", "Ⅱ"]);
     expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent)
       .toContain("1 / 2");
@@ -534,8 +553,9 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("Dm7");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .toContain("左手");
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("構成音");
+    // P23-20 L1: the hand panel is five slot cards; the chord tone sits in each used card.
+    expect(container.querySelectorAll("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-degree").length)
+      .toBeGreaterThan(0);
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("あと2拍");
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
@@ -546,7 +566,41 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => recall.click());
     expect(recall.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent ?? "").not.toContain("構成音");
+    // …and no note is shown in the hand cards (recall hides the answer).
+    expect(container.querySelectorAll("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-pitch")).toHaveLength(0);
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
+  });
+
+  it("P23-32 C4: the head shows the title and the facts, and the back button calls onBackToPicker once", async () => {
+    const onBackToPicker = vi.fn();
+    const candidate = { ...vaultCandidate(0), sourceReference: snapshot("basic-full").source.reference };
+    const container = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn(), onBackToPicker }, [candidate]);
+    const head = container.querySelector("[data-testid='voicing-loop-head']")!;
+    expect(head.querySelector(".lv-vl-head-title")?.textContent).toBe("Progression 0");
+    expect(head.querySelector(".lv-vl-head-facts")?.textContent).toBe("Cメジャー ・ 1 小節");
+    const back = head.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-back']")!;
+    expect(back.getAttribute("aria-label")).toBe("練習する進行へ戻る");
+    expect(back.textContent).toContain("練習する進行");
+    await act(async () => back.click());
+    expect(onBackToPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it("P23-32 C4: without a matching Vault candidate the head keeps the facts and draws no title", async () => {
+    const onBackToPicker = vi.fn();
+    const container = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn(), onBackToPicker }, []);
+    const head = container.querySelector("[data-testid='voicing-loop-head']")!;
+    expect(head.querySelector(".lv-vl-head-title")).toBeNull();
+    expect(head.querySelector(".lv-vl-head-facts")?.textContent).toBe("Cメジャー ・ 1 小節");
+    await act(async () => head.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-back']")!.click());
+    expect(onBackToPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it("P23-32 C4: without onBackToPicker the head draws no back button", async () => {
+    const container = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
+    expect(container.querySelector("[data-testid='voicing-loop-head']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-back']")).toBeNull();
   });
 
   it("auditions any playable timeline card without seeking or changing the practice clock", async () => {
@@ -587,8 +641,8 @@ describe("ProgressionVoicingPracticeView", () => {
       key.dispatchEvent(new Event("change", { bubbles: true }));
     });
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dmaj7");
-    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰ");
-    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
+    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰmaj7");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱm7");
     expect(source.events[0]?.chord.label).toBe("Cmaj7");
     expect(source.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
 
@@ -605,14 +659,14 @@ describe("ProgressionVoicingPracticeView", () => {
     const source = snapshot("source-midi");
     const container = await renderView(runtime, { "source-midi": source }, "source-midi");
     const primary = container.querySelector("[data-testid='voicing-loop-transport-primary']")!;
-    const midiRow = container.querySelector("[data-testid='voicing-loop-transport-midi-row']")!;
-    expect(primary.textContent).toContain("BPM");
     expect(primary.textContent).toContain("キー");
     expect(primary.textContent).toContain("オクターブ元");
-    expect(midiRow.textContent).toContain("MIDI 入力");
-    expect(midiRow.textContent).toContain("MIDI 設定");
-    expect(midiRow.textContent).not.toContain("再接続");
-    expect(midiRow.textContent).not.toContain("BPM");
+    // P23-32 K3/K4: the bar is one row — no BPM field (the header's 共通 BPM), no MIDI status row, no MIDI 設定.
+    expect(primary.textContent).not.toContain("BPM");
+    expect(primary.textContent).toContain("お手本の音");
+    expect(container.querySelector("[data-testid='voicing-loop-transport-midi-row']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-midi-status']")).toBeNull();
+    expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
 
     await act(async () => container.querySelector<HTMLButtonElement>("[aria-label='1オクターブ上げる']")?.click());
     expect(primary.textContent).toContain("オクターブ+1");
@@ -623,17 +677,15 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(source.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
   });
 
-  it("changes BPM by dragging vertically while retaining direct number input", async () => {
+  it("plays at the app-wide BPM after the practice's own BPM field was removed (P23-32 K4)", async () => {
     const runtime = new FakeTransport();
-    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
-    const drag = container.querySelector<HTMLElement>("[data-testid='voicing-loop-bpm-drag']")!;
-    await act(async () => {
-      dispatchPointer(drag, "pointerdown", { button: 0, clientY: 100, pointerId: 7 });
-      dispatchPointer(drag, "pointermove", { button: 0, clientY: 70, pointerId: 7 });
-      dispatchPointer(drag, "pointerup", { button: 0, clientY: 70, pointerId: 7 });
-    });
-    expect(container.querySelector<HTMLInputElement>("#voicing-loop-bpm")?.value).toBe("88");
-    expect(runtime.setBpm).toHaveBeenLastCalledWith(88);
+    // P23-06: the practice starts at the app-wide BPM; the header's 共通 BPM is the only field now.
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 88 });
+    expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-bpm-drag']")).toBeNull();
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start.mock.calls[0]?.[0].bpm).toBe(88);
   });
 
   it("separates SOURCE, STUDY, and DISPLAY while keeping exact sources independent from study", async () => {
@@ -646,33 +698,37 @@ describe("ProgressionVoicingPracticeView", () => {
 
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
-      "ソース", "生成タイプ", "表示",
+      "音の出どころ", "表示",
     ]);
     expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
       .toBe(true);
     expect(toolbar.textContent).toContain("Colorを加える");
     expect(toolbar.textContent).toContain("Open配置");
-    expect(toolbar.textContent).toContain("進行に合わせて最適化");
+    // P23-20 L2: the two checks always show a short name; the full sentence is their accessible name.
+    // P23-20 L2 + P23-32 T4: the two settings are switches that keep the short name and the full accessible name.
+    expect(controlSwitch(toolbar, "進行に合わせて最適化").getAttribute("aria-label")).toBe("進行に合わせて最適化");
     expect(toolbar.textContent).not.toContain("SHELL TYPE");
     expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
-    const sourceCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
-    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
-      expect(sourceCheckboxes.find((input) => input.parentElement?.textContent?.includes(label))?.disabled).toBe(true);
+    for (const label of ["Colorを加える", "Open配置"]) {
+      expect(controlCheckbox(toolbar, label).disabled).toBe(true);
     }
+    expect(controlSwitch(toolbar, "進行に合わせて最適化").disabled).toBe(true);
 
     await act(async () => button(container, "自動生成").click());
     expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.value).toBe("teacher");
     expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(false);
-    const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
-    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
-    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
-    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(true);
+    expect(controlCheckbox(toolbar, "Colorを加える").checked).toBe(false);
+    expect(controlCheckbox(toolbar, "Open配置").checked).toBe(false);
+    expect(controlSwitch(toolbar, "進行に合わせて最適化").getAttribute("aria-checked")).toBe("true");
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
     expect(explanation.textContent).toContain("Teacher Style");
     expect(explanation.textContent).toContain("候補");
-    expect(explanation.textContent).toContain("ルールP5.33-GEN-TEACHER-MAJ7");
+    // P23-32 P4: the rule's internal names move into the i's accessible name, not the visible words.
+    expect(explanation.textContent).not.toContain("P5.33-GEN");
+    expect(explanation.querySelector(".lv-vl-rule-info")?.getAttribute("aria-label"))
+      .toContain("ルール P5.33-GEN-TEACHER-MAJ7");
     expect(explanation.textContent).toContain("トップトップ候補");
 
     await act(async () => button(container, "カスタム").click());
@@ -684,23 +740,23 @@ describe("ProgressionVoicingPracticeView", () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
-    const checkbox = (label: string) => Array.from(
-      toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
-    ).find((input) => input.parentElement?.textContent?.includes(label))!;
+    const checkbox = (label: string) => controlCheckbox(toolbar, label);
+    const toggle = (label: string) => controlSwitch(toolbar, label);
 
     expect(checkbox("Colorを加える").checked).toBe(false);
     expect(checkbox("Open配置").checked).toBe(false);
-    expect(checkbox("進行に合わせて最適化").checked).toBe(true);
+    expect(toggle("進行に合わせて最適化").getAttribute("aria-checked")).toBe("true");
 
     await act(async () => button(container, "開始").click());
     runtime.stop.mockClear();
     runtime.pause.mockClear();
     runtime.updatePlan.mockClear();
 
-    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+    for (const label of ["Colorを加える", "Open配置"]) {
       await act(async () => checkbox(label).click());
       expect(button(container, "一時停止")).not.toBeNull();
     }
+    await act(async () => toggle("進行に合わせて最適化").click());
     expect(runtime.stop).not.toHaveBeenCalled();
     expect(runtime.pause).not.toHaveBeenCalled();
     expect(runtime.updatePlan).toHaveBeenCalledTimes(3);
@@ -854,13 +910,13 @@ describe("ProgressionVoicingPracticeView", () => {
     };
     const container = await renderView(runtime, { "basic-full": slash }, "basic-full");
     await selectStudy(container, "core");
-    const current = container.querySelector("[data-testid='voicing-loop-current-voicing']")!;
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
-    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F♯");
     expect(usedCells(container, "voicing-loop-left-hand", "degree")).toEqual(["9"]);
     expect(usedCells(container, "voicing-loop-right-hand", "degree")).toEqual(["1", "3", "5"]);
-    expect(current.textContent).toContain("指L5");
-    expect(current.textContent).toContain("指R");
+    // P23-20 L1: the slot card carries the finger name alone.
+    expect(usedCells(container, "voicing-loop-left-hand", "finger")).toContain("L5");
+    expect(usedCells(container, "voicing-loop-right-hand", "finger")[0]).toBe("R1");
     expect(next.textContent).toContain("左手");
     expect(container.querySelector("[data-testid='voicing-loop-next-left-hand']")?.textContent)
       .toContain("左手");
@@ -882,7 +938,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
     expect(toolbar.textContent).not.toMatch(/\bMY\b|\bLESSON\b|SHELL TYPE/);
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
-      "ソース", "生成タイプ", "表示",
+      "音の出どころ", "表示",
     ]);
     expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
@@ -937,11 +993,11 @@ describe("ProgressionVoicingPracticeView", () => {
   it("defaults reference sound on, passes session state to Start, and keeps visual transport available off", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
-    const referenceSound = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
-      .find((input) => input.parentElement?.textContent?.includes("お手本音"))!;
-    expect(referenceSound.checked).toBe(true);
+    // P23-32 K3: the reference sound is a switch with the visible name 「お手本の音」.
+    const referenceSound = controlSwitch(container, "お手本の音");
+    expect(referenceSound.getAttribute("aria-checked")).toBe("true");
     await act(async () => referenceSound.click());
-    expect(referenceSound.checked).toBe(false);
+    expect(referenceSound.getAttribute("aria-checked")).toBe("false");
     expect(runtime.setReferenceSoundEnabled).toHaveBeenCalledWith(false);
 
     await act(async () => button(container, "開始").click());
@@ -964,7 +1020,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "electric-piano");
   });
 
-  it("shows the shared MIDI state beside transport controls and opens the MIDI panel", async () => {
+  it("keeps the shared MIDI state out of the transport row (the top band owns it)", async () => {
     const original = defaultLiveMidiStore.getState();
     const intent = connectionController.state.getState().intent;
     connectionController.state.setState({ intent: "on" });
@@ -979,13 +1035,12 @@ describe("ProgressionVoicingPracticeView", () => {
         { "basic-full": snapshot("basic-full") },
         "basic-full",
       );
-      const status = container.querySelector("[data-testid='voicing-loop-midi-status']");
-      expect(status?.textContent).toContain("MIDI 入力：Studio Keyboard");
-      expect(status?.getAttribute("data-midi-kind")).toBe("connected");
+      // P23-32 K4: the band repeated the top band's 「MIDI 機器がありません」, so the state row and its
+      // settings button are gone from this screen; the top band's MIDI button opens the same shared panel.
+      expect(container.querySelector("[data-testid='voicing-loop-transport-midi-row']")).toBeNull();
+      expect(container.querySelector("[data-testid='voicing-loop-midi-status']")).toBeNull();
       expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
         .not.toContain("MIDI");
-      await act(async () => button(container, "MIDI 設定").click());
-      expect(midiPanelStore.getState().open).toBe(true);
     } finally {
       closeMidiPanel();
       connectionController.state.setState({ intent });
@@ -1156,16 +1211,14 @@ describe("ProgressionVoicingPracticeView", () => {
 
   it("keeps BPM and metronome UI aligned with changes made during pending Start", async () => {
     const runtime = new PendingTransport();
-    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 96, extra: <BpmProbe /> });
     await act(async () => button(container, "開始").click());
-    const bpm = container.querySelector<HTMLInputElement>("#voicing-loop-bpm")!;
     await act(async () => {
-      const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-      valueSetter?.call(bpm, "132");
-      bpm.dispatchEvent(new Event("input", { bubbles: true }));
+      button(container, "bpm-132").click();
       button(container, "メトロノーム").click();
     });
-    expect(bpm.value).toBe("132");
+    expect(loadGlobalBpm()).toBe(132);
     expect(runtime.setBpm).toHaveBeenCalledWith(132);
     expect(runtime.setMetronomeEnabled).toHaveBeenCalledWith(false);
     expect(button(container, "メトロノーム").getAttribute("aria-label")).toContain("OFF");
@@ -1211,19 +1264,19 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => button(container, "停止").click());
     await act(async () => release(false));
     expect(runtime.start).toHaveBeenCalledOnce();
-    expect(container.textContent).toContain("停止しました");
+    // P23-32 K5: the stopped state reads 「停止中」.
+    expect(container.textContent).toContain("停止中");
   });
 
   it("applies BPM to the latest synchronized transport position", async () => {
     const runtime = new FakeTransport();
-    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    // P23-06 / P23-32 K4: the app-wide BPM (the header's field) is the one the practice follows.
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 80, extra: <BpmProbe value={120} /> });
     await act(async () => button(container, "開始").click());
-    const bpm = container.querySelector<HTMLInputElement>("#voicing-loop-bpm")!;
     await act(async () => {
       runtime.options?.onTransportBeat(6.5, 1e6);
-      const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-      valueSetter?.call(bpm, "120");
-      bpm.dispatchEvent(new Event("input", { bubbles: true }));
+      button(container, "bpm-120").click();
     });
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
     expect(runtime.setBpm).toHaveBeenCalledWith(120);
@@ -1320,7 +1373,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent)
       .toBe("Gmaj9/A");
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("音名A3");
+      .toContain("A3");
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
       .toContain("F#4");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
@@ -1341,13 +1394,10 @@ describe("ProgressionVoicingPracticeView", () => {
 
     for (const label of ["カスタム", "自動生成"]) {
       await act(async () => button(container, label).click());
-      expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-        .toContain("指");
+      expect(container.querySelectorAll("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-finger").length).toBeGreaterThan(0);
     }
-    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("指L");
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("指R");
+    expect(usedCells(container, "voicing-loop-left-hand", "finger")[0]).toBe("L5");
+    expect(usedCells(container, "voicing-loop-right-hand", "finger")[0]).toBe("R1");
   });
 
   it("can hide, save, and reset a personal fingering by exact physical pitch signature", async () => {
@@ -1376,15 +1426,18 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent).toContain("おすすめ");
     await act(async () => button(document.body, "キャンセル").click());
 
-    const toggle = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
-      .find((input) => input.parentElement?.textContent?.includes("おすすめ運指を表示"));
-    await act(async () => toggle?.click());
+    const toggle = controlSwitch(container, "おすすめ運指を表示");
+    await act(async () => toggle.click());
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .not.toContain("FINGER");
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("音名");
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("構成音");
+    // P23-20 L1: with the fingering hidden the notes stay (the finger names go away).
+    expect(container.querySelectorAll("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-pitch").length)
+      .toBeGreaterThan(0);
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-finger")?.textContent)
+      .toBe("");
+    // P23-20 L1: the chord tone is in each used slot card.
+    expect(container.querySelectorAll("[data-testid='voicing-loop-current-voicing'] .voicing-hand-slot-degree").length)
+      .toBeGreaterThan(0);
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
   it("restores the previous usable source without changing the Vault snapshot", async () => {
@@ -1425,14 +1478,22 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(cards[1]!.dataset.range).toBe("b");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.loopBounds).toEqual({ startBeat: 0, endBeat: 4 });
+    // P23-66: right-clicking inside the active range clears it.
     await rightClick(1);
-    expect(cards[1]!.dataset.range).toBe("pending-a");
-    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("1〜2");
-    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
-    expect(container.querySelector("[data-testid='voicing-loop-range-pending']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-range-chip']")).toBeNull();
+    expect(cards[0]!.dataset.range).toBe("none");
+    expect(cards[1]!.dataset.range).toBe("none");
+    expect(runtime.setLoopBounds).toHaveBeenCalledWith(undefined);
     await rightClick(1, true);
     expect(runtime.setLoopBounds).toHaveBeenCalledWith({ startBeat: 2, endBeat: 4 });
     expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
+    // P23-66: amber band above the cards and amber bottom marker without cyan fill/ring on non-current range cards.
+    const rangeBand = container.querySelector<HTMLElement>("[data-testid='voicing-loop-range-band']");
+    expect(rangeBand).not.toBeNull();
+    expect(Number.parseFloat(rangeBand!.style.width)).toBeGreaterThan(0);
+    expect(rangeBand!.className).toContain("bg-[var(--lv-vl-range)]");
+    expect(cards[1]!.dataset.range).toBe("a-b");
+    expect(cards[1]!.className).not.toContain("ring-2");
     const beforeSeek = runtime.seek.mock.calls.length;
     await act(async () => cards[0]!.click());
     expect(runtime.seek).toHaveBeenCalledTimes(beforeSeek);
@@ -1441,6 +1502,9 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("2 / 2");
     await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-chip']")!.click());
     expect(runtime.setLoopBounds).toHaveBeenLastCalledWith(undefined);
+    // P23-20 L5: × on the chip clears the colour with the loop.
+    expect(container.querySelector("[data-testid='voicing-loop-range-band']")).toBeNull();
+    expect(cards[1]!.dataset.range).toBe("none");
   });
 
   it("uses Shift+F10/Menu for the same range action and supports one-card selection", async () => {
@@ -1511,10 +1575,18 @@ describe("ProgressionVoicingPracticeView", () => {
     for (const hand of ["left", "right"]) {
       const card = panel.querySelector(`[data-testid='voicing-loop-${hand}-hand']`)!;
       expect(card).not.toBeNull();
-      for (const label of ["指", "音名", "構成音", "おすすめ"]) expect(card.textContent).toContain(label);
+      // P23-20 L1: five fixed slot cards, each with its finger; the used ones carry the note and the tone.
+      expect(card.querySelectorAll("[data-testid='voicing-loop-hand-slot']")).toHaveLength(5);
+      expect(card.textContent).toContain("おすすめ");
+      expect(card.querySelectorAll(".voicing-hand-slot-finger").length).toBe(5);
+      expect(card.querySelectorAll(".voicing-hand-slot-pitch").length).toBeGreaterThan(0);
+      expect(card.querySelectorAll(".voicing-hand-slot-degree").length).toBeGreaterThan(0);
     }
     const info = panel.querySelector("[data-testid='voicing-loop-current-explanation']")!;
-    for (const label of ["Teacher Style", "Literal", "候補", "ルール", "省略", "トップ"]) expect(info.textContent).toContain(label);
+    for (const label of ["Teacher Style", "Literal", "候補", "省略", "トップ"]) expect(info.textContent).toContain(label);
+    // P23-32 P4: 「ルール …」 is no longer visible; the i carries it as its accessible name.
+    expect(info.textContent).not.toContain("ルール");
+    expect(info.querySelector(".lv-vl-rule-info")?.getAttribute("aria-label")).toContain("ルール P5.33");
     expect(button(container, "運指を編集").disabled).toBe(false);
   });
 
@@ -1564,7 +1636,7 @@ describe("ProgressionVoicingPracticeView", () => {
     await contextRange(cards[1]!);
     const viewport = container.querySelector<HTMLElement>("[data-testid='voicing-loop-timeline-viewport']")!;
     expect(document.activeElement).toBe(viewport);
-    for (const target of [button(container, "元MIDI"), container.querySelector<HTMLInputElement>("#voicing-loop-bpm")!, cards[0]!]) {
+    for (const target of [button(container, "元MIDI"), container.querySelector<HTMLSelectElement>("#voicing-loop-count-in")!, cards[0]!]) {
       target.focus();
       const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
       await act(async () => target.dispatchEvent(event));
@@ -1576,16 +1648,17 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.start).toHaveBeenCalledOnce();
   });
 
-  it("transport clear is always present; clears pending/active/highlights and returns to full playback with reset count", async () => {
+  it("the range's × clears pending/active/highlights and returns to full playback with reset count", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
-    const clear = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-clear']")!;
     const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
-    expect(clear.disabled).toBe(true);
+    // P23-32 L1/K4: the × beside 「ここから n」 appears only while a start is pending (the bar's 区間解除 is gone).
+    expect(container.querySelector("[data-testid='voicing-loop-range-clear']")).toBeNull();
     await contextRange(cards[1]!);
-    expect(clear.disabled).toBe(false);
+    const clear = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-clear']")!;
+    expect(clear).not.toBeNull();
     await act(async () => clear.click());
-    expect(clear.disabled).toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-range-clear']")).toBeNull();
     expect(cards[1]!.dataset.range).toBe("none");
     await contextRange(cards[0]!, true);
     await act(async () => button(container, "開始").click());
@@ -1593,9 +1666,9 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("2 周完了");
     await contextRange(cards[1]!);
     expect(cards[0]!.dataset.range).toBe("a-b");
-    await act(async () => clear.click());
+    // An active range is cleared by the chip's own ×.
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-chip']")!.click());
     expect(runtime.setLoopBounds).toHaveBeenLastCalledWith(undefined);
-    expect(clear.disabled).toBe(true);
     expect(container.querySelector("[data-testid='voicing-loop-range-chip']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-range-pending']")).toBeNull();
     expect(cards[0]!.dataset.range).toBe("none");
@@ -1630,7 +1703,8 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => viewport.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
     expect(cards[1]!.dataset.range).toBe("a-b");
     expect(cards[0]!.dataset.range).toBe("outside");
-    await act(async () => button(container, "区間解除").click());
+    // P23-32 L1/K4: the active range's chip clears both the range and the pending start.
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-chip']")!.click());
     await act(async () => button(container, "開始").click());
     await act(async () => ruler.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 100 + ppb / 2 })));
     expect(runtime.seek).toHaveBeenLastCalledWith(1);
@@ -1712,6 +1786,497 @@ describe("P11 generated substitute and fingering acceptance", () => {
   });
 });
 
+describe("P23-06 the app-wide BPM", () => {
+  /** Changes the app-wide BPM from outside the practice screen, as the header does. */
+  function HeaderProbe() {
+    const { setBpm, songBpm } = useGlobalBpm();
+    return <button type="button" data-song-bpm={songBpm ?? ""} onClick={() => setBpm(132)}>header-132</button>;
+  }
+  const songBpm = (container: HTMLElement) => container.querySelector<HTMLElement>("[data-song-bpm]")!.dataset.songBpm;
+
+  it("plays at the app-wide BPM, not the progression's", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 96 });
+    expect(snapshot("basic-full").bpm).toBe(80);
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start.mock.calls[0]?.[0].bpm).toBe(96);
+  });
+
+  it("has no BPM field of its own; the header's field is the one that writes the app-wide BPM", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 96, extra: <BpmProbe value={104} /> });
+    expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+    await act(async () => button(container, "bpm-104").click());
+    expect(loadGlobalBpm()).toBe(104);
+    expect(runtime.setBpm).toHaveBeenCalledWith(104);
+  });
+
+  it("a change from outside (the header) reaches the transport without stopping the playback", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, undefined, [], undefined, { globalBpm: 96, extra: <HeaderProbe /> });
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start).toHaveBeenCalledOnce();
+    expect(runtime.start.mock.calls[0]?.[0].bpm).toBe(96);
+    const stops = runtime.stop.mock.calls.length;
+    await act(async () => button(container, "header-132").click());
+    expect(runtime.setBpm).toHaveBeenCalledWith(132);
+    expect(runtime.stop.mock.calls.length).toBe(stops);
+    expect(runtime.start).toHaveBeenCalledOnce();
+    expect(button(container, "一時停止")).toBeTruthy();
+  });
+
+  it("changing the voicing source keeps the app-wide BPM", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, {
+      "source-midi": snapshot("source-midi"),
+      "basic-full": snapshot("basic-full"),
+    }, "source-midi", false, undefined, [], undefined, { globalBpm: 96 });
+    expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+    await act(async () => button(container, "自動生成").click());
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button(container, "元MIDI").click());
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start.mock.calls[0]?.[0].bpm).toBe(96);
+  });
+
+  it("announces a saved BPM as the song's BPM, never a stand-in", async () => {
+    const loaded = { ...snapshot("source-midi"), bpm: 96 };
+    const candidateOf = (tempoOrigin: "SAVED_BPM" | "SMF_DEFAULT" | "PRACTICE_INITIAL") => ({
+      ...vaultCandidate(0), sourceReference: loaded.source.reference, bpm: 96, tempoOrigin,
+    });
+    for (const [origin, expected] of [["SAVED_BPM", "96"], ["SMF_DEFAULT", ""], ["PRACTICE_INITIAL", ""]] as const) {
+      const container = await renderView(new FakeTransport(), { "source-midi": loaded }, "source-midi", false,
+        { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [candidateOf(origin)], undefined,
+        { globalBpm: 120, extra: <HeaderProbe /> });
+      expect(songBpm(container), origin).toBe(expected);
+      expect(container.querySelector("#voicing-loop-bpm"), origin).toBeNull();
+      await act(async () => root?.unmount());
+      root = undefined;
+      document.body.replaceChildren();
+    }
+  });
+
+  it("the picker announces no song BPM", async () => {
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(), onEnterText: vi.fn() },
+      [{ ...vaultCandidate(0), bpm: 96, tempoOrigin: "SAVED_BPM" as const }], undefined,
+      { globalBpm: 120, extra: <HeaderProbe /> });
+    expect(container.querySelector("[data-testid='voicing-loop-progression-row']")).not.toBeNull();
+    expect(songBpm(container)).toBe("");
+  });
+
+  it("shows no tempo-origin mark (V3)", async () => {
+    const loaded = snapshot("source-midi");
+    for (const tempoOrigin of ["SMF_DEFAULT", "PRACTICE_INITIAL"] as const) {
+      const container = await renderView(new FakeTransport(), { "source-midi": loaded }, "source-midi", false,
+        { onSelectProgression: vi.fn(), onEnterText: vi.fn() },
+        [{ ...vaultCandidate(0), sourceReference: loaded.source.reference, bpm: 120, tempoOrigin }], undefined,
+        { globalBpm: 120 });
+      expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+      expect(container.querySelector("[data-testid='voicing-loop-tempo-origin']"), tempoOrigin).toBeNull();
+      expect(container.textContent).not.toContain(tempoOrigin === "SMF_DEFAULT" ? "SMF既定" : "練習初期値");
+      await act(async () => root?.unmount());
+      root = undefined;
+      document.body.replaceChildren();
+    }
+  });
+
+  it("explains a provisional tempo in the picker as a stand-in (V4)", async () => {
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(), onEnterText: vi.fn() },
+      [{ ...vaultCandidate(0), bpm: 120, tempoOrigin: "SMF_DEFAULT" as const },
+        { ...vaultCandidate(1), bpm: 120, tempoOrigin: "PRACTICE_INITIAL" as const }],
+      undefined, { globalBpm: 100 });
+    const titleOf = (origin: string) => container.querySelector(`[data-tempo-origin='${origin}']`)?.getAttribute("title");
+    expect(titleOf("SMF_DEFAULT")).toBe("MIDIにテンポが無いため、仮の 120 BPM です");
+    expect(titleOf("PRACTICE_INITIAL")).toBe("BPMが保存されていないため、仮の 120 BPM です");
+  });
+  it("P23-29 C2: the first press picks, the picked row starts, and the star never starts", async () => {
+    const runtime = new FakeTransport();
+    const candidates = [vaultCandidate(0), vaultCandidate(1), vaultCandidate(2)];
+    const onSelectProgression = vi.fn(() => true);
+    const container = await renderView(runtime, undefined, "source-midi", false,
+      { onSelectProgression, onEnterText: vi.fn(), onToggleFavorite: vi.fn(() => true) }, candidates);
+    const rows = () => Array.from(container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progression-row']"));
+    const referenceOf = (row: HTMLElement) => candidates.find((candidate) => row.textContent?.includes(candidate.title))!.sourceReference;
+
+    // L8: the first playable row is picked when the picker opens — exactly one.
+    expect(rows().filter((row) => row.getAttribute("data-selected") === "true")).toHaveLength(1);
+    const pick = (row: HTMLElement) => act(async () => row.click());
+    const selected = () => rows().find((row) => row.getAttribute("data-selected") === "true")!;
+
+    // L6: pressing a row that is not picked only picks it.
+    const other = rows().find((row) => row !== selected())!;
+    await pick(other);
+    expect(onSelectProgression).not.toHaveBeenCalled();
+    expect(other.getAttribute("data-selected")).toBe("true");
+    expect(rows().filter((row) => row.getAttribute("data-selected") === "true")).toHaveLength(1);
+
+    // L6b: pressing the picked row starts it.
+    const second = referenceOf(other);
+    await pick(other);
+    expect(onSelectProgression).toHaveBeenCalledTimes(1);
+    expect(onSelectProgression).toHaveBeenLastCalledWith(second);
+
+    // L6: the star never starts the practice.
+    await act(async () => other.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-favorite']")!.click());
+    expect(onSelectProgression).toHaveBeenCalledTimes(1);
+
+    // L6b: a search that hides the picked row picks the first playable row of what is left.
+    const search = container.querySelector<HTMLInputElement>("#voicing-loop-progression-search")!;
+    const target = rows().find((row) => row !== other)!;
+    await act(async () => {
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      valueSetter?.call(search, target.textContent?.match(/Progression \d/)?.[0] ?? "");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0]!.getAttribute("data-selected")).toBe("true");
+  });
+  it("P23-29 C2: Enter, the right column's button and a list where nothing can be practiced", async () => {
+    const onSelectProgression = vi.fn(() => true);
+    const candidates = [vaultCandidate(0), vaultCandidate(1)];
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression, onEnterText: vi.fn() }, candidates);
+    const rows = () => Array.from(container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progression-row']"));
+    const selected = () => rows().find((row) => row.getAttribute("data-selected") === "true");
+    const referenceOf = (row: HTMLElement) => candidates
+      .find((candidate) => row.textContent?.includes(candidate.title))!.sourceReference;
+
+    // L8/L6b: the list's first playable row is picked at open, and pressing it (the pick is already made) starts it.
+    const top = selected()!;
+    expect(top).toBe(rows()[0]);
+    await act(async () => top.click());
+    expect(onSelectProgression).toHaveBeenCalledTimes(1);
+    expect(onSelectProgression).toHaveBeenLastCalledWith(referenceOf(top));
+
+    // A different row is picked by its first press only …
+    const other = rows()[1]!;
+    await act(async () => other.click());
+    expect(onSelectProgression).toHaveBeenCalledTimes(1);
+    expect(selected()).toBe(other);
+    // … then Enter (with no control focused) starts the picked row.
+    const enter = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true });
+    await act(async () => { document.body.dispatchEvent(enter); });
+    expect(enter.defaultPrevented).toBe(true);
+    expect(onSelectProgression).toHaveBeenCalledTimes(2);
+    expect(onSelectProgression).toHaveBeenLastCalledWith(referenceOf(other));
+    // The right column's main button starts the same picked row.
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-preview-practice']")!.click());
+    expect(onSelectProgression).toHaveBeenCalledTimes(3);
+    expect(onSelectProgression).toHaveBeenLastCalledWith(referenceOf(other));
+
+    // L6b: a list with nothing playable has no picked row, and Enter starts nothing.
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+    const nothing = vi.fn(() => true);
+    const blocked = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: nothing, onEnterText: vi.fn() },
+      [{ ...vaultCandidate(0), unavailableReason: "practice-capacity" as const }]);
+    expect(blocked.querySelectorAll("[data-testid='voicing-loop-progression-row']")).toHaveLength(1);
+    expect(blocked.querySelector("[data-testid='voicing-loop-progression-row'][data-selected='true']")).toBeNull();
+    expect(blocked.querySelector("[data-testid='voicing-loop-preview-empty']")?.textContent).toBe("進行を選んでください");
+    const enterNothing = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true });
+    await act(async () => { document.body.dispatchEvent(enterNothing); });
+    expect(nothing).not.toHaveBeenCalled();
+  });
+  it("P23-29 C4: the 続きから band only appears while that progression can still be practiced", async () => {
+    const record = new Date().toISOString();
+    window.localStorage.setItem("loop-vault:voicing-loop-last:v1",
+      JSON.stringify({ version: 1, reference: { ideaId: "idea-1", blockId: "block-1" }, at: record }));
+    try {
+      const shown = await renderView(new FakeTransport(), undefined, "source-midi", false,
+        { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [vaultCandidate(0), vaultCandidate(1)]);
+      const band = shown.querySelector("[data-testid='voicing-loop-resume']");
+      expect(band?.textContent).toContain("続きから");
+      expect(band?.textContent).toContain("Progression 1");
+      // L8: the 続きから progression is the one picked at open.
+      expect(shown.querySelector("[data-testid='voicing-loop-progression-row'][data-selected='true']")?.textContent)
+        .toContain("Progression 1");
+      await act(async () => root?.unmount());
+      root = undefined;
+      document.body.replaceChildren();
+
+      // The progression is gone from the Vault.
+      const missing = await renderView(new FakeTransport(), undefined, "source-midi", false,
+        { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [vaultCandidate(0)]);
+      expect(missing.querySelector("[data-testid='voicing-loop-resume']")).toBeNull();
+      await act(async () => root?.unmount());
+      root = undefined;
+      document.body.replaceChildren();
+
+      // It is still there but cannot be practiced any more.
+      const unavailable = await renderView(new FakeTransport(), undefined, "source-midi", false,
+        { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
+        [vaultCandidate(0), { ...vaultCandidate(1), unavailableReason: "resource-budget" as const }]);
+      expect(unavailable.querySelector("[data-testid='voicing-loop-resume']")).toBeNull();
+    } finally {
+      window.localStorage.removeItem("loop-vault:voicing-loop-last:v1");
+    }
+  });
+  it("P23-31 C9: the picker's degrees and role colours follow the key and the 「度数を表示」 setting", async () => {
+    const candidate = {
+      ...vaultCandidate(0), chordDegrees: ["Ⅰmaj7", "Ⅴ7"], chordRoles: ["T", "D"],
+      chordCount: 2, savedVoiceCount: 0, hasSourceMidi: true, block: savedBlock(),
+    };
+    const shown = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [candidate], undefined, { globalBpm: 120 });
+    const rowChips = () => Array.from(shown.querySelectorAll<HTMLElement>(".lv-vl-row-chord"));
+    expect(rowChips().map((chip) => chip.dataset.fn)).toEqual(["T", "D"]);
+    expect(rowChips().map((chip) => chip.querySelector("small")?.textContent)).toEqual(["Ⅰmaj7", "Ⅴ7"]);
+    const boxChips = () => Array.from(shown.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-preview-chord']"));
+    expect(boxChips().map((chip) => chip.dataset.fn)).toEqual(["T", "D"]);
+    expect(boxChips().map((chip) => chip.querySelector("small")?.textContent)).toEqual(["Ⅰmaj7", "Ⅴ7"]);
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+
+    // The setting off: the degrees go, the role colours stay.
+    const hidden = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [candidate], undefined,
+      { globalBpm: 120, showDegrees: false });
+    const hiddenRows = Array.from(hidden.querySelectorAll<HTMLElement>(".lv-vl-row-chord"));
+    expect(hiddenRows.map((chip) => chip.dataset.fn)).toEqual(["T", "D"]);
+    expect(hiddenRows.filter((chip) => chip.querySelector("small"))).toHaveLength(0);
+    const hiddenBoxes = Array.from(hidden.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-preview-chord']"));
+    expect(hiddenBoxes.map((chip) => chip.dataset.fn)).toEqual(["T", "D"]);
+    expect(hiddenBoxes.every((chip) => (chip.querySelector("small")?.textContent ?? "").trim() === "")).toBe(true);
+  });
+
+  it("P23-29 C3: the right column counts the saved voicings and draws no degree without a key", async () => {
+    const candidate = {
+      ...vaultCandidate(0),
+      chordLabels: ["Cmaj7", "Dm7"],
+      chordCount: 8,
+      savedVoiceCount: 3,
+      // No key → no degrees; the chords keep their names.
+      chordDegrees: [undefined, undefined],
+      hasSourceMidi: true,
+    };
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [candidate]);
+    const usable = container.querySelector("[data-testid='voicing-loop-preview-usable']")?.textContent ?? "";
+    expect(usable).toContain("保存した音 3/8");
+    expect(usable).toContain("元の MIDI");
+    expect(usable).toContain("自動生成");
+    const degrees = Array.from(container.querySelectorAll("[data-testid='voicing-loop-preview-chords'] small"));
+    expect(degrees).toHaveLength(2);
+    expect(degrees.every((element) => (element.textContent ?? "").trim() === "")).toBe(true);
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+
+    const noMidi = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, [{ ...candidate, hasSourceMidi: false }]);
+    expect(noMidi.querySelector("[data-testid='voicing-loop-preview-usable']")?.textContent ?? "")
+      .not.toContain("元の MIDI");
+  });
+  it("P23-20 C3: the degree and its role colour follow the key and the 「度数を表示」 setting", async () => {
+    const runtime = new FakeTransport();
+    const keyed = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [], undefined, { globalBpm: 100 });
+    // キーがある進行: 度数は Ⅱm7 の形で、役割の色(T / SD…)が付く
+    expect(keyed.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰmaj7");
+    expect(keyed.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱm7");
+    expect(keyed.querySelector("[data-testid='voicing-loop-then-next-degree']")?.textContent).toBe("Ⅰmaj7");
+    expect(keyed.querySelector("[data-testid='voicing-loop-current-degree-wrap']")?.getAttribute("data-fn")).toBe("T");
+    expect(keyed.querySelector("[data-testid='voicing-loop-next-degree-wrap']")?.getAttribute("data-fn")).toBe("SD");
+    expect(keyed.querySelector("[data-testid='voicing-loop-current-role']")?.textContent).toBe("Tトニック");
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+
+    // 「度数を表示」が切: 度数だけ消え、役割の色(札)は残る
+    const hidden = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full",
+      false, { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [], undefined, { globalBpm: 100, showDegrees: false });
+    expect(hidden.querySelector("[data-testid='voicing-loop-current-degree']")).toBeNull();
+    expect(hidden.querySelector("[data-testid='voicing-loop-current-degree-wrap']")?.getAttribute("data-fn")).toBe("T");
+    expect(hidden.querySelector("[data-testid='voicing-loop-current-role']")?.textContent).toBe("Tトニック");
+    expect(hidden.querySelector("[data-testid='voicing-loop-event-degree']")).toBeNull();
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+
+    // キーの無い進行: 度数も役割の色も出ない
+    const noKey = await renderView(runtime, { "basic-full": { ...snapshot("basic-full"), key: undefined } }, "basic-full",
+      false, { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [], undefined, { globalBpm: 100 });
+    expect(noKey.querySelector("[data-testid='voicing-loop-current-degree']")).toBeNull();
+    expect(noKey.querySelector("[data-testid='voicing-loop-current-degree-wrap']")).toBeNull();
+    expect(noKey.querySelector("[data-testid='voicing-loop-event-degree']")).toBeNull();
+  });
+
+  it("P23-29 C1: L1-L5 — 続きから, the tool row, the sections, the two columns and the row", async () => {
+    window.localStorage.setItem("loop-vault:voicing-loop-last:v1",
+      JSON.stringify({ version: 1, reference: { ideaId: "idea-0", blockId: "block-0" }, at: new Date().toISOString() }));
+    saveRecentVoicingLoopProgressions([{ ideaId: "idea-1", blockId: "block-1" }]);
+    const candidates = [
+      { ...vaultCandidate(0), favorite: true, lengthBars: 4, chordCount: 2, savedVoiceCount: 0, hasSourceMidi: true,
+        chordRoles: ["T", "D"], chordDegrees: ["Ⅰmaj7", "Ⅴ7"], block: savedBlock() },
+      vaultCandidate(1),
+      { ...vaultCandidate(2), unavailableReason: "practice-capacity" as const },
+    ];
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, candidates);
+    const rows = () => Array.from(container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progression-row']"));
+    const sectionIds = () => Array.from(container.querySelectorAll<HTMLElement>("[data-testid^='voicing-loop-section-']"))
+      .map((section) => section.dataset.testid);
+    const filter = (kind: string) => container.querySelector<HTMLElement>(`[data-testid='voicing-loop-filter-${kind}']`)!;
+
+    // L1: the 続きから band: the VL mark, the words, the title, the key/bars/day and the main 「続ける」+ Enter.
+    const band = container.querySelector<HTMLElement>("[data-testid='voicing-loop-resume']")!;
+    expect(band).not.toBeNull();
+    expect(band.querySelector("[aria-hidden='true']")?.textContent).toBe("VL");
+    expect(band.textContent).toContain("続きから");
+    expect(band.textContent).toContain("Progression 0");
+    expect(band.textContent).toContain("Cメジャー ・ 4 小節 ・ きょう練習");
+    expect(band.querySelector("[data-testid='voicing-loop-resume-go']")?.textContent).toBe("続けるEnter");
+
+    // L2: the tool row — the radiogroup of three, the old search field in the middle, the text entry at the right.
+    const tools = container.querySelector<HTMLElement>("[data-testid='voicing-loop-picker-tools']")!;
+    const group = tools.querySelector<HTMLElement>("[role='radiogroup']")!;
+    expect(group.getAttribute("aria-label")).toBe("一覧の切り替え");
+    const radios = Array.from(group.querySelectorAll<HTMLElement>("[role='radio']"));
+    expect(radios.map((radio) => radio.dataset.testid)).toEqual([
+      "voicing-loop-filter-all", "voicing-loop-filter-favorites", "voicing-loop-filter-recent"]);
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["true", "false", "false"]);
+    expect(radios.map((radio) => radio.textContent)).toEqual(["すべて3", "お気に入り1", "最近使った1"]);
+    const search = tools.querySelector<HTMLInputElement>("#voicing-loop-progression-search")!;
+    expect(search.getAttribute("placeholder")).toBe("タイトル、コード、Keyで検索");
+    // P23-61 §3: with progressions the picker has no text entry; the search keeps the row's width.
+    expect(Array.from(tools.querySelectorAll("button"))
+      .some((button) => (button.getAttribute("aria-label") ?? "").includes("テキストで新しい進行"))).toBe(false);
+    expect(tools.lastElementChild).toBe(search.closest("div"));
+    expect(search.closest("div")?.className).toContain("flex-1");
+
+    // L5: the row — the star, the title with one line of facts, the role-coloured chord chips, the day.
+    expect(rows()).toHaveLength(3);
+    const first = rows()[0]!;
+    expect(first.firstElementChild?.getAttribute("data-testid")).toBe("voicing-loop-favorite");
+    expect(first.lastElementChild?.getAttribute("data-testid")).toBe("voicing-loop-progression-day");
+    expect(first.querySelector("[data-testid='voicing-loop-progression-day']")?.textContent).toBe("きょう");
+    expect(rows()[1]!.querySelector("[data-testid='voicing-loop-progression-day']")?.textContent).toBe("—");
+    const facts = first.querySelector(".lv-vl-row-facts")?.textContent ?? "";
+    expect(facts).toContain("Cメジャー");
+    expect(facts).toContain("80 BPM");
+    expect(facts).toContain("4 小節");
+    // The three separate badges are gone; the chips replace them.
+    expect(first.querySelector(".lv-vl-picker-tags")).toBeNull();
+    const chips = Array.from(first.querySelectorAll<HTMLElement>(".lv-vl-row-chord"));
+    expect(chips.map((chip) => chip.dataset.fn)).toEqual(["T", "D"]);
+    expect(chips.map((chip) => chip.textContent)).toEqual(["Ⅰmaj7Cmaj7", "Ⅴ7G7"]);
+    const unavailable = rows()[2]!;
+    expect(unavailable.getAttribute("data-unavailable")).toBe("true");
+    expect(unavailable.getAttribute("aria-disabled")).toBe("true");
+    expect(unavailable.querySelector("[data-testid='voicing-loop-progression-chords']")).toBeNull();
+    expect(unavailable.querySelector("[data-testid='voicing-loop-progression-reason']")?.textContent)
+      .toBe("長すぎるため、ここでは練習できません(範囲を分けて保存してください)");
+    expect(container.querySelector("[data-testid='voicing-loop-progression-practice']")).toBeNull();
+
+    // L4: the list and the chosen progression are the two columns, in that order, inside the grid.
+    const grid = container.querySelector<HTMLElement>(".lv-vl-picker-grid")!;
+    const list = grid.querySelector("[data-testid='voicing-loop-progression-list']")!;
+    const preview = grid.querySelector("[data-testid='voicing-loop-preview']")!;
+    expect([...grid.children]).toEqual([list, preview]);
+    expect(preview.getAttribute("aria-label")).toBe("進行を選んでください");
+
+    // L3: すべて draws the three sections; each filter draws only its own; a search draws the 検索結果.
+    expect(sectionIds()).toEqual([
+      "voicing-loop-section-favorites", "voicing-loop-section-recent", "voicing-loop-section-others"]);
+    await act(async () => filter("favorites").click());
+    expect(sectionIds()).toEqual(["voicing-loop-section-favorites"]);
+    expect(rows()).toHaveLength(1);
+    await act(async () => filter("recent").click());
+    expect(sectionIds()).toEqual(["voicing-loop-section-recent"]);
+    expect(rows()).toHaveLength(1);
+    await act(async () => filter("all").click());
+    expect(sectionIds()).toHaveLength(3);
+    await typeSearch(container, "Progression 2");
+    expect(sectionIds()).toEqual(["voicing-loop-section-results"]);
+    expect(rows()).toHaveLength(1);
+    await typeSearch(container, "");
+    expect(sectionIds()).toHaveLength(3);
+  });
+
+  it("P23-29 C1: L7-L9 — the chosen column, the first pick and the search box", async () => {
+    const onOpenInVault = vi.fn();
+    const onSelectProgression = vi.fn(() => true);
+    const candidate = {
+      ...vaultCandidate(0), lengthBars: 3, chordCount: 2, savedVoiceCount: 0, hasSourceMidi: true,
+      chordRoles: ["T", "D"], chordDegrees: ["Ⅰmaj7", "Ⅴ7"], block: savedBlock(),
+    };
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression, onEnterText: vi.fn(), onOpenInVault }, [candidate, vaultCandidate(1)]);
+
+    // L8: without a 続きから record the list's first playable row is picked at open.
+    const rows = () => Array.from(container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progression-row']"));
+    const selected = () => container.querySelector<HTMLElement>("[data-testid='voicing-loop-progression-row'][data-selected='true']");
+    expect(selected()).toBe(rows()[0]);
+    // L6: one press on another row only picks it (the right column follows).
+    const target = rows().find((row) => row.textContent?.includes("Progression 0"))!;
+    await act(async () => target.click());
+    expect(selected()).toBe(target);
+    expect(onSelectProgression).not.toHaveBeenCalled();
+
+    // L7: the chosen progression — title, chips, the four-column chord cards with degrees and role colours,
+    // the small roll, ▶ 試聴, the three fact lines and the two buttons.
+    const preview = container.querySelector<HTMLElement>("[data-testid='voicing-loop-preview']")!;
+    expect(preview.querySelector("[data-testid='voicing-loop-preview-title']")?.textContent).toBe("Progression 0");
+    expect(Array.from(preview.querySelectorAll(".lv-vl-preview-chip")).map((chip) => chip.textContent))
+      .toEqual(["Cメジャー", "80 BPM", "3 小節", "2 コード"]);
+    const chordCards = Array.from(preview.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-preview-chord']"));
+    expect(chordCards).toHaveLength(2);
+    expect(chordCards.map((card) => card.dataset.fn)).toEqual(["T", "D"]);
+    expect(chordCards.map((card) => card.querySelector("small")?.textContent)).toEqual(["Ⅰmaj7", "Ⅴ7"]);
+    expect(chordCards.map((card) => card.querySelector("b")?.textContent)).toEqual(["Cmaj7", "G7"]);
+    expect(chordCards.every((card) => !card.disabled)).toBe(true);
+    expect(chordCards[0]!.getAttribute("aria-label")).toBe("Cmaj7 試聴");
+    expect(preview.querySelector("[data-testid='voicing-loop-preview-roll'] [data-testid='home-loop-roll']")).not.toBeNull();
+    const audition = preview.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-preview-audition']")!;
+    expect(audition.disabled).toBe(false);
+    expect(audition.querySelector("kbd")?.textContent).toBe("Space");
+    const facts = preview.querySelector("[data-testid='voicing-loop-preview-facts']")!;
+    expect(facts.textContent).toContain("最後に練習");
+    expect(facts.textContent).toContain("まだ");
+    expect(facts.textContent).toContain("使える音");
+    expect(facts.querySelector("[data-testid='voicing-loop-preview-usable']")?.textContent)
+      .toBe("元の MIDI ・ 保存した音 0/2 ・ 自動生成");
+    expect(facts.textContent).toContain("保存した日");
+    expect(facts.textContent).toContain("1/1");
+    const practice = preview.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-preview-practice']")!;
+    expect(practice.textContent).toBe("この進行で練習するEnter");
+    expect(practice.className).toContain("lv-button-primary");
+    await act(async () => practice.click());
+    expect(onSelectProgression).toHaveBeenCalledWith(candidate.sourceReference);
+    await act(async () => preview.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-preview-open']")!.click());
+    expect(onOpenInVault).toHaveBeenCalledWith(candidate.sourceReference);
+
+    // L9: Space, Enter and the arrows inside the search box belong to the box, not to the picker.
+    const search = container.querySelector<HTMLInputElement>("#voicing-loop-progression-search")!;
+    search.focus();
+    for (const key of [" ", "Enter", "ArrowDown"] as const) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      await act(async () => { search.dispatchEvent(event); });
+      expect(event.defaultPrevented, key).toBe(false);
+    }
+    expect(onSelectProgression).toHaveBeenCalledTimes(1);
+    expect(selected()?.textContent).toContain("Progression 0");
+
+    // L8: no progression at all keeps the old 「まだ進行がありません」 screen and draws no right column.
+    await act(async () => root?.unmount());
+    root = undefined;
+    document.body.replaceChildren();
+    const empty = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() }, []);
+    expect(empty.querySelector("[data-testid='voicing-loop-progression-row']")).toBeNull();
+    expect(empty.querySelector("[data-testid='voicing-loop-preview']")).toBeNull();
+    expect(empty.textContent).toContain("まだ進行がありません");
+  });
+});
+
 async function renderView(
   runtime: FakeTransport,
   snapshots: Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>> | undefined,
@@ -1723,18 +2288,23 @@ async function renderView(
     bulkSourcePreview?: { eligible: number; changed: number; skippedCustom: number; skippedMissingSource: number };
     onBulkSourceApply?: () => boolean;
     onToggleFavorite?: (reference: ProgressionPracticeSourceReference, pinned: boolean) => boolean | "pending";
+    /** P23-29 L7: the right column's 「Vault で開く」. */
+    onOpenInVault?: (reference: ProgressionPracticeSourceReference) => void;
+    /** P23-32 T1: the practice head's 「練習する進行」. */
+    onBackToPicker?: () => void;
   } = { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
   vaultProgressions: readonly VoicingLoopVaultCandidate[] = [],
   resolutionOptions?: ResolveProgressionPracticeVoicingsOptions,
+  /** P23-06: renders inside GlobalBpmProvider with this stored app-wide BPM, next to `extra`. */
+  app?: { globalBpm: number; extra?: ReactNode; showDegrees?: boolean },
 ): Promise<HTMLDivElement> {
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
   // Legacy timing scenarios explicitly start with click ON; production default is OFF.
   saveMetronomeEnabled(true);
-  await act(async () => root?.render(
-    <MetronomeProvider>
-      <GlobalMetronomeButton />
+  if (app) saveGlobalBpm(app.globalBpm);
+  const view = (
     <PreviewSoundProvider>
       <ProgressionVoicingPracticeView
         snapshots={snapshots}
@@ -1745,10 +2315,18 @@ async function renderView(
         bulkSourcePreview={callbacks.bulkSourcePreview}
         onBulkSourceApply={callbacks.onBulkSourceApply}
         onToggleFavorite={callbacks.onToggleFavorite}
+        onOpenInVault={callbacks.onOpenInVault}
+        onBackToPicker={callbacks.onBackToPicker}
         transportFactory={() => runtime}
         resolutionOptions={resolutionOptions}
+        showDegrees={app?.showDegrees}
       />
     </PreviewSoundProvider>
+  );
+  await act(async () => root?.render(
+    <MetronomeProvider>
+      <GlobalMetronomeButton />
+      {app ? <GlobalBpmProvider>{app.extra}{view}</GlobalBpmProvider> : view}
     </MetronomeProvider>,
   ));
   return container;
@@ -1767,6 +2345,35 @@ function vaultCandidate(index: number): VoicingLoopVaultCandidate {
   };
 }
 
+/**
+ * P23-29 L7: the saved block the picker's right column draws (the roll) and auditions (▶ 試聴, the chord
+ * cards). The real candidates carry the Vault block; the synthetic ones in this file get one only when the
+ * test looks at that column's roll and audition.
+ */
+function savedBlock(chords: readonly string[] = ["Cmaj7", "G7"]): SavedProgressionBlock {
+  return {
+    id: "block-0",
+    summaryText: "Cmaj7 G7",
+    chords: chords.map((label, index) => ({
+      eventId: `event-${index}`,
+      bar: 1 + index,
+      beat: 1,
+      durationBeats: 4,
+      chord: parseChordLabel(label)!,
+      confidence: 1,
+      alternatives: [],
+      warnings: [],
+    })),
+    detectedKey: "C major",
+    bpm: 80,
+    timeSignature: "4/4",
+    lengthBars: chords.length,
+    tags: [],
+    capturedAt: "2026-01-01T00:00:00.000Z",
+    analyzerVersion: "test",
+  };
+}
+
 async function selectStudy(container: HTMLElement, value: "teacher" | "core") {
   const select = container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")!;
   await act(async () => {
@@ -1777,12 +2384,45 @@ async function selectStudy(container: HTMLElement, value: "teacher" | "core") {
 
 /** One row of a hand panel's five slots (P5.26.2-02): "finger" labels, note names ("pitch") or degrees. */
 function handCells(container: ParentNode, testId: string, row: "finger" | "pitch" | "degree"): { text: string; used: boolean }[] {
-  return Array.from(container.querySelectorAll(`[data-testid='${testId}'] tr[data-row='${row}'] td`))
-    .map((cell) => ({ text: cell.textContent ?? "", used: cell.getAttribute("data-used") === "true" }));
+  // P23-20 L1: one hand is five slot cards now; the finger / note / chord tone are read from each card.
+  return Array.from(container.querySelectorAll<HTMLElement>(`[data-testid='${testId}'] [data-testid='voicing-loop-hand-slot']`))
+    .map((slot) => {
+      const text = row === "finger"
+        ? slot.querySelector(".voicing-hand-slot-finger")?.textContent ?? ""
+        : row === "pitch"
+          ? slot.querySelector(".voicing-hand-slot-pitch")?.textContent ?? ""
+          : slot.querySelector(".voicing-hand-slot-degree")?.textContent ?? "";
+      return { text, used: slot.getAttribute("data-used") === "true" };
+    });
 }
 /** The slots in use, in screen order. */
 function usedCells(container: ParentNode, testId: string, row: "finger" | "pitch" | "degree"): string[] {
   return handCells(container, testId, row).filter((cell) => cell.used).map((cell) => cell.text);
+}
+
+/**
+ * P23-20 L2: a checkbox is found by its accessible name (`aria-label`) or by the text of its label —
+ * the two always-visible short names (最適化 / 運指) keep the full sentence as the accessible name.
+ */
+function controlCheckbox(container: ParentNode, label: string): HTMLInputElement {
+  const found = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
+    .find((input) => input.getAttribute("aria-label") === label || input.parentElement?.textContent?.includes(label));
+  if (!found) throw new Error(`Checkbox not found: ${label}`);
+  return found;
+}
+
+/** P23-32 T4/K3: the two named settings and the reference sound are switches (a button with `role="switch"`). */
+function controlSwitch(container: ParentNode, label: string): HTMLButtonElement {
+  const found = Array.from(container.querySelectorAll<HTMLButtonElement>("button[role='switch']"))
+    .find((entry) => entry.getAttribute("aria-label") === label || entry.parentElement?.textContent?.includes(label));
+  if (!found) throw new Error(`Switch not found: ${label}`);
+  return found;
+}
+
+/** A header-side stand-in for the app-wide BPM field (P23-32 K4 removed the practice's own field). */
+function BpmProbe({ value = 132 }: { readonly value?: number }) {
+  const { setBpm } = useGlobalBpm();
+  return <button type="button" onClick={() => setBpm(value)}>{`bpm-${value}`}</button>;
 }
 
 function button(container: HTMLElement, label: string): HTMLButtonElement {
@@ -1793,8 +2433,18 @@ function button(container: HTMLElement, label: string): HTMLButtonElement {
   return found;
 }
 
+/** P23-29: types into the picker's search box the way the field does (a value write, then an input event). */
+async function typeSearch(container: HTMLElement, value: string): Promise<HTMLInputElement> {
+  const search = container.querySelector<HTMLInputElement>("#voicing-loop-progression-search")!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(search, value);
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  return search;
+}
+
 /** The whole row of a picker entry (title, facts, chords, star and the practice button or the short reason). */
-function rowText(choice: HTMLElement): string {
+function rowText(choice: Element): string {
   return choice.closest("[data-testid='voicing-loop-progression-row']")?.textContent ?? choice.textContent ?? "";
 }
 
@@ -1834,20 +2484,6 @@ function snapshot(
       },
     ],
   };
-}
-
-function dispatchPointer(
-  target: HTMLElement,
-  type: string,
-  values: { button: number; clientY: number; pointerId: number },
-) {
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.defineProperties(event, {
-    button: { value: values.button },
-    clientY: { value: values.clientY },
-    pointerId: { value: values.pointerId },
-  });
-  target.dispatchEvent(event);
 }
 
 class FakeTransport implements ProgressionVoicingTransportPort {

@@ -71,10 +71,11 @@ test("P5.30 card audition is keyboard-operable and reference sound is session-lo
     height: initialBox?.height,
   });
 
-  const referenceSound = workspace.getByRole("checkbox", { name: "お手本音" });
-  await expect(referenceSound).toBeChecked();
-  await referenceSound.uncheck();
-  await expect(referenceSound).not.toBeChecked();
+  // P23-32 K3: the reference sound is a switch with the visible name 「お手本の音」.
+  const referenceSound = workspace.getByRole("switch", { name: "お手本の音" });
+  await expect(referenceSound).toHaveAttribute("aria-checked", "true");
+  await referenceSound.click();
+  await expect(referenceSound).toHaveAttribute("aria-checked", "false");
   await page.getByLabel("カウントイン").selectOption("0");
   await page.getByRole("button", { name: /開始/ }).click();
   await expect(secondCard).toBeEnabled();
@@ -86,7 +87,7 @@ test("P5.30 card audition is keyboard-operable and reference sound is session-lo
   await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
   await page.getByRole("button", { name: "再開", exact: true }).click();
   await page.getByRole("button", { name: "停止", exact: true }).click();
-  await expect(referenceSound).not.toBeChecked();
+  await expect(referenceSound).toHaveAttribute("aria-checked", "false");
 });
 
 test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and axe-clean", async ({ page }) => {
@@ -96,7 +97,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
   await chooseVoicingLoop(page);
-  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: "テキストで入力", exact: true }).click();
 
   const capture = page.getByTestId("text-progression-capture");
   const maximumInput = `| ${Array(32).fill("Cmaj7 Cmaj7 Cmaj7 Cmaj7").join(" | ")} |`;

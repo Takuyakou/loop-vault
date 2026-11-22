@@ -11,6 +11,7 @@ import { createNotificationStore, NotificationProvider, type NotificationStore }
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { HomeView, type HomeViewProps } from "./HomeView";
+import { createEmptyPracticeFile } from "../features/bass-practice/infra/repository/practiceRepository";
 import { TODAY_LOOP_STORAGE_KEY } from "./home/todayLoop";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -38,12 +39,19 @@ describe("HomeView", () => {
   it("shows the mock's cards in order with one primary button", async () => {
     const { container } = await renderHome(homeIdeas());
     const sections = Array.from(container.querySelectorAll("section"), (section) => section.getAttribute("aria-label"));
-    expect(sections).toEqual(["続きから", "取り込む", "今日のループ", "今日の練習", "最近の進行"]);
+    expect(sections).toEqual(["今日のループ", "続きから", "最近入れた進行", "取り込む", "練習", "自分の引き出し"]);
     const primary = container.querySelectorAll(".lv-button-primary");
     expect(primary).toHaveLength(1);
     expect(primary[0].textContent).toBe("続きをやる");
     expect(container.textContent).not.toContain("月間ゴール");
     expect(container.textContent).not.toContain("次の一手");
+    expect(container.textContent).not.toContain("コードを押すと、その音が鳴ります");
+    const tools = container.querySelector(".lv-home-loop-tools")!;
+    expect(tools).not.toBeNull();
+    expect(tools.querySelector("[aria-label='お気に入りに追加']")).not.toBeNull();
+    expect(tools.textContent).toContain("他のループ");
+    expect(tools.querySelector("[data-midi-export-control]")).not.toBeNull();
+    expect(container.querySelector(".lv-home-loop-actions")?.querySelectorAll("button")).toHaveLength(3);
   });
 
   it("shows only the first-capture guide when the Vault has no progression", async () => {
@@ -53,7 +61,7 @@ describe("HomeView", () => {
     expect(container.textContent).toContain("最初の進行を取り込む");
     await act(async () => findButton(container, "MIDI から取り込む").click());
     expect(openCapture).toHaveBeenCalledWith("midi");
-    await act(async () => findButton(container, "テキストから取り込む").click());
+    await act(async () => findButton(container, "コード譜のテキストを貼り付け").click());
     expect(openCapture).toHaveBeenCalledWith("text");
   });
 
@@ -132,12 +140,42 @@ describe("HomeView", () => {
     const openVoicingLoop = vi.fn();
     const { container } = await renderHome(homeIdeas(6), { openProgression, openVoicingLoop });
     const rows = Array.from(container.querySelectorAll("[data-testid='home-recent-row']"));
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(4);
     expect(rows[0].textContent).toContain("Idea · 6");
     await act(async () => (rows[0] as HTMLElement).click());
     expect(openProgression).toHaveBeenCalledWith("idea", "block-6");
     await act(async () => findButton(rows[1], "練習").click());
     expect(openVoicingLoop).toHaveBeenCalledWith({ ideaId: "idea", blockId: "block-5" });
+  });
+
+
+  it("shows the newest Bass Practice in 続きから and opens that practice", async () => {
+    const openBassPractice = vi.fn();
+    const practiceFile = {
+      ...createEmptyPracticeFile(new Date()),
+      rhythmAttempts: [{ completedAt: new Date(2026, 8, 28, 11).toISOString() } as never],
+    };
+    const { container } = await renderHome(homeIdeas(), { practiceFile, openBassPractice });
+    const card = container.querySelector("[data-testid='home-continue']")!;
+    expect(card.getAttribute("data-continue-kind")).toBe("bass-practice");
+    expect(card.textContent).toContain("Bass Practice");
+    // P23-62: the practice names are Japanese now.
+    expect(card.textContent).toContain("リズム");
+    await act(async () => findButton(card, "続きをやる").click());
+    expect(openBassPractice).toHaveBeenCalledWith("rhythm");
+  });
+
+  it("今日の練習 has three rows and the Voicing Loop row has no count", async () => {
+    const openVoicingLoopHome = vi.fn();
+    const { container } = await renderHome(homeIdeas(), { bassPracticeAvailable: true, openVoicingLoopHome });
+    const rows = [...container.querySelectorAll("[data-testid='home-practice-row']")];
+    expect(rows.map((row) => row.getAttribute("data-practice-kind"))).toEqual(["voicing-loop", "chord-dojo", "bass-practice"]);
+    expect(rows[0]!.querySelector("[role='img']")).toBeNull();
+    expect(rows[0]!.textContent).toContain("Voicing Loop");
+    expect(rows[1]!.textContent).toContain("今日はまだ");
+    expect(rows[2]!.textContent).toContain("今日はまだ");
+    await act(async () => (rows[0] as HTMLButtonElement).click());
+    expect(openVoicingLoopHome).toHaveBeenCalledOnce();
   });
 
   it("shows today's count from new Dojo records without a streak", async () => {
@@ -146,10 +184,10 @@ describe("HomeView", () => {
     ideas[0].progressionBlocks![1].practice = { schemaVersion: 1, progressionFingerprint: "y", lastPracticedAt: new Date(2026, 8, 27, 9).toISOString() };
     const dojo=emptyStore();dojo.shapes["preset:synthetic"]={...emptyItem(),recent:[{at:new Date(2026,8,28,9).toISOString(),ok:true},{at:new Date(2026,8,27,9).toISOString(),ok:true}]};dojoStore.setState({file:dojo});
     const { container } = await renderHome(ideas);
-    const card = container.querySelector("section[aria-label='今日の練習']")!;
-    expect(card.textContent).toContain("今日 1回");
-    expect(card.querySelector("[data-testid='home-practice-streak']")?.textContent).not.toContain("連続");
-    expect(card.querySelectorAll(".lv-home-dot[data-practiced='true']")).toHaveLength(2);
+    const card = container.querySelector("section[aria-label='練習']")!;
+    expect(card.textContent).toContain("今日 1 回");
+    expect(card.querySelector("[data-practice-kind='chord-dojo'] [data-testid='home-practice-week']")?.textContent).not.toContain("連続");
+    expect(card.querySelectorAll("[data-practice-kind='chord-dojo'] [data-testid='home-practice-week'] i[data-practised='true']")).toHaveLength(2);
   });
 });
 
@@ -196,6 +234,8 @@ async function renderHome(ideas: SongIdea[], overrides: Partial<HomeViewProps> =
           openChordDojo={vi.fn()}
           openBassPractice={vi.fn()}
           openVoicingLoop={vi.fn()}
+          openVoicingLoopHome={vi.fn()}
+          resumeChordDojo={vi.fn()}
           updateProgressionBlock={vi.fn(() => true as const)}
           {...overrides}
         />

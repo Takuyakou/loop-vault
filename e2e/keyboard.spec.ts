@@ -41,7 +41,7 @@ test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ�
 
   const dialog = page.getByRole("dialog", { name: /修正ログを削除/ });
   await expect(dialog).toBeVisible();
-  const cancel = dialog.getByRole("button", { name: /キャンセル/ });
+  const cancel = dialog.getByRole("button", { name: /戻る/ });
   await expect(cancel).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(dialog.locator(":focus")).toHaveCount(1);
@@ -112,8 +112,7 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
     .getByRole("button", { name: /進行を開く/ });
   await open.focus();
   await page.keyboard.press("Enter");
-  const practice = page.locator("[data-progression-detail-view]")
-    .getByRole("button", { name: /Bass Practice/ });
+  const practice = page.locator('[data-nav="bass-practice"]');
   await practice.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();

@@ -30,6 +30,9 @@ export default defineConfig({
   outputDir: "test-results",
   use: {
     ...devices["Desktop Chrome"],
+    launchOptions: {
+      args: ["--disable-audio-output"],
+    },
     baseURL,
     colorScheme: "dark",
     locale: "ja-JP",

@@ -7,7 +7,7 @@ import {
 } from "../domain/progressionClassification/mod";
 import type { SavedProgressionBlock } from "../domain/types";
 import { progressionTagsCopy } from "../i18n";
-import { Plus, RotateCcw, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 interface ProgressionTagsEditorProps {
   block: SavedProgressionBlock;
@@ -45,17 +45,17 @@ export function ProgressionTagsEditor({
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <section>
-        <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
+    <div className="lv-tags-editor">
+      <section className="lv-tags-col">
+        <h3 className="lv-tags-title">
           {text.manualTitle}
-        </p>
-        <form className="mt-2 flex gap-2" onSubmit={addTag}>
+        </h3>
+        <form className="lv-tags-add" onSubmit={addTag}>
           <input
             name="progression-tag"
             autoComplete="off"
             aria-label={text.manualTitle}
-            className="min-w-0 flex-1 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] px-3 py-2 text-sm"
+            className="lv-tags-input"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={text.placeholder}
@@ -63,7 +63,7 @@ export function ProgressionTagsEditor({
           />
           <button
             type="submit"
-            className="lv-button-secondary grid h-10 w-10 place-items-center disabled:opacity-40"
+            className="lv-tags-add-btn"
             disabled={!input.trim()}
             aria-label={text.add}
             title={text.add}
@@ -71,13 +71,13 @@ export function ProgressionTagsEditor({
             <Plus aria-hidden="true" size={16} />
           </button>
         </form>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="lv-tags-list">
           {block.tags.length > 0 ? block.tags.map((tag) => (
-            <span key={tag} className="inline-flex items-center gap-1 bg-[var(--lv-surface-raised)] px-2 py-1 text-xs">
+            <span key={tag} className="lv-tag-chip" data-kind="manual">
               {displayManualTag(tag)}
               <button
                 type="button"
-                className="-my-2 -mr-2 grid h-10 w-10 place-items-center text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"
+                className="lv-tag-x"
                 onClick={() => onChange({
                   tags: block.tags.filter((entry) => entry !== tag),
                   suppressedAutoTags: block.suppressedAutoTags ?? [],
@@ -88,27 +88,28 @@ export function ProgressionTagsEditor({
                 <X aria-hidden="true" size={16} />
               </button>
             </span>
-          )) : <span className="text-sm text-[var(--lv-text-muted)]">{text.noManualTags}</span>}
+          )) : <span className="lv-tags-empty">{text.noManualTags}</span>}
         </div>
       </section>
 
-      <section>
-        <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
+      <section className="lv-tags-col">
+        <h3 className="lv-tags-title">
           {text.autoTitle}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        </h3>
+        <div className="lv-tags-list">
           {derivedTags.length > 0 ? derivedTags.map((tag) => {
             const label = progressionTagLabel(tag.tagId);
             return (
               <span
                 key={tag.tagId}
-                className="inline-flex items-center gap-1 border border-teal-400/40 bg-teal-300/10 px-2 py-1 text-xs text-teal-100"
+                className="lv-tag-chip"
+                data-kind="auto"
                 title={tag.reasons.join(" ")}
               >
                 {label}
                 <button
                   type="button"
-                  className="-my-2 -mr-2 grid h-10 w-10 place-items-center text-teal-200 hover:text-white"
+                  className="lv-tag-x"
                   onClick={() => onChange({
                     tags: block.tags,
                     suppressedAutoTags: suppressAutoTag(block.suppressedAutoTags, tag.tagId),
@@ -120,28 +121,29 @@ export function ProgressionTagsEditor({
                 </button>
               </span>
             );
-          }) : <span className="text-sm text-[var(--lv-text-muted)]">{text.noAutoTags}</span>}
+          }) : <span className="lv-tags-empty">{text.noAutoTags}</span>}
         </div>
 
         {(block.suppressedAutoTags?.length ?? 0) > 0 ? (
-          <div className="mt-3 border-t border-[var(--lv-border)] pt-3">
-            <p className="text-xs text-[var(--lv-text-muted)]">{text.suppressedTitle}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <div className="lv-tags-suppressed">
+            <p className="lv-tags-sub">{text.suppressedTitle}</p>
+            <div className="lv-tags-list">
               {block.suppressedAutoTags?.map((tag) => {
                 const label = progressionTagLabel(tag.tagId);
                 return (
                   <button
                     key={`${tag.tagId}:${tag.taxonomyVersion}`}
                     type="button"
-                    className="inline-flex items-center gap-1 border border-[var(--lv-border)] px-2 py-1 text-xs text-[var(--lv-text-secondary)]"
+                    className="lv-tag-chip"
+                    data-kind="off"
                     onClick={() => onChange({
                       tags: block.tags,
                       suppressedAutoTags: restoreAutoTag(block.suppressedAutoTags, tag.tagId),
                     })}
                     title={text.restore(label)}
                   >
-                    <RotateCcw aria-hidden="true" size={16} />
                     {label}
+                    <Plus aria-hidden="true" size={16} />
                   </button>
                 );
               })}
@@ -153,6 +155,6 @@ export function ProgressionTagsEditor({
   );
 }
 
-function displayManualTag(tag: string): string {
+export function displayManualTag(tag: string): string {
   return tag.replace(/^[a-z][a-z0-9-]*:/, "");
 }

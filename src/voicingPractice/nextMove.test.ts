@@ -102,4 +102,10 @@ describe("VL-11 fixed finger presentation", () => {
     expect(handMoveSummary(computeNextMoves(hand([48,52,55], []), hand([36,40,43], []),
       { left: fingering("wide-a", [48,52,55], [5,3,1]) }, { left: fingering("wide-b", [36,40,43], [5,3,1]) }).filter((move) => move.hand === "left"))).toBe("手ごと ↓ 約1oct");
   });
+  it("describes a single-note finger change that keeps the hand position", () => {
+    expect(handMoveSummary(computeNextMoves(hand([38], []), hand([40], []), { left: fingering("a", [38], [4]) }, { left: fingering("b", [40], [3]) }).filter((move) => move.hand === "left"))).toBe("指を替える(手はそのまま)");
+    expect(handMoveSummary(computeNextMoves(hand([38], []), hand([40], []), { left: fingering("a", [38], [5]) }, { left: fingering("b", [40], [5]) }).filter((move) => move.hand === "left"))).toBe("指だけ");
+    expect(handMoveSummary(computeNextMoves(hand([36], []), hand([45], []), { left: fingering("a", [36], [5]) }, { left: fingering("b", [45], [1]) }).filter((move) => move.hand === "left"))).toBe("少し動く");
+    expect(handMoveSummary(computeNextMoves(hand([], [60]), hand([], [62]), { right: fingering("a", [60], [1]) }, { right: fingering("b", [62], [2]) }).filter((move) => move.hand === "right"))).toBe("指を替える(手はそのまま)");
+  });
 });

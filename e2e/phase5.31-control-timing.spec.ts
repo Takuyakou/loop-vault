@@ -14,10 +14,10 @@ async function saveTextToLoop(page: Page, input: string) {
     await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
-  await page.getByRole("button", { name: /テキストで新しい進行を入力/ }).click();
+  await page.getByRole("button", { name: "テキストで入力", exact: true }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(input);
-  await expect(capture.getByTestId("text-progression-invalid-card")).toHaveCount(0);
+  await expect(capture.getByTestId("text-preview-error")).toHaveCount(0);
   await capture.getByTestId("text-progression-key").selectOption("C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").focus();
@@ -39,16 +39,19 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     const workspace = await saveTextToLoop(page, suppliedFixture(name));
     await page.locator('[data-nav="voicing-loop"]').click();
     await page.getByRole("searchbox", { name: "進行を検索" }).fill("P5.31 control timing fixture");
-    const choice = page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.31 control timing fixture" });
-    await expect(choice).toHaveCount(1);
-    await choice.focus();
+    // P23-29 L6/L7: the main button is the right column's; Enter on it starts the picked row.
+    const practice = page.getByTestId("voicing-loop-preview-practice");
+    await expect(practice).toHaveCount(1);
+    await practice.focus();
     await page.keyboard.press("Enter");
     const cards = workspace.getByTestId("voicing-loop-event");
     await expect(cards).toHaveCount(34);
     const expectedDurations = Array.from({ length: 16 }, (_, bar) => bar === 3 ? ["1", "1", "1", "1"] : ["2", "2"]).flat();
     expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats")))).toEqual(expectedDurations);
     observed.push(await cards.evaluateAll(items => items.map(item => item.getAttribute("aria-label") ?? "")));
-    await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
+    // P23-32 K4: no practice BPM field; the saved 120 is announced to the header's 共通 BPM.
+    await expect(workspace.locator("#voicing-loop-bpm")).toHaveCount(0);
+    await expect(page.getByTestId("global-bpm-value")).toHaveAttribute("aria-valuenow", "120");
     await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
     await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
@@ -159,7 +162,8 @@ test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and red
   await expect(workspace.getByTestId("voicing-loop-event")).toHaveAttribute("data-duration-beats", "128");
   await page.getByLabel("カウントイン").selectOption("0");
   await workspace.getByRole("button", { name: /開始/ }).click();
-  await expect(workspace).toContainText("自動送り中");
+  // P23-32 K5: the running state reads 「再生中」.
+  await expect(workspace).toContainText("再生中");
   await expect(workspace.getByRole("progressbar", { name: "拍" })).toHaveCount(0);
   await expect(workspace.getByRole("progressbar", { name: "位置" })).toHaveCount(0);
   await assertNoHorizontalOverflow(page);

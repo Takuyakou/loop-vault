@@ -2,8 +2,9 @@
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
+import type { MutableRefObject } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { RecordCompareSection, runRecordStartGuard } from "./RecordCompareSection";
+import { RecordCompareSection, runRecordStartGuard, type MidiRecordingCommands } from "./RecordCompareSection";
 import { setRecordChannel } from "../application/recordChannelStore";
 import { RecordingSessionController } from "../application/recordingSessionController";
 import {
@@ -65,6 +66,31 @@ describe("RecordCompareSection", () => {
     const { container, root } = mount();
     await act(async () => root.render(<RecordCompareSection mode="degree" enabledOverride={false} />));
     expect(container.textContent).toBe("");
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+
+  // P23-62: the practice stage owns every control; this section only drives the recorder behind it.
+  test("presentation=none draws nothing yet still starts the judged take", async () => {
+    const controller = fakeController();
+    const commands = { current: null } as MutableRefObject<MidiRecordingCommands | null>;
+    const onStatusChange = vi.fn();
+    const { container, root } = mount();
+    await act(async () => root.render(
+      <RecordCompareSection
+        mode="degree"
+        controller={controller}
+        enabledOverride
+        presentation="none"
+        midiRecording={{ durationMs: 2_000, commands, onCompleted: vi.fn(), onCanceled: vi.fn() }}
+        onStatusChange={onStatusChange}
+      />,
+    ));
+    expect(container.textContent).toBe("");
+    expect(commands.current).not.toBeNull();
+
+    await act(async () => { commands.current?.start(); await flush(); await flush(); });
+    expect(onStatusChange).toHaveBeenCalledWith("recording");
     await act(async () => root.unmount());
     document.body.replaceChildren();
   });

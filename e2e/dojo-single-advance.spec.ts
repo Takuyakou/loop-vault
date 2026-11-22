@@ -13,13 +13,14 @@ const F=5;
 const emit=(page:Page,notes:readonly number[],on=true)=>page.evaluate(({notes,on})=>(window as typeof window&{__p12Midi:MidiControl}).__p12Midi.emit(notes,on),{notes:[...notes],on});
 const cursor=(page:Page)=>page.locator('.dojo').getAttribute('data-dojo-cursor');
 
-for(const rate of [1,8,20])test(`one chord moves one card (CPU ${rate}× slower)`,async({page})=>{
+// 20× is the slowest page: the more the page is late, the more likely the double step, so it contains the milder rates. A normal-speed one-card step is what every practice e2e asserts.
+for(const rate of [20])test(`one chord moves one card (CPU ${rate}× slower)`,async({page})=>{
  test.setTimeout(120000);
  await openDojo(page);
  await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  const card=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'ジャズブルース',exact:true})});
  await card.getByLabel('ジャズブルースのキー').selectOption(String(F));
- await card.getByRole('button',{name:'これを練習する'}).click();
+ await card.getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
  await expect(page.locator('.dojo')).toHaveAttribute('data-dojo-cursor',/:see:0:0$/);
  if(rate>1)await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate',{rate});

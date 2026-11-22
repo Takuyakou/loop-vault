@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
 import { dropMidi, openApp, openCapture, openVault, openRecommendedRanges } from "./helpers/app";
+import { practiceFromVault } from "./helpers/practice";
 
 /** P10.0-06: saving from the correction workspace (spec v2.4 §10.1). */
 
@@ -17,7 +18,7 @@ const workspace = (page: Page) => page.getByTestId("correction-workspace");
 const saveForm = (page: Page) => workspace(page).getByTestId("correction-save-form");
 
 async function saveNewIdea(page: Page, title: string) {
-  await saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await saveForm(page).getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
   await expect(form.getByTestId("save-progression-note")).toHaveText("保存すると、外した音は戻せなくなります");
@@ -51,7 +52,7 @@ test("P10.0-06 a segment band picks the range, saves to the Vault and stays on t
 
   await openVault(page);
   await expect(page.locator(".lv-vault-row")).toHaveCount(1);
-  await expect(page.getByText("P10 作業場から保存")).toBeVisible();
+  await expect(page.locator(".lv-vault-row").getByText("P10 作業場から保存")).toBeVisible();
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
   await expect(detail).toBeVisible();
@@ -78,7 +79,7 @@ test("P10.0-06 recommended ranges, Shift+click and adding to an existing idea", 
   await expect(cards.nth(4)).toHaveAttribute("data-out-of-range", "true");
 
   await saveForm(page).getByRole("button", { name: "保存先を選ぶ" }).first().click();
-  await page.getByRole("menuitem", { name: /既存Ideaへ追加/ }).click();
+  await page.getByRole("menuitem", { name: /今ある曲へ追加/ }).click();
   const form = page.locator('form[role="dialog"]');
   await form.locator("select").selectOption({ label: "おすすめの範囲から" });
   await form.getByRole("button", { name: /保存/, exact: true }).click();
@@ -98,7 +99,7 @@ test("P10.0-06 saving with a one-note card shows why and where; leaving with edi
   while (await used.count() > 1) await used.first().click();
 
   await workspace(page).getByTestId("correction-segment").first().click();
-  await saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await saveForm(page).getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const problems = saveForm(page).getByTestId("correction-save-problems");
   await expect(problems).toContainText("2音以上にしてください：3小節の");
   await expect(page.locator('form[role="dialog"]')).toHaveCount(0);
@@ -141,7 +142,7 @@ test("P10.2 addendum 2: with no range chosen 「曲全体を保存」 saves the 
   await page.getByRole("menuitem", { name: "ここから保存する範囲を選ぶ" }).click();
   await workspace(page).getByTestId("correction-card").nth(2).click({ button: "right" });
   await expect(range).toContainText("2〜3小節・2枚");
-  await expect(saveForm(page).getByRole("button", { name: /Vaultに保存/, exact: true })).toBeVisible();
+  await expect(saveForm(page).getByRole("button", { name: /Vault に保存/, exact: true })).toBeVisible();
   await workspace(page).getByTestId("correction-range-chip-clear").click();
   await expect(whole).toBeVisible();
 
@@ -169,7 +170,7 @@ test("P10.2 addendum 2: ▾ 「区切りごとに保存…」 lists each set of 
   await expect(rows).toHaveCount(4);
   await expect(dialog).toContainText("と同じ");
   await expect(dialog.getByRole("button", { name: "戻る" })).toBeFocused();
-  await expect(dialog.getByRole("radio", { name: /新しいアイデア（題名：long-64）/ })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: /新しい曲（題名：long-64）/ })).toBeChecked();
   await dialog.getByRole("button", { name: "4個を保存" }).click();
   await expect(dialog).toBeHidden();
   await expect(workspace(page).getByTestId("correction-notice")).toHaveText("4個の進行を保存しました");
@@ -211,7 +212,7 @@ test("P10.2 addendum 2: a long song saved whole opens on the progression page an
   await expect(page.locator("[data-progression-detail-view]")).toBeVisible();
 
   t0 = Date.now();
-  await page.getByTestId("voicing-loop-handoff").click();
+  await practiceFromVault(page, "Voicing Loop");
   const loop = page.getByTestId("voicing-loop-workspace");
   await expect(loop.getByTestId("voicing-loop-event").first()).toBeVisible();
   const loopMs = Date.now() - t0;
@@ -268,7 +269,7 @@ test("P10.3 §7: in Voicing Loop with 「保存した音」, the one chord witho
   await expect(form).toBeHidden();
   await openVault(page);
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /進行を開く/ }).click();
-  await page.getByTestId("voicing-loop-handoff").click();
+  await practiceFromVault(page, "Voicing Loop");
   const loop = page.getByTestId("voicing-loop-workspace");
   await expect(page.getByTestId("voicing-loop-saved-availability")).toHaveText("96/97");
   await loop.getByRole("button", { name: "保存した音" }).click();

@@ -87,9 +87,9 @@ export async function chooseFirstCandidate(page: Page): Promise<void> {
   await expect(workspace.getByTestId("correction-save-form")).toBeVisible();
 }
 
-/** 「Vaultに保存」 in the save form, then the title, then 保存. */
+/** 「Vault に保存」 in the save form, then the title, then 保存. */
 export async function saveChosenRange(page: Page, title: string): Promise<void> {
-  await page.getByTestId("correction-save-form").getByRole("button", { name: /Vaultに保存/, exact: true }).click();
+  await page.getByTestId("correction-save-form").getByRole("button", { name: /Vault に保存/, exact: true }).click();
   const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
   await expect(form).toBeVisible();
   await form.locator('input[name="progression-title"]').fill(title);
@@ -152,4 +152,29 @@ export async function waitForSidebarSettled(page: Page): Promise<void> {
     const target = aside.getAttribute("data-sidebar") === "collapsed" ? 64 : 232;
     return Math.round(aside.getBoundingClientRect().width) === target;
   })).toBe(true);
+}
+
+/** P23-25: the five practices are opened from the home's cards (the 5-button bar is gone). */
+/** P23-62: the screen names are Japanese now; the old English names stay here so older specs still find a card. */
+const BASS_MODE_BY_NAME: Readonly<Record<string, "degree" | "rhythm" | "bassline" | "root-motion" | "midi">> = {
+  度数: "degree",
+  リズム: "rhythm",
+  コード進行のベース: "bassline",
+  ルートの動き: "root-motion",
+  "MIDI のベースライン": "midi",
+  "Degree Echo": "degree",
+  "Rhythm Echo": "rhythm",
+  "Bassline Echo": "bassline",
+  "Root Motion Echo": "root-motion",
+};
+
+export async function openBassPractice(page: Page, name: string): Promise<void> {
+  const mode = BASS_MODE_BY_NAME[name];
+  if (!mode) throw new Error(`unknown Bass Practice: ${name}`);
+  const card = page.locator(`[data-testid='bass-home-card'][data-mode='${mode}']`);
+  if (!(await card.isVisible().catch(() => false))) {
+    const back = page.getByRole("button", { name: "‹ Bass Practice" });
+    if (await back.count()) await back.first().click().catch(() => undefined);
+  }
+  await card.first().click();
 }

@@ -1,7 +1,10 @@
 import { normalizeQuery } from "../harmony/degrees";
-import type { SongIdea } from "../types";
+import { degreeOf } from "../harmony/degrees";
+import { functionKeyOf, progressionFunctions } from "../harmony/chordFunction";
+import { parseChordLabel } from "../chords";
+import type { SavedProgressionBlock, SongIdea } from "../types";
 import { buildProgressionVoicingPracticeHandoffFromVault, resolveVaultPracticeTempo, type VaultPracticeTempoOrigin } from "./handoff";
-import type { ProgressionPracticeSnapshotErrorCode, ProgressionPracticeSourceReference } from "./types";
+import type { ProgressionPracticeChord, ProgressionPracticeSnapshotErrorCode, ProgressionPracticeSourceReference } from "./types";
 
 export interface VoicingLoopVaultCandidate {
   readonly id: string;
@@ -18,6 +21,17 @@ export interface VoicingLoopVaultCandidate {
   readonly lengthBars?: number;
   /** Stored safely in Vault, but outside the bounded Voicing Loop practice capacity. */
   readonly unavailableReason?: ProgressionPracticeSnapshotErrorCode | "source-unavailable";
+  /** P23-29: the saved block itself — the picker's right column draws its roll and auditions its chords. */
+  readonly block?: SavedProgressionBlock;
+  /** P23-29: chords in the block / how many of them carry their own saved voicing (`voicingMemory`). */
+  readonly chordCount?: number;
+  readonly savedVoiceCount?: number;
+  /** P23-29: false hides 「元の MIDI」 in the picker's 使える音 line. */
+  readonly hasSourceMidi?: boolean;
+  /** P23-29: the role colour per shown chord (T / SD / SDm / D, "" when the key is unknown). */
+  readonly chordRoles?: readonly string[];
+  /** P23-29: the degree per shown chord (Ⅱm7 form), undefined when the key is unknown. */
+  readonly chordDegrees?: readonly (string | undefined)[];
 }
 
 /** How many of the recently used progressions the picker shows above the rest (the stored list keeps 5). */
@@ -85,6 +99,10 @@ export function buildVoicingLoopVaultCandidates(
         title: normalizedTitle(idea.title, fallbackTitle),
         favorite: block.pinned === true,
         ...(block.lengthBars === undefined ? {} : { lengthBars: block.lengthBars }),
+        // P23-29: what the picker's rows and right column read.
+        block,
+        chordCount: block.chords.length,
+        savedVoiceCount: block.chords.filter((item) => item.voicingMemory !== undefined).length,
       };
       if (!result.ok) {
         const bpm = tempo.bpm;
@@ -116,6 +134,8 @@ export function buildVoicingLoopVaultCandidates(
         tempoOrigin: tempo.origin,
         chordLabels: Object.freeze(snapshot.events.map(({ chord }) => chord.label)),
         capturedAt: block.capturedAt,
+        hasSourceMidi: Boolean(result.handoff.snapshots["source-midi"]),
+        ...pickerHarmony(snapshot.key, snapshot.events.map(({ chord }) => chord)),
       }));
     }
   }
@@ -139,8 +159,7 @@ export function filterVoicingLoopVaultCandidates(
 }
 
 export function voicingLoopSourceId(reference: ProgressionPracticeSourceReference): string {
-  return JSON.stringify([reference.ideaId, reference.blockId]);
-}
+  return JSON.stringify([reference.ideaId, reference.blockId]);}
 
 function compareCandidates(
   left: VoicingLoopVaultCandidate,
@@ -171,4 +190,53 @@ function normalizeText(value: string): string {
 
 function isFiniteBpm(value: number | undefined): value is number {
   return value !== undefined && Number.isFinite(value) && value > 0;
+}
+
+/** P23-29: the degree (Ⅱm7) and role colour (T / SD / SDm / D) the picker draws for one progression. */
+function pickerHarmony(
+  key: string | undefined,
+  chords: readonly ProgressionPracticeChord[],
+): Pick<VoicingLoopVaultCandidate, "chordDegrees" | "chordRoles"> {
+  const degrees = chords.map((chord) => degreeOf({
+    root: chord.root,
+    quality: chord.quality,
+    tensions: [...chord.tensions],
+    label: chord.label,
+    ...(chord.bass === undefined ? {} : { bass: chord.bass }),
+  }, key)?.label);
+  const functionKey = functionKeyOf(key);
+  const toFunctionChord = (chord: ProgressionPracticeChord) => ({
+    rootPc: chord.root,
+    quality: chord.quality,
+    tensions: chord.tensions,
+    ...(chord.bass === undefined ? {} : { bassPc: chord.bass }),
+  });
+  if (!functionKey) return { chordDegrees: Object.freeze(degrees) };
+  return {
+    chordDegrees: Object.freeze(degrees),
+    chordRoles: Object.freeze(progressionFunctions(chords.map(toFunctionChord), functionKey).map((entry) => entry.kind)),
+  };
+}
+
+/**
+ * P23-31 V1: the degrees and role colours of a list of chord names, through the very same function the
+ * picker uses on the Vault's blocks. The synthetic e2e candidates call this, so their chips are never
+ * hand-written and always agree with the app.
+ */
+export function pickerHarmonyOfLabels(
+  key: string | undefined,
+  labels: readonly string[],
+): Pick<VoicingLoopVaultCandidate, "chordDegrees" | "chordRoles"> {
+  const chords = labels.map((label) => {
+    const chord = parseChordLabel(label);
+    if (!chord) throw new Error(`P23-31 picker harmony did not parse: ${label}`);
+    return {
+      root: chord.root,
+      quality: chord.quality,
+      tensions: [...chord.tensions],
+      label: chord.label,
+      ...(chord.bass === undefined ? {} : { bass: chord.bass }),
+    };
+  });
+  return pickerHarmony(key, chords);
 }

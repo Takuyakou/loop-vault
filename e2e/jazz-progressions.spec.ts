@@ -53,7 +53,7 @@ test('the list has the Jazz Progressions group after Original Practice: 12 items
  await jump.last().click();
  const cards=page.locator('.dojo-jazz-card');
  await expect(cards).toHaveCount(12);
- await expect(page.locator('#dojo-builtin-jazz-progressions')).toContainText('推奨ボイシング(元の演奏の書き起こしではない)');
+ await expect(page.locator('#dojo-builtin-jazz-progressions')).toContainText('ジャズのオシャレなコード進行');
  await expect(cards.nth(0).getByRole('heading',{name:'01 ii–V–I と 6/9 への解決'})).toBeVisible();
  await expect(cards.nth(0).locator('.dojo-builtin-chords')).toHaveText('E♭：Fm9 → B♭13 → E♭6/9');
  await expect(cards.nth(0).getByTestId('jazz-item-laps')).toHaveText('まだ');
@@ -75,7 +75,7 @@ test('001 played through goes round, counts one 完奏 in the Jazz record only, 
  test.setTimeout(60000);
  await openJazz(page);
  await expect(page.getByTestId('jazz-card')).toHaveCount(3);
- await expect(page.getByTestId('dojo-jazz')).toContainText('推奨ボイシング(元の演奏の書き起こしではない)');
+ await expect(page.getByTestId('dojo-jazz')).toContainText('ジャズのオシャレなコード進行');
  await playCard(page,ID,0);await at(page,1);
  // B♭13: the right hand (A♭3 C4 G4) stays down, only the left hand is played again
  expect(carriedOf(ID)[1]!.length).toBe(3);
@@ -149,8 +149,10 @@ test('009: the second half is in Em under G♯m and in G♯m under Cm, and the s
 test('the random key: a lap goes on to the next key at once, in the order of a shuffled round; the keys played through are marked; the laps are counted by the key played',async({page})=>{
  test.setTimeout(120000);
  await openList(page);
- await expect(page.locator('[data-jazz-item=jazz-progressions-001]').getByTestId('jazz-open-random')).toHaveText('ランダムキーで練習');
- await page.locator('[data-jazz-item=jazz-progressions-001]').getByTestId('jazz-open-random').click();
+ // P22-01 §3-1-2 (rule B): the list's 「ランダム」 switch, then the card.
+ await page.getByTestId('dojo-random-toggle').click();
+ await expect(page.getByTestId('dojo-random-toggle')).toHaveAttribute('aria-pressed','true');
+ await page.locator('[data-jazz-item=jazz-progressions-001]').getByTestId('jazz-open').click();
  await expect(page.getByTestId('dojo-jazz')).toHaveAttribute('data-jazz-random','on');
  await expect(page.getByTestId('jazz-random')).toHaveAttribute('aria-pressed','true');
  await expect(page.getByTestId('jazz-round')).toContainText('1巡目 1/12');
@@ -240,7 +242,7 @@ test('what the progression teaches and the note about the voicings are on the sc
  await expect(page.getByTestId('jazz-version')).toHaveCount(2);
  await expect(page.getByTestId('dojo-score')).toContainText('この進行で学ぶこと:');
  await expect(page.getByTestId('dojo-score')).toContainText('左手の A と G、右手の E と F♯ は押さえたまま');
- await expect(page.getByTestId('jazz-note')).toHaveText('推奨ボイシング(元の演奏の書き起こしではない)');
+ await expect(page.getByTestId('jazz-note')).toHaveText('ジャズのオシャレなコード進行');
  await playCard(page,'jazz-progressions-004',0);await at(page,1);
  await page.getByTestId('jazz-version').nth(1).click();
  await expect(page.getByTestId('dojo-jazz')).toHaveAttribute('data-jazz-id','jazz-progressions-004-a');
@@ -314,6 +316,15 @@ test('the ear practice has no Jazz Progressions',async({page})=>{
 });
 
 const SIZES=[[1280,720],[1366,768],[1440,900],[1660,1035],[1920,1080],[768,640]] as const;
+
+/** P22-01 §4-2 (rule B): the row of conditions may wrap to two lines; then the staff and the keyboard move down and the page scrolls.
+ * At the bottom of the page the keyboard is still clear of the edge (the free strip under it). */
+async function keyboardClearAtPageEnd(page:Page){
+ await page.locator('#main-content').evaluate(e=>e.scrollTo({top:e.scrollHeight}));
+ // whole pixels: the end of a scroll is a whole pixel, the rows above it may not be
+ return page.evaluate(()=>Math.round(document.querySelector('#main-content')!.getBoundingClientRect().bottom-document.querySelector('.dojo-keyboard')!.getBoundingClientRect().bottom));
+}
+
 for(const [w,h] of SIZES){
  test(`the cards, what is taught, the seek bar, the staff and the keyboard fit at ${w}x${h}`,async({page})=>{
   await page.setViewportSize({width:w,height:h});
@@ -345,13 +356,14 @@ for(const [w,h] of SIZES){
    expect(m.seek.bottom,item).toBeLessThanOrEqual(m.center.bottom+1);
    expect(m.hint.bottom,item).toBeLessThanOrEqual(m.center.bottom+1);
    expect(m.score.bottom,item).toBeLessThanOrEqual(m.keyboard.top+1);
-   if(!stacked)expect(m.keyboard.bottom,item).toBeLessThanOrEqual(h+1); // narrower: the screen is stacked and the page scrolls
+   // narrower: the screen is stacked and the page scrolls. P22-01 §4-2 (rule B): a wrapped row of conditions may push the keyboard down too.
+   if(!stacked){if(m.barRows===1)expect(m.keyboard.bottom,item).toBeLessThanOrEqual(h+1);else expect(await keyboardClearAtPageEnd(page),`${item} wrapped: the keyboard is clear of the page end`).toBeGreaterThanOrEqual(16);}
    expect(m.buttonsWrap,'header buttons stay on one line').toBe(false);
    expect(m.overlap,'the buttons of the bar do not overlap').toBe(false);
    // the finger marks on the keyboard can be read (their height, in pixels)
    expect(m.fingerFont,`${item} finger marks`).toBeGreaterThanOrEqual(9);
-   // the tempo of the listening is in the row of the controls, whole and at the tempo of the progression
-   expect(m.bpm,`${item} BPM field`).toEqual({inside:true,value:'72'});
+   // the tempo of the listening is in the row of the controls, whole and at the app-wide BPM (P23-06: 120 at first, three digits)
+   expect(m.bpm,`${item} BPM field`).toEqual({inside:true,value:'120'});
    // and clear of the mark under it
    expect(m.whiteLabelGap,`${item} white-key marks apart from the circle`).toBeGreaterThanOrEqual(0.5);
    // the label of a white key stands under the black keys, which would cut it
@@ -458,17 +470,20 @@ test('続き is shown only when the two lines do not hold what is taught',async(
  await expect(page.locator('.dojo-jazz-focus-more')).toHaveText('続き');
 });
 
-test('the tempo of the listening: a BPM field next to 通して聴く, the first value is that of the progression, it stays on the next progression, the seek bar and the ring go at that speed, and changing it while listening stops',async({page})=>{
+test('the tempo of the listening: a BPM field next to 通して聴く, the first value is the app-wide BPM, it stays on the next progression, the seek bar and the ring go at that speed, and changing it while listening stops',async({page})=>{
  test.setTimeout(90000);
  await openJazz(page,'001');
  const field=page.getByTestId('jazz-bpm-input'),button=page.getByTestId('jazz-listen-all'),seek=page.getByTestId('jazz-seek');
- await expect(field).toBeVisible();await expect(field).toHaveValue('72');
+ // P23-06: the listening is at the app-wide BPM (120 at first); the progression's 72 is offered in the header as the song's BPM
+ await expect(field).toBeVisible();await expect(field).toHaveValue('120');
+ await expect(page.getByTestId('global-bpm-song')).toHaveText('曲 72');
  // in the row of the settings; 通して聴く is in the row of the buttons under the cards (P18-01: the same place on every practice screen)
  const box=async(id:string)=>(await page.getByTestId(id).boundingBox())!;
  const f=await box('jazz-bpm-field'),l=await box('jazz-listen-all');
  expect(l.y).toBeGreaterThan(f.y);
  await field.fill('240');await field.press('Enter');
  await expect(field).toHaveValue('240');
+ await expect(page.getByTestId('global-bpm-value')).toHaveAttribute('aria-valuenow','240');
  // the next progression opens at the tempo that was chosen
  const openInApp=async(item:string)=>{await page.getByTestId('dojo-back').click();await page.locator(`[data-jazz-item=jazz-progressions-${item}]`).getByTestId('jazz-open').click();await expect(page.getByTestId('dojo-jazz')).toBeVisible();};
  await openInApp('002');
@@ -495,6 +510,21 @@ test('the tempo of the listening: a BPM field next to 通して聴く, the first
  // the card played alone and the practice do not depend on it: a card sounds and the judging works as before
  await page.getByTestId('jazz-card').nth(0).click();
  await expect(page.getByTestId('jazz-card').nth(0)).toHaveAttribute('data-playing','true');
+});
+
+test('P23-06: changing the app-wide BPM in the header while the whole progression sounds stops it, and the field shows the new value',async({page})=>{
+ test.setTimeout(60000);
+ await openJazz(page,'001');
+ const field=page.getByTestId('jazz-bpm-input'),button=page.getByTestId('jazz-listen-all'),header=page.getByTestId('global-bpm-value');
+ await expect(field).toHaveValue('120');
+ await button.click();
+ await expect(page.getByTestId('jazz-card').nth(0)).toHaveAttribute('data-listening','true');
+ await header.focus();
+ await page.keyboard.press('ArrowUp');
+ await expect(header).toHaveAttribute('aria-valuenow','121');
+ await expect(page.locator('[data-testid=jazz-card][data-listening=true]')).toHaveCount(0);
+ await expect(button).toHaveText('通して聴く');
+ await expect(field).toHaveValue('121');
 });
 
 test('after a card is played, the heading of the staff goes back from 〜を聴いています',async({page})=>{
@@ -612,6 +642,8 @@ test('octave +1: the notes of the standard octave do not pass at +1',async({page
 });
 
 test('octave +1: the listening sounds the raised notes',async({page})=>{
+ // P23-06: the listening is at the app-wide BPM; set it to the progression's 72 (the value this test expects)
+ await page.addInitScript(()=>localStorage.setItem('loop-vault:global-bpm:v1',JSON.stringify({version:1,bpm:72})));
  await openJazz(page,'001');
  const sent=()=>page.evaluate(()=>(window as typeof window&{__lvJazzListen?:{pitches:number[];bpm:number}}).__lvJazzListen);
  const standard=[...new Set(rowOf(ID,3).cards.flatMap(c=>c.expectedPitches))].sort((a,b)=>a-b);
@@ -666,7 +698,8 @@ for(const [w,h] of SIZES){
    expect(m.overflowX,item).toBe(0);expect(m.centerScroll,`${item} centre`).toBe(0);expect(m.overlap,`${item} buttons overlap`).toBe(false);
    if(w>=1500)expect(m.barRows,`${item} +1: the row of controls is one line`).toBe(1);
    expect(m.octaveInside,`${item} switch`).toBe(true);expect(m.hintInside,item).toBe(true);expect(m.staffAboveKeys,item).toBe(true);
-   if(w!==768)expect(m.keysInside,item).toBe(true);
+   // P22-01 §4-2 (rule B): a wrapped row of conditions may push the keyboard down; the page scrolls and the strip under it stays.
+   if(w!==768){if(m.barRows===1)expect(m.keysInside,item).toBe(true);else expect(await keyboardClearAtPageEnd(page),`${item} wrapped: the keyboard is clear of the page end`).toBeGreaterThanOrEqual(16);}
    expect(m.fingerFont,`${item} finger marks`).toBeGreaterThanOrEqual(9);
    await page.getByTestId('dojo-back').click();
   }

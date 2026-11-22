@@ -1,3 +1,4 @@
+import { displayChordLabel } from "../ui/chordText";
 import { useEffect, useState } from "react";
 import { resizeDraftBoundary } from "../domain/midi/draftRangeEditing";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
@@ -52,7 +53,7 @@ export function DraftBoundaryHandles({
                 className="grid min-h-10 grid-cols-[minmax(7rem,auto)_minmax(8rem,1fr)_4rem] items-center gap-3 text-xs"
               >
                 <span className="truncate text-[var(--lv-text)]" title={label}>
-                  {left.chord.label} | {right.chord.label}
+                  {displayChordLabel(left.chord.label)} | {displayChordLabel(right.chord.label)}
                 </span>
                 <input
                   type="range"

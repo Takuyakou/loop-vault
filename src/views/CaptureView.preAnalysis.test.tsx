@@ -87,9 +87,17 @@ describe("Phase 5.12 Capture product path", () => {
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(11);
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-piano-roll']")).toHaveLength(1);
-    expect(mounted.container.textContent).toContain("Acoustic Grand Piano");
-    expect(mounted.container.textContent).toContain("Electric Guitar (jazz)");
-    expect(mounted.container.textContent).toContain("ドラム");
+    // P23-30 A2: only the selected part shows its details, so walk the parts to read every program name.
+    const rows = [...mounted.container.querySelectorAll<HTMLElement>("[data-voice-id]")];
+    const details: string[] = [];
+    for (const row of rows) {
+      await act(async () => row.click());
+      details.push(row.textContent ?? "");
+    }
+    const allDetails = details.join(" ");
+    expect(allDetails).toContain("Acoustic Grand Piano");
+    expect(allDetails).toContain("Electric Guitar (jazz)");
+    expect(allDetails).toContain("ドラム");
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
     expect(mounted.container.textContent).not.toContain("パートを確定");
@@ -221,8 +229,7 @@ describe("Phase 5.12 Capture product path", () => {
     const mounted = await renderCaptureProduct(analyzerCalls);
 
     await act(async () => {
-      [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === appCopy.ja.capture.loadMidi)
+      mounted.container.querySelector<HTMLButtonElement>("[data-testid='capture-choose-midi']")
         ?.click();
     });
     await waitFor(() =>
@@ -372,8 +379,7 @@ describe("Phase 5.12 Capture product path", () => {
     tauriMocks.readFile.mockReturnValue(read.promise);
     const mounted = await renderCaptureProduct([], setToast);
     await act(async () => {
-      [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent === appCopy.ja.capture.loadMidi)?.click();
+      mounted.container.querySelector<HTMLButtonElement>("[data-testid='capture-choose-midi']")?.click();
     });
     await waitFor(() => tauriMocks.readFile.mock.calls.length === 1);
     await mounted.unmount();

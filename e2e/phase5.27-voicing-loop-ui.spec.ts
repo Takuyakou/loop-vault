@@ -45,13 +45,14 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("banner").locator("p").filter({ hasText: /^Voicing Loop$/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
-  // P5.26.2-02: each hand is five fixed slots; the notes and degrees under the used fingers are what is checked.
+  // P23-20 L1: each hand is five fixed slot cards; the note and the degree sit in each used card.
   const used = (hand: "left" | "right", row: "pitch" | "degree") =>
-    page.getByTestId(`voicing-loop-${hand}-hand`).locator(`tr[data-row="${row}"] td[data-used="true"]`);
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("音名");
+    page.getByTestId(`voicing-loop-${hand}-hand`)
+      .locator(`[data-testid="voicing-loop-hand-slot"][data-used="true"] .voicing-hand-slot-${row}`);
+  await expect(page.getByTestId("voicing-loop-current-voicing").locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
   await expect(used("left", "pitch")).toHaveText(["C4"]);
   await expect(used("right", "pitch")).toHaveText(["G4", "B4"]);
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("構成音");
+  await expect(page.getByTestId("voicing-loop-current-voicing").locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
   await expect(used("left", "degree")).toHaveText(["1"]);
   await expect(used("right", "degree")).toHaveText(["5", "7"]);
   await expect(page.getByTestId("voicing-loop-event-timing")).toHaveText([
@@ -62,7 +63,8 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("progressbar")).toHaveCount(0);
   await expect(page.getByTestId("voicing-loop-status")).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("あと2拍");
-  await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI 入力");
+  // P23-32 K4: the band's MIDI state row is gone (the top band shows the same thing once).
+  await expect(page.getByTestId("voicing-loop-midi-status")).toHaveCount(0);
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
   await expect(page.getByRole("button", { name: "元MIDI" })).toBeVisible();
   await expect(page.getByRole("button", { name: "自動生成", exact: true })).toBeVisible();
@@ -86,10 +88,11 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.locator("[data-testid='voicing-loop-event'][aria-current='step']"))
     .toContainText("Dm7", { timeout: 3_000 });
   await page.getByRole("button", { name: "停止", exact: true }).click();
-  await expect(page.getByText("停止しました")).toBeVisible();
+  // P23-32 K5: the stopped state reads 「停止中」.
+  await expect(page.getByTestId("voicing-loop-transport")).toContainText("停止中");
 });
 
-test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings beside transport", async ({ page }) => {
+test("P5.27 Voicing Loop fills the keyboard region and leaves MIDI to the top band", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   await chooseVoicingLoop(page);
@@ -105,9 +108,10 @@ test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings bes
   const recall = page.getByRole("button", { name: "思い出す（コード名のみ）" });
   await recall.click();
   await expect(recall).toHaveAttribute("aria-pressed", "true");
+  // P14 / P23-32 K4: 「MIDI 設定」 left the practice bar; the top band's MIDI chip opens the same shared panel.
   const transport = page.getByTestId("voicing-loop-transport");
-  await expect(transport.getByRole("button", { name: "MIDI 設定", exact: true })).toBeVisible();
-  await transport.getByRole("button", { name: "MIDI 設定", exact: true }).click();
+  await expect(transport.getByRole("button", { name: "MIDI 設定", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /^MIDI 入力：/ }).click();
   const dialog = page.getByTestId("midi-panel");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("使う機器")).toBeVisible();
@@ -160,7 +164,8 @@ test("P8.9-09 Voicing Loop bottom bar keeps every control visible at 960 and 768
     const fit = await row.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
     expect(fit.scroll, `${width}px`).toBeLessThanOrEqual(fit.client + 1);
     const rowBox = (await row.boundingBox())!;
-    for (const name of [/開始/, /最初から/, /停止/, /区間解除/]) {
+    // P23-32 K3/K4: the bar is one row — 区間解除 moved to the strip's × beside 「ここから n」.
+    for (const name of [/開始/, /最初から/, /停止/]) {
       const box = (await row.getByRole("button", { name }).boundingBox())!;
       expect(box.x + box.width, `${width}px ${name}`).toBeLessThanOrEqual(rowBox.x + rowBox.width + 1);
     }
@@ -210,7 +215,9 @@ test("P8.9-09b every BPM field shows three digits without clipping at 4 sizes", 
     await page.setViewportSize({ width, height });
     await openApp(page);
     await chooseVoicingLoop(page);
-    await fits(page.locator("#voicing-loop-bpm"), `${width} Voicing Loop`);
+    // P23-32 K4: the practice has no BPM field of its own; the header's 共通 BPM is the one field it follows.
+    await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
+    await expect(page.getByTestId("global-bpm-value")).toHaveAttribute("aria-valuenow", /^\d+$/);
     await page.locator('[data-nav="capture"]').click();
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
     await fits(page.getByTestId("text-progression-bpm"), `${width} text standard`);

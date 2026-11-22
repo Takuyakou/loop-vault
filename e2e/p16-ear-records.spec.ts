@@ -14,7 +14,7 @@ const chordCount = (page: Page): Promise<number> => page.evaluate(() => {
   return count;
 });
 /** Everything the browser keeps that is not the ear practice's (the Dojo, the Bass practice, the Vault). */
-const otherKeys = (page: Page) => page.evaluate(() => Object.fromEntries(Object.keys(window.localStorage).filter((key) => !key.includes("ear-practice")).sort().map((key) => [key, window.localStorage.getItem(key)])));
+const otherKeys = (page: Page) => page.evaluate(() => Object.fromEntries(Object.keys(window.localStorage).filter((key) => !key.includes("ear-practice") && !key.includes("dojo-recent")).sort().map((key) => [key, window.localStorage.getItem(key)])));
 const stored = (page: Page) => page.evaluate((key) => window.localStorage.getItem(key), KEY);
 
 type Rec = Record<string, unknown>;

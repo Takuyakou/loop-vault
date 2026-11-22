@@ -31,10 +31,25 @@ export function audibleNotes(session: AnalysisSession): PreAnalysisNote[] {
 }
 
 export function buildSoundingIndex(session: AnalysisSession): SoundingIndex {
+  return indexOfNotes(audibleNotes(session));
+}
+
+/**
+ * P23-31 P6: the notes the 「鳴っている音」 line names. The same audible rule as playback, but a
+ * part hidden with the eye button is left out too (it is not on the roll, so it is not named).
+ */
+export function soundingLineIndex(session: AnalysisSession): SoundingIndex {
+  const hidden = new Set(
+    session.voices.filter((voice) => !voice.visible).map((voice) => voice.id),
+  );
+  return indexOfNotes(audibleNotes(session).filter((note) => !hidden.has(note.voiceId)));
+}
+
+function indexOfNotes(notes: readonly PreAnalysisNote[]): SoundingIndex {
   const short: PreAnalysisNote[] = [];
   const long: PreAnalysisNote[] = [];
   let maxShort = 0;
-  for (const note of audibleNotes(session)) {
+  for (const note of notes) {
     if (note.durationBeats > LONG_NOTE_BEATS) {
       long.push(note);
     } else {
@@ -80,9 +95,18 @@ export function soundingAt(
 
 const PITCH_NAMES = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
 
-/** 「鳴っている音 C3 E3 G3」: the pitches that sound, lowest first, each once. Empty when nothing sounds. */
+/** P23-31 P6: how many notes the line names. */
+export const SOUNDING_LINE_MAX = 6;
+
+/**
+ * P23-31 P6: 「C3 ・ E4 ・ G4」 — the pitches that sound, lowest first, each once, at most 6.
+ * 「—」 when nothing sounds. The screen writes 「鳴っている音」 before this text.
+ */
 export function soundingText(sounding: readonly PreAnalysisNote[]): string {
-  if (!sounding.length) return "";
   const pitches = [...new Set(sounding.map((note) => note.pitch))].sort((a, b) => a - b);
-  return `鳴っている音 ${pitches.map((pitch) => `${PITCH_NAMES[pitch % 12]}${Math.floor(pitch / 12) - 1}`).join(" ")}`;
+  if (!pitches.length) return "—";
+  return pitches
+    .slice(0, SOUNDING_LINE_MAX)
+    .map((pitch) => `${PITCH_NAMES[pitch % 12]}${Math.floor(pitch / 12) - 1}`)
+    .join(" ・ ");
 }

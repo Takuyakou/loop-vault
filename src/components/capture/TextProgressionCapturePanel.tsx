@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check } from "lucide-react";
+import { useSaveButtonState } from "../ui";
 import { useReserveBottomSpace } from "../notifications";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
@@ -7,11 +9,14 @@ import { TextVoicingAvailability } from "./TextVoicingAvailability";
 import { useTextTransport } from "./useTextTransport";
 import { TextTransportBar } from "./TextTransportBar";
 import type { PreviewSound } from "../../audio/chordPreview";
-import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
+import { formatMidiNoteForDisplay } from "../music-keyboard";
+import { displayChordLabel } from "../../ui/chordText";
+import { displayKey } from "../../domain/displayLabels";
+import { importKeyLabel, resolveImportKey, type ImportKeyChoice } from "../../domain/importKeyResolution";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
 import { TextCaptureShell } from "./TextCaptureShell";
-import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, TextSaveControls, textSaveBlockedReason } from "./TextCaptureFields";
+import { TEXT_CAPTURE_DEFAULT_NAME, TextKeySelect, TextMeterSelect, textSaveBlockedReason } from "./TextCaptureFields";
 import { StandardTextScoreWorkspace } from "./StandardTextScoreWorkspace";
 import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
 import {
@@ -21,11 +26,9 @@ import {
   TEXT_PROGRESSION_MAX_BARS,
   TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS,
   TEXT_PROGRESSION_MAX_TOKENS,
-  TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
   type TextProgressionCapability,
   type TextProgressionDiagnostic,
   type TextProgressionEvent,
-  type TextProgressionToken,
 } from "../../domain/textProgression";
 import {
   createTextProgressionDraft,
@@ -46,13 +49,17 @@ import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
 import { VoicingPanel } from "../voicing/VoicingPanel";
 import { BpmScrubField } from "../BpmScrubField";
 import { usePreviewSound } from "../PreviewSoundProvider";
+import { cardHarmony } from "../correction-workspace/cardHarmony";
 import { useMetronome } from "../MetronomeProvider";
+import { useGlobalBpm } from "../GlobalBpmProvider";
 
 export interface TextProgressionConvertedDraft {
   readonly draft: ManualCandidateDraft;
   readonly title: string;
   readonly bpm?: number;
   readonly confirmedKey?: string;
+  /** P23-33: the effective key (manual, inherited or inferred) for the save and the display. */
+  readonly resolvedKey?: string;
 }
 
 interface TextProgressionCapturePanelProps {
@@ -61,7 +68,8 @@ interface TextProgressionCapturePanelProps {
   readonly draftActive?: boolean;
   readonly onConvert: (converted: TextProgressionConvertedDraft) => void;
   readonly onSaveStandard?: (converted: TextProgressionConvertedDraft, title: string) => boolean;
-  readonly onSaveExtended?: (result: ExtendedTextResult, title: string) => boolean;
+  /** P23-33: the third argument is the effective (auto/inherited/manual) key for save and reload. */
+  readonly onSaveExtended?: (result: ExtendedTextResult, title: string, resolvedKey?: string) => boolean;
   readonly onPreview: (
     event: TextProgressionEvent,
     memory: ChordVoicingMemory | undefined,
@@ -89,27 +97,54 @@ export function TextProgressionCapturePanel({
 }: TextProgressionCapturePanelProps) {
   const { sound: globalSound } = usePreviewSound();
   const { enabled: metronomeEnabled } = useMetronome();
+  const { bpm: globalBpm } = useGlobalBpm();
   const selectedSound = previewSound ?? globalSound;
   const [input, setInput] = useState("");
   const editorSelection = useRef({ start: 0, end: 0 });
   const statusBarRef = useRef<HTMLElement>(null);
   useReserveBottomSpace(statusBarRef);
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
-  const [confirmedKey, setConfirmedKey] = useState<string>();
+  const [keyChoice, setKeyChoice] = useState<ImportKeyChoice>({ kind: "auto" });
   const [bpmInput, setBpmInput] = useState("");
+  const [matchGlobalBpm, setMatchGlobalBpm] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpRef = useRef<HTMLDivElement>(null);
   const [saveTitle, setSaveTitle] = useState(TEXT_CAPTURE_DEFAULT_NAME);
   const [saved, setSaved] = useState(false);
+  const saveBtn = useSaveButtonState();
   const [saveFailed, setSaveFailed] = useState(false);
   const [selectedEventKey, setSelectedEventKey] = useState<string>();
   const [voicingOverrides, setVoicingOverrides] = useState<TextProgressionVoicingOverrides>(new Map());
   const [voicingStyles, setVoicingStyles] = useState<ReadonlyMap<string, TextProgressionVoicingStyleId>>(new Map());
 
+  const manualKey = keyChoice.kind === "manual" ? keyChoice.key : undefined;
+  // P23-33: the parse keeps using only a human-chosen key (degrees and roman numerals need one); the
+  // effective key for display and save is resolved separately below, from the parsed absolute chords.
   const result = useMemo(() => parseTextProgression(input, {
-    keyState: confirmedTextProgressionKeyState(confirmedKey),
-  }), [confirmedKey, input]);
+    keyState: confirmedTextProgressionKeyState(manualKey),
+  }), [manualKey, input]);
+  const keyChords = useMemo(() => result.events.map(event => event.chord), [result]);
+  const keyDecision = useMemo(() => resolveImportKey({
+    mode: keyChoice.kind,
+    ...(keyChoice.kind === "manual" ? { manualKey: keyChoice.key } : {}),
+    chords: keyChords,
+  }), [keyChoice, keyChords]);
   const explicitBpm = parseExplicitBpm(bpmInput);
+  /** V6: the field's value when it has one, the common BPM while 「共通の BPM に合わせる」 is on, and the common BPM when the field is empty. */
+  const playbackBpm = explicitBpm === undefined || matchGlobalBpm ? globalBpm : explicitBpm;
   const { transport, state: transportState } = useTextTransport(
     controller ?? playbackController, selectedSound, "standard-text-whole");
+  useEffect(() => {
+    if (!helpOpen) return undefined;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); setHelpOpen(false); } };
+    const onDown = (event: MouseEvent) => {
+      if (helpRef.current && event.target instanceof Node && !helpRef.current.contains(event.target)) setHelpOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onDown);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); };
+  }, [helpOpen]);
+  useEffect(() => { transport.setBpm(playbackBpm); }, [playbackBpm, transport]);
   const playbackSnapshot = useMemo(() => ({
     notes: standardTextPlaybackNotes(result, voicingOverrides, metronomeEnabled), lengthBeats: result.scoreLengthBeats,
     beatsPerBar: 4, sourceText: input,
@@ -129,6 +164,11 @@ export function TextProgressionCapturePanel({
   const storedStyle = selectedEvent
     ? textProgressionStyleFromSnapshot(selectedMemory?.practiceVoicingOverride, selectedEvent.chord)
     : undefined;
+  // P23-17 V7/V8/V9: the degree, role and voicing mark of the preview cards (the card list is gone).
+  const harmony = useMemo(() => cardHarmony(
+    result.events.map(event => ({ id: String(event.range.start), name: event.chord, start: event.range.start })),
+    keyDecision.key,
+  ), [result, keyDecision.key]);
   const selectedStyle = storedStyle
     ?? (selectedKey === undefined ? undefined : voicingStyles.get(selectedKey))
     ?? "generated-close";
@@ -185,17 +225,19 @@ export function TextProgressionCapturePanel({
     if (transportState.status !== "playing") {
       if (transportState.status === "stopped") onStop();
       if (textPreviewNotes(event.chord, voicingOverrides.get(key)).length) {
-        onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+        onPreview(event, voicingOverrides.get(key), playbackBpm);
       }
     }
   }
 
-  /** Choosing a key confirms it: roman numerals and degrees use only a confirmed key. */
-  function chooseKey(key: string | undefined) {
+  /** 「自動」keeps the key automatic; 「未設定」is the explicit no-key choice; a key is a manual pick. */
+  function chooseKeyChoice(choice: string | undefined) {
     if (draftActive) return;
     onStop();
-    const state = confirmedTextProgressionKeyState(key);
-    setConfirmedKey(state.kind === "confirmed" ? state.key : undefined);
+    if (choice === "auto") { setKeyChoice({ kind: "auto" }); return; }
+    if (choice === "unset" || !choice) { setKeyChoice({ kind: "unset" }); return; }
+    const state = confirmedTextProgressionKeyState(choice);
+    setKeyChoice(state.kind === "confirmed" ? { kind: "manual", key: state.key } : { kind: "auto" });
   }
 
   function updateVoicing(memory: ChordVoicingMemory | undefined) {
@@ -250,11 +292,12 @@ export function TextProgressionCapturePanel({
 
   function convertedDraft(): TextProgressionConvertedDraft {
     const draft = createTextProgressionDraft({ result, voicingOverrides });
-    const key = result.keyState.kind === "confirmed" ? result.keyState.key : undefined;
     return {
       draft, title: textProgressionDraftTitle(result),
       ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }),
-      ...(key === undefined ? {} : { confirmedKey: key }),
+      // P23-33: the human's parse key and the effective (auto/inherited/manual) save key are separate.
+      ...(manualKey === undefined ? {} : { confirmedKey: manualKey }),
+      ...(keyDecision.key === undefined ? {} : { resolvedKey: keyDecision.key }),
     };
   }
 
@@ -270,8 +313,11 @@ export function TextProgressionCapturePanel({
     try {
       const converted = convertedDraft();
       const success = onSaveStandard(converted, saveTitle.trim());
-      setSaved(success); setSaveFailed(!success);
-    } catch { setSaved(false); setSaveFailed(true); }
+      setSaved(success);
+      if (success) saveBtn.succeed();
+      else saveBtn.reset();
+      setSaveFailed(!success);
+    } catch { setSaved(false); saveBtn.reset(); setSaveFailed(true); }
   }
 
   function switchDialect(next: "standard" | "extended") {
@@ -284,20 +330,37 @@ export function TextProgressionCapturePanel({
 
   function previewSelected() {
     if (draftActive || !selectedEvent || !textPreviewNotes(selectedEvent.chord, selectedMemory).length) return;
-    onPreview(selectedEvent, selectedMemory, explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+    onPreview(selectedEvent, selectedMemory, playbackBpm);
   }
 
   const visibleDiagnostics = input.trim() ? result.diagnostics : [];
   const statusModel = textCaptureStatus({
     bars: result.bars, annotations: 0, meterLabel: "4/4", bpm: explicitBpm ?? null,
-    keyLabel: confirmedKey ?? null, errors: visibleDiagnostics.length, warnings: 0,
+    keyLabel: keyDecision.key === undefined ? null : displayKey(keyDecision.key) ?? keyDecision.key,
+    errors: visibleDiagnostics.length, warnings: 0,
     practiceLimits: 0, hasSource: Boolean(input.trim()),
   });
   const saveReason = textCaptureSaveReason(statusModel);
   const saveBlocked = textSaveBlockedReason(result.canConvert, saveReason, saveTitle);
-  const confirmed = result.keyState.kind === "confirmed";
-  const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
+  const confirmed = keyDecision.key !== undefined;
+  const keySelectValue = keyChoice.kind === "manual" ? keyChoice.key : keyChoice.kind;
   const disabled = draftActive;
+  /** P23-17 V8/V9: what a preview card shows above and below its chord name. */
+  const harmonyFor = (sourceStart: number) => {
+    const own = confirmed && showRomanNumerals ? harmony.get(String(sourceStart)) : undefined;
+    const event = result.events.find(item => item.range.start === sourceStart);
+    const practice = event ? voicingOverrides.get(textProgressionEventKey(event))?.practiceVoicingOverride : undefined;
+    const styleId = event ? textProgressionStyleFromSnapshot(practice, event.chord) : undefined;
+    const voicing = practice?.source === "live-played" ? "カスタム / Live MIDI"
+      : styleId ? voicingStyleLabel(styleId) : event ? "標準 / 自動生成" : undefined;
+    if (!own && !voicing && !event) return undefined;
+    return {
+      ...(own?.degree ? { degree: own.degree } : {}),
+      ...(own?.role ? { role: own.role } : {}),
+      ...(voicing ? { voicing } : {}),
+      ...(event ? { name: displayChordLabel(event.canonical) } : {}),
+    };
+  };
   const modeSelector = (
     <div className="flex shrink-0 items-center gap-1" role="group" aria-label={"テキスト記法"}>
       <span className="text-xs text-[var(--lv-text-muted)]">{"読み方"}</span>
@@ -317,9 +380,10 @@ export function TextProgressionCapturePanel({
     return <TextCaptureShell dialect={dialect} draftActive={draftActive}>
       <ExtendedTextIntakePanel input={input} disabled={disabled}
         controller={controller} sound={selectedSound} modeSelector={modeSelector}
+        showRomanNumerals={showRomanNumerals}
         onInput={setInput} editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
-        onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
+        onSave={(extended, title, resolvedKey) => onSaveExtended?.(extended, title, resolvedKey) ?? false} />
     </TextCaptureShell>;
   }
 
@@ -335,72 +399,77 @@ export function TextProgressionCapturePanel({
         </div>
       ) : null}
       <div className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]" data-testid="standard-text-intake">
-      <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
-        {modeSelector}
-        <TextMeterSelect testId="text-progression-meter" value="4/4" options={["4/4"]} disabled
-          reason={"通常の読み方は4/4だけです。ほかの拍子は拡張で使えます"} onChange={() => undefined} />
-        <TextKeySelect testId="text-progression-key" value={confirmedKey} disabled={disabled}
-          suggestions={suggestions.map(candidate => candidate.key)} onChange={chooseKey} />
-        <div className="lv-text-toolbar-bpm">
-          <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
-            label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
-            dragLabel={"上下にドラッグしてBPMを変更"}
-            value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
-            onChange={value => { if (transportState.status === "stopped") onStop();
-              transport.setBpm(value); setBpmInput(String(value)); }}
-            onExplicitInput={value => { if (transportState.status === "stopped") onStop();
-              transport.setBpm(value); setBpmInput(String(value)); }} />
-          {explicitBpm === undefined ? <small className="whitespace-nowrap text-[var(--lv-text-muted)]">{"試聴120"}</small> : null}
-        </div>
-        <TextTransportBar transport={transport} state={transportState}
-          snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
-          sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
-        {onSaveStandard ? <TextSaveControls nameTestId="text-progression-name" saveTestId="text-progression-save"
-          reasonId="text-progression-save-reason" name={saveTitle} blockedReason={saveBlocked} disabled={disabled}
-          onName={value => { setSaveTitle(value); setSaved(false); setSaveFailed(false); }} onSave={saveStandard} /> : null}
+      <div className="lv-text-capture-toolbar lv-text-topbar" data-testid="text-capture-toolbar">
+        <section className="lv-text-topgroup" aria-label="読み方の設定">
+          <span className="lv-text-toplabel">{"読み方の設定"}</span>
+          {modeSelector}
+          <TextMeterSelect testId="text-progression-meter" value="4/4" options={["4/4"]} disabled
+            reason={"通常の読み方は4/4だけです。ほかの拍子は拡張で使えます"} onChange={() => undefined} />
+          <TextKeySelect testId="text-progression-key" value={keySelectValue} disabled={disabled}
+            allowAuto autoLabel={importKeyLabel(keyDecision)} onChange={chooseKeyChoice} />
+          <div className="lv-text-toolbar-bpm">
+            <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
+              label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
+              dragLabel={"上下にドラッグしてBPMを変更"}
+              value={explicitBpm ?? globalBpm}
+              onChange={value => { if (transportState.status === "stopped") onStop();
+                setMatchGlobalBpm(false); setBpmInput(String(value)); }}
+              onExplicitInput={value => { if (transportState.status === "stopped") onStop();
+                setMatchGlobalBpm(false); setBpmInput(String(value)); }} />
+            {explicitBpm === undefined ? <small className="whitespace-nowrap text-[var(--lv-text-muted)]">{`試聴 ${globalBpm}`}</small> : (
+              <button type="button" className="lv-text-bpm-match" aria-pressed={matchGlobalBpm}
+                aria-label={matchGlobalBpm ? "曲の BPM に戻す" : "共通の BPM に合わせる"}
+                title={matchGlobalBpm ? `曲の BPM（${explicitBpm}）で鳴らす` : `上の帯の共通 BPM（${globalBpm}）で鳴らす。保存する BPM は変わりません`}
+                data-testid="text-match-global-bpm" onClick={() => setMatchGlobalBpm(value => !value)}>
+                {matchGlobalBpm ? "曲の BPM に戻す" : "共通の BPM に合わせる"}
+              </button>
+            )}
+          </div>
+          <div className="lv-text-top-help" ref={helpRef}>
+            <button type="button" className="lv-text-help-button" data-testid="text-help" aria-expanded={helpOpen}
+              aria-label="説明" title="説明" onClick={() => setHelpOpen(open => !open)}>{"?"}</button>
+            {helpOpen ? (
+              <div className="lv-text-help-face" role="dialog" aria-label="説明" data-testid="text-help-face">
+                {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
+                <p className="lv-text-help-line">{"通常の読み方は4/4だけです。ほかの拍子は拡張で使えます"}</p>
+                <p className="lv-text-help-line">{`4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`}</p>
+                <p className="lv-text-help-line">{"キーは自動で決まり、手で選ぶと固定されます。「自動」に戻すと選び直します。「未設定」にすると自動でも付けません。"}</p>
+                <p className="lv-text-help-line">{"自動のキーは、3つ以上の異なる和音があり、その全部が同じキーに合い、候補が1つに絞れた時だけ付きます。ローマ数字・数字の入力には、これまでどおり手で選んだキーが必要です。"}</p>
+              </div>
+            ) : null}
+          </div>
+        </section>
+        <section className="lv-text-topgroup" aria-label="試聴">
+          <span className="lv-text-toplabel">{"試聴"}</span>
+          <TextTransportBar transport={transport} state={transportState}
+            snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
+            sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
+        </section>
       </div>
-      {result.canConvert ? <TextVoicingAvailability availability={registration} /> : null}
       <StandardTextScoreWorkspace input={input} result={result} statusModel={statusModel} disabled={disabled}
         editorSelection={editorSelection.current}
         onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
         transport={transport} transportState={transportState}
+        harmonyFor={harmonyFor}
         onInput={value => { if (transportState.status === "stopped") onStop();
-          setSaved(false); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
+          // P23-17 V14: after a save, clearing the whole input starts the next progression from the first values.
+          if (saved && value.trim() === "") {
+            setKeyChoice({ kind: "auto" }); setBpmInput(""); setSaveTitle(TEXT_CAPTURE_DEFAULT_NAME);
+          }
+          setSaved(false); saveBtn.reset(); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
         onSeekBar={bar => transport.seek((bar - 1) * 4)} />
-      <p id="text-progression-format" className="sr-only text-[var(--lv-text-muted)]">
-        {`4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`}
-      </p>
-
-      <span className="sr-only" data-testid="text-progression-key-state">
-        {confirmed ? `確定: ${result.keyState.key}`
-          : "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。"}
-      </span>
-
-      <TextDiagnostics diagnostics={visibleDiagnostics} />
-
-      <footer ref={statusBarRef} className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
-        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
-          {textCaptureSummary(statusModel)}
-        </span>
-        {result.tokens.length ? <details name="capture-details" className="lv-text-detail-popover" data-testid="standard-text-card-details">
-          <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
-            {"カード一覧"}
-          </summary>
-          <TextProgressionCards
-            events={result.events}
-            valid={result.canConvert}
-            tokens={result.tokens}
-            voicingOverrides={voicingOverrides}
-            selectedKey={selectedKey}
-            confirmedKey={confirmed ? result.keyState.key : undefined}
-            showRomanNumerals={showRomanNumerals}
-            disabled={disabled}
-            onSelect={selectEvent}
-          />
-        </details> : null}
-        {selectedEvent && !draftActive ? (
-          <details name="capture-details" className="lv-text-detail-popover" data-testid="text-progression-inspector">
-            <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{"選択音"}: <span className="font-mono">{selectedEvent.canonical}</span></summary>
+      {/* P23-17 V11: the chosen card is a row under the preview; the row opens to the old contents. A score with no
+          chords (rests only) keeps the way to 「音を細かく直す」 here, so that path is not lost. */}
+      {!draftActive && (selectedEvent || (result.canConvert && result.events.length === 0)) ? (
+        <div className="lv-text-selected-row" data-testid="text-progression-inspector-row">
+          {selectedEvent ? (
+          <details name="capture-details" className="lv-text-selected-details" data-testid="text-progression-inspector">
+            <summary className="cursor-pointer text-xs">
+              <span className="font-semibold">{"選んだカード: "}<span className="font-mono">{selectedEvent.canonical}</span></span>
+              <span className="lv-text-selected-notes">
+                {`鳴らす音 ${textPreviewNotes(selectedEvent.chord, selectedMemory).map(note => formatMidiNoteForDisplay(note, "fl-studio", "flat")).join("・")}(アプリのおすすめの音。元の MIDI の音ではありません)`}
+              </span>
+            </summary>
             <div className="lv-text-inspector-content border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -456,136 +525,56 @@ export function TextProgressionCapturePanel({
             </details>
             </div>
           </details>
-        ) : null}
+          ) : <span className="lv-text-selected-notes">{"コードのない進行です(休符だけ)"}</span>}
+          <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" data-testid="text-progression-convert"
+            title={result.canConvert ? "コードと長さを1つずつ直してから保存します" : "正しいコード進行を入れると使えます"}
+            disabled={disabled || !result.canConvert} onClick={convert}>{"音を細かく直す"}</button>
+        </div>
+      ) : null}
+      <p id="text-progression-format" className="sr-only text-[var(--lv-text-muted)]">
+        {`4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`}
+      </p>
+
+      <span className="sr-only" data-testid="text-progression-key-state">
+        {keyDecision.key
+          ? `${keyChoice.kind === "auto" ? "自動" : "確定"}: ${keyDecision.key}`
+          : "キーは未確定です。ローマ数字・数字の表記には、キーを選んでください。"}
+      </span>
+
+      <TextDiagnostics diagnostics={visibleDiagnostics} />
+
+      <footer ref={statusBarRef} className="lv-text-intake-savebar lv-text-status-bar flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] px-2 py-1 text-xs">
+        <label className="lv-text-footer-name flex items-center gap-1.5">{"名前"}
+          <input className="lv-field-control min-h-8 w-28 px-2" maxLength={80} data-testid="text-progression-name"
+            value={saveTitle} onChange={event => { setSaveTitle(event.target.value); setSaved(false); saveBtn.reset(); setSaveFailed(false); }} />
+        </label>
+        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
+          {textCaptureSummary(statusModel)}
+        </span>
         <details name="capture-details" className="relative ml-auto" data-testid="text-progression-capability-details">
-          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]"
-            title={"この進行を保存したあと、どの練習や機能で使えるか"}>{"使える機能"}</summary>
+          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]" aria-label="使える機能"
+            title={"この進行を保存したあと、どの練習や機能で使えるか"}>{"?"}</summary>
           <TextCapabilityList capabilities={capabilities} />
         </details>
-        <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" data-testid="text-progression-convert"
-          title={result.canConvert ? "コードと長さを1つずつ直してから保存します" : "正しいコード進行を入れると使えます"}
-          disabled={disabled || !result.canConvert} onClick={convert}>{"詳細編集"}</button>
-        {saved ? <span role="status" className="text-[var(--lv-accent)]">{"保存しました"}</span> : null}
         {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">
           {"保存できませんでした。入力内容は保持されています。"}</span> : null}
         <span id="text-progression-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">{saveReason}</span>
+        {saveBlocked !== undefined ? <span tabIndex={0} role="note" aria-describedby="text-progression-save-reason" title={saveBlocked}
+          className="cursor-help text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">{"ⓘ"}</span> : null}
+        {onSaveStandard ? <button type="button" className="lv-button-primary min-h-9 whitespace-nowrap px-3 text-xs" data-testid="text-progression-save"
+          data-save-state={saveBtn.state}
+          disabled={disabled || saveBlocked !== undefined} title={saveBlocked}
+          aria-describedby={saveBlocked !== undefined ? "text-progression-save-reason" : undefined} onClick={saveStandard}>
+          {saveBtn.state === "busy" ? <><span className="lv-save-spin" aria-hidden="true" /><span>保存中…</span></>
+            : saveBtn.state === "done" ? <><Check aria-hidden="true" size={16} /><span>保存しました</span></>
+            : "Vault に保存"}
+        </button> : null}
       </footer>
       </div>
     </TextCaptureShell>
   );
 }
 
-function TextProgressionCards({
-  events,
-  valid,
-  tokens,
-  voicingOverrides,
-  selectedKey,
-  confirmedKey,
-  showRomanNumerals,
-  disabled,
-  onSelect,
-}: {
-  readonly events: readonly TextProgressionEvent[];
-  readonly valid: boolean;
-  readonly tokens: readonly TextProgressionToken[];
-  readonly voicingOverrides: TextProgressionVoicingOverrides;
-  readonly selectedKey?: string;
-  readonly confirmedKey?: string;
-  readonly showRomanNumerals: boolean;
-  readonly disabled: boolean;
-  readonly onSelect: (event: TextProgressionEvent) => void;
-}) {
-  if (!tokens.length) return null;
-  const eventsByToken = new Map(events.map((event) => [
-    `${event.bar}:${event.range.start}:${event.range.end}`,
-    event,
-  ]));
-  const bars = new Map<number, TextProgressionToken[]>();
-  for (const token of tokens) {
-    const entries = bars.get(token.bar) ?? [];
-    entries.push(token);
-    bars.set(token.bar, entries);
-  }
-  return (
-    <section className="mt-4" aria-label={"\u89e3\u6790\u6e08\u307f\u30b3\u30fc\u30c9"}>
-      <div className="space-y-3">
-        {[...bars.entries()].map(([bar, barTokens]) => (
-          <section
-            key={bar}
-            role="group"
-            aria-label={barLabel(bar)}
-            data-testid="text-progression-bar"
-            className="border-l-2 border-[var(--lv-border)] pl-3"
-          >
-            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--lv-text-muted)]">
-              {barLabel(bar)}
-            </h3>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              {barTokens.map((token) => {
-                const event = eventsByToken.get(`${token.bar}:${token.range.start}:${token.range.end}`);
-                if (!event && valid && (token.raw === "_" || token.raw === "=")) {
-                  return (
-                    <div key={`${token.index}:${token.range.start}`} className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3" data-testid="text-progression-control-card">
-                      <span className="block font-semibold">{token.raw === "_" ? "休符" : "保持（再発音なし）"}</span>
-                      <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{tokenLocation(token)}</span>
-                    </div>
-                  );
-                }
-                if (!event) {
-                  return (
-                    <div
-                      key={`${token.index}:${token.range.start}`}
-                      className="min-w-0 break-words border border-amber-400/50 bg-amber-950/20 p-3 text-left [overflow-wrap:anywhere]"
-                      data-testid="text-progression-invalid-card"
-                    >
-                      <span className="block font-semibold text-amber-50">{token.raw}</span>
-                      <span className="mt-1 block text-xs text-amber-100">
-                        {"\u4fee\u6b63\u304c\u5fc5\u8981"}
-                      </span>
-                      <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">
-                        {tokenLocation(token)}
-                      </span>
-                    </div>
-                  );
-                }
-                const key = textProgressionEventKey(event);
-                const practice = voicingOverrides.get(key)?.practiceVoicingOverride;
-                const styleId = textProgressionStyleFromSnapshot(practice, event.chord);
-                const voicingState = practice?.source === "live-played"
-                  ? "カスタム / Live MIDI"
-                  : styleId
-                    ? voicingStyleLabel(styleId)
-                    : "標準 / 自動生成";
-                const degree = confirmedKey && showRomanNumerals
-                  ? romanNumeralHint(event.chord, confirmedKey)?.label
-                  : undefined;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`border p-3 text-left ${key === selectedKey ? "border-[var(--lv-accent)] bg-teal-950/40" : "border-[var(--lv-border)]"}`}
-                    data-testid="text-progression-card"
-                    data-selected={key === selectedKey ? "true" : "false"}
-                    aria-pressed={key === selectedKey}
-                    disabled={disabled}
-                    onClick={() => onSelect(event)}
-                  >
-                    <span className="block font-mono font-semibold text-[var(--lv-text)]">{event.canonical}</span>
-                    <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{timingLabel(event)}</span>
-                    {degree ? <span className="mt-1 block text-xs text-teal-200">{degree}</span> : null}
-                    <span className="mt-1 block text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-voicing-state">
-                      {voicingState}
-                    </span>                  </button>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-    </section>
-  );
-}
 function TextDiagnostics({
   diagnostics,
 }: {
@@ -732,15 +721,8 @@ function parseExplicitBpm(value: string): number | undefined {
   return Number.isFinite(parsed) && parsed >= 30 && parsed <= 240 ? parsed : undefined;
 }
 
-function barLabel(bar: number): string {
-  return `${bar}\u5c0f\u7bc0\u76ee`;
-}
 function timingLabel(event: TextProgressionEvent): string {
   return `${event.bar}\u5c0f\u7bc0\u76ee\u30fb${event.startBeat}\u62cd\u76ee\u30fb${event.durationBeats}\u62cd`;
-}
-function tokenLocation(token: TextProgressionToken): string {
-  const chars = `${token.range.start + 1}-${token.range.end}`;
-  return `${token.bar}\u5c0f\u7bc0\u76ee\u30fb\u6587\u5b57 ${chars}`;
 }
 function diagnosticLocation(diagnostic: TextProgressionDiagnostic): string {
   const chars = `${diagnostic.range.start + 1}-${diagnostic.range.end}`;

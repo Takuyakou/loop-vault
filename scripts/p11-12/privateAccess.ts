@@ -35,7 +35,7 @@ export const costs = privateRanker as unknown as {
 export const viewFunctions = extract(viewPath, ["rankFingeringsForHand", "effectiveFingering", "addKeyboardFingerLabels", "fingerSummary"], {
   rankPracticeHandFingerings, rankCyclicFingerings: product.rankCyclicFingerings, findPersonalFingering, EMPTY_NOTES: [],
 }) as unknown as {
-  rankFingeringsForHand(snapshot: ProgressionVoicingPracticeSnapshot | undefined, hands: readonly ProgressionFingeringHandTargets[], selection: ProgressionVoicingSelection, hand: product.FingeringHand, preferences?: FingeringPreferenceCollection): readonly Ranked[];
+  rankFingeringsForHand(snapshot: ProgressionVoicingPracticeSnapshot | undefined, hands: readonly ProgressionFingeringHandTargets[], selection: ProgressionVoicingSelection, hand: product.FingeringHand, preferences?: FingeringPreferenceCollection, options?: product.FingeringRankingOptions): readonly Ranked[];
   effectiveFingering(value: Ranked | undefined, preferences: FingeringPreferenceCollection): product.RankedFingering | undefined;
   addKeyboardFingerLabels(labels: Map<number, string>, value: product.RankedFingering | undefined, prefix: "L" | "R"): void;
   fingerSummary(value: product.RankedFingering | undefined, prefix: "L" | "R", count: number, unavailable: string): string;

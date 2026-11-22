@@ -34,7 +34,7 @@ export function collectVault(ideas:readonly SongIdea[],at:string){
    const range={index:1,startBar:Math.floor(Math.max(0,spanStart-savedStart)/meter)+1,endBar:Math.max(1,Math.ceil((spanEnd-savedStart)/meter))};
    const memo=splitProgressionMemo(block.memo),savedName=memo.name??memo.free.trim();
    const displayName=savedName||(idea.title?.trim()?`${idea.title.trim()}${(idea.progressionBlocks?.length??0)>1?`・保存進行${blockIndex+1}`:''}`:`保存進行${blockIndex+1}`);
-   const sourceName=`${idea.title?.trim()||'保存したアイデア'} / ${savedName?`保存名「${savedName}」`:`保存進行${blockIndex+1}`}`;
+   const sourceName=`${idea.title?.trim()||'保存した曲'} / ${savedName?`保存名「${savedName}」`:`保存進行${blockIndex+1}`}`;
    const scope=`保存内${range.startBar}〜${range.endBar}小節`,bars=range.endBar-range.startBar+1;
    progressions.push({key,blockId:block.id,ideaId:idea.id,name:sourceName,displayName,memo:block.memo,sourceIsMidi:!block.textSource&&Boolean(block.sourceAssetId||block.sourceFileName||block.origin==='live-midi'),beatsPerBar:meter,chordBeatRanges:block.chords.map(e=>({start:(e.bar-1)*meter+e.beat-1-savedStart,end:(e.bar-1)*meter+e.beat-1+e.durationBeats-savedStart})),sourceBarRange:{startBar:Math.floor(spanStart/meter)+1,endBar:Math.ceil(spanEnd/meter)},sourceName,rangeLabel:scope,hiddenName:`保存進行${blockIndex+1}（全${bars}小節）`,range,keyContext:block.detectedKey??idea.key,chords,chordBars,legacyConfirmed:Boolean(block.practice?.confirmedLevel),pinned:Boolean(block.pinned),capturedAt:block.capturedAt});
   }

@@ -1,0 +1,296 @@
+/*
+ * P23-60: the practice screens of Chord Dojo (定番の進行・Original・Jazz・ボイシングドリル・2-5-1 Master)
+ * take the tone of the guided stage (P23-49): a quiet top row on the page colour, one soft light
+ * behind the chords, bands that are not boxed, and the same small controls. Only colour, line,
+ * type and the controls' look change here; the rows' heights stay as they are (the layout tests).
+ */
+
+/* ---- 1. the top row: on the page colour, no line under it ---- */
+.dojo .dojo-practice-head,
+.dojo .master251-header {
+  border-bottom: 0;
+  background: transparent;
+}
+.dojo .dojo-practice-head .dojo-endless-name {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.dojo .dojo-practice-head .dojo-endless-name > span {
+  color: var(--dojo-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.dojo .dojo-practice-head .dojo-endless-name > b,
+.dojo .master251-header h1 {
+  color: #f2f6fc;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.dojo .dojo-practice-head .dojo-endless-name > i {
+  color: var(--dojo-muted);
+  font-size: 12px;
+  font-style: normal;
+}
+/* MIDI 設定 / やめる / 48セル: the guided stage's quiet buttons */
+.dojo .dojo-practice-head > button:not(.dojo-back),
+.dojo .master251-header > button,
+.dojo .master251-records > summary {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dojo-secondary);
+  font-size: 12px;
+}
+.dojo .dojo-practice-head > button:not(.dojo-back):hover,
+.dojo .master251-header > button:hover,
+.dojo .master251-records > summary:hover {
+  border-color: var(--dojo-border-strong);
+  color: #f2f6fc;
+}
+
+/* ① 見て弾く ② 覚えて弾く and 学習 / 復習 / Mixed Test: one segmented look (the pill on the page colour) */
+.dojo .dojo-practice-head .dojo-stage,
+.dojo .master251-switch {
+  display: inline-flex;
+  gap: 2px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 10px;
+  background: var(--dojo-bg-2);
+  box-sizing: border-box;
+  overflow: visible;
+}
+.dojo .dojo-practice-head .dojo-stage > button,
+.dojo .dojo-practice-head .dojo-stage > span,
+.dojo .master251-switch button {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dojo-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.dojo .dojo-practice-head .dojo-stage > [data-active],
+.dojo .master251-switch button[data-on] {
+  background: var(--dojo-accent-soft);
+  color: var(--dojo-accent);
+}
+.dojo .dojo-practice-head .dojo-stage > [data-off] { opacity: 0.45; }
+
+/* ---- 2. the soft light behind the chords (the guided stage's) ---- */
+.dojo .dojo-endless-center,
+.dojo .master251-task { position: relative; isolation: isolate; }
+.dojo .dojo-endless-center::before,
+.dojo .master251-task::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(900px, 100%);
+  height: 100%;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgb(66 216 198 / 7%), transparent);
+  content: "";
+  pointer-events: none;
+}
+
+/* ---- 3. the conditions row: the same small controls as the guided stage ---- */
+.dojo .dojo-practice-conditions {
+  gap: 6px 8px;
+  color: var(--dojo-secondary);
+  font-size: 12px;
+}
+.dojo .dojo-practice-conditions button:not(.dojo-help-button),
+.dojo .dojo-practice-conditions select {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  background-color: transparent;
+  color: #dbe4f0;
+  font-size: 12px;
+}
+.dojo .dojo-practice-conditions select {
+  padding-right: 28px;
+  background: var(--dojo-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237f90aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+  appearance: none;
+}
+.dojo .dojo-practice-conditions .lv-select > svg { display: none; }
+.dojo .dojo-practice-conditions button:not(.dojo-help-button):hover:not(:disabled),
+.dojo .dojo-practice-conditions select:hover:not(:disabled) { border-color: var(--dojo-border-strong); }
+.dojo .dojo-practice-conditions button[aria-pressed="true"],
+.dojo .dojo-practice-conditions button[data-on] {
+  border-color: rgb(66 216 198 / 45%);
+  background: var(--dojo-accent-soft);
+  color: var(--dojo-accent);
+}
+.dojo .dojo-practice-conditions .dojo-help-button {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+/* ---- 4. the buttons under the cards: the guided stage's quiet buttons (the first one stays primary) ---- */
+.dojo .dojo-practice-actions button:not(.dojo-primary),
+.dojo .master251-task > .dojo-actions button:not(.dojo-primary) {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 10px;
+  background: transparent;
+  color: #dbe4f0;
+  font-size: 13px;
+}
+.dojo .dojo-practice-actions button:not(.dojo-primary):hover:not(:disabled),
+.dojo .master251-task > .dojo-actions button:not(.dojo-primary):hover:not(:disabled) {
+  border-color: var(--dojo-border-strong);
+  background: rgb(255 255 255 / 3%);
+}
+
+/* ---- 5. the staff and keyboard bands: not boxed (no fill, one faint line) ---- */
+.dojo .dojo-practice > .dojo-score,
+.dojo .dojo-practice > .dojo-keyboard,
+.dojo .master251-practice > .grand-staff,
+.dojo .master251-practice > .dojo-score,
+.dojo .master251-keyboard {
+  border-top: 1px solid rgb(150 170 195 / 8%);
+  background: transparent;
+}
+
+/* ---- 6. 2-5-1 Master: its practice panel is not a box, and its cards read like the other screens' ---- */
+.dojo .master251-practice {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.dojo .master251-header .master251-stage select {
+  height: 30px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  background: var(--dojo-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237f90aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+  color: #f2f6fc;
+  font-size: 12px;
+  appearance: none;
+}
+.dojo .master251-header .master251-stage .lv-select > svg { display: none; }
+.dojo .master251-header .m251-lab { color: var(--dojo-muted); font-size: 12px; }
+/* ii・V・I: the function's colour on top (SD・D・T, as the other screens' cards), the degree in it, the name larger */
+.dojo .master251-chords > button {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border: 1px solid var(--dojo-border);
+  border-radius: 10px;
+  background: var(--dojo-surface, #111b2a);
+  overflow: hidden;
+}
+.dojo .master251-chords > button::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: var(--m251-fn, var(--dojo-border-strong));
+  content: "";
+}
+.dojo .master251-chords > button:nth-child(1) { --m251-fn: var(--lv-fn-sd); }
+.dojo .master251-chords > button:nth-child(2) { --m251-fn: var(--lv-fn-d); }
+.dojo .master251-chords > button:nth-child(3) { --m251-fn: var(--lv-fn-t); }
+.dojo .master251-chords > button > b { color: #f2f6fc; font-size: 16px; line-height: 20px; }
+.dojo .master251-chords > button > small:not(.master251-completed) { color: var(--m251-fn); font-size: 11px; font-weight: 700; line-height: 14px; }
+.dojo .master251-chords > button[data-current="true"] {
+  border-color: var(--dojo-accent);
+  background: #123b3a;
+  box-shadow: inset 0 0 0 1px rgb(66 216 198 / 35%);
+}
+/* the twelve keys: a little room between them and the big chord name */
+.dojo .master251-ident-row { margin-bottom: 4px; }
+.dojo .master251-identity { color: var(--dojo-secondary); font-size: 13px; }
+
+/* ---- 7. the list pages (定番の進行・ボイシングドリル): the guided map's head ---- */
+.dojo .dojo-builtin-head h1,
+.dojo .dojo-drill-page .dojo-page-head h1 {
+  margin: 0 8px 0 0;
+  color: #f2f6fc;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.dojo .dojo-drill-page .dojo-page-head { align-items: center; gap: 14px; }
+.dojo .dojo-drill-lead { margin-top: 6px; color: var(--dojo-secondary); font-size: 13px; }
+.dojo .dojo-builtin-key {
+  height: 30px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.dojo .dojo-builtin-head .dojo-random-toggle {
+  height: 30px;
+  min-height: 30px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* ---- 8. ボイシングドリル: the cards sit in the middle when they fit (they still scroll from the first when they do not) ---- */
+section.dojo[data-practice-frame="e"] .dojo-drill-cards { justify-content: safe center; }
+
+/* 「動きを減らす」: nothing here moves; only the hover colours change. */
+
+/* ---- 9. 2-5-1 Master on a short window: the big name leaves air over the cards (the row keeps its height) ---- */
+@media (max-height: 800px) {
+  .dojo .master251-current-chord { align-self: start; font-size: 32px; }
+}
+
+/* ---- 10. the light answers, as on the guided stage: red on a wrong result, green on a right one ---- */
+.dojo .dojo-endless-center:has(.dojo-practice-result [data-ok="true"])::before {
+  background: radial-gradient(closest-side, rgb(54 201 144 / 14%), transparent);
+}
+.dojo .dojo-endless-center:has(.dojo-practice-result :is([data-error="true"], [data-ok="false"]))::before {
+  background: radial-gradient(closest-side, rgb(238 107 115 / 11%), transparent);
+}
+
+/* ---- 11. the words around the cards: one size for the guide, quiet labels in the conditions row ---- */
+.dojo[data-practice-frame] .dojo-practice-guide .dojo-endless-result { font-size: 14px; }
+.dojo .dojo-practice-conditions label,
+.dojo .dojo-practice-conditions > div > span:first-child,
+.dojo .dojo-practice-conditions > label > span:first-child {
+  color: var(--dojo-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* an empty kind (the drill: the back button already says it) takes no room */
+.dojo .dojo-practice-head .dojo-endless-name > span:empty { display: none; }
+
+/* ---- 12. the result is words in the light, not a bar: no fill, no left line; right is green, wrong is red ---- */
+.dojo .dojo-practice .dojo-endless-center .dojo-practice-result {
+  border-left-color: transparent;
+  background: none;
+}
+.dojo .dojo-practice-result .dojo-result[data-ok="true"] { color: #5fd39a; font-weight: 600; }
+.dojo .dojo-practice-result .dojo-result[data-ok="false"],
+.dojo .dojo-practice-result [data-error="true"] { color: #ff8a95; font-weight: 600; }

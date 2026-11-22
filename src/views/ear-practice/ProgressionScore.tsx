@@ -28,7 +28,7 @@ function Head({ note, value, tone }: { note: PlacedNote; value: PlacedChord["val
   );
 }
 
-function Row({ row, signature, annotations, tone, playingIndex, onPlay, labelFor }: {
+function Row({ row, signature, annotations, tone, playingIndex, onPlay, labelFor, compactHeader }: {
   row: PlacedRow;
   signature: EarKeySignature | undefined;
   annotations: ReadonlyMap<number, ScoreAnnotation>;
@@ -36,6 +36,7 @@ function Row({ row, signature, annotations, tone, playingIndex, onPlay, labelFor
   playingIndex: number | undefined;
   onPlay: (index: number) => void;
   labelFor: (index: number) => string;
+  compactHeader: boolean;
 }) {
   const staffLines = (top: number) => Array.from({ length: 5 }, (_, i) => top + i * GAP);
   const bassBottom = row.bassTop + 4 * GAP;
@@ -68,12 +69,12 @@ function Row({ row, signature, annotations, tone, playingIndex, onPlay, labelFor
             const annotation = annotations.get(chord.index);
             return (
               <g key={chord.index} className="ear-score-chord" data-chord-index={chord.index} data-value={chord.value} data-playing={playingIndex === chord.index || undefined}>
-                <rect className="ear-score-hit" role="button" tabIndex={0} x={chord.x} y={2} width={chord.width} height={row.height - 4} rx={5}
+                <rect className="ear-score-hit" role="button" tabIndex={0} x={chord.x} y={compactHeader ? 18 : 2} width={chord.width} height={row.height - (compactHeader ? 20 : 4)} rx={5}
                   aria-label={`${labelFor(chord.index)} を鳴らす`} data-testid={`ear-score-chord-${chord.index}`}
                   onClick={() => onPlay(chord.index)}
                   onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.stopPropagation(); onPlay(chord.index); } }} />
-                <text className="ear-score-name" x={chord.cx} y={16} textAnchor="middle">{displayChordLabel(chord.label)}</text>
-                {annotation ? (
+                <text className="ear-score-name" x={chord.cx} y={compactHeader ? 32 : 16} textAnchor="middle">{displayChordLabel(chord.label)}</text>
+                {annotation && !compactHeader ? (
                   <text className="ear-score-sub" x={chord.cx} y={32} textAnchor="middle" data-testid={`ear-score-sub-${chord.index}`}>
                     {annotation.marks.map((mark) => <tspan key={mark} className="ear-score-mark" data-mark={mark}>{MARK_TEXT[mark]} </tspan>)}
                     <tspan>{annotation.text}</tspan>
@@ -100,7 +101,7 @@ function Row({ row, signature, annotations, tone, playingIndex, onPlay, labelFor
  * The whole progression on a grand staff: key signature, bars, chord names with their marks and seconds, and the notes.
  * What is drawn is decided by `layoutScore`; pressing a chord asks the parent to sound it.
  */
-export function ProgressionScore({ chords, beatsPerBar, signature, annotations, tone, playingIndex, onPlay, labelFor }: {
+export function ProgressionScore({ chords, beatsPerBar, signature, annotations, tone, playingIndex, onPlay, labelFor, compactHeader = false }: {
   chords: readonly ScoreChordInput[];
   beatsPerBar: number;
   signature: EarKeySignature | undefined;
@@ -110,6 +111,7 @@ export function ProgressionScore({ chords, beatsPerBar, signature, annotations, 
   playingIndex?: number | undefined;
   onPlay: (index: number) => void;
   labelFor: (index: number) => string;
+  compactHeader?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(900);
@@ -124,12 +126,14 @@ export function ProgressionScore({ chords, beatsPerBar, signature, annotations, 
     return () => observer.disconnect();
   }, []);
   const layout = useMemo(() => layoutScore({ chords, beatsPerBar, signature, width, windowWidth }), [chords, beatsPerBar, signature, width, windowWidth]);
+  const cropTop = compactHeader && layout.rows.length === 1 ? 16 : 0;
+  const svgHeight = Math.max(1, layout.height - cropTop);
   return (
     <div className="ear-progression-score" ref={ref} data-testid="ear-progression-score" data-per-row={layout.perRow} data-rows={layout.rows.length} data-writable={layout.writable} data-tone={tone}>
-      <svg width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`} role="group" aria-label="進行の譜面">
+      <svg width={layout.width} height={svgHeight} viewBox={`0 ${cropTop} ${layout.width} ${svgHeight}`} role="group" aria-label="進行の譜面">
         {layout.rows.map((row, index) => (
           <Row key={index} row={row} signature={signature} annotations={annotations} tone={tone}
-            playingIndex={playingIndex} onPlay={onPlay} labelFor={labelFor} />
+            playingIndex={playingIndex} onPlay={onPlay} labelFor={labelFor} compactHeader={compactHeader} />
         ))}
       </svg>
     </div>

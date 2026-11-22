@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Button, StatusMessage, Surface } from "../../../components/ui";
+import { readableBackupDate } from "../../../views/SettingsView";
+import { Button } from "../../../components/ui";
+import { ProblemBackupRow, ProblemPanel } from "../../../components/ProblemPanel";
 import type { PracticeBackupMetadata } from "../infra/repository";
 
+/** P23-30 P7: the practice record's own recovery screen, on the shared `ProblemPanel`. */
 export function PracticeRecoveryPanel({ backups, error, onRestore, onRetry, onStartFresh, readOnly = false }: {
   backups: readonly PracticeBackupMetadata[];
   error: string;
@@ -20,28 +23,51 @@ export function PracticeRecoveryPanel({ backups, error, onRestore, onRetry, onSt
     finally { setPending(undefined); }
   };
   return (
-    <Surface className="space-y-4 p-5" aria-labelledby="practice-recovery-title">
-      <StatusMessage title="練習の記録を読み込めませんでした" tone="error">
-        {actionError ?? error}
-      </StatusMessage>
-      <div>
-        <h3 id="practice-recovery-title" className="text-sm font-semibold">復旧の方法</h3>
-        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-          {readOnly ? "この練習ファイルは読み取り専用です。変更する前に Loop Vault を更新してください。元のファイルは置き換えも非表示もしません。" : "選んだバックアップは置き換える前にすべて検証します。Vault のデータは変わりません。"}
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" disabled={Boolean(pending)} onClick={() => void run("retry", onRetry)}>
+    <ProblemPanel
+      tone={readOnly ? "accent" : "warning"}
+      title="練習の記録を読み込めませんでした"
+      description="Bass Practice の記録のファイルです。Vault の進行は無事です。"
+      what="練習の記録のファイルを読めませんでした。"
+      data={readOnly
+        ? "消えていません。元のファイルは置き換えも非表示もしません。"
+        : "消えていません。元のファイルは残してあります。バックアップは置き換える前にすべて検証します。"}
+      next={readOnly ? "Loop Vault を新しくしてください。" : "バックアップに戻すか、記録を空にして新しく始めます。"}
+      details={actionError ?? error}
+      labelledBy="practice-recovery-title"
+    >
+      <h3 id="practice-recovery-title" className="text-sm font-semibold">復旧の方法</h3>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button variant="ghost" disabled={Boolean(pending)} onClick={() => void run("retry", onRetry)}>
           {pending === "retry" ? "再読み込み中…" : "もう一度読み込む"}
         </Button>
-        {onRestore ? backups.map((backup) => (
-          <Button key={backup.name} variant="ghost" disabled={Boolean(pending)} onClick={() => void run(backup.name, () => onRestore(backup.name))}>
-            {pending === backup.name ? "復元中…" : `バックアップ r${backup.revision} を復元`}
+        {onStartFresh ? (
+          <Button variant="danger" disabled={Boolean(pending)} onClick={() => void run("start-fresh", onStartFresh)}>
+            {pending === "start-fresh" ? "開始中…" : "記録を空にして新しく始める"}
           </Button>
-        )) : null}
-        {onStartFresh ? <Button variant="ghost" disabled={Boolean(pending)} onClick={() => void run("start-fresh", onStartFresh)}>{pending === "start-fresh" ? "開始中…" : "新しく始める"}</Button> : null}
+        ) : null}
       </div>
-      {!readOnly && onRestore && backups.length === 0 ? <p className="text-xs text-[var(--lv-text-muted)]">検証済みのバックアップがありません。壊れた元のファイルは安全に残してあるので、「新しく始める」は使えます。</p> : null}
-    </Surface>
+      {onRestore && backups.length > 0 ? (
+        <ul className="problem-backup-list mt-3">
+          {backups.map((backup, index) => {
+            const readable = readableBackupDate(backup.name);
+            const date = readable ?? `バックアップ r${backup.revision}`;
+            return (
+              <ProblemBackupRow
+                key={backup.name}
+                date={date}
+                sub={backup.name}
+                newest={index === 0}
+                actionLabel={readable ? `${date} のバックアップに戻す` : `${date} に戻す`}
+                disabled={Boolean(pending)}
+                onRestore={() => void run(backup.name, () => onRestore(backup.name))}
+              />
+            );
+          })}
+        </ul>
+      ) : null}
+      {pending && pending !== "retry" && pending !== "start-fresh" ? <p role="status" className="mt-2 text-xs text-[var(--lv-text-muted)]">復元中…</p> : null}
+      {!readOnly && onRestore && backups.length === 0 ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]">検証済みのバックアップがありません。壊れた元のファイルは安全に残してあるので、「記録を空にして新しく始める」は使えます。</p> : null}
+      {readOnly ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]">読み取り専用です。記録を書き換える前に Loop Vault を更新してください。</p> : null}
+    </ProblemPanel>
   );
 }

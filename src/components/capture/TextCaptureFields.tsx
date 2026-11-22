@@ -11,12 +11,16 @@ const KEYS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
   .flatMap((root) => [`${root} major`, `${root} minor`]);
 
 /** Values stay "C major" (the parser's form); labels are Japanese. */
-export function TextKeySelect({ testId, value, suggestions = [], disabled, onChange }: {
+export function TextKeySelect({ testId, value, suggestions = [], disabled, allowAuto = false, autoLabel, onChange }: {
   readonly testId: string;
   readonly value: string | undefined;
   /** Keys inferred from the text: listed first, never applied until chosen. */
   readonly suggestions?: readonly string[];
   readonly disabled: boolean;
+  /** P23-33: the 「自動」and「未設定」choices above the key list (the automatic key is the default). */
+  readonly allowAuto?: boolean;
+  /** The automatic state's own label (`自動: Cメジャー` / `自動: 未確定`), display only. */
+  readonly autoLabel?: string;
   readonly onChange: (key: string | undefined) => void;
 }) {
   const option = (key: string) => <option key={key} value={key}>{displayKey(key) ?? key}</option>;
@@ -24,7 +28,8 @@ export function TextKeySelect({ testId, value, suggestions = [], disabled, onCha
     <label className="lv-text-toolbar-key text-xs">{"キー"}
       <select data-testid={testId} className="lv-field-control min-h-9 w-32 px-1 text-xs"
         value={value ?? ""} disabled={disabled} onChange={(event) => onChange(event.target.value || undefined)}>
-        <option value="">{"未確定"}</option>
+        {allowAuto ? <option value="auto">{autoLabel ?? "自動"}</option> : <option value="">{"未確定"}</option>}
+        {allowAuto ? <option value="unset">{"未設定"}</option> : null}
         {suggestions.length ? <optgroup label={"推定"}>{suggestions.map(option)}</optgroup> : null}
         {suggestions.length ? <optgroup label={"すべて"}>{KEYS.map(option)}</optgroup> : KEYS.map(option)}
       </select>

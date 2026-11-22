@@ -171,6 +171,56 @@ describe("ConfirmDialog", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(onCancel).not.toHaveBeenCalled();
   });
+
+  it("puts the second choice before the main action, so the main action is last (P23-03 M1)", async () => {
+    const onConfirm = vi.fn();
+    const onSecondary = vi.fn();
+    await mount(
+      <ConfirmDialog
+        open
+        title="変更を保存しますか？"
+        description="保存して移るか、保存せずに移るか選んでください。"
+        confirmLabel="保存して移る"
+        cancelLabel="戻る"
+        secondaryLabel="保存せずに移る"
+        onSecondary={onSecondary}
+        onConfirm={onConfirm}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')];
+    // P23-30 D3: the cancel button carries the Esc badge inside it.
+    expect(buttons.map((button) => button.textContent)).toEqual(["戻るEsc", "保存せずに移る", "保存して移る"]);
+    await act(async () => buttons[2]?.click());
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(onSecondary).not.toHaveBeenCalled();
+    await act(async () => buttons[1]?.click());
+    expect(onSecondary).toHaveBeenCalledTimes(1);
+  });
+
+  it("draws the second choice red only when secondaryTone is danger (P23-03 M2)", async () => {
+    const dialog = (secondaryTone?: "default" | "danger") => (
+      <ConfirmDialog
+        open
+        title="変更を保存しますか？"
+        description="保存して閉じるか、保存せずに閉じるか選んでください。"
+        confirmLabel="保存して閉じる"
+        cancelLabel="戻る"
+        secondaryLabel="保存せずに閉じる"
+        onSecondary={vi.fn()}
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+        {...(secondaryTone ? { secondaryTone } : {})}
+      />
+    );
+    const second = () => [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')][1]!;
+    await mount(dialog("danger"));
+    expect(second().className).toContain("lv-button-danger");
+    await act(async () => mountedRoot?.render(dialog()));
+    expect(second().className).toContain("lv-button-neutral");
+    expect(second().className).not.toContain("lv-button-danger");
+  });
 });
 
 async function mount(node: React.ReactNode) {

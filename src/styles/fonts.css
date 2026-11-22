@@ -1,24 +1,75 @@
-/* Local IBM Plex files; Latin and Japanese are split so Japanese WOFF2 is not fetched for Latin-only UI. */
+/* P23-01: Inter (Latin) + Noto Sans JP (Japanese) + LV Symbols (♭ ♮ ♯ cut from Noto Sans Symbols; Ⅰ–Ⅻ composed from Inter's I, V, X).
+   IBM Plex Mono stays for the monospaced text. Local files only; see src/assets/fonts/SOURCE.md. */
+
+/* ---- Inter: Latin ---- */
 @font-face {
-  font-family: 'IBM Plex Sans JP'; font-style: normal; font-weight: 400; font-display: swap;
-  src: url('../assets/fonts/ibm-plex-sans-jp-latin-400-normal.woff2') format('woff2');
-  unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F;
+  font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/inter-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'IBM Plex Sans JP'; font-style: normal; font-weight: 600; font-display: swap;
-  src: url('../assets/fonts/ibm-plex-sans-jp-latin-600-normal.woff2') format('woff2');
-  unicode-range: U+0000-024F, U+1E00-1EFF, U+2000-206F;
+  font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('../assets/fonts/inter-latin-600-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'IBM Plex Sans JP'; font-style: normal; font-weight: 400; font-display: swap;
-  src: url('../assets/fonts/ibm-plex-sans-jp-japanese-400-normal.woff2') format('woff2');
+  font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('../assets/fonts/inter-latin-700-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---- Inter: Latin Extended ---- */
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/inter-latin-ext-400-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('../assets/fonts/inter-latin-ext-600-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('../assets/fonts/inter-latin-ext-700-normal.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---- Noto Sans JP: Japanese (the same ranges the Japanese face had before) ---- */
+@font-face {
+  font-family: 'Noto Sans JP'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/noto-sans-jp-japanese-400-normal.woff2') format('woff2');
   unicode-range: U+3000-30FF, U+31F0-31FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF, U+20000-2FA1F;
 }
 @font-face {
-  font-family: 'IBM Plex Sans JP'; font-style: normal; font-weight: 600; font-display: swap;
-  src: url('../assets/fonts/ibm-plex-sans-jp-japanese-600-normal.woff2') format('woff2');
+  font-family: 'Noto Sans JP'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('../assets/fonts/noto-sans-jp-japanese-600-normal.woff2') format('woff2');
   unicode-range: U+3000-30FF, U+31F0-31FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF, U+20000-2FA1F;
 }
+@font-face {
+  font-family: 'Noto Sans JP'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('../assets/fonts/noto-sans-jp-japanese-700-normal.woff2') format('woff2');
+  unicode-range: U+3000-30FF, U+31F0-31FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF, U+20000-2FA1F;
+}
+
+/* ---- LV Symbols: ♭ ♮ ♯ (U+266D–266F) and Ⅰ–Ⅻ (U+2160–216B). P23-04-fix-1: the numerals are sans, built from Inter. ---- */
+@font-face {
+  font-family: 'LV Symbols'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('../assets/fonts/lv-symbols-400-normal.woff2') format('woff2');
+  unicode-range: U+266D-266F, U+2160-216B;
+}
+@font-face {
+  font-family: 'LV Symbols'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('../assets/fonts/lv-symbols-600-normal.woff2') format('woff2');
+  unicode-range: U+266D-266F, U+2160-216B;
+}
+@font-face {
+  font-family: 'LV Symbols'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('../assets/fonts/lv-symbols-700-normal.woff2') format('woff2');
+  unicode-range: U+266D-266F, U+2160-216B;
+}
+
+/* ---- IBM Plex Mono: unchanged ---- */
 @font-face {
   font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap;
   src: url('../assets/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');

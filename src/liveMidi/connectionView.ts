@@ -62,7 +62,7 @@ export function selectMidiConnection(live: MidiConnectionLiveState, controller: 
   // Not connected, and it was connected in this run: it dropped. A cold start never gets here (no lastConnected).
   if (controller.lastConnected) return view("lost", `${controller.lastConnected.name} が外れました`, { deviceName: controller.lastConnected.name });
   const found = resolvePreferredInput(live.devices, preferred);
-  if (preferred && !found) return view("missing", `${preferred.name} が見つかりません`, { deviceName: preferred.name });
+  if (preferred && !found) return view("missing", `${preferred.name} 未接続`, { deviceName: preferred.name });
   if (live.devices.length === 0) return view("no-device", "MIDI 機器がありません");
   if (!found) return view("choose", "機器を選んでください");
   // The saved input is there and not connected yet: the controller is about to connect to it.

@@ -107,7 +107,7 @@ async function renderCapture(analysis: AnalysisState, overrides: Partial<Paramet
 const buttons = (scope: ParentNode, text: string) => [...scope.querySelectorAll<HTMLButtonElement>("button")]
   .filter((button) => button.textContent?.trim() === text);
 
-/** A range (the first recommended one, or the first segment band), then 「Vaultに保存」 in the save form. */
+/** A range (the first recommended one, or the first segment band), then 「Vault に保存」 in the save form. */
 async function openSaveForRecommendedRange(container: HTMLElement, from: "recommended" | "segment" = "recommended") {
   // P10.2 addendum 1: 「おすすめの範囲」 starts closed.
   if (from === "recommended" && !container.querySelector('[data-testid="correction-recommended"]')) {
@@ -116,7 +116,7 @@ async function openSaveForRecommendedRange(container: HTMLElement, from: "recomm
   const picker = container.querySelector<HTMLButtonElement>(from === "recommended" ? '[data-testid="correction-recommended"] button' : '[data-testid="correction-segment"]');
   await act(async () => picker?.click());
   const saveForm = container.querySelector<HTMLElement>('[data-testid="correction-save-form"]')!;
-  await act(async () => buttons(saveForm, "Vaultに保存")[0]?.click());
+  await act(async () => buttons(saveForm, "Vault に保存")[0]?.click());
 }
 
 describe("CaptureView helpers", () => {

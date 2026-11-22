@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -127,7 +127,7 @@ describe("CaptureView text progression entry", () => {
       await setInput(textInput, "| Cmaj7 |");
 
       const chordCard = mounted.container.querySelector<HTMLButtonElement>(
-        "[data-testid='text-progression-card']",
+        "[data-testid='text-preview-band']",
       );
       expect(chordCard?.textContent).toContain("Cmaj7");
       await act(async () => chordCard?.click());

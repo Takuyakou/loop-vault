@@ -1,0 +1,149 @@
+/* P23-62: the one practice stage every Bass practice uses — 聴く → 弾く → 結果 in the middle of the page,
+   the lane of お手本 / 自分 under the sentence, the buttons right under the lane, the keys at the very bottom.
+   No right column. The Bass purple comes from .bass-practice-shell (--bp-accent …). */
+
+.bass-echo-frame[data-rail="false"] { grid-template-columns:minmax(0,1fr); }
+.bass-echo-frame[data-rail="false"] > .bass-echo-main { display:flex; flex-direction:column; overflow:hidden; }
+.bp-frame { flex:1; display:flex; flex-direction:column; height:100%; min-height:0; min-width:0; }
+.bp-frame-scroll { flex:1; min-height:0; overflow-y:auto; scrollbar-gutter:stable; display:flex; flex-direction:column; }
+
+/* 1 聴く — 2 弾く — 3 結果 */
+.bp-steps { flex:none; display:flex; justify-content:center; align-items:center; gap:10px; height:40px; margin:0; padding:0; list-style:none; }
+.bp-step { display:inline-flex; align-items:center; gap:8px; height:28px; padding:0 12px; border-radius:999px; color:var(--lv-text-muted); font-size:12px; font-weight:600; transition:background-color 180ms cubic-bezier(.2,.7,.2,1), color 180ms cubic-bezier(.2,.7,.2,1); }
+.bp-step-no { display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; border:1px solid var(--lv-border-strong); font-size:11px; font-variant-numeric:tabular-nums; }
+.bp-step[data-state="done"] { color:var(--lv-text-secondary); }
+.bp-step[data-state="done"] .bp-step-no { border-color:var(--bp-accent); color:var(--bp-accent); }
+.bp-step[data-state="current"] { background:var(--bp-accent-soft); color:#fff; }
+.bp-step[data-state="current"] .bp-step-no { border-color:var(--bp-accent); background:var(--bp-accent); color:var(--bp-on-accent); }
+.bp-step-line { width:56px; height:1px; background:var(--lv-border); }
+
+/* The column in the middle. A soft purple light behind it (green after a good result). */
+.bp-stage { position:relative; isolation:isolate; flex:1 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; min-height:0; padding:12px 0 24px; }
+.bp-stage::before { content:""; position:absolute; z-index:-1; left:50%; top:24px; width:min(900px,100%); height:min(520px,90%); transform:translateX(-50%); background:radial-gradient(closest-side, rgb(167 156 255 / 9%), transparent); pointer-events:none; }
+.bp-stage[data-tone="good"]::before { background:radial-gradient(closest-side, rgb(54 201 144 / 12%), transparent); }
+.bp-meta { margin:0; color:var(--lv-text-muted); font-size:12px; font-family:var(--font-mono, ui-monospace, monospace); }
+.bp-say { margin:0; font-size:20px; font-weight:700; letter-spacing:.01em; color:var(--lv-text); text-align:center; }
+.bp-sub { margin:-10px 0 0; color:var(--lv-text-secondary); font-size:13px; text-align:center; }
+.bp-banner { display:inline-flex; align-items:center; gap:8px; height:28px; padding:0 12px; border-radius:999px; background:var(--bp-accent-soft); color:#e8e3ff; font-size:12.5px; font-weight:600; }
+
+/* お手本 / 自分 lane */
+.bp-lane { position:relative; width:min(820px,100%); border-radius:14px; border:1px solid rgb(150 170 195 / 10%); background:rgb(17 27 42 / 55%); }
+.bp-lane[data-wide="true"] { width:min(1000px,100%); }
+.bp-lane-scroll { overflow-x:auto; padding:12px 16px 14px 0; }
+.bp-lane-inner { position:relative; min-width:100%; }
+.bp-lane-beats { position:relative; height:18px; margin-left:76px; color:var(--lv-text-muted); font-size:11px; font-family:var(--font-mono, ui-monospace, monospace); }
+.bp-lane-beats > span { position:absolute; top:0; }
+.bp-lane-row { position:relative; display:flex; height:46px; border-top:1px solid rgb(150 170 195 / 8%); }
+.bp-lane-row > em { flex:none; width:76px; padding-left:16px; align-self:center; font-style:normal; font-size:12px; color:var(--lv-text-secondary); }
+.bp-lane-track { position:relative; flex:1; min-width:0; }
+.bp-lane-grid { position:absolute; top:0; bottom:0; width:1px; background:rgb(150 170 195 / 9%); }
+.bp-lane-grid[data-bar="true"] { background:rgb(150 170 195 / 20%); }
+.bp-note { position:absolute; top:7px; height:32px; box-sizing:border-box; display:flex; align-items:center; gap:6px; padding:0 9px; overflow:hidden; white-space:nowrap; border-radius:7px; font-weight:700; font-size:13px; }
+.bp-note small { font-weight:600; font-size:10.5px; opacity:.85; }
+.bp-note[data-kind="hide"] { background:rgb(167 156 255 / 12%); border:1px dashed rgb(167 156 255 / 55%); color:var(--bp-accent); }
+.bp-note[data-kind="ref"] { background:#17403f; border:1px solid rgb(66 216 198 / 55%); color:#dffaf6; }
+.bp-note[data-kind="ok"] { background:rgb(54 201 144 / 16%); border:1px solid #36c990; color:#d9f7ea; }
+.bp-note[data-kind="pitch"], .bp-note[data-kind="extra"] { background:rgb(238 107 115 / 16%); border:1px solid #ee6b73; color:#ffd9dc; }
+.bp-note[data-kind="early"], .bp-note[data-kind="late"] { background:rgb(242 193 78 / 14%); border:1px solid #f2c14e; color:#ffe9b8; }
+.bp-note[data-kind="miss"] { background:transparent; border:1px dashed var(--lv-text-muted); color:var(--lv-text-muted); }
+.bp-note[data-narrow="true"] { padding:0; justify-content:center; }
+.bp-note[data-narrow="true"] > * { display:none; }
+.bp-lane-row[data-row="chords"] { height:28px; }
+.bp-lane-chord { position:absolute; top:5px; font-size:12.5px; font-weight:700; color:var(--lv-text-secondary); white-space:nowrap; }
+.bp-playhead { position:absolute; top:0; bottom:0; width:2px; background:#ee6b73; pointer-events:none; }
+
+/* The round play button and its neighbours */
+.bp-playrow { display:flex; align-items:center; gap:18px; }
+.bp-play { display:grid; place-items:center; width:68px; height:68px; border:0; border-radius:50%; background:var(--lv-accent); color:#062a27; box-shadow:0 8px 28px rgb(66 216 198 / 22%); cursor:pointer; }
+.bp-play:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+.bp-play:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+
+/* Buttons: a quiet one and the main one. The main one is red while it stops a take. */
+.bp-actions { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; }
+.bp-actions-gap { width:22px; }
+.bp-btn { display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 14px; border:1px solid var(--lv-border); border-radius:10px; background:transparent; color:#dbe4f0; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer; }
+.bp-btn:hover:not(:disabled) { border-color:var(--lv-border-strong); background:rgb(255 255 255 / 4%); }
+.bp-btn[aria-pressed="true"] { border-color:rgb(167 156 255 / 55%); background:var(--bp-accent-soft); color:#fff; }
+.bp-btn:disabled { opacity:.45; cursor:not-allowed; }
+.bp-btn[data-tone="primary"] { height:44px; padding:0 22px; border:0; border-radius:12px; background:var(--lv-accent); color:#062a27; font-size:15px; font-weight:700; }
+.bp-btn[data-tone="primary"]:hover:not(:disabled) { background:var(--lv-accent); filter:brightness(1.06); }
+.bp-btn[data-tone="record"] { height:44px; padding:0 22px; border:0; border-radius:12px; background:#ee6b73; color:#fff; font-size:15px; font-weight:700; }
+.bp-btn[data-tone="record"]:hover:not(:disabled) { background:#ee6b73; filter:brightness(1.06); }
+.bp-btn kbd { font-family:var(--font-mono, ui-monospace, monospace); font-size:11px; opacity:.7; }
+.bp-btn:focus-visible { outline:2px solid var(--lv-accent); outline-offset:2px; }
+
+/* Hints: one chip per step, opened in order. */
+.bp-hints { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; color:var(--lv-text-muted); font-size:12px; }
+.bp-hint { display:inline-flex; align-items:center; height:28px; padding:0 10px; border:1px solid var(--lv-border); border-radius:8px; background:transparent; color:var(--lv-text-secondary); font-size:12px; cursor:pointer; }
+.bp-hint[data-state="open"] { border-color:rgb(167 156 255 / 55%); background:var(--bp-accent-soft); color:#fff; cursor:default; }
+.bp-hint:disabled:not([data-state="open"]) { opacity:.5; cursor:not-allowed; }
+.bp-hint:focus-visible { outline:2px solid var(--lv-accent); outline-offset:2px; }
+
+/* While a take runs */
+.bp-count { display:flex; gap:10px; margin:0; font-family:var(--font-mono, ui-monospace, monospace); font-size:22px; font-weight:700; color:var(--lv-text-muted); }
+.bp-count b { color:#fff; }
+.bp-meter { display:inline-flex; align-items:flex-end; gap:2px; height:12px; }
+.bp-meter i { width:3px; border-radius:1px; background:rgb(150 170 195 / 30%); }
+.bp-meter i:nth-child(1) { height:5px; } .bp-meter i:nth-child(2) { height:9px; } .bp-meter i:nth-child(3) { height:12px; } .bp-meter i:nth-child(4) { height:7px; }
+.bp-meter i[data-on="true"] { background:#36c990; }
+.bp-note-line { display:flex; align-items:center; gap:8px; margin:0; color:var(--lv-text-muted); font-size:12px; }
+
+/* The result */
+.bp-big { display:flex; align-items:baseline; gap:10px; margin:0; }
+.bp-big b { font-size:44px; font-weight:800; letter-spacing:-.01em; color:#fff; font-variant-numeric:tabular-nums; }
+.bp-big span { color:var(--lv-text-secondary); font-size:15px; }
+.bp-facts { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:-8px 0 0; padding:0; list-style:none; }
+.bp-facts li { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; background:rgb(255 255 255 / 5%); color:var(--lv-text-secondary); font-size:12px; }
+.bp-facts i { width:8px; height:8px; border-radius:50%; }
+.bp-facts i[data-tone="ok"] { background:#36c990; } .bp-facts i[data-tone="ng"] { background:#ee6b73; } .bp-facts i[data-tone="warn"] { background:#f2c14e; } .bp-facts i[data-tone="mute"] { background:var(--lv-text-muted); }
+.bp-rating { display:flex; align-items:center; gap:8px; color:var(--lv-text-muted); font-size:12px; }
+.bp-rating-seg { display:inline-flex; gap:2px; padding:2px; border:1px solid var(--lv-border); border-radius:10px; background:#0d1522; }
+.bp-rating-seg button { height:26px; padding:0 10px; border:0; border-radius:7px; background:transparent; color:var(--lv-text-secondary); font-size:12px; font-weight:600; cursor:pointer; }
+.bp-rating-seg button[aria-pressed="true"] { background:var(--bp-accent-soft); color:#fff; }
+.bp-rating-seg button:focus-visible { outline:2px solid var(--lv-accent); outline-offset:1px; }
+
+/* A small fretboard: the strings top to bottom from high to low, 0–12 frets. */
+.bp-fret { width:min(820px,100%); box-sizing:border-box; border-radius:12px; border:1px solid rgb(150 170 195 / 10%); padding:8px 12px; }
+.bp-fret-string { position:relative; height:20px; border-bottom:1px solid rgb(150 170 195 / 22%); }
+.bp-fret-string:last-child { border-bottom:0; }
+.bp-fret-wire { position:absolute; top:0; bottom:0; width:1px; background:rgb(150 170 195 / 14%); }
+.bp-fret-wire[data-nut="true"] { width:3px; background:rgb(150 170 195 / 40%); }
+.bp-fret-dot { position:absolute; top:1px; display:grid; place-items:center; min-width:18px; height:18px; padding:0 3px; box-sizing:border-box; border-radius:9px; background:var(--lv-accent); color:#062a27; font-size:10.5px; font-weight:800; transform:translateX(-50%); }
+.bp-fret-dot[data-tone="warn"] { background:#f2c14e; }
+.bp-fret-numbers { position:relative; height:14px; color:var(--lv-text-muted); font-size:10px; font-family:var(--font-mono, ui-monospace, monospace); }
+.bp-fret-numbers span { position:absolute; transform:translateX(-50%); }
+
+/* The keys at the very bottom */
+.bp-foot { flex:none; display:flex; align-items:center; justify-content:center; height:36px; color:var(--lv-text-muted); font-size:12px; }
+
+/* The top band: back · group · name · (the practice's own chips) · 入力 · 楽器 · ? */
+.bass-modebar .bass-mode-kicker { color:var(--lv-text-muted); font-size:12px; font-weight:600; white-space:nowrap; }
+.bass-modebar .bass-mode-name { font-size:15px; }
+.bass-mode-slot { display:contents; }
+.bp-chip-meter { display:inline-flex; align-items:center; gap:8px; }
+.bp-tools-panel { display:grid; gap:10px; width:min(340px,calc(100vw - 48px)); }
+.bp-tools-panel label { display:grid; gap:4px; font-size:12px; color:var(--lv-text-secondary); }
+.bp-tools-panel p { margin:0; font-size:11.5px; color:var(--lv-text-muted); }
+
+@media (max-height: 820px) {
+  .bp-stage { gap:14px; padding:6px 0 12px; }
+  .bp-say { font-size:18px; }
+  .bp-play { width:60px; height:60px; }
+  .bp-big b { font-size:38px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-step { transition:none; }
+}
+@media (max-height: 760px) {
+  .bp-steps { height:32px; }
+  .bp-stage { gap:10px; padding:2px 0 8px; }
+  .bp-big b { font-size:32px; }
+  .bp-facts { margin-top:-4px; }
+  .bp-lane-scroll { padding:8px 16px 8px 0; }
+  .bp-lane-row { height:40px; }
+  .bp-note { top:5px; height:30px; }
+  .bp-fret { padding:6px 12px; }
+  .bp-fret-string { height:16px; }
+  .bp-fret-dot { top:-1px; }
+  .bp-foot { height:28px; }
+}

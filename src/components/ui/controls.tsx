@@ -1,12 +1,16 @@
 // P8.9 shared controls. Styles: src/styles/components.css.
 import {
   cloneElement,
+  forwardRef,
   isValidElement,
+  useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
@@ -43,8 +47,31 @@ export interface SegmentedControlProps<T extends string> {
 
 /** Single-choice radio group; ←→ (and ↑↓, Home, End) move and select. */
 export function SegmentedControl<T extends string>({ className = "", label, onChange, options, value }: SegmentedControlProps<T>) {
+  const groupRef = useRef<HTMLDivElement>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pill, setPill] = useState<{ left: number; width: number } | undefined>();
   const enabled = options.map((option, index) => (option.disabled ? -1 : index)).filter((index) => index >= 0);
+
+  const measure = useCallback(() => {
+    const idx = options.findIndex((option) => option.value === value);
+    const active = idx >= 0 ? refs.current[idx] : null;
+    if (!active) { setPill(undefined); return; }
+    const left = active.offsetLeft;
+    const width = active.offsetWidth;
+    setPill((prev) => (prev && prev.left === left && prev.width === width ? prev : { left, width }));
+  }, [options, value]);
+
+  useLayoutEffect(() => {
+    measure();
+  }, [measure]);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => measure());
+    observer.observe(group);
+    return () => observer.disconnect();
+  }, [measure]);
 
   function move(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const position = enabled.indexOf(index);
@@ -59,8 +86,13 @@ export function SegmentedControl<T extends string>({ className = "", label, onCh
     refs.current[next]?.focus();
   }
 
+  const pillStyle: CSSProperties | undefined = pill && pill.width > 0
+    ? { width: `${pill.width}px`, transform: `translateX(${pill.left}px)` }
+    : undefined;
+
   return (
-    <div role="radiogroup" aria-label={label} className={`lv-segmented ${className}`}>
+    <div ref={groupRef} role="radiogroup" aria-label={label} className={`lv-segmented ${className}`} data-has-pill={pillStyle ? "true" : undefined}>
+      {pillStyle ? <span aria-hidden="true" data-segment-pill className="lv-segment-pill" style={pillStyle} /> : null}
       {options.map((option, index) => {
         const checked = option.value === value;
         return (
@@ -91,14 +123,17 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 /** Native <select> with the P8.9 look (keyboard and screen-reader behavior stay native). */
-export function Select({ className = "", wrapperClassName = "", children, ...props }: SelectProps) {
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  { className = "", wrapperClassName = "", children, ...props },
+  ref,
+) {
   return (
     <span className={`lv-select ${wrapperClassName}`}>
-      <select {...props} className={className}>{children}</select>
+      <select ref={ref} {...props} className={className}>{children}</select>
       <ChevronDownIcon size={14} />
     </span>
   );
-}
+});
 
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Toggle chips set this; it maps to aria-pressed and the teal selected look. */
@@ -176,6 +211,45 @@ export function Popover({ children, className = "", defaultOpen = false, label, 
           {children}
         </div>
       ) : null}
+    </span>
+  );
+}
+
+export interface SwitchProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange" | "role" | "aria-checked"> {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  /** Accessible name. Use `aria-labelledby` instead when a visible label sits beside the switch. */
+  label?: string;
+}
+
+/** On / off switch (role="switch"). Space and Enter toggle it, as on any button. */
+export function Switch({ checked, onChange, label, className = "", type = "button", onClick, ...props }: SwitchProps) {
+  return (
+    <button
+      {...props}
+      type={type}
+      role="switch"
+      aria-checked={checked}
+      aria-label={label ?? props["aria-label"]}
+      className={`lv-switch ${className}`}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) onChange(!checked);
+      }}
+    />
+  );
+}
+
+/** A key cap, e.g. <Kbd>Ctrl K</Kbd>. */
+export function Kbd({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <kbd className={`lv-kbd ${className}`}>{children}</kbd>;
+}
+
+/** The one "this is sounding now" mark: three bars. Decorative; the caller supplies the text. */
+export function PlayingMark({ className = "" }: { className?: string }) {
+  return (
+    <span aria-hidden="true" className={`lv-playing-mark ${className}`} data-testid="playing-mark">
+      <i /><i /><i />
     </span>
   );
 }

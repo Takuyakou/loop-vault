@@ -1,3 +1,6 @@
+import { ChordName } from "../ChordName";
+import { PlayingMark } from "../ui";
+import { displayChordLabel } from "../../ui/chordText";
 import { useState } from "react";
 import type { ChordSymbol } from "../../domain/types";
 import { noteNameFromPitchClass } from "../../domain/chords";
@@ -58,7 +61,7 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
       <div>
         <p className="lv-cw-eyebrow">選んだカード</p>
         <div className="lv-cw-insp-name-row">
-          <h3 className="lv-cw-insp-name" data-testid="correction-inspector-name">{card.name.label}</h3>
+          <h3 className="lv-cw-insp-name" data-testid="correction-inspector-name">{displayChordLabel(card.name.label)}</h3>
           {props.progression || props.onDeleteCard ? (
             <details className="lv-cw-danger-menu lv-cw-insp-delete">
               <summary className="lv-cw-btn" data-danger><span>カードを消す</span> <kbd>Del</kbd> ▾</summary>
@@ -139,7 +142,8 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
               title={`${index + 1} を押しても選べます`}
             >
               {!props.progression || index<4 ? <span className="lv-cw-alt-no">{index + 1}</span> : null}
-              <span className="lv-cw-alt-name">{name.label}</span>
+              {/* P23-16 W5: the candidate names as every chord name is shown (root large, ♯ ♭). */}
+              <ChordName className="lv-cw-alt-name" label={name.label} />
             </button>
           ))}
         </div>
@@ -153,8 +157,8 @@ export function CorrectionInspector(props: CorrectionInspectorProps) {
       <section>
         <h4 className="lv-cw-h4">聴き比べ</h4>
         <div className="lv-cw-ab">
-          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "source"} onClick={props.onPlaySource} title="区間に鳴っている音すべて（A）" data-testid="correction-play-source">{props.progression ? "▶ A 保存してある音" : "▶ A 元の音"}</button>
-          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "card"} onClick={props.onPlayCard} title="保存すると鳴る音（B）" data-testid="correction-play-card">{props.progression ? "▶ B 今の音" : "▶ B カードの音"}</button>
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "source"} data-playing={props.playing === "source" ? "true" : undefined} onClick={props.onPlaySource} title="区間に鳴っている音すべて（A）" data-testid="correction-play-source">{props.playing === "source" ? <PlayingMark /> : "▶"} {props.progression ? "A 保存してある音" : "A 元の音"}</button>
+          <button type="button" className="lv-cw-btn" aria-pressed={props.playing === "card"} data-playing={props.playing === "card" ? "true" : undefined} onClick={props.onPlayCard} title="保存すると鳴る音（B）" data-testid="correction-play-card">{props.playing === "card" ? <PlayingMark /> : "▶"} {props.progression ? "B 今の音" : "B カードの音"}</button>
         </div>
       </section>
 

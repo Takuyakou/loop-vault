@@ -5,6 +5,11 @@ export interface PianoKeyStateInput {
   heldNotes: ReadonlySet<number>;
   sustainedNotes: ReadonlySet<number>;
   allowedPitchClasses: ReadonlySet<number>;
+  /**
+   * P23-23a B2: keys named one by one to be drawn as foreign (`held-foreign`), whatever their note name allows.
+   * Absent everywhere else, so every other keyboard keeps exactly the picture it had.
+   */
+  foreignNotes?: ReadonlySet<number>;
 }
 
 export function pianoKeyVisualState(
@@ -16,6 +21,7 @@ export function pianoKeyVisualState(
   const sustained = input.sustainedNotes.has(note);
   const allowed = input.allowedPitchClasses.has(positiveModulo(note, 12));
 
+  if (held && input.foreignNotes?.has(note)) return "held-foreign";
   if (held && !allowed) return "held-foreign";
   if (held && guide) return "guide-and-held";
   if (held) return "held-correct";

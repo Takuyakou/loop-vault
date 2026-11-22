@@ -54,4 +54,25 @@ describe("Root Motion Practice session", () => {
     session.startListen();
     expect(session.cancelListen()).toMatchObject({ ok: true, snapshot: { status: "ready", listenCount: 0 } });
   });
+
+  // P23-62: after the answer the phrase can still be heard, and hearing it returns to the same stage.
+  test("listening after the answer returns to sing, whether it finishes or is stopped", () => {
+    const session = new RootMotionPracticeSession(exercise());
+    session.startListen(); session.completeListen();
+    const motion = exercise().motions[0];
+    session.submitIdentify({ direction: motion.direction, category: motion.category, semitones: motion.semitones });
+    expect(session.getSnapshot().status).toBe("sing");
+    expect(session.startListen()).toMatchObject({ ok: true, snapshot: { status: "listening" } });
+    expect(session.completeListen()).toMatchObject({ ok: true, snapshot: { status: "sing" } });
+    expect(session.startListen().ok).toBe(true);
+    expect(session.cancelListen()).toMatchObject({ ok: true, snapshot: { status: "sing" } });
+    expect(session.continueToPlay()).toMatchObject({ ok: true, snapshot: { status: "play" } });
+  });
+
+  // The identify stage keeps the rule it had: a stopped first listen goes back to ready.
+  test("stopping the first listen still returns to ready", () => {
+    const session = new RootMotionPracticeSession(exercise());
+    session.startListen();
+    expect(session.cancelListen()).toMatchObject({ ok: true, snapshot: { status: "ready", listenCount: 0 } });
+  });
 });

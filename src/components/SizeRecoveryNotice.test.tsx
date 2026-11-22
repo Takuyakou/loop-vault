@@ -31,7 +31,7 @@ describe("SizeRecoveryNotice", () => {
   it("explains the allowed shrink/delete recovery in Japanese and opens Vault", async () => {
     const onOpenVault = vi.fn();
     const root = await render("ja", { error: "縮小が必要です。", onOpenVault });
-    expect(host.textContent).toContain("既存内容を短くするか、アイデア／進行を削除");
+    expect(host.textContent).toContain("既存内容を短くするか、曲／進行を削除");
     expect(host.textContent).toContain("縮小が必要です。");
     expect(host.querySelector('[role="alert"]')?.textContent).toContain("縮小が必要です。");
     expect(host.querySelector('[role="status"]')?.getAttribute("aria-live")).toBe("polite");

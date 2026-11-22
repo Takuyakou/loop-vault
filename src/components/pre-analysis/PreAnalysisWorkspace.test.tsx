@@ -267,8 +267,11 @@ describe("PreAnalysisWorkspace (取り込み前の確認)", () => {
 
     expect(container.querySelector("[data-testid=pre-analysis-part-count]")?.textContent)
       .toBe(`${session.voices.length}パート中 ${really}パートを解析します`);
-    expect(container.querySelector("[data-testid=pre-analysis-summary]")?.textContent)
-      .toContain("使わない:");
+    // P23-30 A5: the row says how many parts are left out; the part's name is the chip's tooltip.
+    const summary = container.querySelector("[data-testid=pre-analysis-summary]")!;
+    expect(summary.textContent).toContain("使わない ");
+    const offChip = summary.querySelector("[data-role='off']");
+    expect(offChip?.getAttribute("title") ?? "").toContain(target.displayName);
     await unmount();
   });
 

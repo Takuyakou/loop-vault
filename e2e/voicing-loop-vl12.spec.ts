@@ -21,15 +21,18 @@ test("VL-12 Space shortcut respects native controls and keeps keyboard focus vis
   await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
   await page.keyboard.press("Space");
   await expect(workspace.getByRole("button", { name: "再開" })).toBeVisible();
-  await workspace.locator("#voicing-loop-bpm").focus();
+  // P23-32 K4: Space on a control of the bar (the お手本の音 switch) toggles that control, not the transport.
+  const reference = workspace.getByRole("switch", { name: "お手本の音" });
+  await reference.focus();
   await page.keyboard.press("Space");
+  await expect(reference).toHaveAttribute("aria-checked", "false");
   await expect(workspace.getByRole("button", { name: "再開" })).toBeVisible();
   const timeline = workspace.getByTestId("voicing-loop-timeline-viewport");
   await timeline.focus();
   expect(await timeline.evaluate((node) => getComputedStyle(node).outlineStyle)).not.toBe("none");
 });
 
-test("VL-12 BPM scrub works from the full field and keeps direct input, wheel, and keys", async ({ page }) => {
+test("VL-12 the practice has no BPM field of its own; the header's 共通 BPM is the one it follows", async ({ page }) => {
   await page.goto("/?p527Status=vl09-layout");
   const nav = page.locator('[data-nav="voicing-loop"]');
   if (await nav.isVisible()) await nav.click();
@@ -37,55 +40,19 @@ test("VL-12 BPM scrub works from the full field and keeps direct input, wheel, a
     await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
-  const bpm = page.locator("#voicing-loop-bpm");
-  const field = page.getByTestId("voicing-loop-bpm-field");
-  const start = Number(await bpm.inputValue());
-  await field.scrollIntoViewIfNeeded();
-  const box = await field.boundingBox();
-  expect(box).toBeTruthy();
-  await page.mouse.move(box!.x + 5, box!.y + box!.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box!.x + 5, box!.y + box!.height / 2 - 2);
-  expect(Number(await bpm.inputValue())).toBe(start);
-  await page.mouse.move(box!.x + 5, box!.y + box!.height / 2 - 16);
-  await page.mouse.up();
-  await expect(bpm).toHaveValue(String(start + 4));
-  await field.hover();
-  await page.mouse.wheel(0, -100);
-  await expect(bpm).toHaveValue(String(start + 5));
-  await bpm.focus();
-  await bpm.press("ArrowDown");
-  await expect(bpm).toHaveValue(String(start + 4));
-  await bpm.press("Shift+ArrowUp");
-  await expect(bpm).toHaveValue(String(start + 14));
-  await bpm.fill("128");
-  await bpm.press("Enter");
-  await expect(bpm).toHaveValue("128");
-  const dragFrom = async (offsetX: number, deltaY: number, modifier?: "Shift" | "Control") => {
-    const bounds = await field.boundingBox();
-    if (modifier) await page.keyboard.down(modifier);
-    // A negative offset starts from the right edge (the drag grip).
-    const x = bounds!.x + (offsetX < 0 ? bounds!.width + offsetX : offsetX);
-    await page.mouse.move(x, bounds!.y + bounds!.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(x + 100, bounds!.y + bounds!.height / 2 + deltaY);
-    await page.mouse.up();
-    if (modifier) await page.keyboard.up(modifier);
-  };
-  await dragFrom(40, -20, "Shift");
-  await expect(bpm).toHaveValue("130");
-  await dragFrom(-6, -8, "Control");
-  await expect(bpm).toHaveValue("140");
-  await dragFrom(5, -500);
-  await expect(bpm).toHaveValue("240");
-  await bpm.fill("4");
-  await bpm.press("Enter");
-  await expect(bpm).toHaveValue("30");
-  await field.dblclick();
-  expect(await bpm.evaluate((node) => {
-    const input = node as HTMLInputElement;
-    return input.selectionStart === 0 && input.selectionEnd === input.value.length;
-  })).toBe(true);
+  // P23-32 K4: the scrub field left this screen; the header's 共通 BPM is the field that applies now.
+  await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
+  await expect(page.getByTestId("voicing-loop-bpm-field")).toHaveCount(0);
+  const shared = page.getByTestId("global-bpm-value");
+  const start = Number(await shared.getAttribute("aria-valuenow"));
+  expect(start).toBeGreaterThan(0);
+  await shared.focus();
+  await page.keyboard.press("PageUp");
+  await expect.poll(async () => Number(await shared.getAttribute("aria-valuenow"))).not.toBe(start);
+  // The practice keeps running at that value: the bar still starts and pauses.
+  const transport = page.getByTestId("voicing-loop-transport");
+  await transport.getByRole("button", { name: /開始/ }).click();
+  await expect(transport.getByRole("button", { name: /一時停止/ })).toBeVisible();
 });
 
 test("VL-12 transport rows fit vertically at desktop viewports and scaling", async ({ page }) => {
@@ -108,7 +75,8 @@ test("VL-12 transport rows fit vertically at desktop viewports and scaling", asy
       await page.getByRole("tab", { name: "Voicing Loop" }).click();
     }
     await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
-    for (const id of ["voicing-loop-transport-primary", "voicing-loop-transport-midi-row"]) {
+    // P23-32 K4: the bar is one row, so the row to check is the primary one.
+    for (const id of ["voicing-loop-transport-primary"]) {
       const row = page.getByTestId(id);
       const measure = await row.evaluate((element) => ({
         client: element.clientHeight,
@@ -116,7 +84,9 @@ test("VL-12 transport rows fit vertically at desktop viewports and scaling", asy
         overflowY: getComputedStyle(element).overflowY,
       }));
       expect(measure.scroll).toBeLessThanOrEqual(measure.client);
-      expect(measure.overflowY).toBe("hidden");
+      // P23-20 L6: a narrow bar wraps and grows its row (`visible`); it must never scroll vertically.
+      expect(measure.overflowY).not.toBe("auto");
+      expect(measure.overflowY).not.toBe("scroll");
     }
   }
 });
@@ -142,9 +112,11 @@ test("P11 current hand cards keep fingering information with compact Next Move",
     for (const hand of ["left", "right"]) {
       const card = page.getByTestId(`voicing-loop-${hand}-hand`);
       await expect(card).toBeVisible();
-      await expect(card).toContainText("指");
-      await expect(card).toContainText("音名");
-      await expect(card).toContainText("構成音");
+      // P23-20 L1: five slot cards per hand; the finger, note and chord tone live in each card.
+      await expect(card.locator("[data-testid='voicing-loop-hand-slot']")).toHaveCount(5);
+      await expect(card.locator(".voicing-hand-slot-finger").first()).toHaveText(/^[LR][1-5]$/);
+      await expect(card.locator(".voicing-hand-slot-pitch").first()).not.toBeEmpty();
+      await expect(card.locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
       await expect(card).toContainText("おすすめ");
     }
   }

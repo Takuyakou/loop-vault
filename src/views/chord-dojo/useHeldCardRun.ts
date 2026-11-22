@@ -21,7 +21,7 @@ export interface HeldRunTarget{cards:readonly HeldRunCard[];/** The tonic its la
  * Progressions): MIDI or self-judging, the pause and the reconnect, the card the run is at, the laps of this screen and the
  * record of a lap. It reads raw note events (HeldCardJudge); nothing here marks a wrong note.
  */
-export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,onSpace}:{
+export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,onSpace,onFirstInput}:{
  /** The kind of practice: the id of the card that is sounded (`original:card:0`) and the record are told apart by it. */
  kind:'original'|'jazz';
  target:()=>HeldRunTarget;
@@ -35,6 +35,8 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
  lap?:()=>{stage:'see'|'recall';hinted:()=>boolean;/** Called when a ② lap was counted. */clean?:()=>void};
  /** P18-02: Space in the ② stage shows the answer of the current card. */
  onSpace?:()=>void;
+ /** P20: called once, at the first key of a condition (or the first self-judged answer). */
+ onFirstInput?:()=>void;
 }){
  const {sound}=usePreviewSound();
  const playback=usePlaybackState();
@@ -52,6 +54,9 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
  const stopAtLapRef=useRef(stopAtLap);stopAtLapRef.current=stopAtLap;
  const lapRef=useRef(lap);lapRef.current=lap;
  const onSpaceRef=useRef(onSpace);onSpaceRef.current=onSpace;
+ const onFirstInputRef=useRef(onFirstInput);onFirstInputRef.current=onFirstInput;
+ const firstInput=useRef(false);
+ const markFirst=useCallback(()=>{if(firstInput.current)return;firstInput.current=true;onFirstInputRef.current?.();},[]);
  const [lapStop,writeLapStop]=useState(false),lapStopRef=useRef(false);
  const targetRef=useRef(target),indexRef=useRef(0),connectedRef=useRef(connected),sessionRef=useRef(session),judge=useRef<HeldCardJudge>();
  targetRef.current=target;connectedRef.current=connected;sessionRef.current=session;
@@ -94,7 +99,7 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
  },[]);
  /** Back to the first card. `change` is what else changes with it (the key, the version): it is done before the screen is drawn again. */
  const restart=useCallback((change?:()=>void)=>{
-  playbackController.stop();lapStopRef.current=false;writeLapStop(false);judge.current!.startCard();indexRef.current=0;setIndex(0);setLastLap(undefined);
+  playbackController.stop();lapStopRef.current=false;writeLapStop(false);firstInput.current=false;judge.current!.startCard();indexRef.current=0;setIndex(0);setLastLap(undefined);
   change?.();
  },[]);
  /** The laps counted on this screen start again (another version of the progression). */
@@ -105,6 +110,7 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
   const unsubscribe=liveMidiService.subscribeBatches(batch=>{
    for(const e of batch.events){
     if(!connectedRef.current||inputModeRef.current!=='midi')continue;
+    if((e.status&0xf0)===0x90&&e.data2>0)markFirst();
     judge.current!.event(e.status,e.channel,e.data1,e.data2);
     if(lapStopRef.current)continue; // the lap end asks: what is pressed stays known to the judge, but nothing is judged
     if((e.status&0xf0)!==0x90||e.data2===0)continue;
@@ -113,7 +119,7 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
    }
   });
   return unsubscribe;
- },[pass]);
+ },[pass,markFirst]);
 
  // Playing a card plays the notes of the card.
  const prefix=`${kind}:card:`;
@@ -124,7 +130,7 @@ export function useHeldCardRun({kind,target,lapStore,onBack,onLap,stopAtLap,lap,
   prepareAudio();
   try{await playbackController.play({kind:'practice',id:`${prefix}${i}`},{type:'chord',chord:c.chord,sound,explicitMidiNotes:c.expected});}catch{/* the answer is on the keyboard */}
  },[sound,prepareAudio,prefix]);
- const yes=useCallback(()=>{if(inputModeRef.current==='manual'&&!lapStopRef.current)pass();},[pass]);
+ const yes=useCallback(()=>{if(inputModeRef.current==='manual'&&!lapStopRef.current){markFirst();pass();}},[pass,markFirst]);
 
  useEffect(()=>{
   const handler=(e:KeyboardEvent)=>{

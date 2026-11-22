@@ -245,7 +245,7 @@ async function openDojo(page: Page, file?: ReturnType<typeof emptyStore>) {
   await openApp(page);
   await expect(chip(page)).toHaveAttribute("data-midi-kind", "connected", { timeout: 3000 });
   await page.locator('[data-nav="chord-dojo"]').click();
-  await expect(page.getByRole("heading", { name: "今日の練習", exact: true })).toBeVisible();
+  await expect(page.getByTestId("dojo-home")).toBeVisible();
 }
 async function startPractice(page: Page) {
   await openDojo(page, practiceFile());
@@ -294,26 +294,26 @@ test.describe("modes follow the shared state", () => {
     await walk(page, () => page.getByTestId("master251").getAttribute("data-midi-kind"));
   });
 
-  test("Voicing Loop shows the same kind as the header, as the line MIDI 入力：{label}", async ({ page }) => {
+  test("Voicing Loop leaves the MIDI kind to the header chip", async ({ page }) => {
     await openApp(page);
     await expect(chip(page)).toHaveAttribute("data-midi-kind", "connected", { timeout: 3000 });
     await page.locator('[data-nav="voicing-loop"]').click();
-    const status = page.getByTestId("voicing-loop-midi-status");
-    await expect(status).toContainText("MIDI 入力：合成入力");
-    await walk(page, () => status.getAttribute("data-midi-kind"));
-    await expect(status).toContainText("MIDI 入力：MIDI エラー");
+    // P23-32 K4: the band's 「MIDI 入力：{label}」 line and its 再接続 control are gone from this screen; the
+    // header chip is the one place that carries the kind.
+    await expect(page.getByTestId("voicing-loop-midi-status")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "再接続" })).toHaveCount(0);
+    await expect(chip(page)).toHaveAttribute("data-midi-kind", "connected");
   });
 
   test("a disconnect from the header puts the off notice into the Dojo start screen and Master within a second", async ({ page }) => {
     await openDojo(page, masterFile());
-    await expect(page.getByTestId("midi-required-notice")).toHaveCount(0);
+    await expect(page.getByTestId("home-midi-banner")).toHaveCount(0);
     await openPanel(page);
     await panelButton(page, "切断").click();
     await page.keyboard.press("Escape");
-    const notice = page.getByTestId("midi-required-notice");
+    const notice = page.getByTestId("home-midi-banner");
     await expect(notice).toHaveAttribute("data-midi-kind", "off", { timeout: 1000 });
-    await expect(notice.getByRole("button", { name: "MIDI に接続" })).toBeVisible();
+    await expect(notice.getByRole("button", { name: "MIDI 設定" })).toBeVisible();
     await page.getByRole("button", { name: "2-5-1 Master 続きから" }).click();
     const masterNotice = page.getByTestId("master251").getByTestId("midi-required-notice");
     await expect(masterNotice).toHaveAttribute("data-midi-kind", "off");

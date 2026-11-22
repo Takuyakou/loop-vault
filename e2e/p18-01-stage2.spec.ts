@@ -36,7 +36,7 @@ async function list(page:Page){await openDojo(page);await page.getByRole('button
 const ouudou=(page:Page)=>page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})});
 async function openA(page:Page){
  await list(page);
- await ouudou(page).getByRole('button',{name:'これを練習する'}).click();
+ await ouudou(page).getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
  await expect(page.locator('.dojo')).toHaveAttribute('data-dojo-cursor',/:see:0:0$/);
 }
@@ -228,7 +228,7 @@ test('R does nothing while typing, or while a dialog is open',async({page})=>{
  await playRound(page,'recall');
  await expect(page.getByTestId('dojo-again-recall')).toBeVisible({timeout:15000});
  await page.getByRole('button',{name:'練習の設定'}).click();
- await page.getByLabel('BPM').focus();
+ await page.locator('#main-content').getByLabel('BPM').focus();
  await page.keyboard.press('r');
  await expect(page.getByTestId('dojo-again-recall')).toBeVisible();
  await page.getByRole('button',{name:'MIDI 設定'}).click();
@@ -240,14 +240,14 @@ test('R does nothing while typing, or while a dialog is open',async({page})=>{
 
 test('C Original Practice: くり返す off stops at the lap end (the lap is still recorded), R goes on; the switch is remembered',async({page})=>{
  await list(page);
- await page.locator(`.dojo-original-card[data-original=${ORIG_ID}]`).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator(`.dojo-original-card[data-original=${ORIG_ID}]`).getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.getByTestId('dojo-original')).toBeVisible();
  await expect(page.getByTestId('original-repeat')).toHaveAttribute('aria-pressed','true');
  await page.getByTestId('original-repeat').click();
  await expect(page.getByTestId('original-repeat')).toHaveAttribute('aria-pressed','false');
  await page.getByTestId('dojo-back').click();
  await expect(page.getByRole('heading',{name:'定番の進行',exact:true})).toBeVisible();
- await page.locator(`.dojo-original-card[data-original=${ORIG_ID}]`).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator(`.dojo-original-card[data-original=${ORIG_ID}]`).getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.getByTestId('original-repeat')).toHaveAttribute('aria-pressed','false');
  for(let i=0;i<6;i+=1){await at(page,i);await playOrigCard(page,i);}
  await expect(page.getByTestId('dojo-original')).toHaveAttribute('data-lap-stop','true',{timeout:10000});

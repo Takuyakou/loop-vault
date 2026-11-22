@@ -65,7 +65,7 @@ describe("RetainedTakesPanel", () => {
     const { container, root } = await render(<RetainedTakesPanel repository={repo} takePlayer={player} enabledOverride />);
 
     expect(container.querySelector("[data-testid=retained-take]")).not.toBeNull();
-    expect(container.textContent).toContain("Degree Echo");
+    expect(container.textContent).toContain("度数");
     expect(container.textContent).not.toContain("Accuracy");
     expect(container.textContent).not.toContain("Score");
     expect(container.querySelector("[data-testid=retained-capacity]")?.textContent).toContain("MB");

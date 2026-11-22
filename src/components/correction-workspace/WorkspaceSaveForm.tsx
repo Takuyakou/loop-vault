@@ -1,4 +1,7 @@
+import { displayChordLabel } from "../../ui/chordText";
 import { useState, type ReactNode } from "react";
+import { Check } from "lucide-react";
+import { useSaveButtonState } from "../ui";
 import type { CorrectionModel } from "../../domain/correction/correctionModel";
 import { buildSaveCandidate, cardsInRange, type SaveCandidateResult, type SaveProblem, type SaveRange } from "../../domain/correction/saveCandidate";
 import { screenToSource } from "../../domain/correction/barMap";
@@ -39,7 +42,7 @@ export const rangeLabel = (range: SaveRange) => range.startBar === range.endBar 
 
 /**
  * Spec v2.4 §10.1: the save form for the chosen range, pinned to the bottom of the right
- * panel (P10.2 §10.3): the range and 範囲を外す, the names, Vaultに保存 and 「おすすめの範囲」.
+ * panel (P10.2 §10.3): the range and 範囲を外す, the names, the new song's name (P23-16 W3), Vault に保存 and 「おすすめの範囲」.
  */
 function CaptureWorkspaceSaveForm({ model, timeline, range, saved, actions, onGoToCard, onSaved, whole = false, menuExtras }: {
   model: CorrectionModel;
@@ -65,6 +68,13 @@ function CaptureWorkspaceSaveForm({ model, timeline, range, saved, actions, onGo
   const preview = buildSaveCandidate(model, range, timeline);
   const removed = model.context.removedBars ?? [];
   const crossesCut = screenToSource((range.startBar - 1) * model.context.meter, range.endBar * model.context.meter, removed).length > 1;
+  // P23-16 W3: the new song's name in the box; until it is typed, the name the save always offered (it follows edits).
+  const [typedName, setTypedName] = useState<string>();
+  const key = rangeKey(range);
+  const [nameRange, setNameRange] = useState(key);
+  if (nameRange !== key) { setNameRange(key); setTypedName(undefined); } // another range: its own offered name
+  const offeredName = preview.ok ? actions.titleFor(preview.candidate) : rangeLabel(range);
+  const name = typedName ?? offeredName;
   return (
     <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form" data-whole={whole || undefined}>
       <div className="lv-cw-row-between">
@@ -99,11 +109,19 @@ function CaptureWorkspaceSaveForm({ model, timeline, range, saved, actions, onGo
           {actions.renderBassline(preview)}
         </details>
       ) : null}
+      <label className="lv-cw-save-name">
+        <span>名前</span>
+        <input name="workspace-save-name" aria-label="新しい曲の名前" autoComplete="off" maxLength={80} value={name} onChange={(event) => setTypedName(event.target.value)} data-testid="correction-save-name" />
+      </label>
       <div className="lv-cw-save-actions">
       <span title={SAVE_NOTE}>
       <SaveProgressionPopover
         key={rangeKey(range)}
-        initialTitle={preview.ok ? actions.titleFor(preview.candidate) : rangeLabel(range)}
+        initialTitle={offeredName}
+        title={name}
+        onTitleChange={setTypedName}
+        primaryLabel={whole ? "曲全体を保存" : "Vault に保存"}
+        {...(name.trim() ? {} : { primaryDisabledReason: "名前を入れると保存できます" })}
         ideas={actions.ideas}
         defaultNextAction={actions.defaultNextAction}
         copy={actions.copy}
@@ -122,7 +140,6 @@ function CaptureWorkspaceSaveForm({ model, timeline, range, saved, actions, onGo
         }}
         onSaved={onSaved}
         note={SAVE_NOTE}
-        {...(whole ? { primaryLabel: "曲全体を保存" } : {})}
         menuIncludesNew
         {...(menuExtras?.length ? { menuExtras, requestMenu: () => true } : {})}
       />
@@ -141,7 +158,7 @@ export function NoSaveRange() {
       </div>
       <p className="lv-cw-muted" data-testid="correction-save-range">保存できるカードがありません。</p>
       <div className="lv-cw-save-actions">
-        <button type="button" className="lv-cw-btn" data-kind="primary" disabled title="範囲を選んでいません">Vaultに保存</button>
+        <button type="button" className="lv-cw-btn" data-kind="primary" disabled title="範囲を選んでいません">Vault に保存</button>
       </div>
     </section>
   );
@@ -203,7 +220,7 @@ export function RecommendedRanges({ candidates, open, onToggle, current, saved, 
             return (
               <button key={candidate.id} type="button" className="lv-cw-recommend-item" aria-current={(current && rangeKey(current) === rangeKey(range)) || undefined} onClick={() => onPick(range)}>
                 <b>{rangeLabel(candidate)}</b>
-                <span className="lv-cw-reco-names">{candidate.chords.slice(0, 6).map((item) => item.chord.label).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
+                <span className="lv-cw-reco-names">{candidate.chords.slice(0, 6).map((item) => displayChordLabel(item.chord.label)).join(" ")}{candidate.chords.length > 6 ? "…" : ""}</span>
                 {saved.has(rangeKey(range)) ? <span className="lv-cw-saved">保存済み</span> : null}
               </button>
             );
@@ -223,16 +240,21 @@ export function WorkspaceSaveForm(props:Parameters<typeof CaptureWorkspaceSaveFo
 }
 function ProgressionSaveForm({options:o}:{options:ProgressionSaveOptions}) {
   const [version,setVersion]=useState(false),[discard,setDiscard]=useState(false);
+  const saveBtn = useSaveButtonState();
   const [scope,setScope]=useState<'whole'|'range'>(o.range?'range':'whole');
   const defaultName=(range:boolean)=>range&&o.range?`${progressionName(o.base).replace(/[（(].*$/,'')}（${rangeLabel(o.range)}・別の版 1）`:`${progressionName(o.base).replace(/[（(].*$/,'')}（別の版 1）`;
   const [name,setName]=useState('');
   const openVersion=()=>{setScope(o.range?'range':'whole');setName(defaultName(Boolean(o.range)));setVersion(true);};
   const changed=changedProgressionCards(o.base,o.model);
-  return <section className="lv-cw-save" aria-label="保存" data-testid="correction-save-form">
+  return <section className="lv-cw-save" data-mode="progression" aria-label="保存" data-testid="correction-save-form">
     <h4 className="lv-cw-h4">保存 <span className="lv-cw-muted">{o.changes?`変更 ${o.changes}（まだ保存していない）`:'変更はありません'}</span></h4>
     <p className="lv-cw-save-names">{changed.map(c=>c.name.label).join('  ')}</p>
     <div className="lv-cw-save-actions">
-      <button type="button" className="lv-cw-btn" data-kind="primary" disabled={!o.changes} onClick={o.onOverwrite}>上書き保存</button>
+      <button type="button" className="lv-cw-btn" data-kind="primary" data-save-state={saveBtn.state} disabled={!o.changes} onClick={()=>{if(o.onOverwrite())saveBtn.succeed();}}>
+        {saveBtn.state === "busy" ? <><span className="lv-save-spin" aria-hidden="true" /><span>保存中…</span></>
+          : saveBtn.state === "done" ? <><Check aria-hidden="true" size={16} /><span>保存しました</span></>
+          : "上書き保存"}
+      </button>
       <button type="button" className="lv-cw-btn" onClick={openVersion}>別の版として保存</button>
       <details><summary className="lv-cw-btn" aria-label="保存のその他の操作">▾</summary><div className="lv-cw-delete-menu">
         <button type="button" className="lv-cw-btn" disabled={!o.range} onClick={openVersion}>範囲だけ別の版として保存…</button><hr/>
@@ -245,6 +267,6 @@ function ProgressionSaveForm({options:o}:{options:ProgressionSaveOptions}) {
       <label className="lv-progression-version-name">名前<input aria-label="別の版の名前" value={name} onChange={e=>setName(e.target.value)}/></label>
       <div className="mt-4 flex justify-end gap-2"><button type="button" className="lv-cw-btn" onClick={()=>setVersion(false)}>戻る</button><button type="button" className="lv-cw-btn" data-kind="primary" disabled={!name.trim()} onClick={()=>{if(o.onVersion(name.trim(),scope==='range'?o.range:undefined))setVersion(false);}}>保存</button></div>
     </Modal>:null}
-    <ConfirmDialog open={discard} title="変更を捨てますか？" description={`変更 ${o.changes} を捨てて、保存してある状態に戻しますか。`} confirmLabel="変更を捨てる" cancelLabel="戻る" tone="danger" onCancel={()=>setDiscard(false)} onConfirm={()=>{setDiscard(false);o.onDiscard();}}/>
+    <ConfirmDialog open={discard} title="変更を捨てますか？" description={`変更 ${o.changes} を捨てて、保存してある状態に戻しますか。`} confirmLabel="変更を捨てる" cancelLabel="戻る" tone="danger" changeCount={o.changes} onCancel={()=>setDiscard(false)} onConfirm={()=>{setDiscard(false);o.onDiscard();}}/>
   </section>;
 }

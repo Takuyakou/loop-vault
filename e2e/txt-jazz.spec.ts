@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 import type { MidiControl } from "./helpers/p12";
 
 // Independent pitch/octave expectation: G2 root, Eb4 b13, F4 b7, Bb4 #9, B4 third.
@@ -22,6 +22,8 @@ for (const dialect of ["standard", "extended"] as const) {
     await expect(input).toHaveAttribute("aria-invalid", "true");
     await expect(save).toBeDisabled();
     await input.fill(chart);
+    // P23-17 V3: the voicing note moved into the 「?」 face.
+    await capture.getByTestId("text-help").click();
     await expect(capture.getByTestId("text-voicing-availability")).toContainText("3 / 4コード");
     await expect(capture.getByTestId("text-voicing-unavailable")).toContainText("G7alt/D");
     // R-03: the storage split is unchanged, but its notice is no longer shown on the capture screen.
@@ -30,8 +32,7 @@ for (const dialect of ["standard", "extended"] as const) {
     const title = `合成 TXT-JAZZ ${dialect}`;
     await capture.getByTestId(dialect === "standard" ? "text-progression-name" : "extended-text-name").fill(title);
     if (dialect === "standard") {
-      await capture.getByTestId("standard-text-card-details").locator(":scope > summary").click();
-      await capture.getByTestId("text-progression-card").filter({ hasText: /^G7alt/ }).first().click();
+      await capture.getByTestId("text-preview-band").filter({ hasText: /^G7alt/ }).first().locator(".lv-text-preview-chord").dispatchEvent("click");
       const inspector = capture.getByTestId("text-progression-inspector");
       await inspector.locator(":scope > summary").click();
       await inspector.getByTestId("text-progression-detail-expander").locator(":scope > summary").click();

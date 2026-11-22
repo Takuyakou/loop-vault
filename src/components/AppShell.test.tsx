@@ -11,7 +11,7 @@ import type { PreviewLifecycleCallbacks } from "../audio/chordPreview";
 import { appCopy } from "../i18n";
 import { connectionController } from "../liveMidi/connectionController";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
-import { AppShell, type SaveStatus } from "./AppShell";
+import { AppShell, type AppView, type SaveStatus } from "./AppShell";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -47,21 +47,23 @@ async function renderShell({
   standardTitleBar = false,
   masterVolume = 100,
   onMasterVolumeChange = vi.fn(),
+  vaultCount,
 }: {
   view?: "home" | "capture" | "library" | "detail" | "practice";
   saveStatus?: SaveStatus;
   controller?: ReturnType<typeof createPlaybackController>;
-  setView?: ReturnType<typeof vi.fn>;
-  openVoicingLoop?: ReturnType<typeof vi.fn>;
-  openLiveMidi?: ReturnType<typeof vi.fn>;
-  openMidiSettings?: ReturnType<typeof vi.fn>;
+  setView?: (view: AppView) => void;
+  openVoicingLoop?: () => void;
+  openLiveMidi?: () => void;
+  openMidiSettings?: () => void;
   voicingLoopActive?: boolean;
-  openSettings?: ReturnType<typeof vi.fn>;
-  onSearch?: ReturnType<typeof vi.fn>;
+  openSettings?: () => void;
+  onSearch?: () => void;
   settingsOpen?: boolean;
   standardTitleBar?: boolean;
   masterVolume?: number;
-  onMasterVolumeChange?: ReturnType<typeof vi.fn>;
+  onMasterVolumeChange?: (value: number) => void;
+  vaultCount?: number;
 } = {}) {
   const container = document.createElement("div");
   document.body.append(container);
@@ -83,6 +85,7 @@ async function renderShell({
       masterVolume={masterVolume}
       onMasterVolumeChange={onMasterVolumeChange}
       controller={controller}
+      vaultCount={vaultCount}
       pageTitle="ホーム"
     >
       <main id="test-content">Content</main>
@@ -116,7 +119,7 @@ describe("AppShell (P8.9-02)", () => {
     const openSettings = vi.fn();
     const { container, root } = await renderShell({ view: "detail", openSettings });
     expect(navKeys(container)).toEqual(["home", "capture", "vault", "voicing-loop", "chord-dojo", "bass-practice", "live-midi", "settings"]);
-    expect([...container.querySelectorAll("[data-nav]")].map((item) => item.textContent)).toEqual([
+    expect([...container.querySelectorAll("[data-nav]")].map((item) => item.querySelector(".lv-nav-label")?.textContent)).toEqual([
       "ホーム", "取り込む", "Vault", "Voicing Loop", "Chord Dojo", "Bass Practice", "Live MIDI", "設定",
     ]);
     expect(container.textContent).not.toMatch(/WORKSPACE|SYSTEM/);
@@ -168,9 +171,10 @@ describe("AppShell (P8.9-02)", () => {
     const actions = container.querySelector("[data-global-actions]")!;
     expect([...actions.children].map((child) => child.classList.contains("lv-midi-anchor") ? "midi"
       : child.getAttribute("aria-label") === "試聴音色" ? "sound"
+        : child.getAttribute("data-testid") === "global-bpm" ? "bpm"
         : child.getAttribute("data-testid") === "global-metronome" ? "metronome"
           : child.classList.contains("lv-volume-group") ? "volume"
-              : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "metronome", "volume", "save"]);
+              : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "bpm", "metronome", "volume", "save"]);
     expect(container.querySelector("[data-volume-trigger]")).toBeNull();
     const knob = container.querySelector<HTMLElement>('[role="slider"][aria-label="マスター音量"]')!;
     expect(knob.closest(".lv-volume-group")?.querySelector("[data-playback-level-meter]")).not.toBeNull();
@@ -290,4 +294,22 @@ it("shows the shared MIDI facts: searching, error and the connected device name"
  await act(async()=>defaultLiveMidiStore.setState({status:"connected",selected:{backendId:"synthetic",name:"合成入力",index:0}}));expect(chip?.textContent).toBe("合成入力");
  await act(async()=>connectionController.state.setState({intent:"off"}));expect(chip?.dataset.midiKind).toBe("off");
  await act(async()=>root.unmount());defaultLiveMidiStore.setState(initial);connectionController.state.setState({intent});
+});
+
+describe("AppShell (P23-02)", () => {
+  it("shows the Vault count beside Vault only when it is given and above zero, without renaming the button", async () => {
+    const counted = await renderShell({ vaultCount: 7 });
+    const vault = counted.container.querySelector<HTMLButtonElement>('[data-nav="vault"]')!;
+    const count = counted.container.querySelector<HTMLElement>('[data-testid="nav-vault-count"]');
+    expect(count?.textContent).toBe("7");
+    expect(count?.getAttribute("aria-hidden")).toBe("true");
+    expect(vault.contains(count)).toBe(true);
+    await act(async () => counted.root.unmount());
+
+    for (const vaultCount of [undefined, 0]) {
+      const { container, root } = await renderShell({ vaultCount });
+      expect(container.querySelector('[data-testid="nav-vault-count"]')).toBeNull();
+      await act(async () => root.unmount());
+    }
+  });
 });

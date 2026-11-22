@@ -14,8 +14,9 @@ async function openVl09(page: Page) {
 
 async function majorGeometry(page: Page) {
   return page.getByTestId("voicing-loop-workspace").evaluate((workspace) => {
+    // P23-32 K4: the transport is one row now, so the MIDI row is not a region of the pane any more.
     const ids = ["voicing-loop-current-next", "voicing-loop-timeline", "voicing-loop-detail",
-      "voicing-loop-transport-primary", "voicing-loop-transport-midi-row"];
+      "voicing-loop-transport-primary"];
     return ids.map((id) => {
       const target = workspace.querySelector(`[data-testid='${id}']`);
       if (!target) throw new Error(`Missing region ${id}`);

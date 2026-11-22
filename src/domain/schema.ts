@@ -367,7 +367,7 @@ export const vaultSettingsSchema = z
   })
   .strict();
 
-export const vaultFileSchema: z.ZodType<VaultFile, z.ZodTypeDef, unknown> = z
+export const vaultFileSchema: z.ZodType<VaultFile, unknown> = z
   .object({
     app: z.literal("loopvault"),
     fileVersion: z.literal(2),

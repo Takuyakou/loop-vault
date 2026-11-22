@@ -7,11 +7,13 @@ import { Modal } from "../Modal";
 import { iconCatalog, LoopIcon, SettingsIcon, VaultIcon, VolumeIcon } from "../icons";
 import { createNotificationStore, NotificationProvider, useNotify } from "../notifications";
 import { useUndoQueue } from "../../hooks/useUndoQueue";
-import { Button, Chip, EmptyState, IconButton, LoadingState, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./index";
+import { Button, Chip, EmptyState, IconButton, Kbd, LoadingState, PlayingMark, Popover, ProgressBar, SegmentedControl, Select, Switch, Tooltip } from "./index";
 import "./gallery.css";
 import { appCopy } from "../../i18n";
 import { FirstCaptureGuide } from "../FirstCaptureGuide";
 import { SizeRecoveryNotice } from "../SizeRecoveryNotice";
+import { GlobalBpmField } from "../GlobalBpmField";
+import { GlobalBpmProvider, useAnnounceSongBpm } from "../GlobalBpmProvider";
 import { QuarantineNotice, StartupState } from "../StartupStates";
 
 /** The single marker the FULL gate searches for in dist/ (scripts/test-dx/check-gallery-excluded.mjs). */
@@ -85,6 +87,8 @@ export function ComponentGallery() {
   const [segment, setSegment] = useState<"step" | "tempo" | "free">("step");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [switchOn, setSwitchOn] = useState(true);
+  const [switchOff, setSwitchOff] = useState(false);
 
   return (
     <NotificationProvider store={store} undo={{ actions: undoQueue.actions, onUndo: undoQueue.undo, label: "元に戻す", fallbackFocusRef: fallbackRef }}>
@@ -179,23 +183,74 @@ export function ComponentGallery() {
           </div>
         </Section>
 
+        <Section title="P23-03 の部品(スイッチ・キーの印・鳴っている印)">
+          <div className="flex flex-wrap items-center gap-6" data-testid="p89-gallery-p23-03">
+            <div className="flex items-center gap-3">
+              <Switch checked={switchOn} onChange={setSwitchOn} label="見本のスイッチ(ON)" />
+              <Switch checked={switchOff} onChange={setSwitchOff} label="見本のスイッチ(OFF)" />
+              <Switch checked={false} onChange={() => undefined} disabled label="見本のスイッチ(使えない)" />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[var(--lv-text-secondary)]">
+              <Kbd>Ctrl K</Kbd>
+              <Kbd>Esc</Kbd>
+            </div>
+            <PlayingMark />
+          </div>
+        </Section>
+        <Section title="P23-05 共通 BPM">
+          <div className="flex flex-wrap items-center gap-6" data-testid="p89-gallery-p23-05">
+            <GlobalBpmProvider>
+              <GallerySongBpm />
+              <GlobalBpmField />
+            </GlobalBpmProvider>
+          </div>
+        </Section>
         <Section title="起動・復旧・空の状態（P8.9-08、合成データ）">
           <div className="grid gap-4 lg:grid-cols-2" data-testid="p89-gallery-startup">
-            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)]" data-testid="p89-gallery-startup-loading">
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)]" data-testid="p89-gallery-startup-loading" data-p23-30="P2">
               <StartupState loadStatus="loading" recovery={undefined} readonly={undefined} requestRestoreBackup={() => undefined} copy={appCopy.ja} />
             </div>
             <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-4">
               <FirstCaptureGuide onMidi={() => undefined} onText={() => undefined} />
             </div>
-            <div data-testid="p89-gallery-quarantine">
+            <div data-testid="p89-gallery-quarantine" data-p23-30="P8">
               <QuarantineNotice count={2} copy={appCopy.ja} />
               <SizeRecoveryNotice saving={false} onOpenVault={() => undefined} />
             </div>
-            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4">
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4" data-p23-30="P3">
               <StartupState
                 loadStatus="recovery"
-                recovery={{ kind: "invalid-json", corruptPath: "data.corrupt-20260928.json", backups: [{ name: "data-backup-20260927.json", path: "data-backup-20260927.json", createdAt: "2026-09-27T00:00:00.000Z" }] } as never}
+                recovery={{ kind: "invalid-json", corruptPath: "data.corrupt-20260928.json", backups: [{ name: "data-backup-20260927.json", path: "data-backup-20260927.json", createdAt: "2026-09-27T00:00:00.000Z" }, { name: "data-20261111-0930.json", path: "data-20261111-0930.json", createdAt: "2026-11-11T00:30:00.000Z" }, { name: "data-20261112-1015.json", path: "data-20261112-1015.json", createdAt: "2026-11-12T01:15:00.000Z" }] } as never}
                 readonly={undefined}
+                requestRestoreBackup={() => undefined}
+                copy={appCopy.ja}
+              />
+            </div>
+            {/* P23-30 P3 without a backup, P5, P6: the other three panels of the same part. */}
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4" data-p23-30="P3-empty" data-testid="p89-gallery-recovery-empty">
+              <StartupState
+                loadStatus="recovery"
+                recovery={{ kind: "invalid-json", backups: [] } as never}
+                readonly={undefined}
+                requestRestoreBackup={() => undefined}
+                copy={appCopy.ja}
+              />
+            </div>
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4" data-p23-30="P5" data-testid="p89-gallery-readonly">
+              <StartupState
+                loadStatus="readonly"
+                recovery={undefined}
+                readonly={{ fileVersion: 3, message: "このdata.jsonは fileVersion 3 です。" } as never}
+                requestRestoreBackup={() => undefined}
+                copy={appCopy.ja}
+              />
+            </div>
+            <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] px-4" data-p23-30="P6" data-testid="p89-gallery-error">
+              <StartupState
+                loadStatus="error"
+                recovery={undefined}
+                readonly={undefined}
+                error="ENOENT: no such file or directory, open 'C:/appdata/loopvault/data.json'"
                 requestRestoreBackup={() => undefined}
                 copy={appCopy.ja}
               />
@@ -228,9 +283,17 @@ export function ComponentGallery() {
         confirmLabel="削除する"
         cancelLabel="やめる"
         tone="danger"
+        secondaryLabel="複製して残す"
+        onSecondary={() => setConfirmOpen(false)}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => setConfirmOpen(false)}
       />
     </NotificationProvider>
   );
+}
+
+/** P23-05: no screen announces a song BPM yet, so the gallery does, to show 「曲 100」. */
+function GallerySongBpm() {
+  useAnnounceSongBpm(100);
+  return null;
 }

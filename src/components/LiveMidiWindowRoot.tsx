@@ -74,7 +74,8 @@ export function LiveMidiWindowRoot() {
       onShowMain={() => { void sendLiveMidiCommand({ type: "show-main" }); }}
       onRefreshDevices={() => { void sendLiveMidiCommand({ type: "refresh-devices" }); }}
       onSelectDevice={(backendId) => { void sendLiveMidiCommand({ type: "select-device", backendId }); }}
-      onSetShowHistory={(show) => { void sendLiveMidiCommand({ type: "set-show-history", show }); }}
+      onSave={() => { void sendLiveMidiCommand({ type: "close" }); }}
+      onClearHistory={() => { void sendLiveMidiCommand({ type: "clear-history" }); }}
     />
   );
 }

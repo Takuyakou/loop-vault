@@ -6,11 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { CorrectionMetricsSettings } from "../components/CorrectionMetricsSettings";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
+import { SettingsRow } from "../components/SettingsRow";
 import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { deleteOpenAiApiKey, getOpenAiApiKeyStatus, isLlmDesktopAvailable } from "../llm/bridge";
 import { loadUseStandardTitleBar, saveUseStandardTitleBar } from "../components/shell/shellPreferences";
 import { ChevronDownIcon } from "../components/icons";
-import { Button, StatusMessage } from "../components/ui";
+import { Button, Select, StatusMessage, Switch } from "../components/ui";
+import { useMidiConnection } from "../liveMidi/useMidiConnection";
+import { JAZZ_VAULT_DATA_PATH } from "../storage/jazzVaultStorage";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
@@ -52,8 +55,6 @@ import type { StoreApi } from "zustand/vanilla";
 import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
 import { loopVaultBuildInfo } from "../buildInfo";
 
-const inputClass = "lv-input w-full px-3 text-sm";
-
 /**
  * Scrolls only the app's content area (#main-content) to a section. `scrollIntoView` would also
  * scroll the fixed app frame, which clips the title bar and header.
@@ -65,14 +66,29 @@ function scrollToSection(id: string) {
   main.scrollTop += section.getBoundingClientRect().top - main.getBoundingClientRect().top - 12;
 }
 
-/** Left list of the settings screen: [section id, label]. */
+/** Left list of the settings screen: [section id, label]. P23-26 S1: five groups, the MIDI one merged. */
 const settingsSections = [
-  ["settings-general", "一般"],
-  ["settings-audio-midi", "音と MIDI"],
-  ["settings-live-midi", "Live MIDI"],
+  ["settings-general", "表示"],
+  ["settings-audio-midi", "MIDI 入力"],
   ["settings-data", "データ"],
+  ["settings-about", "このアプリについて"],
   ["settings-developer", "開発者向け"],
 ] as const;
+
+/** P23-26 S6: `data-20261111-0930.json` → 「11月11日 9:30」 in this PC's own clock. */
+const BACKUP_NAME_PATTERN = /^data-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})\.json$/;
+
+export function readableBackupDate(name: string): string | undefined {
+  const match = BACKUP_NAME_PATTERN.exec(name);
+  if (!match) return undefined;
+  const [, year, month, day, hour, minute] = match as unknown as [string, string, string, string, string, string];
+  const at = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+  if (Number.isNaN(at.getTime())) return undefined;
+  // A name that only looks like a date (month 13, hour 25) is not one: leave it as the file name.
+  if (at.getFullYear() !== Number(year) || at.getMonth() !== Number(month) - 1 || at.getDate() !== Number(day)
+    || at.getHours() !== Number(hour) || at.getMinutes() !== Number(minute)) return undefined;
+  return `${at.getMonth() + 1}月${at.getDate()}日 ${at.getHours()}:${String(at.getMinutes()).padStart(2, "0")}`;
+}
 
 async function writeClipboardText(text: string): Promise<void> {
   if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available.");
@@ -142,16 +158,40 @@ export function SettingsView({
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
   const [confirmationBusy, setConfirmationBusy] = useState(false);
   const [dataOperation, setDataOperation] = useState<"export" | "import">();
+  const [currentSection, setCurrentSection] = useState<string>(settingsSections[0][0]);
   const confirmationLockRef = useRef(false);
   const dataOperationLockRef = useRef(false);
+  const midiView = useMidiConnection();
+  // P23-26 S6: the counts the adopted design shows beside the location (both come from the loaded Vault).
+  const progressionCount = ideas.reduce((total, idea) => total + (idea.progressionBlocks?.length ?? 0), 0);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {
       setDataPath(ui.dataPathFallback);
       return;
     }
-    void appDataDir().then((path) => setDataPath(`${path}loopvault/data.json`));
+    // P23-26 S8: the Vault really lives one level down (the txt-jazz-v3 folder), not at loopvault/data.json.
+    void appDataDir().then((path) => setDataPath(`${path}${JAZZ_VAULT_DATA_PATH}`));
   }, [ui.dataPathFallback]);
+
+  // P23-26 S3: the left list lights the section the reader is in.
+  useEffect(() => {
+    const main = document.getElementById("main-content");
+    if (!main) return;
+    const update = () => {
+      const top = main.getBoundingClientRect().top + 90;
+      let current = settingsSections[0][0] as string;
+      for (const [id] of settingsSections) {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= top) current = id;
+      }
+      if (main.scrollTop + main.clientHeight >= main.scrollHeight - 4) current = settingsSections[settingsSections.length - 1][0];
+      setCurrentSection(current);
+    };
+    update();
+    main.addEventListener("scroll", update, { passive: true });
+    return () => main.removeEventListener("scroll", update);
+  }, []);
 
   async function runDataOperation<T>(
     operation: "export" | "import",
@@ -404,68 +444,90 @@ export function SettingsView({
             key={target}
             type="button"
             className="lv-settings-nav-item"
+            data-current={currentSection === target || undefined}
+            aria-current={currentSection === target ? "true" : undefined}
             onClick={() => {
               if (target === "settings-developer") setAnalysisExpanded(true);
+              setCurrentSection(target);
               window.requestAnimationFrame(() => scrollToSection(target));
             }}
           >
-            {label}
+            <span>{label}</span>
+            {target === "settings-audio-midi" ? (
+              <span className="lv-midi-dot" data-midi-kind={midiView.kind} aria-hidden="true" />
+            ) : null}
           </button>
         ))}
       </nav>
 
       <div className="lv-settings-content">
         <section id="settings-general" aria-labelledby="settings-general-title" className="lv-settings-card">
-          <h2 id="settings-general-title" className="lv-settings-card-title">{ui.general}</h2>
-          <label className="lv-settings-check">
-            <input type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
-            <span>
-              <strong>{ui.showDegrees}</strong>
-              <span>{ui.showDegreesHelp}</span>
-            </span>
-          </label>
-          <label className="lv-settings-check">
-            <input
-              type="checkbox"
-              checked={standardTitleBar}
-              onChange={(event) => {
-                setStandardTitleBar(event.target.checked);
-                saveUseStandardTitleBar(event.target.checked);
-              }}
-              data-testid="settings-standard-title-bar"
+          <h2 id="settings-general-title" className="lv-settings-card-title">表示</h2>
+          <p className="lv-settings-lead">変えると、すぐに反映されます。</p>
+          <div className="lv-settings-rows">
+            <SettingsRow
+              title={ui.showDegrees}
+              description={ui.showDegreesHelp}
+              control={(
+                <Switch
+                  label={ui.showDegrees}
+                  data-testid="settings-show-degrees"
+                  checked={showRomanNumerals}
+                  onChange={setShowRomanNumerals}
+                />
+              )}
             />
-            <span>
-              <strong>標準のタイトルバーを使う</strong>
-              <span>アプリのタイトルバーの代わりに Windows の標準のバーを使います。次の起動から変わります。この端末だけに保存します。</span>
-            </span>
-          </label>
+            <SettingsRow
+              title="標準のタイトルバーを使う"
+              description="アプリのタイトルバーの代わりに Windows の標準のバーを使います。次の起動から変わります。この端末だけに保存します。"
+              control={(
+                <Switch
+                  label="標準のタイトルバーを使う"
+                  data-testid="settings-standard-title-bar"
+                  checked={standardTitleBar}
+                  onChange={(next) => {
+                    setStandardTitleBar(next);
+                    saveUseStandardTitleBar(next);
+                  }}
+                />
+              )}
+            />
+          </div>
         </section>
 
-        <section id="settings-audio-midi" aria-labelledby="settings-audio-midi-title" className="lv-settings-group">
-          <h2 id="settings-audio-midi-title" className="lv-settings-group-title">音と MIDI</h2>
-          <p className="lv-settings-help">試聴の音色・メトロノーム・音量は、画面の上のヘッダーでいつでも切り替えられます。</p>
-          <BassPracticeRecordingSettingsSection />
+        {/* P23-26 S1: 「音と MIDI」 and 「Live MIDI」 are one section. `settings-live-midi` stays inside it. */}
+        <section id="settings-audio-midi" aria-labelledby="settings-audio-midi-title" className="lv-settings-card">
+          <h2 id="settings-audio-midi-title" className="lv-settings-card-title">MIDI 入力</h2>
+          <p className="lv-settings-lead">練習と Live MIDI で使う鍵盤です。アプリ全体で 1 つの接続を使います。</p>
+          <LiveMidiSettingsSection copy={ui} store={liveMidiStore}>
+            <BassPracticeRecordingSettingsSection />
+          </LiveMidiSettingsSection>
+          <p className="lv-settings-foot">試聴の音色・メトロノーム・音量は、画面の上の帯でいつでも変えられます。</p>
         </section>
-
-        <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
 
         <section id="settings-data" aria-labelledby="settings-data-title" className="lv-settings-card">
           <h2 id="settings-data-title" className="lv-settings-card-title">{ui.data}</h2>
-          <div>
-            <h3 className="lv-settings-subtitle">{ui.dataLocation}</h3>
-            <p className="mt-2 break-all text-sm text-[var(--lv-text-muted)]">{dataPath}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="neutral" onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</Button>
-              <Button variant="neutral" onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</Button>
+          <p className="lv-settings-lead">Vault は、この PC の中の 1 つのファイルに保存しています。</p>
+          <div className="lv-settings-path">
+            <div className="lv-settings-path-text">
+              <b>
+                {ui.dataLocation}
+                <span className="lv-settings-counts">
+                  <span>進行 <b>{progressionCount}</b></span>
+                  <span>曲 <b>{ideas.length}</b></span>
+                </span>
+              </b>
+              <code title={dataPath}>{dataPath}</code>
             </div>
+            <Button variant="neutral" size="sm" onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</Button>
+            <Button variant="neutral" size="sm" onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</Button>
           </div>
-          <div className="lv-settings-divider grid gap-5 md:grid-cols-2">
-            <div>
-              <h3 className="lv-settings-subtitle">{ui.exportTitle}</h3>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.exportDescription}</p>
+          <div className="lv-settings-io">
+            <div className="lv-settings-io-card">
+              <h3 className="lv-settings-subtitle"><Download aria-hidden="true" size={16} />{ui.exportTitle}</h3>
+              <p>{ui.exportDescription}</p>
               <Button
                 variant="neutral"
-                className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "export"}
                 onClick={() => void exportData()}
@@ -474,17 +536,16 @@ export function SettingsView({
                 {dataOperation === "export" ? ui.processing : ui.exportButton}
               </Button>
             </div>
-            <div>
-              <h3 className="lv-settings-subtitle">{ui.importTitle}</h3>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.importDescription}</p>
+            <div className="lv-settings-io-card" data-import-mode={importMode}>
+              <h3 className="lv-settings-subtitle"><Upload aria-hidden="true" size={16} />{ui.importTitle}</h3>
               <label className="sr-only" htmlFor="settings-import-mode">{ui.importTitle}</label>
-              <select id="settings-import-mode" name="settings-import-mode" className={`${inputClass} mt-2`} disabled={Boolean(dataOperation)} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
+              <Select id="settings-import-mode" name="settings-import-mode" wrapperClassName="w-full" className="w-full" disabled={Boolean(dataOperation)} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
                 <option value="merge">{ui.importMerge}</option>
                 <option value="replace">{ui.importReplace}</option>
-              </select>
+              </Select>
+              <p>{ui.importDescription}</p>
               <Button
                 variant="neutral"
-                className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "import"}
                 onClick={() => void importData()}
@@ -498,38 +559,55 @@ export function SettingsView({
               {error ? <StatusMessage className="mt-3" tone="error" title={error} /> : null}
             </div>
           </div>
-          <div className="lv-settings-divider">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="lv-settings-subtitle">{ui.backups}</h3>
+          <div className="lv-settings-backups">
+            <div className="lv-settings-backup-head">
+              <b>{ui.backups}</b>
+              <span>アプリが自動で残した控えです。戻すと、今の Vault と入れ替わります。</span>
               <Button variant="neutral" size="sm" onClick={() => void refreshBackups()}>{ui.refresh}</Button>
             </div>
-            <div className="mt-3 space-y-2">
-              {backups.length === 0 ? <p className="text-sm text-[var(--lv-text-muted)]">{ui.noBackups}</p> : null}
-              {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
+            <div>
+              {backups.length === 0 ? <p className="lv-settings-backup-empty">{ui.noBackups}</p> : null}
+              {(showAllBackups ? backups : backups.slice(0, 5)).map((backup, index) => (
                 <div key={backup.name} className="lv-settings-backup">
-                  <div><p className="font-medium">{backup.name}</p><p className="text-[var(--lv-text-muted)]">{backup.createdAt}</p></div>
+                  <span className="lv-settings-backup-date">
+                    {readableBackupDate(backup.name) ?? backup.name}
+                    {index === 0 ? <small>いちばん新しい</small> : null}
+                  </span>
+                  <code title={backup.name}>{backup.name}</code>
                   <Button variant="neutral" size="sm" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</Button>
                 </div>
               ))}
             </div>
             {backups.length > 5 ? (
-              <Button variant="ghost" size="sm" className="mt-3 !px-0 text-[var(--lv-accent)] hover:underline" onClick={() => setShowAllBackups((value) => !value)}>
+              <Button variant="ghost" size="sm" className="lv-settings-more" onClick={() => setShowAllBackups((value) => !value)}>
                 {showAllBackups ? ui.showLatestFive : ui.showAll}
               </Button>
             ) : null}
           </div>
-          <div
-            id="settings-about"
-            className="lv-settings-divider grid gap-1 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
-            aria-label={ui.formatInfo}
-            data-testid="loop-vault-format-info"
-          >
-            <span>{ui.appVersion(loopVaultBuildInfo.version)}</span>
-            <span>{ui.appFormat}</span>
-            <span>{ui.dataFormat}</span>
-            <span className="sm:col-span-2" data-testid="piano-sample-attribution">
-              Salamander Grand Piano V3 by Alexander Holm · CC BY 3.0 · https://creativecommons.org/licenses/by/3.0/
+        </section>
+
+        <section id="settings-about" aria-labelledby="settings-about-title" className="lv-settings-card">
+          <h2 id="settings-about-title" className="lv-settings-card-title">このアプリについて</h2>
+          <div className="lv-settings-about">
+            <span className="lv-settings-about-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="8" />
+                <circle cx="12" cy="12" r="2.5" />
+              </svg>
             </span>
+            <div className="lv-settings-about-text">
+              <b>Loop Vault<small>{loopVaultBuildInfo.version}</small></b>
+              <span>作曲の引き出しを、自分の耳で集める。</span>
+            </div>
+          </div>
+          <div className="lv-settings-about-facts" aria-label={ui.formatInfo} data-testid="loop-vault-format-info">
+            <div className="lv-settings-about-fact"><b>{ui.appVersion(loopVaultBuildInfo.version)}</b></div>
+            <div className="lv-settings-about-fact"><b>{ui.appFormat}</b></div>
+            <div className="lv-settings-about-fact"><b>{ui.dataFormat}</b></div>
+            <div className="lv-settings-about-fact"><b>{ui.formatInfo}</b></div>
+            <p className="lv-settings-about-attribution" data-testid="piano-sample-attribution">
+              Salamander Grand Piano V3 by Alexander Holm · CC BY 3.0 · https://creativecommons.org/licenses/by/3.0/
+            </p>
           </div>
         </section>
 
@@ -706,7 +784,7 @@ export function SettingsView({
         title={pendingConfirmation?.title ?? ""}
         description={pendingConfirmation?.description ?? ""}
         confirmLabel={pendingConfirmation?.confirmLabel ?? ui.refresh}
-        cancelLabel={ui.cancel}
+        cancelLabel="戻る"
         onCancel={() => setPendingConfirmation(undefined)}
         onConfirm={() => void confirmPendingAction()}
         tone="danger"

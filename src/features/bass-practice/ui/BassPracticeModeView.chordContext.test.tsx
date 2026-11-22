@@ -44,10 +44,14 @@ describe("Bass Practice Vault Chord Context handoff", () => {
     await act(async () => root.render(<BassPracticeModeView chordContextSnapshot={result.snapshot} />));
 
     expect(container.querySelector("[data-testid='bassline-echo-view']")).not.toBeNull();
-    expect(container.querySelector("[data-testid='bassline-source']")?.textContent)
+    // P23-63: the progression/key/level/BPM moved into the stage's 条件 chip in the top band.
+    expect(container.querySelector("[data-testid='bassline-conditions']")?.textContent)
       .toContain("Vault進行 · C major · bars 1-1");
-    expect(container.querySelector("[role='tab'][aria-selected='true']")?.textContent)
-      .toBe("Bassline Echo");
+    // P23-62: the screen name is Japanese now.
+    expect(container.querySelector(".bass-mode-name")?.textContent)
+      .toBe("コード進行のベース");
+    // P23-25 P7: a practice asked for by a progression skips the picking home.
+    expect(container.querySelector("[data-testid='bass-practice-home']")?.closest("[hidden]")).not.toBeNull();
     await act(async () => root.unmount());
   });
 });

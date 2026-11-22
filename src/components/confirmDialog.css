@@ -1,0 +1,87 @@
+/* P23-30 D1: one window shape — 480px wide, 16px corners, a 17px title, 13px text at 1.7. */
+/* The doubled class outranks the Modal's own `rounded-[var(--lv-radius-panel)]` utility. */
+.lv-confirm.lv-confirm {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+}
+
+.lv-confirm-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lv-confirm-title {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--lv-text);
+}
+
+.lv-confirm-warn {
+  flex: none;
+  color: var(--lv-danger);
+}
+
+.lv-confirm-count {
+  flex: none;
+  border-radius: 999px;
+  background: var(--lv-warning-soft);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lv-warning);
+}
+
+.lv-confirm-desc {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--lv-text-secondary);
+}
+
+/* D1: 取り消す方 (left) — the space — 消える方 — 主の方 (right). */
+.lv-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.lv-confirm-spacer {
+  flex: 1 1 auto;
+}
+
+.lv-confirm-actions kbd {
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--lv-text) 12%, transparent);
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: inherit;
+}
+
+/* P23-30 D8: the Modal-based windows take the same corners and the same footer order. */
+.lv-dialog-16.lv-dialog-16 {
+  border-radius: 16px;
+}
+
+.lv-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.lv-dialog-actions > .lv-dialog-spacer {
+  flex: 1 1 auto;
+}

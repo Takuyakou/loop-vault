@@ -82,6 +82,13 @@ async function renderVault(overrides: Partial<Props> = {}) {
 
 const buttonByText = (scope: ParentNode, text: string) =>
   [...scope.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent?.includes(text));
+/** P23-10: the facet chips above the list (the left rail is gone); a facet's values open from its chip. */
+const facets = (container: HTMLElement) => container.querySelector<HTMLElement>("[data-testid='vault-facets']")!;
+async function facetOption(container: HTMLElement, facet: string, label: string) {
+  const menu = () => [...container.querySelectorAll<HTMLElement>(".lv-vault-facet-menu")].find((node) => node.getAttribute("aria-label") === facet);
+  if (!menu()) await act(async () => buttonByText(facets(container), facet)!.click());
+  return buttonByText(menu()!, label)!;
+}
 const rowNames = (container: HTMLElement) =>
   [...container.querySelectorAll(".lv-vault-progression-primary")].map((node) => node.textContent);
 
@@ -132,7 +139,7 @@ describe("VaultView", () => {
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
     expect(view.container.querySelector("[role='group'][aria-label='Vault']")).toBeNull();
     const group = view.container.querySelector("[data-testid='vault-orphan-ideas']")!;
-    const toggle = buttonByText(group, "進行のない Idea（2件）")!;
+    const toggle = buttonByText(group, "進行のない曲（2件）")!;
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     await act(async () => toggle.click());
     await act(async () => buttonByText(group, "Memo only")!.click());
@@ -148,7 +155,7 @@ describe("VaultView", () => {
     expect(view.container.textContent).toContain("最初の進行を取り込む");
     await act(async () => buttonByText(view.container, "MIDI から取り込む")!.click());
     expect(openCapture).toHaveBeenCalled();
-    await act(async () => buttonByText(view.container, "テキストから取り込む")!.click());
+    await act(async () => buttonByText(view.container, "コード譜のテキストを貼り付け")!.click());
     expect(openTextCapture).toHaveBeenCalled();
     expect(view.container.querySelectorAll(".lv-button-primary")).toHaveLength(1);
     await view.unmount();
@@ -162,26 +169,27 @@ describe("VaultView", () => {
         makeIdea({ id: "c", title: "Charlie", progressionBlocks: [chordBlock("c", ["D", "A"], { detectedKey: "D", lengthBars: 16, textSource: {} as SavedProgressionBlock["textSource"] })] }),
       ],
     });
-    const filters = view.container.querySelector<HTMLElement>(".lv-vault-rail [data-testid='vault-filters']")!;
-    const option = (section: string, label: string) =>
-      buttonByText(filters.querySelector(`section[aria-label='${section}']`)!, label)!;
-    expect(option("取り込み元", "MIDI").textContent).toContain("1");
+    const option = (section: string, label: string) => facetOption(view.container, section, label);
+    expect((await option("取り込み元", "MIDI")).textContent).toContain("1");
 
-    await act(async () => option("取り込み元", "Live MIDI").click());
-    await act(async () => option("取り込み元", "テキスト").click());
+    const pick1 = await option("取り込み元", "Live MIDI");
+    await act(async () => pick1.click());
+    const pick2 = await option("取り込み元", "テキスト");
+    await act(async () => pick2.click());
     expect(new Set(rowNames(view.container))).toEqual(new Set(["Bravo", "Charlie"]));
-    expect(option("取り込み元", "MIDI").getAttribute("aria-pressed")).toBe("false");
+    expect((await option("取り込み元", "MIDI")).getAttribute("aria-pressed")).toBe("false");
 
-    await act(async () => option("長さ", "5〜8小節").click());
+    const pick3 = await option("長さ", "5〜8小節");
+    await act(async () => pick3.click());
     expect(rowNames(view.container)).toEqual(["Bravo"]);
     expect(view.container.querySelector("[role='status']")?.textContent).toBe("1 / 3件");
-    expect(option("長さ", "〜4小節").disabled).toBe(true);
+    expect((await option("長さ", "〜4小節")).disabled).toBe(true);
 
-    await act(async () => buttonByText(filters, "すべて解除")!.click());
+    await act(async () => buttonByText(facets(view.container), "すべて外す")!.click());
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(3);
     expect(view.container.querySelector("[role='status']")?.textContent).toBe("3件");
 
-    await act(async () => buttonByText(filters, "お気に入り")!.click());
+    await act(async () => buttonByText(facets(view.container), "お気に入り")!.click());
     expect(rowNames(view.container)).toEqual(["Alpha"]);
     await view.unmount();
   });
@@ -197,7 +205,7 @@ describe("VaultView", () => {
     expect(search.placeholder).toBe("コード名か度数（2-5-1）で探す");
     await setInputValue(search, "2-5-1");
     expect(rowNames(view.container)).toEqual(["Two five"]);
-    expect(view.container.querySelector("[data-testid='vault-degree-match']")?.textContent).toContain("ii7 → V7 → Imaj7（2〜4番目のコード）");
+    expect(view.container.querySelector("[data-testid='vault-degree-match']")?.textContent).toContain("Ⅱm7 → Ⅴ7 → Ⅰmaj7（2〜4番目のコード）");
     expect([...view.container.querySelectorAll(".lv-vault-chip")].map((chip) => chip.getAttribute("data-match")))
       .toEqual(["false", "true", "true", "true"]);
 
@@ -219,7 +227,7 @@ describe("VaultView", () => {
     expect(rowNames(view.container)).toEqual(["Bee", "Ant"]);
     await setSelectValue(sort, "length");
     expect(rowNames(view.container)).toEqual(["Ant", "Bee"]);
-    await act(async () => buttonByText(view.container.querySelector(".lv-vault-rail")!, "お気に入り")!.click());
+    await act(async () => buttonByText(facets(view.container), "お気に入り")!.click());
     await view.unmount();
 
     expect(JSON.parse(window.sessionStorage.getItem(VAULT_LIBRARY_SESSION_KEY)!)).toMatchObject({ filters: { favorite: true } });
@@ -352,9 +360,14 @@ describe("VaultView", () => {
     expect(view.container.querySelector('label[for="vault-sort"]')?.textContent).toContain("並び順");
     expect(view.container.querySelector('[role="status"][aria-live="polite"]')?.textContent).toBe("2件");
     const favorite = view.container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.addFavorite}"]`)[1]!;
-    const copyButton = view.container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.copyProgression}"]`)[1]!;
     expect(favorite.title).toBe(appCopy.ja.library.addFavorite);
-    expect(copyButton.title).toBe(appCopy.ja.library.copyProgression);
+    // P23-10 V3: a row's right has ♥ and 「開く ›」 only; copying is the chosen progression's 「コードをコピー」 (and C).
+    const rows = view.container.querySelectorAll<HTMLElement>(".lv-vault-row");
+    for (const row of rows) {
+      expect([...row.querySelectorAll(".lv-vault-actions button")].map((button) => button.getAttribute("aria-label")))
+        .toEqual([appCopy.ja.library.addFavorite, appCopy.ja.library.openProgression]);
+    }
+    const copyButton = buttonByText(view.container.querySelector("[data-testid='vault-preview']")!, "コードをコピー")!;
     await act(async () => {
       favorite.click();
       copyButton.click();
@@ -379,14 +392,17 @@ describe("VaultView", () => {
     });
     const view = await renderVault({ ideas: [idea], showRomanNumerals: true });
     const row = view.container.querySelector<HTMLElement>(".lv-vault-row")!;
-    expect(row.getAttribute("data-compact")).toBe("false");
-    expect(row.classList.contains("min-h-24")).toBe(true);
+    expect(row.getAttribute("data-selected")).toBe("true");
     expect(row.querySelector(".lv-vault-progression")?.getAttribute("aria-current")).toBe("true");
     expect(row.querySelector(".lv-vault-progression-primary")?.textContent).toBe("Night bridge");
-    expect(row.querySelector(".lv-vault-progression-secondary")?.textContent).toBe("Dマイナー · BPM 124 · 4小節 · 7月15日 · MIDI");
-    expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bridge");
-    expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bright");
-    expect(row.querySelector(".lv-vault-chip")?.textContent).toBe("Cmaj7♭VIImaj7");
+    // P23-10 V2: the 58px row keeps the source, key and bars; BPM, date and tags are in the chosen progression's contents.
+    expect(row.querySelector(".lv-vault-progression-secondary")?.textContent).toBe("MIDIDマイナー · 4小節");
+    const preview = view.container.querySelector<HTMLElement>("[data-testid='vault-preview']")!;
+    expect([...preview.querySelectorAll(".lv-vault-preview-meta span")].map((part) => part.textContent))
+      .toEqual(["Dマイナー", "124 BPM", "4小節", "MIDI", "7月15日に保存"]);
+    expect(preview.textContent).toContain("bridge");
+    expect(preview.textContent).toContain("bright");
+    expect(row.querySelector(".lv-vault-chip")?.textContent).toBe("Cmaj7♭Ⅶmaj7");
     await view.unmount();
   });
 
@@ -454,7 +470,7 @@ describe("VaultView", () => {
     const setToast = vi.fn();
     const view = await renderVault({ ideas: [makeIdea({ progressionBlocks: [progressionBlock] })], setToast });
     await act(async () => {
-      view.container.querySelector<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.copyProgression}"]`)?.click();
+      buttonByText(view.container.querySelector("[data-testid='vault-preview']")!, "コードをコピー")?.click();
     });
     expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.library.copyFailed);
     await view.unmount();
@@ -472,7 +488,8 @@ describe("VaultView", () => {
     const search = view.container.querySelector<HTMLInputElement>("#vault-search")!;
     await setInputValue(search, "Library");
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(2);
-    await act(async () => buttonByText(view.container.querySelector(".lv-vault-rail section[aria-label='タグ']")!, "分数コード")!.click());
+    const fraction = await facetOption(view.container, "タグ", "分数コード");
+    await act(async () => fraction.click());
     expect(search.value).toBe("Library");
     expect(view.container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
     expect(view.container.querySelector(".lv-vault-chip")?.textContent).toBe("Cmaj7/E");
@@ -482,12 +499,10 @@ describe("VaultView", () => {
   it("virtualizes 1000 progression rows without mounting every card", async () => {
     const blocks = Array.from({ length: 1000 }, (_, index) => ({ ...progressionBlock, id: `block-${index}` }));
     const view = await renderVault({ ideas: [makeIdea({ id: "idea-large", progressionBlocks: blocks })] });
-    expect(view.container.querySelector("[data-virtualized='true']")?.getAttribute("data-row-height")).toBe("96");
+    // P23-10 V2: every row is 58px (a date heading 30px), so the window knows every offset.
+    expect(view.container.querySelector("[data-virtualized='true']")?.getAttribute("data-row-height")).toBe("58");
     const compactRow = view.container.querySelector<HTMLElement>(".lv-vault-row")!;
-    expect(compactRow.getAttribute("data-compact")).toBe("true");
-    expect(compactRow.classList.contains("h-24")).toBe(true);
-    expect(compactRow.classList.contains("overflow-hidden")).toBe(true);
-    expect(compactRow.querySelector(".lv-vault-progression-primary")?.classList.contains("truncate")).toBe(true);
+    expect(compactRow.parentElement?.style.height).toBe("58px");
     expect(compactRow.querySelector(".lv-vault-progression")?.getAttribute("title")).toContain("Cmaj7");
     expect(view.container.querySelectorAll(".lv-vault-row").length).toBeLessThan(100);
     expect(view.container.textContent).toContain("1000件");

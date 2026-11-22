@@ -1,0 +1,64 @@
+[
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": []
+    }
+  },
+  {
+    "case": "one",
+    "outcome": {
+      "ok": true,
+      "value": [
+        {
+          "kind": "standard",
+          "id": "builtin:i-v-vi-iv:1",
+          "key": 3,
+          "stage": "see",
+          "random": false,
+          "at": "2026-07-04T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  {
+    "case": "keeps-three-at-most",
+    "outcome": {
+      "ok": true,
+      "value": [
+        {
+          "kind": "standard",
+          "id": "builtin:i-v-vi-iv:1",
+          "key": 3,
+          "stage": "see",
+          "random": false,
+          "at": "2026-07-05T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  {
+    "case": "drops-the-broken-one",
+    "outcome": {
+      "ok": true,
+      "value": [
+        {
+          "kind": "standard",
+          "id": "builtin:i-v-vi-iv:1",
+          "key": 3,
+          "stage": "see",
+          "random": false,
+          "at": "2026-07-04T00:00:00.000Z"
+        }
+      ]
+    }
+  },
+  {
+    "case": "invalid-json",
+    "outcome": {
+      "ok": true,
+      "value": []
+    }
+  }
+]

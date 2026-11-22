@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0 - 2026-11-22
+
+- Redo the whole interface: new fonts, colours and surfaces, the Home screen (today's loop, practice records, resume), Import (MIDI / text entry and the pre-analysis check), the Vault list and preview, the progression header, the Correction Workspace, Settings, the toast and the sidebar. Search from anywhere with Ctrl+K.
+- Show chord names with ♯ / ♭ and Roman-numeral degrees, give an unset key automatically when a progression is imported, and share one BPM across the practice screens.
+- Voicing Loop: a new practice screen and progression picker; right-click inside the range clears it, and the range is amber.
+- Chord Dojo: a two-column Home; the Guided Course (Lv1–Lv8 and a capstone) with its own stage, restart dialog and course map; 2-5-1 Master top row; Ear Practice (choose, record, judge, result); Voicing Drill.
+- Bass Practice: a three-stage practice screen with automatic judging of a played bassline (a guide for single-note playing), and a calmer Home.
+- Dependencies: zod 4, vitest 4, vite 7.3.8 and four Rust crates; `npm audit` reports 0 vulnerabilities.
+- Keep Vault `fileVersion` 2. v2.1.0 data opens as it is; the new practice records (`guided-course-v1`, `guided-course-advanced-v1`, `voicing-drill-v1`) get their own files on first use. See [release notes](docs/release/v3.0.0/release-notes.md).
+
 ## 2.1.0 - 2026-11-08
 
 - Rebuild Chord Dojo: 定番の進行 across 12 keys and random keys, Original Practice, long progressions, 2-5-1 Master, saved progressions, and one visible answer step per judged chord.

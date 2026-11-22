@@ -1,0 +1,519 @@
+/* P23-42: the guided course screen. Course-scoped: the ordinary PracticeFrame is untouched. */
+.dojo[data-dojo-screen="guided-course"] .guided-course {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 1100px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 14px 20px 20px;
+}
+
+.gc-head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* P23-47: the title row keeps the back action and the one-line task title; all controls move to
+   their own operations row so the title is never squeezed by progress/MIDI/restart controls. */
+.gc-head-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gc-head-main { min-width: 0; flex: 1 1 auto; }
+
+.gc-kicker {
+  margin: 0;
+  color: var(--dojo-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+
+.gc-head h1 {
+  margin: 2px 0 0;
+  color: #f2f6fc;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.gc-sub {
+  margin: 2px 0 0;
+  color: var(--dojo-secondary);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.gc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px 10px;
+  min-width: 0;
+  color: var(--dojo-secondary);
+  font-size: 12px;
+}
+
+/* P23-58 E3: secondary button matching `.dojo button`, with a small restart icon. */
+.gc-meta .gc-restart {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.gc-meta .gc-restart svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.gc-meta [data-testid="course-progress"] {
+  color: #f2f6fc;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gc-meta .gc-midi { white-space: nowrap; }
+.gc-meta button { min-height: 30px; padding: 0 9px; font-size: 12px; }
+
+.gc-task {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 190px;
+  padding: 20px 24px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 14px;
+  background: var(--dojo-surface);
+  text-align: center;
+  min-width: 0;
+}
+
+.gc-task-kind {
+  margin: 0;
+  color: var(--dojo-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.gc-chord {
+  max-width: 100%;
+  margin: 0;
+  color: #f2f6fc;
+  font-size: clamp(38px, 4.6vw, 60px);
+  font-weight: 700;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.gc-instruction {
+  margin: 0;
+  color: var(--dojo-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.gc-audio { color: var(--dojo-muted); font-size: 12.5px; }
+
+.gc-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+.gc-choices button {
+  min-width: 140px;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.gc-choices button[aria-pressed="true"] {
+  border-color: var(--dojo-accent);
+  background: var(--dojo-accent-soft);
+  color: var(--dojo-accent);
+}
+
+.gc-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  color: var(--dojo-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.gc-feedback[data-ok="true"] { color: var(--dojo-accent); }
+.gc-feedback[data-ok="false"] { color: #ff9aa2; }
+.gc-feedback[data-result="invalid"] { color: var(--dojo-warn); }
+
+/* P23-47-fix-3: the visible chord name is the audition card. */
+.gc-chord-card-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gc-chord-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 140px;
+  max-width: 100%;
+  min-height: 58px;
+  padding: 8px 20px;
+  border: 1px solid var(--dojo-border-strong);
+  border-radius: 14px;
+  background: var(--dojo-surface);
+  color: #f2f6fc;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gc-chord-card:hover {
+  border-color: color-mix(in srgb, var(--dojo-accent) 60%, transparent);
+  background: var(--dojo-raised);
+}
+
+.gc-chord-card:focus-visible {
+  border-color: var(--dojo-accent);
+  outline: 2px solid #8bd7ff;
+  outline-offset: 2px;
+}
+
+.gc-chord-card[data-playing] {
+  border-color: var(--dojo-accent);
+  box-shadow: 0 0 0 3px rgb(66 216 198 / 25%);
+}
+
+.gc-chord-card:disabled { opacity: .6; cursor: wait; }
+
+.gc-chord-card-name {
+  margin: 0;
+  color: #f2f6fc;
+  font-size: clamp(38px, 6vw, 52px);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.gc-chord-card-sound { flex: none; color: var(--dojo-muted); }
+
+.gc-chord-card[data-playing] .gc-chord-card-sound { color: var(--dojo-accent); }
+
+.gc-chord-card-hint {
+  margin: 0;
+  color: var(--dojo-secondary);
+  font-size: 12.5px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.gc-practice-back-row { display: flex; justify-content: flex-start; margin-top: 4px; }
+.gc-feedback {
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+
+.gc-feedback-detail { color: var(--dojo-secondary); font-size: 12.5px; }
+
+.gc-example-notes {
+  margin: 0;
+  color: var(--dojo-accent);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.gc-answer-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--dojo-secondary);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.gc-view-answer {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dojo-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.gc-view-answer:hover { color: #f2f6fc; }
+
+.gc-auto-advance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dojo-secondary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.gc-auto-advance input { width: 16px; height: 16px; accent-color: var(--dojo-accent); }
+
+.gc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gc-actions .dojo-primary,
+.gc-panel-actions .dojo-primary {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gc-note {
+  margin: 0;
+  color: var(--dojo-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.gc-keyboard {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  border-top: 1px solid var(--dojo-border);
+  padding: 6px 0 2px;
+}
+
+.gc-keyboard-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 18px;
+  color: var(--dojo-muted);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.gc-keyboard-head b { color: #f2f6fc; font-size: 12px; }
+.gc-keyboard [role="region"] { border: 0; padding: 0; background: none; }
+.gc-keyboard svg { display: block; width: 100%; height: 128px; min-width: 0 !important; margin-inline: auto; }
+
+.gc-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 18px 20px;
+  border: 1px solid var(--dojo-border);
+  border-radius: 14px;
+  background: var(--dojo-surface);
+  min-width: 0;
+}
+
+.gc-panel h2 {
+  margin: 0;
+  color: #f2f6fc;
+  font-size: 20px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.gc-panel p { margin: 0; color: var(--dojo-secondary); font-size: 13px; line-height: 1.55; }
+.gc-panel .gc-panel-kicker { color: var(--dojo-accent); font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.gc-panel .gc-panel-ok { color: var(--dojo-accent); font-weight: 700; }
+.gc-panel .gc-panel-warn { color: var(--dojo-warn); font-weight: 700; }
+
+.gc-result-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 4px 16px; }
+.gc-result-counts span { color: var(--dojo-secondary); font-size: 13px; }
+.gc-result-counts b { color: #f2f6fc; font-variant-numeric: tabular-nums; }
+
+.gc-result details { margin-top: 2px; }
+.gc-result summary { color: var(--dojo-secondary); font-size: 12.5px; cursor: pointer; }
+.gc-result ul { margin: 6px 0 0; padding-left: 18px; color: var(--dojo-secondary); font-size: 12.5px; line-height: 1.55; }
+
+.gc-panel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+@media (max-width: 860px) {
+  .dojo[data-dojo-screen="guided-course"] .guided-course { gap: 8px; padding: 8px 12px 12px; }
+  .gc-meta { justify-content: flex-start; }
+  .gc-task { min-height: 150px; padding: 12px; }
+  .gc-chord { font-size: clamp(36px, 8vw, 48px); }
+  .gc-panel { padding: 16px; }
+}
+
+@media (max-width: 520px) {
+  .gc-chord { font-size: 36px; }
+  .gc-choices button { flex: 1 1 120px; }
+  .gc-meta button { min-height: 32px; }
+}
+
+/* P23-47-fix-1: the restart confirmation is portaled to document.body, outside `.dojo`, so it
+   carries its own opaque palette and button styling instead of the `.dojo` variables. */
+.gc-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(4, 8, 14, .78);
+  overscroll-behavior: contain;
+}
+
+.gc-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: min(430px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid rgb(150 170 195 / 30%);
+  border-radius: 16px;
+  background: #111b2a;
+  color: #f2f6fc;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+  text-align: left;
+  font-family: inherit;
+}
+
+.gc-dialog h2 {
+  margin: 0;
+  color: #f2f6fc;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.gc-dialog p {
+  margin: 0;
+  color: #a5b2c6;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.gc-dialog .gc-dialog-error {
+  color: #ff9aa2;
+  font-weight: 700;
+}
+
+.gc-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gc-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgb(150 170 195 / 45%);
+  border-radius: 8px;
+  background: transparent;
+  color: #f2f6fc;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gc-dialog button:hover { background: #162338; }
+
+.gc-dialog button:focus-visible {
+  outline: 2px solid #8bd7ff;
+  outline-offset: 2px;
+}
+
+.gc-dialog button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.gc-dialog button[data-variant="restart"] {
+  border-color: #8a6a34;
+  background: #111b2a;
+  color: #e6bd74;
+  font-weight: 600;
+}
+
+.gc-dialog button[data-variant="restart"]:hover {
+  background: #2b241b;
+  color: #e6bd74;
+}
+
+@media (max-width: 520px) {
+  .gc-dialog-actions { flex-direction: column; }
+  .gc-dialog-actions button { width: 100%; }
+}
+
+.gc-self-choices { margin-top: -2px; }
+.gc-self-choices button { min-width: 160px; }
+
+/* P23-43: the ear controls live with the task; the keyboard shares the task's centreline. */
+.gc-ear-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; }
+.gc-ear-controls button { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+.gc-keyboard { align-items: center; }
+.gc-keyboard-head { justify-content: center; }
+.gc-keyboard [role="region"] { width: min(100%, 760px); margin: 0 auto; }
+.gc-keyboard-body { display: flex; justify-content: center; width: min(100%, 760px); min-width: 0; margin: 0 auto; }
+
+/* P23-44: one 760px card holds the task, the keyboard and the result/actions. */
+.dojo[data-dojo-screen="guided-course"] .guided-course { width: min(100%, 760px); }
+.gc-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 20px; border: 1px solid var(--dojo-border); border-radius: 16px; background: var(--dojo-surface); }
+.gc-card-top { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; text-align: center; }
+.gc-card-mid { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gc-card-bottom { display: flex; flex-direction: column; gap: 8px; min-height: 112px; }
+.gc-demo-notes { margin: 0; color: var(--dojo-accent); font-size: 13px; font-variant-numeric: tabular-nums; }
+.gc-listen-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; }
+.gc-listen-row button, .gc-review-actions button { min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+.gc-review { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.gc-review-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.gc-review-note { margin: 0; color: var(--dojo-secondary); font-size: 12px; line-height: 1.5; text-align: center; }
+.gc-next-idle { opacity: .55; }
+.gc-keyboard-body { width: 100%; min-width: 0; }
+.gc-keyboard [role="region"] { width: 100%; }
+.gc-keyboard [role="region"] > div { width: 100% !important; min-width: 0 !important; }
+.gc-keyboard svg { width: 100% !important; min-width: 0 !important; height: 128px !important; }
+
+@media (max-width: 860px) {
+  .gc-card { gap: 10px; padding: 12px; }
+  .gc-card-bottom { min-height: 104px; }
+  .gc-keyboard svg { height: 120px !important; }
+}
+.dojo[data-dojo-screen="guided-course"] .guided-course { width: min(100%, 800px); }
+.gc-keyboard-body > div { width: 100%; min-width: 0; }
+.gc-give-up-row { display: flex; justify-content: center; }
+.gc-give-up { min-height: 28px; padding: 0 10px; border-color: transparent; background: transparent; color: var(--dojo-muted); font-size: 11.5px; text-decoration: underline; }
+.gc-give-up:hover { color: var(--dojo-secondary); background: transparent; }

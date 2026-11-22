@@ -27,7 +27,7 @@ async function mount(selection:ProgressionVoicingSelection, snapshots=syntheticS
 function button(c:HTMLElement,label:string){const result=[...c.querySelectorAll<HTMLButtonElement>("button")].find(b=>b.textContent===label||b.getAttribute("aria-label")===label)??[...c.querySelectorAll<HTMLButtonElement>("button")].find(b=>b.textContent?.includes(label));if(!result)throw Error(`Missing control: ${label}`);return result;}
 function observe(container:HTMLElement,model:ReturnType<typeof project>,event:number,tag:string){
  const frame=model.frames[event]!;const card:Record<string,string|null>={};
- for(const hand of ["left","right"]as const){const panel=container.querySelector(`[data-testid='voicing-loop-${hand}-hand']`);card[hand]=panel?.textContent??null;if(frame.hands[hand].length){const label=frame.cardLabels[hand]!;if(/^[LR]\d/.test(label)){const used=[...panel!.querySelectorAll("tr[data-row='finger'] td[data-used='true']")].map(n=>n.textContent!).sort();expect(used).toEqual(label.split(" · ").sort());}else expect(panel?.textContent).toContain(label);}}
+ for(const hand of ["left","right"]as const){const panel=container.querySelector(`[data-testid='voicing-loop-${hand}-hand']`);card[hand]=panel?.textContent??null;if(frame.hands[hand].length){const label=frame.cardLabels[hand]!;if(/^[LR]\d/.test(label)){const used=[...panel!.querySelectorAll("[data-testid='voicing-loop-hand-slot'][data-used='true'] .voicing-hand-slot-finger")].map(n=>n.textContent!).sort();expect(used).toEqual(label.split(" · ").sort());}else expect(panel?.textContent).toContain(label);}}
  const keys=[...container.querySelectorAll<HTMLElement>("[data-midi-note] [data-finger-label]")].map(e=>({note:Number(e.closest("[data-midi-note]")!.getAttribute("data-midi-note")),label:e.getAttribute("data-finger-label")}));
  for(const [note,label]of Object.entries(frame.keyboardLabels))expect(keys.some(k=>k.note===Number(note)&&k.label===label)).toBe(true);
  const slots=[...container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-finger-slot']")].map(e=>({finger:e.dataset.finger,title:e.title,strength:e.dataset.strength}));
@@ -62,7 +62,8 @@ it("measures Range selection without changing effective fingering",async()=>{
   await context(a,a===b);if(a!==b)await context(b);
   await act(async()=>cards()[1]!.click());observe(container,model,1,`range-${tag}`);
   expect(container.querySelector("[data-testid='voicing-loop-range-chip']")).not.toBeNull();
-  await act(async()=>button(container,"区間解除").click());
+  // P23-32 L1/K4: the bar's 区間解除 is gone; the active range is cleared by its own chip.
+  await act(async()=>container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-range-chip']")!.click());
  }
  observations.push({tag:"range-result",changed:0,total:3,scope:"same target event=1; actual View contextmenu; notes/ranking baseline kept"});write();
 });

@@ -1,5 +1,7 @@
 import {expect,test,type Page} from '@playwright/test';
 import {assertNoHorizontalOverflow} from './helpers/app';
+import { stageMicrophone } from './helpers/bass-stage';
+import { backToVault, bassPracticeFromVault, practiceFromVault } from "./helpers/practice";
 async function open(page:Page,long:boolean|'text'=false){await page.goto(`/?p104=${long==='text'?'text':long?'long':'normal'}`);await page.locator('[data-nav="vault"]').click();const row=page.locator('.lv-vault-row').filter({hasText:'P10.4 合成曲'}).first();await expect(row).toBeVisible();await row.getByRole('button',{name:/進行を開く/}).click();await expect(page.getByTestId('correction-piano-roll')).toBeVisible();}
 const cards=(page:Page)=>page.getByTestId('correction-card');
 const notes=(page:Page)=>page.locator('.lv-cw-note[data-card="p104-0"]');
@@ -12,7 +14,7 @@ test('P10.4 manual notes retain source, minimum two, overwrite reload and shared
  await expect(page.locator('.lv-cw-note[data-card="p104-0"]:not([data-kind="off"])')).toHaveCount(2);
  await page.getByRole('button',{name:'上書き保存',exact:true}).click();await expect(page.getByRole('button',{name:'上書き保存',exact:true})).toBeDisabled();
  await expect(notes(page)).toHaveCount(2);await page.getByRole('combobox',{name:'この曲の進行',exact:true}).selectOption('10400000-0000-4000-8000-000000000002');await page.getByRole('combobox',{name:'この曲の進行',exact:true}).selectOption('10400000-0000-4000-8000-000000000001');await expect(notes(page)).toHaveCount(2);
- await page.getByTestId('voicing-loop-handoff').click();await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
+ await practiceFromVault(page,'Voicing Loop',{blockId:'10400000-0000-4000-8000-000000000001'});await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
 });
 test('P10.4 range loops for its full span, endpoints adjust, version defaults to range and original stays intact',async({page})=>{
  await open(page);await cards(page).first().click({button:'right'});await page.getByRole('menuitem',{name:'ここから保存する範囲を選ぶ'}).click();await cards(page).nth(1).click({button:'right'});await expect(page.getByTestId('correction-range-chip')).toContainText('くり返し');
@@ -25,11 +27,11 @@ test('P10.4 range loops for its full span, endpoints adjust, version defaults to
 });
 test('P10.4 candidates, note move/add, split/delete/boundary, save-aware navigation and text keyboard',async({page})=>{
  await open(page);await cards(page).first().click();await page.getByTestId('correction-name-candidates').getByRole('button').first().click();await expect(cards(page).first()).toContainText('変更');
- await page.getByRole('combobox',{name:'この曲の進行',exact:true}).selectOption('10400000-0000-4000-8000-000000000002');const guard=page.getByRole('dialog',{name:'変更を保存しますか？'});await expect(guard).toBeVisible();await guard.getByRole('button',{name:'戻る',exact:true}).click();await expect(page.getByRole('combobox',{name:'この曲の進行',exact:true})).toHaveValue('10400000-0000-4000-8000-000000000001');
- await page.getByTestId('correction-undo').click();await page.getByTestId('correction-mode-edit').click();const note=notes(page).first();const box=await note.boundingBox();if(!box)throw new Error('note missing');await page.mouse.move(box.x+12,box.y+2);await page.mouse.down();await page.mouse.move(box.x+12,box.y-4,{steps:3});await page.mouse.up();await expect(page.locator('.lv-cw-note[data-card="p104-0"][data-kind="manual"]')).toHaveCount(1);
+ await page.getByRole('combobox',{name:'この曲の進行',exact:true}).selectOption('10400000-0000-4000-8000-000000000002');const guard=page.getByRole('dialog',{name:'変更を保存しますか？'});await expect(guard).toBeVisible();await guard.getByRole('button',{name:/^戻る/}).click();await expect(page.getByRole('combobox',{name:'この曲の進行',exact:true})).toHaveValue('10400000-0000-4000-8000-000000000001');
+ await page.getByTestId('correction-undo').click();await page.getByTestId('correction-mode-edit').click();const note=notes(page).first();await note.scrollIntoViewIfNeeded();const box=await note.boundingBox();if(!box)throw new Error('note missing');await page.mouse.move(box.x+12,box.y+2);await page.mouse.down();await page.mouse.move(box.x+12,box.y-4,{steps:3});await page.mouse.up();await expect(page.locator('.lv-cw-note[data-card="p104-0"][data-kind="manual"]')).toHaveCount(1);
  await page.getByTestId('correction-add-note').click();await page.getByRole('group',{name:'足す音を選ぶ'}).getByRole('button').nth(1).click();await expect(page.locator('.lv-cw-note[data-card="p104-0"][data-kind="manual"]')).toHaveCount(2);
  await page.getByTestId('correction-card-actions').getByRole('button',{name:/分けて足す/}).click();await expect(cards(page)).toHaveCount(9);await page.getByTestId('correction-undo').click();await expect(cards(page)).toHaveCount(8);
- await page.getByLabel('メモ',{exact:true}).fill('Space N S Del メモ');await page.keyboard.press('Space');await expect(page.getByTestId('correction-play-song')).toHaveText('▶ 再生');
+ if(await page.getByTestId('progression-memo-add').isVisible())await page.getByTestId('progression-memo-add').click();await page.getByLabel('メモ',{exact:true}).fill('Space N S Del メモ');await page.keyboard.press('Space');await expect(page.getByTestId('correction-play-song')).toHaveText('▶ 再生');
  await page.locator('[data-nav="home"]').click();const leave=page.getByRole('dialog');await expect(leave).toContainText('保存して移る');await leave.getByRole('button',{name:'保存して移る',exact:true}).click();await expect(page.locator('[data-progression-detail-view]')).toHaveCount(0);
  await page.locator('[data-nav="vault"]').click();await page.locator('.lv-vault-row').first().getByRole('button',{name:/進行を開く/}).click();await expect(page.getByLabel('メモ',{exact:true})).toHaveValue('Space N S Del メモ ');
 });
@@ -37,20 +39,28 @@ test('P10.4 long progression and four viewport sizes have no horizontal overflow
 
 test('P10.4 edited text split and range version enter Voicing Loop using saved cards',async({page})=>{
  await open(page,'text');await cards(page).first().click();await page.getByTestId('correction-card-actions').getByRole('button',{name:/分けて足す/}).click();await expect(cards(page)).toHaveCount(5);
- await page.getByTestId('voicing-loop-handoff').click();await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存して移る',exact:true}).click();await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
+ await backToVault(page);await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存して移る',exact:true}).click();await practiceFromVault(page,'Voicing Loop','P10.4 合成曲');await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
  await page.locator('[data-nav="vault"]').click();await page.locator('.lv-vault-row').filter({hasText:'P10.4 合成曲'}).first().getByRole('button',{name:/進行を開く/}).click();await expect(cards(page)).toHaveCount(5);
  await cards(page).nth(2).click({button:'right'});await page.getByRole('menuitem',{name:'ここから保存する範囲を選ぶ'}).click();await cards(page).nth(3).click({button:'right'});await expect(page.getByTestId('correction-range-chip')).toBeVisible();await page.getByRole('button',{name:'別の版として保存',exact:true}).click();const dialog=page.getByRole('dialog',{name:'別の版として保存',exact:true});await expect(dialog.getByRole('radio').nth(1)).toBeChecked();await dialog.getByRole('button',{name:'保存',exact:true}).click();await expect(cards(page)).toHaveCount(2);
- await page.getByTestId('voicing-loop-handoff').click();await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
+ const version=await page.getByRole('combobox',{name:'この曲の進行',exact:true}).inputValue();await practiceFromVault(page,'Voicing Loop',{blockId:version});await expect(page.getByTestId('voicing-loop-workspace')).toBeVisible();
 });
 
 test('P10.4 saved edited MIDI notes reach Bass Listen/Play and discard uses the saved harmony',async({page})=>{
+ await stageMicrophone(page);
  await open(page);await cards(page).first().click();await page.getByTestId('correction-mode-edit').click();await notes(page).first().click();await notes(page).nth(1).click();
- await page.getByTestId('chord-context-handoff').getByRole('button',{name:'Bass Practice',exact:true}).click();await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存して移る',exact:true}).click();
- const context=page.getByTestId('chord-context-controls');await expect(context).toBeVisible();await context.getByTestId('chord-context-start-stop').click();
+ await backToVault(page);await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存して移る',exact:true}).click();await bassPracticeFromVault(page,'P10.4 合成曲');
+ // P23-63: bassPracticeFromVault opens the 条件 popover; close it before clicking the stage buttons.
+ const closeConditions=async()=>{const conditions=page.getByTestId('bassline-conditions');if((await conditions.getAttribute('aria-expanded'))==='true')await conditions.click();};
+ await closeConditions();
+ const bassline=page.getByTestId('bassline-echo-view');await expect(bassline).toBeVisible();
+ const listen=bassline.getByTestId('bassline-listen');await listen.click();
  const played=()=>page.evaluate(()=>(window as typeof window&{__lvBassSavedPlayback?:{mode:string;notes:readonly (readonly number[])[]}}).__lvBassSavedPlayback);
  await expect.poll(async()=>(await played())?.notes[0]).toEqual([64,67]);
- await context.getByRole('radio',{name:'演奏',exact:true}).click();await context.getByTestId('chord-context-start-stop').click();await expect.poll(async()=>(await played())?.mode).toBe('play');expect((await played())?.notes[0]).toEqual([64,67]);
+ if((await listen.getAttribute('aria-label'))==='止める')await listen.click();
+ await expect(bassline.getByTestId('bassline-record')).toBeEnabled();
+ await bassline.getByTestId('bassline-record').click();await expect.poll(async()=>(await played())?.mode).toBe('play');expect((await played())?.notes[0]).toEqual([64,67]);
+ await bassline.getByTestId('bassline-stop').click();
  await page.locator('[data-nav="vault"]').click();await page.locator('.lv-vault-row').filter({hasText:'P10.4 合成曲'}).first().getByRole('button',{name:/進行を開く/}).click();await cards(page).first().click();await page.getByTestId('correction-name-candidates').getByRole('button').first().click();
- await page.getByTestId('chord-context-handoff').getByRole('button',{name:'Bass Practice',exact:true}).click();await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存せずに移る',exact:true}).click();await expect(context).toBeVisible();
- await context.getByTestId('chord-context-start-stop').click();await expect.poll(async()=>(await played())?.mode).toBe('listen');expect((await played())?.notes[0]).toEqual([64,67]);
+ await backToVault(page);await page.getByRole('dialog',{name:'変更を保存しますか？'}).getByRole('button',{name:'保存せずに移る',exact:true}).click();await bassPracticeFromVault(page,'P10.4 合成曲');await closeConditions();await expect(bassline).toBeVisible();
+ await bassline.getByTestId('bassline-listen').click();await expect.poll(async()=>(await played())?.mode).toBe('listen');expect((await played())?.notes[0]).toEqual([64,67]);
 });

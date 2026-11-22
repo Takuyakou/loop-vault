@@ -37,6 +37,7 @@ import {
   ideaAnchor,
   progressionBlockAnchor,
 } from "../domain/undoDeletion";
+import { progressionSourceKind, progressionSourceLabels } from "../views/vault/progressionFacts";
 import { createVaultStore } from "./vaultStore";
 
 class FakeRepository implements VaultRepository {
@@ -1398,5 +1399,26 @@ describe("vault store", () => {
       textTimelineChord("Em7", 1, 3, 2),
     ])).toBeUndefined();
     expect(store.getState().ideas).toHaveLength(0);
+  });
+
+  it("P23-58 B5: normal text save records source kind as text (テキスト)", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const id = store.getState().createIdeaFromTextProgression({
+      title: "Standard text save",
+      summaryText: "C Am F G",
+      chords: [
+        textTimelineChord("C", 1),
+        textTimelineChord("Am", 2),
+        textTimelineChord("F", 3),
+        textTimelineChord("G", 4),
+      ],
+    });
+    expect(id).toBeDefined();
+    const block = store.getState().ideas.find((idea) => idea.id === id)?.progressionBlocks?.[0];
+    expect(block).toBeDefined();
+    expect(progressionSourceKind(block!)).toBe("text");
+    expect(progressionSourceLabels[progressionSourceKind(block!)]).toBe("テキスト");
   });
 });

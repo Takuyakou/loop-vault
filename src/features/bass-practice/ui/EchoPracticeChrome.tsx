@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useEchoFramed } from "./EchoPracticeFrame";
 import { Badge } from "../../../components/ui";
 
@@ -13,6 +14,8 @@ export function EchoPracticeHeader({
   readonly title: string;
 }) {
   const framed=useEchoFramed();
+  // P23-28 F2: inside the frame the top band carries the name, the badge and the sentence; the header is not drawn.
+  if (framed) return null;
   return (
     <div className="bass-echo-task flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
@@ -36,16 +39,22 @@ export function EchoPracticeProgress({
   readonly currentIndex: number;
   readonly steps: readonly string[];
 }) {
+  // P23-28 F3: a numbered flow — a 22px circle and the name; a thin stretched line between the steps.
+  // The lines are empty <li>s (no text), so the step names stay the only text in the list.
   return (
-    <ol className={`grid gap-1 ${steps.length === 3 ? "grid-cols-3" : steps.length > 4 ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-2 sm:grid-cols-4"}`} aria-label={ariaLabel}>
+    <ol className="bass-echo-steps" data-count={steps.length} aria-label={ariaLabel}>
       {steps.map((step, index) => (
-        <li
-          key={step}
-          className={`rounded-[var(--lv-radius-sm)] border px-2 py-2 text-center text-[11px] font-semibold ${index === currentIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : index < currentIndex ? "border-[var(--lv-success)] text-[var(--lv-success)]" : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"}`}
-          aria-current={index === currentIndex ? "step" : undefined}
-        >
-          {step}
-        </li>
+        <Fragment key={step}>
+          {index > 0 ? <li className="bass-echo-line" data-filled={index <= currentIndex ? "true" : undefined} aria-hidden="true" /> : null}
+          <li
+            className="bass-echo-step"
+            data-state={index === currentIndex ? "current" : index < currentIndex ? "done" : "todo"}
+            aria-current={index === currentIndex ? "step" : undefined}
+          >
+            <span className="bass-echo-step-no" data-no={index + 1} aria-hidden="true" />
+            <span className="bass-echo-step-name">{step}</span>
+          </li>
+        </Fragment>
       ))}
     </ol>
   );

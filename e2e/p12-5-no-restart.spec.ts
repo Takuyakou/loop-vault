@@ -122,6 +122,11 @@ test('the random key: 9 chords and more are out, the 8-chord canon is in, every 
  await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  const total=await page.locator('.dojo-builtin-card').count();
  expect(total).toBe(45);
- await expect(page.locator('.dojo-builtin-card').getByRole('button',{name:'ランダムキーで練習'})).toHaveCount(total-3);
- await expect(page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'カノン進行',exact:true})}).getByRole('button',{name:'ランダムキーで練習'})).toHaveCount(1);
+ // P22-01 §3-1-2 (rule B): the random key is the list's switch; it applies to every card that is not long (data-long).
+ await expect(page.locator('.dojo-builtin-card:not(.dojo-original-card)[data-long]')).toHaveCount(3);
+ const canon=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'カノン進行',exact:true})});
+ await expect(canon).not.toHaveAttribute('data-long',/.*/);
+ await page.getByTestId('dojo-random-toggle').click();
+ await canon.getByRole('button',{name:/ を練習する$/}).click();
+ await expect(page.locator('[data-dojo-screen=endless]')).toBeVisible();
 });

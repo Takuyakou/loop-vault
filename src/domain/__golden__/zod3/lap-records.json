@@ -1,0 +1,55 @@
+[
+  {
+    "case": "partial",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-jazz-practice",
+        "fileVersion": 1,
+        "version": 1,
+        "revision": 1,
+        "laps": {
+          "jazz-progressions-001": {
+            "0": {
+              "count": 2,
+              "lastAt": "2026-07-04T00:00:00.000Z"
+            },
+            "5": {
+              "count": 1,
+              "lastAt": "2026-07-04T00:00:00.000Z"
+            }
+          }
+        },
+        "operations": [
+          "op-1"
+        ]
+      }
+    }
+  },
+  {
+    "case": "empty-laps",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-jazz-practice",
+        "fileVersion": 1,
+        "version": 1,
+        "revision": 1,
+        "laps": {},
+        "operations": []
+      }
+    }
+  },
+  {
+    "case": "unknown-progression",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "bad-tonic",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

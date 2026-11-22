@@ -2,7 +2,8 @@ import {ChordCardMark,cardResult} from '../../components/practice/ChordCardResul
 import {DojoBackButton} from './DojoBackButton';
 import {whiteKeysIn} from '../ear-practice/earKeyboardHeight';
 import {usePracticeLayout} from './practiceLayout';
-import {PracticeCard,PracticeHead,PracticeSafeArea,type StageItem} from './PracticeFrame';
+import {PracticeActions,PracticeCard,PracticeConditions,PracticeGuide,PracticeHead,PracticeResult,PracticeSafeArea,STAFF_HELP,keyed,type StageItem} from './PracticeFrame';
+import {degreeFunctionKinds} from '../../domain/earPractice/degreeFunction';
 import {CHOICE_NAMES} from './dojoNav';
 import {useCallback,useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {useStore} from 'zustand';
@@ -18,6 +19,7 @@ import {pc} from '../../domain/chordDojo/recipes';
 import {dojoStore} from '../../domain/chordDojo/runtime';
 import {snapshotFingerLabels,targetSnapshot} from '../../domain/chordDojo/targetSnapshot';
 import {heldNotes} from '../../domain/liveMidi';
+import {rememberRecent} from './dojoRecent';
 import {defaultLiveMidiStore} from '../../liveMidi/defaultLiveMidiStore';
 import {GrandStaff} from './GrandStaff';
 import {answerKeyboardRange} from './keyboardRange';
@@ -31,13 +33,14 @@ import {useDojoMidi} from './useDojoMidi';
 /** The random key is the second stage (名前を思い出して弾く) played in changing keys: the others cannot be used here. */
 const STAGES:readonly StageItem[]=[{num:'①',name:'見て弾く',state:'off',title:'ランダムキーは ② で弾きます'},{num:'②',name:'覚えて弾く',state:'on'},{num:'③',name:'テンポで弾く',state:'off',title:'ランダムキーは ② で弾きます'}];
 const NEXT_KEY_WAIT_MS=600;
-const SELF_NOTICE='答えを見て、自分で「弾けた／まだ」を押す形で進みます（秒数は測りません）。';
+const SELF_NOTICE='答えを見て、自分で「弾けた／まだ」を押す形で進みます。';
 const DROPPED_NOTICE='MIDI が外れました。つなぎ直すと、この課題から続けます。';
 const chipText=(r:EndlessResult,mode:'major'|'minor')=>`${keyLabel(r.key,mode)} ${r.skipped?'とばした':r.self?'自分で':r.hint?'ヒント':`${(r.sec??0).toFixed(1)}s`}`;
 const chipKind=(r:EndlessResult)=>r.skipped?'skipped':r.self?'self':r.hint?'hint':'ok';
 
 export function ChordDojoEndlessView({builtinId,onBack}:{builtinId:string;onBack:()=>void}){
  const builtin=BUILTINS.find(b=>b.id===builtinId)!;
+ const fnKinds=degreeFunctionKinds(builtin.fullDegrees,builtin.mode);
  const settleMs=useStore(dojoStore,s=>s.file.settings.settleMs);
  const {sound}=usePreviewSound();
  const playback=usePlaybackState();
@@ -62,6 +65,9 @@ export function ChordDojoEndlessView({builtinId,onBack}:{builtinId:string;onBack
 
  // The message belongs to the card it was made for.
  useEffect(()=>{setMessage(undefined);setSelfNo(false);},[state.key,state.chordIndex,state.phase,state.round]);
+ // P20: the first key of a random-key run is what 「続きから」 remembers (the new order, not the old bag).
+ const rememberedRecent=useRef('');
+ useEffect(()=>{if(state.phase!=='active')return;const id=`${state.key}:${state.round}`;if(rememberedRecent.current===id)return;rememberedRecent.current=id;rememberRecent({kind:'standard',id:builtinId,key:state.key,random:true});},[state.phase,state.key,state.round,builtinId]);
 
  // MIDI session: when MIDI is not connected (it dropped, or it was still connecting at the start) the session waits.
  useEffect(()=>{
@@ -177,6 +183,8 @@ export function ChordDojoEndlessView({builtinId,onBack}:{builtinId:string;onBack
    :state.chordIndex>0?`${state.chordIndex}番目まで合いました`
    :'度数を見て、このキーのコードを順に弾いてください');
  const lastResult=state.phase==='clear'?state.results[state.results.length-1]:undefined;
+ const judged=!state.manual&&message!==undefined;
+ const line=<p className="dojo-endless-result" role="status" data-error={message?.startsWith('✗')||undefined}>{hintLine}</p>;
  const shownResults=state.results.slice(-12),hiddenResults=state.results.length-shownResults.length;
 
  if(state.phase==='summary')return <section className="dojo" data-testid="dojo-endless" data-dojo-screen="endless" data-endless-phase="summary" data-midi-kind={view.kind}>
@@ -197,7 +205,7 @@ export function ChordDojoEndlessView({builtinId,onBack}:{builtinId:string;onBack
  return <section className="dojo" data-testid="dojo-endless" data-dojo-screen="endless" data-practice-frame="b" data-endless-phase={state.phase} data-midi-kind={view.kind}>
   <div className="dojo-practice dojo-endless" ref={practice} data-practice-layout={layout.kind} style={layoutStyle}>
    <PracticeHead backLabel={CHOICE_NAMES['builtin-progressions']} onBack={()=>{playbackController.stop();onBack();}} kind="ランダムキー" title={builtinDisplayName(builtin)} degrees={builtin.fullDegrees.join('–')}
-    stages={STAGES} progressLabel="このセッションの集計" onQuit={quit}
+    stages={STAGES} progressLabel="このセッションの集計" onQuit={quit} quitLabel="結果を見て終わる"
     progress={<>
      <span><em>{state.round}</em>巡目 <em>{state.pos+1}/12</em></span>
      <span>クリア <em>{summary.cleared}</em></span>
@@ -207,27 +215,29 @@ export function ChordDojoEndlessView({builtinId,onBack}:{builtinId:string;onBack
     {audioState==='error'?<p className="dojo-notice" role="alert">入力のピアノ音を開始できませんでした。入力の判定は続けられます。<button type="button" onClick={retryAudio}>入力音をもう一度</button></p>:null}
     {waiting?<MidiRequiredNotice view={view} heading={view.kind==='error'?'MIDI 接続でエラーが起きました。':undefined} description={DROPPED_NOTICE}><button type="button" onClick={()=>apply(switchToSelf)}>自分で判定に切り替える</button></MidiRequiredNotice>
      :state.manual&&!connected?<MidiRequiredNotice compact view={view} description={SELF_NOTICE}/>:null}
-    <div className="dojo-practice-set dojo-jazz-bar">
+    <PracticeConditions className="dojo-jazz-bar" help={STAFF_HELP}>
      <span className="dojo-practice-key" data-endless-key={key}>キー<b>{keyName}</b><small>（ランダム）</small></span>
      <span className="dojo-practice-pill">構成とベースが合えばよい（転回は自由）</span>
-    </div>
+    </PracticeConditions>
     <div className="dojo-endless-cards">{chords.map((c,i)=>{
      const finished=i<done,shown=finished||state.revealed.includes(i),current=i===state.chordIndex&&state.phase!=='clear';
      const degree=builtin.fullDegrees[i],hint=!state.manual&&state.hinted&&shown&&!finished;
      return <PracticeCard key={i} label={shown?`${c.chord.label}（${degree}）を聴く`:`${i+1}番目のコードをヒントとして聴く`} onPress={()=>pressCard(i)} state={finished?'done':current?'current':'todo'} hint={hint} playing={playingIndex===i}
-      degree={degree} name={shown?c.chord.label:'?'} mark={finished?<ChordCardMark result={cardResult(true,state.manual)} layer="set" corner/>:null}/>;})}</div>
-    <div className="dojo-practice-say">
+      degree={degree} name={shown?c.chord.label:'?'} fn={fnKinds[i]?.kind||undefined} fnBorrowed={fnKinds[i]?.borrowedDominant} mark={finished?<ChordCardMark result={cardResult(true,state.manual)} layer="set" corner/>:null}/>;})}</div>
+    {/* P22-01 §4-1: the judgement (a clear, a ✗) is the result; what to do now is the guide (one line, the same element either way). */}
+    <PracticeResult>
      {lastResult?<div className="dojo-endless-clear" role="status"><span>クリア！ {keyName}</span><small>{lastResult.self?'自分で判定':lastResult.hint?'ヒントあり':`${(lastResult.sec??0).toFixed(1)} 秒`}</small></div>:null}
-     <p className="dojo-endless-result" role="status" data-error={message?.startsWith('✗')||undefined}>{hintLine}</p>
-    </div>
-    <div className="dojo-actions dojo-endless-actions">
-     <button type="button" onClick={hear} disabled={state.phase==='clear'}>お手本を聴く（L）</button>
-     <button type="button" onClick={showAnswer} disabled={state.phase==='clear'}>答えを見る（Space）</button>
+     {judged?line:null}
+    </PracticeResult>
+    <PracticeGuide>{judged?null:line}</PracticeGuide>
+    <PracticeActions>
+     {state.manual?<><button type="button" className="dojo-primary" disabled={state.phase!=='active'||!currentShown} onClick={yes} {...keyed('弾けた','Y')}/><button type="button" disabled={state.phase!=='active'||!currentShown} onClick={no} {...keyed('まだ','N')}/></>:null}
+     <button type="button" onClick={hear} disabled={state.phase==='clear'} {...keyed('お手本を聴く','L')}/>
+     <button type="button" onClick={showAnswer} disabled={state.phase==='clear'} {...keyed('答えを見る','Space')}/>
      <button type="button" onClick={skip}>このキーをとばす</button>
-     {state.manual?<><button type="button" className="dojo-primary" disabled={state.phase!=='active'||!currentShown} onClick={yes}>弾けた（Y）</button><button type="button" disabled={state.phase!=='active'||!currentShown} onClick={no}>まだ（N）</button></>:null}
-    </div>
+    </PracticeActions>
    </div>
-   <GrandStaff compact snapshot={snapshot} caption={playingIndex!==undefined&&snapshot?`${snapshot.chordSymbol} を聴いています`:undefined} hiddenText="答えは、弾いた後かヒントの後に出ます"/>
+   <GrandStaff quiet compact snapshot={snapshot} caption={playingIndex!==undefined&&snapshot?`${snapshot.chordSymbol} を聴いています`:undefined} hiddenText="答えは、弾いた後かヒントの後に出ます"/>
    <div className="dojo-keyboard" style={{'--target-keyboard-width':`${Math.max(760,Math.ceil((keyboardRange.maxMidiNote-keyboardRange.minMidiNote+1)*7/12)*22)}px`,'--held-key-height':`${layout.keyHeight}px`} as CSSProperties}>
     <div className="dojo-keyboard-head"><b>鍵盤</b><span><i className="dojo-held-swatch"/>押している音</span><span><i className="dojo-answer-swatch"/>答え（弾いた後に出る）</span><span><i className="dojo-wrong-swatch"/>違う音</span><span><i className="dojo-missing-swatch"/>不足する音</span>
      {state.results.length>0?<span className="dojo-jazz-keys dojo-endless-history" aria-label="このセッションの記録"><span>このセッション：</span>{hiddenResults>0?<span className="dojo-endless-chip" data-kind="skipped">…ほか {hiddenResults}</span>:null}{shownResults.slice(-6).map((r,i)=><span className="dojo-endless-chip" data-kind={chipKind(r)} key={i}>{chipText(r,mode)}</span>)}</span>:null}</div>

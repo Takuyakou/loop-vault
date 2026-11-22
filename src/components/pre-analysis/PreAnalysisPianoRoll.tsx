@@ -81,6 +81,8 @@ export interface PianoRollOverlayApi {
 interface PreAnalysisPianoRollProps {
   session: AnalysisSession;
   selectedVoiceId?: string;
+  /** P23-30 A3: while a part row is under the pointer, its notes are the bright ones and the others fade. */
+  highlightVoiceId?: string;
   /** Width and height of the area the roll may use (measured by the parent). */
   width: number;
   height: number;
@@ -104,6 +106,7 @@ const NO_NOTES: readonly PreAnalysisNote[] = [];
 export function PreAnalysisPianoRoll({
   session,
   selectedVoiceId,
+  highlightVoiceId,
   width,
   height,
   pixelsPerBeat,
@@ -205,6 +208,7 @@ export function PreAnalysisPianoRoll({
     drawPianoRoll(context, width, layout, {
       session,
       selectedVoiceId,
+      highlightVoiceId,
       pixelsPerBeat,
       viewportStartBeat,
       multipliers,
@@ -216,6 +220,7 @@ export function PreAnalysisPianoRoll({
     splits,
     pixelsPerBeat,
     selectedVoiceId,
+    highlightVoiceId,
     session,
     viewportStartBeat,
     width,
@@ -358,6 +363,8 @@ export function PreAnalysisPianoRoll({
 export interface PianoRollDrawOptions {
   session: AnalysisSession;
   selectedVoiceId?: string;
+  /** P23-30 A3: the part whose notes stay bright while a part row is under the pointer. */
+  highlightVoiceId?: string;
   pixelsPerBeat: number;
   viewportStartBeat: number;
   multipliers?: ReadonlyMap<PreAnalysisNote, number>;
@@ -393,7 +400,7 @@ export function drawPianoRoll(
   options: PianoRollDrawOptions,
   hitAreasRef: { current: NoteHitArea[] },
 ) {
-  const { session, selectedVoiceId, pixelsPerBeat, viewportStartBeat, multipliers, splits } = options;
+  const { session, selectedVoiceId, highlightVoiceId, pixelsPerBeat, viewportStartBeat, multipliers, splits } = options;
   const { minPitch, maxPitch, rowHeight, contentHeight } = layout;
   const gutter = PIANO_ROLL_GUTTER;
   const ruler = PIANO_ROLL_RULER;
@@ -460,9 +467,10 @@ export function drawPianoRoll(
     const split = splits?.[note.voiceId];
     const aboveLine = split !== undefined && note.pitch >= split.melodyFrom;
     // Notes above a line are not analysed; they are drawn as melody (the colour says how they are treated).
-    context.globalAlpha = aboveLine
+    const faded = highlightVoiceId !== undefined && note.voiceId !== highlightVoiceId;
+    context.globalAlpha = (aboveLine
       ? (selected ? 0.95 : 0.8)
-      : noteAlpha(voice, anySolo, selected, multipliers?.get(note));
+      : noteAlpha(voice, anySolo, selected, multipliers?.get(note))) * (faded ? 0.25 : 1);
     context.fillStyle = aboveLine ? ROLE_COLOR.melody : noteColor(voice);
     context.fillRect(clippedX, y, rectWidth, rectHeight);
     if (selected) selectedNotes.push({ x: clippedX, y, w: rectWidth, h: rectHeight });

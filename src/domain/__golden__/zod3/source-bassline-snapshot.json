@@ -1,0 +1,55 @@
+[
+  {
+    "case": "valid",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "schemaVersion": 1,
+        "sourceKind": "selected-bass-voice",
+        "snapshotSignature": "40affa51dbca7e6fd09fa7aedb4e4c7cb0d6698188452cd17b6f281511bf4462",
+        "capturedMeter": {
+          "numerator": 4,
+          "denominator": 4
+        },
+        "length": {
+          "numerator": 4,
+          "denominator": 1
+        },
+        "notes": [
+          {
+            "pitch": 40,
+            "start": {
+              "numerator": 0,
+              "denominator": 1
+            },
+            "duration": {
+              "numerator": 1,
+              "denominator": 1
+            },
+            "velocity": 0.8,
+            "continuesFromBefore": false,
+            "continuesAfterEnd": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "case": "half-bar-length",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "bad-signature",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "no-notes",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

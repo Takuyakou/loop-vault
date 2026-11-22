@@ -1,0 +1,48 @@
+import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { criticalUiSpecs } from "./selection.mjs";
+import { EXTENDED_ARCHIVE_SPECS, EXTENDED_HEAVY_SPECS, partitionE2eSpecs } from "./tiers.mjs";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const allSpecs = readdirSync(join(root, "e2e"))
+  .filter((file) => file.endsWith(".spec.ts"))
+  .sort()
+  .map((file) => `e2e/${file}`);
+
+test("every e2e spec belongs to exactly one tier with zero drops", () => {
+  const { core, extendedLight, extendedHeavy } = partitionE2eSpecs(allSpecs);
+  const combined = [...core, ...extendedLight, ...extendedHeavy].sort();
+  assert.deepEqual(combined, allSpecs);
+  assert.equal(new Set(combined).size, allSpecs.length);
+  assert.ok(core.length > 0, "core tier must not be empty");
+});
+
+test("all explicit extended spec entries exist on disk and do not overlap", () => {
+  const allSet = new Set(allSpecs);
+  const heavySet = new Set(EXTENDED_HEAVY_SPECS);
+  for (const spec of EXTENDED_HEAVY_SPECS) {
+    assert.ok(allSet.has(spec), `missing heavy spec: ${spec}`);
+  }
+  for (const spec of EXTENDED_ARCHIVE_SPECS) {
+    assert.ok(allSet.has(spec), `missing archive spec: ${spec}`);
+    assert.ok(!heavySet.has(spec), `spec listed in both heavy and archive: ${spec}`);
+  }
+});
+
+test("all criticalUiSpecs stay in core", () => {
+  const { core } = partitionE2eSpecs(allSpecs);
+  const coreSet = new Set(core);
+  for (const spec of criticalUiSpecs) {
+    assert.ok(coreSet.has(spec), `criticalUiSpec must remain in core: ${spec}`);
+  }
+});
+
+test("guided-course specs stay in core", () => {
+  const { core } = partitionE2eSpecs(allSpecs);
+  const coreSet = new Set(core);
+  const guided = allSpecs.filter((spec) => /^e2e\/p23-(42|4[4-9]|[5-9]\d)-/.test(spec) && !EXTENDED_HEAVY_SPECS.includes(spec));
+  for (const spec of guided) assert.ok(coreSet.has(spec), `guided-course spec must stay in core: ${spec}`);
+});

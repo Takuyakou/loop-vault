@@ -45,3 +45,15 @@ Each invocation also writes a local `*-metrics.json` beside its logs: execution 
 FEATURE/FAST browser checks reuse only the successful app TypeScript check in that same invocation. They still build the fixture bundle and run the browser tests. UI, which has no preceding app TypeScript step, retains that precheck. Production and fixture builds remain separate.
 
 Local Playwright workers use one quarter of available logical CPUs, bounded to 2–6 (6 on the measured i7-13700F); CI remains 1. `test:e2e -- --workers=2` remains available for constrained environments. Specs remain sequential internally (`fullyParallel=false`); contexts, failure artifacts, retries and timeouts are unchanged. See the root `TEST-PERFORMANCE-OPTIMIZATION.md` for the measurement and stability limits. Automatically inferred `--changed` spec lists retain owner expansion; only manually supplied all-spec lists are exact.
+
+## FULL's order and what keeps it short (test-slim, 2026-11)
+
+FULL runs its independent steps side by side — ESLint, class/source lint, both TypeScript checks, phase-docs/AI-handoff/privacy, the production build, the runner contracts and Vitest — and each keeps its own log, count check and diagnostics. Every step finishes before the first failure is thrown. The gallery check follows the build. Then the light Playwright pass (all specs except the measurement specs, 6 local workers) and the heavy pass (`heavySpecs` in `run.mjs`, 2 workers). The heavy pass reuses the fixture bundle the light pass built (`LV_DX_PREBUILT_FIXTURE=1`, FULL only; a direct `test:e2e` always builds). Vitest in FULL uses 6 workers.
+
+Keeping it short — rules of thumb for new tests in this repository:
+
+- **One walk per dimension.** If only the data differs (a Form, a key, a bank), walk one in the UI and let the unit test check the data for all of them (`scheduler.test.ts` already checks every Form). Do not multiply a UI flow by a data axis.
+- **Sweeps read in the page.** A loop over all 144 Master targets (or all 48 cells) must not make a locator round trip per key: read the DOM in one `page.evaluate` and assert on the result (`e2e/helpers/masterGuideKeys.ts`). Roughly 20 round trips per chord was most of the sweep time.
+- **A real wait only for what is real.** Audio clock, count-in and "nothing happens by itself" waits stay real; everything else waits on state (`e2e/helpers/settle.ts`). Put a new real-time or CPU-sensitive spec into `heavySpecs` instead of lowering workers for the whole suite.
+- **Do not add a size or a rate to hide a gap.** The five product sizes are the matrix; a CPU throttle test needs only its slowest rate.
+- **Node tests that touch globals stay isolated.** Vitest keeps per-file isolation; the measured gain from turning it off for pure-logic files (69s to 23s for 450 files) was dropped because its leak risk is not worth ~35s of FULL.

@@ -4,7 +4,7 @@ import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Button, Chip, IconButton, Popover, ProgressBar, SegmentedControl, Select, Tooltip } from "./index";
+import { Button, Chip, IconButton, Kbd, PlayingMark, Popover, ProgressBar, SegmentedControl, Select, Switch, Tooltip } from "./index";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -107,5 +107,41 @@ describe("P8.9 controls", () => {
     key(container.querySelector("input")!, "Escape");
     expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(trigger);
+  });
+});
+
+describe("P23-03 parts", () => {
+  it("Switch is a role=switch button that reports the flipped value and stays still when disabled", () => {
+    const changes: boolean[] = [];
+    act(() => root.render(<Switch checked onChange={(value) => changes.push(value)} label="見本のスイッチ" />));
+    const toggle = container.querySelector<HTMLButtonElement>("button")!;
+    expect(toggle.getAttribute("role")).toBe("switch");
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    expect(toggle.getAttribute("aria-label")).toBe("見本のスイッチ");
+    act(() => toggle.click());
+    expect(changes).toEqual([false]);
+
+    act(() => root.render(<Switch checked={false} onChange={(value) => changes.push(value)} label="見本のスイッチ" />));
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    act(() => toggle.click());
+    expect(changes).toEqual([false, true]);
+
+    act(() => root.render(<Switch checked={false} disabled onChange={(value) => changes.push(value)} label="見本のスイッチ" />));
+    act(() => toggle.click());
+    expect(changes).toEqual([false, true]);
+  });
+
+  it("Kbd is a kbd with its text", () => {
+    act(() => root.render(<Kbd>Ctrl K</Kbd>));
+    const cap = container.querySelector("kbd");
+    expect(cap?.textContent).toBe("Ctrl K");
+    expect(cap?.className).toContain("lv-kbd");
+  });
+
+  it("PlayingMark is decorative and has three bars", () => {
+    act(() => root.render(<PlayingMark />));
+    const mark = container.querySelector<HTMLElement>('[data-testid="playing-mark"]');
+    expect(mark?.getAttribute("aria-hidden")).toBe("true");
+    expect(mark?.querySelectorAll("i")).toHaveLength(3);
   });
 });

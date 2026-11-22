@@ -13,10 +13,12 @@ const CHORD_SECONDS = 1.6;
 type Which = "sounded" | "played";
 
 /** The result screen's score of the whole progression, with the switch between what was sounded and what was played. */
-export function ResultScore({ session, play, stop }: {
+export function ResultScore({ session, play, stop, compactHeader = false, functionNote }: {
   session: EarSession;
   play: (id: string, notes: MidiPreviewNote[], endBeat: number) => EarPlayHandle;
   stop: () => void;
+  compactHeader?: boolean;
+  functionNote?: string;
 }) {
   const question = session.question;
   const [which, setWhich] = useState<Which>("sounded");
@@ -109,9 +111,11 @@ export function ResultScore({ session, play, stop }: {
         <button type="button" data-testid="ear-score-listen" onClick={listen}>譜面を見ながら聴く</button>
         {playing !== undefined ? <button type="button" data-testid="ear-score-stop" onClick={stopAll}>止める</button> : null}
         <span className="ear-help">和音を押すと、その和音が鳴ります{which === "played" ? "(自分が弾いた音)" : ""}</span>
+        {functionNote ? <span className="ear-score-fn-note" data-testid="ear-function-note">{functionNote}</span> : null}
       </div>
       <ProgressionScore chords={chords} beatsPerBar={question.beatsPerBar} signature={signature} annotations={annotations}
-        tone={which} playingIndex={playing} onPlay={pressChord} labelFor={(index) => displayChordLabel(question.chords[index]!.label)} />
+        tone={which} playingIndex={playing} onPlay={pressChord} labelFor={(index) => displayChordLabel(question.chords[index]!.label)}
+        compactHeader={compactHeader} />
     </div>
   );
 }

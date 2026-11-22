@@ -8,7 +8,7 @@ const configFiles = [
   "package.json", "package-lock.json", "node_modules/.package-lock.json", "tsconfig.json", "tsconfig.e2e.json",
   "playwright.config.ts", "vite.config.ts", "vite.config.js",
   "scripts/run-playwright-visual-tests.mjs", "scripts/playwright-web-server.js",
-  "scripts/test-dx/selection.mjs", "scripts/test-dx/run.mjs", "scripts/test-dx/cache.mjs", "scripts/test-dx/reporting.mjs",
+  "scripts/test-dx/selection.mjs", "scripts/test-dx/run.mjs", "scripts/test-dx/cache.mjs", "scripts/test-dx/reporting.mjs", "scripts/test-dx/tiers.mjs",
 ];
 
 export function sha256(value) {
@@ -81,7 +81,7 @@ export function cacheKey({ head, dirtyHash, configHash }, gate, selection) {
 }
 
 export function cacheEnabled(level, fresh = false) {
-  return level !== "full" && !fresh;
+  return !["full", "full-all", "extended"].includes(level) && !fresh;
 }
 
 export function readPass(cacheRoot, key) {

@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
-import { ChevronDown, Save } from "lucide-react";
-import { Button } from "./ui";
+import { Check, ChevronDown, Save } from "lucide-react";
+import { Button, Select, useSaveButtonState } from "./ui";
 
 type SavePanel = "new" | "append" | "memo";
 
@@ -27,6 +27,11 @@ interface SaveProgressionPopoverProps {
   menuExtras?: readonly { label: ReactNode; onSelect: () => void; testId?: string }[];
   /** Whether the ▾ menu may open (default: `requestOpen`). */
   requestMenu?: () => boolean;
+  /** P23-16 W3: the title kept by the screen (the save box's 名前); the dialog's title field edits the same value. */
+  title?: string;
+  onTitleChange?: (title: string) => void;
+  /** P23-16 W3: the primary button cannot be pressed (an empty name); the reason is its title. */
+  primaryDisabledReason?: string;
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
@@ -66,10 +71,16 @@ export function SaveProgressionPopover({
   menuIncludesNew = false,
   menuExtras = [],
   requestMenu = requestOpen,
+  title: heldTitle,
+  onTitleChange,
+  primaryDisabledReason,
 }: SaveProgressionPopoverProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const saveBtn = useSaveButtonState();
   const [panel, setPanel] = useState<SavePanel>();
-  const [title, setTitle] = useState(initialTitle);
+  const [ownTitle, setOwnTitle] = useState(initialTitle);
+  const title = heldTitle ?? ownTitle;
+  const setTitle = (next: string) => { if (onTitleChange) onTitleChange(next); else setOwnTitle(next); };
   const [ideaId, setIdeaId] = useState("");
   const [userVerified, setUserVerified] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -164,7 +175,7 @@ export function SaveProgressionPopover({
   function openNew() {
     if (requestOpen && !requestOpen()) return;
     restoreFocusRef.current = primaryButtonRef.current ?? undefined;
-    setTitle(initialTitle);
+    if (heldTitle === undefined) setOwnTitle(initialTitle);
     setIdeaId("");
     setUserVerified(false);
     setMenuOpen(false);
@@ -197,6 +208,7 @@ export function SaveProgressionPopover({
     }
 
     if (saved) {
+      saveBtn.succeed();
       onSaved();
       close(true);
     }
@@ -230,13 +242,17 @@ export function SaveProgressionPopover({
         variant="primary"
         size="sm"
         className="min-h-10 rounded-r-none px-3"
+        data-save-state={saveBtn.state}
         aria-haspopup="dialog"
         aria-controls={primaryExpanded ? panelId : undefined}
         aria-expanded={primaryExpanded}
+        disabled={Boolean(primaryDisabledReason)}
+        title={primaryDisabledReason}
         onClick={openNew}
       >
-        <Save aria-hidden="true" size={16} />
-        {primaryLabel ?? copy.capture.saveToVault}
+        {saveBtn.state === "busy" ? <><span className="lv-save-spin" aria-hidden="true" /><span>保存中…</span></>
+          : saveBtn.state === "done" ? <><Check aria-hidden="true" size={16} /><span>保存しました</span></>
+          : <><Save aria-hidden="true" size={16} />{primaryLabel ?? copy.capture.saveToVault}</>}
       </Button>
       <Button
         ref={menuButtonRef}
@@ -347,10 +363,10 @@ export function SaveProgressionPopover({
           ) : (
             <label className="mt-4 block text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
               {copy.capture.destination}
-              <select ref={ideaSelectRef} name="progression-destination" className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
+              <Select ref={ideaSelectRef} name="progression-destination" wrapperClassName="mt-2 w-full" className="w-full" value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
                 <option value="">{copy.capture.chooseIdea}</option>
                 {ideas.map((idea) => <option key={idea.id} value={idea.id}>{idea.title}</option>)}
-              </select>
+              </Select>
             </label>
           )}
 

@@ -1,6 +1,6 @@
 /* global process, console */
 import { Buffer } from "node:buffer";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +8,7 @@ import { performance } from "node:perf_hooks";
 import { selectForFiles } from "./selection.mjs";
 import { cacheEnabled, cacheKey, fingerprint, readPass, writePass, sha256 } from "./cache.mjs";
 import { diagnostics, summaryCounts } from "./reporting.mjs";
+import { partitionE2eSpecs } from "./tiers.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 process.chdir(root);
@@ -70,37 +71,73 @@ function runStep(label, args, kind = "static", extraEnv = {}) {
   const begun = performance.now();
   const result = spawnSync(process.execPath, args, {
     cwd: root,
-    env: { ...env, ...extraEnv, ...(kind === "browser" ? {
-      LV_TEST_PERFORMANCE_OUTPUT: join(logRoot, `${session}-${slug}-timing.json`),
-    } : {}) },
+    env: stepEnvironment(slug, kind, extraEnv),
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-  writeFileSync(log, output, "utf8");
-  appendFileSync(combinedLog, `\n## ${label}\n${output}`, "utf8");
-  rawBytes += Buffer.byteLength(output);
-  const seconds = ((performance.now() - begun) / 1000).toFixed(1);
-  if (result.error || result.status !== 0) {
-    steps.push({ label, status: "fail", cached: false, seconds: Number(seconds), log: log.replace(root, ".") });
-    console.error(`${label}: FAIL — ${seconds}s`);
-    console.error(diagnostics(output || result.error?.message || "No command output"));
-    console.error(`Full log: ${log.replace(root + "\\", "").replaceAll("\\", "/")}`);
-    throw new Error(`${label} exited ${result.status ?? "without status"}`);
-  }
-  const counts = summaryCounts(output, kind);
-  if (["vitest", "browser", "node"].includes(kind) && (!counts || counts.startsWith("0/"))) {
-    steps.push({ label, status: "fail", cached: false, seconds: Number(seconds), reason: "zero passing tests" });
-    throw new Error(`${label} reported no passing tests; see ${log}`);
-  }
+  const { seconds, counts } = finishStep({ label, kind, log, begun, output, status: result.status, error: result.error });
   if (before && key) {
     const after = fingerprint(root);
     if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error(`${label} changed tracked/config inputs while running; PASS not cached`);
-    writePass(cacheRoot, key, { status: "pass", counts, seconds: Number(seconds) });
+    writePass(cacheRoot, key, { status: "pass", counts, seconds });
   }
-  steps.push({ label, status: "pass", cached: false, seconds: Number(seconds), counts, bytes: Buffer.byteLength(output), log: log.replace(root, ".") });
+  steps.push({ label, status: "pass", cached: false, seconds, counts, bytes: Buffer.byteLength(output), log: log.replace(root, ".") });
   console.log(`${label}: PASS${counts ? ` — ${counts}` : ""} — ${seconds}s`);
-  return { seconds: Number(seconds), bytes: Buffer.byteLength(output), output };
+  return { seconds, bytes: Buffer.byteLength(output), output };
+}
+
+function stepEnvironment(slug, kind, extraEnv) {
+  return { ...env, ...extraEnv, ...(kind === "browser" ? {
+    LV_TEST_PERFORMANCE_OUTPUT: join(logRoot, `${session}-${slug}-timing.json`),
+  } : {}) };
+}
+
+/** Writes the step's logs and throws (with diagnostics) when it failed; otherwise returns its duration and counts. */
+function finishStep({ label, kind, log, begun, output, status, error }) {
+  writeFileSync(log, output, "utf8");
+  appendFileSync(combinedLog, `\n## ${label}\n${output}`, "utf8");
+  rawBytes += Buffer.byteLength(output);
+  const seconds = Number(((performance.now() - begun) / 1000).toFixed(1));
+  if (error || status !== 0) {
+    steps.push({ label, status: "fail", cached: false, seconds, log: log.replace(root, ".") });
+    console.error(`${label}: FAIL — ${seconds}s`);
+    console.error(diagnostics(output || error?.message || "No command output"));
+    console.error(`Full log: ${log.replace(root + "\\", "").replaceAll("\\", "/")}`);
+    throw new Error(`${label} exited ${status ?? "without status"}`);
+  }
+  const counts = summaryCounts(output, kind);
+  if (["vitest", "browser", "node"].includes(kind) && (!counts || counts.startsWith("0/"))) {
+    steps.push({ label, status: "fail", cached: false, seconds, reason: "zero passing tests" });
+    throw new Error(`${label} reported no passing tests; see ${log}`);
+  }
+  return { seconds, counts };
+}
+
+/**
+ * FULL only (no PASS cache): independent steps run side by side. Each keeps its own log, count check and failure
+ * diagnostics; every step is allowed to finish before the first failure is thrown, so no log is cut short.
+ */
+async function runStepsTogether(specs) {
+  const outcomes = await Promise.allSettled(specs.map(({ label, script, args = [], kind = "static" }) => new Promise((done, fail) => {
+    const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const log = join(logRoot, `${session}-${slug}.log`);
+    const begun = performance.now();
+    const child = spawn(process.execPath, [script, ...args], { cwd: root, env: stepEnvironment(slug, kind, {}) });
+    let output = "";
+    for (const stream of [child.stdout, child.stderr]) { stream.setEncoding("utf8"); stream.on("data", (chunk) => { output += chunk; }); }
+    child.on("error", (error) => { try { finishStep({ label, kind, log, begun, output, status: null, error }); } catch (thrown) { fail(thrown); } });
+    child.on("close", (status) => {
+      try {
+        const { seconds, counts } = finishStep({ label, kind, log, begun, output, status });
+        steps.push({ label, status: "pass", cached: false, seconds, counts, bytes: Buffer.byteLength(output), log: log.replace(root, ".") });
+        console.log(`${label}: PASS${counts ? ` — ${counts}` : ""} — ${seconds}s`);
+        done();
+      } catch (thrown) { fail(thrown); }
+    });
+  })));
+  const failed = outcomes.find((outcome) => outcome.status === "rejected");
+  if (failed) throw failed.reason;
 }
 
 function nodeStep(label, script, args = [], kind = "static", extraEnv = {}) {
@@ -146,7 +183,7 @@ function runSelected(selection, mode) {
   }
 }
 
-function runFull() {
+async function runFull({ includeExtended = false } = {}) {
   // R-01: report screenshots belong out of the tracked tree during daily runs. Any tracked PNG that is modified when
   // FULL starts, or that a test changes while FULL runs, fails here with the paths named (the runner used to die on
   // the following git diff with ENOBUFS instead of saying this). Untracked PNG files (`??`) are checked too, but only
@@ -157,46 +194,47 @@ function runFull() {
   const pngTrackedBefore = pngPaths(false);
   if (pngTrackedBefore.length) throw new Error(`Tracked PNG files are already modified before FULL started — tests must not write into docs/reports (see r-01-test-hygiene): ${pngTrackedBefore.join(", ")}`);
   const pngUntrackedBefore = pngPaths(true).sort();
-  nodeStep("Repository ESLint", "node_modules/eslint/bin/eslint.js", ["."]);
-  nodeStep("Class lint", "scripts/lint-tailwind-classes.mjs");
-  nodeStep("Source contracts", "scripts/lint-source-contracts.mjs");
-  nodeStep("E2E TypeScript", "node_modules/typescript/bin/tsc", ["-p", "tsconfig.e2e.json"]);
-  nodeStep("Phase docs", "scripts/phase-docs/validate.mjs");
-  nodeStep("AI handoff", "scripts/ai-handoff/validate.mjs");
-  nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
-  nodeStep("App TypeScript", "node_modules/typescript/bin/tsc");
-  nodeStep("Production build", "node_modules/vite/bin/vite.js", ["build"]);
+  // Run static checks and production build together first, then run Vitest full on its own so heavy CPU
+  // unit tests (e.g. p21SingleNoteFingering) do not contend with tsc/eslint/vite and hit the 30s timeout.
+  await runStepsTogether([
+    { label: "Repository ESLint", script: "node_modules/eslint/bin/eslint.js", args: ["."] },
+    { label: "Class lint", script: "scripts/lint-tailwind-classes.mjs" },
+    { label: "Source contracts", script: "scripts/lint-source-contracts.mjs" },
+    { label: "E2E TypeScript", script: "node_modules/typescript/bin/tsc", args: ["-p", "tsconfig.e2e.json"] },
+    { label: "Phase docs", script: "scripts/phase-docs/validate.mjs" },
+    { label: "AI handoff", script: "scripts/ai-handoff/validate.mjs" },
+    { label: "Privacy scan", script: "scripts/security/trackedSecurityScan.mjs" },
+    { label: "App TypeScript", script: "node_modules/typescript/bin/tsc" },
+    { label: "Production build", script: "node_modules/vite/bin/vite.js", args: ["build"] },
+    { label: "Runner contracts", script: "--test", kind: "node", args: [
+      "scripts/test-dx/selection.node-test.mjs",
+      "scripts/test-dx/cache.node-test.mjs",
+      "scripts/test-dx/reporting.node-test.mjs",
+      "scripts/test-dx/check-gallery-excluded.node-test.mjs",
+      "scripts/test-dx/performance-reporter.node-test.mjs",
+      "scripts/test-dx/tiers.node-test.mjs",
+      "scripts/run-playwright-visual-tests.node-test.mjs",
+    ] },
+  ]);
+  nodeStep("Vitest full", "node_modules/vitest/vitest.mjs", ["run", "--maxWorkers=6", "--testTimeout=30000", "--reporter=dot"], "vitest");
   nodeStep("Gallery excluded", "scripts/test-dx/check-gallery-excluded.mjs");
-  nodeStep("Runner contracts", "--test", [
-    "scripts/test-dx/selection.node-test.mjs",
-    "scripts/test-dx/cache.node-test.mjs",
-    "scripts/test-dx/reporting.node-test.mjs",
-    "scripts/test-dx/check-gallery-excluded.node-test.mjs",
-    "scripts/test-dx/performance-reporter.node-test.mjs",
-    "scripts/run-playwright-visual-tests.node-test.mjs",
-  ], "node");
-  nodeStep("Vitest full", "node_modules/vitest/vitest.mjs", [
-    "run", "--maxWorkers=4", "--testTimeout=30000", "--reporter=dot",
-  ], "vitest");
-  // R-01: the master251 sweeps fan out into many browser contexts per test, and preview-fade records the preview audio
-  // through a live worklet — both depend on how much CPU is left beside them. The tempo dojo judges each answer
-  // against a beat-time window, so a browser busy with full-sweep neighbours once landed one answer outside its own
-  // window (13/14; standalone and mixed sampling never reproduced it). Same treatment as the other load-dependent
-  // measurements: their own low-parallelism pass removed the failures without hiding them through retries — the specs
-  // still run with unchanged expectations, only with fewer neighbours at a time.
-  // R-02: vl-14 measures the painted playhead against the audio clock; one FULL run under six neighbours read a 0.1303
-  // beat gap against its 0.125 limit, while three standalone runs and three six-way repeats of the spec itself passed.
-  // It belongs with the other measurements rather than with the bulk pass.
   const visualRunner = "scripts/run-playwright-visual-tests.mjs";
   const visualReporter = ["--reporter=dot,./scripts/test-dx/performance-reporter.mjs"];
-  const heavySpecs = ["e2e/preview-fade.spec.ts", "e2e/dojo-display-judge.spec.ts", "e2e/p12-master251-register.spec.ts", "e2e/p12-master251-ui-scheduler.spec.ts", "e2e/vl-14-resume-smooth.spec.ts"];
   const allSpecs = readdirSync(join(root, "e2e")).filter((file) => file.endsWith(".spec.ts")).sort().map((file) => `e2e/${file}`);
-  const lightSpecs = allSpecs.filter((file) => !heavySpecs.includes(file));
+  const { core, extendedLight, extendedHeavy } = partitionE2eSpecs(allSpecs);
   const visualEnv = { LV_DX_PRECHECKED_TSC: "1" };
-  const passes = [
-    nodeStep("Playwright full", visualRunner, [...visualReporter, ...lightSpecs], "browser", visualEnv),
-    nodeStep("Playwright heavy pass", visualRunner, [...visualReporter, ...heavySpecs, "--workers=2"], "browser", visualEnv),
-  ];
+  const passes = [];
+  if (includeExtended) {
+    passes.push(
+      nodeStep("Playwright full (all light)", visualRunner, [...visualReporter, ...core, ...extendedLight], "browser", visualEnv),
+      nodeStep("Playwright heavy pass", visualRunner, [...visualReporter, ...extendedHeavy, "--workers=2"], "browser", { ...visualEnv, LV_DX_PREBUILT_FIXTURE: "1" }),
+    );
+  } else {
+    console.log(`E2E tier: core (${core.length} specs); extended (${extendedLight.length + extendedHeavy.length} specs) via npm run test:e2e:extended or npm run test:full:all`);
+    passes.push(
+      nodeStep("Playwright full (core)", visualRunner, [...visualReporter, ...core], "browser", visualEnv),
+    );
+  }
   // R-01 §3: navigation retries around a transiently unreachable preview server (state-based, URL-load driven) are
   // kept, and their count is made visible here so a rising number cannot hide behind a PASS.
   const reopenings = passes.reduce((count, result) => count + (result?.output ? (result.output.match(/GOTO-RETRY /g)?.length ?? 0) : 0), 0);
@@ -213,9 +251,21 @@ function runFull() {
   console.log("Tracked PNG check: PASS (no tracked PNG file changed during FULL)");
 }
 
+function runExtendedE2e() {
+  const visualRunner = "scripts/run-playwright-visual-tests.mjs";
+  const visualReporter = ["--reporter=dot,./scripts/test-dx/performance-reporter.mjs"];
+  const allSpecs = readdirSync(join(root, "e2e")).filter((file) => file.endsWith(".spec.ts")).sort().map((file) => `e2e/${file}`);
+  const { extendedLight, extendedHeavy } = partitionE2eSpecs(allSpecs);
+  console.log(`E2E extended: ${extendedLight.length} archive/sweep specs + ${extendedHeavy.length} heavy (--workers=2) specs`);
+  nodeStep("Playwright extended light", visualRunner, [...visualReporter, ...extendedLight], "browser");
+  nodeStep("Playwright extended heavy", visualRunner, [...visualReporter, ...extendedHeavy, "--workers=2"], "browser", { LV_DX_PRECHECKED_TSC: "1", LV_DX_PREBUILT_FIXTURE: "1" });
+}
+
 try {
-  if (!["fast", "feature", "ui", "full"].includes(level)) throw new Error("Usage: run.mjs <fast|feature|ui|full> [changed paths]");
-  if (level === "full") runFull();
+  if (!["fast", "feature", "ui", "full", "full-all", "extended"].includes(level)) throw new Error("Usage: run.mjs <fast|feature|ui|full|full-all|extended> [changed paths]");
+  if (level === "full") await runFull({ includeExtended: false });
+  else if (level === "full-all") await runFull({ includeExtended: true });
+  else if (level === "extended") runExtendedE2e();
   else {
     const files = explicitFiles.length ? explicitFiles : level === "ui" && !autoChanged ? [] : changedFiles();
     if (level === "feature" && files.length === 0) throw new Error("FEATURE needs a changed source/test path or branch change");

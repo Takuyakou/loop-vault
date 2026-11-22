@@ -1,0 +1,28 @@
+[
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-voicing-drill",
+        "fileVersion": 1,
+        "version": 1,
+        "revision": 1,
+        "sets": {},
+        "operations": []
+      }
+    }
+  },
+  {
+    "case": "wrong-app",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "empty-object",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

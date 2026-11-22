@@ -1,4 +1,6 @@
 import { useMemo,useState } from "react";
+import { Check, Copy } from "lucide-react";
+import { Select, useTransientFlag } from "../components/ui";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { voiceTextChordForAudition } from "../domain/textChordTones";
 import { playbackController,type PlaybackController } from "../audio/playbackController";
@@ -117,14 +119,15 @@ export function ProgressionAdvancedView(props:ProgressionDetailViewProps) {
   }
 
 
+  const [copiedChordDrip, triggerCopiedChordDrip] = useTransientFlag(1100);
   return <section className="lv-progression-subpanel" aria-label="MIDIと以前の操作">
     <PreviewSoundSelector value={previewSound} onChange={sound=>{controller.stop();setPreviewSound(sound);}} copy={copy}/>
     {showMidiExport?<ProgressionMidiControl result={midiExport.result} disabledReason={midiExport.disabledReason} setToast={setToast} actions={midiExportActions}/>:null}
     <SourceBasslineStatus block={block} progressionEdited={false}/>
     <p>元ファイル: {block.sourceFileName??block.origin??'Manual'}</p>
-    <button type="button" className="lv-cw-btn" onClick={()=>{void (async()=>{try{await navigator.clipboard.writeText(formatProgressionText(block.chords));setToast('ChordDrip 用にコピーしました');}catch{setToast('コピーできませんでした','error');}})();}}>ChordDrip 用にコピー</button>
+    <button type="button" className="lv-cw-btn" data-copied={copiedChordDrip?"true":undefined} onClick={()=>{void (async()=>{try{await navigator.clipboard.writeText(formatProgressionText(block.chords));triggerCopiedChordDrip();setToast('ChordDrip 用にコピーしました');}catch{setToast('コピーできませんでした','error');}})();}}><span className="lv-copy-icon" aria-hidden="true">{copiedChordDrip?<Check className="lv-copy-icon-ok" size={16}/>:<Copy size={16}/>}</span>ChordDrip 用にコピー</button>
     <button type="button" className="lv-cw-btn" onClick={()=>{const candidates=editable.slots.map(slot=>({id:slot.id,chord:slot.currentChord,voicingMemory:slot.voicingMemory}));const result=setAllEligibleCardsToSource(candidates);if(result.changedCount)setEditable(current=>setEditableVoicingMemories(current,result.cards.filter((card,index)=>card!==candidates[index]).map(card=>({slotId:card.id,memory:card.voicingMemory}))));setToast(`元MIDI再生に変更: ${result.changedCount}件`);}}>対象カードを元MIDI再生に変更</button>
-    <label>音の保存設定を見るカード<select aria-label="音の保存設定を見るカード" value={selected} onChange={e=>setSelected(Number(e.target.value))}>{block.chords.map((item,index)=><option key={index} value={index}>{item.bar}小節 {item.chord.label}</option>)}</select></label>
+    <label>音の保存設定を見るカード<Select aria-label="音の保存設定を見るカード" value={selected} onChange={e=>setSelected(Number(e.target.value))}>{block.chords.map((item,index)=><option key={index} value={index}>{item.bar}小節 {item.chord.label}</option>)}</Select></label>
     {selectedItem?<VoicingPanel chord={selectedItem.chord} memory={selectedItem.voicingMemory} generatedNotes={block.textSource?[...voiceTextChordForAudition(selectedItem.chord)]:voiceChordForPreview(selectedItem.chord).notes} sourceAvailable={Boolean(sourceAsset?.path&&loadMidiSource)} reextracting={reextracting} onMemoryChange={memory=>props.updateProgressionBlock(idea.id,block.id,{chords:block.chords.map((item,index)=>index===selected?{...item,voicingMemory:memory}:item)})} onReextract={()=>void reextractSourceVoicings()}/>:null}
   </section>;
 }
@@ -210,7 +213,7 @@ function greatestCommonDivisor(left: bigint, right: bigint): bigint {
   }
   return a === 0n ? 1n : a;
 }
-function midiExportDisabledReason(
+export function midiExportDisabledReason(
   error: unknown,
 ): string {
   if (error instanceof ProgressionMidiExportError) {

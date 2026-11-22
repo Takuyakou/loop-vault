@@ -25,8 +25,8 @@ async function mount(snapshots=syntheticSnapshots()) {
   await act(async()=>root!.render(<MetronomeProvider><PreviewSoundProvider><FingeringRankerComparisonSettings/><ProgressionVoicingPracticeView snapshots={snapshots} initialSelection="source-midi" transportFactory={()=>runtime} onSelectProgression={()=>true} onEnterText={()=>{}}/></PreviewSoundProvider></MetronomeProvider>));
   return {container,snapshots,audition};
 }
-/** P5.26.2-02: the fingers in use are the slots with a note under them (the panel is five fixed slots). */
-const usedSlots=(c:HTMLElement,hand:"left"|"right")=>[...c.querySelectorAll(`[data-testid="voicing-loop-${hand}-hand"] tr[data-row="finger"] td[data-used="true"]`)].map(n=>n.textContent!).sort();
+/** P5.26.2-02 / P23-20 L1: the fingers in use are the slot cards with a note under them (five fixed slots per hand). */
+const usedSlots=(c:HTMLElement,hand:"left"|"right")=>[...c.querySelectorAll(`[data-testid="voicing-loop-${hand}-hand"] [data-testid="voicing-loop-hand-slot"][data-used="true"] .voicing-hand-slot-finger`)].map(n=>n.textContent!).sort();
 const handLabels=(c:HTMLElement)=>[...c.querySelectorAll("[data-testid='voicing-loop-left-hand'],[data-testid='voicing-loop-right-hand']")].map(n=>n.textContent);
 it("normal candidate default reaches timing-aware Bass and CURRENT fallback without changing the source",async()=>{
   const snapshots=syntheticSnapshots(),base=snapshots["source-midi"]!;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Select } from "../ui";
 import { useStore } from "zustand";
 import {
   createMidiInputPianoMonitor,
@@ -235,8 +236,7 @@ export function VoicingPanel({
           {styleSelector ? (
             <label className="flex items-center gap-2 text-xs text-[var(--lv-text-muted)]">
               <span>{styleSelector.label}</span>
-              <select
-                className="min-h-9 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 text-xs text-[var(--lv-text)]"
+              <Select
                 data-testid="voicing-style-selector"
                 value={styleSelector.value}
                 disabled={recording}
@@ -250,7 +250,7 @@ export function VoicingPanel({
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           ) : null}
           <VoicingSourceChip
@@ -266,8 +266,9 @@ export function VoicingPanel({
       </div>
       <label className="mt-3 block text-sm">
         {text.playbackChoice}
-        <select
-          className="mt-1 block w-full border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2"
+        <Select
+          wrapperClassName="mt-1 w-full"
+          className="w-full"
           value={memory?.playbackChoice ?? "LEGACY"}
           onChange={(event) => onMemoryChange({
             ...memory,
@@ -280,7 +281,7 @@ export function VoicingPanel({
           <option value="SOURCE" disabled={sourceCompatibility !== "compatible"}>{text.choiceSource}</option>
           <option value="GENERATED">{text.choiceGenerated}</option>
           <option value="CUSTOM" disabled={!memory?.practiceVoicingOverride}>{text.choiceCustom}</option>
-        </select>
+        </Select>
       </label>
       <div className="mt-3 border border-[var(--lv-border)] bg-[var(--lv-bg)]/60 p-3" data-testid="voicing-saved-notes">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-accent)]">{text.savedNotes}</p>

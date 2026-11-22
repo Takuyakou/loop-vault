@@ -5,6 +5,7 @@ import { loadFingeringPreferences, savePersonalFingering, resetPersonalFingering
 import { computeNextMoves, fixedFingerSlots } from "../../src/voicingPractice/nextMove";
 import { generateFingeringCandidates } from "../../src/domain/progressionFingering";
 import { viewFunctions } from "./privateAccess";
+import { p21ERankerCostModel } from "../../src/domain/p21SingleNoteFingering";
 export const emptyPreferences: FingeringPreferenceCollection = {version:1,entries:[]};
 export function syntheticSnapshots() {
   const labels=["Cmaj7","Dm7","G7","Cmaj7"];
@@ -25,7 +26,7 @@ export function project(snapshot:ProgressionVoicingPracticeSnapshot,preferences=
   const plan=resolveProgressionPracticeVoicings(snapshot,options);
   const voicings=plan.events.map(e=>e.status==="SUPPORTED"?e.voicing:undefined);
   const hands=assignPracticeHandsAcrossProgression(snapshot.selection,voicings);
-  const ranked={left:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"left",preferences),right:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"right",preferences)};
+  const ranked={left:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"left",preferences,{costModel:p21ERankerCostModel()}),right:viewFunctions.rankFingeringsForHand(snapshot,hands,snapshot.selection,"right",preferences,{costModel:p21ERankerCostModel()})};
   const frames=snapshot.events.map((event,i)=>{
     const suggested=Object.fromEntries((["left","right"] as const).map(hand=>[hand,ranked[hand].find(r=>r.id===event.id)])) as {left:typeof ranked.left[number]|undefined;right:typeof ranked.right[number]|undefined};
     const effective={left:viewFunctions.effectiveFingering(suggested.left,preferences),right:viewFunctions.effectiveFingering(suggested.right,preferences)};

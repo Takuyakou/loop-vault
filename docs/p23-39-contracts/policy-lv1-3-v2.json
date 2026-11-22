@@ -1,0 +1,85 @@
+{
+  "version": "p23-39.policy.lv1-3.v2",
+  "bankVersion": "p23-39.bank.lv1-3.v2",
+  "contractVersion": "p23-39.contracts.v2",
+  "pairId": "p23-39.bank.lv1-3.v2+p23-39.policy.lv1-3.v2",
+  "levels": {
+    "1": {
+      "questions": 20,
+      "pass": 18,
+      "roots": 6,
+      "delay": {
+        "questions": 10,
+        "pass": 8
+      },
+      "ear": {
+        "questions": 10,
+        "pass": 8
+      }
+    },
+    "2": {
+      "questions": 20,
+      "pass": 18,
+      "perQuality": {
+        "min": 4,
+        "of": 5
+      },
+      "roots": 6,
+      "delay": {
+        "questions": 10,
+        "pass": 8
+      },
+      "ear": {
+        "questions": 10,
+        "pass": 8
+      }
+    },
+    "3": {
+      "questions": 30,
+      "pass": 27,
+      "perQuality": {
+        "min": 4,
+        "of": 5
+      },
+      "roots": 12,
+      "speed": {
+        "limitMs": 3000,
+        "ofCorrect": 0.8
+      },
+      "delay": {
+        "questions": 12,
+        "pass": 10
+      }
+    }
+  },
+  "superseded": {
+    "lv3": {
+      "questions": 24,
+      "pass": 22,
+      "perQuality": "4 per quality would need 4/4 for 80%, contradicting 22/24"
+    },
+    "v1": {
+      "pairId": "p23-39.bank.lv1-3.v1+p23-39.policy.lv1-3.v1",
+      "lv2Roots": 5,
+      "lv2Ear": "missing from the policy",
+      "delaySets": "named in prose only; no frozen items",
+      "nameRecallBass": "required the source voicing's bass"
+    }
+  },
+  "rules": {
+    "pass": "official pass requires the exact frozen same-day set (20/20 or 30/30 evaluated, no repeats), every quality block complete at of=5 with >= min, every level root covered, the exact delayed set (10/10 or 12/12) with >= pass, the ear set where the level has one, and the Lv3 speed ratio; invalid trials are excluded and must be re-tried",
+    "independent": "a correct result counts toward the official pass only when it is MIDI-confirmed and not hint-assisted; self-confirmation is a separate progress track and never a formal pass",
+    "speed": "only the Lv3 name-recall level; 80% of independent-correct attempts must have a recorded completionAt - armedAt <= 3000 ms; missing speed counts as not within the limit; invalid trials are excluded",
+    "delay": "different day (>= 24h and >= 12h apart is not enough alone); the delayed set is a frozen, disjoint item set; where a level has no spare cells the same cell reappears with a different authored placement; order alone is never a different problem",
+    "hint": "an audition/name hint or an ear replay marks the trial assisted; it counts as practice progress, never as an independent confirmation",
+    "selfCheck": "MIDI confirmation and self-confirmation are stored as different evidence; self-confirmation never promotes to MIDI-verified",
+    "duplicate": "an item id never repeats inside a same-day or delayed set; the frozen sets are disjoint by construction and a same-day repeat cannot add coverage",
+    "invalid": "disconnected / prepare-failed / clock-jump / capability / stall / hidden trials are excluded from every denominator, recorded with their reason, and re-tried",
+    "noInput": "no captured notes within the response timeout (10000 ms) is an attempt with result no-input, never a wrong answer or a device-invalid"
+  },
+  "answerPolicy": {
+    "nameRecall": "the quality's required tones under the product 'normal' leniency (root+3rd required; 5th optional; maj7/min7/dom7 require the 7th; min7b5 requires b5); an unspecified bass is free and any inversion is accepted; a bass is enforced only when the item specifies one; never a single fixed MIDI set",
+    "savedVoicing": "the authored notes are the gold: same notes, same octaves, same doubling; no theory-derived additions; this is a separate policy from name recall",
+    "ear": "accepted harmony (the same required tones) + the item's specified bass (root); exact voicing is not required; one playback, and a replay marks the trial assisted"
+  }
+}

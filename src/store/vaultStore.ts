@@ -117,6 +117,11 @@ export interface TextProgressionIdeaDraft {
   bpm?: number;
   /** Present only when explicitly confirmed by the Text Progression UI. */
   confirmedKey?: string;
+  /**
+   * P23-33: the effective key for display and save (manual, inherited or automatically inferred in
+   * this import session). It never replaces `confirmedKey` for the original-text validation.
+   */
+  resolvedKey?: string;
   /** Transient exact score extent, persisted through existing source beat bounds. */
   scoreLengthBeats?: number;
   /** Extended text's explicit n/4 grid; legacy text remains 4/4. */
@@ -460,6 +465,13 @@ export function createVaultStore(
               ...voicingSourceContext(get().analysis, draft.progressionAnalysis),
             }, draft.progressionMetadata)
           : undefined;
+        // P23-33: when the analysis had no key, the key resolved at the save boundary is the block's key
+        // too, so the display and the save agree. An analysis-detected key is never replaced.
+        const draftKeyState = draft.key === undefined ? undefined : confirmedTextProgressionKeyState(draft.key);
+        const keyedBlock = progressionBlock !== undefined && progressionBlock.detectedKey === undefined
+          && draftKeyState?.kind === "confirmed"
+          ? { ...progressionBlock, detectedKey: draftKeyState.key }
+          : progressionBlock;
         const idea: SongIdea = {
           id,
           title: trimmedTitle.slice(0, 80),
@@ -475,7 +487,7 @@ export function createVaultStore(
           assets: draft.progressionMetadata?.sourcePath && sourceAssetId
             ? [{ id: sourceAssetId, type: "midi", path: draft.progressionMetadata.sourcePath }]
             : [],
-          progressionBlocks: progressionBlock ? [progressionBlock] : [],
+          progressionBlocks: keyedBlock ? [keyedBlock] : [],
           statusHistory: [{ status, at: createdAt }],
           createdAt,
           updatedAt: createdAt,
@@ -508,7 +520,9 @@ export function createVaultStore(
           id,
           title: normalized.title,
           ...(normalized.bpm === undefined ? {} : { bpm: normalized.bpm }),
-          ...(normalized.confirmedKey === undefined ? {} : { key: normalized.confirmedKey }),
+          ...(normalized.resolvedKey === undefined && normalized.confirmedKey === undefined
+            ? {}
+            : { key: normalized.resolvedKey ?? normalized.confirmedKey }),
           moods: [],
           status: "idea",
           nextAction: { text: normalized.nextAction, updatedAt: createdAt },
@@ -539,7 +553,10 @@ export function createVaultStore(
                 ...idea,
                 progressionBlocks: [...(idea.progressionBlocks ?? []), block],
                 ...(idea.bpm === undefined && normalized.bpm !== undefined ? { bpm: normalized.bpm } : {}),
-                ...(idea.key === undefined && normalized.confirmedKey !== undefined ? { key: normalized.confirmedKey } : {}),
+                // P23-33: an existing idea keeps its key; a missing one is filled from the effective key only.
+                ...(idea.key === undefined && (normalized.resolvedKey ?? normalized.confirmedKey) !== undefined
+                  ? { key: normalized.resolvedKey ?? normalized.confirmedKey }
+                  : {}),
                 chordMemo: idea.chordMemo.trim() ? idea.chordMemo : normalized.summaryText,
                 updatedAt,
               }
@@ -548,7 +565,7 @@ export function createVaultStore(
       },
       updateIdea(id, changes) {
         if (Object.prototype.hasOwnProperty.call(changes, "progressionBlocks")) {
-          set({ error: "進行はIDを指定して更新してください。Ideaの情報で進行の一覧を置き換えることはできません。" });
+          set({ error: "進行はIDを指定して更新してください。曲の情報で進行の一覧を置き換えることはできません。" });
           return false;
         }
         const updatedAt = now().toISOString();
@@ -1040,6 +1057,7 @@ function normalizeTextProgressionIdeaDraft(
   chords: ChordTimelineItem[];
   bpm?: number;
   confirmedKey?: string;
+  resolvedKey?: string;
 }) | undefined {
   const title = draft.title.trim().slice(0, 80);
   if (!title || (draft.bpm !== undefined && !isValidTextProgressionBpm(draft.bpm))) {
@@ -1048,6 +1066,11 @@ function normalizeTextProgressionIdeaDraft(
   const suppliedKey = draft.confirmedKey?.trim();
   const keyState = confirmedTextProgressionKeyState(suppliedKey);
   if (suppliedKey && keyState.kind !== "confirmed") return undefined;
+  // P23-33: the automatic/inherited key is validated with the same canonical form, but it is kept apart
+  // from `confirmedKey` (the original text's interpretation key) all the way to the block and the idea.
+  const suppliedResolvedKey = draft.resolvedKey?.trim();
+  const resolvedKeyState = confirmedTextProgressionKeyState(suppliedResolvedKey);
+  if (suppliedResolvedKey && resolvedKeyState.kind !== "confirmed") return undefined;
 
   // Deliberately discard every incoming MIDI-like field. The public adapter is
   // fail-closed: only text-safe timing, chord identity, and Live MIDI practice
@@ -1071,6 +1094,7 @@ function normalizeTextProgressionIdeaDraft(
     ...(textSource === undefined ? {} : { textSource }),
     ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
     ...(keyState.kind === "confirmed" ? { confirmedKey: keyState.key } : {}),
+    ...(resolvedKeyState.kind === "confirmed" ? { resolvedKey: resolvedKeyState.key } : {}),
   };
 }
 
@@ -1114,6 +1138,7 @@ function createSavedTextProgressionBlock(
     chords: ChordTimelineItem[];
     bpm?: number;
     confirmedKey?: string;
+    resolvedKey?: string;
   },
   context: { idFactory: () => string; createdAt: string },
 ): SavedProgressionBlock {
@@ -1132,7 +1157,11 @@ function createSavedTextProgressionBlock(
     summaryText: draft.summaryText,
     chords: persistChordEvents(draft.chords, context.idFactory),
     ...(draft.textSource === undefined ? {} : { textSource: draft.textSource }),
-    ...(draft.confirmedKey === undefined ? {} : { detectedKey: draft.confirmedKey }),
+    // P23-33: the effective key (manual, inherited or inferred) is what the block is saved with; a
+    // human-confirmed key is still the fallback when no effective key was resolved.
+    ...(draft.resolvedKey === undefined && draft.confirmedKey === undefined
+      ? {}
+      : { detectedKey: draft.resolvedKey ?? draft.confirmedKey }),
     ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
     timeSignature: `${beatsPerBar}/4`,
     tags: [],

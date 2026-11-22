@@ -115,3 +115,30 @@ issue #375 は RUSTSEC ではありません(Dependabot の「actions/setup-node
 - 次の ignore の見直しは、Tauri を上げる時です。
 
 止まります。
+
+## 8. 11-16 の 2 件(2026-11-20、DEP-00。RUSTSEC-2026-0538・RUSTSEC-2026-0486)
+
+週 1 の検査(`security.yml` の `rust-advisories`)が 2026-11-16 に立てた issue #391・#392 の 2 件。**このアプリへの影響はどちらも無い**が、ロックファイルの版を上げれば消えるので上げた(ignore には入れていない)。
+
+| issue | 部品(更新前) | 中身 | このアプリへの影響 | 直る版 | 更新後 |
+|---|---|---|---|---|---|
+| #391 RUSTSEC-2026-0538 | quinn-udp 0.5.15 | 大きすぎる UDP の後に受け取りの繰り返しが回り続ける | **無い**。Windows は別の受け取り方で影響を受けない。そもそも quinn はビルドに入らない(§3) | ≥0.5.16 | **0.5.16** |
+| #392 RUSTSEC-2026-0486(unsound) | rustix 1.1.4 | `getxattr` などに長さ 0 の入れ物を渡すと、書いていないメモリを書いたことにする | **無い**。rustix は Linux などの部品(tempfile・polling・zbus の下)で、アプリは xattr を使わない | ≥1.1.6 | **1.1.6** |
+
+- `cargo update --manifest-path src-tauri/Cargo.toml -p quinn-udp -p rustix` で上がったのは **この 2 つだけ**(`Cargo.lock` の `[[package]]` の版を前後で突き合わせて確認)。`Cargo.toml` は変えていない。
+- ロックファイルの差(13 行追加・13 行削除)のうち、ほかのクレートの行は `windows-sys` の参照先(もともとロックにあった 0.59.0 / 0.61.2)が変わっただけで、**クレートの版は 1 つも変わっていない**(`windows-sys` の `[[package]]` も増減なし)。
+- `cargo audit --file src-tauri/Cargo.lock`(更新前のロックで試した時: 脆弱性 1〔quinn-udp〕・allowed warning 2〔rustix・chrono〕)
+- 確かめ:
+
+| 確かめ | 結果 |
+|---|---|
+| リポジトリの一番上で `cargo audit --file src-tauri/Cargo.lock`(CI と同じ形) | **終了コード 0、脆弱性 0**。警告は既存の chrono(`RUSTSEC-2026-0543`・unmaintained)1 件だけで、`allowed warning` として扱われる(この段の前から出ていた物。`.cargo/audit.toml` には足していない)。#391・#392 は消えた |
+| `cargo test --manifest-path src-tauri/Cargo.toml --locked` | **70 件通過** |
+| `npx tauri build --no-bundle`(release) | **通過**(`src-tauri/target/release/loop-vault.exe`、26,834,944 バイト)。quinn の成果物は 0 個のまま |
+| `npm run test:fast` | **PASS**(`30.5s`) |
+| local master へ `--no-ff` | `chore/rustsec-2026-11-16` をマージ(push していない) |
+
+- #391・#392 は、この直しが公開リポジトリに届いた時(次の公開)に利用者が閉じる。ワーカーは GitHub に書き込んでいない。
+
+
+- REL-02-fix-1(v3.0.0 の準備):`chrono` 0.4.45(`RUSTSEC-2026-0543`・手入れ終了の知らせだけ)を `.cargo/audit.toml` の ignore に足した。`serde_with` の任意の機能から `Cargo.lock` にだけ入り、`cargo tree -i chrono --locked --target all` は何も出さない=どのビルドにも入らない。見直す時:Tauri か `serde_with` を上げる時。足したあと、一番上の `cargo audit --file src-tauri/Cargo.lock` は警告 0(`--deny warnings` も終了コード 0)。

@@ -75,12 +75,13 @@ describe("SettingsView sections", () => {
   it("is a screen with five sections and keeps the developer section collapsed initially", async () => {
     const mounted = await renderSettings();
     expect(document.querySelector('[role="dialog"]')).toBeNull();
+    // P23-26 S1 (B): 表示 / MIDI 入力 / データ / このアプリについて / 開発者向け.
     const headings = [...screen().querySelectorAll("h2")].map((heading) => heading.textContent);
-    expect(headings).toEqual([appCopy.ja.settingsUi.general, "音と MIDI", appCopy.ja.settingsUi.liveMidiTitle, appCopy.ja.settingsUi.data, "開発者向け"]);
+    expect(headings).toEqual(["表示", "MIDI 入力", "データ", "このアプリについて", "開発者向け"]);
     const sectionNav = screen().querySelector('nav[aria-label="設定の欄"]')!;
     expect([...sectionNav.querySelectorAll("button")].map((button) => button.textContent))
-      .toEqual(["一般", "音と MIDI", "Live MIDI", "データ", "開発者向け"]);
-    for (const id of ["settings-general", "settings-audio-midi", "settings-live-midi", "settings-data", "settings-developer"]) {
+      .toEqual(["表示", "MIDI 入力", "データ", "このアプリについて", "開発者向け"]);
+    for (const id of ["settings-general", "settings-audio-midi", "settings-live-midi", "settings-data", "settings-about", "settings-developer"]) {
       expect(screen().querySelector(`#${id}`)).not.toBeNull();
     }
 
@@ -101,11 +102,12 @@ describe("SettingsView sections", () => {
   it("keeps the section texts and the piano sample attribution in the data section", async () => {
     const mounted = await renderSettings({ copy: appCopy.ja });
     const text = screen()?.textContent;
-    expect(text).toContain(appCopy.ja.settingsUi.general);
-    expect(text).toContain(appCopy.ja.settingsUi.liveMidiTitle);
+    // P23-26 S1 (B): the first section is 表示 now, and このアプリについて has its own section.
+    expect(text).toContain("表示");
+    expect(text).toContain("このアプリについて");
     expect(text).toContain(appCopy.ja.settingsUi.data);
     expect(text).not.toMatch(/Build commit|Backup \/ Restore|Pre-Analysis|Export|Import|Accuracy First\b(?!）)/);
-    expect(screen()?.querySelector("#settings-data [data-testid='piano-sample-attribution']")?.textContent)
+    expect(screen()?.querySelector("#settings-about [data-testid='piano-sample-attribution']")?.textContent)
       .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
   });
@@ -158,7 +160,10 @@ describe("SettingsView sections", () => {
     const mounted = await renderSettings({ setShowRomanNumerals });
 
     expect(document.querySelector("#settings-language")).toBeNull();
-    const degreeToggle = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    // P23-26 S4 (B): the checkbox is the shared switch now, with the same effect.
+    const degreeToggle = screen().querySelector<HTMLButtonElement>("[data-testid='settings-show-degrees']");
+    expect(degreeToggle?.getAttribute("role")).toBe("switch");
+    expect(degreeToggle?.getAttribute("aria-checked")).toBe("true");
     await click(degreeToggle);
 
     expect(document.querySelector("#settings-monthly-goal")).toBeNull();

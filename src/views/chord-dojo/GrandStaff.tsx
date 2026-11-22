@@ -49,7 +49,7 @@ export const SIGNATURE_STEPS={
 };
 export interface StaffKeySignature{accidental:'flat'|'sharp';count:number;}
 export type StaffTone='held'|'sounded'|'answer';
-function GrandStaffRenderer({snapshot,compact=false,viewportSnapshots,caption,captionNode,hiddenText,showFingering=true,fingerLayout,keySignature,answerSnapshot,tone,cropX,alwaysStaff=false,staffGap,fixedExtent}:{snapshot?:TargetSnapshot;compact?:boolean;viewportSnapshots?:readonly TargetSnapshot[];caption?:string;captionNode?:ReactNode;hiddenText?:string;
+function GrandStaffRenderer({quiet=false,snapshot,compact=false,viewportSnapshots,caption,captionNode,hiddenText,showFingering=true,fingerLayout,keySignature,answerSnapshot,tone,cropX,alwaysStaff=false,staffGap,fixedExtent}:{/** P22-01 §4-4: the always-shown notes (「構成音表示・リズム指定なし」, 「左＝左手 · 右＝右手」, the finger legend) are in the practice screen's 「?」 instead. A caption that is passed is still shown. */quiet?:boolean;snapshot?:TargetSnapshot;compact?:boolean;viewportSnapshots?:readonly TargetSnapshot[];caption?:string;captionNode?:ReactNode;hiddenText?:string;
  /** The finger numbers, their lines and the legend. Off for the ear practice (the hand is not asked). The default shows everything as before. */
  showFingering?:boolean;
  /** Drawn after the clefs. Without it nothing is drawn there, as before. */
@@ -84,19 +84,19 @@ function GrandStaffRenderer({snapshot,compact=false,viewportSnapshots,caption,ca
     <ellipse cx={p.x} cy={p.y} rx="8" ry="5.5" transform={`rotate(-18 ${p.x} ${p.y})`}/>
     {showFingering?<><path className="dojo-score-leader" d={`M ${p.x+(p.n.hand==='left'?-13:13)} ${p.y} L ${p.fingerX+(p.n.hand==='left'?25:-10)} ${p.fingerY}`}/><text className="dojo-score-finger" x={p.fingerX} y={p.fingerY+5}>{`${handName[p.n.hand]}${p.n.finger??'・'}`}</text></>:null}
    </g>;};
- return <section className="dojo-score" aria-label="構成音表示" data-testid="dojo-score" data-score-visible={Boolean(snapshot)} data-score-compact={compact||undefined}>
-  <div className="dojo-score-caption">{captionNode??<><b>{caption??'構成音表示・リズム指定なし'}</b>{showFingering?<span>左＝左手 · 右＝右手</span>:null}</>}</div>
+ return <section className="dojo-score" aria-label="構成音表示" data-testid="dojo-score" data-score-visible={Boolean(snapshot)} data-score-compact={compact||undefined} data-score-quiet={quiet||undefined} title={showFingering&&!quiet?"楽譜は構成音の表示です（リズムの指定はありません）。「左」は左手、「右」は右手。数字は指の番号（1 親指・2 人差し指・3 中指・4 薬指・5 小指）。":undefined}>
+  <div className="dojo-score-caption">{captionNode??(caption?<b>{caption}</b>:null)}</div>
   <div className="dojo-score-scroll" tabIndex={0} role="region" aria-label="譜面のスクロール">{snapshot||viewportSnapshots||answerSnapshot||alwaysStaff?<svg className="dojo-grand-staff" role="img" aria-label={snapshot?`${snapshot.chordSymbol} の構成音${showFingering?'と運指':''}${snapshot.representative?'（高さは代表例）':''}`:'譜表・答えは弾いた後に表示します'} viewBox={`${cropX?.x??0} ${minY-(compact?4:8)} ${cropX?.width??640} ${height}`} style={{height:viewportSnapshots?188:fixedExtent?'100%':height}} data-target-id={snapshot?.targetId} data-target-revision={snapshot?.revision}>
    <title>{snapshot?`${snapshot.chordSymbol}・構成音表示`:hiddenText??"答えは弾いた後に表示します"}</title>
    {(['treble','bass'] as const).map(staff=><g key={staff} className="dojo-score-staff" data-score-staff={staff}>{Array.from({length:5},(_,i)=><line key={i} x1="78" x2="608" y1={staves[staff].bottom-i*12} y2={staves[staff].bottom-i*12}/>)}<text x="12" y={staves[staff].bottom-18} className="dojo-score-clef-label">{staff==='treble'?'高音':'低音'}</text></g>)}
-   <path className="dojo-score-clef" d="M 101 118 C 87 106 82 92 99 84 C 117 76 129 88 120 99 C 109 112 93 101 96 90 M 108 125 C 112 113 103 90 101 72 C 99 51 113 39 116 49 C 125 63 97 75 91 90"/>
+   <path className="dojo-score-clef" transform={compact&&bassBottom===undefined?"translate(101 84) scale(0.78) translate(-101 -84)":undefined} d="M 101 118 C 87 106 82 92 99 84 C 117 76 129 88 120 99 C 109 112 93 101 96 90 M 108 125 C 112 113 103 90 101 72 C 99 51 113 39 116 49 C 125 63 97 75 91 90"/>
    <g data-score-clef="bass" transform={`translate(0 ${bassBottom!==undefined?bassBottom-214:compact?-46:-6})`}><path className="dojo-score-clef" d="M 95 174 C 113 159 130 181 111 194 C 104 200 96 203 90 208 M 99 178 a 4 4 0 1 1 -1 -1"/><circle cx="125" cy="172" r="2.4"/><circle cx="125" cy="184" r="2.4"/></g>
    <path className="dojo-score-brace" d={bassBottom!==undefined?`M 69 55 C 55 72 73 ${bassBottom-85} 61 ${bassBottom-76} C 73 ${bassBottom-67} 55 ${bassBottom-18} 69 ${bassBottom+1}`:compact?"M 69 55 C 55 72 73 103 61 112 C 73 121 55 150 69 169":"M 69 55 C 55 72 73 123 61 132 C 73 141 55 190 69 209"}/>
    {signature?<g className="dojo-score-key" data-testid="dojo-score-key" data-key-accidental={signature.accidental} data-key-count={signature.count}>{(['treble','bass'] as const).flatMap(staff=>SIGNATURE_STEPS[signature.accidental][staff].slice(0,signature.count).map(([octave,step],i)=><text key={`${staff}${i}`} className="dojo-score-accidental" x={150+i*13} y={staves[staff].bottom-(octave*7+step-staves[staff].step)*6+(signature.accidental==='flat'?4:6)}>{accidental(signature.accidental==='flat'?-1:1)}</text>))}</g>:null}
    {placed.map(p=>drawNote(p,tone))}
    {placedAnswer.map(p=>drawNote(p,'answer'))}
   </svg>:<div className="dojo-score-hidden">{hiddenText??"答えは弾いた後に表示します"}</div>}</div>
-  {showFingering?<p className="dojo-score-legend">1 親指 · 2 人差し指 · 3 中指 · 4 薬指 · 5 小指{snapshot?.notes.some(n=>n.finger===undefined)?' · 運指候補なしの音には番号を付けていません。':''}{snapshot?.representative?' · 音の高さは代表例です。構成の練習はどの高さでも判定します。':''}</p>:null}
+  {showFingering&&!quiet&&(snapshot?.notes.some(n=>n.finger===undefined)||snapshot?.representative)?<p className="dojo-score-legend">{[snapshot?.notes.some(n=>n.finger===undefined)?'運指候補なしの音には番号を付けていません。':'',snapshot?.representative?'音の高さは代表例です。構成の練習はどの高さでも判定します。':''].filter(Boolean).join(' ')}</p>:null}
  </section>;
 }
 export const GrandStaff=memo(GrandStaffRenderer);

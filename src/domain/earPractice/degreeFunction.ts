@@ -17,7 +17,7 @@ const ACCIDENTAL = { [-1]: "♭", 0: "", 1: "♯" } as const;
 type Family = "dom" | "maj" | "min" | "hdim" | "dim" | "dim7" | "sus" | "aug" | "?";
 
 /** The part of a chord that decides its function. */
-interface FunctionChord {
+export interface FunctionChord {
   /** Semitones above the key's tonic. */
   pc: number;
   family: Family;
@@ -127,7 +127,7 @@ const TABLE: Record<EarMode, Record<string, string>> = { major: MAJOR_TABLE, min
 const MAJOR_TRIADS: Record<EarMode, readonly number[]> = { major: [0, 5, 7], minor: [3, 8, 10] };
 
 /** The function of chord `i` of a progression, from its own degree and kind and the chord after it ("" when none fits). */
-function functionAt(chords: readonly FunctionChord[], index: number, mode: EarMode): string {
+export function functionAt(chords: readonly FunctionChord[], index: number, mode: EarMode): string {
   const chord = chords[index]!;
   const table = TABLE[mode];
   const own = table[`${chord.pc}|${chord.family}` as Key] ?? "";
@@ -167,4 +167,36 @@ export function questionInfos(question: Pick<EarQuestion, "chords" | "mode" | "t
 export function functionKind(fn: string): "T" | "SD" | "SDm" | "D" | "" {
   if (fn === "T" || fn === "SD" || fn === "SDm") return fn;
   return fn.startsWith("D") ? "D" : "";
+}
+
+/** The roman numerals the labels use (full width) and the spellings the tables know under another name (the kind only depends on the family). */
+const ROMAN_FROM_UNICODE: Record<string, string> = { "Ⅰ": "I", "Ⅱ": "II", "Ⅲ": "III", "Ⅳ": "IV", "Ⅴ": "V", "Ⅵ": "VI", "Ⅶ": "VII" };
+const SUFFIX_ALIASES: Record<string, string> = { "(maj7)": "mMaj7", "ø7": "m7b5", "ø": "m7b5", "m7(b5)": "m7b5" };
+
+/** A written label in the spelling the tables read: `♭Ⅵmaj9` → `bVImaj9`, `iiø7` → `IIm7b5`, `♯idim7` → `#Idim7`. */
+function normalizeDegreeLabel(token: string): string {
+  const written = token
+    .replace(/[ⅠⅡⅢⅣⅤⅥⅦ]/g, (char) => ROMAN_FROM_UNICODE[char]!)
+    .replace(/♭/g, "b")
+    .replace(/♯/g, "#");
+  const match = /^([b#]?)([ivIV]+)(.*)$/.exec(written);
+  if (!match) return written;
+  const suffix = match[3]!;
+  const alias = SUFFIX_ALIASES[suffix];
+  if (alias) return `${match[1]}${match[2]!.toUpperCase()}${alias}`;
+  // A lower-case roman is a minor chord; a suffix that already names the chord keeps it as written.
+  const lower = match[2] === match[2].toLowerCase();
+  const minor = lower && !/^(m|dim|°|ø)/.test(suffix) ? "m" : "";
+  return `${match[1]}${match[2]!.toUpperCase()}${minor}${suffix}`;
+}
+
+/** Function kinds for a written degree list, using the same table as the ear practice. `tokens` are the degree labels without separators. */
+export function degreeFunctionKinds(tokens: readonly string[], mode: EarMode): Array<{ kind: "T" | "SD" | "SDm" | "D" | ""; borrowedDominant: boolean }> {
+  const normalized = tokens.map(normalizeDegreeLabel);
+  let chords: FunctionChord[];
+  try { chords = normalized.map(fromToken); } catch { return tokens.map(() => ({ kind: "" as const, borrowedDominant: false })); }
+  return chords.map((_chord, index) => {
+    const fn = functionAt(chords, index, mode);
+    return { kind: functionKind(fn), borrowedDominant: fn.startsWith("D→") || fn.includes("裏") };
+  });
 }

@@ -36,12 +36,21 @@ export interface PianoKeyboardVisualizerProps {
   fingerLabels?: ReadonlyMap<number, string>;
   layout?: "default" | "wide-61" | "wide-88";
   hideLegend?: boolean;
+  /** P23-32 K1: fill the box's remaining height (only the wide 88-key layout). */
+  fillHeight?: boolean;
   appearance?: "default" | "dojo";
   colorGuideHands?: boolean;
   markScale?: number;
   /** Dojo appearance only: the height the keys are drawn at, in pixels (128 as before). The drawing is not stretched: the
    * caller makes the `svg` this high, and the keys keep their proportions. */
   dojoHeight?: number;
+  /** P23-51 (dojo only): a mark per MIDI note after a wrong answer (see PianoKey's `resultMark`). Absent: as before. */
+  resultMarks?: ReadonlyMap<number, "hit" | "wrong" | "miss">;
+  /**
+   * P23-23a B2: MIDI note numbers to draw as foreign (`held-foreign`), key by key, when the caller knows which
+   * pressed keys are wrong. Absent: the picture is exactly what it was.
+   */
+  foreignNotes?: readonly number[];
 }
 
 const copy = {
@@ -85,10 +94,13 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   fingerLabels,
   layout = "default",
   hideLegend = false,
+  fillHeight = false,
   appearance = "default",
   colorGuideHands = false,
   markScale = 1,
   dojoHeight = 128,
+  foreignNotes,
+  resultMarks,
 }: PianoKeyboardVisualizerProps) {
   const text = copy.ja;
   const range = useMemo(
@@ -113,6 +125,11 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   const allowed = useMemo(
     () => new Set(allowedPitchClasses.map((pitchClass) => positiveModulo(pitchClass, 12))),
     [allowedPitchClasses],
+  );
+  // B2: keys named by the caller are foreign; nothing is named anywhere else, so the other keyboards are untouched.
+  const forcedForeign = useMemo(
+    () => (foreignNotes && foreignNotes.length ? new Set(foreignNotes) : undefined),
+    [foreignNotes],
   );
   const outside = useMemo(
     () => notesOutsideKeyboardRange([...display.heldNotes, ...display.sustainedNotes], range),
@@ -157,11 +174,13 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
       display.sustainedNotes.length,
     );
   const wideLayout = layout !== "default";
+  // P23-32 K1: the practice lets the keyboard take the rest of its box (only the wide 88-key layout).
+  const fill = Boolean(fillHeight) && layout === "wide-88";
 
   return (
-    <div className={wideLayout ? "min-w-0" : ""} data-match-state={matchState}>
+    <div className={wideLayout ? (fill ? "h-full w-full min-w-0" : "min-w-0") : ""} data-match-state={matchState}>
       <div
-        className="relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2"
+        className={`relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b]${fill ? " h-full p-1" : " p-2"}`}
         role="region"
         aria-label={text.region}
         tabIndex={0}
@@ -190,7 +209,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         ) : null}
         <div
           className={wideLayout
-            ? `w-full ${layout === "wide-88" ? "min-w-[72rem]" : "min-w-[72rem]"}`
+            ? `${fill ? "h-full " : ""}w-full ${layout === "wide-88" ? "min-w-[72rem]" : "min-w-[72rem]"}`
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
@@ -203,7 +222,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
             className={layout === "wide-88"
-              ? "block h-[clamp(160px,19dvh,200px)] w-full max-w-none"
+              ? (fill ? "block h-full w-full max-w-none" : "block h-[clamp(160px,19dvh,200px)] w-full max-w-none")
               : wideLayout ? "block h-auto w-full max-w-none"
                 : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={wideLayout ? undefined : { minWidth: `${geometry.width}px` }}
@@ -220,6 +239,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                   heldNotes: held,
                   sustainedNotes: sustained,
                   allowedPitchClasses: allowed,
+                  ...(forcedForeign ? { foreignNotes: forcedForeign } : {}),
                 })}
                 showCLabel={showCLabels}
                 guideBass={showGuide && guideBassNote === key.note}
@@ -238,6 +258,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 colorGuideHands={colorGuideHands}
                 markScale={markScale}
                 missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
+                resultMark={appearance === "dojo" ? resultMarks?.get(key.note) : undefined}
               />
             ))}
           </g>
@@ -252,6 +273,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                   heldNotes: held,
                   sustainedNotes: sustained,
                   allowedPitchClasses: allowed,
+                  ...(forcedForeign ? { foreignNotes: forcedForeign } : {}),
                 })}
                 showCLabel={showCLabels}
                 guideBass={showGuide && guideBassNote === key.note}
@@ -270,6 +292,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 colorGuideHands={colorGuideHands}
                 markScale={markScale}
                 missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
+                resultMark={appearance === "dojo" ? resultMarks?.get(key.note) : undefined}
               />
             ))}
           </g>

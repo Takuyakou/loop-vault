@@ -1,0 +1,40 @@
+[
+  {
+    "case": "contract-file",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "schemaVersion": 1,
+        "melody": {
+          "rule": "continued-top-or-melody-nonchord",
+          "continuedToleranceBeats": 0.000001,
+          "melodyRoles": [
+            "melody"
+          ],
+          "requireNonChordToneForRoleMatch": true
+        },
+        "percussion": {
+          "shortMaxBeats": 0.3,
+          "gridBeats": 0.25,
+          "gridToleranceBeats": 0.05,
+          "minRepeatsInSong": 16
+        },
+        "sameChordSplit": {
+          "compare": "pitch-class set of used notes + lowest used pitch"
+        }
+      }
+    }
+  },
+  {
+    "case": "missing-percussion",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "negative-tolerance",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

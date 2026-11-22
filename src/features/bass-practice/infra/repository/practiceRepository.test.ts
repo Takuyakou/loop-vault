@@ -1,9 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt, createSourceBasslineHistoryEntry, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../../domain";
+import {
+  buildVaultChordContextSnapshot,
+  createChordContextHistoryEntry,
+  createCompletedAttempt,
+  createRootMotionHistoryEntry,
+  createSourceBasslineHistoryEntry,
+  createVaultRootMotionExercise,
+  generateRhythmExercise,
+  RHYTHM_GENERATOR_VERSION,
+  STANDARD_BASS_TUNINGS,
+  type RhythmPracticeAttempt,
+} from "../../domain";
 import { generatedExercise } from "../../domain/testFixtures";
 import {
+  addChordContextHistoryEntry,
   addCompletedAttempt,
   addCompletedRhythmAttempt,
+  addRootMotionHistoryEntry,
   addSourceBasslineHistoryEntry,
   createEmptyPracticeFile,
   JsonPracticeRepository,
@@ -344,4 +357,120 @@ describe("JsonPracticeRepository", () => {
     await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, overlapClippedNoteCount: 2 } }] })).rejects.toThrow(/inconsistent/i);
     await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, pitchReplacementCount: 2 } }] })).rejects.toThrow(/inconsistent/i);
     expect(storage.committed).toBe(lastGood);
-  });});
+  });
+
+  it("persists and reloads Chord Context history built from a real ChordContextSnapshot signature", async () => {
+    const built = buildVaultChordContextSnapshot({
+      sourceReference: { ideaId: "idea-real", blockId: "block-real" },
+      block: {
+        id: "block-real",
+        capturedAt: "2026-08-02T10:00:00.000Z",
+        detectedKey: "C major",
+        bpm: 96,
+        timeSignature: "4/4",
+        summaryText: "C - G - Am - F",
+        tags: [],
+        analyzerVersion: "test",
+        chords: [
+          { bar: 1, beat: 1, durationBeats: 2, confidence: 1, alternatives: [], warnings: [], chord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" } },
+          { bar: 1, beat: 3, durationBeats: 2, confidence: 1, alternatives: [], warnings: [], chord: { root: 7, quality: "dom7", tensions: [], label: "G7" } },
+          { bar: 2, beat: 1, durationBeats: 2, confidence: 1, alternatives: [], warnings: [], chord: { root: 9, quality: "min7", tensions: [], label: "Am7" } },
+          { bar: 2, beat: 3, durationBeats: 2, confidence: 1, alternatives: [], warnings: [], chord: { root: 5, quality: "maj7", tensions: [], label: "Fmaj7" } },
+        ],
+      },
+      sectionId: "bars:1-2",
+    });
+    if (!built.ok) throw new Error(built.error.message);
+    expect(built.snapshot.signature).toMatch(/^chord-context-snapshot-v1:[a-f0-9]{16}$/);
+
+    const entry = createChordContextHistoryEntry({
+      id: "chord-context-history:real-signature",
+      completedAt: "2026-08-02T10:04:00.000Z",
+      snapshot: built.snapshot,
+      effectiveBpm: 96,
+      listenMode: "bass-and-chords",
+      playMode: "chords-and-metronome",
+      metronomeUsed: true,
+      recordCompareUsed: true,
+    });
+    const storage = new MemoryPracticeStorage();
+    const repository = new JsonPracticeRepository(storage, () => NOW);
+    const initial = await repository.load();
+    await repository.save(addChordContextHistoryEntry(initial.file, entry));
+
+    const reloaded = await new JsonPracticeRepository(storage, () => NOW).load();
+    expect(reloaded.file.chordContextHistory).toEqual([entry]);
+  });
+
+  it("persists and reloads Vault Root Motion history built from createVaultRootMotionExercise", async () => {
+    const built = buildVaultChordContextSnapshot({
+      sourceReference: { ideaId: "idea-root", blockId: "block-root" },
+      block: {
+        id: "block-root",
+        capturedAt: "2026-08-02T10:00:00.000Z",
+        detectedKey: "C major",
+        bpm: 96,
+        timeSignature: "4/4",
+        summaryText: "C - G - F - C",
+        tags: [],
+        analyzerVersion: "test",
+        chords: [0, 7, 5, 0].map((root, index) => ({
+          bar: Math.floor(index / 2) + 1,
+          beat: (index % 2) * 2 + 1,
+          durationBeats: 2,
+          confidence: 1,
+          alternatives: [],
+          warnings: [],
+          chord: { root, quality: "maj" as const, tensions: [], label: "C" },
+        })),
+      },
+      sectionId: "bars:1-2",
+    });
+    if (!built.ok) throw new Error(built.error.message);
+
+    const exerciseResult = createVaultRootMotionExercise({
+      snapshot: built.snapshot,
+      level: 1,
+      noteCount: 3,
+      tuning: STANDARD_BASS_TUNINGS[4],
+      stringCount: 4,
+      fretRange: { min: 0, max: 12 },
+      pitchSpan: { minMidi: 28, maxMidi: 55 },
+      handedness: "right",
+    });
+    if (!exerciseResult.ok) throw new Error(exerciseResult.error.message);
+    const firstMotion = exerciseResult.exercise.motions[0]!;
+    const entry = createRootMotionHistoryEntry({
+      completedAt: "2026-08-02T10:05:00.000Z",
+      exercise: exerciseResult.exercise,
+      firstAnswer: {
+        submitted: { direction: firstMotion.direction },
+        expected: {
+          direction: firstMotion.direction,
+          semitones: firstMotion.semitones,
+          signedSemitones: firstMotion.signedSemitones,
+          category: firstMotion.category,
+        },
+        directionCorrect: true,
+        categoryCorrect: false,
+        exactIntervalCorrect: false,
+        replayCountBeforeFirstAnswer: 1,
+        answerAttempts: 1,
+        assistance: "independent",
+      },
+      selfRating: "good",
+    });
+    expect(entry.source.kind).toBe("vault-root-path");
+    if (entry.source.kind === "vault-root-path") {
+      expect(entry.source.snapshotSignature).toMatch(/^chord-context-snapshot-v1:[a-f0-9]{16}$/);
+    }
+
+    const storage = new MemoryPracticeStorage();
+    const repository = new JsonPracticeRepository(storage, () => NOW);
+    const initial = await repository.load();
+    await repository.save(addRootMotionHistoryEntry(initial.file, entry));
+
+    const reloaded = await new JsonPracticeRepository(storage, () => NOW).load();
+    expect(reloaded.file.rootMotionHistory).toEqual([entry]);
+  });
+});

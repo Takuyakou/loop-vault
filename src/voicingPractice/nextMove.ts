@@ -1,4 +1,5 @@
 import type { FingerNumber, FingeringHand, RankedFingering } from "../domain/progressionFingering";
+import { handPositionProxy } from "../domain/handPositionFingering";
 import type { ProgressionFingeringHandTargets } from "./fingeringDisplay";
 
 export type MovementKind = "KEEP" | "SMALL" | "MEDIUM" | "LARGE" | "ADD" | "RELEASE";
@@ -155,6 +156,17 @@ export function handMoveSummary(moves: readonly FingerMovement[]): string {
   const moving = moves.filter((move) => move.semitones !== undefined && move.semitones !== 0);
   const additions = moves.some((move) => move.kind === "ADD" || move.kind === "RELEASE");
   if (!moving.length && !additions) return "そのまま";
+  const fromMoves = moves.filter((move) => move.from !== undefined);
+  const toMoves = moves.filter((move) => move.to !== undefined);
+  if (fromMoves.length === 1 && toMoves.length === 1
+    && fromMoves[0]!.finger !== undefined && toMoves[0]!.finger !== undefined
+    && !fromMoves[0]!.estimated && !toMoves[0]!.estimated
+    && fromMoves[0]!.finger !== toMoves[0]!.finger) {
+    const hand = fromMoves[0]!.hand;
+    const before = handPositionProxy(hand, [fromMoves[0]!.from!], [fromMoves[0]!.finger!]);
+    const after = handPositionProxy(hand, [toMoves[0]!.to!], [toMoves[0]!.finger!]);
+    if (Math.abs(after - before) <= 0.5) return "指を替える(手はそのまま)";
+  }
   const directions = moving.map((move) => Math.sign(move.semitones!));
   const up = directions.filter((direction) => direction > 0).length;
   const down = directions.length - up;

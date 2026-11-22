@@ -41,6 +41,7 @@ export type RootMotionSessionResult =
 
 export class RootMotionPracticeSession {
   private snapshot: RootMotionPracticeSnapshot;
+  private listenReturn: "identify" | "sing" = "identify";
 
   constructor(private readonly exercise: RootMotionExercise) {
     this.snapshot = freeze({ status: "ready", listenCount: 0, hintLevel: 0, answerAttempts: 0 });
@@ -49,20 +50,23 @@ export class RootMotionPracticeSession {
   getSnapshot(): RootMotionPracticeSnapshot { return this.snapshot; }
 
   startListen(): RootMotionSessionResult {
-    if (this.snapshot.status !== "ready" && this.snapshot.status !== "identify") return this.invalid("Listening is not available in the current phase.");
+    if (this.snapshot.status !== "ready" && this.snapshot.status !== "identify" && this.snapshot.status !== "sing") return this.invalid("Listening is not available in the current phase.");
+    // P23-62: after the answer the phrase can still be heard before playing; listening returns to that stage.
+    this.listenReturn = this.snapshot.status === "sing" ? "sing" : "identify";
     this.snapshot = freeze({ ...this.snapshot, status: "listening", listenCount: this.snapshot.listenCount + 1 });
     return this.success();
   }
 
   completeListen(): RootMotionSessionResult {
     if (this.snapshot.status !== "listening") return this.invalid("No Root Motion playback is active.");
-    this.snapshot = freeze({ ...this.snapshot, status: "identify" });
+    this.snapshot = freeze({ ...this.snapshot, status: this.listenReturn });
     return this.success();
   }
 
   cancelListen(): RootMotionSessionResult {
     if (this.snapshot.status !== "listening") return this.invalid("No Root Motion playback is active.");
-    this.snapshot = freeze({ ...this.snapshot, status: this.snapshot.listenCount === 1 ? "ready" : "identify", listenCount: Math.max(0, this.snapshot.listenCount - 1) });
+    const back = this.listenReturn === "sing" ? "sing" : this.snapshot.listenCount === 1 ? "ready" : "identify";
+    this.snapshot = freeze({ ...this.snapshot, status: back, listenCount: Math.max(0, this.snapshot.listenCount - 1) });
     return this.success();
   }
 

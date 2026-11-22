@@ -23,7 +23,7 @@ async function open(page:Page,data?:DojoStore,mode='midi'){
 const saved=(page:Page)=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!) as DojoStore,KEY);
 const emit=(page:Page,notes:readonly number[],on=true)=>page.evaluate(({notes,on})=>(window as typeof window&{__p12Midi:MidiControl}).__p12Midi.emit(notes,on),{notes:[...notes],on});
 const back=(page:Page)=>page.getByTestId('dojo-back');
-const top=(page:Page)=>page.getByRole('heading',{name:'今日の練習',exact:true});
+const top=(page:Page)=>page.getByTestId('dojo-home');
 
 test.describe('the back button: where it is and where it goes',()=>{
  test('the top screen has none; every list below has one, named for the top',async({page})=>{
@@ -33,8 +33,8 @@ test.describe('the back button: where it is and where it goes',()=>{
   for(const choice of ['型の一覧','登録した音','自分の進行','定番の進行']){
    await page.getByRole('button',{name:choice,exact:true}).click();
    await expect(back(page)).toHaveCount(1);
-   await expect(back(page)).toHaveText(/今日の練習/);
-   await expect(back(page)).toHaveAttribute('aria-label','今日の練習へ戻る');
+   await expect(back(page)).toHaveText(/Chord Dojo/);
+   await expect(back(page)).toHaveAttribute('aria-label','Chord Dojoへ戻る');
    await back(page).click();
    await expect(back(page)).toHaveCount(0);
   }
@@ -43,12 +43,12 @@ test.describe('the back button: where it is and where it goes',()=>{
  test('a practice opened from a list goes back to that list, and a list goes back to the top',async({page})=>{
   await open(page);
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await page.locator('.dojo-builtin-card').first().getByRole('button',{name:'これを練習する'}).click();
+  await page.locator('.dojo-builtin-card').first().getByRole('button', { name: / を練習する$/ }).click();
   await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
   await expect(back(page)).toHaveAttribute('aria-label','定番の進行へ戻る');
   await back(page).click();
   await expect(page.locator('.dojo-builtin-card').first()).toBeVisible();
-  await expect(back(page)).toHaveAttribute('aria-label','今日の練習へ戻る');
+  await expect(back(page)).toHaveAttribute('aria-label','Chord Dojoへ戻る');
   await back(page).click();
   await expect(top(page)).toBeVisible();
  });
@@ -56,11 +56,11 @@ test.describe('the back button: where it is and where it goes',()=>{
  test('today\'s practice goes back to the top; random key goes back to the list; 2-5-1 Master to the top',async({page})=>{
   await open(page,file(progression));
   await page.getByTestId('practice-start').click();
-  await expect(back(page)).toHaveAttribute('aria-label','今日の練習へ戻る');
+  await expect(back(page)).toHaveAttribute('aria-label','Chord Dojoへ戻る');
   await back(page).click();
   await expect(top(page)).toBeVisible();
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await page.locator('.dojo-builtin-card').first().getByRole('button',{name:'ランダムキーで練習'}).click();
+  await page.getByTestId('dojo-random-toggle').click();await page.locator('.dojo-builtin-card').first().getByRole('button',{name:/ を練習する$/}).click();
   await expect(page.locator('[data-dojo-screen=endless]')).toBeVisible();
   await expect(back(page)).toHaveAttribute('aria-label','定番の進行へ戻る');
   await back(page).click();
@@ -68,7 +68,7 @@ test.describe('the back button: where it is and where it goes',()=>{
   await back(page).click();
   await page.getByRole('button',{name:'2-5-1 Master 続きから'}).click();
   await expect(page.getByTestId('master251')).toBeVisible();
-  await expect(back(page)).toHaveAttribute('aria-label','今日の練習へ戻る');
+  await expect(back(page)).toHaveAttribute('aria-label','Chord Dojoへ戻る');
   await back(page).click();
   await expect(top(page)).toBeVisible();
  });
@@ -107,7 +107,7 @@ test.describe('leaving a practice',()=>{
  test('a practice nobody played leaves the day exactly as it was', async({page})=>{
   await open(page,undefined,'no-midi');
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await page.locator('.dojo-builtin-card').first().getByRole('button',{name:'これを練習する'}).click();
+  await page.locator('.dojo-builtin-card').first().getByRole('button', { name: / を練習する$/ }).click();
   await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
   const before=await saved(page);
   await back(page).click();
@@ -144,9 +144,9 @@ test.describe('Esc steps one level outward',()=>{
   await open(page,file(progression));
   await page.getByTestId('practice-start').click();
   await page.getByRole('button',{name:'練習の設定'}).click();
-  await expect(page.getByLabel('BPM')).toBeVisible();
+  await expect(page.locator('#main-content').getByLabel('BPM')).toBeVisible();
   await page.locator('body').press('Escape');
-  await expect(page.getByLabel('BPM')).toHaveCount(0);
+  await expect(page.locator('#main-content').getByLabel('BPM')).toHaveCount(0);
   await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
   await page.locator('body').press('Escape');
   await expect(top(page)).toBeVisible();
@@ -174,7 +174,7 @@ test.describe('Esc steps one level outward',()=>{
  test('random key: Esc leaves (nothing was cleared, so there is no summary to show)',async({page})=>{
   await open(page);
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await page.locator('.dojo-builtin-card').first().getByRole('button',{name:'ランダムキーで練習'}).click();
+  await page.getByTestId('dojo-random-toggle').click();await page.locator('.dojo-builtin-card').first().getByRole('button',{name:/ を練習する$/}).click();
   await expect(page.locator('[data-dojo-screen=endless]')).toBeVisible();
   await page.locator('body').press('Escape');
   await expect(page.locator('.dojo-builtin-card').first()).toBeVisible();
@@ -185,10 +185,10 @@ test.describe('the focus goes back to what opened the screen',()=>{
  test('a practice opened from a list returns to that card\'s button; the top returns to the list button',async({page})=>{
   await open(page);
   await page.getByRole('button',{name:'定番の進行',exact:true}).click();
-  await page.locator('.dojo-builtin-card').nth(2).getByRole('button',{name:'これを練習する'}).click();
+  await page.locator('.dojo-builtin-card').nth(2).getByRole('button', { name: / を練習する$/ }).click();
   await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
   await back(page).click();
-  await expect(page.locator('.dojo-builtin-card').nth(2).getByRole('button',{name:'これを練習する'})).toBeFocused();
+  await expect(page.locator('.dojo-builtin-card').nth(2).getByRole('button', { name: / を練習する$/ })).toBeFocused();
   await back(page).click();
   await expect(page.getByRole('button',{name:'定番の進行',exact:true})).toBeFocused();
  });
@@ -207,7 +207,7 @@ test('the finish screen goes back to the top',async({page})=>{
  await page.getByTestId('practice-start').click();
  await page.getByRole('button',{name:'とばす',exact:true}).click(); // the only task: skipping it ends today's plan
  await expect(page.locator('[data-dojo-screen=finish]')).toBeVisible({timeout:10000});
- await expect(back(page)).toHaveAttribute('aria-label','今日の練習へ戻る');
+ await expect(back(page)).toHaveAttribute('aria-label','Chord Dojoへ戻る');
  await back(page).click();
  await expect(top(page)).toBeVisible();
 });

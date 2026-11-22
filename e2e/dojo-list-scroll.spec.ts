@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {openDojo} from './helpers/p12';
+import {settlePaint} from './helpers/settle';
 
 /**
  * The list of 定番の進行 (the earlier groups, Original, Jazz): the titles of the cards are one colour, and coming back from a practice
@@ -30,23 +31,26 @@ test('the titles of the cards are one colour and weight in every group (the earl
  expect(titles[0]).toBe('rgb(242, 246, 252)|700|15px');
 });
 
-const ENTRANCES:[string,string][]=[
- ['an earlier group: これを練習する','.dojo-builtin-card:not(.dojo-original-card) [data-focus-key^="practice:"]'],
- ['an earlier group: ランダムキーで練習','.dojo-builtin-card:not(.dojo-original-card) [data-focus-key^="endless:"]'],
- ['Original: これを練習する','.dojo-original-card [data-focus-key^="original:"]'],
- ['Original: ランダムキーで練習','.dojo-original-card [data-focus-key^="original-random:"]'],
- ['Jazz: これを練習する','[data-testid=jazz-open]'],
- ['Jazz: ランダムキーで練習','[data-testid=jazz-open-random]'],
+// P22-01 §3-1 (rule B): a card is entered by its name (the primary); the random key is the list's 「ランダム」 switch, then the card.
+const ENTRANCES:[string,string,boolean][]=[
+ ['an earlier group: the card','.dojo-builtin-card:not(.dojo-original-card) [data-focus-key^="practice:"]',false],
+ ['an earlier group: ランダム, then the card','.dojo-builtin-card:not(.dojo-original-card):not([data-long]) [data-focus-key^="practice:"]',true],
+ ['Original: the card','.dojo-original-card [data-focus-key^="original:"]',false],
+ ['Original: ランダム, then the card','.dojo-original-card [data-focus-key^="original:"]',true],
+ ['Jazz: the card','[data-testid=jazz-open]',false],
+ ['Jazz: ランダム, then the card','[data-testid=jazz-open]',true],
 ];
-for(const [name,selector] of ENTRANCES){
+for(const [name,selector,random] of ENTRANCES){
  for(const how of ['back button','Esc'] as const){
   test(`coming back (${how}) from ${name}: the list is where it was scrolled to and the button has the focus`,async({page})=>{
    test.setTimeout(60000);
    await page.setViewportSize({width:1280,height:720});
    await openList(page);
+   if(random)await page.getByTestId('dojo-random-toggle').click();
    const buttons=page.locator(selector),count=await buttons.count();
    expect(count).toBeGreaterThan(0);
-   const index=Math.min(count-1,5);
+   // P22-01 §3 (rule A): the cards lost their button row and are shorter, so an earlier group's 12th card is as far down as its 6th was.
+   const index=Math.min(count-1,name.startsWith('an earlier group')?11:5);
    await buttons.nth(index).evaluate(e=>e.setAttribute('data-e2e-target','1'));
    await scrollListBy(page,'[data-e2e-target="1"]',37);
    const before=await scrollTopOf(page);
@@ -57,6 +61,7 @@ for(const [name,selector] of ENTRANCES){
    if(how==='Esc')await page.keyboard.press('Escape');
    else await page.getByRole('button',{name:/定番の進行/}).first().click();
    await expect(page.locator('.dojo-builtin-jump')).toBeVisible();
+   await settlePaint(page);
    await expect.poll(()=>page.evaluate(()=>document.activeElement?.getAttribute('data-focus-key')??null)).toBe(key);
    await expect.poll(async()=>Math.abs((await scrollTopOf(page))-before)).toBeLessThanOrEqual(4);
   });

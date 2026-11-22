@@ -1,47 +1,96 @@
-/* P8.9-04 Home (mock RHome.dc.html / RHomeCompact.dc.html).
-   The layout follows the content width, so it holds with the wide and the icon-only sidebar. */
+/* P8.9-04 Home; P23-09 rebuilt to the adopted mock: a left column (今日のループ → 続きから → 最近入れた進行) and a
+   380px right column (取り込む → 練習 → 自分の引き出し) whose bottoms line up. Sizes follow the content width, so the
+   layout holds with the wide and the icon-only sidebar. */
 @layer components {
   .lv-home {
     container-type: inline-size;
   }
 
-  .lv-home-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: var(--lv-space-5);
+  .lv-home-board {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
   }
 
-  .lv-home-card {
+  .lv-home-grid {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: var(--lv-space-4);
+  }
+
+  .lv-home-col {
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--lv-space-4);
+  }
+
+  /* G2: the last block of each column takes the rest, so the two bottoms line up. */
+  .lv-home-col > :last-child {
+    flex: 1 1 auto;
+  }
+
+  .lv-home-panel {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--lv-space-2);
     box-sizing: border-box;
-    padding: 22px;
-    border: 1px solid var(--lv-border);
+    padding: var(--lv-space-4) 18px;
     border-radius: var(--lv-radius-lg);
-    background: var(--lv-surface);
+    background: var(--lv-panel-bg);
+    box-shadow: var(--lv-panel-shadow);
   }
 
-  .lv-home-card[data-tone="quiet"] {
-    background: var(--lv-bg-subtle);
+  .lv-home-head {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 10px;
   }
 
-  .lv-home-continue { grid-column: span 8; }
-  .lv-home-import { grid-column: span 4; gap: 12px; }
-  .lv-home-loop { grid-column: span 7; }
-  .lv-home-practice { grid-column: span 5; gap: 12px; }
-  .lv-home-recent { grid-column: span 12; gap: 6px; padding-bottom: 10px; }
+  .lv-home-title {
+    font-size: var(--lv-text-14);
+    font-weight: 700;
+  }
+
+  .lv-home-hint {
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
 
   .lv-home-kicker {
     color: var(--lv-text-secondary);
-    font-size: var(--lv-text-11);
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-size: var(--lv-text-12);
+    font-weight: 700;
+    letter-spacing: 0.08em;
   }
 
   .lv-home-kicker[data-accent="true"] {
     color: var(--lv-accent);
+  }
+
+  .lv-home-link {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 2px;
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-12);
+    font-weight: 600;
+  }
+
+  .lv-home-link:hover {
+    color: var(--lv-accent);
+  }
+
+  .lv-home-empty {
+    padding: 6px 2px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-13);
   }
 
   .lv-home-meta {
@@ -49,11 +98,254 @@
     flex-wrap: wrap;
     gap: 4px 14px;
     color: var(--lv-text-secondary);
+    font-size: var(--lv-text-13);
+  }
+
+  .lv-home-meta-inline {
+    min-width: 0;
+    flex: 0 100 auto;
+    overflow: hidden;
+    color: var(--lv-text-secondary);
     font-size: var(--lv-text-12);
+    font-weight: 400;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .lv-home-mono {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
+  }
+
+  /* 今日のループ */
+  .lv-home-loop {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--lv-space-3);
+    padding: 20px 22px 18px;
+    border-radius: var(--lv-radius-xl);
+    background: radial-gradient(120% 140% at 0% 0%, var(--lv-accent-soft) 0%, var(--lv-surface-raised) 45%, var(--lv-surface) 100%);
+    box-shadow: var(--lv-panel-shadow);
+  }
+
+  .lv-home-loop-title {
+    margin-top: 2px;
+    overflow: hidden;
+    font-size: var(--lv-text-28);
+    font-weight: 700;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* P23-65: ♥ · 他のループ · MIDI を DAW へ — one row, centred on the same line. */
+  .lv-home-loop-tools {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--lv-space-2);
+  }
+
+  .lv-home-loop-tools [data-midi-export-control] {
+    flex: none;
+  }
+
+  .lv-home-loop-play {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--lv-accent);
+    box-shadow: var(--lv-primary-glow);
+    color: var(--lv-text-on-accent);
+    transition: box-shadow var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-loop-play:hover,
+  .lv-home-loop-play[aria-pressed="true"] {
+    box-shadow: var(--lv-primary-glow-hover);
+  }
+
+  /* T1: one box per chord, as wide as it lasts; the top edge is the chord's role colour when the key is known. */
+  .lv-home-chips {
+    display: flex;
+    gap: var(--lv-space-1);
+    padding: 10px;
+    border-radius: var(--lv-radius-md);
+    background: rgb(12 20 30 / 60%);
+  }
+
+  .lv-home-chip {
+    --lv-home-fn: var(--lv-text-muted);
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 10px 10px;
+    border-top: 4px solid var(--lv-line);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-surface-raised);
+    text-align: left;
+    transition: transform var(--lv-motion-fast) var(--lv-ease-standard),
+      background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  /* P23-09b: the notes of the chord boxes above, cell for cell (same gap, same growth, same inner padding). */
+  .lv-home-roll {
+    position: relative;
+    display: flex;
+    height: 66px;
+    /* Q7: sits 6px under the chord boxes (half the card's gap) so 1440×900 with 8 progressions still has no scroll. */
+    margin-top: -6px;
+    gap: var(--lv-space-1);
+    padding: 0 10px;
+    overflow: hidden;
+    border-radius: var(--lv-radius-md);
+    background: repeating-linear-gradient(180deg, rgb(14 24 35 / 90%) 0 9px, rgb(16 28 41 / 90%) 9px 18px);
+  }
+
+  .lv-home-roll-cell {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 0;
+    margin: 6px 0;
+  }
+
+  .lv-home-roll-note {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--lv-accent);
+    opacity: 0.85;
+  }
+
+  .lv-home-roll-cell[data-current="true"] .lv-home-roll-note {
+    opacity: 1;
+    box-shadow: 0 0 6px var(--lv-accent);
+  }
+
+  .lv-home-roll-head {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: #fff;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  .lv-home-chip[data-fn="T"] { --lv-home-fn: var(--lv-fn-t); border-top-color: var(--lv-fn-t); }
+  .lv-home-chip[data-fn="SD"] { --lv-home-fn: var(--lv-fn-sd); border-top-color: var(--lv-fn-sd); }
+  .lv-home-chip[data-fn="SDm"] { --lv-home-fn: var(--lv-fn-sdm); border-top-color: var(--lv-fn-sdm); }
+  .lv-home-chip[data-fn="D"] { --lv-home-fn: var(--lv-fn-d); border-top-color: var(--lv-fn-d); }
+
+  .lv-home-chip:hover {
+    background: var(--lv-surface-overlay);
+    transform: translateY(-2px);
+  }
+
+  .lv-home-chip[data-current="true"] {
+    background: var(--lv-surface-overlay);
+    outline: 2px solid var(--lv-accent);
+  }
+
+  .lv-home-chip-sub {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--lv-home-fn);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lv-home-chip-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--lv-text);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+  }
+
+  .lv-home-loop-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--lv-space-2);
+  }
+
+  .lv-home-go {
+    font-weight: 600;
+  }
+
+  /* 続きから */
+  .lv-home-continue {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--lv-space-2);
+    padding: 12px 16px;
+    border-radius: var(--lv-radius-lg);
+    background: var(--lv-surface-raised);
+    box-shadow: inset 4px 0 0 var(--lv-accent);
+  }
+
+  .lv-home-continue-row {
+    display: flex;
+    align-items: center;
+    gap: var(--lv-space-3);
+  }
+
+  .lv-home-continue-icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+  }
+
+  .lv-home-continue-icon[data-kind="bass-practice"] {
+    background: var(--lv-practice-bass-soft);
+    color: var(--lv-practice-bass);
+  }
+
+  .lv-home-continue-label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--lv-space-2);
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-12);
+  }
+
+  .lv-home-continue-what {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .lv-home-continue-what > h2 {
+    min-width: 0;
+    flex: 0 1 auto;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
   /* 続きから: one cell per bar, like the 8.8 score strip. */
@@ -70,14 +362,14 @@
     align-items: center;
     box-sizing: border-box;
     padding: 0 3px;
-    border: 1px solid var(--lv-border);
     border-left: 3px solid var(--lv-accent-soft);
     border-radius: 6px;
     background: var(--lv-bg-subtle);
     color: var(--lv-text-secondary);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: var(--lv-text-11);
     font-weight: 600;
+    line-height: 1.3;
   }
 
   .lv-home-strip-cell[data-hold="true"] {
@@ -86,7 +378,6 @@
   }
 
   .lv-home-strip-cell[data-current="true"] {
-    border-color: var(--lv-accent);
     background: var(--lv-accent);
     color: var(--lv-text-on-accent);
   }
@@ -119,216 +410,90 @@
     color: inherit;
   }
 
-  .lv-home-drop {
+  /* 最近入れた進行 */
+  .lv-home-recent {
     display: flex;
-    min-height: 96px;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--lv-space-2);
+  }
+
+  .lv-home-recent-list {
+    display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1.5px dashed var(--lv-border-strong);
-    border-radius: var(--lv-radius-md);
-    color: var(--lv-text-secondary);
-    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
-      background-color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-home-drop:hover,
-  .lv-home-drop:focus-visible {
-    border-color: var(--lv-accent);
-    background: rgb(66 216 198 / 6%);
-  }
-
-  .lv-home-row-button {
-    display: flex;
-    min-height: 40px;
-    align-items: center;
-    gap: 10px;
-    padding: 0 12px;
-    border: 1px solid var(--lv-border);
-    border-radius: 10px;
-    color: var(--lv-text);
-    font-size: var(--lv-text-13);
-    text-align: left;
-    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-home-row-button:hover {
-    background: var(--lv-surface-raised);
-  }
-
-  /* 今日のループ */
-  .lv-home-loop-play {
-    display: grid;
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-    place-items: center;
-    border: 1px solid var(--lv-border-strong);
-    border-radius: 50%;
-    color: var(--lv-text);
-    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-home-loop-play:hover,
-  .lv-home-loop-play[aria-pressed="true"] {
-    background: var(--lv-surface-raised);
-  }
-
-  .lv-home-chips {
-    display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 6px;
   }
 
-  .lv-home-chip {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    padding: 8px 10px;
-    border: 1px solid var(--lv-border);
-    border-radius: 10px;
-    background: var(--lv-bg-subtle);
-    text-align: left;
-    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
-      background-color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-home-chip:hover {
-    border-color: var(--lv-border-strong);
-  }
-
-  .lv-home-chip[data-current="true"] {
-    border-color: var(--lv-accent);
-    background: var(--lv-accent-soft);
-    box-shadow: 0 0 0 3px rgb(66 216 198 / 14%);
-  }
-
-  .lv-home-chip-name {
-    max-width: 100%;
-    overflow: hidden;
-    color: var(--lv-text);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 15px;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .lv-home-chip-sub {
-    color: var(--lv-text-muted);
-    font-size: 10px;
-  }
-
-  .lv-home-chip[data-current="true"] .lv-home-chip-sub {
-    color: var(--lv-accent);
-  }
-
-  /* 今日の練習 */
-  .lv-home-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--lv-surface-raised);
-  }
-
-  .lv-home-dot[data-practiced="true"] {
-    background: var(--lv-record);
-  }
-
-  .lv-home-dot[data-today="true"][data-practiced="false"] {
-    background: transparent;
-    box-shadow: inset 0 0 0 1.5px var(--lv-record);
-  }
-
-  .lv-home-practice-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
-    border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-md);
-    background: var(--lv-bg-subtle);
-    color: inherit;
-    text-align: left;
-    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard);
-  }
-
-  .lv-home-practice-row:hover {
-    background: var(--lv-surface-raised);
-  }
-
-  .lv-home-practice-icon {
-    display: grid;
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    place-items: center;
-    border-radius: 10px;
-    background: var(--lv-accent-soft);
-    color: var(--lv-accent);
-  }
-
-  .lv-home-practice-icon[data-kind="bass-practice"] {
-    background: var(--lv-accent-secondary-soft);
-    color: var(--lv-accent-secondary);
-  }
-
-  /* 最近の進行 */
   .lv-home-recent-row {
-    display: flex;
-    min-height: 50px;
+    display: grid;
+    min-height: 52px;
+    max-height: 76px;
+    flex: 1 1 0;
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, 1.6fr) auto;
     align-items: center;
-    gap: 14px;
-    padding: 0 10px;
-    border-radius: 10px;
+    gap: var(--lv-space-3);
+    padding: 6px 14px;
+    border: 2px solid transparent;
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface);
     cursor: pointer;
   }
 
-  .lv-home-recent-row:hover,
-  .lv-home-recent-row:focus-within {
-    background: var(--lv-surface);
+  .lv-home-recent-row:hover {
+    border-color: var(--lv-accent);
   }
 
   .lv-home-recent-name {
     display: flex;
-    width: 240px;
     min-width: 0;
-    flex-shrink: 0;
     flex-direction: column;
     text-align: left;
+  }
+
+  .lv-home-src-mark {
+    margin-right: 6px;
+    padding: 0 5px;
+    border: 1px solid var(--lv-border-strong);
+    border-radius: 5px;
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-text-11);
+    font-style: normal;
+    font-weight: 700;
   }
 
   .lv-home-recent-chips {
     display: flex;
     min-width: 0;
-    flex: 1 1 auto;
-    gap: 5px;
+    gap: 4px;
     overflow: hidden;
   }
 
   .lv-home-recent-chip {
     flex-shrink: 0;
-    padding: 3px 9px;
-    border: 1px solid var(--lv-border);
-    border-radius: 7px;
-    background: var(--lv-surface);
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: var(--lv-surface-raised);
     color: var(--lv-text-secondary);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: var(--lv-text-12);
+    font-weight: 600;
+    line-height: 1.3;
+    transition: background-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard),
+      transform var(--lv-motion-fast) var(--lv-ease-standard);
   }
 
-  .lv-home-recent-actions {
-    opacity: 0.55;
-    transition: opacity var(--lv-motion-fast) var(--lv-ease-standard);
+  .lv-home-recent-chip:hover {
+    background: var(--lv-surface-overlay);
+    color: var(--lv-text);
+    transform: translateY(-1px);
   }
 
-  .lv-home-recent-row:hover .lv-home-recent-actions,
-  .lv-home-recent-row:focus-within .lv-home-recent-actions {
-    opacity: 1;
+  .lv-home-recent-chip[data-playing="true"] {
+    background: var(--lv-accent);
+    color: var(--lv-text-on-accent);
   }
 
   .lv-home-round-play {
@@ -337,57 +502,464 @@
     height: 32px;
     flex-shrink: 0;
     place-items: center;
-    border: 1px solid var(--lv-border-strong);
     border-radius: 50%;
+    background: var(--lv-surface-overlay);
     color: var(--lv-text-secondary);
   }
 
+  .lv-home-recent-row:hover .lv-home-round-play,
   .lv-home-round-play[aria-pressed="true"] {
+    background: var(--lv-accent);
+    color: var(--lv-text-on-accent);
+  }
+
+  /* 取り込む */
+  .lv-home-import {
+    padding: 14px 16px;
+  }
+
+  .lv-home-drop {
+    display: flex;
+    min-height: 88px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px;
+    border: 1.5px dashed var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    color: var(--lv-text-secondary);
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-drop > svg {
+    margin-bottom: 4px;
+    transition: transform var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-home-drop:hover,
+  .lv-home-drop:focus-visible {
     border-color: var(--lv-accent);
+    background: rgb(66 216 198 / 6%);
+  }
+
+  .lv-home-drop:hover > svg {
+    transform: translateY(3px);
+  }
+
+  /* I2: the dotted text box; on hover the arrow moves and the three boxes light from the left. */
+  .lv-home-row-button {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--lv-space-3);
+    padding: 10px 14px;
+    border: 1.5px dashed var(--lv-border-strong);
+    border-radius: var(--lv-radius-md);
+    color: var(--lv-text);
+    text-align: left;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      background-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-row-button:hover,
+  .lv-home-row-button:focus-visible {
+    border-color: var(--lv-accent);
+    background: rgb(66 216 198 / 6%);
+  }
+
+  .lv-home-text-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: var(--lv-radius-control);
+    background: rgb(66 216 198 / 8%);
+    color: var(--lv-accent);
+    transition: transform var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-home-row-button:hover .lv-home-text-icon {
+    transform: translateY(2px);
+  }
+
+  .lv-home-text-demo {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .lv-home-text-src {
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-11);
+    white-space: nowrap;
+  }
+
+  .lv-home-text-arrow {
+    flex: none;
+    color: var(--lv-text-muted);
+    transition: transform var(--lv-motion-normal) var(--lv-ease-standard),
+      color var(--lv-motion-normal) var(--lv-ease-standard);
+  }
+
+  .lv-home-row-button:hover .lv-home-text-arrow {
+    color: var(--lv-accent);
+    transform: translateX(2px);
+  }
+
+  .lv-home-text-chips {
+    display: flex;
+    gap: 3px;
+  }
+
+  .lv-home-text-chips > span {
+    --lv-home-fn: var(--lv-fn-t);
+    padding: 2px 5px;
+    border-bottom: 2px solid color-mix(in srgb, var(--lv-home-fn) 40%, transparent);
+    border-radius: 5px;
+    background: var(--lv-surface-raised);
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-11);
+    font-weight: 600;
+    line-height: 1.3;
+    transition: color 0.2s, border-color 0.2s, transform 0.2s;
+  }
+
+  .lv-home-text-chips > [data-fn="SD"] { --lv-home-fn: var(--lv-fn-sd); }
+  .lv-home-text-chips > [data-fn="D"] { --lv-home-fn: var(--lv-fn-d); }
+
+  .lv-home-row-button:hover .lv-home-text-chips > span {
+    border-bottom-color: var(--lv-home-fn);
+    color: var(--lv-text);
+    transform: translateY(-1px);
+  }
+
+  .lv-home-row-button:hover .lv-home-text-chips > span:nth-child(2) { transition-delay: 0.07s; }
+  .lv-home-row-button:hover .lv-home-text-chips > span:nth-child(3) { transition-delay: 0.14s; }
+
+  /* 練習 */
+  .lv-home-practice-row {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--lv-space-3);
+    padding: 5px 12px;
+    border: 2px solid transparent;
+    border-radius: var(--lv-radius-md);
+    background: var(--lv-surface-raised);
+    color: inherit;
+    text-align: left;
+    transition: border-color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-practice-row:hover {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-home-practice-icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border-radius: var(--lv-radius-control);
     background: var(--lv-accent-soft);
     color: var(--lv-accent);
   }
 
-  /* 1440×900: same order, fewer columns. */
+  .lv-home-practice-icon[data-kind="bass-practice"] {
+    background: var(--lv-practice-bass-soft);
+    color: var(--lv-practice-bass);
+  }
+
+  /* P1: the last 7 days, oldest on the left. */
+  .lv-home-week {
+    display: flex;
+    gap: 3px;
+  }
+
+  .lv-home-week > i {
+    display: block;
+    width: 9px;
+    height: 18px;
+    border-radius: 3px;
+    background: var(--lv-surface-overlay);
+  }
+
+  .lv-home-week > i[data-practised="true"] {
+    background: var(--lv-accent);
+  }
+
+  .lv-home-practice-row[data-practice-kind="bass-practice"] .lv-home-week > i[data-practised="true"] {
+    background: var(--lv-practice-bass);
+  }
+
+  /* 自分の引き出し */
+  .lv-home-drawer {
+    min-height: 0;
+  }
+
+  .lv-home-drawer-body {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lv-home-rank {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) 56px auto;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px;
+    line-height: 1.3;
+    border: 2px solid transparent;
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-surface-raised);
+    color: inherit;
+    text-align: left;
+  }
+
+  .lv-home-rank:hover {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-home-rank-no {
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-13);
+    font-weight: 700;
+  }
+
+  .lv-home-rank-chords {
+    display: flex;
+    gap: 6px;
+    overflow: hidden;
+    color: var(--lv-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--lv-text-12);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .lv-home-rank-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--lv-surface-overlay);
+  }
+
+  .lv-home-rank-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--lv-text-secondary);
+  }
+
+  .lv-home-keys {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--lv-space-4);
+  }
+
+  .lv-home-wheel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lv-space-2);
+  }
+
+  .lv-home-wheel-key {
+    cursor: pointer;
+    outline: none;
+  }
+
+  .lv-home-wheel-key > path {
+    fill: var(--lv-surface-raised);
+    stroke: var(--lv-bg);
+    stroke-width: 2;
+    transition: fill var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-wheel-key:hover > path {
+    filter: brightness(1.25);
+  }
+
+  .lv-home-wheel-key:focus-visible > path {
+    stroke: var(--lv-focus);
+    stroke-width: 2.5;
+  }
+
+  .lv-home-wheel-key[data-selected="true"] > path {
+    fill: var(--lv-accent);
+  }
+
+  .lv-home-wheel-key > text {
+    fill: var(--lv-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .lv-home-wheel-key:not([data-count="0"]) > text {
+    fill: var(--lv-text);
+  }
+
+  .lv-home-wheel-key[data-selected="true"] > text {
+    fill: var(--lv-text-on-accent);
+  }
+
+  .lv-home-wheel-name {
+    fill: var(--lv-text);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .lv-home-wheel-mode,
+  .lv-home-wheel-swap {
+    fill: var(--lv-text-muted);
+    font-size: 10px;
+  }
+
+  .lv-home-wheel-center {
+    cursor: pointer;
+    outline: none;
+  }
+
+  .lv-home-wheel-center > circle {
+    fill: transparent;
+    stroke: transparent;
+    stroke-width: 2;
+    transition: fill var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-home-wheel-center:hover > circle {
+    fill: var(--lv-surface-raised);
+  }
+
+  .lv-home-wheel-center:focus-visible > circle {
+    stroke: var(--lv-focus);
+  }
+
+  .lv-home-wheel-center:hover > .lv-home-wheel-swap {
+    fill: var(--lv-accent);
+  }
+
+  .lv-home-legend {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--lv-text-muted);
+    font-size: var(--lv-text-11);
+  }
+
+  .lv-home-legend > i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--lv-accent);
+  }
+
+  .lv-home-legend > i:nth-child(1) { opacity: 0.3; }
+  .lv-home-legend > i:nth-child(2) { opacity: 0.6; }
+  .lv-home-legend > i:nth-child(3) { margin-right: 5px; }
+
+  .lv-home-keys-side {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .lv-home-key-row {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 10px;
+    border: 2px solid transparent;
+    border-radius: var(--lv-radius-control);
+    background: var(--lv-surface-raised);
+    color: inherit;
+  }
+
+  .lv-home-key-row:hover {
+    border-color: var(--lv-accent);
+  }
+
+  .lv-home-key-play {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--lv-surface-overlay);
+  }
+
+  .lv-home-key-row:hover .lv-home-key-play,
+  .lv-home-key-row[aria-pressed="true"] .lv-home-key-play {
+    background: var(--lv-accent);
+    color: var(--lv-text-on-accent);
+  }
+
+  /* 1440×900: same order, the bar strip in two rows of eight. */
   @container (max-width: 1399px) {
-    .lv-home-continue { grid-column: span 7; }
-    .lv-home-import { grid-column: span 5; }
     /* 8 × 2 keeps 7-character names (C#m7b5, Dmaj7) whole. */
     .lv-home-strip { grid-template-columns: repeat(8, minmax(0, 1fr)); }
   }
 
-  /* Icon-only sidebar (window < 1200px): RHomeCompact. */
+  /* Icon-only sidebar (window < 1200px). */
   @container (max-width: 1099px) {
-    .lv-home-grid { gap: 16px; }
-    .lv-home-card { padding: 18px; }
-    .lv-home-strip { grid-template-columns: repeat(8, minmax(0, 1fr)); }
     .lv-home-strip-cell:nth-child(n + 9) { display: none; }
-    .lv-home-chips { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     .lv-home-chip:nth-child(n + 7) { display: none; }
-    .lv-home-chip-name { font-size: 13px; }
-    .lv-home-recent-chip:nth-child(n + 5) { display: none; }
-    .lv-home-recent-name { width: 200px; }
+    .lv-home-roll-cell:nth-child(n + 7) { display: none; }
+    .lv-home-chip-name { font-size: 15px; }
+    .lv-home-recent-chip:nth-child(n + 4) { display: none; }
   }
 
-  /* 768×640 and below: one column. */
+  /* G3: 768×640 and below, one column: 今日のループ → 続きから → 取り込む → 練習 → 最近入れた進行 → 自分の引き出し. */
   @container (max-width: 759px) {
-    .lv-home-continue,
-    .lv-home-import,
-    .lv-home-loop,
-    .lv-home-practice { grid-column: span 12; }
-    .lv-home-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .lv-home-grid { display: flex; flex-direction: column; }
+    .lv-home-col { display: contents; }
+    .lv-home-col > :last-child { flex: none; }
+    .lv-home-loop { order: 1; }
+    .lv-home-continue { order: 2; }
+    .lv-home-import { order: 3; }
+    .lv-home-practice { order: 4; }
+    .lv-home-recent { order: 5; }
+    .lv-home-drawer { order: 6; }
     .lv-home-chip:nth-child(n + 5) { display: none; }
-    .lv-home-recent-chips,
-    .lv-home-recent-src { display: none; }
-    .lv-home-recent-name { width: auto; flex: 1 1 auto; }
+    .lv-home-roll-cell:nth-child(n + 5) { display: none; }
+    .lv-home-recent-row { max-height: none; flex: none; grid-template-columns: 32px minmax(0, 1fr) auto; }
+    .lv-home-recent-chips { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .lv-home-drop,
-    .lv-home-chip,
+    .lv-home-drop > svg,
     .lv-home-row-button,
+    .lv-home-text-icon,
+    .lv-home-text-arrow,
+    .lv-home-text-chips > span,
+    .lv-home-chip,
+    .lv-home-recent-chip,
     .lv-home-practice-row,
     .lv-home-loop-play,
-    .lv-home-recent-actions { transition: none; }
+    .lv-home-wheel-center > circle,
+    .lv-home-wheel-key > path { transition: none; }
+
+    .lv-home-drop:hover > svg,
+    .lv-home-row-button:hover .lv-home-text-icon,
+    .lv-home-row-button:hover .lv-home-text-arrow,
+    .lv-home-row-button:hover .lv-home-text-chips > span,
+    .lv-home-chip:hover,
+    .lv-home-recent-chip:hover { transform: none; }
   }
 }

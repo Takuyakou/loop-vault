@@ -1,0 +1,30 @@
+[
+  {
+    "case": "on",
+    "outcome": {
+      "ok": true,
+      "value": true
+    }
+  },
+  {
+    "case": "off",
+    "outcome": {
+      "ok": true,
+      "value": false
+    }
+  },
+  {
+    "case": "wrong-type",
+    "outcome": {
+      "ok": true,
+      "value": true
+    }
+  },
+  {
+    "case": "invalid-json",
+    "outcome": {
+      "ok": true,
+      "value": true
+    }
+  }
+]

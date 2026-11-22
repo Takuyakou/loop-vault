@@ -1,0 +1,41 @@
+[
+  {
+    "case": "empty",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "app": "loopvault-chord-dojo",
+        "fileVersion": 4,
+        "version": 1,
+        "revision": 1,
+        "startedAt": "2026-07-04T00:00:00.000Z",
+        "knownQualities": {},
+        "shapes": {},
+        "voicings": {},
+        "progressions": {},
+        "settings": {
+          "reviewDays": [
+            14,
+            30
+          ],
+          "progBpm": 70,
+          "settleMs": 60,
+          "hintSec": 5,
+          "degrees": false
+        }
+      }
+    }
+  },
+  {
+    "case": "wrong-app",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "wrong-file-version",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

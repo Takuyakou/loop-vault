@@ -1,0 +1,28 @@
+[
+  {
+    "case": "valid",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "kind": "standard",
+        "id": "builtin:i-v-vi-iv:1",
+        "key": 3,
+        "stage": "see",
+        "random": false,
+        "at": "2026-07-04T00:00:00.000Z"
+      }
+    }
+  },
+  {
+    "case": "standard-without-key",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "unknown-key",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

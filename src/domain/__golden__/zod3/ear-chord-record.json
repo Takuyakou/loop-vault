@@ -1,0 +1,54 @@
+[
+  {
+    "case": "valid",
+    "outcome": {
+      "ok": true,
+      "value": {
+        "at": "2026-07-04T00:00:00.000Z",
+        "play": "play-1",
+        "run": "run-1",
+        "questionId": "ear:builtin:1",
+        "source": "builtin",
+        "benchmark": 2,
+        "level": 2,
+        "length": 4,
+        "chordLevel": 2,
+        "kind": "maj7・6",
+        "move": 5,
+        "index": 0,
+        "given": false,
+        "manual": false,
+        "wrongs": 1,
+        "hint": 0,
+        "seconds": 3.5,
+        "firstAnswerSeconds": 2.25,
+        "replays": 1,
+        "judge": "core"
+      }
+    }
+  },
+  {
+    "case": "missing-level",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "wrong-source",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "unknown-key",
+    "outcome": {
+      "ok": false
+    }
+  },
+  {
+    "case": "seconds-out-of-range",
+    "outcome": {
+      "ok": false
+    }
+  }
+]

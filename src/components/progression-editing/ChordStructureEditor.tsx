@@ -1,3 +1,4 @@
+import { Select } from "../ui";
 import { formatChordSymbol, formatTextChordSymbol, makeChordSymbol } from "../../domain/chords";
 import type { ChordQuality, ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy } from "../../i18n";
@@ -100,8 +101,9 @@ function StructureSelect({
   return (
     <label className="min-w-0 text-xs text-[var(--lv-text-muted)]">
       {label}
-      <select
-        className="mt-1 w-full border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-300"
+      <Select
+        wrapperClassName="mt-1 w-full"
+        className="w-full"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={label}
@@ -109,7 +111,7 @@ function StructureSelect({
         {options.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
-      </select>
+      </Select>
     </label>
   );
 }

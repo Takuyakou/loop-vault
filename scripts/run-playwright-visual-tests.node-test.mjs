@@ -72,3 +72,9 @@ test("prechecked DX FULL omits only duplicate TypeScript and retains fixture bui
     ["node_modules/@playwright/test/cli.js", "test", "e2e/visual.spec.ts"],
   ]);
 });
+
+test("a pass that follows a fixture build in the same FULL run may reuse it, and nothing else may", () => {
+  const plan = visualTestCommandPlan(["e2e/visual.spec.ts"], { LV_DX_PRECHECKED_TSC: "1", LV_DX_PREBUILT_FIXTURE: "1" });
+  assert.deepEqual(plan, [["node_modules/@playwright/test/cli.js", "test", "e2e/visual.spec.ts"]]);
+  assert.equal(visualTestCommandPlan(["e2e/visual.spec.ts"], {}).some((step) => step[0] === "node_modules/vite/bin/vite.js"), true);
+});

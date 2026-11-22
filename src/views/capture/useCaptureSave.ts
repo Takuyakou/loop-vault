@@ -1,7 +1,7 @@
 import { useState, type MutableRefObject } from "react";
 import type { ToastFn } from "../../components/notifications";
 import { buildCorrectionEvents } from "../../domain/midi";
-import {
+import { resolveImportKey } from "../../domain/importKeyResolution";import {
   buildProgressionSaveFeedbackEvent,
   type CorrectionPropagationFeedbackEvent,
   type PersistedAnalysisFeedbackEvent,
@@ -90,12 +90,18 @@ export function useCaptureSave({
     // The workspace stays on the capture screen after saving; the old screen's call is unchanged.
     const navigation = options?.stayOnCapture ? { stayOnCapture: true } : undefined;
     const create = (draft: Parameters<CreateIdeaFromDraft>[0]) => navigation ? createIdeaFromDraft(draft, navigation) : createIdeaFromDraft(draft);
+    // P23-33: a MIDI analysis keeps the key it detected; only when it has none does the save boundary
+    // resolve one from the chords being saved (the same rule the text imports use).
+    const keyDecision = resolveImportKey({
+      existingKey: analysis.result?.detectedKey,
+      chords: candidate.chords.map(event => event.chord),
+    });
     const id = create({
       title,
       status: "idea",
       bpm: options?.bpm ?? (analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
         ? undefined : analysis.result?.bpm),
-      key: analysis.result?.detectedKey,
+      key: keyDecision.key,
       chordMemo: candidate.summaryText,
       nextAction,
       progressionBlock: candidate,
@@ -116,7 +122,7 @@ export function useCaptureSave({
         ),
       ]);
       persistLabelCorrectionLogs(original, editable, removedBars);
-      setToast(copy.capture.savedToVault, "success");
+      setToast(copy.capture.workspaceSavedToVault, "success");
       return id;
     }
     setToast(copy.capture.createFailed, "error");

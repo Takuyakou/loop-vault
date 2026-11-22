@@ -35,9 +35,13 @@ afterEach(() => {
 });
 
 describe("Progression Detail Chord Context handoff", () => {
-  it("passes only the selected immutable Vault snapshot to Bass Practice", async () => {
+  // P23-15 H2 (B): practice is no longer opened from this page (the Vault preview, Home, the finder and each
+  // practice's 「Vault から選ぶ」 open it). The snapshot itself is checked in chordContextSnapshot.test.ts.
+  it("the page has no practice buttons and no practice section select, even in the ⋯ menu", async () => {
     const idea = makeIdea({ id: "idea-context", progressionBlocks: [block] });
     const openPractice = vi.fn();
+    const openVoicingPractice = vi.fn();
+    const openChordDojo = vi.fn();
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -53,6 +57,8 @@ describe("Progression Detail Chord Context handoff", () => {
           openVault={vi.fn()}
           requestDelete={vi.fn()}
           openPractice={openPractice}
+          openVoicingPractice={openVoicingPractice}
+          openChordDojo={openChordDojo}
           setToast={vi.fn()}
           copy={appCopy.ja}
         />,
@@ -60,96 +66,16 @@ describe("Progression Detail Chord Context handoff", () => {
     });
 
     await act(async()=>container.querySelector<HTMLButtonElement>('button[aria-label="そのほか"]')!.click());
-    const select = container.querySelector<HTMLSelectElement>("[data-testid='chord-context-section-select']")!;
-    expect([...select.options].map((option) => option.value)).toEqual(["bars:1-1", "bars:1-2", "bars:2-2"]);
-    await act(async () => {
-      select.value = "bars:1-2";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Bass Practice")!;
-    await act(async () => practice.click());
-
-    expect(openPractice).toHaveBeenCalledOnce();
-    const snapshot = openPractice.mock.calls[0]![0];
-    expect(snapshot).toMatchObject({
-      source: {
-        kind: "vault",
-        reference: { ideaId: idea.id, blockId: block.id },
-      },
-      section: { id: "bars:1-2", lengthBeats: 8 },
-    });
-    expect(Object.isFrozen(snapshot)).toBe(true);
-    expect(JSON.stringify(snapshot)).not.toMatch(/private|sourceAsset|sourceFileName/i);
-    await act(async () => root.unmount());
-  });
-
-  it("does not open generated practice as a substitution when the Vault source has no safe section", async () => {
-    const unavailable = { ...block, timeSignature: "3/4" };
-    const idea = makeIdea({ id: "idea-unavailable", progressionBlocks: [unavailable] });
-    const openPractice = vi.fn();
-    const container = document.createElement("div");
-    document.body.append(container);
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(
-        <ProgressionDetailView
-          idea={idea}
-          block={unavailable}
-          updateProgressionBlock={vi.fn(() => true)}
-          duplicateProgressionBlock={vi.fn()}
-          openProgression={vi.fn()}
-          openIdea={vi.fn()}
-          openVault={vi.fn()}
-          requestDelete={vi.fn()}
-          openPractice={openPractice}
-          setToast={vi.fn()}
-          copy={appCopy.ja}
-        />,
-      );
-    });
-    const practice = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Bass Practice")!;
-    expect(practice.disabled).toBe(true);
+    const names = [...container.querySelectorAll<HTMLButtonElement>("button")].map((button) => button.textContent?.trim());
+    expect(names).not.toContain("Bass Practice");
+    expect(names).not.toContain("Voicing Loop");
+    expect(names).not.toContain("Chord Dojo");
+    expect(container.querySelector("[data-testid='chord-context-section-select']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-handoff']")).toBeNull();
+    expect(container.querySelector("[data-testid='chord-context-handoff']")).toBeNull();
     expect(openPractice).not.toHaveBeenCalled();
-    await act(async () => root.unmount());
-  });
-
-  it("opens Voicing Loop from the saved block independently of Chord Context sections", async () => {
-    const unavailableForChordContext = { ...block, timeSignature: "3/4" };
-    const idea = makeIdea({ id: "idea-voicing-loop", progressionBlocks: [unavailableForChordContext] });
-    const openPractice = vi.fn();
-    const openVoicingPractice = vi.fn();
-    const container = document.createElement("div");
-    document.body.append(container);
-    const root = createRoot(container);
-    await act(async () => {
-      root.render(
-        <ProgressionDetailView
-          idea={idea}
-          block={unavailableForChordContext}
-          updateProgressionBlock={vi.fn(() => true)}
-          duplicateProgressionBlock={vi.fn()}
-          openProgression={vi.fn()}
-          openIdea={vi.fn()}
-          openVault={vi.fn()}
-          requestDelete={vi.fn()}
-          openPractice={openPractice}
-          openVoicingPractice={openVoicingPractice}
-          setToast={vi.fn()}
-          copy={appCopy.ja}
-        />,
-      );
-    });
-
-    const chordContext = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.trim() === "Bass Practice")!;
-    expect(chordContext.disabled).toBe(true);
-    const voicingLoop = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-handoff']")!;
-    expect(voicingLoop.disabled).toBe(false);
-    await act(async () => voicingLoop.click());
-    expect(openPractice).not.toHaveBeenCalled();
-    expect(openVoicingPractice).toHaveBeenCalledWith(idea.id, unavailableForChordContext.id);
+    expect(openVoicingPractice).not.toHaveBeenCalled();
+    expect(openChordDojo).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
 });

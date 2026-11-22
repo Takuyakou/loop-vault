@@ -115,3 +115,14 @@ describe("P8.9-09 error toasts", () => {
     expect(errors.notify({ message: "保存できませんでした。", tone: "error" })).not.toBe(first);
   });
 });
+
+describe("P23-02 toast shape", () => {
+  it("the toast has no tone stripe and its time bar grows", () => {
+    notify({ message: "進行をコピーしました。", tone: "success" });
+    const toast = container.querySelector<HTMLElement>(".lv-toast");
+    expect(toast).not.toBeNull();
+    const bar = toast!.querySelector<HTMLElement>(".lv-toast-bar");
+    expect(bar).not.toBeNull();
+    expect(bar!.style.animationDuration).toBe("4000ms");
+  });
+});

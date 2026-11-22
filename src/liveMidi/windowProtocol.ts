@@ -18,7 +18,8 @@ export type LiveMidiWindowCommand =
   | { type: "close" }
   | { type: "refresh-devices" }
   | { type: "select-device"; backendId: string }
-  | { type: "set-show-history"; show: boolean };
+  | { type: "set-show-history"; show: boolean }
+  | { type: "clear-history" };
 
 export interface LiveMidiWindowSnapshot {
   devices: LiveMidiDevice[];

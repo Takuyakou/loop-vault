@@ -27,8 +27,8 @@ test("Progression Detail keeps cards first and exposes accessible click, keyboar
   const detail = page.locator("[data-progression-detail-view]");
   const cardStage = detail.locator("[data-progression-card-stage]");
   await detail.getByRole("button",{name:"そのほか",exact:true}).click();
-  await detail.getByRole("button",{name:"MIDI書き出し・元MIDI・コピー",exact:true}).click();
-  const midiControl = detail.locator("[data-midi-export-control]");
+  await detail.getByRole("button",{name:"元の MIDI・以前の操作",exact:true}).click();
+  const midiControl = detail.locator('[aria-label="MIDIと以前の操作"] [data-midi-export-control]');
   const midiButton = midiControl.getByRole("button", { name: /MIDI/ });
 
   await expect(cardStage).toBeVisible();

@@ -71,6 +71,12 @@
     color: var(--lv-text);
   }
 
+  /* P23-59-fix-1 3b: the buttons take the banner's amber, not the app's teal. */
+  .lv-cw-suggestion .lv-cw-btn[data-kind="accent"] { border-color: rgb(242 193 78 / 55%); background: transparent; color: var(--lv-warning); font-weight: 600; }
+  .lv-cw-suggestion .lv-cw-btn[data-kind="accent"]:hover:not(:disabled) { border-color: var(--lv-warning); background: rgb(242 193 78 / 12%); color: var(--lv-warning); }
+  .lv-cw-suggestion .lv-cw-btn:not([data-kind]) { border-color: rgb(255 255 255 / 16%); background: transparent; color: var(--lv-text-secondary); }
+  .lv-cw-suggestion .lv-cw-btn:not([data-kind]):hover:not(:disabled) { border-color: rgb(255 255 255 / 28%); background: rgb(255 255 255 / 6%); color: var(--lv-text); }
+
   .lv-cw-work {
     display: grid;
     min-width: 0;
@@ -137,10 +143,27 @@
     border-bottom: 1px solid var(--lv-border);
     background: var(--lv-bg-subtle);
   }
-  .lv-cw-group { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid var(--lv-border); }
+  .lv-cw-group { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0 8px; border-left: 1px solid var(--lv-border); }
   .lv-cw-group:first-child, .lv-cw-bar-lead:first-child > .lv-cw-group:first-child { padding-left: 0; border-left: 0; }
   .lv-cw-bar-lead { display: inline-flex; flex: none; flex-wrap: nowrap; align-items: center; }
   .lv-cw-bar .lv-cw-btn { padding-inline: 8px; }
+  .lv-cw-bar .lv-cw-group[aria-label="表示"] .lv-cw-seg button { padding: 0 7px; }
+  /* P23-16 W1: the shared playback row at the bar's height (30px, like the other buttons). */
+  .lv-cw-bar .lv-playback-row { gap: 4px; }
+  .lv-cw-bar .lv-playback-row .lv-transport-button { min-height: 30px; padding: 3px 7px; font-size: var(--lv-text-12); }
+  .lv-cw-bar .lv-playback-row .lv-transport-primary-fixed { width: 4.25rem; }
+  /* P23-16: a narrow bar keeps one line. First 「／ 8小節」 steps aside (the bar needs about 1150px with it), then
+     (about 1100px) only the marks (|◀ ↻) and 「共通 BPM」 are shown; the buttons' names stay the full words. */
+  .lv-cw-word-short { display: none; }
+  .lv-cw-word-short::before { content: attr(data-text); }
+  @container (max-width: 1090px) {
+    .lv-cw-bar .lv-cw-time-total { display: none; }
+    .lv-cw-bar .lv-cw-time { min-width: 4em; }
+  }
+  @container (max-width: 1105px) {
+    .lv-cw-bar .lv-playback-word, .lv-cw-bar .lv-cw-word-long { display: none; }
+    .lv-cw-bar .lv-cw-word-short { display: inline; }
+  }
   /* P10.3 §3: the range chip (the decided range's teal); narrow bars keep only the bars. */
   .lv-cw-bar { container-type: inline-size; }
   .lv-cw-range-chip { display: inline-flex; flex: none; align-items: center; gap: 4px; height: 28px; margin-left: 10px; padding: 0 4px 0 10px; border: 1px solid var(--lv-accent); border-radius: 14px; background: var(--lv-accent-soft); color: var(--lv-accent); font-size: var(--lv-text-12); white-space: nowrap; }
@@ -234,7 +257,7 @@
     display: grid;
     align-content: space-between;
     overflow: hidden;
-    padding: 8px 10px;
+    padding: 8px; /* P23-16 W7: 8px a side, so 「E♭maj7」 fits a one-bar card at 1280 (cardLabel measures with this padding). */
     border: 1px solid var(--lv-border-strong);
     border-radius: 8px;
     background: var(--lv-surface);
@@ -288,6 +311,16 @@
   .lv-cw-card[data-size="bare"] { padding: 0; border-radius: 3px; }
   .lv-cw-card[data-size="bare"][data-review] { background: var(--lv-warning-soft); }
 
+  /* P23-14: the degree and the role colour on a card. The colour is on the degree text and the small dot only. */
+  .lv-cw-harmony { display: inline-flex; min-width: 0; align-items: center; gap: 4px; color: var(--lv-text-secondary); }
+  .lv-cw-harmony-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: currentColor; }
+  .lv-cw-harmony-degree { overflow: hidden; font-weight: 600; line-height: 1.4; text-overflow: clip; white-space: nowrap; }
+  .lv-cw-harmony[data-fn="T"] { color: var(--lv-fn-t); }
+  .lv-cw-harmony[data-fn="SD"] { color: var(--lv-fn-sd); }
+  .lv-cw-harmony[data-fn="SDm"] { color: var(--lv-fn-sdm); }
+  .lv-cw-harmony[data-fn="D"] { color: var(--lv-fn-d); }
+  .lv-cw-card[data-size="narrow"] .lv-cw-harmony-degree { display: none; }
+
   .lv-cw-roll {
     overflow: hidden;
     border-top: 1px solid var(--lv-border);
@@ -325,7 +358,7 @@
   .lv-cw-legend i[data-kind="off"] { outline: 1px dashed var(--lv-text-muted); outline-offset: -1px; }
 
   /* Fixed width so the numbers changing never move the buttons beside it. */
-  .lv-cw-time { display: inline-block; min-width: 9.5em; color: var(--lv-text-secondary); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lv-cw-time { display: inline-block; min-width: 8.5em; color: var(--lv-text-secondary); font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lv-cw-insp-empty { display: grid; gap: 8px; justify-items: start; margin-bottom: 14px; }
 
   .lv-cw-insp { display: flex; min-width: 0; flex-direction: column; background: var(--lv-bg-subtle); }
@@ -402,7 +435,7 @@
 
   /* P10.0-04 card editing */
   .lv-cw-handle { position: absolute; top: 4px; bottom: 4px; z-index: 2; width: 8px; cursor: ew-resize; touch-action: none; }
-  .lv-cw-handle::after { position: absolute; top: 20%; bottom: 20%; left: 3px; width: 2px; border-radius: 1px; background: var(--lv-border-strong); content: ""; opacity: 0; }
+  .lv-cw-handle::after { position: absolute; top: 20%; bottom: 20%; left: var(--lv-cw-handle-mid, 3px); width: 2px; border-radius: 1px; background: var(--lv-border-strong); content: ""; opacity: 0; }
   .lv-cw-cards:hover .lv-cw-handle::after, .lv-cw-handle:active::after { opacity: 1; }
   .lv-cw-handle:hover::after, .lv-cw-handle:active::after { background: var(--lv-accent); }
   .lv-cw-chips { position: relative; height: 20px; }
@@ -420,7 +453,17 @@
   .lv-cw-save .lv-cw-h4 { margin-bottom: 0; }
   .lv-cw-save-range { color: var(--lv-text); font-weight: 700; }
   .lv-cw-save-names { overflow: hidden; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--lv-text-12); text-overflow: ellipsis; white-space: nowrap; }
+  /* P23-16 W3: the new song's name, a labelled field above the button. */
+  .lv-cw-save-name { display: flex; min-width: 0; align-items: center; gap: 8px; color: var(--lv-text-muted); font-size: var(--lv-text-12); }
+  .lv-cw-save-name input { min-width: 0; height: 30px; flex: 1 1 auto; padding: 0 8px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-sm); background: var(--lv-bg); color: var(--lv-text); font-size: var(--lv-text-13); }
+  .lv-cw-save-name input:focus { border-color: var(--lv-accent); outline: none; }
   .lv-cw-save-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  /* P23-58-fix-1 D1: the progression page's save row: overwrite on its own line, then the version and its menu. */
+  .lv-cw-save[data-mode="progression"] .lv-cw-save-actions { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 8px; }
+  .lv-cw-save[data-mode="progression"] .lv-cw-save-actions > [data-kind="primary"] { grid-column: 1 / -1; width: 100%; min-width: 0; }
+  .lv-cw-save[data-mode="progression"] .lv-cw-save-actions > button { width: 100%; }
+  .lv-cw-save[data-mode="progression"] .lv-cw-save-actions > details > summary { display: flex; width: 34px; justify-content: center; padding: 0; list-style: none; }
+  .lv-cw-save[data-mode="progression"] .lv-cw-save-actions > details > summary::-webkit-details-marker { display: none; }
   .lv-cw-details summary { cursor: pointer; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
   /* P10.2 addendum 1 §2: 「おすすめの範囲」 on top of the panel; the heading row opens it. */
   .lv-cw-reco { display: flex; flex: none; flex-direction: column; border-bottom: 1px solid var(--lv-border-strong); }
@@ -462,15 +505,22 @@
   .lv-cw-card[data-name-unreadable] .lv-cw-card-name { opacity: 0.55; }
   .lv-cw-name-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
 
+  /* P23-16 W4: one line; 「?」 opens the whole list above it. */
   .lv-cw-keys-help {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px 16px;
-    padding: 10px 16px;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 16px;
     border-top: 1px solid var(--lv-border);
     color: var(--lv-text-muted);
     font-size: var(--lv-text-12);
   }
+  .lv-cw-keys-line { display: flex; min-width: 0; gap: 16px; overflow: hidden; white-space: nowrap; }
+  .lv-cw-keys-more { display: grid; width: 24px; height: 24px; flex: none; place-items: center; border: 1px solid var(--lv-border-strong); border-radius: 50%; color: var(--lv-text-secondary); font-weight: 700; }
+  .lv-cw-keys-more:hover, .lv-cw-keys-more[aria-expanded="true"] { border-color: var(--lv-accent); color: var(--lv-text); }
+  .lv-cw-keys-help .lv-popover.lv-cw-keys-all { top: auto; right: auto; bottom: calc(100% + 8px); left: 0; width: min(560px, calc(100vw - 48px)); }
+  .lv-cw-keys-list { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--lv-text-secondary); font-size: var(--lv-text-12); }
 
   .lv-cw kbd {
     padding: 0 4px;
@@ -551,29 +601,79 @@
 
 /* P10.4 changes are scoped to the saved progression workspace. */
 .lv-progression-page { display:flex;flex-direction:column;min-width:0; }
-.lv-progression-breadcrumb { display:flex;gap:8px;padding:8px 0;color:var(--lv-text-secondary);font-size:12px; }
-.lv-progression-file { flex-wrap:wrap;position:relative;gap:8px; }
-.lv-progression-selector { display:flex;align-items:center;gap:5px;font-size:11px; }
+/* P23-15: the header — row 1 back / title / ♥ / copy / MIDI / ⋯, row 2 facts / tags / memo / other progressions. */
+/* contain: a long title must not widen the workspace's grid column; it ends in … instead. */
+.lv-cw-file.lv-progression-file { contain:inline-size;container-type:inline-size;position:relative;z-index:calc(var(--lv-z-sticky) + 1);flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px; }
+.lv-progression-row { display:flex;min-width:0;align-items:center;gap:8px; }
+.lv-progression-row2 { flex-wrap:wrap;gap:6px; }
+.lv-progression-back { display:inline-flex;flex:none;align-items:center;gap:4px;height:34px;padding:0 12px 0 8px;border:1px solid var(--lv-border-strong);border-radius:9px;color:var(--lv-text-secondary);font-weight:600; }
+.lv-progression-back:hover { border-color:var(--lv-accent);color:var(--lv-text); }
+.lv-progression-title { display:flex;min-width:80px;align-items:center;gap:6px;padding:2px 8px;border:1.5px solid transparent;border-radius:8px;color:var(--lv-text);cursor:text; }
+.lv-progression-title strong { overflow:hidden;font-size:20px;line-height:1.3;text-overflow:ellipsis;white-space:nowrap; }
+.lv-progression-title svg { flex:none;color:var(--lv-text-muted);opacity:0; }
+.lv-progression-title:hover,.lv-progression-title:focus-visible { border-color:var(--lv-border-strong); }
+.lv-progression-title:hover svg,.lv-progression-title:focus-visible svg { opacity:1; }
+.lv-progression-file .lv-progression-title-input { width:min(320px,100%);height:34px;border:1.5px solid var(--lv-accent);border-radius:8px;font-size:20px;font-weight:700; }
+.lv-progression-icon { display:grid;width:32px;height:32px;flex:none;place-items:center;border-radius:8px;color:var(--lv-text-muted);font-size:18px; }
+.lv-progression-icon:hover { background:var(--lv-surface-raised);color:var(--lv-text); }
+.lv-progression-icon[aria-pressed=true] { color:var(--lv-accent); }
+.lv-progression-spacer { flex:1 1 0; }
+.lv-progression-row [data-midi-export-control],.lv-progression-row [data-midi-export-control] * { flex:none;white-space:nowrap; }
+.lv-progression-fact { flex:none;padding:2px 8px;border-radius:6px;background:var(--lv-surface-raised);color:var(--lv-text-secondary);font-size:12px;white-space:nowrap; }
+.lv-progression-fact[data-kind=source] { padding:1px 6px;border:1px solid var(--lv-border-strong);background:none;font-size:10.5px;font-weight:700; }
+.lv-progression-cap { flex:none;margin-left:6px;color:var(--lv-text-muted);font-size:11px;letter-spacing:.06em; }
+.lv-progression-tags { display:flex;flex-wrap:wrap;align-items:center;gap:4px; }
+.lv-progression-tag { padding:1px 9px;border:1px solid var(--lv-border-strong);border-radius:11px;color:var(--lv-text-secondary);font-size:11.5px;white-space:nowrap; }
+.lv-progression-tag[data-mine] { border-color:var(--lv-accent);color:var(--lv-text); }
+.lv-progression-tag[data-add] { border-style:dashed;color:var(--lv-text-muted); }
+.lv-progression-tag[data-add]:hover,.lv-progression-tag[data-add][aria-expanded=true] { border-color:var(--lv-accent);color:var(--lv-text); }
+.lv-progression-selector { display:flex;flex:none;align-items:center;gap:6px;color:var(--lv-text-secondary);font-size:12px;white-space:nowrap; }
+.lv-progression-pop { position:absolute;z-index:20;padding:6px;border:1px solid var(--lv-border-strong);border-radius:12px;background:var(--lv-surface);box-shadow:0 14px 34px rgb(0 0 0 / 55%); }
+.lv-progression-more { top:48px;right:10px;display:flex;min-width:220px;flex-direction:column; }
+.lv-progression-more button { padding:7px 10px;border-radius:7px;color:var(--lv-text-secondary);text-align:left; }
+.lv-progression-more button:hover { background:var(--lv-surface-raised);color:var(--lv-text); }
+.lv-progression-more button[data-danger] { margin-top:5px;border-top:1px solid var(--lv-border);border-radius:0 0 7px 7px;color:var(--lv-danger); }
+.lv-progression-tag-pop { top:88px;left:14px;width:min(560px,calc(100% - 28px));padding:12px; }
 .lv-progression-file select,.lv-progression-file input,.lv-progression-subpanel input,.lv-progression-subpanel select,.lv-progression-version-name input { min-width:0;border:1px solid var(--lv-border);border-radius:5px;background:var(--lv-bg);color:var(--lv-text);padding:5px 7px; }
-.lv-progression-memo { flex:1 1 140px; }
-.lv-progression-more,.lv-progression-subpanel { width:100%;padding:12px;display:flex;flex-wrap:wrap;gap:10px;border:1px solid var(--lv-border);background:var(--lv-surface); }
+.lv-progression-memo { display:flex;min-width:160px;flex:1 1 200px;align-items:center;gap:6px; }
+.lv-progression-memo .lv-progression-cap { margin-left:0; }
+.lv-progression-file .lv-progression-memo input { flex:1;height:28px;font-size:12.5px; }
+.lv-progression-memo-codes { flex:none;font-size:11.5px;white-space:nowrap; }
+.lv-progression-subpanel { width:100%;padding:12px;display:flex;flex-wrap:wrap;gap:10px;border:1px solid var(--lv-border);background:var(--lv-surface); }
 .lv-progression-subpanel label { display:flex;align-items:center;gap:6px; }
 .lv-progression-version-name { display:flex;flex-direction:column;gap:6px;margin-top:16px; }
 .lv-cw-change { position:absolute;bottom:2px;right:4px;font-size:9px;color:#c4a5ff; }
 .lv-cw-insert { position:absolute;top:34px;width:18px;height:18px;z-index:9;background:var(--lv-bg);border:1px solid var(--lv-border);border-radius:50%;font-size:12px;opacity:0; }
 .lv-cw-insert:hover,.lv-cw-insert:focus-visible,.lv-cw-cards:hover .lv-cw-insert { opacity:1; }
 .lv-cw-delete-menu { display:flex;flex-direction:column;gap:5px;margin:5px 0; }
+.lv-cw-save[data-mode="progression"] .lv-cw-save-actions > details { position:relative; }
+.lv-cw-save[data-mode="progression"] .lv-cw-save-actions > details > .lv-cw-delete-menu { position:absolute; right:0; bottom:calc(100% + 4px); z-index:20; min-width:220px; margin:0; padding:6px; border:1px solid var(--lv-border); border-radius:8px; background:var(--lv-surface); box-shadow:0 12px 32px rgb(0 0 0 / 45%); }
 .lv-cw[data-progression] .lv-cw-range-handle { position:absolute;top:0;font-size:10px;color:inherit;pointer-events:auto;touch-action:none;cursor:ew-resize;background:transparent; }
 .lv-cw-range-handle[data-end=a] { left:-5px; }.lv-cw-range-handle[data-end=b] { right:-5px; }
-@media(min-width:1220px) { .lv-progression-page > .lv-cw { flex:1;min-height:580px;height:calc(100dvh - 140px); } }
-@media(max-width:959px) { .lv-progression-file { gap:6px; }.lv-progression-memo { flex-basis:100%; }.lv-progression-breadcrumb { overflow:hidden; } }
+/* P23-16 W7: the progression page fills the main area (its two-row header included) and never makes the page scroll;
+   the piano roll takes what is left and scrolls inside (it was calc(100dvh - 140px), from the breadcrumb days).
+   Answer 3: with 「この曲」 or 「MIDIと以前の操作」 open, the workspace keeps the same height (the whole main area)
+   and the panel sits below it; the page scrolls to it. */
+@media(min-width:1220px) {
+  .lv-progression-page { height:100%; }
+  .lv-progression-page > .lv-cw { flex:1 1 auto;min-height:0;height:auto; }
+  .lv-progression-page:has(> .lv-progression-subpanel) > .lv-cw { flex:0 0 100%; }
+  .lv-progression-page:has(> .lv-progression-subpanel) > .lv-progression-subpanel { flex:none; }
+  .lv-progression-page .lv-cw-work { min-height:0; }
+  .lv-progression-page .lv-cw-body { min-height:120px; }
+  /* P23-58 B1: give the piano roll >= 160px visible height at 1280x720 without vertical page scroll. */
+  .lv-progression-page .lv-cw-chips { height: 8px; }
+  .lv-progression-page .lv-cw-legend { flex-wrap: nowrap; gap: 4px 10px; font-size: 11px; white-space: nowrap; }
+  .lv-progression-page .lv-cw-cards { height: 76px; }
+  .lv-progression-page .lv-cw-card { height: 52px; }
+}
+@media(max-width:959px) { .lv-progression-file { gap:6px; }.lv-progression-memo { flex-basis:100%; } }
 
 .lv-cw[data-progression] .lv-cw-note[data-kind=manual],.lv-cw[data-progression] .lv-cw-legend i[data-kind=manual] { background:#a78bfa;outline-color:#c4b5fd; }
 .lv-cw[data-progression] .lv-cw-note[data-moved] { background-image:none; }
 .lv-cw[data-progression] .lv-cw-nrow-pitch[data-kind=manual] { color:#c4b5fd; }
 .lv-cw[data-progression] .lv-cw-segments[hidden] { display:none; }
 
-.lv-progression-breadcrumb span { display:inline-flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap; }
 
 /* P17-01: the card menu and the danger-coloured delete items (text and border, no fill). */
 .lv-cw-card-menu { position:fixed; z-index:60; display:grid; gap:6px; min-width:260px; max-width:330px; max-height:calc(100vh - 16px); overflow-y:auto; padding:8px; border:1px solid var(--lv-border); border-radius:10px; background:var(--lv-surface); box-shadow:0 18px 48px rgb(0 0 0 / 45%); }.lv-cw-menu-group { display:grid; gap:2px; }
@@ -593,3 +693,40 @@
 .lv-cw-insp-delete { position:relative; flex:none; }
 .lv-cw-insp-delete > summary { white-space:nowrap; }
 .lv-cw-insp-delete > .lv-cw-delete-menu { position:absolute; right:0; top:calc(100% + 4px); z-index:20; min-width:250px; padding:6px; border:1px solid var(--lv-border); border-radius:8px; background:var(--lv-surface); box-shadow:0 12px 32px rgb(0 0 0 / 45%); }
+/* P23-15b N2/N3/N4: a narrow header keeps ‹ Vault and the title on the first line, hides the MIDI label's words
+   (the name stays), and folds the buttons to a second line. The pseudo-element is the full-width break; the
+   order puts every button after the title on the second line, as one group. */
+@container (max-width: 559px) {
+  .lv-progression-row { flex-wrap:wrap;align-items:center;row-gap:6px; }
+  .lv-progression-row > .lv-progression-back,
+  .lv-progression-row > .lv-progression-title { order:1; }
+  .lv-progression-row::after { content:"";order:2;flex:0 0 100%;height:0; }
+  .lv-progression-row > .lv-progression-icon,
+  .lv-progression-row > .lv-progression-spacer,
+  .lv-progression-row > [data-midi-export-control] { order:3; }
+  .lv-midi-export-label { display:none; }
+  /* P23-15b A: the song's progressions may shrink; the label's words stay whole and the select takes the cut. */
+  .lv-progression-selector { flex:0 1 auto;min-width:0;white-space:normal; }
+  .lv-progression-selector > select { min-width:120px;max-width:100%; }
+}
+
+/* P23-58 B2: the tag window in the current look (pill chips like .lv-progression-tag). */
+.lv-tags-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .lv-tags-editor { grid-template-columns: 1fr; } }
+.lv-tags-title { margin: 0 0 8px; color: var(--lv-text-muted); font-size: 12px; font-weight: 700; }
+.lv-tags-add { display: flex; gap: 6px; }
+.lv-tags-editor .lv-tags-input { flex: 1; min-width: 0; height: 34px; padding: 0 12px; border: 1px solid var(--lv-border-strong); border-radius: 999px; background: var(--lv-surface); color: var(--lv-text); font-size: 13px; }
+.lv-tags-editor .lv-tags-input:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: 1px; }
+.lv-tags-add-btn { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: var(--lv-surface-raised); color: var(--lv-text-secondary); }
+.lv-tags-add-btn:hover:not(:disabled) { color: var(--lv-text); }
+.lv-tags-add-btn:disabled { opacity: .4; }
+.lv-tags-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.lv-tag-chip { display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 2px 0 11px; border: 1px solid var(--lv-border-strong); border-radius: 14px; color: var(--lv-text-secondary); font-size: 12px; white-space: nowrap; }
+.lv-tag-chip[data-kind="auto"] { border-color: color-mix(in srgb, var(--lv-accent) 45%, transparent); background: color-mix(in srgb, var(--lv-accent) 10%, transparent); color: var(--lv-text); }
+.lv-tag-chip[data-kind="off"] { gap: 4px; padding: 0 10px 0 11px; border-style: dashed; color: var(--lv-text-muted); }
+.lv-tag-chip[data-kind="off"]:hover { color: var(--lv-text); }
+.lv-tag-x { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; color: var(--lv-text-muted); }
+.lv-tag-x:hover { background: var(--lv-surface-raised); color: var(--lv-text); }
+.lv-tags-empty { color: var(--lv-text-muted); font-size: 12.5px; }
+.lv-tags-suppressed { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--lv-border); }
+.lv-tags-sub { margin: 0; color: var(--lv-text-muted); font-size: 12px; }

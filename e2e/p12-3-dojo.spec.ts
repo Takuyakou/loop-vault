@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import {test,expect,type Page} from '@playwright/test';
 import {dateKey,emptyStore,emptyItem,type DojoStore,type Task} from '../src/domain/chordDojo/store';
 import {builtinChords} from './helpers/p12-3';
+import {displayChordLabel} from '../src/ui/chordText';
 import {openDojo,type MidiControl} from './helpers/p12';
 
 /** P12.3 §3 (bass below), §5 (playable progression cards), §6 (one-chord card), §7 (degrees always shown). */
@@ -29,7 +30,7 @@ test('P12.3 §3 in key A the first ii–V–I answer has the bass below, and pla
  await openDojo(page);
  await page.getByRole('button',{name:'定番の進行',exact:true}).click();
  await page.getByLabel('定番のキー').selectOption('9');
- await page.locator('.dojo-list .dojo-card').filter({has:page.getByRole('heading',{name:'ii–V–I',exact:true})}).getByRole('button',{name:'これを練習する'}).click();
+ await page.locator('.dojo-list .dojo-card').filter({has:page.getByRole('heading',{name:'ii–V–I',exact:true})}).getByRole('button', { name: / を練習する$/ }).click();
  await expect(page.locator('[data-dojo-screen=practice]')).toBeVisible();
  const first=builtinChords('ii-v-i-major',9)[0];
  expect(first.notes).toEqual([47,57,62,66]);
@@ -132,9 +133,9 @@ test.describe('§6 one-chord cards play',()=>{
 test.describe('§7 degrees are always shown',()=>{
  test('the settings have no degrees checkbox, and ii–V–I ① shows ii7 · V7 · Imaj7',async({page})=>{
   await start(page,practiceFile(progressionTask(),'memorize'));
-  await expect(page.locator('.dojo-chord-cards>button>small:last-child')).toHaveText(['ii7','V7','Imaj7']);
+  await expect(page.locator('.dojo-chord-cards>button>small:last-child')).toHaveText(['Ⅱm7','Ⅴ7','Ⅰmaj7']);
   await page.getByRole('button',{name:'練習の設定'}).click();
-  await expect(page.getByLabel('BPM')).toBeVisible();
+  await expect(page.locator('#main-content').getByLabel('BPM')).toBeVisible();
   await expect(page.getByRole('checkbox',{name:'度数も出す'})).toHaveCount(0);
  });
  test('a saved progression without a key never shows 「キー未設定」',async({page})=>{
@@ -159,17 +160,22 @@ test.describe('§4 the grouped list',()=>{
   expect(await page.locator('.dojo-builtin-group').evaluateAll(gs=>gs.map(g=>g.querySelectorAll('.dojo-builtin-card').length))).toEqual([6,6,4,5,4,3,6,3,6,2]);
   expect(await page.locator('.dojo-builtin-jump button').allTextContents()).toEqual(['基本 6','J-POP 6','ジャズ・ボサ 4','ネオソウル・Lo-fi 5','マイナー 4','ジャズ基礎 3','ジャズの仕掛け 6','ジャズ・フォーム 3','ネオソウル・ボサ・モーダル 6','Original Practice 2','Jazz Progressions 12']);
   const card=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})});
-  await expect(card.locator('.dojo-builtin-degrees')).toHaveText('IVmaj7 – V7 – iii7 – vi7');
+  await expect(card.locator('.dojo-builtin-degrees')).toHaveText('Ⅳmaj7 – Ⅴ7 – Ⅲm7 – Ⅵm7');
   await expect(card.locator('.dojo-builtin-chords')).toHaveText('C：Fmaj7 → G7 → Em7 → Am7');
   await page.getByLabel('定番のキー').selectOption('3');
   await expect(card.locator('.dojo-builtin-chords')).toHaveText('E♭：A♭maj7 → B♭7 → Gm7 → Cm7');
-  await expect(page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'エオリアン',exact:true})}).locator('.dojo-builtin-chords')).toHaveText(`E♭m：${builtinChords('aeolian',3).map(c=>c.label).join(' → ')}`);
+  await expect(page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'エオリアン',exact:true})}).locator('.dojo-builtin-chords')).toHaveText(`E♭m：${builtinChords('aeolian',3).map(c=>displayChordLabel(c.label)).join(' → ')}`);
  });
- test('each card has the three buttons; a title-less progression keeps its plain name',async({page})=>{
+ // P22-01 §3-1 (rule B): the card is pressed by its name; the random key is the list's switch; the theme is in 「…」.
+ test('each card has its name and 「…」 (今日のテーマにする inside); a title-less progression keeps its plain name',async({page})=>{
   await openBuiltinList(page);
   const card=page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'ii–V–I',exact:true})});
-  await expect(card.getByRole('button')).toHaveText(['これを練習する','ランダムキーで練習','今日のテーマにする']);
-  await expect(card.locator('.dojo-builtin-degrees')).toHaveText('ii7 – V7 – Imaj7');
+  await expect(card.getByRole('button')).toHaveText(['ii–V–I','…']);
+  await expect(card.getByRole('button',{name:'ii–V–I を練習する',exact:true})).toHaveCount(1);
+  await expect(page.getByTestId('dojo-random-toggle')).toHaveAttribute('aria-pressed','false');
+  await card.getByRole('button',{name:'そのほかの操作'}).click();
+  await expect(card.getByRole('menuitem')).toHaveText(['今日のテーマにする']);
+  await expect(card.locator('.dojo-builtin-degrees')).toHaveText('Ⅱm7 – Ⅴ7 – Ⅰmaj7');
  });
  test('a group button scrolls to its heading (1440×900)',async({page})=>{
   await page.setViewportSize({width:1440,height:900});
@@ -192,7 +198,7 @@ const endlessKey=async(page:Page)=>Number(await page.locator('[data-endless-key]
 const stats=(page:Page)=>page.locator('.dojo-endless-stats');
 async function openEndless(page:Page,id='王道進行',mode='midi'){
  await openBuiltinList(page,mode);
- await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:id,exact:true})}).getByRole('button',{name:'ランダムキーで練習'}).click();
+ await page.getByTestId('dojo-random-toggle').click();await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:id,exact:true})}).getByRole('button',{name:/ を練習する$/}).click();
  await expect(page.locator('[data-dojo-screen=endless]')).toBeVisible();
 }
 /** Plays the chords of `id` in `key` as a real player: only the changing notes go off / on, and the old notes stay held between chords. */
@@ -214,7 +220,8 @@ test.describe('§8 the random-key screen',()=>{
   expect(await endlessKey(page)).toBeGreaterThanOrEqual(0);
   const cards=page.locator('.dojo-endless-cards>button');
   await expect(cards).toHaveCount(4);
-  await expect(page.locator('.dojo-endless-degree')).toHaveText(['IVmaj7','V7','iii7','vi7']);
+  await expect(page.locator('.dojo-endless-degree')).toHaveText(['Ⅳmaj7','Ⅴ7','Ⅲm7','Ⅵm7']);
+  await expect(page.locator('.dojo-card-fn')).toHaveText(['SD','D','T','T']);
   await expect(page.locator('.dojo-endless-chord')).toHaveText(['?','?','?','?']);
   await expect(stats(page)).toContainText('1巡目 1/12');
   await expect(page.locator('.dojo-endless-name')).toContainText('王道進行');
@@ -259,7 +266,7 @@ test.describe('§9 judging, hints, clear and the next key',()=>{
   const key=await endlessKey(page);
   const third=page.locator('.dojo-endless-cards>button').nth(2);
   await third.click();
-  await expect(third.locator('.dojo-endless-chord')).toHaveText(builtinChords('ouudou',key)[2].label);
+  await expect(third.locator('.dojo-endless-chord')).toHaveText(displayChordLabel(builtinChords('ouudou',key)[2].label));
   await expect(third).toHaveAttribute('data-hint','true');
   await expect(page.locator('.dojo-endless-result')).toHaveText('ヒントを見ました。このキーは秒数を数えません');
   await playKey(page,'ouudou',key);
@@ -309,15 +316,15 @@ test.describe('§9 judging, hints, clear and the next key',()=>{
 });
 
 test.describe('§10 the summary, and nothing is recorded',()=>{
- test('three cleared keys, then やめる: the summary matches, and the Dojo record text is identical before and after',async({page})=>{
+ test('three cleared keys, then 結果を見て終わる: the summary matches, and the Dojo record text is identical before and after',async({page})=>{
   test.setTimeout(90000);
   const file=practiceFile(progressionTask('ii-v-i-major',0),'memorize');
   await page.addInitScript(({key,file})=>localStorage.setItem(key,JSON.stringify(file)),{key:KEY,file});
   await openBuiltinList(page);
   const before=await page.evaluate(k=>localStorage.getItem(k),KEY);
-  await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})}).getByRole('button',{name:'ランダムキーで練習'}).click();
+  await page.getByTestId('dojo-random-toggle').click();await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})}).getByRole('button',{name:/ を練習する$/}).click();
   for(let i=0;i<3;i++){const key=await endlessKey(page);await playKey(page,'ouudou',key);await expect(stats(page)).toContainText(`1巡目 ${i+2}/12`);}
-  await page.getByRole('button',{name:'やめる（Esc）'}).click();
+  await page.getByRole('button',{name:'結果を見て終わる（Esc）'}).click();
   const summary=page.locator('.dojo-endless-summary');
   await expect(summary).toBeVisible();
   await expect(summary.locator('dd').nth(0)).toHaveText('3');
@@ -332,7 +339,7 @@ test.describe('§10 the summary, and nothing is recorded',()=>{
   await openEndless(page);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading',{name:'定番の進行',exact:true})).toBeVisible();
-  await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})}).getByRole('button',{name:'ランダムキーで練習'}).click();
+  await expect(page.getByTestId('dojo-random-toggle')).toHaveAttribute('aria-pressed','true');await page.locator('.dojo-builtin-card').filter({has:page.getByRole('heading',{name:'王道進行',exact:true})}).getByRole('button',{name:/ を練習する$/}).click();
   await page.getByRole('button',{name:'このキーをとばす'}).click();
   await page.locator('body').evaluate(e=>{e.tabIndex=-1;e.focus({preventScroll:true});});   // keys are ignored while a button has the focus
   await page.keyboard.press('Escape');

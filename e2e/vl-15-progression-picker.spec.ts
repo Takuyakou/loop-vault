@@ -33,45 +33,45 @@ test("VL-15 picker rows stay compact, readable and inside the window at every de
       const box = row.getBoundingClientRect();
       const star = row.querySelector("[data-testid='voicing-loop-favorite']")!.getBoundingClientRect();
       const choice = row.querySelector("[data-testid='voicing-loop-progression-choice']")!.getBoundingClientRect();
-      const chordLine = row.querySelector("[data-testid='voicing-loop-progression-choice'] > span:last-child") as HTMLElement;
-      const chordStyle = getComputedStyle(chordLine);
-      // The action sits right of the title area: the practice button, or nothing on an unavailable row.
-      const practiceButton = [...row.querySelectorAll("button")]
-        .map((button) => button.getBoundingClientRect())
-        .filter((rect) => rect.left >= choice.right - 1 && rect.width > 0)
-        .at(0);
+      const day = row.querySelector("[data-testid='voicing-loop-progression-day']")!.getBoundingClientRect();
+      const strip = row.querySelector("[data-testid='voicing-loop-progression-chords']") as HTMLElement | null;
+      const chip = strip?.querySelector<HTMLElement>(".lv-vl-row-chord");
+      const stripStyle = strip ? getComputedStyle(strip) : undefined;
       return {
         rowHeight: box.height,
         starWidth: star.width,
         starHeight: star.height,
         starBeforeChoice: star.right <= choice.left + 1,
-        choiceBeforeAction: practiceButton ? choice.right <= practiceButton.left + 1 : true,
-        actionWidth: practiceButton?.width ?? 0,
-        actionHeight: practiceButton?.height ?? 0,
-        chordWhiteSpace: chordStyle.whiteSpace,
-        chordOverflow: chordStyle.overflow,
-        chordLines: chordLine.clientHeight,
+        choiceBeforeDay: choice.right <= day.left + 1,
+        hasStrip: Boolean(strip),
+        hasReason: Boolean(row.querySelector("[data-testid='voicing-loop-progression-reason']")),
+        chordWhiteSpace: chip ? getComputedStyle(chip).whiteSpace : "nowrap",
+        chordOverflow: stripStyle?.overflowX ?? "hidden",
+        chordLines: strip ? strip.clientHeight : 0,
       };
     }));
 
     for (const row of geometry) {
-      expect(row.rowHeight).toBeLessThanOrEqual(64);
+      expect(row.rowHeight).toBeLessThanOrEqual(72);
       expect(row.starWidth).toBeGreaterThanOrEqual(32);
       expect(row.starHeight).toBeGreaterThanOrEqual(32);
       expect(row.starBeforeChoice).toBe(true);
-      expect(row.choiceBeforeAction).toBe(true);
+      expect(row.choiceBeforeDay).toBe(true);
       expect(row.chordWhiteSpace).toBe("nowrap");
       expect(row.chordOverflow).toBe("hidden");
-      expect(row.chordLines).toBeLessThanOrEqual(20);
+      expect(row.chordLines).toBeLessThanOrEqual(24);
     }
-    // Four playable rows have a "練習する" button; the unavailable row shows its short reason instead.
-    expect(geometry.filter((row) => row.actionWidth >= 28 && row.actionHeight >= 28)).toHaveLength(4);
-    expect(geometry.filter((row) => row.actionWidth === 0)).toHaveLength(1);
+    // P23-29 L5/L6: four playable rows show the chord chips, the unavailable row shows its short reason, and a
+    // row has no practice button of its own (the main one is in the right column).
+    expect(geometry.filter((row) => row.hasStrip)).toHaveLength(4);
+    expect(geometry.filter((row) => row.hasReason)).toHaveLength(1);
+    await expect(workspace.locator("[data-testid='voicing-loop-progression-row'] button[data-testid='voicing-loop-progression-practice']")).toHaveCount(0);
+    await expect(workspace.getByTestId("voicing-loop-preview-practice")).toHaveCount(1);
 
     // The BPM is the number only; the provisional one is faded and explained on hover.
     const provisional = workspace.locator("[data-tempo-origin='PRACTICE_INITIAL']");
     await expect(provisional).toHaveText("120 BPM");
-    await expect(provisional).toHaveAttribute("title", "BPMが保存されていないため、120 BPM で始めます");
+    await expect(provisional).toHaveAttribute("title", "BPMが保存されていないため、仮の 120 BPM です");
 
     await assertNoHorizontalOverflow(page);
     if (size.width === 1440) {

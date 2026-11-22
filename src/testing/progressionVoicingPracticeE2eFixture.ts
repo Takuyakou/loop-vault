@@ -1,4 +1,6 @@
 import { parseChordLabel } from "../domain/chords";
+import { pickerHarmonyOfLabels } from "../domain/progressionVoicingPractice";
+import type { SavedProgressionBlock } from "../domain/types";
 import type {
   ProgressionVoicingPracticeSnapshots,
   ProgressionVoicingPracticeSnapshot,
@@ -31,24 +33,40 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   };
   if (status === "vl15-picker") {
     // VL-15: favourites, recent, others, a provisional tempo and an unavailable row, all synthetic.
+    // P23-29 L7: each candidate carries its saved block too, so the right column draws its roll and ▶ 試聴.
     return {
       snapshots: {}, initialSelection: "source-midi",
       vaultProgressions: [
         { id: JSON.stringify(["public-vl15-a", "a"]), sourceReference: { ideaId: "public-vl15-a", blockId: "a" }, title: "Public favourite loop",
           key: "F# major", bpm: 120, tempoOrigin: "SAVED_BPM", lengthBars: 32, favorite: true,
-          chordLabels: ["Bm9", "Bb9", "Gmaj9/A", "Bbaug", "Em9/B", "Dadd9/F#"], capturedAt: "2026-02-05T00:00:00.000Z" },
+          chordLabels: ["Bm9", "Bb9", "Gmaj9/A", "Bbaug", "Em9/B", "Dadd9/F#"],
+          ...pickerHarmonyOfLabels("F# major", ["Bm9", "Bb9", "Gmaj9/A", "Bbaug", "Em9/B", "Dadd9/F#"]),
+          block: pickerBlock("public-vl15-a", ["Bm9", "Bb9", "Gmaj9/A", "Bbaug", "Em9/B", "Dadd9/F#"], "F# major", 120, 32, "2026-02-05T00:00:00.000Z"),
+          capturedAt: "2026-02-05T00:00:00.000Z" },
         { id: JSON.stringify(["public-vl15-b", "b"]), sourceReference: { ideaId: "public-vl15-b", blockId: "b" }, title: "Public second favourite",
           key: "G major", bpm: 100, tempoOrigin: "SAVED_BPM", lengthBars: 8, favorite: true,
-          chordLabels: ["Abmaj9", "Ebadd9/G", "Fm9/G", "Cm7", "F13"], capturedAt: "2026-02-04T00:00:00.000Z" },
+          chordLabels: ["Abmaj9", "Ebadd9/G", "Fm9/G", "Cm7", "F13"],
+          ...pickerHarmonyOfLabels("G major", ["Abmaj9", "Ebadd9/G", "Fm9/G", "Cm7", "F13"]),
+          block: pickerBlock("public-vl15-b", ["Abmaj9", "Ebadd9/G", "Fm9/G", "Cm7", "F13"], "G major", 100, 8, "2026-02-04T00:00:00.000Z"),
+          capturedAt: "2026-02-04T00:00:00.000Z" },
         { id: JSON.stringify(["public-vl15-c", "c"]), sourceReference: { ideaId: "public-vl15-c", blockId: "c" }, title: "Public recent loop",
           key: "E major", bpm: 100, tempoOrigin: "SAVED_BPM", lengthBars: 15, favorite: false,
-          chordLabels: ["C#m9", "F#13", "Bm11"], capturedAt: "2026-02-03T00:00:00.000Z" },
+          chordLabels: ["C#m9", "F#13", "Bm11"],
+          ...pickerHarmonyOfLabels("E major", ["C#m9", "F#13", "Bm11"]),
+          block: pickerBlock("public-vl15-c", ["C#m9", "F#13", "Bm11"], "E major", 100, 15, "2026-02-03T00:00:00.000Z"),
+          capturedAt: "2026-02-03T00:00:00.000Z" },
         { id: JSON.stringify(["public-vl15-d", "d"]), sourceReference: { ideaId: "public-vl15-d", blockId: "d" }, title: "Public plain loop",
           bpm: 120, tempoOrigin: "PRACTICE_INITIAL", lengthBars: 16, favorite: false,
-          chordLabels: ["C9", "B7(#9,#5)", "Em7", "A13"], capturedAt: "2026-02-02T00:00:00.000Z" },
+          chordLabels: ["C9", "B7(#9,#5)", "Em7", "A13"],
+          ...pickerHarmonyOfLabels(undefined, ["C9", "B7(#9,#5)", "Em7", "A13"]),
+          block: pickerBlock("public-vl15-d", ["C9", "B7(#9,#5)", "Em7", "A13"], undefined, 120, 16, "2026-02-02T00:00:00.000Z"),
+          capturedAt: "2026-02-02T00:00:00.000Z" },
         { id: JSON.stringify(["public-vl15-e", "e"]), sourceReference: { ideaId: "public-vl15-e", blockId: "e" }, title: "Public unavailable loop",
           bpm: 120, tempoOrigin: "SMF_DEFAULT", lengthBars: 300, favorite: false, unavailableReason: "practice-capacity",
-          chordLabels: ["Cmaj7"], capturedAt: "2026-02-01T00:00:00.000Z" },
+          chordLabels: ["Cmaj7"],
+          ...pickerHarmonyOfLabels(undefined, ["Cmaj7"]),
+          block: pickerBlock("public-vl15-e", ["Cmaj7"], undefined, 120, 300, "2026-02-01T00:00:00.000Z"),
+          capturedAt: "2026-02-01T00:00:00.000Z" },
       ],
     };
   }
@@ -69,6 +87,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "both-hands") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true));
   }
+  if (status === "p21-l1") return oneSelection("source-midi", p21SingleSnapshot(["C", "D", "E", "F"], [36, 38, 40, 41]));
+  if (status === "p21-anchor") return oneSelection("source-midi", p21SingleSnapshot(["C", "D", "E"], [36, 38, 40]));
+  if (status === "p21-l3") return oneSelection("source-midi", p21SingleSnapshot(["C", "F", "G", "C"], [36, 41, 43, 36]));
   if (status === "both-hands-long") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 12));
   }
@@ -150,8 +171,43 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
 }
 
-function vl09LayoutSnapshot(): ProgressionVoicingPracticeSnapshot {
-  const labels = ["F9/A", "Cmaj7", "Eadd9/F#", "Dm7", "C13(b9)", "G13", "Am11", "Bm11",
+/** P23-29 L7: the saved block behind a synthetic candidate — the picker's right column draws its roll and ▶ 試聴. */
+function pickerBlock(
+  id: string,
+  labels: readonly string[],
+  detectedKey: string | undefined,
+  bpm: number,
+  lengthBars: number,
+  capturedAt: string,
+): SavedProgressionBlock {
+  return {
+    id,
+    summaryText: labels.join(" "),
+    chords: labels.map((label, index) => {
+      const chord = parseChordLabel(label);
+      if (!chord) throw new Error(`P23-29 picker fixture did not parse: ${label}`);
+      return {
+        eventId: `${id}-event-${index}`,
+        bar: 1 + index,
+        beat: 1,
+        durationBeats: 4,
+        chord,
+        confidence: 1,
+        alternatives: [],
+        warnings: [],
+      };
+    }),
+    ...(detectedKey === undefined ? {} : { detectedKey }),
+    bpm,
+    timeSignature: "4/4",
+    lengthBars,
+    tags: [],
+    capturedAt,
+    analyzerVersion: "p23-29-e2e",
+  };
+}
+
+function vl09LayoutSnapshot(): ProgressionVoicingPracticeSnapshot {  const labels = ["F9/A", "Cmaj7", "Eadd9/F#", "Dm7", "C13(b9)", "G13", "Am11", "Bm11",
     "F9/A", "Cmaj7", "Eadd9/F#", "Dm7", "C13(b9)", "G13", "Am11", "Bm11"];
   const notes = [
     [57, 65, 72, 75, 77, 79, 84], [48, 55, 59], [42, 52, 56, 59], [50, 57, 60],
@@ -323,5 +379,29 @@ function snapshot(
           : {}),
       });
     })),
+  });
+}
+
+/** P21: four one-note left-hand cards, synthetic. */
+function p21SingleSnapshot(labels: readonly string[], pitches: readonly number[]): ProgressionVoicingPracticeSnapshot {
+  const bpm = 96, beats = 1;
+  return Object.freeze({
+    version: 1,
+    fingerprint: `p21-e2e-${labels.join("-")}-${pitches.join("-")}`,
+    source: { kind: "vault" as const, reference: { ideaId: "p21-e2e-idea", blockId: "p21-e2e-block" } },
+    selection: "source-midi",
+    key: "C major",
+    bpm,
+    meter: { numerator: 4 as const, denominator: 4 as const },
+    lengthBeats: pitches.length * beats,
+    spans: Object.freeze(pitches.map((_pitch, eventIndex) => ({ kind: "chord" as const, eventIndex, startBeat: eventIndex * beats, durationBeats: beats }))),
+    events: Object.freeze(pitches.map((pitch, eventIndex) => Object.freeze({
+      id: `p21-event-${eventIndex + 1}`,
+      startBeat: eventIndex * beats,
+      durationBeats: beats,
+      chord: Object.freeze({ root: 0, quality: "maj" as const, tensions: Object.freeze([]), label: labels[eventIndex]! }),
+      playbackChoice: "SOURCE" as const,
+      voicing: Object.freeze({ kind: "source-midi" as const, midiNotes: Object.freeze([pitch]), bassNote: pitch }),
+    }))),
   });
 }

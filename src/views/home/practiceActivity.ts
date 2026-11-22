@@ -82,6 +82,42 @@ export function collectPracticeRecords(
   return { records, undatedCount };
 }
 
+/** Which Bass Practice screen a record came from (the tabs of `BassPracticeModeView`). */
+export type BassPracticeMode = "degree" | "rhythm" | "bassline" | "root-motion" | "midi";
+
+export interface BassPracticeLatest {
+  readonly at: string;
+  readonly mode: BassPracticeMode;
+}
+
+/**
+ * P22-03 §1: the newest Bass Practice record that carries a date, and which practice it was. `undefined` when no
+ * record has a date (the Home then keeps its old behaviour).
+ */
+export function latestBassPractice(
+  practiceFile: PracticeFileV2 | undefined,
+  midiAttempts: readonly MidiBassAttempt[] = [],
+): BassPracticeLatest | undefined {
+  const entries: BassPracticeLatest[] = [];
+  const push = (at: string | undefined, mode: BassPracticeMode) => {
+    if (!at) return;
+    const time = new Date(at);
+    if (Number.isNaN(time.getTime())) return;
+    entries.push({ at, mode });
+  };
+  if (practiceFile) {
+    practiceFile.attempts.filter((attempt) => attempt.rating).forEach((attempt) => push(attempt.completedAt, "degree"));
+    practiceFile.rhythmAttempts.forEach((attempt) => push(attempt.completedAt, "rhythm"));
+    // Chord Context is practised inside Bassline Echo (it opens that tab with a snapshot).
+    practiceFile.chordContextHistory.forEach((entry) => push(entry.completedAt, "bassline"));
+    practiceFile.rootMotionHistory.forEach((entry) => push(entry.completedAt, "root-motion"));
+    practiceFile.sourceBasslineHistory.forEach((entry) => push(entry.completedAt, "bassline"));
+  }
+  midiAttempts.forEach((attempt) => push(attempt.completedAt, "midi"));
+  if (!entries.length) return undefined;
+  return entries.reduce((newest, entry) => (new Date(entry.at).getTime() > new Date(newest.at).getTime() ? entry : newest));
+}
+
 export function summarizePracticeActivity(
   ideas: readonly SongIdea[],
   practiceFile: PracticeFileV2 | undefined,

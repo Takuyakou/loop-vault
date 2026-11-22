@@ -1,23 +1,29 @@
+import { displayChordLabel, displayDegreeLabel } from "../ui/chordText";
+import { Select } from "../components/ui";
+import { displayKey } from "../domain/displayLabels";
+import { readLastVoicingPractice } from "../voicingPractice/lastPractice";
+import { VoicingLoopPicker } from "./voicing-loop/VoicingLoopPicker";
+import { progressionFunctions, type FunctionKind } from "../domain/harmony/chordFunction";
+import { degreeOf } from "../domain/harmony/degrees";
 import { useFingeringRankerMode } from "../voicingPractice/fingeringRankerMode";
-import { eRankerCostModel } from "../domain/eRankerFingering";
+import { p21ERankerCostModel } from "../domain/p21SingleNoteFingering";
 import { rankPracticeHandFingerings } from "../voicingPractice/rankPracticeFingerings";
 import { GeneratedTypeSelector } from "../voicingPractice/GeneratedTypeSelector";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { useReserveBottomSpace } from "../components/notifications";
 import * as Tone from "tone";
-import { ChevronLeft, ChevronRight, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Pause, Play, Plus, RefreshCw, Square, Volume2 } from "lucide-react";
 import {
   formatMidiNoteForDisplay,
   type NoteAccidentalStyle,
 } from "../components/music-keyboard";
 import { Modal } from "../components/Modal";
-import { BpmScrubField } from "../components/BpmScrubField";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { useMetronome } from "../components/MetronomeProvider";
+import { useAnnounceSongBpm, useGlobalBpm } from "../components/GlobalBpmProvider";
 import { TransportButton } from "../components/TransportButton";
-import { Button, EmptyState, StatusMessage, Surface } from "../components/ui";
-import { FavoriteIcon } from "../components/icons";
+import { Button, StatusMessage, Surface, Switch } from "../components/ui";
 import {
   createProgressionPracticeClockState,
   projectProgressionPracticeClock,
@@ -61,8 +67,6 @@ import {
   type FingeringHand,
   type RankedFingering,
 } from "../domain/progressionFingering";
-import type { MidiConnectionKind } from "../liveMidi/connectionView";
-import { openMidiPanel } from "../liveMidi/midiPanel";
 import { useDojoMidi } from "./chord-dojo/useDojoMidi";
 import {
   ProgressionVoicingTransport,
@@ -91,6 +95,7 @@ import { TimelineNavigator } from "../components/timeline/TimelineNavigator";
 import { buildHandSlots, slotDegree } from "../voicingPractice/handSlots";
 import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
+import { ChordName } from "../components/ChordName";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
@@ -122,8 +127,16 @@ export interface ProgressionVoicingPracticeViewProps {
   /** VL-15: the same Vault favourite flag the Vault list writes (`block.pinned`). */
   readonly onToggleFavorite?: (reference: ProgressionPracticeSourceReference, pinned: boolean) => boolean | "pending";
   readonly onEnterText: () => void;
+  /** P23-29: 「Vault で開く」 in the picker's right column. */
+  readonly onOpenInVault?: (reference: ProgressionPracticeSourceReference) => void;
+  /** P22-02 §1-7: the empty picker sends the player to the MIDI capture screen. */
+  readonly onImportMidi?: () => void;
   readonly transportFactory?: () => ProgressionVoicingTransportPort;
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
+  /** P23-20 L3: the setting 「度数を表示」. False hides the degree text only — the role colour stays. Default true. */
+  readonly showDegrees?: boolean;
+  /** P23-32 T1: the head's 「練習する進行」 back button returns to the picker. */
+  readonly onBackToPicker?: () => void;
 }
 
 const sourceSelections = [
@@ -141,10 +154,42 @@ const advancedSelections = [
 ] as const;
 
 const copy = {
-  ja: {
-    title: "Voicing Loop",
+  ja: {    title: "Voicing Loop",
     description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
+    // P23-20 L2: the top band is two groups, and every checkbox has a name that is always shown.
+    sourceGroup: "音の出どころ",
+    displayGroup: "表示",
+    // P23-29: the picker's own words.
+    resumeTitle: "続きから",
+    resumeGo: "続ける",
+    filterAll: "すべて",
+    filterFavorites: "お気に入り",
+    filterRecent: "最近使った",
+    filterLabel: "一覧の切り替え",
+    pickHint: "進行を選んでください",
+    pickHintBody: "左の一覧で行を押すと、ここに中身が出ます。",
+    practiceThis: "この進行で練習する",
+    openInVault: "Vault で開く",
+    lastPracticed: "最後に練習",
+    never: "まだ",
+    usableVoices: "使える音",
+    sourceMidiLabel: "元の MIDI",
+    savedVoicesLabel: "保存した音",
+    generatedLabel: "自動生成",
+    savedOn: "保存した日",
+    codeCount: (count: number) => `${count} コード`,
+    barsCount: (count: number) => `${count} 小節`,
+    chordCards: "コード",
+    auditionAll: "試聴",
+    auditionHint: "カードを押すと、そのコードが鳴ります",
+    noKeyLabel: "キーなし",
+    noBpmLabel: "BPM なし",
+    // P23-20 L3: the role letters of a chord in its key (read aloud; the letter itself is the badge).
+    roleTonic: "トニック",
+    roleSubdominant: "サブドミナント",
+    roleSubdominantMinor: "サブドミナントマイナー",
+    roleDominant: "ドミナント",
     sourceHelp: "保存した音・元MIDI・カスタムは保存済みの実音を使います。一部に音がない場合だけ自動生成で補完し、カードに印を表示します。",
     studyHelp: "基本または骨組みを選択します。Color・Openやその他の既存の形は詳しい設定で選べます。固定音では変更できません。",
     teacherHelp: "先生由来の考え方を一般化した実用Voicing",
@@ -154,6 +199,8 @@ const copy = {
     openModifier: "Open配置",
     openHelp: "同じ和音を広い音域へ配置します。スラッシュベースは固定します。",
     optimizeProgression: "進行に合わせて最適化",
+    /** P23-20 L2: the always-visible short name; the full sentence stays the accessible name (`aria-label`). */
+    optimizeProgressionShort: "最適化",
     optimizeHelp: "最後から先頭まで含む進行全体で、トップノートと内声のつながりを選びます。OFFでは各コード単体の代表候補を使います。",
     candidateHelp: "同じコードで使える別のVoicing候補",
     previousCandidate: "前のVoicing候補",
@@ -172,7 +219,7 @@ const copy = {
     chordProgress: "コード",
     progressionProgress: "進行",
     position: "位置",
-    timeline: "進行タイムライン",
+    timeline: "進行",
     progressionSection: "進行",
     cardAuditionOnly: "カードクリック = 試聴のみ",
     keyboardTitle: "鍵盤 — 88鍵 / A0–C8",
@@ -182,6 +229,8 @@ const copy = {
     suggestedFingering: "おすすめ運指",
     finger: "指",
     showFingering: "おすすめ運指を表示",
+    /** P23-20 L2: the always-visible short name (contained in the accessible name). */
+    showFingeringShort: "運指",
     rightHand: "右手",
     leftHand: "左手",
     rightHandDisplay: "右手",
@@ -211,7 +260,7 @@ const copy = {
     originalKey: "元",
     bpmDrag: "上下にドラッグしてBPMを変更",
     metronome: "メトロノーム",
-    referenceSound: "お手本音",
+    referenceSound: "お手本の音",
     countInBars: "カウントイン",
     noCountIn: "なし",
     oneBar: "1小節",
@@ -238,11 +287,13 @@ const copy = {
     favoriteRemove: "お気に入りから外す",
     favoriteFailed: "お気に入りを保存できませんでした。",
     results: "検索結果",
-    noSaved: "練習できる保存済み進行はまだありません。",
-    noSavedBody: "「取り込む」からMIDIを読み込むか、テキストで進行を作ってください。",
+    noSaved: "まだ進行がありません",
+    noSavedBody: "「MIDI から取り込む」でMIDIを読み込むか、テキストで進行を作ってください。",
+    importMidi: "MIDI から取り込む",
+    enterTextShort: "テキストで入力",
+    unavailableCapacity: "長すぎるため、ここでは練習できません(範囲を分けて保存してください)",
     noMatches: "検索に一致する進行はありません。",
     practice: "練習する",
-    enterText: "＋ テキストで新しい進行を入力",
     unavailable: "選択したVoicingを利用できません",
     unavailableBody: "このコードには選択したSource/Custom Voicingが保存されていません。別の明示的なVoicingを選んでください。",
     unsupported: "このコードにはこの生成タイプの形がありません。",
@@ -264,22 +315,15 @@ const copy = {
   },
 } as const;
 
-const MIDI_TONES: Record<MidiConnectionKind, { text: string; dot: string }> = {
-  connected: { text: "text-teal-200", dot: "bg-teal-300" },
-  error: { text: "text-rose-200", dot: "bg-rose-300" },
-  lost: { text: "text-amber-200", dot: "bg-amber-300" },
-  missing: { text: "text-amber-200", dot: "bg-amber-300" },
-  "no-device": { text: "text-amber-200", dot: "bg-amber-300" },
-  choose: { text: "text-amber-200", dot: "bg-amber-300" },
-  off: { text: "text-slate-300", dot: "bg-slate-400" },
-  connecting: { text: "text-slate-300", dot: "bg-slate-400" },
-  searching: { text: "text-slate-300", dot: "bg-slate-400" },
-};
+/** P23-29: the picker's words (its own component lives in `views/voicing-loop/`). */
+export type VoicingLoopText = typeof copy.ja;
 
 export function ProgressionVoicingPracticeView({
   initialSelection = "source-midi",
   onSelectProgression,
   onEnterText,
+  onOpenInVault,
+  onImportMidi,
   bulkSourcePreview,
   onBulkSourceApply,
   onToggleFavorite,
@@ -287,10 +331,15 @@ export function ProgressionVoicingPracticeView({
   snapshots,
   transportFactory = createDefaultTransport,
   vaultProgressions = EMPTY_VAULT_PROGRESSIONS,
+  showDegrees = true,
+  onBackToPicker,
 }: ProgressionVoicingPracticeViewProps) {
   const text = copy.ja;
   const { sound: previewSound } = usePreviewSound();
   const { enabled: metronomeEnabled, toggle: toggleGlobalMetronome } = useMetronome();
+  const { bpm: globalBpm } = useGlobalBpm();
+  const globalBpmRef = useRef(globalBpm);
+  globalBpmRef.current = globalBpm;
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(() => restoreVoicingSource(snapshots, initialSelection));
   const duplicateSavedSource = useMemo(() => savedDuplicatesSource(snapshots), [snapshots]);
   const lastGeneratedSelection = useRef<ProgressionVoicingSelection>(selection === "saved" || selection === "source-midi" || selection === "custom" ? "basic-full" : selection);
@@ -368,6 +417,8 @@ export function ProgressionVoicingPracticeView({
   const activeTempoOrigin = sourceSnapshot && vaultProgressions.find((candidate) =>
     candidate.sourceReference.ideaId === sourceSnapshot.source.reference.ideaId
     && candidate.sourceReference.blockId === sourceSnapshot.source.reference.blockId)?.tempoOrigin;
+  // P23-06: only a BPM the user saved with the progression is the song's BPM; a stand-in (120) is not announced.
+  useAnnounceSongBpm(sourceSnapshot && activeTempoOrigin === "SAVED_BPM" ? sourceSnapshot.bpm : undefined);
   const [query, setQuery] = useState("");
   const [pickFavorite, setPickFavorite] = useState<Readonly<Record<string, boolean>>>({});
   const [favoriteNotice, setFavoriteNotice] = useState<string>();
@@ -470,7 +521,7 @@ export function ProgressionVoicingPracticeView({
   const previousRangeSourceRef = useRef(sourceIdentity);
   const selectedRangeBounds = rangeBeatBounds(snapshot?.events ?? [], rangeSelection.active);
   const [clockState, setClockState] = useState(
-    () => snapshot ? createProgressionPracticeClockState(snapshot, { countInBars }) : undefined,
+    () => snapshot ? createProgressionPracticeClockState(snapshot, { bpm: globalBpm, countInBars }) : undefined,
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
   const [timelineScale, setTimelineScale] = useState<8 | 12 | 16>(8);
@@ -503,7 +554,7 @@ export function ProgressionVoicingPracticeView({
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
   const fingeringRankerMode = useFingeringRankerMode();
   const fingeringOptions = useMemo(() => fingeringRankerMode === "E1-T"
-    ? { costModel: eRankerCostModel() } : {}, [fingeringRankerMode]);
+    ? { costModel: p21ERankerCostModel() } : {}, [fingeringRankerMode]);
   const [fingeringChangeBaseline, setFingeringChangeBaseline] = useState<{ key: string; plan: ProgressionPracticeVoicingPlan | undefined; values: Map<string, string> }>();
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
     left: [],
@@ -552,8 +603,7 @@ export function ProgressionVoicingPracticeView({
     if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
   }, []);
   if (!transportRef.current) transportRef.current = transportFactory();
-  const { view: midiView, audioState, prepareAudio, retryAudio } = useDojoMidi(progressionLoaded);
-  const midiTone = MIDI_TONES[midiView.kind];
+  const { audioState, prepareAudio, retryAudio } = useDojoMidi(progressionLoaded);
 
   useEffect(() => {
     const changedProgression = previousPreferenceId.current !== progressionPreferenceId;
@@ -578,7 +628,7 @@ export function ProgressionVoicingPracticeView({
     cardHeldSpanRef.current = undefined;
     setSeekAnchorIndex(0);
     setClockState(sourceSnapshot
-      ? { ...createProgressionPracticeClockState(sourceSnapshot, { countInBars }),
+      ? { ...createProgressionPracticeClockState(sourceSnapshot, { bpm: globalBpmRef.current, countInBars }),
           loopBounds: rangeBeatBounds(sourceSnapshot.events, rangeSelectionRef.current.active),
           anchorBeat: rangeBeatBounds(sourceSnapshot.events, rangeSelectionRef.current.active)?.startBeat ?? 0 }
       : undefined);
@@ -588,6 +638,15 @@ export function ProgressionVoicingPracticeView({
       transport?.stop();
     };
   }, [countInBars, previewSound, sourceSnapshot]);
+
+  // P23-06: the practice plays at the app-wide BPM. When it changes (here or in the header), the clock and the transport follow.
+  useEffect(() => {
+    if (!snapshot || !clockState || clockState.bpm === globalBpm) return;
+    transportRef.current?.setBpm(globalBpm);
+    setClockState((state) => state && state.bpm !== globalBpm
+      ? reduceProgressionPracticeClock(snapshot, state, { type: "SET_BPM", bpm: globalBpm })
+      : state);
+  }, [globalBpm, snapshot, clockState]);
 
   useEffect(() => {
     if (previousRangeSourceRef.current === sourceIdentity) return;
@@ -634,11 +693,27 @@ export function ProgressionVoicingPracticeView({
   const nextWaitBeats = currentEvent
     ? Math.max(0, currentEvent.startBeat + currentEvent.durationBeats - (projection?.progressionBeat ?? currentEvent.startBeat))
     : 0;
-  const thenNextDegree = progressionPracticeDegreeLabel(thenNextEvent?.chord, targetKey);
+  const thenNextDegree = chordDegreeLabel(thenNextEvent?.chord, snapshot?.key);
   const currentResolution = plan?.events[currentIndex];
   const nextResolution = plan?.events[nextIndex];
-  const currentDegree = progressionPracticeDegreeLabel(currentEvent?.chord, targetKey);
-  const nextDegree = progressionPracticeDegreeLabel(nextEvent?.chord, targetKey);
+  const currentDegree = chordDegreeLabel(currentEvent?.chord, snapshot?.key);
+  const nextDegree = chordDegreeLabel(nextEvent?.chord, snapshot?.key);
+  // P23-20 L3: the role of a chord in the key (T / SD / SDm / D); empty without a key.
+  const roleByEventId = useMemo(() => {
+    const roles = new Map<string, FunctionKind>();
+    if (!snapshot?.events.length || !targetKey) return roles;
+    const byKey = progressionFunctions(snapshot.events.map((event) => ({
+      rootPc: event.chord.root,
+      quality: event.chord.quality,
+      tensions: event.chord.tensions,
+      ...(event.chord.bass === undefined ? {} : { bassPc: event.chord.bass }),
+    })), { tonicPc: targetKey.tonicPitchClass, mode: targetKey.mode });
+    snapshot.events.forEach((event, index) => roles.set(event.id, byKey[index]?.kind ?? ""));
+    return roles;
+  }, [snapshot, targetKey]);
+  const currentRole = currentEvent ? roleByEventId.get(currentEvent.id) ?? "" : "";
+  const nextRole = nextEvent ? roleByEventId.get(nextEvent.id) ?? "" : "";
+  const thenNextRole = thenNextEvent ? roleByEventId.get(thenNextEvent.id) ?? "" : "";
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const handAssignments = useMemo(
@@ -743,6 +818,11 @@ export function ProgressionVoicingPracticeView({
     if (timelineScale !== effectiveTimelineScale) setTimelineScale(effectiveTimelineScale);
   }, [effectiveTimelineScale, timelineScale]);
   const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
+  // P23-20 L5: the repeated stretch of the strip, in pixels (the cards are laid out by beat from the left).
+  const rangeBand = selectedRangeBounds ? {
+    left: selectedRangeBounds.startBeat * timelinePixelsPerBeat,
+    width: Math.max(0, (selectedRangeBounds.endBeat - selectedRangeBounds.startBeat) * timelinePixelsPerBeat),
+  } : undefined;
   /** Moves the navigator's frame to the viewport's place (style only). Hidden while the whole song already fits. */
   function syncNavigator() {
     const viewport = timelineViewportRef.current;
@@ -1216,13 +1296,6 @@ export function ProgressionVoicingPracticeView({
     });
   }
 
-  function changeBpm(value: number) {
-    if (!snapshot || !clockState || !Number.isFinite(value) || value < 30 || value > 240) return;
-    transportRef.current?.setBpm(value);
-    setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "SET_BPM", bpm: value })
-      : state);
-  }
 
   async function auditionResolved(index: number, savedCardIntent = false) {
     const resolution = savedCardIntent
@@ -1346,91 +1419,53 @@ export function ProgressionVoicingPracticeView({
   });
 
   if (!progressionLoaded) {
-    const sectionLabels: Record<"favorites" | "recent" | "others", string> = {
-      favorites: text.favorites,
-      recent: text.recent,
-      others: text.others,
-    };
-    const rows = (candidates: readonly VoicingLoopVaultCandidate[]) => (
-      <div className="mt-1.5 grid min-w-0 gap-1" data-testid="voicing-loop-progression-list">
-        {candidates.map((candidate) => (
-          <ProgressionChoice
-            key={candidate.id}
-            candidate={candidate}
-            favorite={pickerFavorite(candidate)}
-            practiceLabel={text.practice}
-            onChoose={() => chooseProgression(candidate)}
-            onToggleFavorite={() => togglePickerFavorite(candidate)}
-          />
-        ))}
-      </div>
-    );
     return (
-      <div className="min-w-0" data-testid="voicing-loop-workspace" onPointerDownCapture={prepareAudio}>
-        <Surface className="min-w-0 p-4 sm:p-5">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-            <h2 className="lv-section-title shrink-0">{text.chooseProgression}</h2>
-            <div className="relative min-w-[220px] flex-1">
-              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--lv-text-muted)]" size={16} />
-              <label className="sr-only" htmlFor="voicing-loop-progression-search">{text.search}</label>
-              <input
-                id="voicing-loop-progression-search"
-                className="lv-input min-h-9 w-full min-w-0 pl-9 pr-3 text-sm"
-                type="search"
-                autoComplete="off"
-                value={query}
-                placeholder={text.searchPlaceholder}
-                onChange={(event) => { setQuery(event.target.value); setFavoriteNotice(undefined); }}
-              />
-            </div>
-          </div>
-          {pickerFavoriteCount === 0 && vaultProgressions.length ? (
-            <p className="mt-2 flex items-center gap-1 text-xs text-[var(--lv-text-muted)]" data-testid="voicing-loop-favorite-hint">
-              <FavoriteIcon aria-hidden="true" size={16} className="shrink-0" />
-              <span>{text.favoriteHint}</span>
-            </p>
-          ) : null}
-          {favoriteNotice ? (
-            <p className="mt-2 text-xs text-[var(--lv-warning)]" role="status" data-testid="voicing-loop-favorite-notice">{favoriteNotice}</p>
-          ) : null}
-
-          {trimmedQuery ? (
-            pickerSearchResults.length ? (
-              <section className="mt-3 min-w-0" data-testid="voicing-loop-section-results">
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <h3 className="lv-section-title">{text.results}</h3>
-                  <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{pickerSearchResults.length}</span>
-                </div>
-                {rows(pickerSearchResults)}
-              </section>
-            ) : (
-              <p className="mt-3 text-sm text-[var(--lv-text-secondary)]" role="status">{text.noMatches}</p>
-            )
-          ) : pickerSections.length ? (
-            pickerSections.map((section) => (
-              <section key={section.kind} className="mt-3 min-w-0" data-testid={`voicing-loop-section-${section.kind}`}>
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <h3 className="lv-section-title">{sectionLabels[section.kind]}</h3>
-                  <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{section.candidates.length}</span>
-                </div>
-                {rows(section.candidates)}
-              </section>
-            ))
-          ) : (
-            <EmptyState className="mt-3" title={text.noSaved} description={text.noSavedBody} />
-          )}
-
-          <div className="mt-4 border-t border-[var(--lv-border)] pt-3">
-            <Button variant="ghost" onClick={onEnterText}>{text.enterText}</Button>
-          </div>
-        </Surface>
-      </div>
+      <VoicingLoopPicker
+        text={text}
+        candidates={vaultProgressions}
+        sections={pickerSections}
+        results={pickerSearchResults}
+        query={query}
+        trimmedQuery={trimmedQuery}
+        onQueryChange={(value) => { setQuery(value); setFavoriteNotice(undefined); }}
+        favoriteOf={pickerFavorite}
+        onToggleFavorite={togglePickerFavorite}
+        favoriteCount={pickerFavoriteCount}
+        favoriteNotice={favoriteNotice}
+        lastPractice={readLastVoicingPractice()}
+        onPractice={chooseProgression}
+        onOpenInVault={(reference) => onOpenInVault?.(reference)}
+        onEnterText={onEnterText}
+        onImportMidi={onImportMidi}
+        sound={previewSound}
+        onPreviewError={(error) => setRuntimeError(error instanceof Error ? error.message : "試聴できませんでした")}
+        showDegrees={showDegrees}
+        onPrepareAudio={prepareAudio}
+      />
     );
   }
+
+  // P23-32 T2: the practice's head — the picker row's title, and the key/bars of the progression.
+  const practiceCandidate = snapshot?.source?.kind === "vault"
+    ? vaultProgressions.find((candidate) => candidate.sourceReference.ideaId === snapshot.source.reference.ideaId
+      && candidate.sourceReference.blockId === snapshot.source.reference.blockId)
+    : undefined;
+  const practiceFacts = snapshot
+    ? `${snapshot.key ? (displayChordLabel(displayKey(snapshot.key) ?? "")) : "キー未設定"} ・ ${Math.ceil(snapshot.lengthBeats / snapshot.meter.numerator)} 小節`
+    : undefined;
+  const practiceHead = (
+    <>
+      {onBackToPicker ? <button type="button" className="lv-vl-back" data-testid="voicing-loop-back" aria-label="練習する進行へ戻る" onClick={onBackToPicker}>‹ <span className="lv-vl-back-label">練習する進行</span></button> : null}
+      {practiceCandidate?.title ? <b className="lv-vl-head-title">{practiceCandidate.title}</b> : null}
+      {practiceFacts ? <span className="lv-vl-head-facts">{practiceFacts}</span> : null}
+    </>
+  );
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto" data-testid="voicing-loop-workspace"
       data-midi-audio={audioState} onPointerDownCapture={prepareAudio}>
+      {/* P23-32 T2: the head row (the low-window form is inside the controls row below). */}
+      <div className="lv-vl-head" data-testid="voicing-loop-head">{practiceHead}</div>
       {audioState === "error" ? (
         <div data-testid="voicing-loop-midi-audio-error">
           <StatusMessage
@@ -1442,11 +1477,14 @@ export function ProgressionVoicingPracticeView({
           </StatusMessage>
         </div>
       ) : null}
-      <Surface className="lv-vl-controls shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
-        <div className="lv-vl-controls-row flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 whitespace-nowrap" data-testid="voicing-loop-controls-row">
-          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-source-help">
-            <legend className="lv-section-kicker mr-1 float-left">ソース</legend>
+      <Surface className="lv-vl-controls shrink-0" data-testid="voicing-loop-controls">
+        <div className="lv-vl-controls-row flex min-w-0 items-center gap-x-3 whitespace-nowrap" data-testid="voicing-loop-controls-row">
+          {/* P23-32 T3: in a low window the head moves to the start of this row. */}
+          <span className="lv-vl-head-inline">{practiceHead}</span>
+          <fieldset className="flex items-center gap-2" aria-describedby="voicing-loop-source-help" data-testid="voicing-loop-source-group">
+            <legend className="lv-section-kicker mr-1 float-left">{text.sourceGroup}</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
+            <span className="lv-vl-seg">
             {sourceSelections.filter(item => item.id !== "saved" || !duplicateSavedSource).map((item) => {
               const generated = item.id === "basic-full";
               const coverage = generated ? undefined : sourceCoverage(snapshots, item.id);
@@ -1466,9 +1504,11 @@ export function ProgressionVoicingPracticeView({
                 </Button>
               );
             })}
+            </span>
           </fieldset>
-          <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help">
-            <legend className="lv-section-kicker mr-1 float-left">生成タイプ</legend>
+          {/* P23-32 T3: the study axis sits next to the source group (the same order on one line), outside the
+              「音の出どころ」 fieldset so a narrow pane can wrap it onto its own line. */}
+          <div className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help" data-testid="voicing-loop-study-group">
             <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
             <GeneratedTypeSelector key={lessonRulesSelected ? "generated" : selection} value={selection === "basic-full" || !lessonRulesSelected ? studyCategory : "advanced"}
               disabled={!lessonRulesSelected} onChange={changeStudyCategory} onOpen={closeGeneratedDetails} />
@@ -1481,16 +1521,16 @@ export function ProgressionVoicingPracticeView({
                 className={`rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 py-2 text-xs ${lessonRulesSelected ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>詳しい設定</summary>
               <div className="absolute right-0 top-full z-50 mt-1 flex w-60 max-w-[75vw] flex-col gap-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 shadow-xl">
                 <label className="flex flex-col gap-1 text-xs">既存の形
-                  <select aria-label="既存の形" className="lv-field-control min-h-9 w-full px-2 text-xs" disabled={!lessonRulesSelected}
+                  <Select aria-label="既存の形" wrapperClassName="w-full" className="w-full text-xs" disabled={!lessonRulesSelected}
                     value={lessonRulesSelected ? selection : "basic-full"} onChange={event => changeSelection(event.currentTarget.value as ProgressionVoicingSelection)}>
                     {advancedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
-                  </select>
+                  </Select>
                 </label>
                 <label className="flex flex-col gap-1 text-xs">左手の形
-                  <select aria-label="左手の形" className="lv-field-control min-h-9 px-2 text-xs" disabled={selection !== "left-hand"}
+                  <Select aria-label="左手の形" wrapperClassName="w-full" className="w-full text-xs" disabled={selection !== "left-hand"}
                     value={leftHandVariant} onChange={event => setLeftHandVariant(event.currentTarget.value as "auto" | "A" | "B")}>
                     <option value="auto">自動 A/B</option><option value="A">A</option><option value="B">B</option>
-                  </select>
+                  </Select>
                 </label>
             <label
               className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
@@ -1528,37 +1568,32 @@ export function ProgressionVoicingPracticeView({
             <span id="voicing-loop-open-help" className="sr-only">{text.openHelp}</span>
               </div>
             </details>
-          </fieldset>
-          <fieldset className="flex shrink-0 items-center gap-2">
-            <legend className="lv-section-kicker mr-1 float-left">表示</legend>
+          </div>
+          <span className="lv-vl-divider" aria-hidden="true" />
+          <fieldset className="flex shrink-0 items-center gap-2" data-testid="voicing-loop-display-group">
+            <legend className="lv-section-kicker mr-1 float-left">{text.displayGroup}</legend>
             <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
               <Button size="sm" variant="secondary" className="lv-choice" title={text.learn} aria-label={text.learn} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}><CompactLabel text={text.learn} /></Button>
               <Button size="sm" variant="secondary" className="lv-choice" title={text.recall} aria-label={text.recall} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}><CompactLabel text={text.recall} /></Button>
             </div>
-            <label
-              className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
-              title={text.optimizeHelp}
-            >
-              <input
-                type="checkbox"
+            <label className="lv-vl-switch" title={text.optimizeHelp}>
+              <Switch
                 checked={progressionOptimizationEnabled}
                 disabled={!lessonRulesSelected || selection !== "basic-full"}
+                label={text.optimizeProgression}
                 aria-describedby="voicing-loop-optimize-help"
-                onChange={(event) => {
-                  const enabled = event.currentTarget.checked;
-                  changeLessonModifier(() => setProgressionOptimizationEnabled(enabled));
-                }}
+                onChange={(checked) => changeLessonModifier(() => setProgressionOptimizationEnabled(checked))}
               />
-              <span className="lv-vl-control-text">{text.optimizeProgression}</span>
+              <span>{text.optimizeProgressionShort}</span>
             </label>
             <span id="voicing-loop-optimize-help" className="sr-only">{text.optimizeHelp}</span>
-            <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)]" title={text.showFingering}>
-              <input
-                type="checkbox"
+            <label className="lv-vl-switch" title={text.showFingering}>
+              <Switch
                 checked={showFingering}
-                onChange={(event) => setShowFingering(event.currentTarget.checked)}
+                label={text.showFingering}
+                onChange={(checked) => setShowFingering(checked)}
               />
-              <span className="lv-vl-control-text">{text.showFingering}</span>
+              <span>{text.showFingeringShort}</span>
             </label>
           </fieldset>
         </div>
@@ -1595,7 +1630,7 @@ export function ProgressionVoicingPracticeView({
                   <div className="flex flex-wrap items-center gap-2">
                     {bulkSourcePreview && onBulkSourceApply ? (
                       <Button size="sm" variant="ghost" onClick={() => setBulkSourceOpen(true)}>
-                        {"この進行をSOURCEに"}
+                        {"この進行を元MIDIに"}
                       </Button>
                     ) : null}
                     {displayMode === "learn" && showFingering && (currentLeftFingering || currentRightFingering) ? (
@@ -1604,12 +1639,13 @@ export function ProgressionVoicingPracticeView({
                   </div>
                 </div>
                 <div className="mt-1 flex min-w-0 items-baseline gap-3">
-                  <h2 className="min-w-0 truncate whitespace-nowrap text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-[56px] sm:leading-[1.08]" title={currentEvent?.chord.label ?? restLabel}>
-                    {currentEvent?.chord.label ?? restLabel}
+                  <h2 className="lv-vl-current-chord min-w-0 truncate whitespace-nowrap font-bold tracking-tight text-[var(--lv-text)]" title={currentEvent ? displayChordLabel(currentEvent.chord.label) : restLabel}>
+                    {currentEvent ? <ChordName label={currentEvent.chord.label} /> : restLabel}
                   </h2>
-                  {currentDegree ? <span className="shrink-0 text-lg font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
+                  {currentDegree || currentRole ? <DegreeTag degree={currentDegree} role={currentRole} showDegree={showDegrees}
+                    size="lg" testId="voicing-loop-current-degree" roleTestId="voicing-loop-current-role" /> : null}
                 </div>
-                <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
+                <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent ? displayChordLabel(currentEvent.chord.label) : restLabel}</p>
                 <div className="mt-2 h-1 overflow-hidden rounded bg-[var(--lv-border)]" aria-hidden="true">
                   <div ref={currentProgressRef} data-testid="voicing-loop-current-progress" className="h-full bg-[var(--lv-accent)]" style={{ width: `${Math.round((projection?.chordProgress ?? 0) * 100)}%` }} />
                 </div>
@@ -1640,8 +1676,8 @@ export function ProgressionVoicingPracticeView({
               </Surface>
               <div className="lv-vl-next-column flex min-h-0 min-w-0 flex-col gap-2">
                 <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" aria-label={"次のコード詳細"}>
-                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
-                    aria-label={"次のコードの詳細をスクロール"}>
+                  <div className="min-h-0 min-w-0 flex-1" tabIndex={0}
+                    aria-label={"次のコードの詳細"}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="lv-section-kicker">{text.next}</p>
                     <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
@@ -1649,8 +1685,9 @@ export function ProgressionVoicingPracticeView({
                     </span>
                   </div>
                   <div className="mt-2 flex min-w-0 items-baseline gap-2">
-                    <p className="min-w-0 truncate whitespace-nowrap text-2xl font-bold text-[var(--lv-text)]" title={nextEvent?.chord.label ?? restLabel}>{nextEvent?.chord.label ?? restLabel}</p>
-                    {nextDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
+                    <p className="lv-vl-next-chord min-w-0 truncate whitespace-nowrap font-bold text-[var(--lv-text)]" title={nextEvent ? displayChordLabel(nextEvent.chord.label) : restLabel}>{nextEvent ? displayChordLabel(nextEvent.chord.label) : restLabel}</p>
+                    {nextDegree || nextRole ? <DegreeTag degree={nextDegree} role={nextRole} showDegree={showDegrees}
+                      size="sm" testId="voicing-loop-next-degree" roleTestId="voicing-loop-next-role" /> : null}
                   </div>
                   {displayMode === "learn" && nextVoicing ? (
                     <div className="mt-2 grid grid-cols-2 gap-2" data-testid="voicing-loop-next-voicing">
@@ -1663,37 +1700,43 @@ export function ProgressionVoicingPracticeView({
                   </div>
                   <NextShapePreview hands={nextHandTargets} nextVoicing={nextVoicing}
                     leftFingering={nextLeftFingering} rightFingering={nextRightFingering}
-                    chordLabel={nextEvent?.chord.label ?? restLabel} accidentalStyle={accidentalStyle} />
-                </Surface>
-                <Surface className="h-[72px] min-w-0 shrink-0 overflow-hidden p-3" data-testid="voicing-loop-then-next">
-                  <div className="flex min-w-0 items-baseline gap-2">
-                    <span className="lv-section-kicker">{"その次"}</span>
-                    <strong className="min-w-0 truncate whitespace-nowrap text-lg text-[var(--lv-text)]" title={thenNextEvent?.chord.label ?? restLabel}>{thenNextEvent?.chord.label ?? restLabel}</strong>
-                    {thenNextDegree ? <span className="text-xs font-bold text-[var(--lv-accent)]">{thenNextDegree}</span> : null}
-                  </div>
-                  {displayMode === "learn" && showFingering ? (
-                    <div className="mt-1 flex min-w-0 gap-x-4 overflow-hidden whitespace-nowrap text-xs text-[var(--lv-text-secondary)]">
-                      <span>{text.leftHandDisplay}: <strong className="text-amber-200">{fingerSummary(effectiveFingering(thenNextEvent ? leftFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "L", thenNextHandTargets.left.length, text.fingeringUnavailable)}</strong></span>
-                      <span>{text.rightHandDisplay}: <strong className="text-teal-200">{fingerSummary(effectiveFingering(thenNextEvent ? rightFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "R", thenNextHandTargets.right.length, text.fingeringUnavailable)}</strong></span>
+                    chordLabel={nextEvent ? displayChordLabel(nextEvent.chord.label) : restLabel} accidentalStyle={accidentalStyle} />
+                  {/* P23-32 P6: 「その次」 is the last thing in the next panel. */}
+                  <div data-testid="voicing-loop-then-next" className="lv-vl-then">
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <span className="lv-section-kicker">{"その次"}</span>
+                      <strong className="min-w-0 truncate whitespace-nowrap text-lg text-[var(--lv-text)]" title={thenNextEvent ? displayChordLabel(thenNextEvent.chord.label) : restLabel}>{thenNextEvent ? displayChordLabel(thenNextEvent.chord.label) : restLabel}</strong>
+                      {thenNextDegree || thenNextRole ? <DegreeTag degree={thenNextDegree} role={thenNextRole} showDegree={showDegrees}
+                        size="xs" testId="voicing-loop-then-next-degree" roleTestId="voicing-loop-then-next-role" /> : null}
                     </div>
-                  ) : null}
+                    {displayMode === "learn" && showFingering ? (
+                      <div className="mt-1 flex min-w-0 gap-x-4 overflow-hidden whitespace-nowrap text-xs text-[var(--lv-text-secondary)]">
+                        <span>{text.leftHandDisplay}: <strong className="text-amber-200">{fingerSummary(effectiveFingering(thenNextEvent ? leftFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "L", thenNextHandTargets.left.length, text.fingeringUnavailable)}</strong></span>
+                        <span>{text.rightHandDisplay}: <strong className="text-cyan-200">{fingerSummary(effectiveFingering(thenNextEvent ? rightFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "R", thenNextHandTargets.right.length, text.fingeringUnavailable)}</strong></span>
+                      </div>
+                    ) : null}
+                  </div>
                 </Surface>
               </div>
             </div>
           </div>
 
-          <Surface className="h-[148px] min-w-0 shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
-            <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[10px]">
+          <Surface className="lv-vl-timeline lv-vl-timeline-frame min-w-0 shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
+            <div className="lv-vl-timeline-head flex min-w-0 items-center justify-between gap-3 px-1 text-[10px]">
               <span className="font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.timeline}</span>
               <div className="flex items-center gap-2" data-testid="voicing-loop-status">
-                <Metric compact label={"コード"} testId="voicing-loop-position-metric" value={`${currentIndex + 1} / ${snapshot.events.length}`} />
+                <Metric compact hideLabel label={"コード"} testId="voicing-loop-position-metric" value={`${currentIndex + 1} / ${snapshot.events.length}`} />
                 <Metric compact label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
                 {rangeSelection.active ? <button type="button" data-testid="voicing-loop-range-chip"
-                  className="rounded border border-[var(--lv-accent)] px-1.5 py-0.5 text-[var(--lv-accent)]"
+                  className="rounded border border-[var(--lv-vl-range)] px-1.5 py-0.5 text-[var(--lv-vl-range)]"
+                  title={"区間を解除(区間の中を右クリックでも外せます)"}
                   aria-label={`区間ループ ${rangeSelection.active.first + 1}〜${rangeSelection.active.last + 1} を解除`}
-                  onClick={clearRange}>{`区間 ${rangeSelection.active.first + 1}〜${rangeSelection.active.last + 1} ×`}</button> : null}
+                  onClick={clearRange}>{`区間 ${rangeSelection.active.first + 1}〜${rangeSelection.active.last + 1} `}<span aria-hidden="true">×</span></button> : null}
                 {rangeSelection.pendingStart !== undefined ? <span data-testid="voicing-loop-range-pending"
-                  className="text-[var(--lv-accent)]">{`ここから ${rangeSelection.pendingStart + 1}`}</span> : null}
+                  className="inline-flex items-center gap-1 text-[var(--lv-vl-range)]">{`ここから ${rangeSelection.pendingStart + 1}`}
+                  <button type="button" data-testid="voicing-loop-range-clear" aria-label="区間の始まりを取り消す" title="区間の始まりを取り消す"
+                    className="rounded px-1 leading-none text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]" onClick={clearRange}>×</button>
+                </span> : null}
               </div>
               <TimelineNavigator containerRef={navigatorRef} frameRef={navigatorFrameRef} headRef={navigatorHeadRef}
                 testId="voicing-loop-navigator" label={"進行の全体図：表示範囲と再生位置"}
@@ -1705,7 +1748,7 @@ export function ProgressionVoicingPracticeView({
                   viewport.scrollLeft = left * viewport.scrollWidth;
                 }}>
                 <span ref={navigatorFillRef} aria-hidden="true" data-testid="voicing-loop-navigator-fill"
-                  className="absolute inset-y-0 left-0 bg-teal-700/70" style={{ width: "0%" }} />
+                  className="lv-vl-progress-done absolute inset-y-0 left-0 opacity-70" style={{ width: "0%" }} />
               </TimelineNavigator>
               <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
                 <button type="button" className={`rounded px-1.5 py-0.5 ${followEnabled ? "text-[var(--lv-accent)]" : "text-amber-200"}`}
@@ -1721,7 +1764,7 @@ export function ProgressionVoicingPracticeView({
             </div>
             <div
               ref={timelineViewportRef}
-              className="h-[112px] min-w-0 overflow-x-auto overflow-y-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
+              className="lv-vl-timeline-viewport min-w-0 overflow-x-auto overflow-y-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
               data-testid="voicing-loop-timeline-viewport"
               onScroll={syncNavigator}
               tabIndex={0}
@@ -1739,7 +1782,7 @@ export function ProgressionVoicingPracticeView({
               role="button" tabIndex={0} aria-label={"進行の全体図から移動"}
               onClick={seekFromOverviewClick} onContextMenu={(event) => markRangeFromTimeline(event, "overview")} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0), "overview"); } }}>
               {Array.from({ length: totalGroups }, (_, index) => (
-                <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
+                <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "lv-vl-progress-done" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
               ))}
                 </div>
                 <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
@@ -1750,6 +1793,11 @@ export function ProgressionVoicingPracticeView({
                   ))}
                 </div>
                 <div className="relative flex gap-0 py-1">
+                {rangeBand ? (
+                  <span aria-hidden="true" data-testid="voicing-loop-range-band"
+                    className="pointer-events-none absolute top-0 z-20 h-1 rounded-full bg-[var(--lv-vl-range)]"
+                    style={{ left: `${rangeBand.left}px`, width: `${rangeBand.width}px` }} />
+                ) : null}
                 <span
                   aria-hidden="true"
                   data-testid="voicing-loop-playhead"
@@ -1771,6 +1819,7 @@ export function ProgressionVoicingPracticeView({
                   const selected = index === transportCurrentSpanIndex;
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
+                  const role = event ? roleByEventId.get(event.id) ?? "" : "";
                   const cardWidth = span.durationBeats * timelinePixelsPerBeat;
                   const compact = compactTimelineCard(cardWidth);
                   const showPreview = playable && cardWidth >= 96;
@@ -1784,18 +1833,19 @@ export function ProgressionVoicingPracticeView({
                       ref={(element) => { timelineEventRefs.current[index] = element; }}
                       type="button"
                       data-testid="voicing-loop-event"
+                      data-fn={role || undefined}
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
                       data-compact={compact}
                       data-auto-fallback={autoFallback ? "true" : "false"}
                       data-range={pendingStart ? "pending-a" : rangeStart && rangeEnd ? "a-b" : rangeStart ? "a" : rangeEnd ? "b" : rangeCard && rangeSelection.active ? "inside" : rangeSelection.active ? "outside" : "none"}
                       data-fingering-adjusted={event && adjustedFingeringIds.has(event.id) ? "true" : "false"}
-                      title={`${event?.chord.label ?? restLabel}${event && adjustedFingeringIds.has(event.id) ? " — 前後に合わせて変化" : ""}`}
+                      title={`${event ? displayChordLabel(event.chord.label) : restLabel}${event && adjustedFingeringIds.has(event.id) ? " — 前後に合わせて変化" : ""}`}
                       style={{ width: `${cardWidth}px` }}
-                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${rangeCard && rangeSelection.active ? "ring-1 ring-inset ring-[var(--lv-accent)]" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`lv-vl-event relative flex w-full flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${rangeSelection.active && !rangeCard ? "opacity-55" : ""} ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${autoFallback ? " 自動生成で補完" : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event ? displayChordLabel(event.chord.label) : restLabel}${showDegrees && degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)}.${event ? ` ${transportRef.current?.supportsSeek ? ("ここへ移動して試聴") : text.auditionCard}` : ""}${autoFallback ? " 自動生成で補完" : ""}${pendingStart ? " 範囲開始の候補A" : rangeStart && rangeEnd ? " 区間A/B" : rangeStart ? " 区間A" : rangeEnd ? " 区間B" : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onMouseDown={(event) => {
                         event.preventDefault();
@@ -1834,25 +1884,31 @@ export function ProgressionVoicingPracticeView({
                       {autoFallback ? <span className="absolute right-1 top-0.5 rounded bg-amber-400/20 px-1 text-[9px] text-amber-200"
                         data-testid="voicing-loop-auto-fallback" title={autoFallbackDescription} aria-label={autoFallbackDescription}>A</span> : null}
                       {pendingStart || rangeStart || rangeEnd ? <span aria-hidden="true"
-                        className="absolute bottom-0.5 right-1 text-[10px] text-[var(--lv-accent)]">
+                        className="absolute bottom-0.5 right-1 text-[10px] text-[var(--lv-vl-range)]">
                         {pendingStart ? "A?" : rangeStart && rangeEnd ? "A/B" : rangeStart ? "A" : "B"}
                       </span> : null}
                       <span className="flex min-w-0 items-baseline gap-1">
                         {!compact ? <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span> : null}
-                        <span className={`min-w-0 leading-tight ${compact ? "block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] tracking-tight" : "break-all text-sm"}`}>{event?.chord.label ?? restLabel}</span>
+                        <span className={`min-w-0 leading-tight ${compact ? "block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] tracking-tight" : "break-all text-sm"}`}>{event ? displayChordLabel(event.chord.label) : restLabel}</span>
                       </span>
                       {!compact ? (
                         <>
-                          {event && adjustedFingeringIds.has(event.id) ? <span className="absolute right-1 top-1 text-[9px] text-teal-200" title="前後に合わせて変化" aria-label="前後に合わせて変化">●</span> : null}
-                          <span data-testid="voicing-loop-event-timing" className={`absolute bottom-1 left-2 text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}>
+                          {event && adjustedFingeringIds.has(event.id) ? <span className="absolute right-1 top-1 text-[9px] text-[var(--lv-accent)]" title="前後に合わせて変化" aria-label="前後に合わせて変化">●</span> : null}
+                          <span data-testid="voicing-loop-event-timing" className={`absolute bottom-1 left-2 text-[10px] font-normal leading-3 ${selected ? "text-[var(--lv-accent)]" : "text-[var(--lv-text-muted)]"}`}>
                             {compactDurationLabel(span.durationBeats)}
                           </span>
-                          {degree && !pendingStart && !rangeStart && !rangeEnd ? <span className={`absolute bottom-1 text-[10px] font-bold leading-3 text-[var(--lv-accent)] ${showPreview ? "right-8" : "right-2"}`} data-testid="voicing-loop-event-degree">{degree}</span> : null}
+                          {(role || showDegrees && degree) && !pendingStart && !rangeStart && !rangeEnd ? (
+                            <span className={`lv-vl-event-degree absolute bottom-1 ${showPreview ? "right-8" : "right-2"}`}
+                              data-badge={cardWidth >= 132 ? undefined : "off"}>
+                              <DegreeTag degree={degree} role={role} showDegree={showDegrees} size="xs"
+                                testId="voicing-loop-event-degree" roleTestId="voicing-loop-event-role" />
+                            </span>
+                          ) : null}
                         </>
                       ) : null}
                     </button>
                     {showPreview ? <button type="button" className="absolute bottom-1 right-1 z-20 rounded bg-[var(--lv-surface-raised)] p-1 text-[var(--lv-accent)] disabled:opacity-40"
-                      data-testid="voicing-loop-event-preview" aria-label={`${event?.chord.label}: ${text.auditionCard}`}
+                      data-testid="voicing-loop-event-preview" aria-label={`${event ? displayChordLabel(event.chord.label) : restLabel}: ${text.auditionCard}`}
                       disabled={active} onClick={(click) => { click.stopPropagation(); void auditionResolved(eventIndex, true); }}><Play aria-hidden="true" size={16} /></button> : null}
                     </div>
                   );
@@ -1862,8 +1918,8 @@ export function ProgressionVoicingPracticeView({
             </div>
           </Surface>
 
-          <Surface className="h-[clamp(190px,24dvh,234px)] min-w-0 shrink-0 overflow-hidden p-2" data-testid="voicing-loop-detail">
-            <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 pb-1">
+          <Surface className="min-w-0 overflow-hidden px-2 py-1" data-testid="voicing-loop-detail">
+            <div className="lv-vl-legend-row flex min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-1">
               <h3 className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.keyboardTitle}</h3>
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-keyboard-legend">
                 {[
@@ -1901,6 +1957,7 @@ export function ProgressionVoicingPracticeView({
                 fingerLabels={keyboardFingerLabels}
                 keyboardLayout="wide-88"
                 hideLegend
+                fillHeight
                 compactSummary
               />
             </div>
@@ -1908,14 +1965,14 @@ export function ProgressionVoicingPracticeView({
 
           {bulkSourceOpen && bulkSourcePreview && onBulkSourceApply ? (
             <Modal
-              ariaLabel={"SOURCEへの一括切り替え"}
+              ariaLabel={"元MIDIへの一括切り替え"}
               onClose={() => setBulkSourceOpen(false)}
               panelClassName="w-full max-w-md"
             >
               <div className="space-y-3 p-4">
-                <h2 className="text-lg font-bold">{"この進行のカードをまとめてSOURCEにする"}</h2>
+                <h2 className="text-lg font-bold">{"この進行のカードをまとめて元MIDIにする"}</h2>
                 <p className="text-sm text-[var(--lv-text-secondary)]">
-                  {`対象 ${bulkSourcePreview.eligible}・変更 ${bulkSourcePreview.changed}・CUSTOM維持 ${bulkSourcePreview.skippedCustom}・元の音なし ${bulkSourcePreview.skippedMissingSource}`}
+                  {`対象 ${bulkSourcePreview.eligible}・変更 ${bulkSourcePreview.changed}・カスタムはそのまま ${bulkSourcePreview.skippedCustom}・元の音なし ${bulkSourcePreview.skippedMissingSource}`}
                 </p>
                 <div className="flex justify-end gap-2">
                   <Button variant="secondary" onClick={() => setBulkSourceOpen(false)}>{"戻る"}</Button>
@@ -1945,38 +2002,52 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface ref={transportBarRef} className="lv-vl-transport h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
-            <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
-              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
-              <BpmScrubField
-                idPrefix="voicing-loop-bpm"
-                label={text.bpm}
-                dragLabel={text.bpmDrag}
-                value={clockState?.bpm ?? snapshot.bpm}
-                onChange={changeBpm}
-              />
-              {activeTempoOrigin === "SMF_DEFAULT" || activeTempoOrigin === "PRACTICE_INITIAL" ? (
-                <span className="shrink-0 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-tempo-origin">
-                  {tempoOriginLabel(activeTempoOrigin)}
-                </span>
-              ) : null}
+          <Surface ref={transportBarRef} className="lv-vl-transport lv-vl-transport-frame min-w-0 shrink-0 px-2 py-0.5" data-testid="voicing-loop-transport">
+            <div className="flex min-w-0 items-center gap-2 whitespace-nowrap" data-testid="voicing-loop-transport-primary">
+              {!active && !paused ? (
+                <TransportButton variant="primary" fixedPrimary disabled={!allEventsPlayable} onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.start}</TransportButton>
+              ) : active ? (
+                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Pause aria-hidden="true" size={16} />{text.pause}</TransportButton>
+              ) : (
+                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
+              )}
+              <TransportButton variant="neutral" title={text.restart} disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.restart}</span></TransportButton>
+              <TransportButton variant="neutral" title={text.stop} disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.stop}</span></TransportButton>
+              <span className="lv-vl-divider" aria-hidden="true" />
               {sourceKey && targetTonicPitchClass !== undefined ? (
                 <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-key">
                   <span className="lv-vl-label-text">{text.key}</span>
-                  <select
+                  <Select
                     id="voicing-loop-key"
-                    className="lv-vl-key-select lv-field-control min-h-8 w-32 px-2 text-xs"
+                    wrapperClassName="w-36"
+                    className="lv-vl-key-select w-full text-xs"
                     value={targetTonicPitchClass}
                     onChange={(event) => changeTargetKey(Number(event.currentTarget.value))}
                   >
                     {keyOptions.map((key) => (
                       <option key={key.tonicPitchClass} value={key.tonicPitchClass}>
-                        {key.labels.ja}{key.tonicPitchClass === sourceKey.tonicPitchClass ? ` (${text.originalKey})` : ""}
+                        {/* P23-20 L7: the same ♭/♯ spelling as the chord names (`Db` → `D♭`). */}
+                        {displayChordLabel(key.labels.ja)}{key.tonicPitchClass === sourceKey.tonicPitchClass ? ` (${text.originalKey})` : ""}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               ) : null}
+              <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-count-in">
+                <span className="lv-vl-label-text">{text.countInBars}</span>
+                <Select
+                  id="voicing-loop-count-in"
+                  wrapperClassName="w-24"
+                  className="w-full text-xs"
+                  value={countInBars}
+                  disabled={active || paused}
+                  onChange={(event) => setCountInBars(Number(event.currentTarget.value) as 0 | 1 | 2)}
+                >
+                  <option value={0}>{text.noCountIn}</option>
+                  <option value={1}>{text.oneBar}</option>
+                  <option value={2}>{text.twoBars}</option>
+                </Select>
+              </label>
               <div className="inline-flex min-h-8 items-center gap-1 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" role="group" aria-label={text.octave}>
                 <span className="lv-vl-label-text mr-1">{text.octave}</span>
                 <Button
@@ -2001,64 +2072,66 @@ export function ProgressionVoicingPracticeView({
                   <Plus aria-hidden="true" size={16} />
                 </Button>
               </div>
-              <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-count-in">
-                <span className="lv-vl-label-text">{text.countInBars}</span>
-                <select
-                  id="voicing-loop-count-in"
-                  className="lv-field-control min-h-8 w-24 px-2 text-xs"
-                  value={countInBars}
-                  disabled={active || paused}
-                  onChange={(event) => setCountInBars(Number(event.currentTarget.value) as 0 | 1 | 2)}
-                >
-                  <option value={0}>{text.noCountIn}</option>
-                  <option value={1}>{text.oneBar}</option>
-                  <option value={2}>{text.twoBars}</option>
-                </select>
+              <label className="lv-vl-switch" title={text.referenceSound}>
+                <Switch checked={referenceSoundEnabled} label={text.referenceSound} onChange={changeReferenceSound} />
+                <span className="lv-vl-label-text">{text.referenceSound}</span>
               </label>
-              {!active && !paused ? (
-                <TransportButton variant="primary" fixedPrimary disabled={!allEventsPlayable} onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.start}</TransportButton>
-              ) : active ? (
-                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Pause aria-hidden="true" size={16} />{text.pause}</TransportButton>
-              ) : (
-                <TransportButton variant="primary" fixedPrimary onClick={togglePlayback}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
-              )}
-              <TransportButton variant="neutral" title={text.restart} disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.restart}</span></TransportButton>
-              <TransportButton variant="neutral" title={text.stop} disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} /><span className="lv-vl-button-text">{text.stop}</span></TransportButton>
-              <label title={text.referenceSound} className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
-                <input
-                  type="checkbox"
-                  checked={referenceSoundEnabled}
-                  onChange={(event) => changeReferenceSound(event.currentTarget.checked)}
-                />
-                <span className="lv-vl-button-text">{text.referenceSound}</span>
-              </label>
-              <TransportButton variant="neutral" className="lv-vl-range-clear" data-testid="voicing-loop-range-clear"
-                disabled={!rangeSelection.active && rangeSelection.pendingStart === undefined}
-                onClick={clearRange}>区間解除</TransportButton>
-              </div>
-              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">
-              <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiTone.text}`} data-testid="voicing-loop-midi-status" data-midi-kind={midiView.kind}>
-                <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiTone.dot}`} />
-                <span className="font-semibold">{text.midi}：</span>
-                <span>{midiView.label}</span>
-              </span>
-              <Button variant="ghost" size="sm" onClick={(event) => openMidiPanel(event.currentTarget)}><Settings aria-hidden="true" size={16} />{text.midiSettings}</Button>
-              <span className="ml-auto text-xs font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status, text)}</span>
-              </div>
+              <span className="ml-auto text-xs font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status)}</span>
             </div>
           </Surface>
           {runtimeError ? <StatusMessage title={text.playbackError} tone="error">{runtimeError}</StatusMessage> : null}
           {plan ? <UnresolvedSummary plan={plan} snapshot={snapshot} /> : null}
           <ResolutionStatus resolution={currentResolution} />
-          <div aria-hidden="true" className="h-4 shrink-0" data-testid="voicing-loop-bottom-safe-area" />
         </>
       )}
     </div>
   );
 }
 
-function practiceTimingLabel(
-  event: Pick<ProgressionPracticeEvent, "startBeat" | "durationBeats">,
+/**
+ * P23-20 L3: a chord's degree in the key as it is shown (Ⅱm7), with the role colour of the key.
+ * The degree text follows 「度数を表示」; the role badge always stays, so the colour remains.
+ */
+function DegreeTag({ degree, role, showDegree, size, testId, roleTestId }: {
+  readonly degree?: string;
+  readonly role: FunctionKind | "";
+  readonly showDegree: boolean;
+  readonly size: "lg" | "sm" | "xs";
+  readonly testId: string;
+  readonly roleTestId: string;
+}) {
+  if (!role && !(showDegree && degree)) return null;
+  const name = roleName(role);
+  return (
+    <span className="lv-vl-degree shrink-0" data-fn={role || undefined} data-size={size} data-testid={`${testId}-wrap`}>
+      {showDegree && degree ? <span className="lv-vl-degree-text" data-testid={testId}>{displayDegreeLabel(degree)}</span> : null}
+      {role ? <span className="lv-vl-degree-role" data-testid={roleTestId} title={name}>
+        <span aria-hidden="true">{role}</span>
+        <span className="sr-only">{name}</span>
+      </span> : null}
+    </span>
+  );
+}
+
+function roleName(role: FunctionKind | ""): string {
+  const text = copy.ja;
+  return role === "T" ? text.roleTonic : role === "SD" ? text.roleSubdominant
+    : role === "SDm" ? text.roleSubdominantMinor : role === "D" ? text.roleDominant : "";
+}
+
+/** P23-20 L3: the degree of a practice chord in the key (Ⅱm7), or undefined without a readable key. */
+function chordDegreeLabel(chord: ProgressionPracticeEvent["chord"] | undefined, key: string | undefined): string | undefined {
+  if (!chord || !key) return undefined;
+  return degreeOf({
+    root: chord.root,
+    quality: chord.quality,
+    tensions: [...chord.tensions],
+    label: chord.label,
+    ...(chord.bass === undefined ? {} : { bass: chord.bass }),
+  }, key)?.label;
+}
+
+function practiceTimingLabel(event: Pick<ProgressionPracticeEvent, "startBeat" | "durationBeats">,
   practiceGroupBeats: number,
 ): string {
   const group = Math.floor(event.startBeat / practiceGroupBeats) + 1;
@@ -2132,18 +2205,19 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
   const slots = fixedFingerSlots(hasNext ? moves : []);
   const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   return (
-    <section className="relative mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-next-move" aria-label={"次への動き"}>
-      <span className="absolute left-0 top-0.5 max-w-[24%] truncate text-[9px] font-bold tracking-[0.04em] text-[var(--lv-text-muted)]">{"次への動き"}</span>
-      <div className="grid min-w-0 grid-cols-2 gap-1">
+    <section className="lv-vl-move relative mt-2 min-w-0 shrink-0" data-testid="voicing-loop-next-move" aria-label={"次への動き"}>
+      <div className="grid h-full min-w-0 grid-cols-2 gap-1">
         {(["left", "right"] as const).map((hand) => (
-          <div key={hand} className="min-w-0" role="group" data-testid="voicing-loop-next-move-hand-group" data-hand={hand}
-            aria-label={hand === "left" ? ("左手") : ("右手")}>
+          <div key={hand} className="flex h-full min-w-0 flex-col rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-1 pb-0.5 pt-0.5" role="group" data-testid="voicing-loop-next-move-hand-group" data-hand={hand}
+            aria-label={hand === "left" ? ("次への動き 左手") : ("次への動き 右手")}>
             <div className={`flex h-[11px] min-w-0 items-center justify-center gap-1 truncate text-[10px] font-bold tracking-[0.04em] ${hand === "left" ? "text-amber-200" : "text-cyan-200"}`}
               data-testid="voicing-loop-next-move-summary">
-              <span>{hand === "left" ? ("左手") : ("右手")}</span>
+              <span className="shrink-0 text-[9px] font-bold text-[var(--lv-text-muted)]">{"次への動き"}</span>
+              <span aria-hidden="true" className="shrink-0 text-[var(--lv-text-muted)]">{"·"}</span>
+              <span className="shrink-0">{hand === "left" ? ("左手") : ("右手")}</span>
               <span className="min-w-0 truncate font-extrabold">{handMoveSummary(moves.filter((move) => move.hand === hand))}</span>
               {loopWrap && hand === "right" ? <span className="truncate text-[var(--lv-text-muted)]">{"ループ先"}</span> : null}
-              <span data-testid="voicing-loop-movement-certainty" className="text-[9px] text-[var(--lv-text-muted)]">{moves.some(move => move.hand === hand && move.certainty === "partial") ? "一部推定" : moves.some(move => move.hand === hand && move.estimated) ? "推定" : "確定"}</span>
+              <span data-testid="voicing-loop-movement-certainty" className="shrink-0 text-[9px] text-[var(--lv-text-muted)]">{moves.some(move => move.hand === hand && move.certainty === "partial") ? "一部推定" : moves.some(move => move.hand === hand && move.estimated) ? "推定" : "確定"}</span>
             </div>
             <div className="mt-px grid min-w-0 grid-cols-5 gap-0.5" role="list">
               {slots.filter((slot) => slot.hand === hand).map((slot) => {
@@ -2153,6 +2227,9 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
                     : slot.moves.some((move) => move.kind === "SMALL") ? "SMALL" : slot.moves.length ? "KEEP" : "EMPTY";
                 const action = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
                   : movementInterval(move.semitones!)).join("/");
+                // P23-31b O3: the narrow slot keeps the arrow and the semitones (the long interval name is cut).
+                const shortAction = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
+                  : `${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`).join("/");
                 const next = slot.moves.reduce<number | undefined>((pitch, move) => move.to ?? pitch, undefined);
                 const description = slot.moves.length
                   ? slot.moves.map((move) => moveText(move, accidentalStyle)).join("; ")
@@ -2162,13 +2239,13 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
                     : strongest === "SMALL" ? "border-current/40 font-semibold"
                       : strongest === "KEEP" ? "border-current/50 bg-current/[0.04] font-semibold" : "border-dashed border-current/20";
                 return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
-                  className={`flex h-[50px] min-w-0 flex-col items-center justify-center rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
+                  className={`lv-vl-move-slot flex min-w-0 flex-col items-center justify-center rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
                   aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${"推定"})` : ""}`}
                   title={`${id}: ${description}`}>
                   <span className={`text-xs font-bold ${strongest === "EMPTY" ? "text-[var(--lv-text-muted)]" : ""}`}>{id}</span>
                   {strongest === "KEEP" ? (
                     <span aria-hidden="true" className="my-0.5 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
-                  ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full truncate px-0.5 text-center text-[11px]">{action}</span> : null}
+                  ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full whitespace-nowrap px-0.5 text-center text-[11px]"><span className="lv-vl-move-long">{action}</span><span className="lv-vl-move-short" aria-hidden="true">{shortAction}</span></span> : null}
                   {strongest !== "EMPTY" && next !== undefined ? <span className={`mt-0.5 text-[11px] ${slot.moves.some(move => move.toEstimated) ? "rounded border border-dashed opacity-60" : ""}`}>{note(next)}{slot.moves.some(move => move.toEstimated) ? " 推定" : ""}</span> : null}
                   {slot.moves.some(move => move.fromEstimated) ? <span className="rounded border border-dashed text-[8px] opacity-60">元音 推定</span> : null}
                 </div>;
@@ -2375,14 +2452,15 @@ function FingeringEditorHand({
           return (
             <label key={pitch} className="min-w-[4.5rem] flex-1 text-xs text-[var(--lv-text-secondary)]">
               <span className="block truncate">{note}</span>
-              <select
-                className="lv-field-control mt-1 min-h-9 w-full px-2"
+              <Select
+                wrapperClassName="mt-1 w-full"
+                className="w-full"
                 aria-label={`${handLabel}: ${text.fingerForNote(note)}`}
                 value={draftFingers[index] ?? ""}
                 onChange={(event) => onChange(hand, index, Number(event.currentTarget.value))}
               >
                 {[1, 2, 3, 4, 5].map((finger) => <option key={finger} value={finger}>{prefix}{finger}</option>)}
-              </select>
+              </Select>
             </label>
           );
         })}
@@ -2398,112 +2476,6 @@ function formatPracticeBeat(value: number): string {
 function compactDurationLabel(value: number): string {
   const formatted = formatPracticeBeat(value);
   return `${formatted}拍`;
-}
-
-function ProgressionChoice({
-  candidate,
-  favorite,
-  onChoose,
-  onToggleFavorite,
-  practiceLabel,
-}: {
-  readonly candidate: VoicingLoopVaultCandidate;
-  readonly favorite: boolean;
-  readonly onChoose: () => void;
-  readonly onToggleFavorite: () => void;
-  readonly practiceLabel: string;
-}) {
-  const text = copy.ja;
-  const unavailable = candidate.unavailableReason ? unavailableReasonLabel(candidate.unavailableReason) : undefined;
-  const chords = candidate.chordLabels.join(" → ") || "休符のみ";
-  const provisionalTempo = candidate.tempoOrigin === "SMF_DEFAULT" || candidate.tempoOrigin === "PRACTICE_INITIAL";
-  const tempoHint = !provisionalTempo || candidate.bpm === undefined ? undefined
-    : candidate.tempoOrigin === "SMF_DEFAULT"
-      ? `MIDIにテンポが無いため、${candidate.bpm} BPM で始めます`
-      : `BPMが保存されていないため、${candidate.bpm} BPM で始めます`;
-  const facts = [
-    candidate.key,
-    candidate.bpm === undefined ? undefined : `${candidate.bpm} BPM`,
-    candidate.lengthBars === undefined ? undefined : `${candidate.lengthBars}小節`,
-  ].filter(Boolean).join(" · ");
-  return (
-    <div
-      data-testid="voicing-loop-progression-row"
-      data-favorite={favorite}
-      className="flex min-w-0 items-center gap-1.5 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] pl-1 pr-2 hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)]"
-      onClick={() => { if (!unavailable) onChoose(); }}
-    >
-      <button
-        type="button"
-        data-testid="voicing-loop-favorite"
-        aria-pressed={favorite}
-        aria-label={favorite ? text.favoriteRemove : text.favoriteAdd}
-        title={favorite ? text.favoriteRemove : text.favoriteAdd}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--lv-radius-sm)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${favorite ? "text-[var(--lv-accent)]" : "text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"}`}
-        onClick={(event) => { event.stopPropagation(); onToggleFavorite(); }}
-      >
-        <FavoriteIcon aria-hidden="true" size={16} fill={favorite ? "currentColor" : "none"} />
-      </button>
-      <button
-        type="button"
-        data-testid="voicing-loop-progression-choice"
-        className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60"
-        aria-label={`${candidate.title}. ${facts}. ${chords}. ${unavailable ?? practiceLabel}`}
-        disabled={Boolean(unavailable)}
-        onClick={(event) => { event.stopPropagation(); onChoose(); }}
-      >
-        <span className="flex w-full min-w-0 items-baseline gap-2">
-          <span className="min-w-0 truncate text-sm font-semibold text-[var(--lv-text)]" title={candidate.title}>{candidate.title}</span>
-          {facts ? <span className="shrink-0 whitespace-nowrap text-[11px] text-[var(--lv-text-secondary)]">
-            {candidate.key ? <>{candidate.key}</> : null}
-            {candidate.key ? " · " : null}
-            {candidate.bpm === undefined ? null : <span data-tempo-origin={candidate.tempoOrigin ?? "SAVED_BPM"}
-              className={provisionalTempo ? "text-[var(--lv-text-muted)]" : undefined} title={tempoHint}>{candidate.bpm} BPM</span>}
-            {candidate.bpm !== undefined && candidate.lengthBars !== undefined ? " · " : null}
-            {candidate.lengthBars === undefined ? null : <>{candidate.lengthBars}小節</>}
-          </span> : null}
-        </span>
-        <span className="w-full truncate text-xs leading-4 text-[var(--lv-text-secondary)]" title={chords}>{chords}</span>
-      </button>
-      {unavailable ? (
-        <span className="max-w-[45%] shrink-0 truncate text-right text-[11px]" title={unavailable}>
-          {unavailableReasonShort(candidate.unavailableReason!)}
-        </span>
-      ) : (
-        <Button size="sm" variant="secondary" className="shrink-0" onClick={(event) => { event.stopPropagation(); onChoose(); }}>
-          {practiceLabel}
-        </Button>
-      )}
-    </div>
-  );
-}
-
-/** The first sentence of a reason, for the row; the full sentence stays in the tooltip and the accessible name. */
-function unavailableReasonShort(reason: NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>): string {
-  return unavailableReasonLabel(reason).split("。")[0]!;
-}
-
-/** The loaded practice screen names the provisional tempo origin next to the BPM field (the picker shows the number only). */
-function tempoOriginLabel(origin: "SMF_DEFAULT" | "PRACTICE_INITIAL"): string {
-  if (origin === "SMF_DEFAULT") return "SMF既定";
-  return "練習初期値";
-}
-
-function unavailableReasonLabel(reason: NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>): string {
-  const ja: Record<NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>, string> = {
-    "practice-capacity": "練習グループ数が256を超えています。Vaultの保存データは保持されます。",
-    "resource-budget": "再生時間・拍数・イベント数の安全上限を超えています。Vaultの保存データは保持されます。",
-    "unsupported-meter": "この拍子はVoicing Loopで練習できません。",
-    "invalid-bpm": "BPMが対応範囲外です。",
-    "invalid-key": "キー情報を練習用に解釈できません。",
-    "empty-progression": "練習できるコードがありません。",
-    "invalid-chord": "対応していないコード構造が含まれます。",
-    "invalid-timing": "進行の時間配置を練習用に解釈できません。",
-    "invalid-reference": "Vaultの参照情報を確認できません。",
-    "invalid-selection": "練習方法を選択できません。",
-    "source-unavailable": "保存済み進行を読み込めません。",
-  };
-  return ja[reason];
 }
 
 function sameReferences(
@@ -2569,9 +2541,12 @@ function CurrentRuleExplanation({
       ) : null}
       {explanation.identity ? (
         <>
-          <span className="min-w-0 flex-1 truncate" title={`${text.rule} ${explanation.identity.ruleId} · ${explanation.identity.variantId}`}><strong className="mr-1 text-[var(--lv-text-muted)]">{text.rule}</strong>{explanation.identity.ruleId} · {explanation.identity.variantId}</span>
           <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.omit}</strong>{explanation.omittedDegrees.length ? explanation.omittedDegrees.join(" · ") : text.none}</span>
           <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.top}</strong>{topRoleLabel(explanation.topRole)}</span>
+          {/* P23-32 P4: the rule's internal names are read from the i, not shown as words. */}
+          <span className="lv-vl-rule-info" role="img" style={{ marginLeft: "auto" }}
+            aria-label={`${text.rule} ${explanation.identity.ruleId} · ${explanation.identity.variantId}`}
+            title={`${text.rule} ${explanation.identity.ruleId} · ${explanation.identity.variantId}`}>i</span>
         </>
       ) : null}
     </div>
@@ -2626,12 +2601,15 @@ function Metric({
   children,
   compact = false,
   label,
+  hideLabel = false,
   testId,
   value,
 }: {
   readonly children?: ReactNode;
   readonly compact?: boolean;
   readonly label: string;
+  /** P23-32 L1: the label stays for screen readers only (the number speaks for itself). */
+  readonly hideLabel?: boolean;
   readonly testId?: string;
   readonly value: string;
 }) {
@@ -2642,7 +2620,7 @@ function Metric({
         : "grid min-w-0 grid-cols-[auto_minmax(2rem,1fr)_auto] items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5"}
       data-testid={testId}
     >
-      <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]">{label}</p>
+      <p className={hideLabel ? "sr-only" : "text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]"}>{label}</p>
       <div className="min-w-0">{children}</div>
       <p className="whitespace-nowrap text-sm font-semibold text-[var(--lv-text)]">{value}</p>
     </div>
@@ -2663,14 +2641,13 @@ function ResolutionStatus({ resolution }: { readonly resolution?: ProgressionPra
 }
 
 
-function sessionStatus(status: ProgressionPracticeClockStatus | undefined, text: typeof copy.ja): string {
+function sessionStatus(status: ProgressionPracticeClockStatus | undefined): string {
+  // P23-32 K5: the three words of the practice.
   switch (status) {
     case "running":
-    case "count-in": return text.running;
-    case "paused": return text.paused;
-    case "stopped": return text.stopped;
-    case "ready":
-    case undefined: return text.ready;
+    case "count-in": return "再生中";
+    case "paused": return "一時停止中";
+    default: return "停止中";
   }
 }
 
@@ -2688,7 +2665,7 @@ function UnresolvedSummary({ plan, snapshot }: {
     ? []
     : [{
         eventIndex: index,
-        label: snapshot.events[index]?.chord.label ?? `${index + 1}`,
+        label: snapshot.events[index] ? displayChordLabel(snapshot.events[index].chord.label) : `${index + 1}`,
         status: resolution.status,
         reason: resolution.reason,
         detail: resolutionStatusLabel(resolution.status, snapshot, index),

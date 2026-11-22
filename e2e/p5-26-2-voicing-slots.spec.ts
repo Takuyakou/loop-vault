@@ -13,7 +13,8 @@ async function openLoop(page: Page, width: number, height: number) {
 
 const geometry = (page: Page, testId: string) => page.getByTestId(testId).evaluate((panel) => {
   const box = panel.getBoundingClientRect();
-  const slots = Array.from(panel.querySelectorAll<HTMLElement>('tr[data-row="finger"] td')).map((cell) => {
+  // P23-20 L1: five fixed slot cards per hand.
+  const slots = Array.from(panel.querySelectorAll<HTMLElement>('[data-testid="voicing-loop-hand-slot"]')).map((cell) => {
     const at = cell.getBoundingClientRect();
     return { slot: cell.getAttribute("data-slot"), x: Math.round(at.x * 10) / 10, width: Math.round(at.width * 10) / 10 };
   });
@@ -70,12 +71,12 @@ test("a finger that is not used shows as an empty slot and every used note has a
     await events.nth(index).click();
     for (const hand of ["left", "right"]) {
       const panel = page.getByTestId(`voicing-loop-${hand}-hand`);
-      await expect(panel.locator('tr[data-row="pitch"] td')).toHaveCount(5);
-      await expect(panel.locator('tr[data-row="degree"] td')).toHaveCount(5);
-      const degrees = await panel.locator('tr[data-row="degree"] td[data-used="true"]').allTextContents();
+      // P23-20 L1: five fixed slot cards; an unused finger is an empty frame with no 「·」.
+      await expect(panel.locator('[data-testid="voicing-loop-hand-slot"]')).toHaveCount(5);
+      const degrees = await panel.locator('[data-testid="voicing-loop-hand-slot"][data-used="true"] .voicing-hand-slot-degree').allTextContents();
       for (const degree of degrees) expect(degree).not.toBe("—");
-      const empties = panel.locator('tr[data-row="pitch"] td[data-used="false"]');
-      for (const text of await empties.allTextContents()) expect(text).toBe("·");
+      const empties = panel.locator('[data-testid="voicing-loop-hand-slot"][data-used="false"]');
+      for (const text of await empties.allTextContents()) expect(text.trim()).toBe(text.trim().replace(/·/g, "").trim());
     }
   }
 });

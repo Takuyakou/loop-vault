@@ -99,9 +99,13 @@ describe("「このパートを線で分ける」", () => {
     const id = session.voices[0]!.id;
     expect(seen[seen.length - 1]).toEqual({ [id]: { melodyFrom: 83 } });
     expect(container.querySelector("[data-testid='pre-analysis-split-pitch']")?.textContent).toBe("B5");
-    const summary = container.querySelector("[data-testid='pre-analysis-summary']")!.textContent!;
-    expect(summary).toContain("B5より下");
-    expect(summary).toContain("B5以上・解析には使わない");
+    const summary = container.querySelector("[data-testid='pre-analysis-summary']")!;
+    // P23-30 A5: the row says how many parts each role has; the names (with the line) are its tooltip.
+    expect(summary.textContent).toContain("コード 1");
+    expect(summary.textContent).toContain("メロディ 1");
+    const titles = [...summary.querySelectorAll("[data-role]")].map((chip) => chip.getAttribute("title")).join(" ");
+    expect(titles).toContain("B5より下");
+    expect(titles).toContain("B5以上・解析には使わない");
     expect(container.querySelector("[data-testid='pre-analysis-split-none']")).toBeNull();
     expect(container.textContent).toContain("このパートでは、線がパート全体の設定より優先されます");
     expect(container.querySelector("[data-testid='pre-analysis-piano-roll']")).not.toBeNull();

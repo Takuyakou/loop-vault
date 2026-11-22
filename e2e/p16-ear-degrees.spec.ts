@@ -234,7 +234,10 @@ test("P16-06: 768×640 で、度数と機能が付いてもカードの高さが
     // finish the question: the result keeps the same card height
     const count = await chordCount(page);
     for (let index = 2; index < count; index += 1) await answer(page, index, index === count - 1);
-    expect(await page.evaluate(() => Math.round(document.querySelector("[data-testid='ear-result-card-0']")!.getBoundingClientRect().height))).toBe(plain[0]);
+    // P23-23b X7 / P23-58-fix-1 addendum 4 案 A: the result's cards are 96 px in a wide, short window (1280×800 too —
+    // the body scrolls there) and 112 px otherwise (the playing cards keep their own height).
+    const resultCardHeight = size.width >= 1200 && size.height <= 800 ? 96 : 112;
+    expect(await page.evaluate(() => Math.round(document.querySelector("[data-testid='ear-result-card-0']")!.getBoundingClientRect().height))).toBe(resultCardHeight);
     await page.screenshot({ path: `p89-generated/P16-06/result-${size.width}x${size.height}.png` });
   }
 });

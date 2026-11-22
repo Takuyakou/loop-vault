@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react";
 import { sectionMemo, type SectionSaveRow } from "../../domain/correction/sectionSave";
 import type { SongIdea } from "../../domain/types";
 import { Modal } from "../Modal";
-import { Button } from "../ui";
+import { Button, Select } from "../ui";
 import type { SaveReady } from "./WorkspaceSaveForm";
 import { rangeLabel } from "./WorkspaceSaveForm";
 
@@ -48,7 +48,7 @@ export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, 
   };
 
   return (
-    <Modal ariaLabelledBy={titleId} initialFocusRef={backRef} onClose={onClose} panelClassName="w-full max-w-xl p-5" layerClassName="z-[70]">
+    <Modal ariaLabelledBy={titleId} initialFocusRef={backRef} onClose={onClose} panelClassName="lv-dialog-16 w-full max-w-xl p-5" layerClassName="z-[70]">
       <div data-testid="correction-section-save">
         <h2 id={titleId} className="text-xl font-semibold">区切りごとに保存</h2>
         <ul className="lv-cw-section-list">
@@ -89,20 +89,21 @@ export function SectionSaveDialog({ rows, ideas, ideaTitle, onCreate, onAppend, 
         </ul>
         <fieldset className="lv-cw-section-dest">
           <legend className="lv-cw-h4">保存先</legend>
-          <label><input type="radio" name="section-destination" checked={destination === "new"} onChange={() => setDestination("new")} /> 新しいアイデア（題名：{ideaTitle}）</label>
+          <label><input type="radio" name="section-destination" checked={destination === "new"} onChange={() => setDestination("new")} /> 新しい曲（題名：{ideaTitle}）</label>
           <label>
-            <input type="radio" name="section-destination" checked={destination === "append"} onChange={() => setDestination("append")} /> 今あるアイデアに追加
+            <input type="radio" name="section-destination" checked={destination === "append"} onChange={() => setDestination("append")} /> 今ある曲に追加
             {destination === "append" ? (
-              <select aria-label="追加するアイデア" value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
+              <Select aria-label="追加する曲" value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
                 <option value="">選んでください</option>
                 {ideas.map((idea) => <option key={idea.id} value={idea.id}>{idea.title}</option>)}
-              </select>
+              </Select>
             ) : null}
           </label>
         </fieldset>
         <p className="lv-cw-muted">保存すると、外した音は戻せなくなります</p>
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="lv-dialog-actions">
           <Button ref={backRef} variant="neutral" onClick={onClose}>戻る</Button>
+          <span className="lv-dialog-spacer" />
           <Button variant="primary" className="font-semibold" disabled={!canSave} onClick={save} data-testid="correction-section-save-confirm">{chosen.length}個を保存</Button>
         </div>
       </div>

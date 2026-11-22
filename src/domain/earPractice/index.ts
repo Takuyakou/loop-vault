@@ -15,7 +15,7 @@ export { EAR_KINDS, EAR_MOVE_NAMES, earChordKind, earChordRecordSchema, recordsO
 export { EarRecordRepository, createEarRecordRepository, type EarRecordsLoad } from "./earRecordRepository";
 export {
   BENCHMARK_CONDITIONS, BENCHMARK_GAP_DAYS, degreeFiguresOf, FEW_CHORDS, LEVEL_GUIDE, MIN_WEAK_CHORDS, addWeeks, benchmarkRuns, benchmarkTooSoon, figuresOf, forLevel, isMeasured,
-  lastBenchmarks, levelGuide, recentComparison, soundedFiguresOf, thisAndLastWeek, weakKinds, weakMoves, weekStartOf, weeklySeries,
-  type EarBenchmarkResult, type EarFigures, type EarLevelGuide, type EarRecentComparison, type EarWeakSpot, type EarWeek,
+  lastBenchmarks, levelGuide, recentComparison, recentPlaySeries, recentPlays, soundedFiguresOf, thisAndLastWeek, weakKinds, weakMoves, weekStartOf, weeklySeries,
+  type EarBenchmarkResult, type EarFigures, type EarLevelGuide, type EarPlaySeriesPoint, type EarRecentComparison, type EarRecentPlay, type EarWeakSpot, type EarWeek,
 } from "./earStats";
 export { degreeText, functionKind, questionInfos, type EarChordInfo } from "./degreeFunction";

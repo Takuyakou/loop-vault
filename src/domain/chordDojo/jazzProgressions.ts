@@ -11,7 +11,7 @@ import {snapshotRevision,type SnapshotNote,type TargetSnapshot,type WrittenPitch
  * and laps are counted by progression × tonic, so the twelve keys can be added later without changing the record.
  */
 export const JAZZ_PROGRESSIONS_GROUP_NAME='Jazz Progressions';
-export const JAZZ_PROGRESSIONS_NOTE='推奨ボイシング(元の演奏の書き起こしではない)';
+export const JAZZ_PROGRESSIONS_NOTE='ジャズのオシャレなコード進行';
 
 /** A card in the same shape as an Original Practice card, plus what the screen needs to write it as the data does. */
 export interface JazzCard extends OriginalCard{
