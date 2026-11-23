@@ -335,3 +335,23 @@ describe("P23-47 restarting a basic level", () => {
     expect(loaded.store.rounds?.["1"]?.startedAt).toBe(roundAt);
   });
 });
+
+
+describe("REL-03 saved v3.0.0 course", () => {
+  it.each([1, 2] as const)("loads the prior version of Lv%i without changing its pass result", async level => {
+    const recorded = storeFor(level, passingCorrect(level));
+    const storage = new MemoryCourseStorage();
+    storage.committed = JSON.stringify({
+      ...recorded, app: "loopvault-guided-course", fileVersion: 1,
+      bankVersion: "p23-39.bank.lv1-3.v3",
+      policyVersion: "p23-39.policy.lv1-3.v3",
+      pairId: "p23-39.bank.lv1-3.v3+p23-39.policy.lv1-3.v3",
+    });
+    const loaded = await new CourseRepository(storage).load();
+    expect(loaded.kind).toBe("ok");
+    if (loaded.kind !== "ok") throw new Error("Saved course did not load");
+    expect(loaded.store.trials).toEqual(recorded.trials);
+    expect(evaluateCourseLevel(level, loaded.store.trials).passed).toBe(true);
+    expect(storage.operations).toEqual(["read"]);
+  });
+});

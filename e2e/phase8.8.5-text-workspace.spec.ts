@@ -1,24 +1,24 @@
 import { expect, test } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, openTextCapture, waitForSidebarSettled, chooseTextSetting } from "./helpers/app";
 
-test("Standard and Extended preserve source and UTF-16 selection", async ({ page }) => {
+/**
+ * P8.8.5 — rewritten for P24-05's one text screen. The old spec compared 「標準」 and 「拡張」; with one screen
+ * the same properties (source/selection, keys, toolbar wrapping, card focus, pane geometry) are checked once.
+ */
+test("the one input keeps its source and its UTF-16 selection", async ({ page }) => {
   await openApp(page);
   await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const source = "# heading\n| C Dm |\n| BbM7 Db7(#9) |\n😀 end";
-  const standard = page.getByTestId("text-progression-input");
-  await standard.fill(source);
-  const editorValue = await standard.inputValue();
-  await standard.evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(19, 25));
-  await standard.dispatchEvent("select");
-  await page.getByTestId("text-mode-extended").click();
-  const extended = page.getByTestId("extended-text-input");
-  await expect(extended).toHaveValue(editorValue);
-  expect(await extended.evaluate((element: HTMLTextAreaElement) =>
-    [element.selectionStart, element.selectionEnd])).toEqual([19, 25]);
-  await page.getByTestId("text-mode-standard").click();
-  await expect(standard).toHaveValue(editorValue);
-  expect(await standard.evaluate((element: HTMLTextAreaElement) =>
+  const input = page.getByTestId("text-progression-input");
+  await input.fill(source);
+  const editorValue = await input.inputValue();
+  await input.evaluate((element: HTMLTextAreaElement) => element.setSelectionRange(19, 25));
+  await input.dispatchEvent("select");
+  // The one result re-reads on every keystroke; a selection that is set must survive that re-render.
+  await chooseTextSetting(page, "text-progression-key", "C major");
+  await expect(input).toHaveValue(editorValue);
+  expect(await input.evaluate((element: HTMLTextAreaElement) =>
     [element.selectionStart, element.selectionEnd])).toEqual([19, 25]);
 });
 
@@ -29,14 +29,14 @@ test("key remains unconfirmed until one is chosen and all 24 keys are offered", 
   const capture = page.getByTestId("text-progression-capture");
   // P23-33: with no chords the key is 「自動: 未確定」; the field itself starts on 「自動」.
   await expect(capture.getByTestId("text-progression-key-state")).toContainText(/キーは未確定/);
-  // P8.9-09b: the same key select as 拡張 — 自動・未設定 plus 24 keys, Japanese labels.
-  await expect(capture.getByTestId("text-progression-key").locator("option")).toHaveCount(26);
+  await capture.getByTestId("text-progression-key").click();
+  await expect(capture.getByTestId("text-progression-key-list").getByRole("option")).toHaveCount(26);
+  await capture.page().keyboard.press("Escape");
   await expect(capture.getByTestId("text-progression-bpm")).toHaveValue("");
-  await capture.getByTestId("text-progression-key").selectOption("F# minor");
-  await expect(capture.getByTestId("text-progression-key").locator("option:checked")).toHaveText("F#マイナー");
+  await chooseTextSetting(capture, "text-progression-key", "F# minor");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("F♯ マイナー");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("F# minor");
 });
-
 
 test("toolbar wraps by content width and keeps the Save cluster fixed during transport states", async ({ page }) => {
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024]) {
@@ -85,103 +85,79 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
   }
 });
 
-
-test("interactive chord bands show teal hover/focus and blocked save explains itself", async ({ page }) => {
-  await openApp(page);
-  await page.locator('[data-nav="capture"]').click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
+test("interactive cards show hover/focus and a blocked save explains itself", async ({ page }) => {
+  await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
   const band = capture.getByTestId("standard-text-preview").getByTestId("text-preview-band").first();
   await expect(band).toHaveCSS("cursor", "pointer");
-  const initial = await band.evaluate(element => getComputedStyle(element).backgroundColor);
+  // P24-05: the design's hover brightens the card (the mock's `.cd:hover{filter:brightness(1.18)}`).
+  const initial = await band.evaluate(element => getComputedStyle(element).filter);
   await band.hover();
-  const hovered = await band.evaluate(element => getComputedStyle(element).backgroundColor);
+  const hovered = await band.evaluate(element => getComputedStyle(element).filter);
   expect(hovered).not.toBe(initial);
-  const chordButton = band.getByRole("button", { name: "C", exact: true });
   await capture.getByTestId("standard-text-preview").getByTestId("text-preview-bar-select").first().focus();
   await page.keyboard.press("Tab");
-  await expect(chordButton).toBeFocused();
-  await expect(chordButton).toHaveCSS("outline-style", "solid");
+  await expect(band).toBeFocused();
+  await expect(band).toHaveCSS("outline-style", "solid");
   await capture.getByTestId("text-progression-input").fill("| C ??? |");
   await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
-  await expect(capture.getByTestId("text-save-blocked-hint")).toHaveAttribute("aria-describedby", "text-progression-save-reason");
-  await expect(capture.locator("#text-progression-save-reason")).toBeVisible();
+  // fix-1 item 3: the error case has no reason sentence; the hint's title explains it and points at nothing.
+  await expect(capture.getByTestId("text-save-blocked-hint")).toHaveAttribute("title", /エラー/);
+  expect(await capture.getByTestId("text-save-blocked-hint").getAttribute("aria-describedby")).toBeNull();
+  await expect(capture.locator("#text-progression-save-reason")).toHaveCount(0);
 });
 
-
-test("Extended toolbar retains meter/key controls and Save cluster without page overflow", async ({ page }) => {
+test("meter/key controls and the Save cluster stay inside the window at every width", async ({ page }) => {
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
     await page.setViewportSize({ width, height: 900 });
     await openApp(page);
     await page.locator('[data-nav="capture"]').click();
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
-    await page.getByTestId("text-mode-extended").click();
-    const intake = page.getByTestId("extended-text-intake");
-    await intake.getByTestId("extended-text-input").fill("| C % = _ | Dm |");
-    await expect(intake.getByTestId("extended-text-save")).toBeEnabled();
-    await expect(intake.getByTestId("extended-text-key").locator("option")).toHaveCount(26);
-    const name = (await intake.getByTestId("extended-text-name").boundingBox())!;
-    const save = (await intake.getByTestId("extended-text-save").boundingBox())!;
+    const intake = page.getByTestId("text-progression-capture");
+    await intake.getByTestId("text-progression-input").fill("| C % = _ | Dm |");
+    await expect(intake.getByTestId("text-progression-save")).toBeEnabled();
+    await intake.getByTestId("text-progression-key").click();
+  await expect(intake.getByTestId("text-progression-key-list").getByRole("option")).toHaveCount(26);
+  await intake.page().keyboard.press("Escape");
+    const name = (await intake.getByTestId("text-progression-name").boundingBox())!;
+    const save = (await intake.getByTestId("text-progression-save").boundingBox())!;
     if (width >= 1440) expect(Math.abs(name.y - save.y)).toBeLessThanOrEqual(4);
-    await intake.getByTestId("extended-text-meter").selectOption("3/4");
-    await expect(intake.getByTestId("extended-text-meter")).toHaveValue("3/4");
+    await chooseTextSetting(intake, "text-progression-meter", "3/4");
+    await expect(intake.getByTestId("text-progression-meter")).toHaveAttribute("data-value","3/4");
     await assertNoHorizontalOverflow(page);
   }
 });
 
-test("P8.9-09b 通常 and 拡張 share the name, fields, save reason, footer and pane geometry", async ({ page }) => {
-  const measure = async (mode: "standard" | "extended") => {
-    const capture = page.getByTestId("text-progression-capture");
-    const ids = mode === "standard"
-      ? { name: "text-progression-name", save: "text-progression-save", meter: "text-progression-meter", key: "text-progression-key" }
-      : { name: "extended-text-name", save: "extended-text-save", meter: "extended-text-meter", key: "extended-text-key" };
-    await expect(capture.getByTestId(ids.name)).toHaveValue("テキスト進行");
-    await expect(capture.getByTestId(ids.save)).toBeDisabled();
-    await expect(capture.getByTestId(ids.save)).toHaveAttribute("title", "コード進行を入れると保存できます");
-    await expect(capture.getByTestId(ids.key).locator("option")).toHaveCount(26);
-    await expect(capture.getByTestId(ids.key).locator("option:checked")).toHaveText("自動: 未確定");
-    const footer = capture.locator("footer.lv-text-status-bar");
-    await expect(footer.locator("[data-testid='text-progression-capability-details'] summary, [data-testid='extended-text-capabilities-unavailable']").first()).toBeVisible();
-    // P23-17 V11: the standard's 「音を細かく直す」 lives in the chosen card's row (no card with an empty input);
-    // the extended still keeps its disabled button in the footer.
-    if (mode === "extended") await expect(capture.getByTestId("extended-text-convert-unavailable")).toBeDisabled();
-    const box = async (selector: string) => (await capture.locator(selector).first().boundingBox())!;
-    const panes = capture.locator(".lv-text-intake-pane");
-    const visiblePanes = [];
-    for (const pane of await panes.all()) if (await pane.isVisible()) visiblePanes.push((await pane.boundingBox())!);
-    return {
-      toolbar: await box("[data-testid='text-capture-toolbar']"),
-      meter: await capture.getByTestId(ids.meter).evaluate((element) => [element.className, getComputedStyle(element).height]),
-      key: await capture.getByTestId(ids.key).evaluate((element) => [element.className, getComputedStyle(element).height]),
-      panes: visiblePanes,
-      footer: (await footer.boundingBox())!,
-      tools: mode === "extended" ? (await capture.getByTestId("extended-text-convert-unavailable").boundingBox())! : undefined,
-    };
-  };
+test("the one screen keeps its fields, footer and pane geometry at four sizes", async ({ page }) => {
+  await openTextCapture(page);
+  const capture = page.getByTestId("text-progression-capture");
   for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640]] as const) {
     await page.setViewportSize({ width, height });
-    await openApp(page);
-    await page.locator('[data-nav="capture"]').click();
-    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
-    const standard = await measure("standard");
-    await page.getByTestId("text-mode-extended").click();
-    const extended = await measure("extended");
-    expect(extended.meter, `${width} meter`).toEqual(standard.meter);
-    expect(extended.key, `${width} key`).toEqual(standard.key);
+    // Crossing 1200px animates the sidebar; measure after it has settled.
+    await waitForSidebarSettled(page);
+    await expect(capture.getByTestId("text-progression-name")).toHaveValue("テキスト進行");
+    await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
+    await expect(capture.getByTestId("text-progression-save")).toHaveAttribute("title", "コード進行を入れると保存できます");
+    await capture.getByTestId("text-progression-key").click();
+  await expect(capture.getByTestId("text-progression-key-list").getByRole("option")).toHaveCount(26);
+  await capture.page().keyboard.press("Escape");
+    await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: 未確定");
+    const footer = capture.locator("footer.lv-text-status-bar");
+    const toolbar = (await capture.locator("[data-testid='text-capture-toolbar']").boundingBox())!;
+    const footerBox = (await footer.boundingBox())!;
     for (const side of ["x", "width"] as const) {
-      expect(Math.abs(extended.toolbar[side] - standard.toolbar[side]), `${width} toolbar ${side}`).toBeLessThanOrEqual(1);
-      expect(Math.abs(extended.footer[side] - standard.footer[side]), `${width} footer ${side}`).toBeLessThanOrEqual(1);
+      expect(Math.abs(footerBox[side] - toolbar[side]), `${width} footer ${side}`).toBeLessThanOrEqual(1);
     }
-    // P23-17 V11: the standard's 「音を細かく直す」 is in the chosen card's row, not the footer; the two are compared
-    // again once the extended reader gets the same row (stage 6).
-    expect(extended.panes.length, `${width} panes`).toBe(standard.panes.length);
-    // P23-17 V9/V11 still have to move the card list and the selected-card row out of the standard footer; until they
-    // do, the footers (and so the panes above them) can differ in height at a narrow width. The full check returns then.
-    if (width >= 1440) standard.panes.forEach((pane, index) => {
-      for (const side of ["x", "y", "width", "height"] as const) {
-        expect(Math.abs(extended.panes[index]![side] - pane[side]), `${width} pane ${index} ${side}`).toBeLessThanOrEqual(1);
-      }
-    });
+    const panes = capture.locator(".lv-text-intake-pane");
+    const visible = [];
+    for (const pane of await panes.all()) if (await pane.isVisible()) visible.push((await pane.boundingBox())!);
+    // Both panes sit side by side above 899px; below that the tabs show one of them.
+    expect(visible.length).toBe(width >= 900 ? 2 : 1);
+    if (width >= 900) {
+      expect(Math.abs(visible[0]!.y - visible[1]!.y)).toBeLessThanOrEqual(1);
+      expect(Math.abs(visible[0]!.height - visible[1]!.height)).toBeLessThanOrEqual(1);
+      expect(visible[0]!.x + visible[0]!.width).toBeLessThanOrEqual(visible[1]!.x + 1);
+    }
   }
 });

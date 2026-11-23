@@ -611,7 +611,7 @@ function BasicCourseView({ onExit, settleMs, targetLevel, targetBlock, demoOnly,
         lines = wrongLines(itemLabel(target), sealed.notes, target.referenceNotes, {
           required: target.requiredPitchClasses,
           allowed: target.allowedPitchClasses,
-          ...(target.prompt === "ear" || target.bass === "root" ? { bass: target.root } : {}),
+          ...(target.prompt !== "ear" && target.bass === "root" ? { bass: target.root } : {}),
         });
         detail = lines?.kind === "swap" ? lines.line : judgement.reason;
       }
@@ -1283,7 +1283,7 @@ function BasicCourseView({ onExit, settleMs, targetLevel, targetBlock, demoOnly,
       const lines = wrongLines(itemLabel(wrongItem), played, wrongItem.referenceNotes, {
         required: wrongItem.requiredPitchClasses,
         allowed: wrongItem.allowedPitchClasses,
-        ...(wrongItem.prompt === "ear" || wrongItem.bass === "root" ? { bass: wrongItem.root } : {}),
+        ...(wrongItem.prompt !== "ear" && wrongItem.bass === "root" ? { bass: wrongItem.root } : {}),
       });
       tipSource = { level: nowQuestion.level, wrong: { prompt: wrongItem.prompt, quality: wrongItem.quality, root: wrongItem.root, ...(lines === undefined ? {} : { kind: lines.kind }) } };
       if (played.length > 0 && lines !== undefined && lines.kind !== "bass") {
@@ -1367,7 +1367,7 @@ function BasicCourseView({ onExit, settleMs, targetLevel, targetBlock, demoOnly,
           {item.prompt === "ear" ? <div className="gc-review-actions">
             <button type="button" data-testid="course-example-play" data-playing={demoPlaying ? "true" : undefined} disabled={demoPlaying} onClick={() => { cancelAuto(); void playExample(item); }}>{demoPlaying ? <><PlayingMark />再生中</> : "正解の一例を聴く"}</button>
           </div> : null}
-          <p className="gc-review-note" data-testid="course-example-label">{correct && feedback?.midi === true ? "正解の一例" : "弾き方の例"}: {noteNames(item.referenceNotes)}。{item.prompt === "ear" ? `一番低い音は${itemRootLabel(item)}。上の音は別の配置でも弾けます` : "転回・別の配置でも合格です"}。</p>
+          <p className="gc-review-note" data-testid="course-example-label">{correct && feedback?.midi === true ? "正解の一例" : "弾き方の例"}: {noteNames(item.referenceNotes)}。{item.prompt === "ear" ? `ルート（根音）は${itemRootLabel(item)}。転回・別の配置でも合格です` : "転回・別の配置でも合格です"}。</p>
         </div> : null}
         {!connected && feedback === undefined ? <div className="gc-choices gc-self-choices" data-testid="course-self-choices">
           <button type="button" data-testid="course-self-ok" disabled={pending} onClick={() => selfConfirm(true)}>弾けた</button>

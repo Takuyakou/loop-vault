@@ -1,5 +1,7 @@
 /* P20: the Chord Dojo home — four practices first, the day's plan as a small card. */
-.dojo-home-p20 {display:flex;flex-direction:column;gap:8px;width:100%;max-width:1728px;min-width:0;min-height:0;margin:0 auto;padding:10px 24px 8px;container-type:inline-size;}
+/* P24-02 I-1: the shared 「続ける Enter」 reads only these two. */
+.dojo-home-p20 {--lv-resume-accent:#42d8c6;--lv-resume-on-accent:#06221f;}
+.dojo-home-p20 {display:flex;flex-direction:column;gap:8px;width:100%;max-width:1728px;min-width:0;min-height:0;margin:0 auto;padding:8px 24px 8px;container-type:inline-size;}
 .dojo-home-p20-midi {display:flex;align-items:center;gap:12px;min-height:34px;padding:4px 12px;border:1px solid #5a4818;border-radius:9px;background:var(--dojo-warn-soft,#2a2210);color:#f3e3b8;font-size:12.5px;}
 .dojo-home-p20-midi p {flex:1;min-width:0;margin:0;line-height:1.45;}
 .dojo-home-p20-midi b {color:#fff;}
@@ -19,8 +21,13 @@
 .dojo-home-p20 .dojo-home-p20-others button:hover {color:var(--dojo-accent);}
 
 .dojo-home-p20 .dojo-home-p20-primary {background:var(--dojo-accent)!important;border-color:var(--dojo-accent)!important;color:#06221f!important;font-weight:700;}
-.dojo-home-p20-resume-actions .dojo-home-p20-primary {min-height:44px;height:44px;padding:0 18px;font-size:15px;}
+/* P24-07 item 7: the band's empty-state button keeps the old 44px primary size (the old wrapper class is gone). */
+.lv-resume-band-action .dojo-home-p20-primary {min-height:36px;height:36px;padding:0 14px;font-size:14px;}
 .dojo-home-p20-primary {min-height:44px;border:1px solid var(--dojo-accent);border-radius:8px;background:var(--dojo-accent);color:#06221f;font-weight:700;}
+/* P24-02 I-1: the 続ける button no longer uses this class; these keep the fallback button as it was. */
+.dojo-home-p20-resume-actions .dojo-home-p20-primary {min-height:44px;height:44px;padding:0 18px;font-size:15px;}
+.dojo-home-p20-resume-actions .dojo-home-p20-primary:hover {background:color-mix(in srgb,var(--dojo-accent) 88%,#fff)!important;border-color:var(--dojo-accent)!important;}
+.dojo-home-p20-resume-actions .dojo-home-p20-primary:focus-visible {outline:2px solid var(--lv-focus);outline-offset:2px;}
 .dojo-home-p20-primary:disabled {opacity:.55;cursor:not-allowed;}
 
 .dojo-home-p20-body {display:flex;align-items:flex-start;gap:16px;min-width:0;}
@@ -116,7 +123,6 @@
 .dojo-home-p20 .dojo-home-p20-card h2 .dojo-card-primary {flex:1;min-width:0;}
 .dojo-home-chev {margin-left:auto;color:var(--dojo-muted);font-size:18px;line-height:1;}
 .dojo-home-p20-mark {flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;border:1px solid color-mix(in srgb, var(--dojo-accent) 45%, var(--dojo-border));background:color-mix(in srgb, var(--dojo-accent) 18%, transparent);color:var(--dojo-accent);font-weight:800;font-size:14px;letter-spacing:.02em;}
-.dojo-home-p20-enter-key {margin-left:8px;padding:1px 6px;border:1px solid color-mix(in srgb, currentColor 45%, transparent);border-radius:5px;font-size:10.5px;font-weight:400;color:inherit;}
 .dojo-home-mini-head {display:flex;align-items:baseline;gap:8px;min-width:0;}
 .dojo-home-mini-head h3 {flex:1;min-width:0;}
 .dojo-home-mini-head small {flex:none;text-align:right;}
@@ -226,9 +232,6 @@
 .dojo-home-p20-resume-title {font-size:14px;line-height:20px;}
 .dojo-home-p20-resume-meta {font-size:12.5px;line-height:17.5px;}
 .dojo-home-p20-resume-actions .dojo-home-p20-primary {height:36px;min-height:36px;padding:0 12px;border-radius:10px;font-size:12px;line-height:16px;font-weight:500;transition:background-color .18s ease;}
-.dojo-home-p20-resume-actions .dojo-home-p20-primary:hover {background:color-mix(in srgb,var(--dojo-accent) 88%,#fff)!important;border-color:var(--dojo-accent)!important;}
-.dojo-home-p20-resume-actions .dojo-home-p20-primary:focus-visible {outline:2px solid var(--lv-focus);outline-offset:2px;}
-.dojo-home-p20-enter-key {margin-left:6px;padding:0 4px;border-radius:4px;font-size:10px;line-height:16px;font-weight:700;}
 .dojo-home-p20 .dojo-home-p20-others button {height:36px;min-height:36px;line-height:36px;}
 .dojo-home-p20-resume-main {gap:0;}
 .dojo-home-p20 .dojo-home-p20-resume-title,.dojo-home-p20-resume-line .dojo-home-p20-resume-title {font-size:14px;line-height:20px;}

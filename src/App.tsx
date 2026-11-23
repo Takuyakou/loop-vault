@@ -567,6 +567,11 @@ function App() {
     });
   }
 
+  /** P24-03: the empty-Vault guide's 「サンプル進行を 3 件入れて試す」. The Vault is not left. */
+  function addSampleProgressions() {
+    defaultVaultStore.getState().addSampleProgressions();
+  }
+
   /** Receives a detached P5.18 snapshot only; raw Vault data never crosses this boundary. */
   function openPractice(snapshot: VaultChordContextSnapshot) {
     const reference = snapshot.source.reference;
@@ -960,6 +965,7 @@ function App() {
                 openVoicingLoopHome={openDirectVoicingLoop}
                 resumeChordDojo={openChordDojoRecent}
                 updateProgressionBlock={updateProgressionBlock}
+                onAddSamples={addSampleProgressions}
               />
             ) : null}
             {view === "library" ? (
@@ -980,6 +986,7 @@ function App() {
                 openBassPractice={bassPracticeEnabled ? openBassPracticeFromVault : undefined}
                 keyRequest={vaultKeyRequest}
                 onKeyRequestDone={clearVaultKeyRequest}
+                onAddSamples={addSampleProgressions}
               />
             ) : null}
             {view === "capture" ? (
@@ -1217,7 +1224,7 @@ function App() {
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (
-              <FirstCaptureGuide className="mx-auto mt-6 w-full max-w-2xl" onMidi={() => navigateTo("capture")} onText={openTextProgressionInput} />
+              <FirstCaptureGuide className="mx-auto mt-6 w-full max-w-2xl" onMidi={() => navigateTo("capture")} onText={openTextProgressionInput} onSamples={addSampleProgressions} />
             ) : null}
           </>
         ) : (

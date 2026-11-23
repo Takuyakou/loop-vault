@@ -53,12 +53,11 @@ describe("P23-39 §3 the name-recall answer policy", () => {
     expect(judgeCourseAnswer(cmaj7, "name", [52, 55, 59, 60]).ok).toBe(true);
   });
 
-  it("names the ear policy's specified bass and rejects an inversion there", () => {
+  it("accepts any inversion of the harmony in the ear policy", () => {
     expect(earAccepts(cmaj7Ear, [48, 52, 55, 59])).toBe(true);
     const inverted = judgeCourseAnswer(cmaj7Ear, "ear", [52, 55, 59, 60]);
-    expect(inverted.ok).toBe(false);
-    expect(inverted.bass).toBe("checked");
-    expect(inverted.reason).toContain("一番下の音");
+    expect(inverted.ok).toBe(true);
+    expect(inverted.bass).toBe("free");
   });
 
   it("freezes the ear prompt conditions: Lv1 is a displayed two-choice, Lv2 identifies", () => {

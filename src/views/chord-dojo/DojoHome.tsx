@@ -1,4 +1,5 @@
 import { displayChordLabel } from "../../ui/chordText";
+import { ResumeBand, ResumeGoButton } from "../../components/ui";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { openMidiPanel } from "../../liveMidi/midiPanel";
@@ -296,30 +297,14 @@ export function DojoHome(props: DojoHomeProps) {
   }, [drill?.bestMs, ear?.last, guideDoneCount, guideRem, jazz?.done, loaded, masteredCount, original?.done]);
 
   return <div className="dojo-home-p20" data-testid="dojo-home" data-loading={!loaded && !waited ? "true" : undefined}>
-    <section className="dojo-home-p20-resume" aria-label="続きから" data-testid="home-resume">
-      <span className="dojo-home-p20-mark" aria-hidden="true">CD</span>
-      <div className="dojo-home-p20-resume-main">
-        <div className="dojo-home-p20-label">続きから</div>
-        {main ? <>
-          {/* P23-31b H5: the title and the thin facts are one line. */}
-          <div className="dojo-home-p20-resume-line">
-            <span className="dojo-home-p20-resume-title">{titleOf(main)}</span>
-            <span className="dojo-home-p20-resume-meta"> ・ {subOf(main)}</span>
-          </div>
-          {main.status !== "ok" ? <div className="dojo-home-p20-resume-note">{statusText(main.status)}</div> : null}
-        </> : <>
-          <div className="dojo-home-p20-resume-line">
-            <span className="dojo-home-p20-resume-title">まずは「ガイド練習」か「定番の進行」から</span>
-            <span className="dojo-home-p20-resume-meta"> ・ 練習を始めると、ここから続けられます</span>
-          </div>
-        </>}
-      </div>
-      <div className="dojo-home-p20-resume-actions">
-        {others.length ? <div className="dojo-home-p20-others"><span>ほかの最近:</span>{others.map((view, index) => <button type="button" key={`${view.entry.kind}:${view.entry.id}`} data-testid={`home-recent-${index}`} data-focus-key={`home:recent:${index}`} data-focus-fallback="home:resume:go" disabled={view.status !== "ok"} title={titleOf(view)} onClick={() => props.onResume(view.entry)}>{view.practice}{view.item ? `・${view.item}` : ""}</button>)}</div> : null}
-        {main ? <button type="button" className="dojo-home-p20-primary" data-testid="home-resume-go" data-primary="true" data-focus-key="home:resume:go" data-focus-fallback="home:standard:open" disabled={mainDisabled} onClick={() => props.onResume(main.entry)}>続ける<span className="dojo-home-p20-enter-key" aria-hidden="true">Enter</span></button>
-          : <button type="button" className="dojo-home-p20-primary" data-primary="true" data-focus-key="home:resume:start" onClick={props.onGuide}>ガイド練習を始める</button>}
-      </div>
-    </section>
+    <ResumeBand screen="cd" testId="home-resume" label="続きから"
+      title={main ? titleOf(main) : "まずは「ガイド練習」か「定番の進行」から"}
+      meta={main ? subOf(main) : "練習を始めると、ここから続けられます"}
+      note={main !== undefined && main.status !== "ok" ? statusText(main.status) : undefined}
+      extra={others.length ? <div className="dojo-home-p20-others"><span>ほかの最近:</span>{others.map((view, index) => <button type="button" key={`${view.entry.kind}:${view.entry.id}`} data-testid={`home-recent-${index}`} data-focus-key={`home:recent:${index}`} data-focus-fallback="home:resume:go" disabled={view.status !== "ok"} title={titleOf(view)} onClick={() => props.onResume(view.entry)}>{view.practice}{view.item ? `・${view.item}` : ""}</button>)}</div> : undefined}>
+      {main ? <ResumeGoButton label="続ける" data-testid="home-resume-go" data-primary="true" data-focus-key="home:resume:go" data-focus-fallback="home:standard:open" disabled={mainDisabled} onClick={() => props.onResume(main.entry)} />
+        : <button type="button" className="dojo-home-p20-primary" data-primary="true" data-focus-key="home:resume:start" onClick={props.onGuide}>ガイド練習を始める</button>}
+    </ResumeBand>
 
     {/* P23-31 D1: the MIDI notice sits between 続きから and the four cards (the mock's order). */}
     {!bannerDismissed && (props.midiError || !connected || props.sourceChanged) ? <div className="dojo-home-p20-midi" data-testid="home-midi-banner" data-midi-kind={midiBusy ? "connecting" : "off"} role="status">

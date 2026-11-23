@@ -19,7 +19,7 @@ import type { CourseFrontier, StationId } from "../../domain/chordDojo/guidedCou
 import { resultMarks, wrongLines } from "./guidedMarks";
 import { breakAfter, roundScore, roundState, ROUND_SIZE } from "./guidedRounds";
 import { tipFor } from "./guidedTips";
-import { MarksLegend, RoundBreak, RoundProgress } from "./GuidedRound";
+import { MarksLegend, RoundBreak, RoundProgress, type RoundCompare } from "./GuidedRound";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import { liveMidiService } from "../../liveMidi/liveMidiService";
 import { createLiveNoteState, reduceLiveNoteState, soundingNotes } from "../../domain/liveMidi";
@@ -30,13 +30,15 @@ import type { CourseLevel } from "../../domain/chordDojo/guidedCourse/bank";
 import { delayEligibility, nextDelayAvailableAt } from "../../domain/chordDojo/guidedCourse/review";
 import { CourseCapture, courseAttemptOutcome, hiddenInvalid, pollGapInvalid, type CourseInvalidReason, type CourseSealed } from "../../domain/chordDojo/guidedCourse/capture";
 import { ADVANCED_LEVELS, advancedLevelSpec, type AdvancedBlock } from "../../domain/chordDojo/guidedCourse/advanced/levels";
-import { advancedDemoItems, LV8_GROUPS, advancedSetIds } from "../../domain/chordDojo/guidedCourse/advanced/bank";
+import { advancedDemoItems, LV8_GROUPS, advancedSetIds, advancedItemById } from "../../domain/chordDojo/guidedCourse/advanced/bank";
 import type { PracticeMaterial } from "../../domain/chordDojo/guidedCourse/advanced/practice";
 import { NOTE_NAMES } from "../../domain/chordDojo/guidedCourse/advanced/build";
 import { judgeAdvancedChord, judgeProgression, judgeSight, expectedChords, SIGHT_BEATS_PER_BAR, SIGHT_MAX_STOP_BEATS, SIGHT_PASS_RATIO } from "../../domain/chordDojo/guidedCourse/advanced/judge";
 import { advancedPlan, advancedPracticePlan, advancedRoundStartedAt, evaluateAdvancedLevel, firstUnpassedAdvancedLevel, restartAdvancedLevel, weakAdvancedItemIdsFor, wrongAdvancedItemIdsFor, type AdvancedPlan, type AdvancedPracticePlan } from "../../domain/chordDojo/guidedCourse/advanced/review";
 import { AdvancedRepository, appendAdvancedTrial, clearAdvancedActive, createAdvancedStorage, createAdvancedTrial, startAdvancedAttempt } from "../../domain/chordDojo/guidedCourse/advanced/store";
-import type { AdvancedAttempt, AdvancedChord, AdvancedCourseLevel as AdvancedLevelAlias, AdvancedItem, AdvancedResult, AdvancedStep, AdvancedStore } from "../../domain/chordDojo/guidedCourse/advanced/types";
+import type { AdvancedAttempt, AdvancedChord, AdvancedCourseLevel as AdvancedLevelAlias, AdvancedItem, AdvancedResult, AdvancedStep, AdvancedStore, AdvancedTrial } from "../../domain/chordDojo/guidedCourse/advanced/types";
+import { diagnoseRound } from "./advancedDiagnosis";
+import { advancedTipFor } from "./advancedTips";
 /**
  * P23-45: the advanced guide course (Lv4–8 and 総合確認). It is a separate screen from the frozen
  * Lv1–3 course and uses a separate store, so the basic course's ids, pass rules and mid-attempt
@@ -1501,6 +1503,33 @@ export function AdvancedCourseView(props: AdvancedCourseViewProps) {
       progress: wrongPractice === undefined ? `${q.index} / ${q.total}` : `間違えた・迷った問題の練習 ${q.index} / ${q.total}`,
       round: rounds === undefined ? undefined : <RoundProgress {...rounds} />,
     };
+    /** P24-04: the compare panel for the first wrong answer, built the way Lv1–3 builds it. */
+    function roundCompareOf(trial: AdvancedTrial | undefined, diagnosisKind: string): RoundCompare | undefined {
+      if (trial === undefined || trial.selfConfirmed || trial.result === "correct") return undefined;
+      if (diagnosisKind === "cap-sight-stop" || diagnosisKind === "cap-sight-accuracy") return undefined;
+      const item = advancedItemById(trial.itemId);
+      if (item === undefined) return undefined;
+      const chords = expectedChords(item);
+      const play = (chord: AdvancedChord) => (notes: readonly number[]) => {
+        void playbackController.play({ kind: "practice", id: `p24-04:compare:${chord.label}` },
+          { type: "chord", chord: symbol(chord.root, chord.quality), sound, explicitMidiNotes: [...notes] }).catch(() => undefined);
+      };
+      if (chords.length <= 1) {
+        const chord = chords[0];
+        if (chord === undefined || trial.sealedNotes.length === 0) return undefined;
+        return { answerLabel: chord.label, answerNotes: [...chord.referenceNotes], playedNotes: [...trial.sealedNotes], onPlay: play(chord) };
+      }
+      const bad = trial.steps.findIndex((step) => !step.ok);
+      const chord = bad < 0 ? undefined : chords[bad];
+      const notes = bad < 0 ? undefined : trial.steps[bad]?.notes;
+      if (chord === undefined || notes === undefined || notes.length === 0) return undefined;
+      return {
+        answerLabel: `${chord.label}（${bad + 1}枚目）`,
+        answerNotes: [...chord.referenceNotes],
+        playedNotes: [...notes],
+        onPlay: play(chord),
+      };
+    }
     const next = () => {
       if (official && trialsById.has(q.item.id) && breakAfter(q.index, q.total)) {
         setRoundBreak(breakKey);
@@ -1512,12 +1541,22 @@ export function AdvancedCourseView(props: AdvancedCourseViewProps) {
       const score = roundScore(q.index, q.total, results);
       const from = (score.round - 1) * ROUND_SIZE;
       const anyWrong = results.slice(from, q.index).some((value) => value === false);
+      // P24-04: the words come from the first wrong answer of this round; the old one-liner stays the fallback.
+      const roundTrials = q.attempt.itemIds.slice(from, q.index + 1)
+        .map((id) => trialsById.get(id))
+        .filter((trial): trial is AdvancedTrial => trial !== undefined);
+      const diagnosis = diagnoseRound(roundTrials, q.level);
+      const wrongTrial = roundTrials.find((trial) => trial.result !== "correct");
+      const tip = advancedTipFor(diagnosis, q.level, score.round, wrongTrial?.itemId)
+        ?? tipFor({ level: q.level, ...(anyWrong ? { wrong: { prompt: "name" as const } } : {}) });
+      const compare = roundCompareOf(wrongTrial, diagnosis.kind);
       return <div className="guided-course" data-testid="guided-course" data-advanced="true" data-midi={connected ? "on" : "off"} data-stage="break">
         <AdvancedHeader {...headerProps} />
         <RoundBreak
           score={score}
           nextCount={Math.min(ROUND_SIZE, q.total - q.index)}
-          tip={tipFor({ level: q.level, ...(anyWrong ? { wrong: { prompt: "name" as const } } : {}) })}
+          tip={tip}
+          compare={compare}
           onNext={() => { setRoundBreak(undefined); setFrozen(undefined); }}
           onStop={props.onExit}
         />

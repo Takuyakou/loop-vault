@@ -1,6 +1,13 @@
 import { useEffect, type RefObject } from "react";
 import type { TextTransport, TextTransportState } from "../../audio/textTransport";
 
+/** P24-05: the card's place in the bar; the new preview writes it as data, the old one as inline style. */
+function numeric(element: HTMLElement, name: "left" | "width"): number {
+  const raw = element.dataset[name] ?? element.style[name];
+  const value = Number.parseFloat(raw ?? "");
+  return Number.isFinite(value) ? value : 0;
+}
+
 /** Paint only the active score bar and its line; React never renders per frame. */
 export function useTextScorePlayhead(
   previewRef: RefObject<HTMLElement | null>, transport: TextTransport,
@@ -24,8 +31,9 @@ export function useTextScorePlayhead(
       const barNumber = Math.min(bars, Math.max(1, Math.floor(position / beatsPerBar) + 1));
       const progress = Math.max(0, Math.min(1, (position - (barNumber - 1) * beatsPerBar) / beatsPerBar));
       if (positionLabel) {
+        // P24-fix-1: the design's 「1 / 8 小節」 (never truncated); the exact position stays as the title.
         const precise = `${barNumber}小節目 · ${position.toFixed(2)}拍`;
-        positionLabel.textContent = `${barNumber}小節目`;
+        positionLabel.textContent = `${barNumber} / ${bars} 小節`;
         positionLabel.title = precise;
         positionLabel.setAttribute("aria-label", precise);
       }
@@ -42,15 +50,13 @@ export function useTextScorePlayhead(
       if (line) line.style.left = `${progress * 100}%`;
       const percent = progress * 100;
       const nextBand = [...activeBar.querySelectorAll<HTMLElement>("[data-testid='text-preview-band']")]
-        .find(band => percent >= Number.parseFloat(band.style.left)
-          && percent < Number.parseFloat(band.style.left) + Number.parseFloat(band.style.width)) ?? null;
+        .find(band => percent >= numeric(band, "left") && percent < numeric(band, "left") + numeric(band, "width")) ?? null;
       if (nextBand !== activeBand) {
         if (activeBand) activeBand.dataset.playbackActive = "false";
         activeBand = nextBand;
       }
       if (activeBand) activeBand.dataset.playbackActive = state.status === "playing" ? "true" : "false";
       if (positionLabel && activeBand?.dataset.chord) {
-        positionLabel.textContent += ` · ${activeBand.dataset.chord}`;
         positionLabel.title += ` · ${activeBand.dataset.chord}`;
         positionLabel.setAttribute("aria-label", positionLabel.title);
       }

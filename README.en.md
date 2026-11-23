@@ -26,7 +26,7 @@ Loop Vault is a Windows desktop songwriting companion for collecting and refinin
 1. Open the [latest release](https://github.com/Takuyakou/loop-vault/releases/latest), download `Loop.Vault_<version>_x64-setup.exe` from **Assets**, and run the installer
 2. Once launched, start from whichever fits you best:
    - **Start with your own MIDI or chords**: Open **取り込む** (Capture), drop a MIDI file or type chord names, review the notes, save to **Vault**, and practise in **Voicing Loop**
-   - **Start playing right away without MIDI**: Even with an empty Vault, open **Chord Dojo** and jump straight into **ガイド練習** (Guided Course) or **定番の進行** (Standard Progressions)
+   - **Start playing right away without MIDI**: Even with an empty Vault, open **Chord Dojo** and jump straight into **ガイド練習** (Guided Course) or **定番の進行** (Standard Progressions). You can also add three sample progressions from the empty Vault and play them in **Voicing Loop**
 3. Connect a MIDI keyboard from the **MIDI** button in the header (it reconnects automatically next time). Every practice screen also works without a MIDI keyboard
 
 ---
@@ -49,7 +49,7 @@ Supports Standard MIDI Files (`.mid` / `.midi`) and text chord progressions.
 
 - **MIDI import**: Drag and drop one or multiple files, choose part roles (bass, harmony, melody) before analysis, and detect keys automatically
 - **Correction Workspace**: Exclude/restore notes, add or adjust pitches, rename chords, split/merge boundaries, and cut whole bars while listening. Original MIDI files are never modified
-- **Text import**: Type progressions such as `| Dm7 G7 | Cmaj7 | Am7 | F G |` and audition them before saving. Supports Standard mode (4/4 with 1/2/4 slots per bar, `%` re-attack, `_` rest, `=` hold) and Extended mode (custom meters, finer subdivisions, and jazz notation such as `Cm(maj7)` and `G7alt`)
+- **Text import**: Type progressions such as `| Dm7 G7 | Cmaj7 | Am7 | F G |` or paste a chord sheet as it is, and audition them before saving. Lyric lines are skipped; meters, `%` re-attack, `_` rest, `=` hold and jazz notation such as `Cm(maj7)` and `G7alt` are supported. You can also add chords one at a time by playing them on a MIDI keyboard
 
 ![Correction Workspace: chord cards, piano roll, recommended ranges and saving to the Vault](docs/images/v3-correction-workspace.png)
 

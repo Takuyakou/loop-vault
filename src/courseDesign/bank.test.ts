@@ -254,10 +254,10 @@ describe("P23-39 §3 the Lv1–3 bank and policy (v3)", () => {
       const inversion = closeVoicing(item.root, item.quality, 1);
       expect(nameRecallAccepts(item, inversion), item.id).toBe(true);
     }
-    // Every ear item accepts its root-position model (harmony + root bass) and rejects an inversion of the bass.
+    // P24-02 I-4: every ear item accepts its model and any inversion.
     for (const item of bank.items.filter((entry) => entry.prompt === "ear")) {
       expect(earAccepts(item, item.referenceNotes), item.id).toBe(true);
-      expect(earAccepts(item, closeVoicing(item.root, item.quality, 1)), item.id).toBe(false);
+      expect(earAccepts(item, closeVoicing(item.root, item.quality, 1)), item.id).toBe(true);
     }
   });
 

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow } from "./helpers/app";
+import { assertNoHorizontalOverflow, chooseTextSetting } from "./helpers/app";
 import { startPracticeNamed } from "./helpers/voicingLoopPicker";
 
 async function openEmptyApp(page: Page) {
@@ -62,7 +62,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
 
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").click();
 

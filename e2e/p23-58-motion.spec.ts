@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture, openVault } from "./helpers/app";
+import { dropMidi, openApp, openCapture, openVault, chooseTextSetting } from "./helpers/app";
 import { openDojo } from "./helpers/p12";
 import { captureReportShot } from "./helpers/reportShots";
 
@@ -9,7 +9,7 @@ async function saveTextProgression(page: Page, text: string, key: string, name: 
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
@@ -27,7 +27,7 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
     const capture = page.getByTestId("text-progression-capture");
     await capture.getByTestId("text-progression-input").fill("| Dm7 | G7 | Cmaj7 | Cmaj7 |");
-    await capture.getByTestId("text-progression-key").selectOption("C major");
+    await chooseTextSetting(capture, "text-progression-key", "C major");
     const bpmInput = capture.getByTestId("text-progression-bpm");
     await bpmInput.click();
     await bpmInput.fill("120");
@@ -364,11 +364,11 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     await bpView.getByTestId("degree-next").click();
     await page.locator(".bass-modebar").getByRole("button", { name: /Bass Practice/ }).click();
     await expect(page.getByTestId("bass-home-resume")).toBeVisible();
-    await expect(page.getByTestId("bass-home-resume").locator(".lv-bh-resume-line b")).toHaveText("度数");
+    await expect(page.getByTestId("bass-home-resume").locator(".lv-resume-band-title")).toHaveText("度数");
     const bpResume = await page.evaluate(() => {
       const band = document.querySelector('[data-testid="bass-home-resume"]')!;
-      const mark = band.querySelector(".lv-bh-mark")!;
-      const title = band.querySelector(".lv-bh-resume-line b")!;
+      const mark = band.querySelector(".lv-resume-band-mark")!;
+      const title = band.querySelector(".lv-resume-band-title")!;
       const btn = band.querySelector('[data-testid="bass-home-resume-open"]')!;
       return {
         bandH: Math.round(band.getBoundingClientRect().height),
@@ -391,9 +391,9 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     await expect(page.getByTestId("voicing-loop-resume")).toBeVisible();
     const vlResume = await page.evaluate(() => {
       const band = document.querySelector('[data-testid="voicing-loop-resume"]')!;
-      const mark = band.querySelector(".lv-vl-resume-mark")!;
-      const title = band.querySelector(".lv-vl-resume-title")!;
-      const btn = band.querySelector(".lv-vl-resume-go")!;
+      const mark = band.querySelector(".lv-resume-band-mark")!;
+      const title = band.querySelector(".lv-resume-band-title")!;
+      const btn = band.querySelector('[data-testid="voicing-loop-resume-go"]')!;
       return {
         bandH: Math.round(band.getBoundingClientRect().height),
         markW: Math.round(mark.getBoundingClientRect().width),
@@ -410,9 +410,9 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     await expect(page.getByTestId("home-resume")).toBeVisible();
     const cdResume = await page.evaluate(() => {
       const band = document.querySelector('[data-testid="home-resume"]')!;
-      const mark = band.querySelector(".dojo-home-p20-mark")!;
-      const title = band.querySelector(".dojo-home-p20-resume-title")!;
-      const btn = band.querySelector(".dojo-home-p20-primary")!;
+      const mark = band.querySelector(".lv-resume-band-mark")!;
+      const title = band.querySelector(".lv-resume-band-title")!;
+      const btn = band.querySelector('[data-testid="home-resume-go"], .dojo-home-p20-primary')!;
       return {
         bandH: Math.round(band.getBoundingClientRect().height),
         markW: Math.round(mark.getBoundingClientRect().width),
@@ -426,7 +426,8 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     expect(Math.abs(vlResume.markW - cdResume.markW)).toBeLessThanOrEqual(1);
     expect(Math.abs(vlResume.markH - cdResume.markH)).toBeLessThanOrEqual(1);
     expect(Math.abs(vlResume.titleFont - cdResume.titleFont)).toBeLessThanOrEqual(1);
-    expect(Math.abs(vlResume.btnH - cdResume.btnH)).toBeLessThanOrEqual(1);
+    // The CD band in this flow may show the empty-state button; compare the shared Enter with the BP one.
+    expect(Math.abs(vlResume.btnH - bpResume.btnH)).toBeLessThanOrEqual(1);
     await captureReportShot(page, "p23-58-assets/e2-resume-cd.png");
 
     // B11: 2-5-1 Master

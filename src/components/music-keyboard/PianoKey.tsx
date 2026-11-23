@@ -73,14 +73,14 @@ export const PianoKey = memo(function PianoKey({
 
   if (appearance === "dojo") {
     const answerColor = colorGuideHands ? guideColor : "#42d8c6";
-    const fill = resultMark === "hit" ? black ? "#1f6b52" : "#bfeedd"
+    const fill = resultMark === "hit" || resultMark === "miss" ? black ? "#1f6b52" : "#bfeedd"
       : resultMark === "wrong" ? black ? "#7a2f36" : "#f6c5c9"
       : visualState === "held-foreign" ? black ? "#c4505a" : "#ffb3b8"
       : isHeld ? black ? "#4f7fd6" : "#8fb7ff" : black ? "#1a2230" : "#d5dce5";
     return <g data-midi-note={note} data-key-kind={black ? "black" : "white"} data-visual-state={visualState} data-guide-hand={guideHand} data-missing-guide={missingGuide || undefined} data-result-mark={resultMark}>
       {!concealNoteName ? <title>{`${formatMidiNoteForDisplay(note, octaveConvention, accidentalStyle)}${fingerLabel ? `, ${fingerLabel}` : ""}`}</title> : null}
       <rect x={x} y={0} width={width} height={height} fill={fill} stroke="#0a1019" strokeWidth={1} rx={black ? 3 : 5}/>
-      {resultMark !== undefined ? <ResultMarkGlyph mark={resultMark} cx={x + width / 2} cy={whiteMarkY(height, black, markScale)} r={(black ? 7 : 9) * markScale}/> : null}
+      {resultMark !== undefined ? <ResultMarkGlyph mark={resultMark} black={black} cx={x + width / 2} cy={whiteMarkY(height, black, markScale)} r={(black ? 7 : 9) * markScale}/> : null}
       {isGuide && resultMark === undefined ? <circle data-answer-marker aria-hidden="true" cx={x + width / 2} cy={whiteMarkY(height, black, markScale)} r={(black ? 5 : 6) * markScale} fill={missingGuide ? "none" : answerColor} stroke={missingGuide ? answerColor : "#0a1019"} strokeWidth={2} strokeDasharray={missingGuide ? "3 2" : undefined}/> : null}
       <FingerLabel label={fingerLabel} geometry={geometry} hand={guideHand} dojo scale={markScale}/>
       {isSustained ? <line aria-hidden="true" x1={x+3} x2={x+width-3} y1={height-10} y2={height-10} stroke="#8bd7ff" strokeWidth={2}/> : null}
@@ -193,8 +193,9 @@ function isGuideState(state: PianoKeyVisualState): boolean {
 
 /** Where the mark of a pressed key is centred; a larger mark on a white key sits a little lower, so that its label can stand under the black keys. */
 /** P23-51 (mock ⑤): ✓ on a green disc, ✕ on a red disc, or a dashed ring where a chord tone was not played. */
-function ResultMarkGlyph({ mark, cx, cy, r }: { mark: "hit" | "wrong" | "miss"; cx: number; cy: number; r: number }) {
-  if (mark === "miss") return <circle data-result-glyph="miss" aria-hidden="true" cx={cx} cy={cy} r={r} fill="rgb(66 216 198 / 18%)" stroke="#42d8c6" strokeWidth={2} strokeDasharray="4 3"/>;
+/** P24-02 I-3: a missing tone is painted like a hit, so the ring has to stay visible on the green key. */
+function ResultMarkGlyph({ mark, black, cx, cy, r }: { mark: "hit" | "wrong" | "miss"; black: boolean; cx: number; cy: number; r: number }) {
+  if (mark === "miss") return <circle data-result-glyph="miss" aria-hidden="true" cx={cx} cy={cy} r={r} fill="none" stroke={black ? "#e9fff8" : "#0b5546"} strokeWidth={2} strokeDasharray="4 3"/>;
   const d = r * 0.42;
   return <g data-result-glyph={mark} aria-hidden="true">
     <circle cx={cx} cy={cy} r={r} fill={mark === "hit" ? "#36c990" : "#ee6b73"} stroke="#0a1019" strokeWidth={1.5}/>

@@ -14,7 +14,11 @@ import {
   resolveProgressionPracticeVoicings,
 } from "../domain/progressionVoicingPractice";
 import { createPreviewInstrument } from "../audio/chordPreview";
+import { MAX_FADING_INSTRUMENTS, PREVIEW_STOP_RETIRE_MS } from "../audio/outputFade";
 import { ProgressionVoicingTransport, ProgressionVoicingTransportV2 } from "./ProgressionVoicingTransport";
+
+/** P24-01 H-3: a stopped output fades first and is thrown away after PREVIEW_STOP_RETIRE_MS. */
+const settleStopRetirement = () => new Promise((resolve) => globalThis.setTimeout(resolve, PREVIEW_STOP_RETIRE_MS + 10));
 
 const toneMock = vi.hoisted(() => {
   const scheduled: Array<{ callback: (time: number) => void; interval: string; start?: string | number }> = [];
@@ -150,7 +154,8 @@ describe("ProgressionVoicingTransport", () => {
     for (let i = 0; i < 10; i++) { await runtime.restart(); expect(toneMock.activeScheduleIds.size).toBe(initialSchedules); }
     expect(toneMock.instruments).toHaveLength(2);
     expect(toneMock.gains[0]!.gain.setValueAtTime.mock.calls.some(([value, time]) => value === 0 && time === 1)).toBe(false);
-    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.003);
+    // P24-01 H-3: a cancel path (pause/restart) fades over PREVIEW_STOP_FADE_SECONDS (15ms).
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.015);
     runtime.stop(); expect(toneMock.activeScheduleIds.size).toBe(0);
   });
 
@@ -295,6 +300,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(runtime.activeNoteCount).toBe(3);
     runtime.stop();
     expect(runtime.activeNoteCount).toBe(0);
+    await settleStopRetirement();
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -332,11 +338,12 @@ describe("ProgressionVoicingTransport", () => {
           worker?.callback(1);
         } else runtime.stop();
         expect(toneMock.activeScheduleIds.size).toBeLessThanOrEqual(131);
-        expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(6);
+        // P24-01 H-3: up to MAX_FADING_INSTRUMENTS outputs may be fading after a stop.
+        expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(8);
       }
       runtime.stop();
       expect(toneMock.activeScheduleIds.size).toBe(0);
-      await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
+      await new Promise((resolve) => globalThis.setTimeout(resolve, PREVIEW_STOP_RETIRE_MS + 10));
       expect(toneMock.activeInstruments.size).toBe(0);
     }
   });
@@ -363,6 +370,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.oneShots.length).toBeGreaterThan(0);
     runtime.stop();
     expect(toneMock.activeScheduleIds.size).toBe(0);
+    await settleStopRetirement();
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -508,6 +516,7 @@ describe("ProgressionVoicingTransport", () => {
     await runtime.restart();
     expect(toneMock.gains[0]!.gain.cancelScheduledValues).toHaveBeenCalled();
     runtime.stop();
+    await settleStopRetirement();
     expect(toneMock.gains[0]!.dispose).toHaveBeenCalledOnce();
     expect(toneMock.activeScheduleIds.size).toBe(0);
   });
@@ -551,7 +560,8 @@ describe("ProgressionVoicingTransport", () => {
     expect(instrument.triggerAttack).not.toHaveBeenCalled();
     expect(instrument.triggerAttackRelease).not.toHaveBeenCalled();
     expect(toneMock.gains[0]!.gain.setValueAtTime.mock.calls.some(([value]) => value === 1)).toBe(true);
-    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 1.05);
+    // P24-01 H-3: the cancel path fades over 15ms instead of 3ms.
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 1.065);
   });
 
   it("advances all-rest clock and silences unsupported boundaries without fabricating fallback attacks", async () => {
@@ -741,7 +751,7 @@ describe("ProgressionVoicingTransport", () => {
       0.72,
     );
     runtime.stop();
-    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
+    await new Promise((resolve) => globalThis.setTimeout(resolve, PREVIEW_STOP_RETIRE_MS + 10));
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -791,7 +801,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1, expect.any(Number));
     runtime.stop();
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount * 2);
-    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
+    await new Promise((resolve) => globalThis.setTimeout(resolve, PREVIEW_STOP_RETIRE_MS + 10));
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -848,7 +858,7 @@ describe("ProgressionVoicingTransport", () => {
     }
     runtime.stop();
     expect(toneMock.activeInstruments.size).toBe(2);
-    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
+    await new Promise((resolve) => globalThis.setTimeout(resolve, PREVIEW_STOP_RETIRE_MS + 10));
     expect(toneMock.activeInstruments.size).toBe(0);
     expect(toneMock.gains.every((gain) => gain.dispose.mock.calls.length === 1)).toBe(true);
   });
@@ -1207,7 +1217,8 @@ describe("ProgressionVoicingTransport", () => {
       const scheduledBeforeLongProjection = toneMock.scheduled.length;
       const instrumentsBeforeLongProjection = toneMock.instruments.length;
       expect(toneMock.activeScheduleIds.size).toBe(schedulesPerCycle);
-      expect(toneMock.activeInstruments.size).toBe(2);
+      // P24-01 H-3: the previous cycle's pair may still be fading, so allow the fade cap.
+      expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(2 + MAX_FADING_INSTRUMENTS);
       const visualCallback = toneMock.scheduled[scheduledBeforeLongProjection - 1]!;
       toneMock.transport.getTicksAtTime.mockReturnValueOnce(30 * 80 * toneMock.transport.PPQ);
       visualCallback.callback(1);
@@ -1216,18 +1227,22 @@ describe("ProgressionVoicingTransport", () => {
       expect(toneMock.scheduled).toHaveLength(scheduledBeforeLongProjection);
       expect(toneMock.instruments).toHaveLength(instrumentsBeforeLongProjection);
       expect(toneMock.activeScheduleIds.size).toBe(schedulesPerCycle);
-      expect(toneMock.activeInstruments.size).toBe(2);
+      // P24-01 H-3: the previous cycle's pair may still be fading, so allow the fade cap.
+      expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(2 + MAX_FADING_INSTRUMENTS);
 
       expect(runtime.pause()).toBe(true);
       await expect(runtime.resume()).resolves.toBe(true);
       await expect(runtime.restart()).resolves.toBe(true);
       runtime.stop();
       expect(toneMock.activeScheduleIds.size).toBe(0);
-      expect(toneMock.activeInstruments.size).toBe(0);
+      // P24-01 H-3: the stopped outputs are still fading; at most MAX_FADING_INSTRUMENTS may linger.
+      expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(MAX_FADING_INSTRUMENTS);
     }
 
     expect(toneMock.scheduled).toHaveLength(cycles * schedulesPerCycle * 2);
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(cycles * schedulesPerCycle * 2);
+    // P24-01 H-3: the last pair is thrown away by the retire timer, so let it run first.
+    await settleStopRetirement();
     expect(toneMock.instruments).toHaveLength(cycles * instrumentsPerCycle);
     expect(toneMock.instruments.every((instrument) => instrument.dispose.mock.calls.length === 1)).toBe(true);
     expect(toneMock.transport.pause).toHaveBeenCalledTimes(cycles * 2);
@@ -1355,6 +1370,137 @@ describe("ProgressionVoicingTransport", () => {
     expect(partial.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
   });
 
+});
+
+describe("P24-01 H-2: octave and detail changes reach the sound", () => {
+  /** The plan `applyOctaveShift` builds: the same snapshot fingerprint plus `:octave:<n>`. */
+  function octavePlan(octaves: number, color = false): ProgressionPracticeVoicingPlan {
+    return {
+      snapshotFingerprint: `${snapshot.fingerprint}:octave:${octaves}`,
+      selection: "source-midi",
+      events: snapshot.events.map((event) => {
+        const shifted = event.voicing!.midiNotes.map((note) => note + octaves * 12);
+        const midiNotes = color ? [...shifted, shifted[0]! + 14] : shifted;
+        return {
+          eventId: event.id,
+          status: "SUPPORTED" as const,
+          voicing: {
+            origin: "source-midi" as const,
+            midiNotes,
+            addedColorDegrees: [],
+            notes: midiNotes.map((midiNote) => ({
+              midiNote, pitchClass: midiNote % 12, octave: Math.floor(midiNote / 12) - 1, degree: null,
+            })),
+          },
+        };
+      }),
+    };
+  }
+
+  it("accepts an octave plan whose fingerprint carries the shift", () => {
+    const runtime = new ProgressionVoicingTransport();
+    return runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() })
+      .then(() => {
+        expect(runtime.updatePlan(octavePlan(-1))).toBe(true);
+        runtime.stop();
+      });
+  });
+
+  it("sounds the shifted octave at the next bar while playing", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["C3", "G3", "B3"], 1, 0.72);
+    expect(runtime.updatePlan(octavePlan(-1), { snapshot, applyAtBeat: 4 })).toBe(true);
+    toneMock.transport.ticks = 4 * 192;
+    toneMock.scheduled[1]!.callback(4);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["D2", "A2", "C3"], 4, 0.72);
+    runtime.stop();
+  });
+
+  it("sounds a detail change at once while an octave shift is on", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan: octavePlan(-1), bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["C2", "G2", "B2"], 1, 0.72);
+    expect(runtime.updatePlan(octavePlan(-1, true))).toBe(true);
+    toneMock.scheduled[1]!.callback(2);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["D2", "A2", "C3", "E3"], 2, 0.72);
+    runtime.stop();
+  });
+
+  it("sounds a deeper shift after a pause and a resume", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan: octavePlan(-1), bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    expect(runtime.pause()).toBe(true);
+    expect(runtime.updatePlan(octavePlan(-2))).toBe(true);
+    await expect(runtime.resume()).resolves.toBe(true);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["C1", "G1", "B1"], 1, 0.72);
+    runtime.stop();
+  });
+
+  it("still rejects a plan from another selection", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(runtime.updatePlan({ ...octavePlan(-1), selection: "basic-full" })).toBe(false);
+    runtime.stop();
+  });
+});
+
+describe("P24-01 H-3: a stop fades out instead of cutting the wave", () => {
+  it("fades the reference output and disposes the instrument after the retire delay", async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = new ProgressionVoicingTransportV2();
+      await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+      const gain = toneMock.gains[0]!;
+      const instrument = toneMock.instruments[0]!;
+      runtime.stop();
+      expect(gain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.015);
+      expect(instrument.dispose).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(PREVIEW_STOP_RETIRE_MS - 1);
+      expect(instrument.dispose).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(2);
+      expect(instrument.dispose).toHaveBeenCalledTimes(1);
+      expect(gain.dispose).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reads the sounding level before it cancels the schedule on pause", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const gain = toneMock.gains[0]!.gain;
+    runtime.pause();
+    expect(gain.cancelScheduledValues).toHaveBeenCalled();
+    const readOrder = gain.getValueAtTime.mock.invocationCallOrder[gain.getValueAtTime.mock.invocationCallOrder.length - 1]!;
+    const cancelOrder = gain.cancelScheduledValues.mock.invocationCallOrder[
+      gain.cancelScheduledValues.mock.invocationCallOrder.length - 1]!;
+    expect(readOrder).toBeLessThan(cancelOrder);
+    runtime.stop();
+  });
+
+  it("never sends notes to the instrument of the previous start", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const first = toneMock.instruments[0]!;
+    runtime.stop();
+    const attacksAfterStop = first.triggerAttackRelease.mock.calls.length;
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    expect(first.triggerAttackRelease.mock.calls.length).toBe(attacksAfterStop);
+    runtime.stop();
+  });
 });
 
 const snapshot: ProgressionVoicingPracticeSnapshot = {

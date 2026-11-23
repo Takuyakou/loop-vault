@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers/app";
+import { openApp, chooseTextSetting } from "./helpers/app";
 import { openDojo } from "./helpers/p12";
 import { captureReportShot } from "./helpers/reportShots";
 
@@ -286,7 +286,7 @@ test("Voicing Loop picker: picking another progression stops the 試聴 of the o
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
     const capture = page.getByTestId("text-progression-capture");
     await capture.getByTestId("text-progression-input").fill(text);
-    await capture.getByTestId("text-progression-key").selectOption("C major");
+    await chooseTextSetting(capture, "text-progression-key", "C major");
     await capture.getByTestId("text-progression-name").fill(name);
     await capture.getByTestId("text-progression-save").click();
   }

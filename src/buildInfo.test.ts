@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { loopVaultBuildInfo } from "./buildInfo";
 
-const RELEASE_VERSION = "3.0.0";
+const RELEASE_VERSION = "3.1.0";
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-describe("release version (REL-02 B3)", () => {
+describe("release version (REL-03 B3)", () => {
   it("shows the release version in the settings 「アプリ版」 (loopVaultBuildInfo)", () => {
     expect(loopVaultBuildInfo.version).toBe(RELEASE_VERSION);
   });

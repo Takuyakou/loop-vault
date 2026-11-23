@@ -184,7 +184,7 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.goto("/");
   await page.evaluate(() => document.fonts.ready);
   await openChordHome(page);
-  const cd = await measure(["[data-testid='home-resume']", ".dojo-home-p20-mark", ".dojo-home-p20-label", ".dojo-home-p20-resume-title", "[data-testid='home-resume-go']", ".dojo-home-p20-enter-key"]);
+  const cd = await measure(["[data-testid='home-resume']", ".lv-resume-band-mark", ".lv-resume-band-label", ".lv-resume-band-title", "[data-testid='home-resume-go']", ".lv-resume-go-key"]);
   await page.screenshot({ path: reportShot("p23-41-assets/cd-home-1440.png") });
   await page.getByTestId("home-resume").hover();
   await page.waitForTimeout(260);
@@ -193,8 +193,8 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.getByTestId("home-resume-go").hover();
   await page.waitForTimeout(260);
   const cdButtonHover = await measure(["[data-testid='home-resume-go']"]);
-  const cdEnter = await measure(["[data-testid='home-resume-go'] .dojo-home-p20-enter-key"]);
-  expect(cdEnter["[data-testid='home-resume-go'] .dojo-home-p20-enter-key"], "CD Enter hint").toMatchObject({ padding: "0px 4px", radius: "4px", font: "10px/16px 700" });
+  const cdEnter = await measure(["[data-testid='home-resume-go'] .lv-resume-go-key"]);
+  expect(cdEnter["[data-testid='home-resume-go'] .lv-resume-go-key"], "CD Enter hint").toMatchObject({ padding: "0px 4px", radius: "4px", font: "10px/16px 700" });
   await page.getByTestId("home-resume-go").focus();
   await page.keyboard.press("Tab");
   await page.keyboard.press("Shift+Tab");
@@ -218,8 +218,8 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await view.getByTestId("degree-next").click();
   await page.locator(".bass-modebar").getByRole("button", { name: /Bass Practice/ }).click();
   await expect(page.getByTestId("bass-home-resume")).toBeVisible();
-  await expect(page.getByTestId("bass-home-resume").locator(".lv-bh-resume-line b")).toHaveText("度数");
-  const bp = await measure(["[data-testid='bass-home-resume']", ".lv-bh-mark", ".lv-bh-resume-kicker", ".lv-bh-resume-line b", "[data-testid='bass-home-resume-open']", ".lv-bh-enter-key"]);
+  await expect(page.getByTestId("bass-home-resume").locator(".lv-resume-band-title")).toHaveText("度数");
+  const bp = await measure(["[data-testid='bass-home-resume']", ".lv-resume-band-mark", ".lv-resume-band-label", ".lv-resume-band-title", "[data-testid='bass-home-resume-open']", ".lv-resume-go-key"]);
   await page.screenshot({ path: reportShot("p23-41-assets/bp-resume-1440.png") });
   await page.getByTestId("bass-home-resume").hover();
   await page.waitForTimeout(260);
@@ -237,7 +237,7 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.evaluate(() => document.fonts.ready);
   await page.locator('[data-nav="voicing-loop"]').click();
   await expect(page.getByTestId("voicing-loop-resume")).toBeVisible();
-  const vl = await measure(["[data-testid='voicing-loop-resume']", ".lv-vl-resume-mark", ".lv-section-kicker", ".lv-vl-resume-title", "[data-testid='voicing-loop-resume-go']", ".lv-vl-kbd"]);
+  const vl = await measure(["[data-testid='voicing-loop-resume']", ".lv-resume-band-mark", ".lv-resume-band-label", ".lv-resume-band-title", "[data-testid='voicing-loop-resume-go']", ".lv-resume-go-key"]);
   await page.screenshot({ path: reportShot("p23-41-assets/vl-resume-1440.png") });
   await page.getByTestId("voicing-loop-resume").hover();
   await page.waitForTimeout(260);
@@ -246,12 +246,12 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
 
   // dimensions and Enter hint are shared
   for (const [mode, values] of [["CD", cd], ["BP", bp], ["VL", vl]] as const) {
-    expect(values[".dojo-home-p20-mark"] ?? values[".lv-bh-mark"] ?? values[".lv-vl-resume-mark"], mode).toMatchObject({ width: 30, height: 30, radius: "8px", font: "11px/17.05px 700" });
+    expect(values[".lv-resume-band-mark"], mode).toMatchObject({ width: 30, height: 30, radius: "8px", font: "11px/17.05px 700" });
     expect(values["[data-testid='home-resume']"] ?? values["[data-testid='bass-home-resume']"] ?? values["[data-testid='voicing-loop-resume']"], mode)
       .toMatchObject({ padding: "8px 12px", gap: "12px", radius: "14px" });
     const button = values["[data-testid='home-resume-go']"] ?? values["[data-testid='bass-home-resume-open']"] ?? values["[data-testid='voicing-loop-resume-go']"];
     expect(button, mode).toMatchObject({ height: 36, padding: "0px 12px", radius: "10px", font: "12px/16px 500" });
-    const enter = values[".dojo-home-p20-enter-key"] ?? values[".lv-bh-enter-key"] ?? values[".lv-vl-kbd"];
+    const enter = values[".lv-resume-go-key"] ?? values[".lv-resume-go-key"] ?? values[".lv-resume-go-key"];
     expect(enter, mode).toMatchObject({ padding: "0px 4px", radius: "4px" });
     expect(enter!.font, mode).toContain("10px");
   }

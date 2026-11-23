@@ -571,6 +571,54 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
   });
 
+  it("P24-01 H-1: the next shape is learn-only and Recall keeps the name, the badge and その次", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    expect(container.querySelector("[data-testid='voicing-loop-next-shape']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-then-next']")).not.toBeNull();
+    const recall = button(container, "思い出す（コード名のみ）");
+    await act(async () => recall.click());
+    expect(container.querySelector("[data-testid='voicing-loop-next-shape']")).toBeNull();
+    expect(container.querySelector(".lv-vl-next-chord")?.textContent).toBe("Dm7");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-then-next']")).not.toBeNull();
+    const learn = button(container, "覚える（Voicing表示）");
+    await act(async () => learn.click());
+    expect(container.querySelector("[data-testid='voicing-loop-next-shape']")).not.toBeNull();
+  });
+
+  it("P24-01 H-3: pause puts the playhead and the resume point on the head of the sounding card", async () => {
+    const runtime = new SeekingTransport();
+    const base = snapshot("basic-full");
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      lengthBeats: 8,
+      events: [
+        { ...base.events[0]!, startBeat: 0, durationBeats: 4 },
+        { ...base.events[1]!, startBeat: 4, durationBeats: 4 },
+      ],
+      spans: [
+        { kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 4 },
+        { kind: "chord", eventIndex: 1, startBeat: 4, durationBeats: 4 },
+      ],
+    };
+    const container = await renderView(runtime, { "basic-full": value }, "basic-full");
+    await act(async () => button(container, "開始").click());
+    // The 3rd beat of the first (4-beat) card.
+    await act(async () => runtime.options?.onTransportBeat(7, 1e6));
+    await act(async () => button(container, "一時停止").click());
+    // P24-01 H-3: the pause seeks by beat (a rest card has no chord event index).
+    expect(runtime.seekBeat).toHaveBeenCalledWith(0);
+    expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("1 / 2");
+    await act(async () => button(container, "再開").click());
+    expect(runtime.resume).toHaveBeenCalled();
+    // Stop keeps the old behaviour: back to the start of the whole progression.
+    await act(async () => button(container, "停止").click());
+    expect(runtime.stop).toHaveBeenCalled();
+    expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("1 / 2");
+  });
+
   it("P23-32 C4: the head shows the title and the facts, and the back button calls onBackToPicker once", async () => {
     const onBackToPicker = vi.fn();
     const candidate = { ...vaultCandidate(0), sourceReference: snapshot("basic-full").source.reference };
@@ -2523,6 +2571,11 @@ class SeekingTransport extends FakeTransport {
     status: this.isPaused ? "paused" as const : "running" as const,
     absoluteBeat: (this.options.countInBars * (this.options.snapshot.practiceGroupBeats ?? this.options.snapshot.meter.numerator))
       + this.options.snapshot.events[eventIndex]!.startBeat,
+  } : undefined);
+  seekBeat = vi.fn((beat: number) => this.options ? {
+    status: this.isPaused ? "paused" as const : "running" as const,
+    absoluteBeat: (this.options.countInBars * (this.options.snapshot.practiceGroupBeats ?? this.options.snapshot.meter.numerator))
+      + beat,
   } : undefined);
 }
 

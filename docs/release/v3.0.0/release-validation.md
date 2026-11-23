@@ -87,3 +87,33 @@
 - 個人の MIDI・音声・動画:**0 件**(同梱の音は、ライセンスつきの Salamander Piano と FreePats Bass のみ)。
 - ほかのサイトの名前・URL:**0 件**。
 - 写真:報告の写真(`docs/reports/**/*.png`)は、Playwright の合成データの画面で、実機の機器名・個人の進行名は写っていません(確かめ方は inclusion-audit の §3)。
+
+## 7. 公開しました(2026-11-22)
+
+**この節は、公開のあとに local `master` にだけ足した記録です(公開した木には入っていません)。**
+
+| 確認 | 結果 |
+|---|---|
+| 公開用コミット | **`57368f7ca9c4fc7b423d1ee73c621f0ea428d79b`**(`public/v3.0.0`、タグ `v3.0.0` の指す先) |
+| 親 | **`142b3877f65d0575385e607d320246245c46c673` のみ**(1 コミット) |
+| ツリー | **`285830938e96abb37ad03cc25cd37975a67f9741`**(`release/v3.0.0` の `325e65e0` と同じ) |
+| 作者・コミッター | `Takuyakou <53846387+Takuyakou@users.noreply.github.com>` |
+| タグ | `v3.0.0`(注釈つき、タグオブジェクト `e039f3115801366e24e75ba5e776d8a0026adae9`、タグを付けた人は Takuyakou の noreply) |
+| FULL を通した木(`4509c5f6` / `6cf9f2a3…`)との差 | **文書と設定だけ**:`release-inclusion-audit.md`・`release-validation.md`・`docs/development.md`・`docs/guide.md`(削除)・`.cargo/audit.toml`(`chrono` の ignore)・`docs/reports/rust-advisories-2026-11.md`。コードは同じ |
+| `git push origin public/v3.0.0:master` | `142b3877..57368f7c`(**fast-forward**、force なし)。手元の `master` は push していない |
+| `git push origin v3.0.0` | `[new tag] v3.0.0 -> v3.0.0` |
+| GitHub のリリース | [Loop Vault v3.0.0](https://github.com/Takuyakou/loop-vault/releases/tag/v3.0.0)(下書きで作成 → 確認 → 公開。2026-11-22T06:41:39Z = 15:41 Asia/Tokyo。非ドラフト・非プレリリース・Latest) |
+| 下書きの 4 つを落として確認 | **4/4 一致**:3 つの SHA-256 が `SHA256SUMS` と同じ、`SHA256SUMS` が手元と同一。本文は `release-notes.md` と同じ |
+| 公開後(ログインなし) | リリースのページ HTTP 200、`Loop.Vault_3.0.0_x64-setup.exe` の直リンク HTTP 200(15,394,364 バイト)、`SHA256SUMS` の中身が上と同じ |
+
+### FULL と配布物(`4509c5f6`)
+
+- `npm run test:full:all`:Vitest 7139/7141(2 スキップ)・Playwright 1218 通過・10 失敗(別々のファイルの `newPage` 時間切れ。同じ HEAD で単独に各 3 回回し 36 通過・0 失敗)。`cargo test --locked`:70 通過。詳しくは `docs/reports/rel-02-release.md`。
+- 配布物(`npx tauri build`、2026-11-22 14:10 Asia/Tokyo):
+
+| ファイル | バイト | SHA-256 |
+|---|---:|---|
+| `Loop.Vault_3.0.0_x64-setup.exe` | 15,394,364 | `186a82e5c9ec6e777e5e5f6884c43bdfec8a8160c0f350ba0e7fe7f8180c39bd` |
+| `Loop.Vault_3.0.0_x64_en-US.msi` | 16,896,000 | `0a2610d82ed2fb4e4eeddd6a3cd59940d382676ab944e43a1948fb8b04ea1ae0` |
+| `loop-vault.exe` | 26,847,232 | `83462a52c4e1f45823738b011c446d26a5adcb22438922af7de4d4206a8f7adc` |
+| `SHA256SUMS` | 275 | `f3f668ccd0b55b1f075ba95a5c42f588c4252cf511b392b3caa3848ede8b5a71`(GitHub が表示した値) |

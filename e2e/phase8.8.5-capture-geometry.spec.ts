@@ -54,9 +54,8 @@ test("P8.8.5 header owns persistent metronome ON/OFF across Capture modes", asyn
   await expect(global).toHaveAttribute("aria-label", "メトロノーム：ON");
   await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
-  await page.getByTestId("text-mode-extended").click();
   await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByTestId("extended-text-intake").getByRole("button", { name: /メトロノーム/ })).toHaveCount(0);
+  await expect(page.getByTestId("text-progression-capture").getByRole("button", { name: /メトロノーム/ })).toHaveCount(0);
   await page.reload();
   await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
 });

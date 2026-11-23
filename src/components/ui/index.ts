@@ -34,3 +34,6 @@ export type {
 } from "./controls";
 export { FavoriteDots, useSaveButtonState, useTransientFlag } from "./motion";
 export type { SaveButtonState } from "./motion";
+export { ResumeBand } from "./ResumeBand";
+export { ResumeGoButton } from "./ResumeGoButton";
+export type { ResumeGoButtonProps } from "./ResumeGoButton";

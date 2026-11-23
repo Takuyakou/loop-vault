@@ -5,8 +5,7 @@ import {
   capturePageErrors,
   openApp,
   openVault,
-  openBassPractice,
-} from "./helpers/app";
+  openBassPractice, chooseTextSetting } from "./helpers/app";
 import { bassPracticeFromVault, practiceFromVault } from "./helpers/practice";
 
 const textTitle = "P5.20 Text Entry E2E";
@@ -32,7 +31,7 @@ async function enterEligibleProgression(page: Page) {
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await expect(capture.getByTestId("text-preview-band")).toHaveCount(4);
 
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
 
   await capture.getByTestId("text-progression-bpm").fill("120");
@@ -53,8 +52,9 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const textInput = capture.getByTestId("text-progression-input");
   const convert = capture.getByTestId("text-progression-convert");
 
-  // A malformed 3-token bar remains visible and blocks the one-way Draft bridge.
-  await textInput.fill("| C G Am |");
+  // P24-05: three chords in a bar are read now, so an unreadable bar is the case that stays visible
+  // and blocks the one-way Draft bridge.
+  await textInput.fill("| C///E |");
   await expect(textInput).toHaveAttribute("aria-invalid", "true");
   await expect(capture.getByTestId("text-progression-diagnostics")).toBeVisible();
   await expect(capture.getByTestId("text-preview-error")).toHaveCount(1);
@@ -66,13 +66,10 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await textInput.fill("| C G |");
   const inspector = capture.getByTestId("text-progression-inspector");
   await expect(inspector).toBeVisible();
-  const initialCapabilities = capture.getByTestId("text-progression-capabilities");
-  // Capability order is the public evaluator contract: Vault, Dojo, Bass
-  // Practice, Chord Context, Root Motion, then Voicing Memory.
-  const capabilityStatuses = initialCapabilities.locator(":scope > div > [data-capability-status]");
-  await expect(capabilityStatuses.nth(0)).toHaveAttribute("data-capability-status", "supported");
-  await expect(capabilityStatuses.nth(1)).toHaveAttribute("data-capability-status", "supported");
-  await expect(capabilityStatuses.nth(3)).toHaveAttribute("data-capability-status", /unknown|unsupported/);
+  // P24-07 item 4: the capability list (the 「?」) is no longer shown; the evaluator itself is tested in
+  // its own unit tests.
+  await expect(capture.getByTestId("text-progression-capabilities")).toHaveCount(0);
+  await expect(capture.getByTestId("text-progression-capability-details")).toHaveCount(0);
 
   await enterEligibleProgression(page);
   await expect(page.locator("[data-capture-stage='pre-analysis']")).toHaveCount(0);
@@ -80,7 +77,7 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.locator("[data-capture-midi-drop-zone]")).toHaveCount(0);
 
   const cards = capture.getByTestId("text-preview-band");
-  await cards.first().locator(".lv-text-preview-chord").focus();
+  await cards.first().focus();
   await page.keyboard.press("Enter");
   await inspector.locator(":scope > summary").click();
   await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();

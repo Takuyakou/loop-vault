@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export async function openApp(page: Page): Promise<void> {
   await page.goto("/");
@@ -177,4 +177,13 @@ export async function openBassPractice(page: Page, name: string): Promise<void> 
     if (await back.count()) await back.first().click().catch(() => undefined);
   }
   await card.first().click();
+}
+
+
+/** P24-07 item 1: the 拍子/キー picker is a button plus a small listbox (no native select any more). */
+export async function chooseTextSetting(root: Page | Locator, testId: string, value: string): Promise<void> {
+  await root.getByTestId(testId).click();
+  const list = root.getByTestId(`${testId}-list`);
+  await expect(list).toBeVisible();
+  await root.locator(`[data-testid="${testId}-list"] [data-value="${value}"]`).first().click();
 }

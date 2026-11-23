@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp, openVault } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, openVault, chooseTextSetting } from "./helpers/app";
 
 /** P23-10: the Vault list rebuilt (V1–V12, C1–C5). */
 
@@ -16,7 +16,7 @@ async function saveText(page: Page, name: string, text: string, key?: string) {
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  if (key) await capture.getByTestId("text-progression-key").selectOption(key);
+  if (key) await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

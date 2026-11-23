@@ -146,7 +146,7 @@ export function CaptureEntry({
               </svg>
               <div role="alert">
                 <p className="lv-capture-zone-title">MIDI を読み込めませんでした</p>
-                <p className="lv-capture-zone-help">{captureEntryErrorText(error)}</p>
+                <p className="lv-capture-zone-help" data-selectable>{captureEntryErrorText(error)}</p>
               </div>
               <Button variant="secondary" className="lv-capture-zone-button" data-testid="capture-retry-midi" onClick={onChooseMidi}>
                 別のファイルを選ぶ

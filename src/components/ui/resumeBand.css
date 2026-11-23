@@ -1,0 +1,104 @@
+/* P24-07 item 7: the shared 「続きから」 band (the design's band: one width and one top on all three homes). */
+.lv-resume-band {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(150 170 195 / 14%);
+  border-radius: 14px;
+  background: #111b2a;
+  transition: border-color 0.18s ease;
+}
+.lv-resume-band:hover,
+.lv-resume-band:has(:focus-visible) {
+  border-color: var(--lv-resume-accent, #42d8c6);
+}
+/* P24-07-fix-1 item 1: the hover tint belongs to the teal screens; Bass Practice keeps its own ground. */
+.lv-resume-band:not(.lv-resume-band-bp):hover {
+  background: color-mix(in srgb, #111b2a 94%, var(--lv-resume-accent, #42d8c6) 6%);
+}
+
+/* Bass Practice's colour is the mode's colour: the purple ground, a transparent border and the purple mark. */
+.lv-resume-band-bp {
+  border-color: transparent;
+  background: linear-gradient(100deg, #1c1840, #101a26 55%);
+}
+.lv-resume-band-bp:hover,
+.lv-resume-band-bp:has(:focus-visible) {
+  border-color: var(--lv-resume-accent, #a79cff);
+}
+.lv-resume-band-bp .lv-resume-band-mark {
+  border-color: var(--lv-resume-accent, #a79cff);
+  background: var(--lv-resume-accent, #a79cff);
+  color: var(--lv-resume-on-accent, #17123a);
+}
+.lv-resume-band-mark {
+  display: grid;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--lv-resume-accent, #42d8c6) 45%, rgb(150 170 195 / 28%));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--lv-resume-accent, #42d8c6) 18%, transparent);
+  color: var(--lv-resume-accent, #42d8c6);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+}
+.lv-resume-band-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+}
+.lv-resume-band-label {
+  color: var(--lv-resume-accent, #42d8c6);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+}
+.lv-resume-band-line {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  white-space: nowrap;
+}
+.lv-resume-band-title {
+  flex: none;
+  color: #f2f6fc;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.lv-resume-band-meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--lv-text-secondary);
+  font-size: 12.5px;
+  line-height: 17.5px;
+  text-overflow: ellipsis;
+}
+.lv-resume-band-note {
+  color: var(--lv-text-secondary);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.lv-resume-band-extra {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+.lv-resume-band-action {
+  display: flex;
+  flex: none;
+  align-items: center;
+}

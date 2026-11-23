@@ -45,7 +45,7 @@ test("C1/C2: the two columns, the resume band, the pictures and the right column
 
   // H2: the CD mark, the label, the title, the Enter key inside the button, the recent two, the primary.
   const band = home.getByTestId("home-resume");
-  await expect(band.locator(".dojo-home-p20-mark")).toHaveText("CD");
+  await expect(band.locator(".lv-resume-band-mark")).toHaveText("CD");
   await expect(band).toContainText("続きから");
   await expect(band).toContainText("定番の進行");
   await expect(band.getByTestId("home-recent-0")).toBeVisible();

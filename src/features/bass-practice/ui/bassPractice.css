@@ -8,7 +8,8 @@
 .bass-practice-shell > .bass-stage { display:flex; flex-direction:column; flex:1; min-height:0; gap:12px; }
 .bass-practice-shell > .bass-stage[hidden] { display:none; }
 .bass-stage > .bass-mode-panel { flex:1; min-height:0; }
-.bass-home-stage { overflow-y:auto; scrollbar-gutter:stable; }
+/* P24-07 item 7: the stable gutter took 10px off the home, so its resume band was narrower than the other two. */
+.bass-home-stage { overflow-y:auto; scrollbar-gutter:auto; }
 .bass-echo-frame { display:grid; grid-template-columns:minmax(0,1fr) 300px; height:100%; min-height:0; gap:14px; }
 .bass-echo-main, .bass-echo-rail { min-width:0; min-height:0; overflow-y:auto; scrollbar-gutter:stable; }
 .bass-echo-rail { display:flex; flex-direction:column; gap:12px; padding:12px; border-left:1px solid var(--lv-border); background:var(--lv-surface); }

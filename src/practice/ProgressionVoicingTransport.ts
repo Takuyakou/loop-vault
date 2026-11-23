@@ -8,6 +8,9 @@ import {
   AUDITION_ATTACK_SECONDS,
   AUDITION_FADE_SECONDS,
   AUDITION_RETIRE_MS,
+  MAX_FADING_INSTRUMENTS,
+  PREVIEW_STOP_FADE_SECONDS,
+  PREVIEW_STOP_RETIRE_MS,
   rampOutputGain,
 } from "../audio/outputFade";
 import type {
@@ -56,6 +59,8 @@ export interface ProgressionVoicingTransportPort {
   readonly supportsSeek?: boolean;
   setLoopBounds?(bounds: { readonly startBeat: number; readonly endBeat: number } | undefined): boolean;
   seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
+  /** P24-01 H-3: a rest card has no chord event, so the pause needs the card's head as a beat. */
+  seekBeat?(beat: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
 
@@ -94,6 +99,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private auditionGeneration = 0;
   private readonly retiringAuditions: Array<{ voice: AuditionVoice; timer: ReturnType<typeof globalThis.setTimeout> }> = [];
   private clickSynth?: Tone.Synth;
+  /** P24-01 H-3: outputs that are fading out before they are thrown away (at most MAX_FADING_INSTRUMENTS). */
+  private readonly retiringOutputs: Array<{
+    readonly instrument?: PreviewInstrument;
+    readonly output?: Tone.Gain;
+    readonly timer: ReturnType<typeof globalThis.setTimeout>;
+  }> = [];
   private resumeRequest?: Promise<boolean>;
   private restartRequest?: Promise<boolean>;
   private generation = 0;
@@ -549,8 +560,27 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const options = this.activeOptions;
     if (!this.v2 || !options || !this.ownsTransport || !Number.isInteger(eventIndex)
       || eventIndex < 0 || eventIndex >= options.snapshot.events.length) return;
-    const target = options.snapshot.events[eventIndex]!.startBeat;
-    if (target < this.loopStart() || target >= this.loopEnd()) return;
+    return this.seekToBeat(options.snapshot.events[eventIndex]!.startBeat, eventIndex);
+  }
+
+  /**
+   * P24-01 H-3: seek to any beat inside the practice. A rest card has no chord event, so pausing in the
+   * middle of a rest needs a beat (its card's head), not an event index.
+   */
+  seekBeat(beat: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined {
+    const options = this.activeOptions;
+    if (!this.v2 || !options || !this.ownsTransport || !Number.isFinite(beat)) return;
+    const atEvent = options.snapshot.events.findIndex((event) => Math.abs(event.startBeat - beat) < 1e-6);
+    return this.seekToBeat(beat, atEvent >= 0 ? atEvent : undefined);
+  }
+
+  private seekToBeat(
+    target: number,
+    eventIndex?: number,
+  ): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined {
+    const options = this.activeOptions;
+    if (!this.v2 || !options || !this.ownsTransport) return;
+    if (!Number.isFinite(target) || target < this.loopStart() || target >= this.loopEnd()) return;
     const wasCountIn = this.transport.ticks / this.transport.PPQ < this.countInBeats;
     const toneBeat = this.transport.ticks / this.transport.PPQ;
     const logical = this.logicalBeat(toneBeat);
@@ -707,15 +737,45 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   private disposeInstruments(): void {
     this.releaseVoices();
-    this.voicingInstrument?.dispose();
-    this.referenceOutput?.dispose();
-    this.referenceOutput = undefined;
+    // P24-01 H-3: never cut a sounding note in the middle of its wave. The output fades,
+    // the instrument is let go of at once (so the next start never mixes with it), and a
+    // timer (not the audio clock, which may have stopped) throws it away later.
+    this.retireVoicingOutput();
     this.latestScheduledAudioTime = 0;
     this.clickSynth?.dispose();
-    this.voicingInstrument = undefined;
     this.voicingSound = undefined;
     this.clickSynth = undefined;
     this.disposeAuditionInstrument();
+  }
+
+  private retireVoicingOutput(): void {
+    const instrument = this.voicingInstrument;
+    const output = this.referenceOutput;
+    this.voicingInstrument = undefined;
+    this.referenceOutput = undefined;
+    this.voicingSound = undefined;
+    if (!instrument && !output) return;
+    const now = Tone.now();
+    if (output) rampOutputGain(output, 0, now, now + PREVIEW_STOP_FADE_SECONDS, true);
+    instrument?.releaseAll(now);
+    const retirement = {
+      ...(instrument === undefined ? {} : { instrument }),
+      ...(output === undefined ? {} : { output }),
+      timer: globalThis.setTimeout(() => this.disposeRetiredOutput(retirement), PREVIEW_STOP_RETIRE_MS),
+    };
+    this.retiringOutputs.push(retirement);
+    // A burst of stops: only so many may be fading at once.
+    while (this.retiringOutputs.length > MAX_FADING_INSTRUMENTS) {
+      this.disposeRetiredOutput(this.retiringOutputs[0]!);
+    }
+  }
+
+  private disposeRetiredOutput(retirement: (typeof this.retiringOutputs)[number]): void {
+    globalThis.clearTimeout(retirement.timer);
+    const index = this.retiringOutputs.indexOf(retirement);
+    if (index >= 0) this.retiringOutputs.splice(index, 1);
+    retirement.instrument?.dispose();
+    retirement.output?.dispose();
   }
 
   private fadeAuditionVoice(voice: AuditionVoice, time: number): void {
@@ -810,10 +870,19 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   private closeReferenceOutput(time: number, cancel = false): void {
+    const output = this.referenceOutput;
+    if (!output) return;
+    this.latestScheduledAudioTime = Math.max(this.latestScheduledAudioTime, time);
     if (cancel) {
-      this.referenceOutput?.gain.cancelScheduledValues(Tone.now());
+      // P24-01 H-3: read the sounding level before cancelling the schedule, then fade out
+      // over the stop window instead of cutting the wave (which is heard as a click).
+      rampOutputGain(output, 0, time, time + PREVIEW_STOP_FADE_SECONDS, true);
+      return;
     }
-    this.scheduleReferenceGate(0, time);
+    // A rest or a chord boundary inside the music keeps the short 3ms gate.
+    const now = Tone.now();
+    const rampStart = Math.max(now, time - 0.003);
+    rampOutputGain(output, 0, rampStart, Math.max(time, rampStart + 0.003));
   }
 
   private scheduleReferenceGate(value: 0 | 1, time: number): void {
@@ -864,11 +933,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 }
 
+/** P24-01 H-2: `applyOctaveShift` appends the shift to the fingerprint, so compare without it. */
+const OCTAVE_FINGERPRINT_SUFFIX = /:octave:-?\d+$/;
+
 function isCompatiblePlan(
   snapshot: ProgressionVoicingPracticeSnapshot,
   plan: ProgressionPracticeVoicingPlan,
 ): boolean {
-  return plan.snapshotFingerprint === snapshot.fingerprint
+  return plan.snapshotFingerprint.replace(OCTAVE_FINGERPRINT_SUFFIX, "") === snapshot.fingerprint
     && plan.selection === snapshot.selection
     && plan.events.length === snapshot.events.length
     && plan.events.every((event, index) => event.eventId === snapshot.events[index]?.id);

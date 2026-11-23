@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers/app";
+import { openApp, chooseTextSetting } from "./helpers/app";
 import { openDojo, type MidiControl } from "./helpers/p12";
 
 /** P23-48: one key press sounds once in Chord Dojo. P23-48-fix-1: Voicing Loop keeps the base teal; Bass Practice's entry is purple. */
@@ -87,7 +87,7 @@ test("Voicing Loop keeps the base teal and the right hand is the keyboard's cyan
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| Cmaj7 | Am7 | Dm7 | G7 |");
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-name").fill("明るい循環");
   await capture.getByTestId("text-progression-save").click();
   await page.locator('[data-nav="voicing-loop"]').click();
@@ -111,7 +111,7 @@ test("the Vault marks: VL and CD are both teal (CD is no longer Bass purple)", a
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| Dm7 | G7 | Cmaj7 |");
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-name").fill("ツーファイブ");
   await capture.getByTestId("text-progression-save").click();
   await page.locator('[data-nav="vault"]').click();

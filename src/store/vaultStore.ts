@@ -25,9 +25,13 @@ import {
   TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
-import { parseExtendedTextProgression, parseExtendedTextChordLabel } from "../domain/extendedTextProgression";
+import { SAMPLE_PROGRESSION_TAG, SAMPLE_PROGRESSIONS, buildSampleProgression } from "../domain/sampleProgressions";
+import { editProgressionMemo, splitProgressionMemo } from "../domain/progressionWorkspace/progressionWorkspace";
+import { parseExtendedTextChordLabel } from "../domain/extendedTextProgression";
+import { asExtendedTextResult, parseUnifiedText } from "../domain/textUnified";
 import { EXTENDED_TEXT_LIMITS } from "../domain/extendedTextBudgets";
 import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSource";
+import { textAttackPlacements } from "../domain/textAttackSplits";
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isUsablePracticeVoicing, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
@@ -177,6 +181,8 @@ export interface VaultStoreState {
   createIdeaFromTextProgression: (draft: TextProgressionIdeaDraft) => string | undefined;
   updateIdea: (id: string, changes: Partial<SongIdea>) => VaultMutationResult;
   appendTextProgressionToIdea: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
+  /** P24-03: the three sample progressions of the empty-Vault guide. Returns how many were added. */
+  addSampleProgressions: () => number;
   deleteIdea: (deletion: PendingIdeaDeletion) => VaultMutationResult;
   appendBlockToIdea: (
     ideaId: string,
@@ -562,6 +568,32 @@ export function createVaultStore(
               }
             : idea),
         }));
+      },
+      addSampleProgressions() {
+        let created = 0;
+        for (const spec of SAMPLE_PROGRESSIONS) {
+          const memo = editProgressionMemo(undefined, { name: spec.name });
+          // Pressing twice must not make six: a sample that is already there is skipped by its memo name.
+          const exists = get().ideas.some((idea) => (idea.progressionBlocks ?? []).some((block) =>
+            block.tags.includes(SAMPLE_PROGRESSION_TAG) && splitProgressionMemo(block.memo).name === memo));
+          if (exists) continue;
+          const draft = buildSampleProgression(spec);
+          const ideaId = get().createIdeaFromTextProgression({
+            title: spec.title,
+            chords: draft.chords,
+            summaryText: "",
+            beatsPerBar: draft.beatsPerBar,
+            scoreLengthBeats: draft.scoreLengthBeats,
+            confirmedKey: spec.keyLabel,
+            userVerified: true,
+          });
+          if (!ideaId) continue;
+          const block = get().ideas.find((idea) => idea.id === ideaId)?.progressionBlocks?.[0];
+          if (!block) continue;
+          get().updateProgressionBlock(ideaId, block.id, { tags: [SAMPLE_PROGRESSION_TAG], memo });
+          created += 1;
+        }
+        return created;
       },
       updateIdea(id, changes) {
         if (Object.prototype.hasOwnProperty.call(changes, "progressionBlocks")) {
@@ -1110,7 +1142,7 @@ function validateSavedTextSource(
   if (!checked.success) return undefined;
   const metadata = checked.data.metadata;
   if (metadata.key !== confirmedKey || metadata.bpm !== bpm) return undefined;
-  const parsed = parseExtendedTextProgression(checked.data.rawText, {
+  const parsed = parseUnifiedText(checked.data.rawText, {
     beat: metadata.beat,
     ...(metadata.key === undefined ? {} : { key: metadata.key, confirmed: true }),
     ...(metadata.bpm === undefined ? {} : { bpm: metadata.bpm }),
@@ -1119,17 +1151,25 @@ function validateSavedTextSource(
   if (!parsed.canConvert
     || beatsPerBar !== parsed.beatsPerBar
     || scoreLengthBeats !== parsed.scoreLengthBeats
-    || chords.length !== parsed.harmonicSpans.length
-    || JSON.stringify(checked.data) !== JSON.stringify(buildSavedTextSource(parsed))) return undefined;
-  for (let index = 0; index < chords.length; index += 1) {
-    const item = chords[index]!;
-    const span = parsed.harmonicSpans[index]!;
-    if (Math.abs(textAbsoluteBeat(item, parsed.beatsPerBar) - span.startBeat) > 1e-9
-      || Math.abs(item.durationBeats - span.durationBeats) > 1e-9
-      || !sameTextProgressionChord(span.chord, item.chord)
-      || item.chord.label !== span.chord.label) return undefined;
-  }
-  return checked.data;
+    || JSON.stringify(checked.data) !== JSON.stringify(buildSavedTextSource(asExtendedTextResult(parsed)))) return undefined;
+  // P24-fix-1: the chords may be the old one-per-harmonic-span list or the new one-per-attack list. Both
+  // are built from the same typed text, so both can be checked exactly.
+  const spanWise = chords.length === parsed.spans.length && chords.every((item, index) => {
+    const span = parsed.spans[index]!;
+    return Math.abs(textAbsoluteBeat(item, parsed.beatsPerBar) - span.startBeat) <= 1e-9
+      && Math.abs(item.durationBeats - span.durationBeats) <= 1e-9
+      && sameTextProgressionChord(span.chord, item.chord)
+      && item.chord.label === span.chord.label;
+  });
+  if (spanWise) return checked.data;
+  const attackWise = chords.length === textAttackPlacements(parsed.spans).length && chords.every((item, index) => {
+    const place = textAttackPlacements(parsed.spans)[index]!;
+    return Math.abs(textAbsoluteBeat(item, parsed.beatsPerBar) - place.beat) <= 1e-9
+      && Math.abs(item.durationBeats - place.durationBeats) <= 1e-9
+      && sameTextProgressionChord(place.chord, item.chord)
+      && item.chord.label === place.chord.label;
+  });
+  return attackWise ? checked.data : undefined;
 }
 
 function createSavedTextProgressionBlock(

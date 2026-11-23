@@ -132,13 +132,14 @@ test("E1/E2: the wrong bass and a missing tone give the reason, then the heading
   const ear = item("lv1-e-132");
   await captureReportShot(page, "p23-47-fix-4-assets/ear-q-1440.png");
 
-  // E1: A♭ in the bass.
-  await play(page, [56, 60, 65]);
+  // E1: the root is missing (P24-02 I-4: an inversion is now a correct answer, so the wrong answer
+  // here is an incomplete chord).
+  await play(page, [56, 60]);
   await expect(page.getByTestId("guided-course")).toHaveAttribute("data-result", "wrong");
-  await expect(page.getByTestId("course-feedback-detail")).toHaveText("一番下の音が A♭ です（F を指定）");
+  await expect(page.getByTestId("course-feedback-detail")).toContainText("F がありません");
   await expect(page.getByTestId("course-chord-card")).toBeVisible();
   await expect(page.getByTestId("course-prompt-name")).toHaveText("Fm");
-  await expect(page.getByTestId("course-example-label")).toContainText("一番低い音はF。上の音は別の配置でも弾けます");
+  await expect(page.getByTestId("course-example-label")).toContainText("ルート（根音）はF。転回・別の配置でも合格です");
   await captureReportShot(page, "p23-47-fix-4-assets/ear-wrong-1440.png");
   void ear;
 
@@ -155,7 +156,7 @@ test("E1 at 768: the ear question and the answer card", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 640 });
   await openEarReady(page, 1);
   await captureReportShot(page, "p23-47-fix-4-assets/ear-q-768.png", { fullPage: true });
-  await play(page, [56, 60, 65]);
+  await play(page, [56, 60]);
   await expect(page.getByTestId("guided-course")).toHaveAttribute("data-result", "wrong");
   await expect(page.getByTestId("course-chord-card")).toBeVisible();
   await captureReportShot(page, "p23-47-fix-4-assets/ear-wrong-768.png", { fullPage: true });

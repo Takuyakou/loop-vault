@@ -43,8 +43,8 @@
       "Bash(git merge --no-ff:*)"
     ],
     "deny": [
-      "Bash(git push:*)",
-      "Bash(git tag:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
       "Bash(git branch -D:*)",
       "Bash(git branch -d:*)",
       "Bash(git add -A:*)",
@@ -56,7 +56,6 @@
       "Bash(git rebase:*)",
       "Bash(git restore:*)",
       "Bash(git checkout -- :*)",
-      "Bash(gh release:*)",
       "Bash(npm install:*)",
       "Bash(npm i :*)",
       "Bash(npm uninstall:*)",

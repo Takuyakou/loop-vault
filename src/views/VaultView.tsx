@@ -53,7 +53,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function VaultView({
   ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, openTextCapture, updateProgressionBlock, setToast, copy, showRomanNumerals,
-  openVoicingLoop, openChordDojo, openBassPractice, keyRequest, onKeyRequestDone,
+  openVoicingLoop, openChordDojo, openBassPractice, keyRequest, onKeyRequestDone, onAddSamples,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
@@ -61,6 +61,8 @@ export function VaultView({
   openProgression?: (ideaId: string, blockId: string) => void;
   openCapture: () => void;
   openTextCapture?: () => void;
+  /** P24-03: the empty-Vault guide's sample button. */
+  onAddSamples?: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
@@ -287,7 +289,7 @@ export function VaultView({
               action={<Button variant="neutral" onClick={clearAll}>条件をすべて解除</Button>}
             />
           ) : (
-            <FirstCaptureGuide onMidi={openCapture} onText={openTextCapture} />
+            <FirstCaptureGuide onMidi={openCapture} onText={openTextCapture} {...(onAddSamples ? { onSamples: onAddSamples } : {})} />
           )}
 
           {orphans.length && library.activeCount === 0 ? <OrphanIdeas ideas={orphans} openDetail={openDetail} /> : null}

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, chooseTextSetting } from "./helpers/app";
 import { practiceFromVault } from "./helpers/practice";
 import { openDojo } from "./helpers/p12";
 import { captureReportShot } from "./helpers/reportShots";
@@ -30,7 +30,7 @@ async function saveText(page: Page, name: string, text: string, key?: string) {
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  if (key) await capture.getByTestId("text-progression-key").selectOption(key);
+  if (key) await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

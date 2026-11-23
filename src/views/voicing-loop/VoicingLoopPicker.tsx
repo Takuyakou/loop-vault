@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FavoriteIcon, PlayIcon, SearchIcon } from "../../components/icons";
-import { Button, EmptyState, FavoriteDots, PlayingMark, Surface, useTransientFlag } from "../../components/ui";
+import { Button, EmptyState, FavoriteDots, PlayingMark, ResumeBand, ResumeGoButton, Surface, useTransientFlag } from "../../components/ui";
 import { auditionSavedChord } from "../chordAudition";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../../audio/playbackController";
 import type { PreviewSound } from "../../audio/chordPreview";
@@ -161,19 +161,11 @@ export function VoicingLoopPicker({
           tool row has no visible title). */}
       <h2 className="sr-only">{text.chooseProgression}</h2>
       {resumeCandidate ? (
-        <section className="lv-vl-resume" data-testid="voicing-loop-resume" aria-label={text.resumeTitle}>
-          <span aria-hidden="true" className="lv-vl-resume-mark">VL</span>
-          <div className="lv-vl-resume-main">
-            <div className="lv-vl-resume-label lv-section-kicker">{text.resumeTitle}</div>
-            <div className="lv-vl-resume-line">
-              <span className="lv-vl-resume-title">{resumeCandidate.title}</span>
-              <span className="lv-vl-resume-meta">{` ・ ${resumeFacts(resumeCandidate, lastPractice, text)}`}</span>
-            </div>
-          </div>
-          <button type="button" className="lv-vl-resume-go" data-testid="voicing-loop-resume-go" onClick={() => onPractice(resumeCandidate)}>
-            {text.resumeGo}<kbd className="lv-vl-kbd">Enter</kbd>
-          </button>
-        </section>
+        <ResumeBand screen="vl" testId="voicing-loop-resume" label={text.resumeTitle}
+          title={resumeCandidate.title}
+          meta={resumeFacts(resumeCandidate, lastPractice, text)}>
+          <ResumeGoButton label={text.resumeGo} data-testid="voicing-loop-resume-go" onClick={() => onPractice(resumeCandidate)} />
+        </ResumeBand>
       ) : null}
 
       <Surface className="lv-vl-picker-tools flex min-w-0 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2" data-testid="voicing-loop-picker-tools">

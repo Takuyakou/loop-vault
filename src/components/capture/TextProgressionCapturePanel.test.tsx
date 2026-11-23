@@ -98,6 +98,26 @@ async function click(element: HTMLElement) {
   await act(async () => element.click());
 }
 
+/** P24-07: the key picker is a button + listbox; open it, choose a value, and it closes. */
+async function chooseKey(harness: Harness, value: string) {
+  await click(keyInput(harness));
+  const option = [...harness.container.querySelectorAll<HTMLElement>(
+    '[data-testid="text-progression-key-list"] [role="option"]',
+  )].find((element) => element.dataset.value === value);
+  expect(option).not.toBeUndefined();
+  await click(option!);
+}
+
+/** The options the key window shows (values and labels), with the window left closed. */
+async function keyOptions(harness: Harness) {
+  await click(keyInput(harness));
+  const options = [...harness.container.querySelectorAll<HTMLElement>(
+    '[data-testid="text-progression-key-list"] [role="option"]',
+  )].map((element) => ({ value: element.dataset.value, label: element.textContent }));
+  await click(keyInput(harness));
+  return options;
+}
+
 function input(harness: Harness) {
   const element = harness.container.querySelector<HTMLTextAreaElement>(
     '[data-testid="text-progression-input"]',
@@ -107,7 +127,7 @@ function input(harness: Harness) {
 }
 
 function keyInput(harness: Harness) {
-  const element = harness.container.querySelector<HTMLSelectElement>(
+  const element = harness.container.querySelector<HTMLButtonElement>(
     '[data-testid="text-progression-key"]',
   );
   expect(element).not.toBeNull();
@@ -136,19 +156,22 @@ function buttonByText(harness: Harness, label: string) {
 }
 
 describe("TextProgressionCapturePanel", () => {
-  it("keeps one shared syntax switch without duplicating the app heading", async () => {
+  it("is one text screen with no syntax switch and no duplicate app heading", async () => {
     const harness = await mount();
     try {
+      // P24-05: the two pane headings are h2 in the design; the app's own heading is not repeated here.
       const heading = () => [...harness.container.querySelectorAll("h2")].map(node => node.textContent);
-      expect(heading()).toEqual([]);
-      expect(harness.container.querySelectorAll('[data-testid="text-mode-standard"]')).toHaveLength(1);
-      expect(harness.container.querySelector('[data-testid="text-progression-capture"]')?.getAttribute("data-text-dialect"))
-        .toBe("standard");
-      await act(async () => harness.container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')?.click());
-      expect(heading()).toEqual([]);
-      expect(harness.container.querySelectorAll('[data-testid="text-mode-extended"]')).toHaveLength(1);
-      expect(harness.container.querySelector('[data-testid="text-progression-capture"]')?.getAttribute("data-text-dialect"))
-        .toBe("extended");
+      expect(heading()).toEqual(["入力", "プレビュー"]);
+      // P24-05: the 「通常 / 拡張」 switch and its second screen are gone; there is one intake.
+      expect(harness.container.querySelectorAll('[data-testid="text-mode-standard"]')).toHaveLength(0);
+      expect(harness.container.querySelectorAll('[data-testid="text-mode-extended"]')).toHaveLength(0);
+      expect(harness.container.querySelectorAll('[data-testid="standard-text-intake"]')).toHaveLength(1);
+      expect(harness.container.querySelectorAll('[data-testid="extended-text-input"]')).toHaveLength(0);
+      // Nothing to normalise yet: the band only appears when the reading differs from the text.
+      expect(harness.container.querySelector('[data-testid="text-normalize-band"]')).toBeNull();
+      await changeValue(input(harness), "歌詞の行\n| Cmaj7 | Dm7 |");
+      expect(harness.container.querySelector('[data-testid="text-normalize-band"]')).not.toBeNull();
+      expect(harness.container.querySelector('[data-testid="text-intake-decorations"]')).not.toBeNull();
     } finally {
       await harness.unmount();
     }
@@ -161,7 +184,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(harness.container.querySelectorAll('[data-testid="text-preview-error"]')).toHaveLength(0);
     // P23-17 V3/V9: the hold (=) has no card of its own any more; the write rules in 「?」 say what it does.
     await click(harness.container.querySelector<HTMLButtonElement>('[data-testid="text-help"]')!);
-    expect(harness.container.querySelector('[data-testid="text-help-face"]')?.textContent).toContain("= は再発音せず保持");
+    expect(harness.container.querySelector('[data-testid="text-help-face"]')?.textContent).toContain("= は鳴らし直さずにのばす");
     await changeValue(input(harness), "| _ |");
     expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
     // V11: a rest-only score has no card, but 「音を細かく直す」 stays (the all-rest path must not be lost).
@@ -178,7 +201,7 @@ describe("TextProgressionCapturePanel", () => {
   it("shows the extended bounded input contract", async () => {
     const harness = await mount();
 
-    expect(harness.container.textContent).toContain("最大32小節・128セル");
+    expect(harness.container.textContent).toContain("最大256小節・4096セル");
     await harness.unmount();
   });
 
@@ -197,14 +220,14 @@ describe("TextProgressionCapturePanel", () => {
     );
     expect(cards).toHaveLength(7);
     expect(cards[0]).toBeInstanceOf(HTMLElement);
-    // The first card is the one the inspector opens on; its accent follows the preview workspace's own selection.
-    expect(cards[0]?.getAttribute("data-selected")).toBe("false");
-    expect(cards[0]?.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
-      .toContain("標準 / 自動生成");
+    // P24-05: the inspector opens on the first card, and the preview now shows that same choice.
+    expect(cards[0]?.getAttribute("data-selected")).toBe("true");
+    // fix-2 item 1: every card uses the same sound, so no card prints its small mark.
+    expect(cards[0]?.querySelector('[data-testid="text-progression-voicing-state"]')).toBeNull();
     // These are native buttons: focus/activation are keyboard reachable without
     // introducing a custom keyboard model. Browser key activation is covered by
     // the stage's Playwright accessibility gate.
-    const firstButton = cards[1]!.querySelector<HTMLButtonElement>(".lv-text-preview-chord")!;
+    const firstButton = cards[1]!;
     firstButton.focus();
     expect(document.activeElement).toBe(firstButton);
     await click(firstButton);
@@ -221,9 +244,9 @@ describe("TextProgressionCapturePanel", () => {
     await harness.unmount();
   });
 
-  it("keeps invalid three-token bars visible with source positions and blocks conversion", async () => {
+  it("keeps unreadable tokens visible with source positions and blocks conversion", async () => {
     const harness = await mount();
-    await changeValue(input(harness), "| C D E |");
+    await changeValue(input(harness), "| C ? |");
 
     const entry = input(harness);
     expect(entry.getAttribute("aria-invalid")).toBe("true");
@@ -231,50 +254,70 @@ describe("TextProgressionCapturePanel", () => {
     const diagnostics = harness.container.querySelector<HTMLElement>(
       '#text-progression-diagnostics',
     );
-    expect(diagnostics?.textContent).toMatch(/1小節目・文字 \d+-\d+/);
-    expect(harness.container.querySelectorAll('[data-testid="text-preview-error"]'))
-      .toHaveLength(1);
+    expect(diagnostics?.textContent).toMatch(/1 行目 · 1 小節目/);
+    // P24-05: the readable C stays a card; only the unreadable characters become the red card.
+    expect(harness.container.querySelectorAll('[data-testid="text-preview-card-error"]')).toHaveLength(1);
+    expect(harness.container.querySelectorAll('[data-testid="text-preview-error"]')).toHaveLength(0);
     // V11: an invalid bar makes no card, so there is no convert button to press.
     expect(harness.container.querySelector('[data-testid="text-progression-convert"]')).toBeNull();
     await harness.unmount();
   });
 
-  it("uses Japanese UI text for diagnostics and capability status/reasons", async () => {
+  it("P24-07 deletes a card with its menu and with Delete, and Ctrl+Z restores the text", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), "| C | F | G |");
+    const firstCard = () => harness.container.querySelector<HTMLButtonElement>(
+      '[data-testid="text-preview-band"]',
+    )!;
+    await act(async () => {
+      firstCard().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: 40, clientY: 60 }));
+    });
+    const menu = harness.container.ownerDocument.querySelector<HTMLElement>('[data-testid="text-card-menu"]');
+    expect(menu).not.toBeNull();
+    const remove = menu!.querySelector<HTMLButtonElement>('[role="menuitem"]')!;
+    expect(remove.textContent).toBe("削除");
+    await click(remove);
+    expect(input(harness).value).toBe("| F | G |");
+    expect(harness.container.ownerDocument.querySelector('[data-testid="text-card-menu"]')).toBeNull();
+
+    // One Ctrl+Z in the input puts the deleted card back.
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true, bubbles: true }));
+    });
+    expect(input(harness).value).toBe("| C | F | G |");
+
+    // Pointer over a card + Delete removes it (no click needed).
+    await act(async () => {
+      firstCard().dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    });
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+    });
+    expect(input(harness).value).toBe("| F | G |");
+    await harness.unmount();
+  });
+
+  it("uses Japanese UI text for diagnostics and no longer shows the capability list", async () => {
     const invalid = await mount({  });
     await changeValue(input(invalid), "| C ? |");
 
     const diagnostics = invalid.container.querySelector<HTMLElement>(
       "#text-progression-diagnostics",
     );
-    expect(diagnostics?.textContent).toContain("対応するコード表記ではありません。");
-    expect(diagnostics?.textContent).toContain("1小節目・文字");
+    expect(diagnostics?.textContent).toContain("「?」はコードとして読めません。");
+    expect(diagnostics?.textContent).toContain("1 行目 · 1 小節目");
     expect(diagnostics?.textContent).not.toContain("`?` is not a supported chord token.");
 
-    const invalidCapabilities = invalid.container.querySelector<HTMLElement>(
-      '[data-testid="text-progression-capabilities"]',
-    )?.textContent ?? "";
-    expect(invalidCapabilities).toContain("利用不可:");
-    expect(invalidCapabilities).toContain("すべてのパーサー診断を修正してください。");
-    expect(invalidCapabilities).not.toContain("unsupported:");
-    expect(invalidCapabilities).not.toContain("Resolve every parser diagnostic before creating a Draft.");
-    expect(invalidCapabilities).not.toContain("Bass Practice is unsupported:");
-    expect(invalidCapabilities).not.toContain("Root Motion depends on an eligible Chord Context snapshot:");
+    // P24-07 item 4: the 「?」 list is gone from the save row.
+    expect(invalid.container.querySelector('[data-testid="text-progression-capability-details"]')).toBeNull();
+    expect(invalid.container.querySelector('[data-testid="text-progression-capabilities"]')).toBeNull();
     await invalid.unmount();
 
     const eligible = await mount({  });
     await changeValue(input(eligible), "| C |");
-    await changeSelect(keyInput(eligible), "C major");
+    await chooseKey(eligible, "C major");
     await changeValue(bpmInput(eligible), "120");
-
-    const eligibleCapabilities = eligible.container.querySelector<HTMLElement>(
-      '[data-testid="text-progression-capabilities"]',
-    )?.textContent ?? "";
-    expect(eligibleCapabilities).toContain("利用可能:");
-    expect(eligibleCapabilities).toContain("未判定:");
-    expect(eligibleCapabilities).not.toContain("supported:");
-    expect(eligibleCapabilities).not.toContain("unknown:");
-    expect(eligibleCapabilities).not.toContain("The saved progression contains at least one complete contiguous");
-    expect(eligibleCapabilities).not.toContain("Select a Root Motion note count from 2 through 8");
+    expect(eligible.container.querySelector('[data-testid="text-progression-capabilities"]')).toBeNull();
     await eligible.unmount();
   });
   it("enables degree input only after an explicit C major confirmation", async () => {
@@ -283,8 +326,8 @@ describe("TextProgressionCapturePanel", () => {
     // V11: no card before the key is confirmed, so the convert button is not there yet.
     expect(harness.container.querySelector('[data-testid="text-progression-convert"]')).toBeNull();
 
-    expect([...keyInput(harness).options].find((option) => option.value === "C major")?.textContent).toBe("Cメジャー");
-    await changeSelect(keyInput(harness), "C major");
+    expect((await keyOptions(harness)).find((option) => option.value === "C major")?.label).toBe("C メジャー");
+    await chooseKey(harness, "C major");
 
     expect(harness.container.querySelector('[data-testid="text-progression-key-state"]')?.textContent)
       .toContain("確定: C major");
@@ -305,22 +348,22 @@ describe("TextProgressionCapturePanel", () => {
     const harness = await mount({ onSaveStandard });
     const nameInput = () => harness.container.querySelector<HTMLInputElement>('[data-testid="text-progression-name"]')!;
     await changeValue(input(harness), "| C |");
-    await changeSelect(keyInput(harness), "C major");
+    await chooseKey(harness, "C major");
     await changeValue(bpmInput(harness), "124");
     await changeValue(nameInput(), "保存する名前");
     await click(button(harness, "text-progression-save"));
     expect(onSaveStandard).toHaveBeenCalledOnce();
     await changeValue(input(harness), "");
     // P23-33: the key select's default state after a save is 「自動」 (it used to be 未確定).
-    expect(keyInput(harness).value).toBe("auto");
+    expect(keyInput(harness).dataset.value).toBe("auto");
     expect(bpmInput(harness).value).toBe("");
     expect(nameInput().value).toBe("テキスト進行");
     // Without a save the fields stay as they were.
     await changeValue(input(harness), "| C |");
-    await changeSelect(keyInput(harness), "C major");
+    await chooseKey(harness, "C major");
     await changeValue(bpmInput(harness), "100");
     await changeValue(input(harness), "");
-    expect(keyInput(harness).value).toBe("C major");
+    expect(keyInput(harness).dataset.value).toBe("C major");
     expect(bpmInput(harness).value).toBe("100");
     await harness.unmount();
   });
@@ -329,10 +372,10 @@ describe("TextProgressionCapturePanel", () => {
     const harness = await mount();
     await changeValue(input(harness), "| C |");
     // P23-33: the automatic state replaced the 「推定」 group; the key list itself is unchanged.
-    const suggestion = [...keyInput(harness).options]
+    const suggestion = (await keyOptions(harness))
       .find((option) => option.value !== "auto" && option.value !== "unset");
     expect(suggestion).not.toBeUndefined();
-    await changeSelect(keyInput(harness), suggestion!.value);
+    await chooseKey(harness, suggestion!.value!);
     await changeValue(bpmInput(harness), "124");
     await click(harness.container.querySelector<HTMLButtonElement>(
       '[data-testid="text-preview-band"]',
@@ -418,7 +461,7 @@ describe("TextProgressionCapturePanel", () => {
     // V11: the draft hides the chosen card's row (and so the convert button).
     expect(harness.container.querySelector('[data-testid="text-progression-inspector-row"]')).toBeNull();
     expect(harness.container.querySelector<HTMLButtonElement>(
-      '[data-testid="text-preview-band"] .lv-text-preview-chord',
+      '[data-testid="text-preview-band"]',
     )?.disabled).toBe(true);
     expect(harness.container.querySelector('[data-testid="text-draft-authoritative"]')).not.toBeNull();
     await harness.unmount();
@@ -620,8 +663,8 @@ describe("TextProgressionCapturePanel P23-33 automatic key", () => {
     const nameInput = () => harness.container.querySelector<HTMLInputElement>('[data-testid="text-progression-name"]')!;
     // A clear major progression settles automatically, without touching the key field.
     await changeValue(input(harness), "| C | F | G | C |");
-    expect(keyInput(harness).value).toBe("auto");
-    expect([...keyInput(harness).options].find((option) => option.value === "auto")?.textContent).toBe("自動: Cメジャー");
+    expect(keyInput(harness).dataset.value).toBe("auto");
+    expect((await keyOptions(harness)).find((option) => option.value === "auto")?.label).toBe("自動: C メジャー");
     await changeValue(nameInput(), "自動キー");
     await click(button(harness, "text-progression-save"));
     expect(onSaveStandard).toHaveBeenCalledOnce();
@@ -635,7 +678,7 @@ describe("TextProgressionCapturePanel P23-33 automatic key", () => {
     const onSaveStandard = vi.fn((_converted: unknown, _title: string) => true);
     const harness = await mount({ onSaveStandard });
     await changeValue(input(harness), "| C | F | G | C |");
-    await changeSelect(keyInput(harness), "D major");
+    await chooseKey(harness, "D major");
     await click(button(harness, "text-progression-save"));
     const converted = onSaveStandard.mock.calls[0]![0] as { confirmedKey?: string; resolvedKey?: string };
     expect(converted.confirmedKey).toBe("D major");
@@ -647,8 +690,8 @@ describe("TextProgressionCapturePanel P23-33 automatic key", () => {
     const onSaveStandard = vi.fn((_converted: unknown, _title: string) => true);
     const harness = await mount({ onSaveStandard });
     await changeValue(input(harness), "| C | F | G | C |");
-    await changeSelect(keyInput(harness), "unset");
-    expect([...keyInput(harness).options].find((option) => option.value === "unset")?.textContent).toBe("未設定");
+    await chooseKey(harness, "unset");
+    expect((await keyOptions(harness)).find((option) => option.value === "unset")?.label).toBe("未設定");
     await click(button(harness, "text-progression-save"));
     const converted = onSaveStandard.mock.calls[0]![0] as { confirmedKey?: string; resolvedKey?: string };
     expect(converted.resolvedKey).toBeUndefined();
@@ -660,14 +703,14 @@ describe("TextProgressionCapturePanel P23-33 automatic key", () => {
     const onSaveStandard = vi.fn((_converted: unknown, _title: string) => true);
     const harness = await mount({ onSaveStandard });
     await changeValue(input(harness), "| C | Am | F |");
-    expect([...keyInput(harness).options].find((option) => option.value === "auto")?.textContent).toBe("自動: 未確定");
+    expect((await keyOptions(harness)).find((option) => option.value === "auto")?.label).toBe("自動: 未確定");
     await click(button(harness, "text-progression-save"));
     expect((onSaveStandard.mock.calls[0]![0] as { resolvedKey?: string }).resolvedKey).toBeUndefined();
     // The next input's decision replaces the old one; the invalid one leaves no stale key behind.
     await changeValue(input(harness), "| C | F | G | C |");
-    expect([...keyInput(harness).options].find((option) => option.value === "auto")?.textContent).toBe("自動: Cメジャー");
+    expect((await keyOptions(harness)).find((option) => option.value === "auto")?.label).toBe("自動: C メジャー");
     await changeValue(input(harness), "| nope |");
-    expect([...keyInput(harness).options].find((option) => option.value === "auto")?.textContent).toBe("自動: 未確定");
+    expect((await keyOptions(harness)).find((option) => option.value === "auto")?.label).toBe("自動: 未確定");
     await harness.unmount();
   });
 

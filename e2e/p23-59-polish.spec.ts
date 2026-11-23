@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createMidiFixture } from "./helpers/midiFixture";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { dropMidi, openApp, openCapture, openVault, waitForSidebarSettled } from "./helpers/app";
+import { dropMidi, openApp, openCapture, openVault, waitForSidebarSettled, chooseTextSetting } from "./helpers/app";
 import { captureReportShot } from "./helpers/reportShots";
 
 const TAGS_SIX_PROGRESSION = "| Dm7 | G7 | Cmaj7 | Cmaj7 |";
@@ -11,7 +11,7 @@ async function saveTextProgression(page: Page, text: string, key: string, name: 
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   const bpmInput = capture.getByTestId("text-progression-bpm");
   await bpmInput.click();
   await bpmInput.fill(String(bpm));

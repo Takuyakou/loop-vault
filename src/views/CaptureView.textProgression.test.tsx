@@ -51,14 +51,12 @@ describe("CaptureView text progression entry", () => {
     }
   });
 
-  it("saves a practice-incompatible Extended score but disables the Voicing Loop action", async () => {
+  it("saves a practice-incompatible score from the one text screen and disables the Voicing Loop action", async () => {
     const mounted = await renderCapture("text");
     try {
-      const extended = mounted.container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]');
-      await act(async () => extended?.click());
-      await setInput(mounted.container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]'),
+      await setInput(mounted.container.querySelector<HTMLTextAreaElement>('[data-testid="text-progression-input"]'),
         "| C Dm G7 F Am |");
-      const save = mounted.container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]');
+      const save = mounted.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-save"]');
       expect(save?.disabled).toBe(false);
       await act(async () => save?.click());
       expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledOnce();

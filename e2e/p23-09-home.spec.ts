@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, chooseTextSetting } from "./helpers/app";
 
 /**
  * P23-09: the Home rebuilt to the adopted mock. Two columns whose bottoms line up at 1440×900 with no vertical scroll,
@@ -28,7 +28,7 @@ async function saveText(page: Page, name: string, text: string, key: string) {
   const capture = page.getByTestId("text-progression-capture");
   await expect(capture).toBeVisible();
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

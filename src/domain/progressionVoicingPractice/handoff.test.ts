@@ -198,7 +198,8 @@ describe("P5.27 saved Vault handoff", () => {
     ]);
   });
 
-  it("detaches extended text attacks while keeping harmonic cards and rests", () => {
+  // P24-fix-1: 前: 2 枚(span)で、攻撃を attackBeats に持つ。後: 4 枚(発音ごと)。理由: 保存を発音ごとにした。
+  it("saves one card per extended text attack while keeping rests", () => {
     const parsed = parseExtendedTextProgression("Cm % = =|_ G7/B G7/B _");
     expect(parsed.state).toBe("VALID");
     const data = extendedTextSaveData(parsed);
@@ -214,11 +215,11 @@ describe("P5.27 saved Vault handoff", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const generated = result.handoff.snapshots["basic-full"]!;
-    expect(generated.events).toHaveLength(2);
-    expect(generated.events.map(event => event.attackBeats)).toEqual([[0, 1], [5, 6]]);
-    expect(generated.events[1]?.chord.label).toBe("G7/B");
+    expect(generated.events).toHaveLength(4);
+    expect(generated.events.map(event => event.attackBeats)).toEqual([undefined, undefined, undefined, undefined]);
+    expect(generated.events.map(event => event.chord.label)).toEqual(["Cm", "Cm", "G7/B", "G7/B"]);
     expect(generated.spans.map(span => [span.kind, span.startBeat, span.durationBeats]))
-      .toEqual([["chord", 0, 4], ["rest", 4, 1], ["chord", 5, 2], ["rest", 7, 1]]);
+      .toEqual([["chord", 0, 1], ["chord", 1, 3], ["rest", 4, 1], ["chord", 5, 1], ["chord", 6, 1], ["rest", 7, 1]]);
     expect(result.handoff.snapshots["source-midi"]?.events.every(event => event.voicing === undefined)).toBe(true);
     expect(block.textSource?.rawText).toBe("Cm % = =|_ G7/B G7/B _");
   });

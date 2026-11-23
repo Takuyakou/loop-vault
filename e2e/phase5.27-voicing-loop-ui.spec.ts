@@ -220,8 +220,7 @@ test("P8.9-09b every BPM field shows three digits without clipping at 4 sizes", 
     await expect(page.getByTestId("global-bpm-value")).toHaveAttribute("aria-valuenow", /^\d+$/);
     await page.locator('[data-nav="capture"]').click();
     await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
-    await fits(page.getByTestId("text-progression-bpm"), `${width} text standard`);
-    await page.getByTestId("text-mode-extended").click();
-    await fits(page.locator("#text-intake-bpm"), `${width} text extended`);
+    // P24-05: one screen, one BPM field (the old extended field is gone).
+    await fits(page.getByTestId("text-progression-bpm"), `${width} text`);
   }
 });

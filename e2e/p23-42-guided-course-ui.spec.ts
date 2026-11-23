@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers/app";
@@ -121,7 +121,7 @@ test("name and ear tasks: the header, the large task, the 2-choice and the hidde
   const ear = item(BANK.sets["1"]!.ear!.items[0]!);
   await expect(page.locator(".gc-head h1")).toHaveText("聴いて弾く");
   // P23-53 (mock ⑦): the root is on the chip under the sound disc; the instruction is one line.
-  await expect(page.getByTestId("course-prompt-name")).toHaveText(`一番低い音は ${NOTE_NAMES[ear.root]}`);
+  await expect(page.getByTestId("course-prompt-name")).toHaveText(`ルート（根音）は ${NOTE_NAMES[ear.root]}（配置は自由）`);
   await expect(page.getByTestId("course-ear-disc")).toBeVisible();
   await expect(page.getByTestId("course-instruction")).toHaveText("聴こえた和音を、そのまま弾く");
   await expect(page.getByTestId("course-feedback-text")).not.toHaveText("演奏を待っています");

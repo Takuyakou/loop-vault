@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, chooseTextSetting } from "./helpers/app";
 
 async function openPopulatedVoicingLoop(page: Page) {
   await openApp(page);
@@ -102,7 +102,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   const capture = page.getByTestId("text-progression-capture");
   const maximumInput = `| ${Array(32).fill("Cmaj7 Cmaj7 Cmaj7 Cmaj7").join(" | ")} |`;
   await capture.getByTestId("text-progression-input").fill(maximumInput);
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("240");
   await capture.getByTestId("text-progression-convert").click();
   const editor = page.getByTestId("manual-candidate-editor");

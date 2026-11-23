@@ -112,6 +112,6 @@ export function EarDisc(props: { readonly root: string; readonly playing: boolea
         <path d="M11 5.6a3.4 3.4 0 0 1 0 4.8M12.8 3.8a6 6 0 0 1 0 8.4" />
       </svg>
     </button>
-    <p className="gc-rootchip" data-testid={props.testId}>一番低い音は <b>{props.root}</b></p>
+    <p className="gc-rootchip" data-testid={props.testId}>ルート（根音）は <b>{props.root}</b>（配置は自由）</p>
   </div>;
 }

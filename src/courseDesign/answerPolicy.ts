@@ -11,8 +11,8 @@ import type { BankItem } from "./bank";
  *   bass" contradicted it and is removed.
  * - `saved-voicing` — a saved progression's authored notes. The exact MIDI notes (same octaves, same
  *   doubling) are the answer. This is a different task and is never mixed into a name-recall item.
- * - `ear` — the item's harmony plus its specified bass (the root). The voicing above the bass is free;
- *   the ear task never requires the authored layout.
+ * - `ear` — the item's harmony only: any inversion and placement is accepted (P24-02 I-4). The voicing
+ *   above the bass is free; the ear task never requires the authored layout.
  *
  * The policy is a *wrapper*: the product's `judgeChord(..., 'core')` forces the root bass, so P23-40 must
  * use this acceptance for course name-recall items instead of calling that judge unchanged. The delta is
@@ -61,7 +61,8 @@ export function judgeCourseAnswer(item: BankItem, mode: AnswerMode, notes: reado
   if (missingPitchClasses.length > 0) {
     return { ok: false, reason: `${names(missingPitchClasses)} がありません`, missingPitchClasses, foreignPitchClasses, bass: "free" };
   }
-  if (mode === "ear" || item.bass === "root") {
+  // P24-02 I-4: an ear question asks for the harmony, so any inversion and placement is accepted.
+  if (mode !== "ear" && item.bass === "root") {
     const lowest = Math.min(...notes);
     if (pitchClass(lowest) !== item.root) {
       return {

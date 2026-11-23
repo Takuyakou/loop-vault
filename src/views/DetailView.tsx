@@ -65,7 +65,7 @@ function ProgressionBlockCard({
     <div className="rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <button type="button" className="min-w-0 text-left" onClick={onOpen}>
-          <p className="font-semibold">{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
+          <p className="font-semibold" data-selectable>{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
           <p className="mt-1 text-[var(--lv-text-muted)]">
             {block.sourceFileName ?? copy.detail.capturedMidi}{block.startBar ? ` · ${copy.detail.barRange(block.startBar, block.endBar ?? block.startBar)}` : ""}
           </p>
@@ -95,7 +95,7 @@ function ProgressionBlockCard({
           playingChordIndex={null}
         />
       </div>
-      {block.memo ? <p className="mt-3 text-xs text-[var(--lv-warning)]" data-testid="block-memo">{describeBlockMemo(block.memo)}</p> : null}
+      {block.memo ? <p className="mt-3 text-xs text-[var(--lv-warning)]" data-testid="block-memo" data-selectable>{describeBlockMemo(block.memo)}</p> : null}
     </div>
   );
 }

@@ -87,6 +87,6 @@
   "answerPolicy": {
     "nameRecall": "the quality's required tones under the product 'normal' leniency, with the P23-47-fix-2 triad rule: Lv1/Lv3 major and minor triads require root+3rd+5th; maj7/min7/dom7 require the 7th and keep the 5th optional; min7b5 requires b5. An unspecified bass is free and any inversion is accepted; a bass is enforced only when the item specifies one; never a single fixed MIDI set",
     "savedVoicing": "the authored notes are the gold: same notes, same octaves, same doubling; no theory-derived additions; this is a separate policy from name recall",
-    "ear": "accepted harmony (the same required tones) + the item's specified bass (root); exact voicing is not required; one playback, and a replay marks the trial assisted"
+    "ear": "accepted harmony (the same required tones); any inversion and placement is accepted; exact voicing is not required; one playback, and a replay marks the trial assisted"
   }
 }

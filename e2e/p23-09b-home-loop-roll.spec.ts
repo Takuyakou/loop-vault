@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, chooseTextSetting } from "./helpers/app";
 
 /** P23-09b: the small piano roll under the 今日のループ chord boxes (Q1–Q9). */
 
@@ -17,7 +17,7 @@ async function homeWithTwoFiveOne(page: Page, text = "| Dm7 | G7 | Cmaj7 |") {
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-name").fill("2-5-1 の帯");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

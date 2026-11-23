@@ -17,11 +17,17 @@ test("Final Capture empty and populated states follow the single-toolbar contrac
   const capture = page.getByTestId("text-progression-capture");
   const toolbar = capture.getByTestId("text-capture-toolbar");
   const empty = capture.getByTestId("standard-text-preview");
-  await expect(empty).toContainText("コード進行を入力すると、ここに譜面が表示されます");
-  await expect(empty).toContainText("エラーなし");
-  await expect(capture.getByTestId("text-progression-capability-summary")).toContainText("BPM —");
+  // P24-05: the empty design shows the writing face and the quick reference, not a 「ここに譜面が…」 line.
+  await expect(capture.getByText("書く、または貼り付ける", { exact: true })).toBeVisible();
+  // P24-07 item 2: the quick reference is gone from the empty preview (four dotted bars only).
+  await expect(empty.getByTestId("text-empty-bar")).toHaveCount(4);
+  await expect(empty).not.toContainText("書き方の早見");
+  // fix-1 item 3: the status chip and the empty BPM are gone from the two headings; the summary keeps
+  // the bar count, the chords and the key only.
+  await expect(capture.getByTestId("text-progression-capability-summary")).toContainText("キー 未確定");
   await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
-  await expect(capture.locator("#text-progression-save-reason")).toContainText("コード進行を入れると保存できます");
+  // P24-05: the empty screen deliberately shows no reason sentence.
+  await expect(capture.locator("#text-progression-save-reason")).toHaveCount(0);
   await expect(capture.getByTestId("standard-text-card-details")).toHaveCount(0);
   await expect(capture.getByTestId("text-progression-inspector")).toHaveCount(0);
   const fontFaces = await page.evaluate(async () => {
@@ -66,7 +72,7 @@ test("Final Capture keeps transport states, BPM provenance and offline font acce
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
   const bpm = capture.getByTestId("text-progression-bpm");
   await expect(bpm).toHaveValue("");
-  await expect(capture.getByTestId("text-progression-capability-summary")).toContainText("BPM —");
+  await expect(capture.getByTestId("text-progression-capability-summary")).not.toContainText("BPM");
   await bpm.fill("120");
   await bpm.press("Enter");
   await expect(capture.getByTestId("text-progression-capability-summary")).toContainText("BPM 120");

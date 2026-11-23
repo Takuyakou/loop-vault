@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { ResumeBand, ResumeGoButton } from "../../../components/ui";
 import "./bassPracticeHome.css";
 
 /** The five practices, with the same names `BassPracticeModeView` uses. */
@@ -331,14 +332,11 @@ export function BassPracticeHome({ modes, info = {}, resume, instrument, onInstr
           edge); the cards and instrument share the row below it, and a missing band does not leave an empty row.
           P23-67: 「聴いてまねる」 and its empty top box are gone — the cards start at the top; 「弾いて確かめる」 stays. */}
       {resumeShown ? (
-        <div className="lv-bh-resume" data-testid="bass-home-resume">
-          <span className="lv-bh-mark" aria-hidden="true">BP</span>
-          <div className="lv-bh-resume-body">
-            <span className="lv-bh-resume-kicker">続きから</span>
-            <span className="lv-bh-resume-line"><b>{BASS_HOME_MODE_NAMES[resumeShown.mode]}</b><span>・ {resumeShown.whenLabel} に弾きました</span></span>
-          </div>
-          <button type="button" className="lv-bh-resume-button" data-testid="bass-home-resume-open" onClick={() => onOpen(resumeShown.mode)}>続ける<span className="lv-bh-enter-key" aria-hidden="true">Enter</span></button>
-        </div>
+        <ResumeBand screen="bp" testId="bass-home-resume" label="続きから"
+          title={BASS_HOME_MODE_NAMES[resumeShown.mode]}
+          meta={`${resumeShown.whenLabel} に弾きました`}>
+          <ResumeGoButton label="続ける" data-testid="bass-home-resume-open" onClick={() => onOpen(resumeShown.mode)} />
+        </ResumeBand>
       ) : null}
 
       <div className="lv-bh-main lv-bh-column">

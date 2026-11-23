@@ -3,6 +3,7 @@ import { isTextProgressionStyleSnapshot } from "../textProgressionVoicing";
 import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
 import { parseTextChordLabel } from "../chords";
 import { TEXT_GENERATED_VOICING_POLICY } from "../textSource";
+import { textAttackPlacements } from "../textAttackSplits";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { isExplicitSourceMidiVoicingAvailable, isUsablePracticeVoicing } from "../voicing";
@@ -100,24 +101,36 @@ export function buildProgressionVoicingPracticeSnapshot(
       > METER_NEUTRAL_BUDGET.maxPracticeGroups) {
     return failure("practice-capacity", "Voicing Loop exceeds its 256 PracticeGroup display capacity.");
   }
-  const textAttacks = input.block.textSource?.harmonicSpans;
-  if (textAttacks && textAttacks.length !== normalized.events.length) {
-    return failure("invalid-timing", "Text attack spans do not match saved harmony.");
-  }
-  const practiceEvents = textAttacks
-    ? Object.freeze(normalized.events.map((event, index) => {
-      const span = textAttacks[index]!;
+  // P24-fix-1: the saved chords may be the old one-per-harmonic-span list or the new one-per-attack list.
+  // A span-wise save carries its attacks as `attackBeats`; an attack-wise save is already one chord per
+  // attack, so nothing needs to be expanded.
+  const textSpans = input.block.textSource?.harmonicSpans;
+  let practiceEvents: readonly ProgressionPracticeEvent[] = normalized.events;
+  if (textSpans) {
+    const spanWise = textSpans.length === normalized.events.length && normalized.events.every((event, index) => {
+      const span = textSpans[index]!;
       const attackBeats = span.attacks.map(attack => attack.beat);
-      if (span.startBeat !== event.startBeat || span.durationBeats !== event.durationBeats
-        || attackBeats.length === 0 || attackBeats[0] !== event.startBeat
-        || attackBeats.some((beat, attackIndex) => beat < event.startBeat
-          || beat >= event.startBeat + event.durationBeats
-          || attackIndex > 0 && beat <= attackBeats[attackIndex - 1]!)) return undefined;
-      return Object.freeze({ ...event, attackBeats: Object.freeze(attackBeats) });
-    }))
-    : normalized.events;
-  if (practiceEvents.some(event => event === undefined)) {
-    return failure("invalid-timing", "Text attacks lie outside their harmonic spans.");
+      return span.startBeat === event.startBeat && span.durationBeats === event.durationBeats
+        && attackBeats.length > 0 && attackBeats[0] === event.startBeat
+        && attackBeats.every((beat, attackIndex) => beat >= event.startBeat
+          && beat < event.startBeat + event.durationBeats
+          && (attackIndex === 0 || beat > attackBeats[attackIndex - 1]!));
+    });
+    if (spanWise) {
+      practiceEvents = Object.freeze(normalized.events.map((event, index) => Object.freeze({
+        ...event,
+        attackBeats: Object.freeze(textSpans[index]!.attacks.map(attack => attack.beat)),
+      })));
+    } else {
+      const places = textAttackPlacements(textSpans.map((span) => ({ ...span, chord: span.chordLabel })));
+      const attackWise = places.length === normalized.events.length
+        && normalized.events.every((event, index) => {
+          const place = places[index]!;
+          return Math.abs(event.startBeat - place.beat) <= 1e-9
+            && Math.abs(event.durationBeats - place.durationBeats) <= 1e-9;
+        });
+      if (!attackWise) return failure("invalid-timing", "Text attack spans do not match saved harmony.");
+    }
   }
   const source = Object.freeze({
     kind: "vault" as const,

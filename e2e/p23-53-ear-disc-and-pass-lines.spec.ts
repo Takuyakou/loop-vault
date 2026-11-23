@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers/app";
 import { openDojo } from "./helpers/p12";
@@ -47,7 +47,7 @@ test("the ear question shows the sound disc and the lowest note; the disc replay
   await openEar(page);
   await expect(page.getByTestId("course-progress")).toHaveText("耳 1 / 10");
   await expect(page.getByTestId("course-instruction")).toHaveText("聴こえた和音を、そのまま弾く");
-  await expect(page.getByTestId("course-prompt-name")).toHaveText("一番低い音は F");
+  await expect(page.getByTestId("course-prompt-name")).toHaveText("ルート（根音）は F（配置は自由）");
   await expect(page.getByTestId("course-ear-disc")).toHaveCSS("width", "150px");
   await expect(page.getByTestId("course-ear-disc")).toHaveAttribute("data-playing", "true");
   await captureReportShot(page, "p23-53-assets/ear-playing-1440.png");

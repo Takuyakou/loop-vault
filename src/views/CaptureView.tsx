@@ -390,11 +390,16 @@ export function CaptureView(props: CaptureViewProps) {
     setCaptureInputMode(nextMode);
   }
 
-  function saveExtendedTextProgression(result: ExtendedTextResult, title: string, resolvedKey?: string): boolean {
+  function saveExtendedTextProgression(
+    result: ExtendedTextResult,
+    title: string,
+    resolvedKey?: string,
+    voicings?: import("../domain/extendedTextSave").TextSaveVoicings,
+  ): boolean {
     if (!result.canConvert || !createIdeaFromTextProgression) return false;
     // P23-33: the effective key is carried beside the confirmed key; the original-text validation still
     // compares only `confirmedKey` with the source metadata.
-    const data = { ...extendedTextSaveData(result), title, ...(resolvedKey === undefined ? {} : { resolvedKey }) };
+    const data = { ...extendedTextSaveData(result, voicings), title, ...(resolvedKey === undefined ? {} : { resolvedKey }) };
     const saved = createIdeaFromTextProgression({
       ...data,
       nextAction: copy.capture.defaultNextAction,

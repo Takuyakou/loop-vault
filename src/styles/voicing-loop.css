@@ -210,9 +210,6 @@
   .lv-vl-resume-line { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
   .lv-vl-resume-title { flex: none; color: #f2f6fc; font-size: 14px; font-weight: 700; line-height: 20px; }
   .lv-vl-resume-meta { min-width: 0; overflow: hidden; color: var(--lv-text-secondary); font-size: 12.5px; line-height: 17.5px; text-overflow: ellipsis; }
-  .lv-vl-resume-go { display: inline-flex; flex: none; align-items: center; height: 36px; min-height: 36px; padding: 0 12px; border: 1px solid var(--lv-accent); border-radius: 10px; background: var(--lv-accent); color: #06221f; font-size: 12px; font-weight: 500; line-height: 16px; transition: background-color .18s ease; }
-  .lv-vl-resume-go:hover { background: color-mix(in srgb, var(--lv-accent) 88%, #fff); }
-  .lv-vl-resume-go:focus-visible { outline: 2px solid #8bd7ff; outline-offset: 2px; }
 
   .lv-vl-kbd {
     margin-left: 6px;
@@ -672,8 +669,8 @@
 }
 
 .lv-vl-resume:has(:focus-visible) {border-color:var(--lv-accent);box-shadow:var(--lv-shadow-raised),inset 0 0 0 1px color-mix(in srgb,var(--lv-accent) 50%,transparent);}
-.lv-vl-resume [data-testid="voicing-loop-resume-go"]:hover {filter:brightness(1.06);}
-.lv-vl-resume [data-testid="voicing-loop-resume-go"]:focus-visible {outline:2px solid var(--lv-focus);outline-offset:2px;}
+/* P24-02 I-1: the shared 「続ける Enter」 reads only these two. */
+[data-testid="voicing-loop-workspace"] { --lv-resume-accent: #42d8c6; --lv-resume-on-accent: #06221f; }
 
 /* P23-66: range loop amber indicator (unlayered so it wins over Tailwind border/shadow utilities). */
 .lv-vl-event[data-range="inside"],

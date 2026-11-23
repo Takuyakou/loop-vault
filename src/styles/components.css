@@ -710,3 +710,50 @@
 :root:has(.lv-cw-save) .lv-analysis-progress { bottom: 76px; }
 :root:has(.lv-analysis-progress) { --lv-toast-offset-bottom: 144px; }
 :root:has(.lv-cw-save):has(.lv-analysis-progress) { --lv-toast-offset-bottom: 196px; }
+
+/* P24-02 I-1: the single 「続ける Enter」 for the three homes. The two-step class beats the
+   .dojo button rule (0,1,1) without touching any other button, and the screens only set the two
+   variables below. */
+button.lv-resume-go.lv-resume-go {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--lv-resume-accent);
+  border-radius: 10px;
+  background: var(--lv-resume-accent);
+  color: var(--lv-resume-on-accent);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  gap: 0;
+  transition: background-color .18s ease;
+}
+button.lv-resume-go.lv-resume-go:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lv-resume-accent) 88%, #fff);
+  border-color: var(--lv-resume-accent);
+}
+button.lv-resume-go.lv-resume-go:focus-visible {
+  outline: 2px solid var(--lv-focus);
+  outline-offset: 2px;
+}
+button.lv-resume-go.lv-resume-go:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+button.lv-resume-go.lv-resume-go .lv-resume-go-key {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 4px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+}

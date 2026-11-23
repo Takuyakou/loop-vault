@@ -30,7 +30,7 @@ async function playOne(page: Page): Promise<void> {
   await page.locator(".bass-modebar").getByRole("button", { name: /Bass Practice/ }).click();
   await expect(page.locator(HOME)).toBeVisible();
   await expect(page.getByTestId("bass-home-resume")).toBeVisible();
-  await expect(page.getByTestId("bass-home-resume").locator(".lv-bh-resume-line b")).toHaveText("度数");
+  await expect(page.getByTestId("bass-home-resume").locator(".lv-resume-band-title")).toHaveText("度数");
 }
 
 const metrics = (page: Page) => page.evaluate(() => {
@@ -56,8 +56,8 @@ const metrics = (page: Page) => page.evaluate(() => {
     resume: rect("[data-testid='bass-home-resume']"),
     button: rect("[data-testid='bass-home-resume-open']"),
     resumeStyle: style("[data-testid='bass-home-resume']"),
-    mark: rect(".lv-bh-mark"),
-    enter: style(".lv-bh-enter-key"),
+    mark: rect(".lv-resume-band-mark"),
+    enter: style(".lv-resume-go-key"),
     overflow: document.documentElement.scrollWidth - window.innerWidth,
   };
 });
@@ -77,7 +77,7 @@ test("Bass 続きから reaches the instrument panel's right edge and fits one c
     expect(Math.abs(box.resume!.right - box.aside!.right), `${size.width}: right edge`).toBeLessThanOrEqual(1);
     expect(Math.abs(box.card!.top - box.instrument!.top), `${size.width}: cards and instrument top`).toBeLessThanOrEqual(1);
     expect(box.button!.right, `${size.width}: button at the right`).toBeGreaterThanOrEqual(box.resume!.right - 24);
-    expect(box.resume!.height).toBeCloseTo(56.97, 1);
+    expect(box.resume!.height).toBeCloseTo(56.59, 1);
     expect(box.mark).toMatchObject({ width: 30, height: 30 });
     expect(box.enter!.fontSize).toBe("10px");
     expect(box.overflow).toBeLessThanOrEqual(1);
@@ -99,7 +99,7 @@ test("Bass 続きから reaches the instrument panel's right edge and fits one c
   // The purple hover stays on the full-width band and returns after the pointer leaves.
   await page.setViewportSize({ width: 1440, height: 900 });
   const normal = await metrics(page);
-  expect(normal.resume!.height).toBeCloseTo(56.97, 1);
+  expect(normal.resume!.height).toBeCloseTo(56.59, 1);
   await page.getByTestId("bass-home-resume").hover();
   await page.waitForTimeout(260);
   await expect(page.getByTestId("bass-home-resume")).toHaveCSS("border-top-color", BP_ACCENT);

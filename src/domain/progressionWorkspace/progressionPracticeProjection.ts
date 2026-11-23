@@ -1,5 +1,6 @@
 import type { SavedProgressionBlock, SongIdea } from '../types';
 import { beatsPerBar } from '../midi/timing';
+import { textAttackPlacements } from '../textAttackSplits';
 
 /** Read-only practice-boundary projection. Never persisted or used for re-analysis. */
 export function progressionPracticeProjection(block: SavedProgressionBlock): SavedProgressionBlock {
@@ -9,6 +10,17 @@ export function progressionPracticeProjection(block: SavedProgressionBlock): Sav
   const sorted = [...block.chords].sort((a, b) => a.bar - b.bar || a.beat - b.beat);
   const origin = block.sourceStartBeat !== undefined && block.sourceEndBeat !== undefined
     ? block.sourceStartBeat : (sorted[0]!.bar - 1) * meter + sorted[0]!.beat - 1;
+  // P24-fix-1: a save written one card per attack already matches its text source exactly; keep the block
+  // (and its source's own span/attack grouping) instead of re-projecting it card by card.
+  const places = textAttackPlacements(source.harmonicSpans.map((span) => ({ ...span, chord: span.chordLabel })));
+  const unchangedAttacks = places.length === sorted.length && sorted.every((card, index) => {
+    const absolute = (card.bar - 1) * meter + card.beat - 1;
+    const place = places[index]!;
+    return Math.abs(absolute - place.beat) <= 1e-9
+      && Math.abs(card.durationBeats - place.durationBeats) <= 1e-9
+      && card.chord.label === place.chord;
+  });
+  if (unchangedAttacks) return block;
   const spans = sorted.map(card => {
     const absolute = (card.bar - 1) * meter + card.beat - 1;
     const end = absolute + card.durationBeats;

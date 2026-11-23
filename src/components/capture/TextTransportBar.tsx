@@ -10,6 +10,8 @@ interface Props {
   readonly sourceMatches: boolean;
   readonly primaryTestId?: string;
   readonly frozenTestId?: string;
+  /** P24-fix-1: the chart's bar count for 「1 / 8 小節」; 0 hides the position (no chords). */
+  readonly positionBars?: number;
 }
 
 function isEditing(target: EventTarget | null): boolean {
@@ -22,7 +24,7 @@ function isEditing(target: EventTarget | null): boolean {
  * The test ids, the words, the Space key, the disabled rules and the frozen notice stay exactly as they were.
  */
 export function TextTransportBar({ transport, state, snapshot, disabled, sourceMatches,
-  primaryTestId = "text-transport-primary", frozenTestId = "text-transport-frozen" }: Props) {
+  primaryTestId = "text-transport-primary", frozenTestId = "text-transport-frozen", positionBars = 0 }: Props) {
   const primary = () => {
     if (disabled) return;
     if (state.status === "playing") transport.pause();
@@ -58,7 +60,10 @@ export function TextTransportBar({ transport, state, snapshot, disabled, sourceM
       beginningProps={{ "data-testid": "text-transport-beginning" }}
       loopProps={{ "data-testid": "text-transport-loop" }}
     >
-      <span className="lv-text-transport-position font-mono text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
+      {positionBars > 0 ? (
+        <span className="lv-text-transport-position font-mono" data-testid="text-transport-position" aria-live="off"
+          style={{ alignSelf: "center", fontSize: 12, color: "#a5b2c6", whiteSpace: "nowrap" }}>{`1 / ${positionBars} 小節`}</span>
+      ) : null}
       <span className="sr-only" role="status" aria-live="polite" data-testid="text-transport-status">
         {primaryLabel}{state.status === "stopped" ? ("・停止中") : ""}
       </span>

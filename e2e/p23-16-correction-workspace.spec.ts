@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs";
-import { assertNoHorizontalOverflow, createSavedProgression, dropMidi, openApp, openCapture, openVault } from "./helpers/app";
+import { assertNoHorizontalOverflow, createSavedProgression, dropMidi, openApp, openCapture, openVault, chooseTextSetting } from "./helpers/app";
 
 /** P23-16: the correction workspace's four points (W1–W7, C1–C5). */
 
@@ -28,7 +28,7 @@ async function saveText(page: Page, text: string, key: string, name: string) {
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

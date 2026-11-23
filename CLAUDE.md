@@ -63,4 +63,4 @@ asking the human for approval. The rules live in
   checks listed in the instruction are the gate for the merge candidate.
 - Generated screenshots go to `p89-generated/` (ignored, never committed).
 - Stage reports are written in Japanese under `docs/phase8.9/reports/`.
-- When the lead's review passes, merge the candidate into local master; otherwise stop at the merge candidate. Never push, tag, or release.
+- When the lead's review passes, merge the candidate into local master; otherwise stop at the merge candidate. Push, tag and release only when the stage's instruction says so. Before publishing, show everything that will go out (commit, tag, release notes, asset checksums) once; after the user's single OK, run every publishing step to the end without asking per command. Stop only on the instruction's stop conditions. Never force-push.

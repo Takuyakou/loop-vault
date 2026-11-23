@@ -1,6 +1,6 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, createSavedProgression } from "./helpers/app";
+import { assertNoHorizontalOverflow, createSavedProgression, chooseTextSetting } from "./helpers/app";
 import { selectedRow, startPracticeFromRow } from "./helpers/voicingLoopPicker";
 
 /**
@@ -130,7 +130,7 @@ test("P23-31 C9: a saved progression's degrees and role colours agree with the V
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| Cmaj7 | Am7 | Dm7 | G7 |");
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-name").fill("P23-31 Vault Parity");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/)).toBeVisible();

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, openTextCapture } from "./helpers/app";
+import { openApp, openTextCapture, chooseTextSetting } from "./helpers/app";
 import { practiceFromVault } from "./helpers/practice";
 
 /** P23-05: the one app-wide BPM in the header (G1–G3). P23-06: Voicing Loop and the Jazz listening play at it; the text intake keeps its own. */
@@ -32,7 +32,7 @@ async function sidebar(page: Page, open: boolean) {
 async function saveProgression(page: Page, bpm?: string) {
   const capture = await openTextCapture(page);
   await capture.getByTestId("text-progression-input").fill("| C#m7 | F#7 | Bmaj7 | G#7 |");
-  await capture.getByTestId("text-progression-key").selectOption("B major");
+  await chooseTextSetting(capture, "text-progression-key", "B major");
   await capture.getByTestId("text-progression-name").fill("P23-05 の進行");
   if (bpm) await capture.getByTestId("text-progression-bpm").fill(bpm);
   await capture.getByTestId("text-progression-save").click();

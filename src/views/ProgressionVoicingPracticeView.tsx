@@ -1218,9 +1218,29 @@ export function ProgressionVoicingPracticeView({
     vl14Mark("pause");
     const pausedRuntime = transportRef.current?.pause() ?? false;
     if (!pausedRuntime) runtimeRequestRef.current += 1;
-    setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "PAUSE" })
-      : state);
+    // P24-01 H-3: a pause in the middle of a card puts the playhead, the whole band and the
+    // resume point on the head of the card that was sounding. A rest card has a head too (the instruction
+    // says so), so the target is the card span at the playhead, not the nearest chord event.
+    const beforePause = clockStateRef.current;
+    const pauseBeat = pausedRuntime && beforePause?.status === "running"
+      ? projectProgressionPracticeClock(snapshot, beforePause).progressionBeat
+      : undefined;
+    const soundingSpan = pauseBeat === undefined ? undefined
+      : snapshot.spans.find((span) => pauseBeat >= span.startBeat
+          && pauseBeat < span.startBeat + span.durationBeats)
+        ?? [...snapshot.spans].reverse().find((span) => span.startBeat <= pauseBeat);
+    // `transport.seekBeat` only moves the position while paused: it does not attack the card.
+    const moved = soundingSpan === undefined ? undefined : transportRef.current?.seekBeat?.(soundingSpan.startBeat);
+    setClockState((state) => {
+      if (!state) return state;
+      if (moved && soundingSpan !== undefined) {
+        return reduceProgressionPracticeClock(snapshot, state, {
+          type: "SEEK", status: moved.status, absoluteBeat: moved.absoluteBeat,
+          anchorBeat: soundingSpan.startBeat,
+        });
+      }
+      return reduceProgressionPracticeClock(snapshot, state, { type: "PAUSE" });
+    });
   }
 
   async function resume() {
@@ -1698,9 +1718,13 @@ export function ProgressionVoicingPracticeView({
                     </div>
                   ) : null}
                   </div>
-                  <NextShapePreview hands={nextHandTargets} nextVoicing={nextVoicing}
-                    leftFingering={nextLeftFingering} rightFingering={nextRightFingering}
-                    chordLabel={nextEvent ? displayChordLabel(nextEvent.chord.label) : restLabel} accidentalStyle={accidentalStyle} />
+                  {/* P24-01 H-1: the next shape is an answer, so Recall keeps only the name, the
+                      degree/role badges and the "then next" line. */}
+                  {displayMode === "learn" ? (
+                    <NextShapePreview hands={nextHandTargets} nextVoicing={nextVoicing}
+                      leftFingering={nextLeftFingering} rightFingering={nextRightFingering}
+                      chordLabel={nextEvent ? displayChordLabel(nextEvent.chord.label) : restLabel} accidentalStyle={accidentalStyle} />
+                  ) : null}
                   {/* P23-32 P6: 「その次」 is the last thing in the next panel. */}
                   <div data-testid="voicing-loop-then-next" className="lv-vl-then">
                     <div className="flex min-w-0 items-baseline gap-2">

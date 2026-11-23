@@ -22,7 +22,12 @@ describe('read-only edited text practice projection', () => {
   it('retains unchanged source identity and its exact repeated attacks', () => {
     const block = fixture(); expect(progressionPracticeProjection(block)).toBe(block);
     const result = handoff(block); expect(result.ok).toBe(true);
-    if (result.ok) expect(result.handoff.snapshots.saved?.events[0]?.attackBeats).toEqual([0, 2]);
+    // fix-1: the save keeps one card per attack, so `| C % |` is two cards and carries no extra attack marks.
+    if (result.ok) {
+      expect(result.handoff.snapshots.saved?.events.map(event => event.chord.label))
+        .toEqual(["C", "C", "F", "G", "Am"]);
+      expect(result.handoff.snapshots.saved?.events.every(event => event.attackBeats === undefined)).toBe(true);
+    }
   });
   it('makes range copies playable in original bar coordinates without modifying saved text', () => {
     const block = fixture(); const before = structuredClone(block);
@@ -41,7 +46,9 @@ describe('read-only edited text practice projection', () => {
     }
   });
   it('retains source grid rejection instead of hiding an unsupported subdivision', () => {
-    const block = fixture('| C F G |'); const model = progressionToWorkspace(block);
+    // fix-1: `| C F G |` is exact on the 48-tick practice grid; the fifth-of-a-bar case is the one that must
+    // still be refused (the same fixture the P5.31 spec uses).
+    const block = fixture('| C Dm Em F G |'); const model = progressionToWorkspace(block);
     const range = progressionVersion(block, model, 'range', { startBar: 1, endBar: 1 });
     expect(handoff(range).ok).toBe(false);
   });

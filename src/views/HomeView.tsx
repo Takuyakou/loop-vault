@@ -78,6 +78,8 @@ export interface HomeViewProps {
   openVoicingLoopHome: () => void;
   resumeChordDojo: (entry: DojoRecentEntry) => void;
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
+  /** P24-03: the empty-Vault guide's sample button. */
+  onAddSamples?: () => void;
 }
 
 /** P22-03 §1: what the Bass Practice tabs call themselves (the Home's 「続きから」 uses the same words). */
@@ -133,6 +135,7 @@ export function HomeView({
   openVoicingLoopHome,
   resumeChordDojo,
   updateProgressionBlock,
+  onAddSamples,
 }: HomeViewProps) {
   const notify = useNotify();
   const { sound } = usePreviewSound();
@@ -201,6 +204,7 @@ export function HomeView({
           className="mx-auto mt-6 max-w-2xl"
           onMidi={() => openCapture("midi")}
           onText={() => openCapture("text")}
+          {...(onAddSamples ? { onSamples: onAddSamples } : {})}
         />
       </div>
     );
@@ -469,7 +473,7 @@ function TodayLoopCard({ entry, showDegrees, sound, onSwap, onPin, onVoicingLoop
         />
         <div className="min-w-0 flex-1">
           <span className="lv-home-kicker" data-accent="true">今日のループ</span>
-          <h2 className="lv-home-loop-title" title={progressionName(idea, block)}>{progressionName(idea, block)}</h2>
+          <h2 className="lv-home-loop-title" data-selectable title={progressionName(idea, block)}>{progressionName(idea, block)}</h2>
           <ProgressionMeta idea={idea} block={block} bars={progressionBars(block)} className="mt-0.5" />
         </div>
         <div className="lv-home-loop-tools">

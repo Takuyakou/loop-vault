@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { openApp, assertNoHorizontalOverflow } from "./helpers/app";
 import { openDojo } from "./helpers/p12";
@@ -109,7 +109,7 @@ test("P23-44 ear answer hides note names until the result, then the example is a
   await expect(page.getByTestId("course-demo")).toHaveCount(0);
   // P23-53 (mock ⑦): one line; the lowest note is on the chip.
   await expect(page.getByTestId("course-instruction")).toHaveText("聴こえた和音を、そのまま弾く");
-  await expect(page.getByTestId("course-prompt-name")).toContainText("一番低い音は");
+  await expect(page.getByTestId("course-prompt-name")).toContainText("ルート（根音）は");
   await expect(page.getByTestId("course-progress")).toHaveText("耳 1 / 10");
   await expect(page.getByTestId("course-feedback-text")).not.toHaveText("演奏を待っています");
   await expect(page.locator(".gc-keyboard-head")).not.toContainText("見本の音名");

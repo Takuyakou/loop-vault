@@ -199,7 +199,7 @@ export function GuidedBasicPractice(props: GuidedBasicPracticeProps) {
     const lines = judged.verdict === "correct" ? undefined : wrongLines(itemLabel(target), sealed.notes, target.referenceNotes, {
       required: target.requiredPitchClasses,
           allowed: target.allowedPitchClasses,
-      ...(target.prompt === "ear" || target.bass === "root" ? { bass: target.root } : {}),
+      ...(target.prompt !== "ear" && target.bass === "root" ? { bass: target.root } : {}),
     });
     const detail = hintUsed && judged.verdict === "correct" ? "お手本を使用しました（ヒントあり）" : lines?.kind === "swap" && judged.detail !== "選択が違います" ? lines.line : judged.detail;
     setFeedback({ ok: judged.verdict === "correct", result: judged.verdict, title: judged.verdict === "correct" ? "正解" : "不正解", ...(detail === undefined ? {} : { detail }), midi: true, played: sealed.notes, ...(lines === undefined ? {} : { why: lines.sub }) });

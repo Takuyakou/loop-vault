@@ -1586,7 +1586,6 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
           onPreview={() => undefined}
           onApply={(chord, source) => { pickName(chord, editorCard.id, source === "alternative" ? "chosen" : "typed"); setNameEditor(undefined); }}
           onReset={() => { edit((model) => chooseName(model, editorCard.id, timeline[editorCard.timelineIndex]!.chord, "auto")); setNameEditor(undefined); }}
-          onOpenInspector={() => setNameEditor(undefined)}
           onClose={() => setNameEditor(undefined)}
         />
       ) : null}

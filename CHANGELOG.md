@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.1.0 - 2026-11-23
+
+- Text import: one input instead of the Standard / Extended switch (both notations still read); paste chord sheets as they are (lyric lines are skipped, full-width symbols are normalised, with a one-line notice and "replace with the tidied text"); `[Section]` headings divide the preview; wavy underlines and a list of fixes, with a one-click fix for German `H` and lower-case roots; cards and input text select each other; right-click or Delete removes a card; new time-signature (1/4–12/4) and key menus.
+- Keyboard entry: press "鍵盤で入れる" in text import and add one chord per release from a MIDI keyboard, with the played notes kept as the card's sound, lengths (bar / 2 beats / 1 beat), rests and undo.
+- Sample progressions: an empty Vault offers three samples (王道進行, 丸サ進行, 循環進行) tagged `サンプル`.
+- Chord Dojo Guided Course: Lv1–Lv2 ear questions accept inversions; Lv4 to the capstone give specific round tips with a compare-with-the-example player; missing keys are green with a clearer dotted ring.
+- Voicing Loop: recall mode hides the next shape; octave and detail changes during playback or pause now reach the sound; pause returns to the card's head; stopping fades out without a click.
+- Shared Home resume band and button across Bass Practice, Chord Dojo and Voicing Loop (each keeps its own colour); screen text is no longer drag-selectable except inputs, titles, chord lines and notes.
+- Keep Vault `fileVersion` 2. v3.0.0 data opens as it is; text progressions saved from now keep repeated chords (`| C | C |`, `%`) as separate attacks. See [release notes](docs/release/v3.1.0/release-notes.md).
+
 ## 3.0.0 - 2026-11-22
 
 - Redo the whole interface: new fonts, colours and surfaces, the Home screen (today's loop, practice records, resume), Import (MIDI / text entry and the pre-analysis check), the Vault list and preview, the progression header, the Correction Workspace, Settings, the toast and the sidebar. Search from anywhere with Ctrl+K.

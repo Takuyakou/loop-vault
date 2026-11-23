@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow } from "./helpers/app";
+import { assertNoHorizontalOverflow, chooseTextSetting } from "./helpers/app";
 
 const suppliedFixture = (name: string) => readFileSync(`docs/phase5.31/fixtures/${name}`, "utf8");
 
@@ -18,7 +18,7 @@ async function saveTextToLoop(page: Page, input: string) {
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(input);
   await expect(capture.getByTestId("text-preview-error")).toHaveCount(0);
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
   await capture.getByTestId("text-progression-convert").focus();
   await page.keyboard.press("Enter");

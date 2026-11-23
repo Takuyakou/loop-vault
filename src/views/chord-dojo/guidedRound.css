@@ -19,7 +19,7 @@
 .guided-course .gc-legend i { width: 11px; height: 11px; border-radius: 50%; }
 .guided-course .gc-legend i[data-mark="hit"] { background: #36c990; }
 .guided-course .gc-legend i[data-mark="wrong"] { background: #ee6b73; }
-.guided-course .gc-legend i[data-mark="miss"] { background: rgb(66 216 198 / 18%); box-shadow: inset 0 0 0 2px var(--dojo-accent); }
+.guided-course .gc-legend i[data-mark="miss"] { background: #bfeedd; box-sizing: border-box; border: 2px dashed #0b5546; }
 
 /* Mock ⑤'s second line: the chord's tones. It hangs under the verdict without moving the keyboard. */
 .guided-course .gc-why { max-width: 640px; height: 0; margin: 0 auto; overflow: visible; color: var(--dojo-secondary); font-size: 14px; line-height: 1.7; text-align: center; }

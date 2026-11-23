@@ -923,7 +923,9 @@ describe("vault store", () => {
     expect(maximumBar?.chords).toHaveLength(TEXT_PROGRESSION_MAX_BARS);
   });
 
-  it("saves a three-quarter extended score without duplicating harmonic cards for reattacks", async () => {
+  // P24-fix-1: the reattack is a card of its own (the save keeps the re-attacks; the text source keeps
+  // the span). 前: 3 枚(span ごと、3 拍・1 拍・1 拍)。後: 4 枚(発音ごと、1・2・1・1 拍)。
+  it("saves a three-quarter extended score with one card per attack", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository, now: () => now });
     await store.getState().initialize();
@@ -939,8 +941,9 @@ describe("vault store", () => {
     expect(ideaId).toBeDefined();
     const block = store.getState().ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
     expect(block).toMatchObject({ timeSignature: "3/4", sourceStartBeat: 0, sourceEndBeat: 6 });
-    expect(block?.chords).toHaveLength(3);
-    expect(block?.chords[0]).toMatchObject({ bar: 1, beat: 1, durationBeats: 3 });
+    expect(block?.chords).toHaveLength(4);
+    expect(block?.chords[0]).toMatchObject({ bar: 1, beat: 1, durationBeats: 1 });
+    expect(block?.chords[1]).toMatchObject({ bar: 1, beat: 2, durationBeats: 2 });
     expect(parsed.harmonicSpans[0]?.attacks).toHaveLength(2);
     expect(block?.textSource).toMatchObject({
       dialect: "extended-v1",
@@ -979,8 +982,9 @@ describe("vault store", () => {
     if (!handoff.ok) throw new Error("Voicing Loop handoff failed");
     const practice = handoff.handoff.snapshots["basic-full"]!;
     expect(practice.meter).toEqual({ numerator: 3, denominator: 4 });
-    expect(practice.events.map(event => event.attackBeats)).toEqual([[0, 1], [4], [5]]);
-    expect(practice.spans.map(span => span.kind)).toEqual(["chord", "rest", "chord", "chord"]);
+    // P24-fix-1: 前: 2 枚(span)に攻撃をまとめた。後: 発音ごとに 4 枚(攻撃の印は無し)。
+    expect(practice.events.map(event => event.attackBeats)).toEqual([undefined, undefined, undefined, undefined]);
+    expect(practice.spans.map(span => span.kind)).toEqual(["chord", "chord", "rest", "chord", "chord"]);
     expect(handoff.handoff.initialSelection).toBe("saved");
   });
 
@@ -1025,13 +1029,14 @@ describe("vault store", () => {
     const block = reloaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
     expect(block?.textSource?.rawText).toBe(rawText);
     expect(block?.textSource?.slots).toHaveLength(1200);
-    expect(block?.chords).toHaveLength(parsed.harmonicSpans.length);
+    // P24-fix-1: 前: span の数(1051)。後: 発音の数(1200 = スロットの数)。
+    expect(block?.chords).toHaveLength(parsed.slots.length);
     const handoff = buildProgressionVoicingPracticeHandoffFromVault(reloaded.vault.ideas, {
       ideaId: ideaId!, blockId: block!.id,
     });
     expect(handoff.ok).toBe(true);
     if (handoff.ok) {
-      expect(handoff.handoff.snapshots["basic-full"]?.events).toHaveLength(parsed.harmonicSpans.length);
+      expect(handoff.handoff.snapshots["basic-full"]?.events).toHaveLength(parsed.slots.length);
       expect(handoff.handoff.snapshots["basic-full"]?.lengthBeats).toBe(600);
     }
   });

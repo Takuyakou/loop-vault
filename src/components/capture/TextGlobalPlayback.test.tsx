@@ -58,9 +58,9 @@ it("routes Text audio through global Piano/EP and uses each Text transport BPM f
   expect(vi.mocked(driver.playNotes!).mock.lastCall?.[2]).toBe("electric-piano");
   await press(host.querySelector<HTMLElement>("[data-testid='text-transport-stop']")!);
 
-  await press(host.querySelector<HTMLElement>("[data-testid='text-mode-extended']")!);
-  await write(host.querySelector<HTMLTextAreaElement>("[data-testid='extended-text-input']")!, "| Dm % = _ |");
-  const bpm = host.querySelector<HTMLInputElement>("#text-intake-bpm")!;
+  // P24-05: the same screen reads the extended-only cells; only the one input remains.
+  await write(host.querySelector<HTMLTextAreaElement>("[data-testid='text-progression-input']")!, "| Dm % = _ |");
+  const bpm = host.querySelector<HTMLInputElement>("#text-progression-bpm")!;
   await act(async () => {
     bpm.focus();
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -68,7 +68,7 @@ it("routes Text audio through global Piano/EP and uses each Text transport BPM f
     bpm.dispatchEvent(new Event("input", { bubbles: true }));
     bpm.blur();
   });
-  await press(host.querySelector<HTMLElement>("[data-testid='extended-text-play']")!);
+  await press(host.querySelector<HTMLElement>("[data-testid='text-transport-primary']")!);
   expect(vi.mocked(driver.playNotes!).mock.lastCall?.[1]).toBe(88);
   expect(vi.mocked(driver.playNotes!).mock.lastCall?.[2]).toBe("electric-piano");
   expect(vi.mocked(driver.playNotes!).mock.lastCall?.[0]?.some(note => note.velocity === 46)).toBe(true);

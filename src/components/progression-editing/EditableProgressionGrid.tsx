@@ -23,7 +23,8 @@ export interface QuickChordEditorControls {
     selection?: QuickCandidateSelectionMetadata,
   ) => void;
   onReset: (slotId: string) => void;
-  onOpenInspector: (slotId: string, index: number) => void;
+  /** P24-07: only the screens that can show an inspector pass this. */
+  onOpenInspector?: (slotId: string, index: number) => void;
 }
 
 export interface ChordContextActionControls {
@@ -169,7 +170,9 @@ export function EditableProgressionGrid({
             selection,
           )}
           onReset={() => quickEditor.onReset(quickSlot.id)}
-          onOpenInspector={() => quickEditor.onOpenInspector(quickSlot.id, quickEdit.index)}
+          {...(quickEditor.onOpenInspector === undefined ? {} : {
+            onOpenInspector: () => quickEditor.onOpenInspector!(quickSlot.id, quickEdit.index),
+          })}
           onClose={() => setQuickEdit(undefined)}
         />
       ) : null}

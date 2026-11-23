@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+﻿import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers/app";
 import { openDojo, type MidiControl } from "./helpers/p12";
@@ -179,7 +179,7 @@ test("the ear question keeps its two choices and the smaller root label", async 
     trials, active,
   });
   await openStage(page);
-  await expect(page.getByTestId("course-prompt")).toContainText("一番低い音は");
+  await expect(page.getByTestId("course-prompt")).toContainText("ルート（根音）は");
   await expect(page.getByTestId("guided-course")).toHaveAttribute("data-stage", "question");
   await captureReportShot(page, "p23-49-assets/ear-1440.png");
 });

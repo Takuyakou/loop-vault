@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseExtendedTextProgression } from "../../domain/extendedTextProgression";
 import { parseTextProgression } from "../../domain/textProgression";
-import { EXTENDED_TEXT_PLACEHOLDER } from "./ExtendedTextIntakePanel";
-import { STANDARD_TEXT_PLACEHOLDER } from "./StandardTextScoreWorkspace";
+import { EXTENDED_TEXT_PLACEHOLDER, STANDARD_TEXT_PLACEHOLDER } from "./textIntakeExamples";
 
 /** P23-17 V4/C10: the examples shown in the empty inputs are read with no errors. */
 const example = (placeholder: string) => placeholder.split("\n")[0]!.replace(/^例: /, "");

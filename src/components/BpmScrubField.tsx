@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { GripVertical } from "lucide-react";
 
 export function BpmScrubField({
@@ -9,6 +9,7 @@ export function BpmScrubField({
   disabled = false,
   dragLabel,
   label,
+  labelStyle,
   onChange,
   value,
 }: {
@@ -19,6 +20,7 @@ export function BpmScrubField({
   readonly disabled?: boolean;
   readonly dragLabel: string;
   readonly label: string;
+  readonly labelStyle?: CSSProperties;
   readonly onChange: (value: number) => void;
   readonly value: number;
 }) {
@@ -123,7 +125,7 @@ export function BpmScrubField({
 
   return (
     <div className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]">
-      <label htmlFor={idPrefix}>{label}</label>
+      <label htmlFor={idPrefix} style={labelStyle}>{label}</label>
       <button type="button" className="lv-button-secondary min-h-8 min-w-8 px-1 text-sm" aria-label={`${label} −`} disabled={disabled} onClick={() => apply(value - 1)}>−</button>
       <div
         ref={fieldRef}

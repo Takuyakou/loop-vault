@@ -1,6 +1,6 @@
 [package]
 name = "loop-vault"
-version = "3.0.0"
+version = "3.1.0"
 description = "Loop Vault desktop app"
 authors = ["Takuyakou"]
 edition = "2021"

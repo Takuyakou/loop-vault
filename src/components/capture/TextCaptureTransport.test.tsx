@@ -58,20 +58,20 @@ describe("Text Capture exact seek", () => {
     await h.unmount();
   });
 
-  it("Extended reattack marker selects its own source token before exact seek", async () => {
+  it("the repeat card selects its own source characters and the frozen notice keeps the playing request", async () => {
     const h = mount(); await h.render();
-    await press(h.container.querySelector<HTMLElement>("[data-testid='text-mode-extended']")!);
-    const input = h.container.querySelector<HTMLTextAreaElement>("[data-testid='extended-text-input']")!;
+    const input = h.container.querySelector<HTMLTextAreaElement>("[data-testid='text-progression-input']")!;
     await write(input, "| C % = _ | Dm |");
-    const repeat = h.container.querySelector<HTMLElement>("[data-testid='text-preview-attack'][data-kind='repeat']")!;
+    // P24-05: each card keeps its own characters, so the repeat card points at the typed 「%」.
+    const repeat = h.container.querySelector<HTMLElement>('[data-testid="text-preview-band"][data-chord="%"]')!;
     await press(repeat);
     expect(input.value.slice(input.selectionStart, input.selectionEnd)).toBe("%");
-    await press(h.container.querySelector<HTMLElement>("[data-testid='extended-text-play']")!);
+    await press(h.container.querySelector<HTMLElement>("[data-testid='text-transport-primary']")!);
     const request = h.controller.getState().request;
     expect(request?.type).toBe("notes");
     if (request?.type === "notes") expect(request.notes[0]?.startBeat).toBe(0);
     await write(input, "| Dm % = _ | G |");
-    expect(h.container.querySelector("[data-testid='extended-text-frozen-playback']")).not.toBeNull();
+    expect(h.container.querySelector("[data-testid='text-transport-frozen']")).not.toBeNull();
     expect(h.container.querySelector<HTMLElement>("[data-testid='extended-text-bar'][data-bar='1']")?.dataset.playheadVisible).toBe("false");
     await h.unmount();
   });

@@ -158,6 +158,8 @@
     flex-shrink: 0;
     flex-direction: column;
     overflow: hidden;
+    /* P24-02 I-2: dragging across the rail selected its labels; nothing in the sidebar needs selecting. */
+    user-select: none;
     border-right: 1px solid rgb(150 170 195 / 10%);
     background: var(--lv-topbar);
     transition: width var(--lv-motion-normal) var(--lv-ease-standard);
@@ -974,3 +976,10 @@
 @container lv-lead (max-width:470px) {
   .lv-header-practice-tabs {display:none !important;}
 }
+
+/* P24-07-fix-1 item 4: the app's text is not selectable; only fields and the marked passages are. */
+#root { user-select: none; -webkit-user-select: none; }
+#root input,
+#root textarea,
+#root [contenteditable="true"],
+#root [data-selectable] { user-select: text; -webkit-user-select: text; }

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp, waitForSidebarSettled } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp, waitForSidebarSettled, chooseTextSetting } from "./helpers/app";
 import { captureReportShot } from "./helpers/reportShots";
 
 async function clearToasts(page: Page) {
@@ -16,7 +16,7 @@ async function saveTextProgression(page: Page, name: string, text: string, key: 
   const capture = page.getByTestId("text-progression-capture");
   await expect(capture).toBeVisible();
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

@@ -270,7 +270,8 @@ describe("the Bass Practice home keys (P23-36)", () => {
     const { container } = await mount({ resume: { mode: "degree", whenLabel: "今日 10:00" } });
     const button = container.querySelector<HTMLElement>("[data-testid='bass-home-resume-open']")!;
     expect(button.textContent).toBe("続けるEnter");
-    const hint = button.querySelector(".lv-bh-enter-key");
+    // P24-02 I-1: the hint is the shared component's badge.
+    const hint = button.querySelector(".lv-resume-go-key");
     expect(hint?.textContent).toBe("Enter");
     expect(hint?.getAttribute("aria-hidden")).toBe("true");
   });

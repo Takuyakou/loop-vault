@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openTextCapture } from "./helpers/app";
+import { openTextCapture, chooseTextSetting } from "./helpers/app";
 
 /**
  * P23-33-fix-1: browser verification for automatic and manual keys across standard text,
@@ -33,8 +33,8 @@ test("K1: standard text C Am F G C infers C major automatically and keeps it aft
   await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("C Am F G C");
-  await expect(capture.getByTestId("text-progression-key")).toHaveValue("auto");
-  await expect(capture.getByTestId("text-progression-key").locator("option:checked")).toHaveText("自動: Cメジャー");
+  await expect(capture.getByTestId("text-progression-key")).toHaveAttribute("data-value","auto");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: C メジャー");
   await capture.getByTestId("text-progression-name").fill("K1 自動通常");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
@@ -46,23 +46,22 @@ test("K1: standard text C Am F G C infers C major automatically and keeps it aft
   await expect(detailAfterNav.locator(".lv-progression-fact").first()).toHaveText("Cメジャー");
 });
 
-test("K2: extended text | Dm7 | G7 | Cmaj7 | Cmaj7 | infers C major automatically and keeps it after Vault save and navigation", async ({ page }) => {
+test("K2: the one grammar reads the extended chart and keeps its automatic key after Vault save and navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
-  await capture.getByTestId("text-mode-extended").click();
-  await capture.getByTestId("extended-text-input").fill("| Dm7 | G7 | Cmaj7 | Cmaj7 |");
-  await expect(capture.getByTestId("extended-text-key")).toHaveValue("auto");
-  await expect(capture.getByTestId("extended-text-key").locator("option:checked")).toHaveText("自動: Cメジャー");
-  await capture.getByTestId("extended-text-name").fill("K2 自動拡張");
-  await capture.getByTestId("extended-text-save").click();
-  await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
+  await capture.getByTestId("text-progression-input").fill("| Dm7 | G7 | Cmaj7 | Cmaj7 |");
+  await expect(capture.getByTestId("text-progression-key")).toHaveAttribute("data-value","auto");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("\u81ea\u52d5: C \u30e1\u30b8\u30e3\u30fc");
+  await capture.getByTestId("text-progression-name").fill("K2 \u81ea\u52d5\u62e1\u5f35");
+  await capture.getByTestId("text-progression-save").click();
+  await expect(capture.getByText(/\u4fdd\u5b58\u3057\u307e\u3057\u305f/, { exact: true })).toBeVisible();
 
-  const detail = await openSavedProgressionFromVault(page, "K2 自動拡張");
-  await expect(detail.locator(".lv-progression-fact").first()).toHaveText("Cメジャー");
+  const detail = await openSavedProgressionFromVault(page, "K2 \u81ea\u52d5\u62e1\u5f35");
+  await expect(detail.locator(".lv-progression-fact").first()).toHaveText("C\u30e1\u30b8\u30e3\u30fc");
 
-  const detailAfterNav = await leaveToHomeAndReopenFromVault(page, "K2 自動拡張");
-  await expect(detailAfterNav.locator(".lv-progression-fact").first()).toHaveText("Cメジャー");
+  const detailAfterNav = await leaveToHomeAndReopenFromVault(page, "K2 \u81ea\u52d5\u62e1\u5f35");
+  await expect(detailAfterNav.locator(".lv-progression-fact").first()).toHaveText("C\u30e1\u30b8\u30e3\u30fc");
 });
 
 test("K3: manually chosen A minor is preserved without being overwritten by automatic inference", async ({ page }) => {
@@ -70,8 +69,8 @@ test("K3: manually chosen A minor is preserved without being overwritten by auto
   await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("C Am F G C");
-  await capture.getByTestId("text-progression-key").selectOption("A minor");
-  await expect(capture.getByTestId("text-progression-key").locator("option:checked")).toHaveText("Aマイナー");
+  await chooseTextSetting(capture, "text-progression-key", "A minor");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("A マイナー");
   await capture.getByTestId("text-progression-name").fill("K3 手動キー");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
@@ -88,8 +87,8 @@ test("K4: ambiguous C Am F G stays 自動: 未確定 and saves without forcing a
   await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("C Am F G");
-  await expect(capture.getByTestId("text-progression-key")).toHaveValue("auto");
-  await expect(capture.getByTestId("text-progression-key").locator("option:checked")).toHaveText("自動: 未確定");
+  await expect(capture.getByTestId("text-progression-key")).toHaveAttribute("data-value","auto");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: 未確定");
   await capture.getByTestId("text-progression-name").fill("K4 未確定");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();

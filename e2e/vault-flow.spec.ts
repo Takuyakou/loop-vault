@@ -4,8 +4,7 @@ import {
   openTextCapture,
   createSavedProgression,
   openApp,
-  openVault,
-} from "./helpers/app";
+  openVault, chooseTextSetting } from "./helpers/app";
 import { bassPracticeFromVault } from "./helpers/practice";
 
 test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる", async ({ page }) => {
@@ -91,7 +90,7 @@ test("P8.9-09b Vault row chords are one band: length-wide frames, merged repeats
   const bars = ["Abmaj9", "Ebadd9/G", "Ebadd9/G", "Ebadd9/G", "Cm9", "Cm7", "Bm7", "Bbm9", "Dm11/G", "Ab7", "C#m9", "Cmaj7",
     "Bm9", "E13", "Amaj7", "Dsus4", "G7", "C", "Am", "F", "G", "C", "Am", "F"];
   await capture.getByTestId("text-progression-input").fill(`| ${bars.join(" | ")} |`);
-  await capture.getByTestId("text-progression-key").selectOption("C major");
+  await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-name").fill("Chord band");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
@@ -123,6 +122,8 @@ test("P8.9-09b Vault row chords are one band: length-wide frames, merged repeats
     expect(band.tops, `${width} one line`).toBe(1);
     expect(band.clipped, `${width} clipped`).toEqual([]);
     expect(band.outside, `${width} outside`).toBe(0);
+    // P24-fix-1: the save keeps one card per attack again, so the row merges the three written bars into one
+    // frame with ×3 (the original check of this stage).
     expect(band.first[1], `${width} merged`).toMatch(/^E♭add9\/G×3/);
     expect(band.degrees, `${width} degrees`).toBe(band.count);
     expect(band.more, `${width} more`).toMatch(/^\+\d+小節$/);

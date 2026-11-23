@@ -4,6 +4,9 @@
   --bh-accent: var(--bp-accent, #a79cff);
   --bh-accent-soft: var(--bp-accent-soft, #2a2550);
   --bh-on-accent: var(--bp-on-accent, #17123a);
+  /* P24-02 I-1: the shared 「続ける Enter」 reads only these two. */
+  --lv-resume-accent: var(--bh-accent);
+  --lv-resume-on-accent: var(--bh-on-accent);
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) 332px;
@@ -34,6 +37,8 @@
 }
 
 /* ---- 続きから ---- */
+/* P24-07 item 7: the shared band spans both grid columns (the cards stay in column 1). */
+.lv-bh > .lv-resume-band { grid-column: 1 / -1; }
 .lv-bh-resume {
   display: flex;
   min-height: 56px;
@@ -85,28 +90,6 @@
   font-size: 15px;
 }
 
-.lv-bh-resume-button {
-  height: 38px;
-  flex: none;
-  padding: 0 16px;
-  border-radius: 10px;
-  background: var(--bh-accent);
-  color: var(--bh-on-accent);
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-/* P23-36: the Enter hint on 続ける, the same shape the Chord Dojo home uses. */
-.lv-bh-enter-key {
-  margin-left: 8px;
-  padding: 1px 6px;
-  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
-  border-radius: 5px;
-  font-size: 10.5px;
-  font-weight: 400;
-  color: inherit;
-}
-
 /* ---- The cards ---- */
 .lv-bh-group {
   display: flex;
@@ -148,7 +131,6 @@
 }
 
 .lv-bh-card:focus-visible,
-.lv-bh-resume-button:focus-visible,
 .lv-bh-segment > button:focus-visible {
   outline: 2px solid var(--lv-focus);
   outline-offset: 2px;
@@ -484,9 +466,6 @@
 .lv-bh-mark {width:30px;height:30px;border-radius:8px;font-size:11px;font-weight:700;}
 .lv-bh-resume-kicker {font-size:12px;line-height:1.55;}
 .lv-bh-resume-line > b {font-size:14px;line-height:20px;}
-.lv-bh-resume-button {height:36px;min-height:36px;padding:0 12px;border-radius:10px;font-size:12px;line-height:16px;font-weight:500;transition:background-color .18s ease;}
-.lv-bh-resume-button:hover {background:color-mix(in srgb,var(--bh-accent) 88%,#fff);}
-.lv-bh-enter-key {margin-left:6px;padding:0 4px;border-radius:4px;font-size:10px;line-height:16px;font-weight:700;}
 .lv-bh-resume {border:1px solid transparent;transition:border-color .18s ease,box-shadow .18s ease;}
 .lv-bh-resume:hover,.lv-bh-resume:focus-within {border-color:var(--bh-accent);}
 .lv-bh-mark {line-height:1.55;}

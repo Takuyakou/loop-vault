@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openTextCapture } from "./helpers/app";
+import { openTextCapture, chooseTextSetting } from "./helpers/app";
 import { openDojo } from "./helpers/p12";
 import { practiceFromVault } from "./helpers/practice";
 
@@ -10,7 +10,7 @@ async function saveText(page: Page, text: string, key: string, name: string) {
   const capture = page.getByTestId("text-progression-capture");
   if (!(await capture.isVisible())) await openTextCapture(page);
   await capture.getByTestId("text-progression-input").fill(text);
-  await capture.getByTestId("text-progression-key").selectOption(key);
+  await chooseTextSetting(capture, "text-progression-key", key);
   await capture.getByTestId("text-progression-name").fill(name);
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText("保存しました")).toBeVisible();

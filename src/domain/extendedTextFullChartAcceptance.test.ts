@@ -44,16 +44,16 @@ describe("P8.8.1 authored full-chart acceptance", () => {
     expect(block?.textSource?.slots).toHaveLength(expectedSlots);
     expect(block?.textSource?.harmonicSpans).toHaveLength(parsed.harmonicSpans.length);
     expect(block?.textSource?.harmonicSpans.flatMap(span => span.attacks)).toHaveLength(authoredAttacks);
-    expect(block?.chords).toHaveLength(parsed.harmonicSpans.length);
+    // fix-1: one saved card per written attack.
+    expect(block?.chords).toHaveLength(authoredAttacks);
     const handoff = buildProgressionVoicingPracticeHandoffFromVault([idea!], {
       ideaId: idea!.id, blockId: block!.id,
     });
     expect(handoff.ok).toBe(true);
     if (!handoff.ok) return;
     expect(handoff.handoff.snapshots["basic-full"]?.lengthBeats).toBe(barCount * 4);
-    expect(handoff.handoff.snapshots["basic-full"]?.events).toHaveLength(parsed.harmonicSpans.length);
-    expect(handoff.handoff.snapshots["basic-full"]?.events.flatMap(event => event.attackBeats ?? []))
-      .toHaveLength(authoredAttacks);
+    expect(handoff.handoff.snapshots["basic-full"]?.events).toHaveLength(authoredAttacks);
+    expect(handoff.handoff.snapshots["basic-full"]?.events.every(event => event.attackBeats === undefined)).toBe(true);
     expect(block?.chords.every(event => event.voicingMemory?.sourceVoicing === undefined)).toBe(true);
     expect(handoff.handoff.snapshots["source-midi"]?.events.every(event => event.voicing === undefined)).toBe(true);
   });

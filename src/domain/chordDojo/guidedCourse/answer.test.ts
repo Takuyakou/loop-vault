@@ -35,7 +35,8 @@ describe("P23-40 name recall keeps the v3 bass-free contract", () => {
     // The ear task keeps its root-bass rule and now asks for the fifth too.
     expect(judgeCourseAnswer(amEar, "ear", [57, 60, 64]).ok).toBe(true);
     expect(judgeCourseAnswer(amEar, "ear", [57, 60]).ok).toBe(false);
-    expect(judgeCourseAnswer(amEar, "ear", [52, 57, 60]).ok).toBe(false);
+    // P24-02 I-4: an ear question accepts any inversion.
+    expect(judgeCourseAnswer(amEar, "ear", [52, 57, 60]).ok).toBe(true);
     // Lv2 seventh chords keep the fifth optional.
     expect(judgeCourseAnswer(cmaj7, "name", [48, 52, 59]).ok).toBe(true);
   });
@@ -45,7 +46,7 @@ describe("P23-40 name recall keeps the v3 bass-free contract", () => {
     expect(judgeCourseAnswer(cmaj7, "saved-voicing", [52, 55, 59, 60]).ok).toBe(false);
     expect(judgeCourseAnswer(cmaj7, "name", [52, 55, 59, 60]).ok).toBe(true);
     expect(judgeCourseAnswer(cmaj7Ear, "ear", [48, 52, 55, 59]).ok).toBe(true);
-    expect(judgeCourseAnswer(cmaj7Ear, "ear", [52, 55, 59, 60]).ok).toBe(false);
+    expect(judgeCourseAnswer(cmaj7Ear, "ear", [52, 55, 59, 60]).ok).toBe(true);
   });
 
   it("agrees with the contract judge on every frozen item and mode", () => {
@@ -62,7 +63,7 @@ describe("P23-40 name recall keeps the v3 bass-free contract", () => {
         expect(judgeCourseAnswer(item, "name", inversion).ok, `${item.id}:inv`).toBe(true);
       } else {
         const inversion = contractCloseVoicing(item.root, item.quality, 1);
-        expect(judgeCourseAnswer(item, "ear", inversion).ok, `${item.id}:ear-inv`).toBe(false);
+        expect(judgeCourseAnswer(item, "ear", inversion).ok, `${item.id}:ear-inv`).toBe(true);
       }
     }
   });

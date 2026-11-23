@@ -55,7 +55,9 @@ export function judgeCourseAnswer(item: CourseItem, mode: CourseAnswerMode, note
   if (missingPitchClasses.length > 0) {
     return { ok: false, reason: `${names(missingPitchClasses)} がありません`, missingPitchClasses, foreignPitchClasses, bass: "free" };
   }
-  if (mode === "ear" || item.bass === "root") {
+  // P24-02 I-4: an ear question asks for the harmony, so any inversion is accepted (the frozen
+  // `bass: "root"` stays in the bank: it is also how an item says it is an ear question).
+  if (mode !== "ear" && item.bass === "root") {
     const lowest = Math.min(...notes);
     if (pitchClass(lowest) !== item.root) {
       return {

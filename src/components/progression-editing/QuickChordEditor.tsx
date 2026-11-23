@@ -42,7 +42,8 @@ interface QuickChordEditorProps {
     selection?: QuickCandidateSelectionMetadata,
   ) => void;
   onReset: () => void;
-  onOpenInspector: () => void;
+  /** P24-07: only the screens that can show an inspector pass this; the button is hidden otherwise. */
+  onOpenInspector?: () => void;
   onClose: () => void;
 }
 
@@ -186,7 +187,7 @@ export function QuickChordEditor({
       event.preventDefault();
       onReset();
       onClose();
-    } else if (event.key.toLowerCase() === "e") {
+    } else if (event.key.toLowerCase() === "e" && onOpenInspector !== undefined) {
       event.preventDefault();
       onOpenInspector();
       onClose();
@@ -309,16 +310,18 @@ export function QuickChordEditor({
         >
           {resetLabel ?? text.reset}
         </button>
-        <button
-          type="button"
-          className="ml-auto px-2 py-2 text-sm text-[var(--lv-text-secondary)]"
-          onClick={() => {
-            onOpenInspector();
-            onClose();
-          }}
-        >
-          {text.detail}
-        </button>
+        {onOpenInspector === undefined ? null : (
+          <button
+            type="button"
+            className="ml-auto px-2 py-2 text-sm text-[var(--lv-text-secondary)]"
+            onClick={() => {
+              onOpenInspector();
+              onClose();
+            }}
+          >
+            {text.detail}
+          </button>
+        )}
       </div>
     </div>
   );

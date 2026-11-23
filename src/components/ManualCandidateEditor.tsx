@@ -450,7 +450,6 @@ export function ManualCandidateEditor({
             onOpen: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
             onPreview: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
             onReset: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
-            onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
             onApply: (slotId, chord, source, selection) => {
               const selected = selectEditableSlot(editable, slotId);
               const before = editable.slots.find((slot) => slot.id === slotId);
