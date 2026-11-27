@@ -23,7 +23,7 @@ function mount(overrides: { readonly onSaveExtended?: (result: ExtendedTextResul
   const root = createRoot(container);
   const onSaveExtended = vi.fn(overrides.onSaveExtended ?? (() => true));
   const render = async () => act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
-    onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended}
+    onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended}
     {...(overrides.controller === undefined ? {} : { controller: overrides.controller })} />));
   return {
     container,

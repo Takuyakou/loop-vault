@@ -74,25 +74,18 @@ test("3: the two headings and the save row keep only the useful words", async ({
   await expect(capture.getByTestId("text-save-error-count")).toContainText("直す所が 1 か所あります");
 });
 
-test("4: the transport position reads 「1 / 8 小節」 and is never cut", async ({ page }) => {
+test("4: the transport has no bar count; the playhead line marks the sounding bar", async ({ page }) => {
   for (const width of [1440, 1280]) {
     await page.setViewportSize({ width, height: width === 1440 ? 900 : 800 });
     await openText(page);
     const capture = captureOf(page);
     await inputOf(page).fill(Array.from({ length: 8 }, () => "| Cmaj7 |").join("\n"));
-    const label = capture.getByTestId("text-transport-position");
-    await expect(label).toHaveText("1 / 8 小節");
-    const fit = await label.evaluate((element) => ({
-      scroll: element.scrollWidth,
-      client: element.clientWidth,
-      size: getComputedStyle(element).fontSize,
-      color: getComputedStyle(element).color,
-    }));
-    expect(fit.scroll, `${width} position width`).toBeLessThanOrEqual(fit.client + 1);
-    expect(fit.size).toBe("12px");
-    // No chords: no position at all.
+    await expect(capture.getByTestId("text-transport-position")).toHaveCount(0);
+    await capture.getByTestId("text-transport-primary").click();
+    await expect(capture.locator("[data-testid='extended-text-bar'][data-playhead-visible='true']").first()).toBeVisible();
+    await capture.getByTestId("text-transport-stop").click();
     await inputOf(page).fill("");
-    await expect(label).toHaveCount(0);
+    await expect(capture.getByTestId("text-transport-position")).toHaveCount(0);
   }
 });
 

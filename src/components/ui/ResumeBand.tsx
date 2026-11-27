@@ -10,12 +10,20 @@ const SCREEN: Record<ResumeBandScreen, { mark: string; accent: string; onAccent:
   vl: { mark: "VL", accent: "#42d8c6", onAccent: "#06221f" },
 };
 
-export function ResumeBand({ screen, testId, label, title, meta, note, extra, children }: {
+/**
+ * P25 V13 (Resume.dc.html 「案」): one 56px row — the mark, 「続きから」 and the title on one line, the facts
+ * as small tags, a rule, when it was played, the screen's own part and 「続ける」.
+ */
+export function ResumeBand({ screen, testId, label, title, tags, when, note, extra, children }: {
   readonly screen: ResumeBandScreen;
   readonly testId: string;
   readonly label: string;
   readonly title: ReactNode;
-  readonly meta?: ReactNode;
+  /** Small facts (the key, the bar count, the item). */
+  readonly tags?: readonly string[];
+  /** When it was played (or a short hint), on the right. */
+  readonly when?: ReactNode;
+  /** A status word (読み込み中 / 今は開けません), before `when`. */
   readonly note?: ReactNode;
   /** The screen's own right-hand part (Chord Dojo's 「ほかの最近」). */
   readonly extra?: ReactNode;
@@ -30,13 +38,17 @@ export function ResumeBand({ screen, testId, label, title, meta, note, extra, ch
     }}>
     <span className="lv-resume-band-mark" aria-hidden="true">{tone.mark}</span>
     <div className="lv-resume-band-main">
-      <div className="lv-resume-band-label">{label}</div>
-      <div className="lv-resume-band-line">
-        <span className="lv-resume-band-title">{title}</span>
-        {meta === undefined ? null : <span className="lv-resume-band-meta">{" ・ "}{meta}</span>}
-      </div>
-      {note === undefined ? null : <div className="lv-resume-band-note">{note}</div>}
+      <span className="lv-resume-band-label">{label}</span>
+      <span className="lv-resume-band-title">{title}</span>
     </div>
+    {tags?.length ? <div className="lv-resume-band-tags">{tags.map((tag) => <span key={tag} className="lv-resume-band-tag">{tag}</span>)}</div> : null}
+    {when === undefined && note === undefined ? null : <>
+      <span className="lv-resume-band-rule" aria-hidden="true" />
+      <span className="lv-resume-band-when">
+        {note === undefined ? null : <span className="lv-resume-band-note">{note}</span>}
+        {when}
+      </span>
+    </>}
     {extra === undefined ? null : <div className="lv-resume-band-extra">{extra}</div>}
     <div className="lv-resume-band-action">{children}</div>
   </section>;

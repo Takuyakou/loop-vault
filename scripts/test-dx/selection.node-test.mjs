@@ -102,7 +102,7 @@ test("runner and docs edits select their own validators", () => {
   assert.deepEqual(runner.areas, ["test-infrastructure"]);
   assert.equal(runner.broad, false);
   assert.ok(runner.nodeTests.includes("scripts/test-dx/cache.node-test.mjs"));
-  assert.equal(select(["docs/test-dx/README.md"], "fast").documentation, true);
+  assert.equal(select(["docs/archive/phases/test-dx/README.md"], "fast").documentation, true);
 });
 
 

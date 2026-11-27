@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { generateFingeringCandidates, rankCyclicFingerings } from "../../src/domain/progressionFingering";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable } from "../../src/voicingPractice/fingeringDisplay";
 import { parseChordLabel } from "../../src/domain/chords";
-import { resolveProgressionPracticeVoicings, type ResolvedProgressionPracticeVoicing } from "../../src/domain/progressionVoicingPractice";
+import { resolveProgressionPracticeVoicings, type ResolvedProgressionPracticeVoicing } from "../../src/domain/progressionVoicingPractice/index";
 import { isValidFingering } from "../../src/voicingPractice/fingeringPreferences";
 import { computeNextMoves, fixedFingerSlots } from "../../src/voicingPractice/nextMove";
 import { evaluate, eventsOf, largeCases, namedCases, nonCyclic, shapes, type Result } from "./fixtures";

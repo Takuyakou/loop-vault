@@ -1,0 +1,128 @@
+/*
+ * P25-16 N3: how parts come and go (見本 Motion.dc.html 「案(動きあり)」). `Presence` puts `data-presence` on the
+ * moving element: "enter" (drawn hidden, one frame), "shown", "exit" (leaving, then removed). Under
+ * `prefers-reduced-motion: reduce` everything is immediate (the global rule in styles.css) and nothing lifts.
+ * Not moved on purpose (they follow the sound): the current card, the keys' lights, the playhead, the beat and ✓ / ×.
+ */
+
+/* 1. The selected card's band (テキスト取り込み). */
+.lv-motion-rise {
+  transition: opacity 220ms var(--lv-ease-out), transform 220ms var(--lv-ease-out);
+}
+.lv-motion-rise[data-presence="enter"],
+.lv-motion-rise[data-presence="exit"] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.lv-motion-rise[data-presence="exit"] {
+  transition: opacity 140ms var(--lv-ease-in), transform 140ms var(--lv-ease-in);
+}
+
+/* 2. Menus that open from a button (形 ▼, the 「?」). The element sets its own transform-origin (the button's corner). */
+.lv-motion-pop {
+  transition: opacity 150ms var(--lv-ease-spring), transform 150ms var(--lv-ease-spring);
+}
+.lv-motion-pop[data-presence="enter"],
+.lv-motion-pop[data-presence="exit"] {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+}
+/* A menu that is on its way out must not catch the pointer: the button below it has to be able to reopen it. */
+.lv-motion-pop[data-presence="exit"] {
+  pointer-events: none;
+}
+.lv-motion-pop[data-presence="exit"] {
+  transition: opacity 120ms var(--lv-ease-in), transform 120ms var(--lv-ease-in);
+}
+.lv-motion-chevron {
+  display: inline-block;
+  transition: transform 150ms var(--lv-ease-out);
+}
+[aria-expanded="true"] > .lv-motion-chevron {
+  transform: rotate(180deg);
+}
+
+/* 3. Fingering words (L5・R1 … in the hand columns, on the keys, 「次への動き」 and 「その次」) when 運指 is switched: all
+   together, opacity only (P25 V14: 120ms, no blur, no stagger). The view sets `data-fingering-motion` only for that
+   moment, so a new chord's words, a new source or a new shape change them without motion (V6). */
+@keyframes lv-motion-fade-in {
+  from { opacity: 0; }
+}
+@keyframes lv-motion-fade-out {
+  to { opacity: 0; }
+}
+[data-fingering-motion="in"] :is(.voicing-hand-slot-finger, [data-finger-label], .lv-vl-move, .lv-vl-then-fingering > *) {
+  animation: lv-motion-fade-in 120ms var(--lv-ease-out) both;
+}
+[data-fingering-motion="out"] :is(.voicing-hand-slot-finger, [data-finger-label], .lv-vl-move, .lv-vl-then-fingering > *) {
+  animation: lv-motion-fade-out 120ms var(--lv-ease-in) forwards;
+}
+
+/* 4. The current chord's details when 覚える / 思い出す changes: the new rises in, the old rises out over it. */
+.lv-motion-swap {
+  transition: opacity 180ms var(--lv-ease-out), transform 180ms var(--lv-ease-out);
+}
+/* P25 V33: like the mock (Motion 4) — 覚える waits above (−6px), 思い出す below (+6px), the same way in and out. */
+.lv-motion-swap[data-presence="enter"],
+.lv-motion-swap[data-presence="exit"] {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.lv-motion-swap.lv-vl-recall-box[data-presence="enter"],
+.lv-motion-swap.lv-vl-recall-box[data-presence="exit"] {
+  transform: translateY(6px);
+}
+
+/* 4・5. The chosen frame of a two-way choice slides (260ms; P25 V14: no spring, only menus spring); the words change
+   colour in 160ms. */
+.lv-motion-pick {
+  position: relative;
+  isolation: isolate;
+}
+.lv-motion-pick > .lv-choice {
+  position: relative;
+  z-index: 1;
+  transition: color 160ms var(--lv-ease-out);
+}
+.lv-motion-pick[data-pick="on"]::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: var(--lv-pick-w);
+  height: var(--lv-pick-h);
+  border-radius: var(--lv-pick-radius, 6px);
+  background: var(--lv-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--lv-pick-ring, color-mix(in srgb, var(--lv-accent) 45%, transparent));
+  content: "";
+  pointer-events: none;
+  transform: translate(var(--lv-pick-x), var(--lv-pick-y));
+  transition: transform 260ms var(--lv-ease-out), width 260ms var(--lv-ease-out);
+}
+.lv-motion-pick[data-pick="on"] > .lv-choice[aria-pressed="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 5. Play-along on / off (P25 V10): the legend's two marks, the judge and 「達成 n/8」 keep their place all the time and
+   only fade there (in 180ms, out 120ms; 見本 Motion.dc.html の 5). Hidden, they cannot be reached. */
+.lv-motion-fade {
+  transition: opacity 180ms var(--lv-ease-out), visibility 0s linear 0s;
+}
+.lv-motion-fade[data-shown="false"] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms var(--lv-ease-in), visibility 0s linear 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-motion-rise,
+  .lv-motion-pop,
+  .lv-motion-chevron,
+  .lv-motion-swap,
+  .lv-motion-pick > .lv-choice,
+  .lv-motion-pick::before,
+  .lv-motion-fade {
+    transition: none;
+  }
+}

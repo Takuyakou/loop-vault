@@ -8,7 +8,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * P23-52: Course Map (①), Result Sheet (⑧), removal of `GuidedLevelSelect`, and Rule 1
  * ("start the next station while a delayed check waits, capped at two pending").
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string;
   policyVersion: string;
   pairId: string;

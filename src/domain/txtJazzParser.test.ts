@@ -45,7 +45,7 @@ const groups: AliasGroup[] = [
 
 describe("TXT-JAZZ text-only symbol contract", () => {
   it("checks all 103 independently specified Stage 00 inputs without replacing existing quality types", () => {
-    const audit = JSON.parse(readFileSync(new URL("../../docs/txt-jazz/evidence/parser-current-tokens.json",import.meta.url),"utf8")) as {
+    const audit = JSON.parse(readFileSync(new URL("../../docs/contracts/txt-jazz/evidence/parser-current-tokens.json",import.meta.url),"utf8")) as {
       rows: { token:string; expected:{root?:number;quality?:string;tensions?:Tension[];alt?:boolean;bass?:number|null;reject?:boolean;preserveExisting?:boolean} }[]
     };
     expect(audit.rows).toHaveLength(103);

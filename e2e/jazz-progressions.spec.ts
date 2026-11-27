@@ -203,14 +203,6 @@ test('the key chosen by hand with the random key on starts the round from that k
  await expect.poll(async()=>(await record(page)).laps[ID]?.[String(row.tonic)]?.count).toBe(1);
 });
 
-test('a lap in the original key is counted under the original tonic, and the Original Practice record is not touched',async({page})=>{
- await openJazz(page);
- const row=rowOf(ID,3);
- for(let i=0;i<3;i+=1)await playRow(page,row,i);
- await expect.poll(async()=>(await record(page)).laps[ID]?.['3']?.count).toBe(1);
- expect(await page.evaluate(()=>localStorage.getItem('loop-vault:original-practice-v1:data'))).toBeNull();
-});
-
 test('the notes are written as the data writes them, with the finger of each; 009 has 𝄪, 010 has C♭',async({page})=>{
  await openJazz(page,'001');
  await expect(page.getByTestId('jazz-notes').nth(0)).toHaveText('左 F2(5) E♭3(1)右 A♭3(1) C4(2) G4(5)');
@@ -656,6 +648,13 @@ test('octave +1: the listening sounds the raised notes',async({page})=>{
  await page.getByTestId('jazz-listen-all').click();
 });
 
+/** P25 T3: the two keys of a version that reach furthest on the staff — the highest top note and the lowest bottom note (from the data). */
+const extremeKeysOf=(id:string)=>{
+ const rows=table.filter(r=>r.id===id).map(r=>({tonic:r.itemTonic,notes:r.cards.flatMap(c=>c.expectedPitches)}));
+ const top=rows.reduce((a,b)=>Math.max(...b.notes)>Math.max(...a.notes)?b:a),bottom=rows.reduce((a,b)=>Math.min(...b.notes)<Math.min(...a.notes)?b:a);
+ return [...new Set([top.tonic,bottom.tonic])];
+};
+
 test('octave +1: the staff keeps its size and place from card to card, key to key and version to version, and nothing is cut',async({page})=>{
  test.setTimeout(240000);
  await page.setViewportSize({width:1280,height:720});
@@ -664,8 +663,12 @@ test('octave +1: the staff keeps its size and place from card to card, key to ke
  const first:{viewBox:string|null;size:number[];lines:number[]}[]=[];
  const versions=await page.getByTestId('jazz-version').count();
  for(let v=0;v<versions;v+=1){
-  await page.getByTestId('jazz-version').nth(v).click();
-  for(let t=0;t<12;t+=1){
+  const version=page.getByTestId('jazz-version').nth(v),id=(await version.getAttribute('data-jazz-version'))!;
+  await version.click();
+  await expect(page.getByTestId('dojo-jazz')).toHaveAttribute('data-jazz-id',id);
+  const keys=extremeKeysOf(id);
+  expect(keys.length,`${id}: the keys come from the data`).toBeGreaterThan(0);
+  for(const t of keys){
    await page.getByTestId('jazz-key-select').selectOption(String(t));
    const cards=await page.getByTestId('jazz-card').count();
    for(let c=0;c<cards;c+=1){

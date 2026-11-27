@@ -6,7 +6,7 @@ import {
   buildVoiceFeatureInputs,
   buildVoices,
   parseMidi,
-} from "../../src/domain/midi";
+} from "../../src/domain/midi/index";
 import { normalizeNotes } from "../../src/domain/midi/normalize";
 import type {
   MidiSongData,
@@ -21,7 +21,7 @@ import {
   voicingNoteSetMetrics,
   voicingRegisterMetrics,
   type MelodyContaminationFilterOptions,
-} from "../../src/domain/voicing";
+} from "../../src/domain/voicing/index";
 
 export type Phase44Split = "dev" | "validation" | "holdout";
 export type Phase44Condition = "A" | "A+" | "B" | "S";

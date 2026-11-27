@@ -9,7 +9,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * on both the result sheet (⑧) and the waiting/due course-map station, while still counting
  * as correct toward passing and never flagging ear/progression questions by elapsed time.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string;
   policyVersion: string;
   pairId: string;

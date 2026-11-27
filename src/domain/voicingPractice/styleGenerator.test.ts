@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { voiceChordForPreview } from "../chordVoicing";
 import { makeChordSymbol } from "../chords";
 import type { ChordTimelineItem } from "../types";
@@ -12,8 +12,6 @@ import {
   handsDoNotCross,
   intervalForDegreeLabel,
   pitchClassForDegreeLabel,
-  rootlessTemplatesForChord,
-  type DegreeLabel,
   MAX_STYLE_CANDIDATES_PER_EVENT,
   styleVoicingTransitionCost,
 } from ".";
@@ -82,8 +80,6 @@ describe("style voicing candidate generation", () => {
     expect(new Set(altered[0]?.allNotes.map((note) => note % 12))).toEqual(new Set([1, 3, 4, 10]));
     expect(intervalForDegreeLabel("4")).toBe(5);
     expect(pitchClassForDegreeLabel(makeChordSymbol(0, "maj7"), "not-a-degree")).toBeUndefined();
-    expectTypeOf(rootlessTemplatesForChord(makeChordSymbol(0, "maj7"))[0]!.labels)
-      .toEqualTypeOf<readonly DegreeLabel[]>();
   });
 });
 

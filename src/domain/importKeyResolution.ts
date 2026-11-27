@@ -61,10 +61,10 @@ export interface ResolveImportKeyInput {
   readonly chords: readonly ChordSymbol[];
 }
 
-/** The adoption thresholds (design §4: an initial, uncalibrated policy — not an accuracy claim). */
+/** The adoption thresholds (design §4: an initial, uncalibrated policy — not an accuracy claim). P25 V33: 0.75 → 0.6、V39: 0.55(利用者が決めた) */
 const MIN_CHORDS = 3;
 const MIN_DISTINCT_CHORDS = 3;
-const MIN_COVERAGE = 0.75;
+export const IMPORT_KEY_MIN_COVERAGE = 0.55;
 const MAX_CANDIDATES = 24;
 
 const DOMINANT_QUALITIES: ReadonlySet<string> = new Set(["maj", "dom7", "dom9", "dom13"]);
@@ -121,18 +121,58 @@ export function inferImportKey(chords: readonly ChordSymbol[]): ImportKeyDecisio
 
   if (best.length === 1) {
     const winner = best[0]!;
-    if (coverage(winner) < MIN_COVERAGE) return unknownKey("coverage-below-threshold", candidates);
+    if (coverage(winner) < IMPORT_KEY_MIN_COVERAGE) return unknownKey("coverage-below-threshold", candidates);
+    // P25 V39: a key and its relative share every note; when they are within one chord, the first chord decides.
+    const relative = relativeOf(winner, candidates);
+    if (relative !== undefined
+      && winner.support - relative.support <= 1
+      && opensOnTonic(valid[0]!, relative)
+      && !opensOnTonic(valid[0]!, winner)) {
+      return Object.freeze({ key: relative.key, origin: "inferred" as const, reason: "settled" as const, candidates });
+    }
     return Object.freeze({ key: winner.key, origin: "inferred" as const, reason: "settled" as const, candidates });
+  }
+
+  // P25 V39: the two strongest readings are a key and its relative — the first chord decides between them.
+  if (best.length === 2) {
+    const first = best[0]!;
+    const second = best[1]!;
+    if (relativeOf(first, best) === second) {
+      const onFirst = opensOnTonic(valid[0]!, first) && !opensOnTonic(valid[0]!, second);
+      const onSecond = opensOnTonic(valid[0]!, second) && !opensOnTonic(valid[0]!, first);
+      if (onFirst || onSecond) {
+        const winner = onFirst ? first : second;
+        if (coverage(winner) < IMPORT_KEY_MIN_COVERAGE) return unknownKey("coverage-below-threshold", candidates);
+        return Object.freeze({ key: winner.key, origin: "inferred" as const, reason: "settled" as const, candidates });
+      }
+    }
   }
 
   // A tie is only narrowed by an adjacent V→I / V→i that really appears in the progression.
   const byCadence = best.filter((candidate) => hasCadence(valid, candidate.tonicPitchClass, candidate.mode));
   if (byCadence.length === 1) {
     const winner = byCadence[0]!;
-    if (coverage(winner) < MIN_COVERAGE) return unknownKey("coverage-below-threshold", candidates);
+    if (coverage(winner) < IMPORT_KEY_MIN_COVERAGE) return unknownKey("coverage-below-threshold", candidates);
     return Object.freeze({ key: winner.key, origin: "inferred" as const, reason: "settled" as const, candidates });
   }
   return unknownKey(byCadence.length ? "not-unique" : "cadence-not-conclusive", candidates);
+}
+
+/**
+ * P25 V39: the relative key of a candidate (the same notes, the other mode): a major key's relative minor
+ * is a minor third down, a minor key's relative major a minor third up.
+ */
+function relativeOf(candidate: ImportKeyCandidate, candidates: readonly ImportKeyCandidate[]): ImportKeyCandidate | undefined {
+  const tonic = candidate.mode === "major" ? (candidate.tonicPitchClass + 9) % 12 : (candidate.tonicPitchClass + 3) % 12;
+  const mode = candidate.mode === "major" ? "minor" : "major";
+  return candidates.find((other) => other.tonicPitchClass === tonic && other.mode === mode);
+}
+
+/** P25 V39: the progression opens on that key's own tonic chord (the mode's arrivals, as the cadence rule uses). */
+function opensOnTonic(first: ChordSymbol, candidate: ImportKeyCandidate): boolean {
+  const root = ((first.root % 12) + 12) % 12;
+  return root === candidate.tonicPitchClass
+    && (candidate.mode === "major" ? MAJOR_ARRIVALS : MINOR_ARRIVALS).has(first.quality);
 }
 
 /** Distinct root/quality pairs, ignoring consecutive repeats (design §4 rule 2). */

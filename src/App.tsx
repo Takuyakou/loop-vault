@@ -62,12 +62,13 @@ import { MetronomeProvider } from "./components/MetronomeProvider";
 import { GlobalBpmProvider } from "./components/GlobalBpmProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { createNotificationStore, NotificationProvider, useReserveBottomSpace, type NotificationTone } from "./components/notifications";
+import { SelectMenuHost } from "./components/ui/SelectMenuHost";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
 import { prepareMainWindowFrame } from "./components/shell/windowControls";
 import { parseMidi } from "./domain/midi";
-import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
+import { restoreOriginalPlayback } from "./domain/voicing";
 import type { SavedProgressionBlock, SongIdea } from "./domain/types";
 import {
   buildVoicingLoopVaultCandidates,
@@ -405,18 +406,12 @@ function App() {
       ?.progressionBlocks?.find((block) => block.id === voicingPracticeHandoff.sourceReference.blockId)
     : undefined;
   const bulkSourcePreview = voicingLoopSourceBlock ? (() => {
-    const cards = voicingLoopSourceBlock.chords;
-    const changed = setAllEligibleCardsToSource(cards).changedCount;
-    return {
-      eligible: cards.filter(canChooseSource).length,
-      changed,
-      skippedCustom: cards.filter((card) => card.voicingMemory?.playbackChoice === "CUSTOM").length,
-      skippedMissingSource: cards.filter((card) => !canChooseSource(card)).length,
-    };
+    const preview = restoreOriginalPlayback(voicingLoopSourceBlock.chords);
+    return { changed: preview.changedCount, keptCustom: preview.keptCustomCount };
   })() : undefined;
   function applyBulkSource(): boolean {
     if (!voicingPracticeHandoff || !voicingLoopSourceBlock) return false;
-    const result = setAllEligibleCardsToSource(voicingLoopSourceBlock.chords);
+    const result = restoreOriginalPlayback(voicingLoopSourceBlock.chords);
     if (result.changedCount === 0) return true;
     const reference = voicingPracticeHandoff.sourceReference;
     if (!updateProgressionBlock(reference.ideaId, reference.blockId, { chords: result.cards })) return false;
@@ -858,6 +853,8 @@ function App() {
       closeLabel={copy.common.close}
       undo={{ actions: undoQueue.actions, onUndo: undoQueue.undo, label: copy.undo.action, fallbackFocusRef: undoFallbackFocusRef }}
     >
+    {/* P25 V34: one host draws the opened list of every <select> in the app's look. */}
+    <SelectMenuHost />
     <MetronomeProvider>
     <GlobalBpmProvider>
     <PreviewSoundProvider>
@@ -1034,14 +1031,6 @@ function App() {
                       ideaId,
                       previousIds,
                     ) ?? false;
-                  }}
-                  openSavedTextProgression={({ ideaId, blockId }) => {
-                    if (visibleIdeas.some((idea) => idea.id === ideaId
-                      && idea.progressionBlocks?.some((block) => block.id === blockId))) {
-                      openProgression(ideaId, blockId);
-                    } else {
-                      setToast("保存済み進行を確認できません。", "error");
-                    }
                   }}
                   openSavedTextProgressionPractice={openProgressionVoicingPractice}
                   updateIdea={updateIdea}

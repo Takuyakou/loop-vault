@@ -1,6 +1,6 @@
 import { progressionToWorkspace, workspaceToProgression } from './progressionWorkspace/progressionWorkspace';
 /**
- * P8.9 data-retention round trip (docs/phase8.9/contracts/P8.9-data-retention.md §2).
+ * P8.9 data-retention round trip (docs/contracts/phase8.9/P8.9-data-retention.md §2).
  *
  * Phase 8.9 removes several fields from the UI but must never drop, move or
  * rewrite their stored values. This test pushes a synthetic vault whose
@@ -129,7 +129,7 @@ describe("P8.9 data retention — load → save round trip", () => {
   /**
    * Normalization the current code already applies. These are defaults for
    * ABSENT optional keys only; no present value is changed. Recorded in
-   * docs/phase8.9/audit/P8.9-00-baseline.md.
+   * docs/archive/phases/phase8.9/audit/P8.9-00-baseline.md.
    */
   it("only fills documented defaults for absent optional keys", async () => {
     const input = retentionVault();

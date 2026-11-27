@@ -49,7 +49,7 @@ export interface JudgedTakeOptions {
 }
 
 /** P23-62: the judging rules every Echo practice uses — the MIDI bassline's 「ふつう」 and automatic latency. */
-const JUDGE: Omit<BassJudgeSettings, "pitchRule"> = { timingToleranceMs: 70, octaveCountsAsCorrect: true, autoLatencyCorrection: true };
+export const JUDGE: Omit<BassJudgeSettings, "pitchRule"> = { timingToleranceMs: 70, octaveCountsAsCorrect: true, autoLatencyCorrection: true };
 
 export interface JudgedTake {
   readonly phase: JudgedTakePhase;

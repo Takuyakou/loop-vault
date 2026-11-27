@@ -1,3 +1,4 @@
+import { textProgressionVoicingNotes } from "../textProgressionVoicing";
 import { describe, expect, it } from "vitest";
 import { makeChordSymbol, parseChordLabel } from "../chords";
 import type { ChordQuality, ChordSymbol, Tension } from "../types";
@@ -131,14 +132,16 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
 
   it.each([
     "maj", "min", "dim", "dim7", "sus2", "sus4", "aug", "add9",
-  ] satisfies ChordQuality[])("returns UNSUPPORTED_RULE for unaudited Basic chord %s", (quality) => {
-    for (const selection of ["basic-shell", "basic-full"] as const) {
-      expect(resolveOne(selection, chord(quality))).toEqual({
-        eventId: "event-1",
-        status: "UNSUPPORTED_RULE",
-        reason: "no-approved-lesson-rule",
-      });
-    }
+  ] satisfies ChordQuality[])("returns UNSUPPORTED_RULE for unaudited Basic chord %s (基本 is filled by K12)", (quality) => {
+    expect(resolveOne("basic-shell", chord(quality))).toEqual({
+      eventId: "event-1",
+      status: "UNSUPPORTED_RULE",
+      reason: "no-approved-lesson-rule",
+    });
+    // P25-08 K12: 基本 (`basic-full`) fills the card with the text intake's recommendation and marks it 「A」.
+    const filled = resolveOne("basic-full", chord(quality));
+    expect(filled).toMatchObject({ status: "SUPPORTED", autoFallbackTitle: "このコードは基本では作れないので、テキスト取り込みのおすすめの音で鳴らしています" });
+    expect(filled.voicing?.midiNotes).toEqual(textProgressionVoicingNotes(chord(quality), "generated-close"));
   });
 
   it("uses only the first audited altered identity for Basic and never completes the chord silently", () => {
@@ -181,7 +184,8 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
 
   it.each([
     [4, "3", 2],
-    [11, "7", 2],
+    // V11b: B2 | C4 … is a minor 9th against the slash bass, so Cmaj7/B is filled like K12 (B2 | E4 G4 C5): the bass carries the 7th.
+    [11, "7", 1],
     [7, "5", 1],
   ] as const)(
     "carries one generated Cmaj7 slash-bass occurrence for pitch class %s without overwriting %s",
@@ -288,10 +292,10 @@ describe("P5.32 slash Shell upper structure", () => {
   it("fails closed when add9 is not supplied by slash Bass or the numerator family is unaudited", () => {
     expect(resolveOne("rootless-shell", makeChordSymbol(4, "add9", [], 6)).status)
       .toBe("UNSUPPORTED_RULE");
-    expect(resolveOne("basic-full", makeChordSymbol(4, "add9", [], 7)).status)
-      .toBe("UNSUPPORTED_RULE");
-    expect(resolveOne("basic-full", makeChordSymbol(4, "aug", [], 6)).status)
-      .toBe("UNSUPPORTED_RULE");
+    // P25-08 K12: 基本 fills these with the text intake's recommendation (「A」 on the card).
+    for (const filled of [makeChordSymbol(4, "add9", [], 7), makeChordSymbol(4, "aug", [], 6)]) {
+      expect(resolveOne("basic-full", filled)).toMatchObject({ status: "SUPPORTED", autoFallbackTitle: expect.stringContaining("基本では作れない") });
+    }
 
     const characteristic = resolveOne("basic-full", makeChordSymbol(0, "min7b5", [], 2));
     expect(characteristic.status).toBe("SUPPORTED");

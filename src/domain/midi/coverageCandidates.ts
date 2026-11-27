@@ -127,7 +127,7 @@ export function buildPatternCoverageCandidates(
   const recommendation = recommendPatterns(catalog);
   // Both selectors stay reachable. The two-pass one measured slightly worse on
   // the known corpora, so it is opt-in rather than the path: see
-  // docs/phase4.1.2/10-two-pass-selection.md. Wiring the loser would be choosing
+  // docs/archive/phases/phase4.1.2/10-two-pass-selection.md. Wiring the loser would be choosing
   // a hypothesis over a measurement.
   const selection = options.useTwoPassSelection
     ? selectPatternsTwoPass(patternCandidates, {

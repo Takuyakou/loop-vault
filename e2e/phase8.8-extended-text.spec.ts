@@ -28,8 +28,8 @@ test("the one text screen saves a public synthetic score and opens Voicing Loop"
   await expect(intake.getByTestId("text-progression-bpm")).toHaveValue("120");
   await expect(input).toHaveValue(raw);
   await intake.getByTestId("text-progression-save").click();
-  await expect(page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習/ })).toBeVisible();
-  await page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習/ }).click();
+  await expect(page.getByRole("button", { name: /Voicing Loopで練習/ })).toBeVisible();
+  await page.getByRole("button", { name: /Voicing Loopで練習/ }).click();
   await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
   expect(errors).toEqual([]);
 });

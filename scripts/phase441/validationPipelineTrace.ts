@@ -5,7 +5,7 @@ import {
   buildVoiceFeatureInputs,
   buildVoices,
   parseMidi,
-} from "../../src/domain/midi";
+} from "../../src/domain/midi/index";
 import { normalizeNotes } from "../../src/domain/midi/normalize";
 import type {
   MidiSongData,
@@ -24,7 +24,7 @@ import {
   type MelodyContaminationFilterOptions,
   type VoicingCandidate,
   type VoicingExtractionInput,
-} from "../../src/domain/voicing";
+} from "../../src/domain/voicing/index";
 import {
   loadPhase44Manifest,
   type Phase44CorpusFile,

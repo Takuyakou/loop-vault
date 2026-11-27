@@ -1,5 +1,5 @@
 import type { ChordSymbol } from "../types";
-import { supportsTextChord } from "../textChordConsumerCapabilities";
+import { supportsLegacyGeneratedChord } from "../textChordConsumerCapabilities";
 import {
   compareCandidate,
   type CandidateBuildOptions,
@@ -17,7 +17,7 @@ export function generateStyleCandidates(
   styleId: VoicingStyleId,
   options: CandidateBuildOptions,
 ): StyleVoicingCandidate[] {
-  if (!supportsTextChord("generated-loop", chord)) return [];
+  if (!supportsLegacyGeneratedChord(chord)) return [];
   const candidates = styleId === "shell-17"
     ? generateShell17Candidates(chord, options)
     : styleId === "open-17"

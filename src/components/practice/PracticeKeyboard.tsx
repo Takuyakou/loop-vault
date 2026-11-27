@@ -44,6 +44,8 @@ interface PracticeKeyboardProps {
   foreignNotes?: readonly number[];
   /** P23-51: marks after a wrong answer (dojo appearance). */
   resultMarks?: ReadonlyMap<number, "hit" | "wrong" | "miss">;
+  /** P25-10 I4: Voicing Loop's play-along — a right key green with ●, a wrong key red with × (default appearance). */
+  playAlongMarks?: ReadonlyMap<number, "ok" | "wrong">;
 }
 
 const copy = {
@@ -83,6 +85,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   dojoHeight,
   foreignNotes: forcedForeignNotes,
   resultMarks,
+  playAlongMarks,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -142,6 +145,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         {...(dojoHeight === undefined ? {} : { dojoHeight })}
         {...(forcedForeignNotes === undefined ? {} : { foreignNotes: forcedForeignNotes })}
         {...(resultMarks === undefined ? {} : { resultMarks })}
+        {...(playAlongMarks === undefined ? {} : { playAlongMarks })}
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">

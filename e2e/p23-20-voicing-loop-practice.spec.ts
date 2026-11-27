@@ -133,7 +133,8 @@ test("C1 + C5: the four sizes keep every part inside the window and the top band
   const names = await page.getByTestId("voicing-loop-display-group").locator("label span").evaluateAll((nodes) =>
     nodes.map((node) => ({ text: node.textContent, width: Math.round(node.getBoundingClientRect().width), clipped: getComputedStyle(node).clipPath })));
   console.log("P2320-NAMES", JSON.stringify(names));
-  expect(names.some((entry) => entry.text === "最適化" && entry.width > 20 && entry.clipped === "none")).toBe(true);
+  // P25-16 N7: 「なめらかにつなぐ」 moved into 「形 ▼」; 運指 keeps its visible name on the row.
+  expect(names.some((entry) => entry.text === "なめらかにつなぐ")).toBe(false);
   expect(names.some((entry) => entry.text === "運指" && entry.width > 12 && entry.clipped === "none")).toBe(true);
 });
 
@@ -210,9 +211,9 @@ test("C1: the top band is two groups, the degree carries the role colour, and th
   for (const name of ["保存した音", "元MIDI", "カスタム", "自動生成"]) {
     await expect(controls.getByRole("button", { name, exact: true })).toBeVisible();
   }
-  await expect(controls.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeVisible();
-  // P23-32 T4: the two named checks are switches now (role="switch"), with the same accessible names.
-  await expect(controls.getByRole("switch", { name: "進行に合わせて最適化", exact: true })).toBeVisible();
+  await expect(controls.getByTestId("voicing-loop-shape-button")).toBeVisible();
+  // P23-32 T4 / P25-08 L3: the named checks are switches (role="switch"). P25-16 N7: 「なめらかにつなぐ」 is in 「形 ▼」 now.
+  await expect(controls.getByRole("switch", { name: "進行に合わせてなめらかにつなぐ", exact: true })).toHaveCount(0);
   await expect(controls.getByRole("switch", { name: "おすすめ運指を表示", exact: true })).toBeVisible();
 
   // L3: the degree in the key, with the role's colour and its badge.

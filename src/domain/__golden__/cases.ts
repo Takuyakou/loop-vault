@@ -3,7 +3,7 @@ import { emptyMidiBassLibrary } from "../../features/bass-practice/midi/model";
 import { emptyStore } from "../chordDojo/store";
 import { emptyDrillRecords } from "../chordDojo/voicingDrillRecords";
 import { sourceBasslineSignature } from "../sourceBassline/snapshot";
-import reviewThresholdsJson from "../../../docs/phase10.0/contracts/P10-review-thresholds.json";
+import reviewThresholdsJson from "../../../docs/contracts/phase10.0/P10-review-thresholds.json";
 
 /**
  * P23 / DEP-01 §2-1: the inputs of the golden set. Every entry gets at least one sample of the real shape, a way to

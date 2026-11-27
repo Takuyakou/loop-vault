@@ -16,7 +16,7 @@ import { chooseTextSetting } from "./helpers/app";
  * The photos go to p89-generated/P24-fix-2/.
  */
 const AT = "2026-11-22T00:00:00.000Z";
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;
@@ -133,10 +133,11 @@ test("1+2+3: the card marks, the row's wording and the tidied-count", async ({ p
   const heights = await capture.locator('[data-testid="text-preview-band"]').evaluateAll((elements) =>
     [...new Set(elements.map((element) => Math.round((element as HTMLElement).getBoundingClientRect().height)))]);
   expect(heights).toHaveLength(1);
-  // 2: the chosen card's row says the app's recommendation, not the (nonexistent) original MIDI.
-  const row = capture.getByTestId("text-progression-inspector-row");
-  await expect(row).toContainText("(アプリのおすすめの音)");
-  await expect(row).not.toContainText("元の MIDI の音ではありません");
+  // 2 (P25-03 C3): the chosen card's band says the app's recommendation, not the (nonexistent) original MIDI.
+  await capture.getByTestId("text-preview-band").first().click();
+  const row = capture.getByTestId("text-dock-source");
+  await expect(row).toContainText("おすすめの形 · 基本");
+  await expect(capture.getByTestId("text-card-dock")).not.toContainText("元の MIDI の音ではありません");
   // 3: three full-width bar lines + Ｆmaj7 + C△7 = 5 places (not one per full-width character).
   await expect(capture.getByTestId("text-normalize-band")).toContainText("表記を 5 か所そろえています");
   await expect(capture.locator("[data-layer='over'] [data-changed='true']")).toHaveCount(5);
@@ -157,9 +158,13 @@ test("1: a played card keeps its mark when the other cards are the default", asy
   await expect(inputOf(page)).toHaveValue("| Cmaj7 |");
   await play(page, [45, 48, 52, 55]);
   await expect(inputOf(page)).toHaveValue("| Cmaj7 | Am7 |");
-  const marks = capture.getByTestId("text-progression-voicing-state");
-  await expect(marks).toHaveCount(1);
-  await expect(marks).toContainText("弾いた音");
+  // P25-03 C10: the card's small word became the dot band; the played card's dots and title say where its
+  // sound came from, the typed card keeps the recommendation's colour.
+  const cards = capture.getByTestId("text-preview-band");
+  await expect(cards.nth(1)).toHaveAttribute("title", /鍵盤で弾いた音/);
+  await expect(cards.nth(0)).not.toHaveAttribute("title", /鍵盤で弾いた音/);
+  await expect(cards.nth(1).getByTestId("text-card-dot").first()).toHaveCSS("background-color", "rgb(139, 215, 255)");
+  await expect(cards.nth(0).getByTestId("text-card-dot").first()).toHaveCSS("background-color", "rgb(66, 216, 198)");
 });
 
 test("4: the Lv4 slash-bass tip holds the bass with the left pinky", async ({ page }) => {
@@ -188,7 +193,7 @@ test("4: the Lv4 slash-bass tip holds the bass with the left pinky", async ({ pa
   await page.screenshot({ path: "p89-generated/P24-fix-2/G-lv4-slash-bass-break-1440.png" });
 });
 
-test("5+6: the band drops 「押さえている」 and the position is centred", async ({ page }) => {
+test("5+6: the band names the held chord in its own place (V20) and the position is centred", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await openKeyboard(page);
@@ -196,21 +201,11 @@ test("5+6: the band drops 「押さえている」 and the position is centred",
   await inputOf(page).fill("| Cmaj7 |");
   await expect(inputOf(page)).toHaveValue("| Cmaj7 |");
   const band = capture.getByTestId("keyboard-entry-band");
-  await expect(band).not.toContainText("押さえている");
+  // P25 V20 replaces fix-2 item 5: the held chord has its own place (「—」 while nothing is held).
+  await expect(band.getByTestId("keyboard-held-name")).toHaveText("—");
   await emit(page, [48, 52, 55, 59]);
   await page.evaluate(() => document.fonts.ready);
-  await expect(band).toContainText("Cmaj7");
-  await expect(band).not.toContainText("押さえている");
+  await expect(band.getByTestId("keyboard-held-name")).toHaveText("Cmaj7");
   await expect(capture.getByTestId("keyboard-keys")).toHaveAttribute("aria-label", /押さえている音/);
   await page.screenshot({ path: "p89-generated/P24-fix-2/E-holding-1440.png" });
-  // 6: the position's vertical centre matches the transport buttons' centre.
-  const delta = await capture.evaluate((root) => {
-    const position = root.querySelector<HTMLElement>('[data-testid="text-transport-position"]')!;
-    const transport = position.closest<HTMLElement>(".lv-text-transport")!;
-    const button = transport.querySelector<HTMLButtonElement>("button")!;
-    const a = position.getBoundingClientRect();
-    const b = button.getBoundingClientRect();
-    return Math.abs((a.top + a.height / 2) - (b.top + b.height / 2));
-  });
-  expect(delta).toBeLessThanOrEqual(1);
 });

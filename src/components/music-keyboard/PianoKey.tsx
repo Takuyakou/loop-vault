@@ -27,6 +27,8 @@ interface PianoKeyProps {
   missingGuide?: boolean;
   /** P23-51 (dojo only): the answer's mark on this key after a wrong answer — played and right, played and wrong, or a chord tone not played. */
   resultMark?: "hit" | "wrong" | "miss";
+  /** P25-10 I4 (default appearance): the play-along's green ● / red ×, drawn over the guide colours. */
+  playAlongMark?: "ok" | "wrong";
 }
 
 const stateColors: Record<PianoKeyVisualState, string | undefined> = {
@@ -55,6 +57,7 @@ export const PianoKey = memo(function PianoKey({
   markScale = 1,
   missingGuide = false,
   resultMark,
+  playAlongMark,
 }: PianoKeyProps) {
   const { black, height, note, width, x } = geometry;
   const label = showCLabel ? formatCLabel(note, octaveConvention) : undefined;
@@ -146,7 +149,15 @@ export const PianoKey = memo(function PianoKey({
           ))}
         </g>
       ) : null}
-      {isGuide && isHeld ? (
+      {playAlongMark ? (
+        <g aria-hidden="true" data-play-along={playAlongMark}>
+          <rect x={x + 1} y={1} width={Math.max(0, width - 2)} height={Math.max(0, height - 2)}
+            fill={playAlongMark === "ok" ? "#36c990" : "#ee6b73"} rx={black ? 1 : 0} />
+          <text x={x + width / 2} y={height - (black ? 6 : 16)} textAnchor="middle" fontSize={black ? 11 : 13} fontWeight={800}
+            fill={playAlongMark === "ok" ? "#05271a" : "#2a0508"}>{playAlongMark === "ok" ? "●" : "×"}</text>
+        </g>
+      ) : null}
+      {isGuide && isHeld && !playAlongMark ? (
         <circle
           aria-hidden="true"
           cx={x + width / 2}

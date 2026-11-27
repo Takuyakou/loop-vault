@@ -53,7 +53,10 @@ export type UnifiedDiagnosticCode =
   | "ambiguous-tokenization"
   | "malformed-chord"
   | "unsupported-notation"
-  | "invalid-structure";
+  | "invalid-structure"
+  | "repeat-without-chord"
+  | "question-mark"
+  | "voicing-notes";
 
 export interface UnifiedDiagnostic {
   readonly code: UnifiedDiagnosticCode;
@@ -328,6 +331,38 @@ export function parseUnifiedText(input: string, options: UnifiedTextOptions = {}
         token: match[0],
         reasonCode: "DEGREE_REQUIRES_KEY",
       });
+    }
+  }
+
+  // P25-06 E2: the `.` and `?` places the normaliser named (they are the screen's own sentences).
+  if (normalized.notices.length > 0) {
+    const lineTexts = normalized.text.split("\n");
+    for (const notice of normalized.notices) {
+      const codeIndex = normalized.codeLineNumbers.indexOf(notice.line);
+      const origins = codeIndex < 0 ? [] : normalized.codeOrigins[codeIndex] ?? [];
+      const at = origins.indexOf(notice.start);
+      const lineOffset = lineTexts.slice(0, Math.max(0, codeIndex)).reduce((total, line) => total + line.length + 1, 0);
+      const normalizedAt = at < 0 ? lineOffset : lineOffset + at;
+      const span = mapSpan({ start: normalizedAt, end: normalizedAt + 1 }, converted.map);
+      const rawSpan = {
+        start: (normalized.lineRawStarts[notice.line - 1] ?? 0) + notice.start,
+        end: (normalized.lineRawStarts[notice.line - 1] ?? 0) + notice.end,
+      };
+      const entry: UnifiedDiagnostic = {
+        code: notice.kind === "dot-without-chord" ? "repeat-without-chord" : notice.kind === "question-mark" ? "question-mark" : "voicing-notes",
+        message: notice.message,
+        severity: "ERROR",
+        span,
+        rawSpan,
+        line: notice.line,
+        column: notice.start + 1,
+        token: notice.token,
+        reasonCode: notice.kind,
+      };
+      // The parser names the same character; the screen's sentence replaces it instead of doubling it.
+      const existing = diagnostics.findIndex((item) => item.rawSpan.start === rawSpan.start);
+      if (existing >= 0) diagnostics[existing] = entry;
+      else diagnostics.push(entry);
     }
   }
 

@@ -5,16 +5,13 @@ import { LV7_OUTSIDE_ITEMS, LV7_REORDERED_ITEMS, practiceMaterials } from "./pra
 
 /** P23-57: Lv7 ear practice beyond the six families (practice only). */
 describe("P23-57 wider ear practice", () => {
-  it("reorders diatonic chords in ways the families never use", () => {
+  it("reorders diatonic chords in ways the families never use and puts one chord from outside the key in each outside question", () => {
     expect(LV7_REORDERED_ITEMS.map((item) => item.chords.map((chord) => chord.label).join(" "))).toEqual([
       "Am F C G",
       "Dm7 G7 Am7",
       "G Bm C D",
       "Fmaj7 Dm7 Am7 C7",
     ]);
-  });
-
-  it("puts one chord from outside the key in each question", () => {
     expect(LV7_OUTSIDE_ITEMS.map((item) => item.chords.map((chord) => chord.label).join(" "))).toEqual([
       "C F Fm C",
       "C E7 Am",

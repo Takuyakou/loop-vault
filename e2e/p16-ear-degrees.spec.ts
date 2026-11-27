@@ -129,7 +129,7 @@ test("P16-06: カードを押すと鳴る。今のカードは動かない。先
   await expect(page.getByTestId("ear-card-2")).not.toHaveAttribute("data-pressed", "true");
   await expect(page.getByTestId("ear-card-2")).toHaveAttribute("aria-disabled", "true");
   await toPlay(page);
-  await expect(page.getByTestId("ear-card-0")).toHaveAttribute("aria-label", "1つ目のコードを鳴らす");
+  await expect(page.getByTestId("ear-card-0")).toHaveAttribute("aria-label", "1つ目のコードを鳴らす、押すと鳴ります");
   const before = await listens(page);
   // the card being played: counts as 今のコードを聴く
   await page.getByTestId("ear-card-0").click();

@@ -2,6 +2,8 @@
 
 日本語 | [English](README.en.md)
 
+[![Security and test gates](https://github.com/Takuyakou/loop-vault/actions/workflows/security.yml/badge.svg)](https://github.com/Takuyakou/loop-vault/actions/workflows/security.yml) [![Latest release](https://img.shields.io/github/v/release/Takuyakou/loop-vault)](https://github.com/Takuyakou/loop-vault/releases/latest) ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-blue)
+
 **「いいな」で終わるコード進行を、自分の引き出しに変えるWindowsアプリ。**
 
 Loop Vaultは、MIDIやテキストからコード進行を集めて整え、鍵盤・ベース・耳で反復練習しながら、制作に使える自分の引き出しとして蓄える、作曲補助用のWindowsデスクトップアプリです。データは手元のPCに保存します。
@@ -11,6 +13,10 @@ Loop Vaultは、MIDIやテキストからコード進行を集めて整え、鍵
 ![Voicing Loop：現在と次のコード、左右の運指、進行タイムライン、88鍵盤](docs/images/v3-voicing-loop.png)
 
 *画像は撮影用に作成した合成データで表示しています。個人の Vault・MIDI・録音は含みません。*
+
+![デモ：テキストからカードを作って形を変える → Voicing Loop で流す → Chord Dojo の 1 問](docs/images/v3-demo.gif)
+
+*25 秒のデモ（音なし）。テキストの取り込み → Voicing Loop での反復（再生ヘッド・運指・88 鍵盤）→ Chord Dojo。すべて合成データで撮っています。*
 
 ---
 
@@ -43,15 +49,15 @@ Loop Vaultは、MIDIやテキストからコード進行を集めて整え、鍵
 
 ![ホーム：今日のループ、続きから、最近入れた進行、取り込みと練習への入口](docs/images/v3-home.png)
 
-### 取り込む ＆ 修正作業場
+### 取り込む ＆ 進行エディタ
 
 MIDI ファイル（`.mid` / `.midi`）とコード進行のテキストに対応しています。
 
 - **MIDI 取り込み**：ドラッグ＆ドロップや複数ファイルの読み込みに対応。解析前にベース・和音・メロディなどのパート役割を確認でき、キーも自動推定されます
-- **修正作業場**：解析結果を聴きながら、音の除外・追加・高さ変更、コード名の修正、分割・結合、小節ごとの削除と詰め直しができます。読み込んだ元の MIDI ファイルは書き換えません
-- **テキスト取り込み**：`| Dm7 G7 | Cmaj7 | Am7 | F G |` のように入力するか、コード譜をそのまま貼り付けて、プレビュー試聴しながら保存できます。歌詞の行は読み飛ばし、拍子・`%` 再発音・`_` 休符・`=` 保持・`Cm(maj7)`・`G7alt` などに対応しています。MIDI 鍵盤で和音を弾いて、1 コードずつ入れることもできます
+- **進行エディタ**：解析結果を聴きながら、音の除外・追加・高さ変更、コード名の修正、分割・結合、小節ごとの削除と詰め直しができます。読み込んだ元の MIDI ファイルは書き換えません
+- **テキスト取り込み**：`| Dm7 G7 | Cmaj7 | Am7 | F G |` のように入力するか、コード譜をそのまま貼り付けて、プレビュー試聴しながら保存できます。歌詞の行は読み飛ばし、拍子・`%` 再発音・`_` 休符・`=` 保持・`Cm(maj7)`・`G7alt`・歌詞の中のコード（`[C]歌詞`）などに対応しています。カードを選ぶと、音の重ね方（形・転回・高さ）をその場で直せます。MIDI 鍵盤で和音を弾いて、1 コードずつ入れることもできます
 
-![修正作業場：コードカード、ピアノロール、おすすめの範囲、Vaultへの保存](docs/images/v3-correction-workspace.png)
+![進行エディタ：コードカード、ピアノロール、おすすめの範囲、Vaultへの保存](docs/images/v3-correction-workspace.png)
 
 ### Vault
 
@@ -68,7 +74,8 @@ MIDI ファイル（`.mid` / `.midi`）とコード進行のテキストに対�
 Vault の進行を、鍵盤と運指を見ながら反復練習する画面です（ページ上部の画像）。
 
 - **ひと目で把握**：現在のコード、次のコード・その次のコード、左右の指番号と「次への動き」、進行タイムライン、88 鍵盤を同時に表示します
-- **4 つの音の出どころ**：「保存した音」「元 MIDI」「カスタム（自分で登録した音）」「自動生成（基本／骨組みや詳細形）」を切り替えられます
+- **4 つの音の出どころ**：「保存した音」「元 MIDI」「カスタム（自分で登録した音）」「自動生成」を切り替えられます。自動生成は、最初は今までどおりの「基本」で、練習したい時はシェル・ルートレス A/B・シェル＋上の三和音・4 度積みの 4 つの形から選べます(テンションを足す・両手に広げるも組み合わせられます)
+- **弾き合わせ**：MIDI 鍵盤で一緒に弾くと、合っている音・違う音と、カードごとにそろったかがその場で分かります
 - **練習しやすい制御**：BPM・キー・オクターブ・カウントインの調整に加え、タイムライン上でコード単位の A–B 区間ループができます。進行一覧はお気に入り・最近使った順で探せます
 
 ### Chord Dojo
@@ -125,19 +132,34 @@ Vault の進行を、鍵盤と運指を見ながら反復練習する画面で�
 
 - **対応 OS**：Windows（x64）。[Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) が必要です（Windows 11 には標準で含まれています）
 - **配布物の署名**：配布ファイルにはコード署名がまだありません。Windows の警告が表示された場合は、配布元がこのリポジトリの Releases であることと `SHA256SUMS` を確認してください
-- **MIDI 解析**：完全な自動採譜ではありません。メロディ・装飾音・複雑な和声などは、修正作業場で音を聴きながら確認・調整する前提で設計しています
+- **MIDI 解析**：完全な自動採譜ではありません。メロディ・装飾音・複雑な和声などは、進行エディタで音を聴きながら確認・調整する前提で設計しています
 - **運指・拍子の範囲**：表示される運指は練習の目安です（手の大きさ等に合わせて編集・固定できます）。Voicing Loop の対応拍子は一定の 1/4〜12/4 です
 
 ---
 
+## 技術構成と設計の見どころ
+
+| 領域 | 使っている物 |
+| --- | --- |
+| デスクトップ | Tauri 2 / Rust（ファイルへの保存、DAW への MIDI のドラッグ＆ドロップ、MIDI 鍵盤の入力（midir）） |
+| 画面 | React 18 / TypeScript / Vite 7 / Tailwind CSS |
+| 状態とデータの約束 | Zustand / Zod（保存の境界での検証と、古い版のデータの読み込みテスト） |
+| 音 | Tone.js（ピアノ・ベースのサンプル音源） |
+| テストと CI | Vitest / Playwright / cargo test / GitHub Actions（Windows・Ubuntu） |
+
+- **画面から分けた音楽の中身**：MIDI の解析、コードの理論と移調、テキストの進行の読み取り、ボイシングの形と進行に沿った選び方、練習の判定は、画面・音・ブラウザに頼らない TypeScript の層（`src/domain/`）にまとめています。Vitest 7,200+件・Playwright（画面・見た目・アクセシビリティ）1,400+件・Rust 49件のテストで、変更のたびに確かめています。ボイシングの形は、4,320 件の正解の表で固定しています。
+- **なめらかな再生**：Voicing Loop は `Tone.Transport` を 1 つの時計にし、再生ヘッドは React の再描画を通さず `requestAnimationFrame` で直接描いています。一時停止や停止では、音量を短く絞ってから音を止め、プツッという音を防いでいます。
+- **手元で完結するデータと、確かめられるリリース**：データは外部に送りません。リポジトリには個人の情報の自動検査、npm と RustSec の脆弱性の検査を入れ、リリースでは「テストを通したツリー」と「公開したツリー」が同じことと、配布ファイルの `SHA256SUMS` を確かめています。
+- **AI と分担した開発**：要件・採否の最終判断・受け入れの基準は作者が持ち、設計案づくり・作業の指示・実装・検証を AI と分担しています。テストと検査の関門を先に決め、そこを通った物だけを入れる進め方です。
+
+設計と記録の案内は [docs/README.md](docs/README.md)。
+
 ## 開発・ビルド（開発者向け）
 
 <details>
-<summary>技術構成とローカルでの起動・ビルド・テスト手順を開く</summary>
+<summary>ローカルでの起動・ビルド・テスト手順を開く</summary>
 
-### 技術構成と前提条件
-
-Tauri 2 / Rust、React 18 / TypeScript、Vite 7、Tone.js、Zustand、Zod を使用しています。
+### 前提条件
 
 - [Node.js](https://nodejs.org/en/download) 22 系と npm
 - [Rust / Cargo](https://rustup.rs/)（Windows は MSVC toolchain）
@@ -166,6 +188,7 @@ npm run lint
 npm test
 npm run test:e2e
 npm run security:scan
+npm run validate:docs-layout
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 ```
 
@@ -173,6 +196,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --locked
 
 </details>
 
+- [設計・ドキュメントの案内（docs）](docs/README.md)
 - [変更の記録（CHANGELOG）](CHANGELOG.md)
 
 ## ライセンス

@@ -10,7 +10,8 @@ import type { EditableProgression } from "./progressionEditing";
 import type { ChordVoicingMemory, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { confirmedTextProgressionKeyState, TEXT_PROGRESSION_MAX_BARS } from "./textProgression";
 import type { TextProgressionEvent, TextProgressionParseResult } from "./textProgression";
-import { createTextProgressionStyleSnapshot, isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
+import { createTextProgressionStyleSnapshot, isTextProgressionStyleSnapshot, textProgressionStyleFromSnapshot } from "./textProgressionVoicing";
+import { basicNotesValid, TEXT_HAND_EXTRACTOR_VERSION } from "./textCardSound";
 import { isValidVoicingSnapshot, voicingCompatibility } from "./voicing";
 import { validateTextChordNotes } from "./textChordValidation";
 
@@ -256,15 +257,21 @@ function practiceOnlyMemory(
   chord: ChordTimelineItem["chord"],
 ): ChordVoicingMemory | undefined {
   const override = memory?.practiceVoicingOverride;
+  // P25-03 C11 / K9-3: the dock's hand-edited notes pass too; only the old `text-style-v1:` snapshots keep
+  // the old text check (K shapes and hand edits were checked when they were made).
+  const oldStyle = textProgressionStyleFromSnapshot(override, chord) !== undefined;
+  const handEdited = override?.source === "manual" && override.extractorVersion === TEXT_HAND_EXTRACTOR_VERSION;
   if (
     !override
     || (
       override.source !== "live-played"
       && !isTextProgressionStyleSnapshot(override, chord)
+      && !handEdited
     )
     || override.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(override)
-    || (isTextProgressionStyleSnapshot(override, chord) && !validateTextChordNotes(chord, override.midiNotes))
+    || (oldStyle && !validateTextChordNotes(chord, override.midiNotes))
+    || (!oldStyle && !basicNotesValid(override.midiNotes))
     || voicingCompatibility(override, chord) !== "compatible"
   ) return undefined;
   return { practiceVoicingOverride: cloneVoicingSnapshot(override) };

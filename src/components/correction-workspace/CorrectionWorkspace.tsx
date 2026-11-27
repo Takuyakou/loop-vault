@@ -981,7 +981,7 @@ export function CorrectionWorkspace(props: CorrectionWorkspaceProps) {
       tabIndex={-1}
       data-testid="correction-workspace"
       data-mode={mode}
-      aria-label="修正作業場"
+      aria-label="進行エディタ"
       onPointerDownCapture={() => { pointerUsedRef.current = true; }}
     >
       {progression ? progression.header(present, apply) : <div className="lv-cw-file">

@@ -21,12 +21,15 @@ test("VL-12 Space shortcut respects native controls and keeps keyboard focus vis
   await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
   await page.keyboard.press("Space");
   await expect(workspace.getByRole("button", { name: "再開" })).toBeVisible();
-  // P23-32 K4: Space on a control of the bar (the お手本の音 switch) toggles that control, not the transport.
+  // P25 V25-8: Space on a control of the bar (the お手本の音 switch) starts / pauses the transport and does not press
+  // the control; Enter presses it.
   const reference = workspace.getByRole("switch", { name: "お手本の音" });
   await reference.focus();
   await page.keyboard.press("Space");
+  await expect(reference).toHaveAttribute("aria-checked", "true");
+  await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
+  await page.keyboard.press("Enter");
   await expect(reference).toHaveAttribute("aria-checked", "false");
-  await expect(workspace.getByRole("button", { name: "再開" })).toBeVisible();
   const timeline = workspace.getByTestId("voicing-loop-timeline-viewport");
   await timeline.focus();
   expect(await timeline.evaluate((node) => getComputedStyle(node).outlineStyle)).not.toBe("none");

@@ -33,23 +33,6 @@ pub async fn openai_api_key_status() -> Result<ApiKeyStatus, LlmError> {
 }
 
 #[tauri::command]
-pub async fn set_openai_api_key(api_key: String) -> Result<ApiKeyStatus, LlmError> {
-    let trimmed = api_key.trim().to_owned();
-    if trimmed.len() < 16 || !trimmed.starts_with("sk-") {
-        return Err(LlmError::AuthenticationFailed);
-    }
-
-    tauri::async_runtime::spawn_blocking(move || {
-        entry()?
-            .set_password(&trimmed)
-            .map_err(|_| LlmError::SecretStoreUnavailable)?;
-        Ok(ApiKeyStatus { registered: true })
-    })
-    .await
-    .map_err(|_| LlmError::SecretStoreUnavailable)?
-}
-
-#[tauri::command]
 pub async fn delete_openai_api_key() -> Result<ApiKeyStatus, LlmError> {
     tauri::async_runtime::spawn_blocking(|| match entry()?.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(ApiKeyStatus { registered: false }),

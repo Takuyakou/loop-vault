@@ -157,6 +157,7 @@ function runSelected(selection, mode) {
     if (selection.documentation) {
       nodeStep("Phase docs", "scripts/phase-docs/validate.mjs");
       nodeStep("AI handoff", "scripts/ai-handoff/validate.mjs");
+      nodeStep("Docs layout", "scripts/docs-layout/validate.mjs");
     }
     if (selection.areas.includes("privacy/security")) nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
     if (selection.browserChanged) nodeStep("Class lint", "scripts/lint-tailwind-classes.mjs");
@@ -192,7 +193,7 @@ async function runFull({ includeExtended = false } = {}) {
   const pngPaths = (untracked) => git(["status", "--porcelain", "--", "*.png"]).trim().split("\n").filter(Boolean)
     .filter((line) => (line.startsWith("??")) === untracked);
   const pngTrackedBefore = pngPaths(false);
-  if (pngTrackedBefore.length) throw new Error(`Tracked PNG files are already modified before FULL started — tests must not write into docs/reports (see r-01-test-hygiene): ${pngTrackedBefore.join(", ")}`);
+  if (pngTrackedBefore.length) throw new Error(`Tracked PNG files are already modified before FULL started — tests must not write into docs/archive/reports (see r-01-test-hygiene): ${pngTrackedBefore.join(", ")}`);
   const pngUntrackedBefore = pngPaths(true).sort();
   // Run static checks and production build together first, then run Vitest full on its own so heavy CPU
   // unit tests (e.g. p21SingleNoteFingering) do not contend with tsc/eslint/vite and hit the 30s timeout.
@@ -203,6 +204,7 @@ async function runFull({ includeExtended = false } = {}) {
     { label: "E2E TypeScript", script: "node_modules/typescript/bin/tsc", args: ["-p", "tsconfig.e2e.json"] },
     { label: "Phase docs", script: "scripts/phase-docs/validate.mjs" },
     { label: "AI handoff", script: "scripts/ai-handoff/validate.mjs" },
+    { label: "Docs layout", script: "scripts/docs-layout/validate.mjs" },
     { label: "Privacy scan", script: "scripts/security/trackedSecurityScan.mjs" },
     { label: "App TypeScript", script: "node_modules/typescript/bin/tsc" },
     { label: "Production build", script: "node_modules/vite/bin/vite.js", args: ["build"] },
@@ -213,6 +215,7 @@ async function runFull({ includeExtended = false } = {}) {
       "scripts/test-dx/check-gallery-excluded.node-test.mjs",
       "scripts/test-dx/performance-reporter.node-test.mjs",
       "scripts/test-dx/tiers.node-test.mjs",
+      "scripts/docs-layout/validate.node-test.mjs",
       "scripts/run-playwright-visual-tests.node-test.mjs",
     ] },
   ]);
@@ -221,16 +224,17 @@ async function runFull({ includeExtended = false } = {}) {
   const visualRunner = "scripts/run-playwright-visual-tests.mjs";
   const visualReporter = ["--reporter=dot,./scripts/test-dx/performance-reporter.mjs"];
   const allSpecs = readdirSync(join(root, "e2e")).filter((file) => file.endsWith(".spec.ts")).sort().map((file) => `e2e/${file}`);
-  const { core, extendedLight, extendedHeavy } = partitionE2eSpecs(allSpecs);
+  const { core, extendedLight, extendedHeavy, extendedRealtimeAudio } = partitionE2eSpecs(allSpecs);
   const visualEnv = { LV_DX_PRECHECKED_TSC: "1" };
   const passes = [];
   if (includeExtended) {
     passes.push(
       nodeStep("Playwright full (all light)", visualRunner, [...visualReporter, ...core, ...extendedLight], "browser", visualEnv),
       nodeStep("Playwright heavy pass", visualRunner, [...visualReporter, ...extendedHeavy, "--workers=2"], "browser", { ...visualEnv, LV_DX_PREBUILT_FIXTURE: "1" }),
+      nodeStep("Playwright real-time audio (one at a time)", visualRunner, [...visualReporter, ...extendedRealtimeAudio, "--workers=1"], "browser", { ...visualEnv, LV_DX_PREBUILT_FIXTURE: "1" }),
     );
   } else {
-    console.log(`E2E tier: core (${core.length} specs); extended (${extendedLight.length + extendedHeavy.length} specs) via npm run test:e2e:extended or npm run test:full:all`);
+    console.log(`E2E tier: core (${core.length} specs); extended (${extendedLight.length + extendedHeavy.length + extendedRealtimeAudio.length} specs) via npm run test:e2e:extended or npm run test:full:all`);
     passes.push(
       nodeStep("Playwright full (core)", visualRunner, [...visualReporter, ...core], "browser", visualEnv),
     );
@@ -247,7 +251,7 @@ async function runFull({ includeExtended = false } = {}) {
   const pngTrackedChanged = pngPaths(false);
   const pngUntrackedNew = pngPaths(true).filter((path) => !pngUntrackedBefore.includes(path));
   const pngReport = [...pngTrackedChanged.map((path) => `changed: ${path}`), ...pngUntrackedNew.map((path) => `new: ${path}`)];
-  if (pngReport.length) throw new Error(`PNG files in tracked directories changed during FULL — tests must not write into docs/reports (see r-01-test-hygiene): ${pngReport.join(", ")}`);
+  if (pngReport.length) throw new Error(`PNG files in tracked directories changed during FULL — tests must not write into docs/archive/reports (see r-01-test-hygiene): ${pngReport.join(", ")}`);
   console.log("Tracked PNG check: PASS (no tracked PNG file changed during FULL)");
 }
 
@@ -255,10 +259,11 @@ function runExtendedE2e() {
   const visualRunner = "scripts/run-playwright-visual-tests.mjs";
   const visualReporter = ["--reporter=dot,./scripts/test-dx/performance-reporter.mjs"];
   const allSpecs = readdirSync(join(root, "e2e")).filter((file) => file.endsWith(".spec.ts")).sort().map((file) => `e2e/${file}`);
-  const { extendedLight, extendedHeavy } = partitionE2eSpecs(allSpecs);
-  console.log(`E2E extended: ${extendedLight.length} archive/sweep specs + ${extendedHeavy.length} heavy (--workers=2) specs`);
+  const { extendedLight, extendedHeavy, extendedRealtimeAudio } = partitionE2eSpecs(allSpecs);
+  console.log(`E2E extended: ${extendedLight.length} archive/sweep specs + ${extendedHeavy.length} heavy (--workers=2) specs + ${extendedRealtimeAudio.length} real-time audio (--workers=1, one at a time)`);
   nodeStep("Playwright extended light", visualRunner, [...visualReporter, ...extendedLight], "browser");
   nodeStep("Playwright extended heavy", visualRunner, [...visualReporter, ...extendedHeavy, "--workers=2"], "browser", { LV_DX_PRECHECKED_TSC: "1", LV_DX_PREBUILT_FIXTURE: "1" });
+  nodeStep("Playwright real-time audio (one at a time)", visualRunner, [...visualReporter, ...extendedRealtimeAudio, "--workers=1"], "browser", { LV_DX_PRECHECKED_TSC: "1", LV_DX_PREBUILT_FIXTURE: "1" });
 }
 
 try {

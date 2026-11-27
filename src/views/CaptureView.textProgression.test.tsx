@@ -1,9 +1,11 @@
-﻿// @vitest-environment jsdom
+// @vitest-environment jsdom
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPlaybackController, type PlaybackAudioDriver } from "../audio/playbackController";
+import { NotificationProvider } from "../components/notifications";
+import { createNotificationStore } from "../components/notifications/notificationStore";
 import { appCopy } from "../i18n";
 import type { TextProgressionIdeaDraft } from "../store/vaultStore";
 import { CaptureView } from "./CaptureView";
@@ -60,16 +62,15 @@ describe("CaptureView text progression entry", () => {
       expect(save?.disabled).toBe(false);
       await act(async () => save?.click());
       expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledOnce();
-      expect(mounted.container.textContent).toContain("練習制限: invalid-timing");
-      const practice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "Voicing Loop");
-      expect(practice).toBeUndefined();
-      const disabledPractice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "Voicing Loopで練習");
-      expect(disabledPractice?.disabled).toBe(true);
-      const view = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "進行を開く");
-      expect(view?.disabled).toBe(false);
+      // P25 V27: the panel under the preview is gone; the bottom-right notice is the only word.
+      const notices = mounted.notifications.getSnapshot();
+      const last = notices[notices.length - 1]!;
+      expect(last).toMatchObject({ tone: "info", message: "進行をVaultに保存しました。この進行は Voicing Loop では練習できません。" });
+      expect(last.action).toBeUndefined();
+      expect(mounted.container.textContent).not.toContain("練習制限");
+      expect(mounted.container.textContent).not.toContain("invalid-timing");
+      expect(mounted.container.textContent).not.toContain("保存した進行を" + "練習できます");
+      expect(mounted.container.textContent).not.toContain("進行エディタで開く");
     } finally {
       await mounted.unmount();
     }
@@ -140,8 +141,9 @@ describe("CaptureView text progression entry", () => {
       );
       await setInput(bpmInput, "132");
 
+      // P25-03: the band's 「鳴らす」 plays the chosen card.
       const preview = mounted.container.querySelector<HTMLButtonElement>(
-        "[data-testid='text-progression-preview']",
+        "[data-testid='text-dock-play']",
       );
       expect(preview?.disabled).toBe(false);
       await act(async () => preview?.click());
@@ -180,7 +182,7 @@ describe("CaptureView text progression entry", () => {
     }
   });
 
-  it("saves a converted text Draft only through the text save adapter", async () => {
+  it("saves the text only through the text save adapter, with no draft screen", async () => {
     const mounted = await renderCapture();
 
     try {
@@ -196,50 +198,17 @@ describe("CaptureView text progression entry", () => {
       // The scrub control displays a practice default of 120 before a BPM is authored.
       await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "121");
       await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "120");
-      await act(async () => mounted.container.querySelector<HTMLButtonElement>(
-        "[data-testid='text-progression-convert']",
-      )?.click());
-
-      expect(mounted.container.querySelector("[data-testid='manual-candidate-editor']")).not.toBeNull();
-      expect(mounted.container.querySelector("[data-testid='draft-source']")?.textContent)
-        .toContain("テキスト入力から作成");
-      for (const action of ["split", "merge", "insert", "delete"]) {
-        expect(mounted.container.querySelector(`button[data-action="${action}"]`)).toBeNull();
-      }
-      expect(mounted.container.querySelector("[data-chord-card]")?.textContent).not.toContain("Review");
-      const sourceChip = mounted.container.querySelector<HTMLElement>(
-        "[data-testid='capture-voicing-source-chip']",
-      );
-      expect(sourceChip?.getAttribute("title")).toBe("テキスト入力から自動生成したボイシングです。");
-      expect(mounted.container.textContent).not.toContain("Source MIDI");
-      expect(mounted.createIdeaFromDraft).not.toHaveBeenCalled();
-      expect(mounted.appendBlockToIdea).not.toHaveBeenCalled();
-      expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
-      expect(mounted.clearAnalysis).not.toHaveBeenCalled();
-
-      const draftEditor = mounted.container.querySelector("[data-testid='manual-candidate-editor']");
-      const saveToVault = [...(draftEditor?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
-        .find((button) => button.textContent?.includes(appCopy.ja.capture.saveToVault));
-      await act(async () => saveToVault?.click());
-
-      const title = mounted.container.querySelector<HTMLInputElement>("input[name='progression-title']");
-      expect(title?.value).toBe("Cmaj7");
-      await setInput(title, "Edited text title");
-      const form = mounted.container.querySelector<HTMLFormElement>("form[role='dialog']");
-      await act(async () => form?.dispatchEvent(new Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      })));
+      // P25-03 C12: no draft screen; the panel's own save goes through the text save adapter.
+      expect(mounted.container.querySelector("[data-testid='text-progression-convert']")).toBeNull();
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-name']"), "Edited text title");
+      await act(async () => mounted.container.querySelector<HTMLButtonElement>("[data-testid='text-progression-save']")?.click());
 
       expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledTimes(1);
       expect(mounted.createIdeaFromDraft).not.toHaveBeenCalled();
-      expect(mounted.appendBlockToIdea).not.toHaveBeenCalled();
+      expect(mounted.container.querySelector("[data-testid='manual-candidate-editor']")).toBeNull();
       const payload = mounted.savedTextDraft();
       if (!payload) throw new Error("Expected text save adapter payload.");
-      expect(payload).toMatchObject({
-        title: "Edited text title",
-        bpm: 120,
-      });
+      expect(payload).toMatchObject({ title: "Edited text title", bpm: 120 });
       expect(payload.chords).toHaveLength(1);
       expect(payload.chords[0]).toMatchObject({ chord: { label: "Cmaj7" } });
       expect(payload).not.toHaveProperty("analysis");
@@ -247,24 +216,15 @@ describe("CaptureView text progression entry", () => {
       expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
       expect(mounted.clearAnalysis).not.toHaveBeenCalled();
 
-      expect(mounted.container.textContent).toContain("保存した進行を練習できます");
-      const voicingLoop = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.trim() === "Voicing Loop");
-      const viewSaved = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.trim() === "保存した進行を見る");
-      await act(async () => voicingLoop?.click());
-      await act(async () => viewSaved?.click());
-      expect(mounted.openSavedTextProgressionPractice).toHaveBeenCalledWith({
-        ideaId: "text-idea",
-        blockId: "text-block",
-      });
-      expect(mounted.openSavedTextProgression).toHaveBeenCalledWith({
-        ideaId: "text-idea",
-        blockId: "text-block",
-      });
-    } finally {
-      await mounted.unmount();
-    }
+      const notices = mounted.notifications.getSnapshot();
+      const last = notices[notices.length - 1]!;
+      expect(last).toMatchObject({ tone: "success", message: appCopy.ja.capture.savedToVault });
+      expect(last.action?.label).toBe("Voicing Loopで練習");
+      await act(async () => last.action?.onClick());
+      expect(mounted.openSavedTextProgressionPractice).toHaveBeenCalledWith({ ideaId: "text-idea", blockId: "text-block" });
+      expect(mounted.container.textContent).not.toContain("保存した進行を" + "練習できます");
+      expect(mounted.container.textContent).not.toContain("進行エディタで開く");
+    } finally { await mounted.unmount(); }
   });
 });
 
@@ -286,32 +246,33 @@ async function renderCapture(initialInputMode: "midi" | "text" = "midi") {
     return { ideaId: "text-idea", blockId: "text-block" };
   });
   const appendBlockToIdea = vi.fn(() => true);
-  const openSavedTextProgression = vi.fn();
   const openSavedTextProgressionPractice = vi.fn();
+  const notifications = createNotificationStore();
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
 
   await act(async () => {
     root.render(
-      <CaptureView
-        initialInputMode={initialInputMode}
-        ideas={[]}
-        analysis={{ status: "idle" }}
-        analyzeMidiBytes={analyzeMidiBytes}
-        clearAnalysis={clearAnalysis}
-        createIdeaFromDraft={createIdeaFromDraft}
-        createIdeaFromTextProgression={createIdeaFromTextProgression}
-        appendBlockToIdea={appendBlockToIdea}
-        appendTextProgressionToIdea={vi.fn(() => true)}
-        openSavedTextProgression={openSavedTextProgression}
-        openSavedTextProgressionPractice={openSavedTextProgressionPractice}
-        updateIdea={vi.fn()}
-        setToast={vi.fn()}
-        copy={appCopy.ja}
-        showRomanNumerals
-        controller={controller}
-      />,
+      <NotificationProvider store={notifications}>
+        <CaptureView
+          initialInputMode={initialInputMode}
+          ideas={[]}
+          analysis={{ status: "idle" }}
+          analyzeMidiBytes={analyzeMidiBytes}
+          clearAnalysis={clearAnalysis}
+          createIdeaFromDraft={createIdeaFromDraft}
+          createIdeaFromTextProgression={createIdeaFromTextProgression}
+          appendBlockToIdea={appendBlockToIdea}
+          appendTextProgressionToIdea={vi.fn(() => true)}
+          openSavedTextProgressionPractice={openSavedTextProgressionPractice}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          showRomanNumerals
+          controller={controller}
+        />
+      </NotificationProvider>,
     );
   });
 
@@ -322,8 +283,8 @@ async function renderCapture(initialInputMode: "midi" | "text" = "midi") {
     createIdeaFromDraft,
     createIdeaFromTextProgression,
     appendBlockToIdea,
-    openSavedTextProgression,
     openSavedTextProgressionPractice,
+    notifications,
     controller,
     stop,
     toggle,

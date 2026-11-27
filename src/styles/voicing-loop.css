@@ -126,16 +126,18 @@
       padding-inline: 0.3rem;
     }
 
-    .lv-vl-transport .lv-transport-row {
-      gap: 2px;
+    /* P25-11 (I0, rev13): the band's own row (the old `.lv-transport-row` rule reached nothing); 8px → 4px. */
+    .lv-vl-transport .lv-vl-transport-primary {
+      column-gap: 4px;
     }
 
+    /* P25-11 (I0, rev12): one step narrower so 「弾き合わせ」 fits beside 「お手本の音」. */
     .lv-vl-transport .lv-vl-key-select {
-      width: 5rem;
+      width: 4rem;
     }
 
     .lv-vl-transport #voicing-loop-count-in {
-      width: 4.25rem;
+      width: 3.75rem;
     }
 
     .lv-vl-transport .lv-transport-primary-fixed {
@@ -567,6 +569,8 @@
 .lv-vl-head-title {font-size:17px;font-weight:700;white-space:nowrap;}
 .lv-vl-head-facts {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--lv-text-muted);}
 .lv-vl-head-inline {display:none;}
+/* P25-16 N4: 「・ MIDI 未接続」 after the key and bars, in the warning colour. */
+.lv-vl-head-no-midi {flex:none;white-space:nowrap;font-size:12.5px;}
 .lv-vl-controls {height:40px;padding:0 10px;border-radius:12px;}
 .lv-vl-controls-row {flex-wrap:nowrap;height:38px;align-items:center;gap:10px;}
 .lv-vl-seg {display:inline-flex;gap:2px;padding:2px;border-radius:8px;background:var(--lv-bg);}
@@ -600,6 +604,7 @@
   .lv-vl-head-inline .lv-vl-back-label {display:none;}
   .lv-vl-head-inline .lv-vl-head-title {font-size:14px;max-width:140px;overflow:hidden;text-overflow:ellipsis;}
   .lv-vl-head-inline .lv-vl-head-facts {display:none;}
+  .lv-vl-head-inline .lv-vl-head-no-midi {font-size:11px;}
   .lv-vl-controls .lv-section-kicker {position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
   .lv-vl-controls-row {gap:8px;}
   .lv-vl-seg .lv-choice {padding:0 8px;}
@@ -688,3 +693,119 @@
 .lv-vl-event[data-range="pending-a"] {
   border-bottom: 2px dashed var(--lv-vl-range);
 }
+
+/* P25-11 I4: the play-along legend squares (the same 10px as the other legend squares). */
+.lv-vl-play-legend { display: inline-block; width: 10px; height: 10px; border-radius: 2px; line-height: 10px; text-align: center; }
+
+/* P25-11 I2 (案 D, rev15): with 弾き合わせ on, the judge buttons join the keyboard legend row. Only where that row
+   cannot keep one line (under about 880px) the 「鍵盤 — 88鍵 / A0–C8」 words are hidden; they stay as its title and
+   for screen readers. Nothing else in the row is hidden or cut. (P25 V10: off keeps the same places, so the same rule holds.) */
+.lv-vl-legend-row {
+  container-type: inline-size;
+}
+
+/* P25 V10: the marks and the judge keep their place while off too, so these narrow-row rules no longer wait for on. */
+@container (max-width: 879px) {
+  .lv-vl-legend-row .lv-vl-legend-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* P25-11 I2 (rev16): with 弾き合わせ on, 「達成 n/8」 joins the progress row. Where the row would no longer keep one
+   line, 「元の拍子 4/4」 is hidden first and then the word 「達成」 (the number stays). Both stay as titles and for
+   screen readers. (P25 V10: off keeps the same places, so the same rule holds.) */
+@container (max-width: 703px) {
+  .lv-vl-timeline-head .lv-vl-source-meter {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@container (max-width: 643px) {
+  .lv-vl-timeline-head [data-testid="voicing-loop-play-along-count"] > p:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* P25-16 N3b: a chord card under the pointer (or chosen with the keyboard) lifts 2px, takes a teal edge and a darker
+   ground, and its ▶ comes up from .55. The current card keeps its own edge and ground (it only lifts, with the
+   shadow and the ▶). Colours of the role line, ✓ / ✖ and the range marks do not change. */
+.lv-vl-event-wrap {
+  transition: transform 120ms var(--lv-ease-in);
+}
+.lv-vl-event-wrap > .lv-vl-event {
+  transition: border-color 120ms var(--lv-ease-in), background-color 120ms var(--lv-ease-in), box-shadow 120ms var(--lv-ease-in);
+}
+.lv-vl-event-wrap > [data-testid="voicing-loop-event-preview"] {
+  opacity: 0.55;
+  transition: opacity 120ms var(--lv-ease-in);
+}
+.lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) {
+  transform: translateY(-2px);
+  transition: transform 140ms var(--lv-ease-out);
+}
+.lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) > .lv-vl-event {
+  box-shadow: 0 6px 14px rgb(0 0 0 / 35%);
+  transition: border-color 140ms var(--lv-ease-out), background-color 140ms var(--lv-ease-out), box-shadow 140ms var(--lv-ease-out);
+}
+.lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) > .lv-vl-event:not([aria-current="step"], [aria-pressed="true"]) {
+  border-color: rgb(66 216 198 / 55%);
+  background-color: #132033;
+}
+.lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) > .lv-vl-event[aria-current="step"] {
+  box-shadow: inset 0 0 0 1px rgb(59 224 206 / 12%), 0 6px 14px rgb(0 0 0 / 35%);
+}
+.lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) > [data-testid="voicing-loop-event-preview"] {
+  opacity: 1;
+  transition: opacity 140ms var(--lv-ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-vl-event-wrap:is(:hover, :has(> .lv-vl-event:focus-visible)) {
+    transform: none;
+  }
+}
+
+/* P25 V6: the current chord's explanation row is always one line high, also when it is empty. */
+.lv-vl-explanation {
+  box-sizing: border-box;
+  height: 21px;
+  overflow: clip;
+  white-space: nowrap;
+  border-top: 1px solid var(--lv-border);
+}
+/* P25 V7: 覚える and 思い出す draw in the same cell, so the hands' place keeps its height (見本 Motion.dc.html の 4). */
+.lv-vl-hands-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.lv-vl-recall-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px dashed rgba(150, 170, 195, 0.28);
+  border-radius: 10px;
+  color: #7f90aa;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* P25 V35: the shape menu answers the pointer (the same tint as the dropdown lists). */
+.lv-vl-shape-item, .lv-vl-shape-order { cursor: pointer; transition: background-color 120ms var(--lv-ease-out), border-color 120ms var(--lv-ease-out); }
+.lv-vl-shape-item:is(:hover, :focus-visible):not([aria-pressed="true"]) { background: color-mix(in srgb, #42d8c6 12%, transparent) !important; }
+.lv-vl-shape-item[aria-pressed="true"]:is(:hover, :focus-visible) { background: #164846 !important; }
+.lv-vl-shape-order:is(:hover, :focus-visible):not([aria-pressed="true"]) { border-color: #42d8c6 !important; color: #f2f6fc !important; }

@@ -5,7 +5,7 @@ import {
   buildVoiceFeatureInputs,
   buildVoices,
   parseMidi,
-} from "../../src/domain/midi";
+} from "../../src/domain/midi/index";
 import { normalizeNotes } from "../../src/domain/midi/normalize";
 import { annotateVoiceRoles } from "../../src/domain/midi/voiceRoles";
 import {
@@ -15,7 +15,7 @@ import {
   voicingRegisterMetrics,
   type MelodyContaminationFilterOptions,
   type VoicingExtractionInput,
-} from "../../src/domain/voicing";
+} from "../../src/domain/voicing/index";
 
 interface GeneralEvent {
   eventId: string;

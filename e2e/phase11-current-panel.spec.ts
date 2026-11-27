@@ -13,6 +13,12 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     await page.evaluate(() => document.fonts.ready);
     await page.locator('[data-nav="voicing-loop"]').click();
     const panel = page.getByTestId("voicing-loop-current-panel");
+    // P25-16 N3: the parts rise in; measure after their shown state (a state wait, not a pause).
+    await expect(page.getByTestId("voicing-loop-current-voicing")).toHaveAttribute("data-presence", "shown");
+    await expect(page.getByTestId("voicing-loop-current-learn")).toHaveAttribute("data-presence", "shown");
+    // …and after the 220ms rise itself (the parts carry a transform until then).
+    await expect(page.getByTestId("voicing-loop-current-learn")).toHaveCSS("transform", "none");
+    await expect(page.getByTestId("voicing-loop-current-voicing")).toHaveCSS("transform", "none");
     const geometry = await panel.evaluate(element => {
       const nodes = [element, ...element.querySelectorAll("[data-testid=voicing-loop-current-content], [data-testid=voicing-loop-current-voicing], [data-testid=voicing-loop-current-explanation], [data-testid=voicing-loop-next-move], [data-testid=voicing-loop-finger-slot]")];
       return nodes.map(node => { const css = getComputedStyle(node); return {
@@ -50,7 +56,10 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
       await expect(card.locator(".voicing-hand-slot-degree").first()).not.toBeEmpty();
     }
     const info = panel.getByTestId("voicing-loop-current-explanation");
-    for (const fact of ["Teacher Style", "Literal", "候補", "省略", "トップ"]) await expect(info).toContainText(fact);
+    // P25-16 N5: no internal names on the row; the candidate navigation stays (「ほかの押さえ方」).
+    await expect(info).toContainText("ほかの押さえ方");
+    await expect(info).not.toContainText("Teacher Style");
+    await expect(info).not.toContainText("Literal");
     // P23-32 P4: the rule's name is in the i's accessible name, not in the visible row.
     await expect(info).not.toContainText("ルール");
     await expect(info.locator(".lv-vl-rule-info")).toHaveAttribute("aria-label", /ルール P5\./);
@@ -64,12 +73,13 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     expect(axe.violations.filter(v => v.impact === "serious" || v.impact === "critical")).toEqual([]);
     await panel.screenshot({ path: join(output, `${width}.png`) });
     await page.screenshot({ path: join(output, `${width}-closed.png`), fullPage: true });
-    const details = page.getByTestId("voicing-loop-generated-details");
-    await details.locator("summary").click();
-    await expect(details).toHaveAttribute("open", "");
+    // P25-08 L1: the shape menu took the place of 「詳しい設定」.
+    const details = page.getByTestId("voicing-loop-shape-menu");
+    await page.getByTestId("voicing-loop-shape-button").click();
+    await expect(details).toBeVisible();
     await page.screenshot({ path: join(output, `${width}-open.png`), fullPage: true });
     await page.getByRole("button", { name: "元MIDI", exact: true }).click();
-    await expect(details).not.toHaveAttribute("open", "");
+    await expect(details).toHaveCount(0);
     await expect(movement).toBeVisible();
     await page.screenshot({ path: join(output, `${width}-source-change.png`), fullPage: true });
     const changedGeometry = await panel.evaluate(node => ({client: node.clientHeight, scroll: node.scrollHeight}));

@@ -1,5 +1,5 @@
 import { normalizedChordKey } from "../voicing";
-import { supportsTextChord } from "../textChordConsumerCapabilities";
+import { supportsLegacyGeneratedChord } from "../textChordConsumerCapabilities";
 import {
   compareCandidate,
   type StyleVoicingCandidate,
@@ -19,9 +19,9 @@ import type {
   VoicingStyleId,
 } from "./types";
 
-interface PathState {
+interface PathState<T> {
   cost: number;
-  path: StyleVoicingCandidate[];
+  path: T[];
 }
 
 export function generateStyleVoicingPlan(
@@ -35,9 +35,9 @@ export function generateStyleVoicingPlan(
       progressionFingerprint: fingerprint,
       styleId,
       generatorVersion: STYLE_VOICING_GENERATOR_VERSION,
-      events: progression.flatMap((event, index) => supportsTextChord("generated-loop", event.chord)
+      events: progression.flatMap((event, index) => supportsLegacyGeneratedChord(event.chord)
         ? [adaptGeneratedCloseVoicing(event, index)] : []),
-      unsupportedEvents: progression.flatMap((event, index) => supportsTextChord("generated-loop", event.chord)
+      unsupportedEvents: progression.flatMap((event, index) => supportsLegacyGeneratedChord(event.chord)
         ? [] : [{ eventId: event.eventId ?? `style-event-${index}`, chordLabel: event.chord.label,
           reason: "このコード分類の生成規則は未対応です。" }]),
     };
@@ -63,7 +63,7 @@ export function generateStyleVoicingPlan(
       chordLabel: event.chord.label,
       reason: compatibility.reason ?? "現在のspanでは候補を生成できません。",
     });
-    if (options.allowUnsupportedFallback && supportsTextChord("generated-loop", event.chord)) {
+    if (options.allowUnsupportedFallback && supportsLegacyGeneratedChord(event.chord)) {
       const fallback = adaptGeneratedCloseVoicing(event, index);
       candidateGroups.push([{
         ...fallback,
@@ -93,36 +93,59 @@ export function generateStyleVoicingPlan(
   };
 }
 
+/** P25-02 K6: the costs the cyclic optimizer uses. Callers that pass nothing keep today's costs. */
+export interface CandidateOptimizationCosts<T> {
+  readonly start: (candidate: T) => number;
+  readonly transition: (previous: T, current: T) => number;
+  readonly compare: (left: T, right: T) => number;
+}
+
+const STYLE_CANDIDATE_COSTS: CandidateOptimizationCosts<StyleVoicingCandidate> = {
+  start: styleVoicingStartCost,
+  transition: styleVoicingTransitionCost,
+  compare: compareCandidate,
+};
+
 export function optimizeCandidateGroups(
   candidateGroups: readonly StyleVoicingCandidate[][],
-): StyleVoicingCandidate[] {
+): StyleVoicingCandidate[];
+export function optimizeCandidateGroups<T>(
+  candidateGroups: readonly (readonly T[])[],
+  costs: CandidateOptimizationCosts<T>,
+): T[];
+export function optimizeCandidateGroups<T>(
+  candidateGroups: readonly (readonly T[])[],
+  costs: CandidateOptimizationCosts<T> = STYLE_CANDIDATE_COSTS as unknown as CandidateOptimizationCosts<T>,
+): T[] {
+  const compareStates = (left: PathState<T>, right: PathState<T>): number =>
+    left.cost - right.cost || comparePaths(left.path, right.path, costs.compare);
   if (candidateGroups.length === 0) return [];
   if (candidateGroups.length === 1) {
-    return candidateGroups[0]
-      .map((candidate) => ({ cost: styleVoicingStartCost(candidate), path: [candidate] }))
-      .sort(comparePathState)[0]?.path ?? [];
+    return candidateGroups[0]!
+      .map((candidate) => ({ cost: costs.start(candidate), path: [candidate] }))
+      .sort(compareStates)[0]?.path ?? [];
   }
 
-  const completed: PathState[] = [];
-  for (const start of candidateGroups[0]) {
-    let states: PathState[] = [{ cost: styleVoicingStartCost(start), path: [start] }];
+  const completed: PathState<T>[] = [];
+  for (const start of candidateGroups[0]!) {
+    let states: PathState<T>[] = [{ cost: costs.start(start), path: [start] }];
     for (let groupIndex = 1; groupIndex < candidateGroups.length; groupIndex += 1) {
-      states = candidateGroups[groupIndex].map((candidate) => {
+      states = candidateGroups[groupIndex]!.map((candidate) => {
         const paths = states.map((state) => ({
           cost: state.cost
-            + styleVoicingStartCost(candidate)
-            + styleVoicingTransitionCost(last(state.path), candidate),
+            + costs.start(candidate)
+            + costs.transition(last(state.path), candidate),
           path: [...state.path, candidate],
         }));
-        return paths.sort(comparePathState)[0]!;
+        return paths.sort(compareStates)[0]!;
       });
     }
     completed.push(...states.map((state) => ({
-      cost: state.cost + styleVoicingTransitionCost(last(state.path), start),
+      cost: state.cost + costs.transition(last(state.path), start),
       path: state.path,
     })));
   }
-  return completed.sort(comparePathState)[0]?.path ?? [];
+  return completed.sort(compareStates)[0]?.path ?? [];
 }
 
 /** Selects each generator's deterministic chord-local default without transition cost. */
@@ -156,21 +179,18 @@ function toGeneratedVoicing(
   };
 }
 
-function comparePathState(left: PathState, right: PathState): number {
-  return left.cost - right.cost || comparePaths(left.path, right.path);
-}
-
-function comparePaths(
-  left: readonly StyleVoicingCandidate[],
-  right: readonly StyleVoicingCandidate[],
+function comparePaths<T>(
+  left: readonly T[],
+  right: readonly T[],
+  compare: (left: T, right: T) => number,
 ): number {
   const length = Math.max(left.length, right.length);
   for (let index = 0; index < length; index += 1) {
     const leftCandidate = left[index];
     const rightCandidate = right[index];
-    if (!leftCandidate) return -1;
-    if (!rightCandidate) return 1;
-    const difference = compareCandidate(leftCandidate, rightCandidate);
+    if (leftCandidate === undefined) return -1;
+    if (rightCandidate === undefined) return 1;
+    const difference = compare(leftCandidate, rightCandidate);
     if (difference !== 0) return difference;
   }
   return 0;

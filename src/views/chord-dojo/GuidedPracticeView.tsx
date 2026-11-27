@@ -719,7 +719,6 @@ export function GuidedPracticeView({ material, progressions, onExit, onChangeMat
       </p> : null}
       {flash ? <p data-testid="guided-feedback" data-ok={flash.ok}>{flash.message}</p> : null}
       {!answers && !cardOpen ? <p className="sr-only" data-testid="guided-hidden-note">答えを隠しています。表示されるのは、いま弾いた音だけです。</p> : null}
-      {!connected ? <p className="dojo-muted" data-testid="guided-midi-off">MIDI が見つかりません。自分で確認するか、接続してください。</p> : null}
     </PracticeGuide>
     <div className="dojo-cards">
       {session.lesson.cards.map((item, index) => {

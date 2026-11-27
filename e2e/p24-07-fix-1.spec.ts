@@ -53,13 +53,14 @@ test("1: Bass Practice keeps its purple band (the shape is shared)", async ({ pa
       markBackground: getComputedStyle(element.querySelector(".lv-resume-band-mark")!).backgroundColor,
     };
   });
+  // P25 V13: the same band as the other two — the purple line and wash, the calm border, the tinted mark.
   expect(style.backgroundImage).toContain("linear-gradient");
-  expect(style.borderTop).toBe("rgba(0, 0, 0, 0)");
+  expect(style.borderTop).toBe("rgba(150, 170, 195, 0.14)");
   expect(style.color).toBe("rgb(167, 156, 255)");
-  expect(style.markBackground).toBe("rgb(167, 156, 255)");
+  expect(style.markBackground).toMatch(/0\.14\)$/);
   await band.hover();
   await page.waitForTimeout(260);
-  await expect(band).toHaveCSS("border-top-color", "rgb(167, 156, 255)");
+  await expect(band).toHaveCSS("border-top-color", /0\.45\)$/);
   // The ground stays the gradient on hover (no teal tint).
   const hovered = await band.evaluate((element) => getComputedStyle(element).backgroundImage);
   expect(hovered).toContain("linear-gradient");

@@ -8,7 +8,7 @@ import { reportShot } from "./helpers/reportShots";
  * passed so the shared entry routes to Lv4. Advanced scenarios are driven through the screen itself
  * (or a minimal attempt pointing at the sight charts) so this spec never imports the product bank.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;
@@ -102,6 +102,7 @@ test("P23-45 Lv4 shows the placement examples and an explicit start after Lv3 pa
   await expect(page.getByTestId("advanced-prompt-name")).toBeVisible();
   await expect(page.getByTestId("advanced-progress")).toHaveText("1 / 20");
   await expect(page.getByTestId("advanced-self-note")).toContainText("進級判定には含まれません");
+  expect((await page.getByTestId("advanced-self-note").boundingBox())!.height).toBeLessThanOrEqual(24);
   await page.screenshot({ path: `${ASSETS}/lv4-question-1440.png`, fullPage: true });
   await page.getByTestId("advanced-self-miss").click();
   await expect(page.getByTestId("advanced-example-label")).toContainText("弾き方の例");
@@ -162,6 +163,9 @@ test("P23-45 capstone shows the eight-bar sight chart at the learner's tempo", a
   await expect(page.getByTestId("advanced-sight-start")).toBeVisible();
   await expect(page.getByTestId("advanced-beat")).toContainText("BPM");
   await expect(page.getByTestId("advanced-feedback-text")).toContainText("開始を押すと拍が進みます");
+  // P25 V1: without MIDI the sight chart says so in one small line (it was a large warning panel).
+  await expect(page.getByTestId("advanced-sight-connection")).toHaveClass("gc-note");
+  expect((await page.getByTestId("advanced-sight-connection").boundingBox())!.height).toBeLessThanOrEqual(24);
   await assertNoHorizontalOverflow(page);
   await page.screenshot({ path: `${ASSETS}/capstone-sight-1440.png`, fullPage: true });
   await page.setViewportSize({ width: 768, height: 640 });

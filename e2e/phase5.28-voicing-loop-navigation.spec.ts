@@ -64,18 +64,11 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
-  await capture.getByTestId("text-progression-convert").click();
+  // P25-03 C12: no Draft bridge; the panel saves the text directly.
+  await capture.getByTestId("text-progression-name").fill("P5.28 Direct Entry E2E");
+  await capture.getByTestId("text-progression-save").click();
 
-  const editor = page.getByTestId("manual-candidate-editor");
-  await expect(editor).toBeVisible();
-  await editor.locator("button[aria-haspopup='dialog']").click();
-  const saveForm = page.locator("form[role='dialog']");
-  await saveForm.locator("input[name='progression-title']").fill("P5.28 Direct Entry E2E");
-  await saveForm.locator("button[type='submit']").click();
-  await expect(saveForm).toBeHidden();
-
-  const savedNotice = page.getByText("保存した進行を練習できます").locator("..");
-  await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.getByRole("button", { name: "Voicing Loopで練習", exact: true }).click();
   const workspace = page.getByTestId("voicing-loop-workspace");
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
   await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))

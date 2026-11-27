@@ -8,7 +8,7 @@ import { reportShot } from "./helpers/reportShots";
  * P23-42: the guided course screen states and layout. The store is seeded with public frozen-bank trials;
  * the product flow, clock, capture and saving are not replaced.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; prompt: "name" | "ear"; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;
@@ -102,6 +102,7 @@ test("name and ear tasks: the header, the large task, the 2-choice and the hidde
   await expect(page.getByTestId("course-feedback-text")).toHaveText("演奏を待っています");
   await expect(page.getByTestId("course-next")).toBeDisabled();
   await expect(page.getByTestId("course-self-note")).toContainText("自己確認です。進級判定には含まれません");
+  expect((await page.getByTestId("course-self-note").boundingBox())!.height).toBeLessThanOrEqual(24);
   await expect(page.getByTestId("dojo-back")).toHaveCount(1);
   await expect(page.getByTestId("course-end")).toHaveCount(0);
   expect(await page.getByTestId("course-prompt").evaluate((element) => element.tagName)).toBe("SECTION");

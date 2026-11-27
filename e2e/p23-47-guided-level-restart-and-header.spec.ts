@@ -8,7 +8,7 @@ import { reportShot } from "./helpers/reportShots";
  * P23-47: restarting the displayed level and the one-line guide header. The basic Lv1–3 course is
  * seeded through the frozen bank JSON so the Lv1 question is the real authored item.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

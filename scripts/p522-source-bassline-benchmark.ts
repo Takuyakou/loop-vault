@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
-import { extractSourceBasslineSnapshot } from "../src/domain/sourceBassline";
+import { extractSourceBasslineSnapshot } from "../src/domain/sourceBassline/index";
 import { buildSourceBasslinePracticeWindow } from "../src/features/bass-practice/domain/sourceBasslinePractice";
 
 const EVENT_COUNT = 2_048;

@@ -4,7 +4,8 @@ import { homeFixture } from "./helpers/p12DojoHome";
 import { reportShot } from "./helpers/reportShots";
 
 const CD_ACCENT = "rgb(66, 216, 198)";
-const BP_ACCENT = "rgb(167, 156, 255)";
+/** P25 V13: hover lights the border in the mode's accent at 45% (Resume.dc.html). */
+const LIT = /0\.45\)$/;
 const HOME = "[data-testid='bass-practice-home']";
 
 async function openBass(page: Page): Promise<void> {
@@ -77,8 +78,9 @@ test("Bass 続きから reaches the instrument panel's right edge and fits one c
     expect(Math.abs(box.resume!.right - box.aside!.right), `${size.width}: right edge`).toBeLessThanOrEqual(1);
     expect(Math.abs(box.card!.top - box.instrument!.top), `${size.width}: cards and instrument top`).toBeLessThanOrEqual(1);
     expect(box.button!.right, `${size.width}: button at the right`).toBeGreaterThanOrEqual(box.resume!.right - 24);
-    expect(box.resume!.height).toBeCloseTo(56.59, 1);
-    expect(box.mark).toMatchObject({ width: 30, height: 30 });
+    expect(box.resume!.height).toBeCloseTo(56, 1);
+    expect(box.mark!.width).toBeCloseTo(34, 1); // P25 V13
+    expect(box.mark!.height).toBeCloseTo(34, 1);
     expect(box.enter!.fontSize).toBe("10px");
     expect(box.overflow).toBeLessThanOrEqual(1);
     await page.screenshot({ path: reportShot(`p23-43-assets/bass-resume-${size.width}.png`), fullPage: true });
@@ -99,15 +101,15 @@ test("Bass 続きから reaches the instrument panel's right edge and fits one c
   // The purple hover stays on the full-width band and returns after the pointer leaves.
   await page.setViewportSize({ width: 1440, height: 900 });
   const normal = await metrics(page);
-  expect(normal.resume!.height).toBeCloseTo(56.59, 1);
+  expect(normal.resume!.height).toBeCloseTo(56, 1);
   await page.getByTestId("bass-home-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("bass-home-resume")).toHaveCSS("border-top-color", BP_ACCENT);
+  await expect(page.getByTestId("bass-home-resume")).toHaveCSS("border-top-color", LIT);
   const hovered = await metrics(page);
-  expect(hovered.resumeStyle!.borderTopColor).toBe(BP_ACCENT);
+  expect(hovered.resumeStyle!.borderTopColor).toMatch(LIT);
   await page.mouse.move(5, 5);
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("bass-home-resume")).not.toHaveCSS("border-top-color", BP_ACCENT);
+  await expect(page.getByTestId("bass-home-resume")).not.toHaveCSS("border-top-color", LIT);
 });
 
 test("続ける and Enter both resume from the full-width band", async ({ page }) => {
@@ -139,15 +141,16 @@ test("CD/VL normal bands are calm; hover uses the mode accent and leaves cleanly
 
   const cdCss = () => page.getByTestId("home-resume").evaluate((element) => {
     const style = getComputedStyle(element);
-    return { border: style.borderTopColor, background: style.backgroundColor };
+    return { border: style.borderTopColor, background: style.backgroundColor, transform: style.transform };
   });
   const cdNormal = await cdCss();
   expect(cdNormal.border).not.toBe(CD_ACCENT);
-  await expect(page.getByTestId("home-resume")).toHaveCSS("height", /^56\.59/);
+  await expect(page.getByTestId("home-resume")).toHaveCSS("height", "56px");
   await page.getByTestId("home-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", CD_ACCENT);
-  expect((await cdCss()).background).not.toBe(cdNormal.background);
+  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", LIT);
+  // P25 V13: hover lifts the band 1px instead of tinting it.
+  expect((await cdCss()).transform).toBe("matrix(1, 0, 0, 1, 0, -1)");
   await page.mouse.move(5, 5);
   await page.waitForTimeout(260);
   expect((await cdCss()).border).toBe(cdNormal.border);
@@ -157,7 +160,7 @@ test("CD/VL normal bands are calm; hover uses the mode accent and leaves cleanly
   await page.getByTestId("home-resume-go").focus();
   await page.keyboard.press("Tab");
   await page.keyboard.press("Shift+Tab");
-  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", CD_ACCENT);
+  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", LIT);
   await page.getByTestId("home-resume-go").evaluate((element) => (element as HTMLElement).blur());
   await page.waitForTimeout(260);
   expect((await cdCss()).border).toBe(cdNormal.border);
@@ -173,15 +176,16 @@ test("CD/VL normal bands are calm; hover uses the mode accent and leaves cleanly
   await expect(page.getByTestId("voicing-loop-resume")).toBeVisible();
   const vlCss = () => page.getByTestId("voicing-loop-resume").evaluate((element) => {
     const style = getComputedStyle(element);
-    return { border: style.borderTopColor, background: style.backgroundColor };
+    return { border: style.borderTopColor, background: style.backgroundColor, transform: style.transform };
   });
   const vlNormal = await vlCss();
   expect(vlNormal.border).not.toBe(CD_ACCENT);
-  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("height", /^56\.59/);
+  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("height", "56px");
   await page.getByTestId("voicing-loop-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("border-top-color", CD_ACCENT);
-  expect((await vlCss()).background).not.toBe(vlNormal.background);
+  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("border-top-color", LIT);
+  // P25 V13: hover lifts the band 1px instead of tinting it.
+  expect((await vlCss()).transform).toBe("matrix(1, 0, 0, 1, 0, -1)");
   await page.screenshot({ path: reportShot("p23-43-assets/vl-resume-hover-1440.png") });
   await page.mouse.move(5, 5);
   await page.waitForTimeout(260);

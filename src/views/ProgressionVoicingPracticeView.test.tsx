@@ -2,6 +2,9 @@
 
 import { act, type ReactNode } from "react";
 import { parseChordLabel } from "../domain/chords";
+import { buildShapeVoicing } from "../domain/voicingShapes";
+import { usedShapeName } from "../domain/voicingShapes/names";
+import { preferenceId } from "../voicingPractice/sourcePreference";
 import { rankCyclicFingerings } from "../domain/progressionFingering";
 import { assignPracticeHandsAcrossProgression } from "../voicingPractice/fingeringDisplay";
 import { createRoot, type Root } from "react-dom/client";
@@ -58,14 +61,30 @@ describe("ProgressionVoicingPracticeView", () => {
     const container = await renderView(new FakeTransport(), { "source-midi": snapshot("source-midi") }, "source-midi", false, {
       onSelectProgression: vi.fn(() => true),
       onEnterText: vi.fn(),
-      bulkSourcePreview: { eligible: 3, changed: 2, skippedCustom: 1, skippedMissingSource: 1 },
+      bulkSourcePreview: { changed: 2, keptCustom: 1 },
       onBulkSourceApply,
     });
-    await act(async () => button(container, "この進行を元MIDIに").click());
-    expect(document.body.textContent).toContain("対象 3・変更 2・カスタムはそのまま 1・元の音なし 1");
+    await act(async () => button(container, "この進行を元の音に").click());
+    expect(document.body.textContent).toContain("この進行を元の音にしますか？");
+    expect(document.body.textContent).toContain("2 枚のカードを、取り込んだ時の音にします。");
+    expect(document.body.textContent).toContain("自分で直した 1 枚はそのままです。");
     expect(onBulkSourceApply).not.toHaveBeenCalled();
-    await act(async () => button(document.body, "切り替える").click());
+    await act(async () => button(document.body, "元の音にする").click());
     expect(onBulkSourceApply).toHaveBeenCalledOnce();
+  });
+
+  it("P25 V33: cannot open the 元の音 confirmation when no card would change", async () => {
+    const onBulkSourceApply = vi.fn(() => true);
+    const container = await renderView(new FakeTransport(), { "source-midi": snapshot("source-midi") }, "source-midi", false, {
+      onSelectProgression: vi.fn(() => true),
+      onEnterText: vi.fn(),
+      bulkSourcePreview: { changed: 0, keptCustom: 0 },
+      onBulkSourceApply,
+    });
+    expect(button(container, "この進行を元の音に").disabled).toBe(true);
+    await act(async () => button(container, "この進行を元の音に").click());
+    expect(document.body.textContent).not.toContain("この進行を元の音にしますか？");
+    expect(onBulkSourceApply).not.toHaveBeenCalled();
   });
 
   it("shows Rest as Current/Next without a keyboard target while one clock crosses silent spans", async () => {
@@ -564,6 +583,7 @@ describe("ProgressionVoicingPracticeView", () => {
 
     const recall = button(container, "思い出す（コード名のみ）");
     await act(async () => recall.click());
+    await settleMotion();
     expect(recall.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent ?? "").not.toContain("構成音");
     // …and no note is shown in the hand cards (recall hides the answer).
@@ -751,60 +771,64 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
       .toBe(true);
-    expect(toolbar.textContent).toContain("Colorを加える");
-    expect(toolbar.textContent).toContain("Open配置");
-    // P23-20 L2: the two checks always show a short name; the full sentence is their accessible name.
-    // P23-20 L2 + P23-32 T4: the two settings are switches that keep the short name and the full accessible name.
-    expect(controlSwitch(toolbar, "進行に合わせて最適化").getAttribute("aria-label")).toBe("進行に合わせて最適化");
+    // P25-08 L1: one 「形 ▼」 replaces 「基本 ▼」 and 「詳しい設定」 (Color / Open are its parts now).
+    expect(toolbar.textContent).not.toContain("Colorを加える");
+    expect(toolbar.textContent).not.toContain("詳しい設定");
+    // P25-16 N7: 「なめらかにつなぐ」 is no longer on the row; it lives in 「形 ▼」 (which opens only for 自動生成).
+    expect(toolbar.querySelector("button[aria-label='進行に合わせてなめらかにつなぐ']")).toBeNull();
     expect(toolbar.textContent).not.toContain("SHELL TYPE");
     expect(button(container, "元MIDI").getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
-    for (const label of ["Colorを加える", "Open配置"]) {
-      expect(controlCheckbox(toolbar, label).disabled).toBe(true);
-    }
-    expect(controlSwitch(toolbar, "進行に合わせて最適化").disabled).toBe(true);
+    const shapeButton = () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-shape-button']")!;
+    expect(shapeButton().disabled).toBe(true);
+    expect(shapeButton().title).toBe("自動生成を選択すると設定できます");
 
     await act(async () => button(container, "自動生成").click());
-    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.value).toBe("teacher");
-    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(false);
-    expect(controlCheckbox(toolbar, "Colorを加える").checked).toBe(false);
-    expect(controlCheckbox(toolbar, "Open配置").checked).toBe(false);
-    expect(controlSwitch(toolbar, "進行に合わせて最適化").getAttribute("aria-checked")).toBe("true");
+    expect(shapeButton().disabled).toBe(false);
+    expect(container.querySelector("[data-testid='voicing-loop-shape-label']")?.textContent).toBe("基本");
+    // P25-08 L3: 「なめらかにつなぐ」 keeps the full sentence as its accessible name (P25-16 N7: inside 「形 ▼」).
+    const smooth = controlSwitch(await openShapeMenu(container as HTMLElement), "進行に合わせてなめらかにつなぐ");
+    expect(smooth.getAttribute("aria-label")).toBe("進行に合わせてなめらかにつなぐ");
+    expect(smooth.getAttribute("aria-checked")).toBe("true");
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
-    expect(explanation.textContent).toContain("Teacher Style");
-    expect(explanation.textContent).toContain("候補");
+    // P25-16 N5: no internal names on the row; more than one candidate reads 「ほかの押さえ方」.
+    expect(explanation.textContent).not.toContain("Teacher Style");
+    expect(explanation.textContent).toContain("ほかの押さえ方");
     // P23-32 P4: the rule's internal names move into the i's accessible name, not the visible words.
     expect(explanation.textContent).not.toContain("P5.33-GEN");
     expect(explanation.querySelector(".lv-vl-rule-info")?.getAttribute("aria-label"))
       .toContain("ルール P5.33-GEN-TEACHER-MAJ7");
-    expect(explanation.textContent).toContain("トップトップ候補");
+    // P25-16 N5: the top note moved into the i.
+    expect(explanation.textContent).not.toContain("トップ");
+    expect(explanation.querySelector(".lv-vl-rule-info")?.getAttribute("title")).toContain("いちばん上の音:上の音の候補");
 
     await act(async () => button(container, "カスタム").click());
-    expect(container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")?.disabled).toBe(true);
+    expect(shapeButton().disabled).toBe(true);
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")).toBeNull();
   });
 
   it("hot-swaps lesson modifiers and OCT without stopping the running or paused clock", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
-    const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
-    const checkbox = (label: string) => controlCheckbox(toolbar, label);
-    const toggle = (label: string) => controlSwitch(toolbar, label);
+    // P25-08 L1: 基本's two parts live in 「形 ▼」.
+    const part = async (testId: string) => (await openShapeMenu(container as HTMLElement)).querySelector<HTMLInputElement>(`[data-testid='${testId}']`)!;
 
-    expect(checkbox("Colorを加える").checked).toBe(false);
-    expect(checkbox("Open配置").checked).toBe(false);
-    expect(toggle("進行に合わせて最適化").getAttribute("aria-checked")).toBe("true");
+    expect((await part("voicing-loop-shape-tension")).checked).toBe(false);
+    expect((await part("voicing-loop-shape-spread")).checked).toBe(false);
+    // P25-16 N7: 「なめらかにつなぐ」 lives at the bottom of 「形 ▼」, not on the toolbar.
+    const smoothSwitch = async () => controlSwitch(await openShapeMenu(container as HTMLElement), "進行に合わせてなめらかにつなぐ");
+    expect((await smoothSwitch()).getAttribute("aria-checked")).toBe("true");
 
     await act(async () => button(container, "開始").click());
     runtime.stop.mockClear();
     runtime.pause.mockClear();
     runtime.updatePlan.mockClear();
 
-    for (const label of ["Colorを加える", "Open配置"]) {
-      await act(async () => checkbox(label).click());
+    for (const testId of ["voicing-loop-shape-tension", "voicing-loop-shape-spread"]) {
+      const input = await part(testId);
+      await act(async () => input.click());
       expect(button(container, "一時停止")).not.toBeNull();
     }
-    await act(async () => toggle("進行に合わせて最適化").click());
+    await act(async () => (await smoothSwitch()).click());
     expect(runtime.stop).not.toHaveBeenCalled();
     expect(runtime.pause).not.toHaveBeenCalled();
     expect(runtime.updatePlan).toHaveBeenCalledTimes(3);
@@ -895,7 +919,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.updatePlan).toHaveBeenCalledTimes(1);
     expect(runtime.stop).not.toHaveBeenCalled();
     expect(runtime.pause).not.toHaveBeenCalled();
-    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent).toContain("候補");
+    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent).toContain("ほかの押さえ方");
     if (afterPlan?.status === "SUPPORTED") {
       for (const note of afterPlan.voicing.midiNotes) {
         expect(container.querySelector(`[data-midi-note='${note}']`)).not.toBeNull();
@@ -937,10 +961,9 @@ describe("ProgressionVoicingPracticeView", () => {
       [],
       { lessonContext: { bass: "self-played", top: "fixed-melody", fixedMelodyMidiNote: 71 } },
     );
-    const navigation = container.querySelector("[data-testid='voicing-loop-candidate-navigation']")!;
-    expect(navigation.textContent).toContain("候補 1/1");
-    expect(navigation.querySelector<HTMLButtonElement>("[aria-label='前のVoicing候補']")?.disabled).toBe(true);
-    expect(navigation.querySelector<HTMLButtonElement>("[aria-label='次のVoicing候補']")?.disabled).toBe(true);
+    // P25-16 N5: with one valid voicing there is nothing to switch to, so 「ほかの押さえ方」 is not shown.
+    expect(container.querySelector("[data-testid='voicing-loop-candidate-navigation']")).toBeNull();
+    expect(container.textContent).not.toContain("ほかの押さえ方");
   });
 
   it("renders slash add9 Shell as an exact two-hand lesson with fingerprints and compact toolbar", async () => {
@@ -957,11 +980,9 @@ describe("ProgressionVoicingPracticeView", () => {
       }),
     };
     const container = await renderView(runtime, { "basic-full": slash }, "basic-full");
-    await selectStudy(container, "core");
+    // P25-08 K8: 「骨組み」 is gone; 基本 (teacher) gives the slash add9 two-hand lesson.
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F♯");
-    expect(usedCells(container, "voicing-loop-left-hand", "degree")).toEqual(["9"]);
-    expect(usedCells(container, "voicing-loop-right-hand", "degree")).toEqual(["1", "3", "5"]);
     // P23-20 L1: the slot card carries the finger name alone.
     expect(usedCells(container, "voicing-loop-left-hand", "finger")).toContain("L5");
     expect(usedCells(container, "voicing-loop-right-hand", "finger")[0]).toBe("R1");
@@ -971,8 +992,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-next-right-hand']")?.textContent)
       .toContain("右手");
     const plan = resolveProgressionPracticeVoicings(slash, {
-      lessonStudyCategory: "core",
-      lessonProgressionOptimization: false,
+      lessonStudyCategory: "teacher",
+      lessonProgressionOptimization: true,
       lessonContext: { bass: "self-played", top: "normal-voicing-top" },
     });
     const currentResolution = plan.events[0]!;
@@ -991,11 +1012,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(["保存した音", "元MIDI", "カスタム", "自動生成"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.getAttribute("aria-label") === label)))
       .toBe(true);
-    expect(toolbar.textContent).toContain("Colorを加える");
-    expect(toolbar.textContent).toContain("Open配置");
+    expect(container.querySelector("[data-testid='voicing-loop-shape-button']")).not.toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-shell-type']")).toBeNull();
-    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
-      .toContain("Family Core");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.events.every((entry) => entry.status === "SUPPORTED")).toBe(true);
   });
@@ -1096,7 +1114,7 @@ describe("ProgressionVoicingPracticeView", () => {
     }
   });
 
-  it("shows unavailable and unsupported states without silent fallback", async () => {
+  it("shows unavailable states, and 基本 fills a card its rules cannot make (K12) with the 「A」", async () => {
     const runtime = new FakeTransport();
     const source = snapshot("source-midi", false);
     const unsupported = snapshot("basic-full", false, "dim");
@@ -1111,9 +1129,11 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "元MIDI").disabled).toBe(true);
 
     await act(async () => button(container, "自動生成").click());
-    expect(container.textContent).toContain("このコードにはこの生成タイプの形がありません。");
-    expect(button(container, "開始").disabled).toBe(true);
-    expect(runtime.start).not.toHaveBeenCalled();
+    expect(container.textContent).not.toContain("このコードにはこの生成タイプの形がありません。");
+    const marks = container.querySelectorAll("[data-testid='voicing-loop-auto-fallback']");
+    expect(marks.length).toBeGreaterThan(0);
+    expect(marks[0]!.getAttribute("title")).toBe("このコードは基本では作れないので、テキスト取り込みのおすすめの音で鳴らしています");
+    expect(button(container, "開始").disabled).toBe(false);
   });
 
   it("keeps missing Custom disabled without a persistent banner", async () => {
@@ -1476,6 +1496,7 @@ describe("ProgressionVoicingPracticeView", () => {
 
     const toggle = controlSwitch(container, "おすすめ運指を表示");
     await act(async () => toggle.click());
+    await settleMotion();
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .not.toContain("FINGER");
     // P23-20 L1: with the fingering hidden the notes stay (the finger names go away).
@@ -1499,16 +1520,23 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(JSON.stringify(values)).toBe(before);
   });
 
-  it("retains every legacy generated family as an explicit detailed choice", async () => {
-    const values = Object.fromEntries(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"].map(mode => [mode, snapshot(mode as ProgressionVoicingSelection)]));
+  it.each([
+    ["basic-full", "基本"], ["basic-shell", "シェル"], ["full-shell", "シェル"], ["rootless-shell", "ルートレス"], ["left-hand", "ルートレス"],
+  ] as const)("K7: an old remembered %s opens as 自動生成 with the shape %s", async (old, label) => {
+    const values = { "basic-full": snapshot("basic-full"), "source-midi": snapshot("source-midi") };
+    window.localStorage.removeItem("loop-vault:voicing-loop-shape:v1");
+    window.localStorage.setItem("loop-vault:voicing-loop-source:v1", JSON.stringify({ version: 1, entries: [[preferenceId(values), old]] }));
     const runtime = new FakeTransport();
-    const container = await renderView(runtime, values, "basic-full");
-    const chooser = container.querySelector<HTMLSelectElement>("[aria-label='既存の形']")!;
-    expect(Array.from(chooser.options, option => option.value)).toEqual(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"]);
-    await act(async () => { chooser.value = "rootless-shell"; chooser.dispatchEvent(new Event("change", { bubbles: true })); });
+    const container = await renderView(runtime, values, "source-midi");
+    expect(button(container, "自動生成").getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-shape-label']")?.textContent).toBe(label);
+    if (old === "full-shell") expect(container.querySelector("[data-testid='voicing-loop-shape-button']")?.textContent).toContain("+ テンション");
+    const stored = JSON.parse(window.localStorage.getItem("loop-vault:voicing-loop-source:v1")!) as { entries: [string, string][] };
+    expect(stored.entries[0]![1]).toBe("basic-full");
     await act(async () => button(container, "開始").click());
-    expect(runtime.options?.plan.selection).toBe("rootless-shell");
-    expect(runtime.options?.plan.events.every(event => event.status === "SUPPORTED")).toBe(true);
+    expect(runtime.options?.plan.selection).toBe("basic-full");
+    window.localStorage.removeItem("loop-vault:voicing-loop-shape:v1");
+    window.localStorage.removeItem("loop-vault:voicing-loop-source:v1");
   });
 
   it("selects A/B by context menu, preserves the old range while A is pending, and keeps outside clicks selection-only", async () => {
@@ -1565,33 +1593,37 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-range-chip']")?.textContent).toContain("2〜2");
   });
 
-  it("dismisses native details on Source/type changes, outside pointer and Escape without stopping transport", async () => {
+  it("closes 「形 ▼」 on a Source change, an outside pointer and Escape without stopping transport (L1)", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full"), "source-midi": snapshot("source-midi") }, "basic-full");
-    const details = container.querySelector<HTMLDetailsElement>("[data-testid='voicing-loop-generated-details']")!;
-    details.open = true;
+    const menu = () => container.querySelector("[data-testid='voicing-loop-shape-menu']");
+    const shapeButton = () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-shape-button']")!;
+    await openShapeMenu(container);
+    expect(shapeButton().getAttribute("aria-expanded")).toBe("true");
     await act(async () => button(container, "元MIDI").click());
-    expect(details.open).toBe(false);
-    expect(details.querySelector("summary")?.getAttribute("aria-disabled")).toBe("true");
+    await settleMotion();
+    expect(menu()).toBeNull();
+    expect(shapeButton().disabled).toBe(true);
     await act(async () => button(container, "自動生成").click());
-    details.open = true;
+    await openShapeMenu(container);
     await act(async () => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
-    expect(details.open).toBe(false);
-    details.open = true;
-    await act(async () => details.querySelector("select")!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
-    expect(details.open).toBe(true);
+    await settleMotion();
+    expect(menu()).toBeNull();
+    await openShapeMenu(container);
+    await act(async () => menu()!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(menu()).not.toBeNull();
     const stops = runtime.stop.mock.calls.length;
     const escape = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
-    await act(async () => details.dispatchEvent(escape));
+    await act(async () => menu()!.dispatchEvent(escape));
     expect(escape.defaultPrevented).toBe(true);
-    expect(details.open).toBe(false);
+    await settleMotion();
+    expect(menu()).toBeNull();
     expect(runtime.stop).toHaveBeenCalledTimes(stops);
-    expect(document.activeElement).toBe(details.querySelector("summary"));
-    await act(async () => button(container, "自動生成").click());
-    for (const value of ["core", "teacher"] as const) {
-      details.open = true;
-      await selectStudy(container, value);
-      expect(details.open).toBe(false);
+    expect(document.activeElement).toBe(shapeButton());
+    for (const shape of ["shell", "basic"] as const) {
+      await chooseShape(container, shape);
+      await settleMotion();
+      expect(menu()).toBeNull();
     }
   });
 
@@ -1604,7 +1636,7 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => button(container, "自動生成").click());
     const generated = hints();
     expect(generated).not.toBe(original);
-    await selectStudy(container, "core");
+    await chooseShape(container, "shell");
     expect(hints()).not.toBe(generated);
     await act(async () => button(container, "元MIDI").click());
     expect(hints()).toBe(original);
@@ -1631,7 +1663,9 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(card.querySelectorAll(".voicing-hand-slot-degree").length).toBeGreaterThan(0);
     }
     const info = panel.querySelector("[data-testid='voicing-loop-current-explanation']")!;
-    for (const label of ["Teacher Style", "Literal", "候補", "省略", "トップ"]) expect(info.textContent).toContain(label);
+    // P25-16 N5: the internal names and the empty facts are gone from the row.
+    for (const label of ["Teacher Style", "Literal", "候補 ", "省略 なし", "トップ"]) expect(info.textContent).not.toContain(label);
+    expect(info.textContent).toContain("ほかの押さえ方");
     // P23-32 P4: 「ルール …」 is no longer visible; the i carries it as its accessible name.
     expect(info.textContent).not.toContain("ルール");
     expect(info.querySelector(".lv-vl-rule-info")?.getAttribute("aria-label")).toContain("ルール P5.33");
@@ -1674,7 +1708,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(JSON.stringify(value)).toBe(original);
   });
 
-  it("range contextmenu releases card focus, but unrelated native buttons and input Space remain untouched", async () => {
+  it("range contextmenu releases card focus, a native select keeps its Space, and Space starts from anywhere else (V25-8)", async () => {
     const runtime = new SeekingTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
     const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
@@ -1684,16 +1718,28 @@ describe("ProgressionVoicingPracticeView", () => {
     await contextRange(cards[1]!);
     const viewport = container.querySelector<HTMLElement>("[data-testid='voicing-loop-timeline-viewport']")!;
     expect(document.activeElement).toBe(viewport);
-    for (const target of [button(container, "元MIDI"), container.querySelector<HTMLSelectElement>("#voicing-loop-count-in")!, cards[0]!]) {
+    {
+      const target = container.querySelector<HTMLSelectElement>("#voicing-loop-count-in")!;
       target.focus();
       const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
       await act(async () => target.dispatchEvent(event));
       expect(event.defaultPrevented).toBe(false);
       expect(runtime.start).not.toHaveBeenCalled();
     }
+    // V25-8: on a focused button the Space starts the loop and is not left for the button to press.
+    {
+      const target = button(container, "元MIDI");
+      target.focus();
+      const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+      await act(async () => target.dispatchEvent(event));
+      expect(event.defaultPrevented).toBe(true);
+      expect(runtime.start).toHaveBeenCalledOnce();
+      runtime.start.mockClear();
+    }
+    // The loop is running now, so the next Space (from the timeline) pauses it.
     viewport.focus();
     await act(async () => viewport.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true })));
-    expect(runtime.start).toHaveBeenCalledOnce();
+    expect(runtime.pause).toHaveBeenCalledOnce();
   });
 
   it("the range's × clears pending/active/highlights and returns to full playback with reset count", async () => {
@@ -1811,26 +1857,182 @@ describe("P11 generated substitute and fingering acceptance", () => {
     }
   });
 
-  it.each(["teacher", "core"] as const)("shows the selected %s substitute on only unsupported detailed cards", async study => {
+  it("marks only the cards a K shape falls back on with today's 「A」 and the shape they play (K4)", async () => {
     const base = snapshot("basic-full");
-    const chords = ["Ebmaj7", "Cm7", "Ebadd9/G", "Ebadd9/G"].map(label => ({ ...base.events[0]!.chord, ...parseChordLabel(label)! }));
-    const snapshots = Object.fromEntries(["basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"].map(selection => [selection, {
-      ...base, selection, fingerprint: `public-${selection}`, lengthBeats: 16,
-      events: chords.map((chord, index) => ({ id: `public-${index}`, chord, startBeat: index * 4, durationBeats: 4 })),
+    const chords = ["Ebmaj7", "Cm7b5", "Cm7", "Cdim"].map(label => ({ ...base.events[0]!.chord, ...parseChordLabel(label)! }));
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...base, fingerprint: "k4-fallback", lengthBeats: 16,
+      events: chords.map((chord, index) => ({ id: `k4-${index}`, chord, startBeat: index * 4, durationBeats: 4 })),
       spans: chords.map((_, index) => ({ kind: "chord", eventIndex: index, startBeat: index * 4, durationBeats: 4 })),
-    }])) as Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>;
-    const container = await renderView(new SeekingTransport(), snapshots, "basic-full");
-    await selectStudy(container, study);
-    const shape = container.querySelector<HTMLSelectElement>('[aria-label="既存の形"]')!;
-    for (const value of ["basic-shell", "full-shell", "rootless-shell", "left-hand"]) {
-      await act(async () => { shape.value = value; shape.dispatchEvent(new Event("change", { bubbles: true })); });
-      const markers = container.querySelectorAll('[data-testid="voicing-loop-auto-fallback"]');
-      expect(markers).toHaveLength(2);
-      const label = study === "teacher" ? "基本" : "骨組み";
-      expect(markers[0]?.getAttribute("title")).toBe(`この形では作れないため「${label}」で鳴らしています`);
-      expect(container.querySelector('[data-testid="voicing-loop-shape-fallback-summary"]')?.textContent).toContain(`2コードは${label}で代替`);
-      expect(container.textContent).not.toContain("個のコードを再生できません");
+    };
+    const container = await renderView(new SeekingTransport(), { "basic-full": value }, "basic-full");
+    await chooseShape(container, "triad");
+    const marks = Array.from(container.querySelectorAll('[data-testid="voicing-loop-auto-fallback"]'), (mark) => mark.getAttribute("title"));
+    const expected = ["Ebmaj7", "Cm7b5", "Cm7", "Cdim"].flatMap((label) => {
+      const built = buildShapeVoicing(parseChordLabel(label)!, { shape: "triad", tension: false, spread: false, rootlessOrder: "auto" });
+      return built.fellBack ? [`この形では作れないため「${usedShapeName(built.used)}」で鳴らしています`] : [];
+    });
+    expect(expected.length).toBeGreaterThan(0);
+    expect(marks).toEqual(expected);
+    window.localStorage.removeItem("loop-vault:voicing-loop-shape:v1");
+  });
+});
+
+describe("P25-11 I: 弾き合わせ in Voicing Loop", () => {
+  const hold = async (notes: readonly number[], sustained: readonly number[] = []) => act(async () => {
+    defaultLiveMidiStore.setState({ notes: {
+      held: new Map(notes.map((note) => [`0:${note}`, { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }])),
+      sustained: new Set(sustained.map((note) => `0:${note}`)), pedalByChannel: new Map(),
+    } as never });
+  });
+  async function connected<T>(run: () => Promise<T>): Promise<T> {
+    const original = defaultLiveMidiStore.getState();
+    const intent = connectionController.state.getState().intent;
+    connectionController.state.setState({ intent: "on" });
+    defaultLiveMidiStore.setState({ active: true, status: "connected", selected: { backendId: "keyboard", name: "Studio Keyboard", index: 0 } });
+    try { return await run(); } finally {
+      connectionController.state.setState({ intent });
+      defaultLiveMidiStore.setState({ active: original.active, status: original.status, selected: original.selected, notes: original.notes });
+      window.localStorage.removeItem("lv-voicing-loop-play-along");
+      window.localStorage.removeItem("lv-voicing-loop-play-along-mode");
     }
+  }
+  /** The legend as read: P25 V10 keeps the hidden parts in their place (aria-hidden), so they are left out here. */
+  const legend = (container: HTMLElement) => {
+    const copy = container.querySelector("[data-testid='voicing-loop-keyboard-legend']")!.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll("[aria-hidden='true']").forEach((node) => node.remove());
+    return copy.textContent ?? "";
+  };
+  /** P25 V10: 「達成 n/8」 is always in its place; it is shown only while 弾き合わせ is on. */
+  const countShown = (container: HTMLElement) => container.querySelector("[data-testid='voicing-loop-play-along-count']")
+    ?.closest("[data-shown]")?.getAttribute("data-shown");
+
+  it("is off by default and cannot be turned on without a MIDI keyboard", async () => {
+    window.localStorage.removeItem("lv-voicing-loop-play-along");
+    const container = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
+    const toggle = controlSwitch(container, "弾き合わせ");
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(toggle.disabled).toBe(true);
+    // P25-16 N4: 「MIDI 未接続」 follows the key and bars in the head, not the band at the bottom.
+    const noMidi = container.querySelector("[data-testid='voicing-loop-play-along-no-midi']");
+    expect(noMidi?.textContent).toBe("・ MIDI 未接続");
+    expect(noMidi?.closest("[data-testid='voicing-loop-head']")).not.toBeNull();
+    expect(noMidi?.getAttribute("title")).toBe("MIDI 鍵盤がつながっていません。弾き合わせは、つなぐと使えます");
+    expect(container.querySelector("[data-testid='voicing-loop-transport']")?.textContent).not.toContain("MIDI 未接続");
+    expect(legend(container)).toContain("押鍵中");
+    expect(countShown(container)).toBe("false");
+  });
+
+  it("turns on: judgement buttons, the legend's two marks, green / red keys, the card's ✓ and the count; then remembers", async () => {
+    await connected(async () => {
+      const runtime = new FakeTransport();
+      const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+      const toggle = controlSwitch(container, "弾き合わせ");
+      expect(toggle.disabled).toBe(false);
+      await act(async () => toggle.click());
+      expect(window.localStorage.getItem("lv-voicing-loop-play-along")).toBe("on");
+      const judge = container.querySelector("[role='group'][aria-label='判定']")!;
+      expect(Array.from(judge.querySelectorAll("button"), (entry) => [entry.textContent, entry.getAttribute("aria-pressed")]))
+        .toEqual([["コード一致", "true"], ["押さえ方どおり", "false"]]);
+      expect(legend(container)).not.toContain("押鍵中");
+      expect(legend(container)).toContain("合っている音");
+      expect(legend(container)).toContain("違う音");
+      expect(container.querySelector("[data-testid='voicing-loop-play-along-count']")?.textContent).toContain("0/2");
+      expect(countShown(container)).toBe("true");
+
+      await act(async () => button(container, "開始").click());
+      const plan = runtime.options!.plan;
+      const first = plan.events[0]!;
+      if (first.status !== "SUPPORTED") throw new Error("expected a sound");
+      await hold([...first.voicing.midiNotes]);
+      for (const note of first.voicing.midiNotes) {
+        expect(container.querySelector(`[data-midi-note='${note}'] [data-play-along='ok']`)).not.toBeNull();
+      }
+      await hold([...first.voicing.midiNotes, 61]);
+      expect(container.querySelector("[data-midi-note='61'] [data-play-along='wrong']")).not.toBeNull();
+
+      await act(async () => judge.querySelectorAll("button")[1]!.click());
+      expect(window.localStorage.getItem("lv-voicing-loop-play-along-mode")).toBe("exact");
+      await act(async () => root?.unmount()); root = undefined;
+      const reopened = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
+      expect(controlSwitch(reopened, "弾き合わせ").getAttribute("aria-checked")).toBe("true");
+      expect(reopened.querySelector("[role='group'][aria-label='判定'] button[aria-pressed='true']")?.textContent).toBe("押さえ方どおり");
+    });
+  });
+
+  it("marks a card ✓ when its chord is pressed while it plays, and shows nothing when MIDI goes away", async () => {
+    await connected(async () => {
+      window.localStorage.setItem("lv-voicing-loop-play-along", "on");
+      const runtime = new FakeTransport();
+      const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+      await act(async () => button(container, "開始").click());
+      // Past the one-bar count-in (results are settled only while the card plays).
+      await act(async () => runtime.options?.onTransportBeat(4.1, 1e6));
+      const first = runtime.options!.plan.events[0]!;
+      if (first.status !== "SUPPORTED") throw new Error("expected a sound");
+      await hold([]);
+      await hold([...first.voicing.midiNotes]);
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+      const mark = container.querySelector("[data-testid='voicing-loop-play-along-mark']");
+      expect(mark?.getAttribute("data-result")).toBe("hit");
+      expect(mark?.getAttribute("title")).toBe("そろった");
+      expect(container.querySelector("[data-testid='voicing-loop-play-along-count']")?.textContent).toContain("1/2");
+      await act(async () => defaultLiveMidiStore.setState({ status: "disconnected" }));
+      expect(container.querySelector("[data-testid='voicing-loop-play-along-mark']")).toBeNull();
+      expect(container.querySelector("[data-play-along]")).toBeNull();
+      expect(legend(container)).toContain("押鍵中");
+      expect(controlSwitch(container, "弾き合わせ").getAttribute("aria-checked")).toBe("true");
+    });
+  });
+});
+
+describe("P25 V9: a card plays what the loop plays now", () => {
+  function savedSnapshot(): ProgressionVoicingPracticeSnapshot {
+    const base = snapshot("saved");
+    return { ...base, events: base.events.map((event, index) => ({ ...event, voicing: { kind: "saved" as const, midiNotes: index ? [38, 53, 57, 60] : [36, 52, 55, 59] } })) };
+  }
+  const playedNotes = (runtime: FakeTransport, index: number) => {
+    const event = runtime.options!.plan.events[index]!;
+    if (event.status !== "SUPPORTED") throw new Error("expected a sound");
+    return progressionPracticePlaybackNotes(event.voicing);
+  };
+  const clickCard = async (container: HTMLElement, index: number) => {
+    await act(async () => container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']")[index]!.click());
+  };
+
+  it("自動生成 + シェル on a progression with 元MIDI plays the loop's notes, also after switching 元MIDI ⇄ 自動生成 three times", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, {
+      "source-midi": snapshot("source-midi"), "basic-full": snapshot("basic-full"),
+    }, "source-midi");
+    await act(async () => button(container, "開始").click());
+    await act(async () => button(container, "自動生成").click());
+    await chooseShape(container, "shell");
+    await settleMotion();
+    const shell = playedNotes(runtime, 1);
+    expect(shell).not.toEqual([50, 57, 60]);
+    await clickCard(container, 1);
+    expect(runtime.audition).toHaveBeenLastCalledWith(shell, "piano");
+    for (let round = 0; round < 3; round += 1) {
+      await act(async () => button(container, "元MIDI").click());
+      await clickCard(container, 1);
+      expect(runtime.audition).toHaveBeenLastCalledWith(playedNotes(runtime, 1), "piano");
+      expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+      await act(async () => button(container, "自動生成").click());
+      await clickCard(container, 1);
+      expect(playedNotes(runtime, 1)).toEqual(shell);
+      expect(runtime.audition).toHaveBeenLastCalledWith(shell, "piano");
+    }
+  });
+
+  it("plays the saved notes while 保存した音 is chosen", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, {
+      saved: savedSnapshot(), "source-midi": snapshot("source-midi"), "basic-full": snapshot("basic-full"),
+    }, "basic-full");
+    await act(async () => button(container, "保存した音").click());
+    await clickCard(container, 1);
+    expect(runtime.audition).toHaveBeenLastCalledWith([38, 53, 57, 60], "piano");
   });
 });
 
@@ -2180,7 +2382,9 @@ describe("P23-06 the app-wide BPM", () => {
     expect(band.querySelector("[aria-hidden='true']")?.textContent).toBe("VL");
     expect(band.textContent).toContain("続きから");
     expect(band.textContent).toContain("Progression 0");
-    expect(band.textContent).toContain("Cメジャー ・ 4 小節 ・ きょう練習");
+    // P25 V13: the key and the bars are tags; the day sits on the right.
+    expect([...band.querySelectorAll(".lv-resume-band-tag")].map((tag) => tag.textContent)).toEqual(["Cメジャー", "4 小節"]);
+    expect(band.querySelector(".lv-resume-band-when")?.textContent).toBe("きょう");
     expect(band.querySelector("[data-testid='voicing-loop-resume-go']")?.textContent).toBe("続けるEnter");
 
     // L2: the tool row — the radiogroup of three, the old search field in the middle, the text entry at the right.
@@ -2333,7 +2537,7 @@ async function renderView(
   callbacks: {
     onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
     onEnterText: () => void;
-    bulkSourcePreview?: { eligible: number; changed: number; skippedCustom: number; skippedMissingSource: number };
+    bulkSourcePreview?: { changed: number; keptCustom: number };
     onBulkSourceApply?: () => boolean;
     onToggleFavorite?: (reference: ProgressionPracticeSourceReference, pinned: boolean) => boolean | "pending";
     /** P23-29 L7: the right column's 「Vault で開く」. */
@@ -2422,12 +2626,25 @@ function savedBlock(chords: readonly string[] = ["Cmaj7", "G7"]): SavedProgressi
   };
 }
 
-async function selectStudy(container: HTMLElement, value: "teacher" | "core") {
-  const select = container.querySelector<HTMLButtonElement>("[aria-label='生成タイプ']")!;
-  await act(async () => {
-    select.click();
-  });
-  await act(async () => Array.from(container.querySelectorAll<HTMLButtonElement>("[role=option]")).find(option => option.textContent === (value === "teacher" ? "基本" : "骨組み"))!.click());
+/** P25-08 L1: open 「形 ▼」 (when closed) and return the menu. */
+/** P25-16 N3: menus, bands and the fingering words leave with a short motion; wait it out (jsdom sends no transitionend). */
+async function settleMotion() {
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
+}
+
+async function openShapeMenu(container: HTMLElement): Promise<HTMLElement> {
+  const shapeButton = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-shape-button']")!;
+  if (shapeButton.getAttribute("aria-expanded") !== "true") {
+    await settleMotion();
+    await act(async () => shapeButton.click());
+  }
+  return container.querySelector<HTMLElement>("[data-testid='voicing-loop-shape-menu']")!;
+}
+
+/** P25-08 L1: choose one of the five shapes in 「形 ▼」 (the menu closes). */
+async function chooseShape(container: HTMLElement, shape: "basic" | "shell" | "rootless" | "triad" | "quartal") {
+  const menu = await openShapeMenu(container);
+  await act(async () => menu.querySelector<HTMLButtonElement>(`[data-shape='${shape}']`)!.click());
 }
 
 /** One row of a hand panel's five slots (P5.26.2-02): "finger" labels, note names ("pitch") or degrees. */
@@ -2446,17 +2663,6 @@ function handCells(container: ParentNode, testId: string, row: "finger" | "pitch
 /** The slots in use, in screen order. */
 function usedCells(container: ParentNode, testId: string, row: "finger" | "pitch" | "degree"): string[] {
   return handCells(container, testId, row).filter((cell) => cell.used).map((cell) => cell.text);
-}
-
-/**
- * P23-20 L2: a checkbox is found by its accessible name (`aria-label`) or by the text of its label —
- * the two always-visible short names (最適化 / 運指) keep the full sentence as the accessible name.
- */
-function controlCheckbox(container: ParentNode, label: string): HTMLInputElement {
-  const found = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
-    .find((input) => input.getAttribute("aria-label") === label || input.parentElement?.textContent?.includes(label));
-  if (!found) throw new Error(`Checkbox not found: ${label}`);
-  return found;
 }
 
 /** P23-32 T4/K3: the two named settings and the reference sound are switches (a button with `role="switch"`). */

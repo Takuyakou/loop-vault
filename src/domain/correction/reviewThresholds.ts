@@ -1,5 +1,5 @@
 import { z } from "zod";
-import rawThresholds from "../../../docs/phase10.0/contracts/P10-review-thresholds.json";
+import rawThresholds from "../../../docs/contracts/phase10.0/P10-review-thresholds.json";
 
 /**
  * The review-rule numbers are the contract file itself (P10.0-00, decided 2026-09-29);

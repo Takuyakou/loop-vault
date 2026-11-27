@@ -174,7 +174,8 @@ test("P23-29 C1/L1: the 続きから band appears after a practice and its 続�
   await expect(band).toBeVisible();
   await expect(band).toContainText("続きから");
   await expect(band).toContainText("P23-29 Resume Target");
-  await expect(band).toContainText("きょう練習");
+  // P25 V13: the day sits on the band's right.
+  await expect(band.locator(".lv-resume-band-when")).toHaveText("きょう");
   await page.getByTestId("voicing-loop-resume-go").click();
   await expect(page.getByTestId("voicing-loop-current-panel")).toBeVisible({ timeout: 20_000 });
   // P23-32 K4: the practice has no BPM field; the header's 共通 BPM is the one it follows.

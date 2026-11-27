@@ -1,5 +1,23 @@
 import type { ProgressionVoicingPracticeSnapshots, ProgressionVoicingSelection } from "../domain/progressionVoicingPractice/types";
 import type { RecentProgressionStorage } from "./recentProgressions";
+import type { GeneratedShapeOptions } from "../domain/voicingShapes";
+import {
+  parseStoredShapeOptions, shapeOfLegacyLoopSelection, VOICING_LOOP_SHAPE_STORAGE_KEY, type LegacyLoopSelection,
+} from "../domain/voicingShapes/shapeIds";
+
+/** P25-08 K7: the generated selections before the 「形 ▼」; they now mean 自動生成 with a shape. */
+const LEGACY_GENERATED: readonly ProgressionVoicingSelection[] = ["basic-shell", "rootless-shell", "full-shell", "left-hand"];
+
+/** K7: the 「形」 Voicing Loop remembers (`loop-vault:voicing-loop-shape:v1`); unreadable → 基本. */
+export function readGeneratedShape(storage?: RecentProgressionStorage): GeneratedShapeOptions {
+  try { return parseStoredShapeOptions((storage ?? window.localStorage).getItem(VOICING_LOOP_SHAPE_STORAGE_KEY)); }
+  catch { return parseStoredShapeOptions(null); }
+}
+
+export function rememberGeneratedShape(shape: GeneratedShapeOptions, storage?: RecentProgressionStorage): void {
+  try { (storage ?? window.localStorage).setItem(VOICING_LOOP_SHAPE_STORAGE_KEY, JSON.stringify(shape)); }
+  catch { /* Do not block practice when storage is disabled or full. */ }
+}
 
 export const VOICING_SOURCE_PREFERENCE_KEY = "loop-vault:voicing-loop-source:v1";
 const selections: readonly ProgressionVoicingSelection[] = ["saved", "source-midi", "custom", "basic-full", "basic-shell", "rootless-shell", "full-shell", "left-hand"];
@@ -47,7 +65,13 @@ export function restoreVoicingSource(snapshots: ProgressionVoicingPracticeSnapsh
   try {
     const id = preferenceId(snapshots);
     const entry = readEntries(storage).find(([key]) => key === id);
-    const selected = entry?.[1];
+    let selected = entry?.[1];
+    if (selected !== undefined && LEGACY_GENERATED.includes(selected)) {
+      // K7: read an old generated id as 自動生成 + its shape, and write both back in the new form.
+      rememberGeneratedShape(shapeOfLegacyLoopSelection(selected as LegacyLoopSelection), storage);
+      selected = "basic-full";
+      rememberVoicingSource(snapshots, selected, storage);
+    }
     if (selected && snapshots?.[selected] && (selected !== "saved" && selected !== "source-midi" && selected !== "custom"
       || sourceCoverage(snapshots, selected).available > 0)) return selected === "saved" && savedDuplicatesSource(snapshots) ? "source-midi" : selected;
   } catch { /* Preference storage is optional. */ }

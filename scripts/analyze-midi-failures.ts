@@ -11,8 +11,8 @@ import { analyzeMidi as analyzeLegacy } from "../src/domain/midi/legacy";
 import type { DecodedSegment } from "../src/domain/midi/decoder";
 
 const manifestPath = resolve(cwd(), "docs/loop-vault-evaluation-corpus/manifest.json");
-const outputDir = resolve(cwd(), "artifacts/midi-failure-analysis");
-const docsPath = resolve(cwd(), "docs/phase3.6.1-failure-analysis.md");
+const outputDir = resolve(cwd(), "docs/archive/artifacts/midi-failure-analysis");
+const docsPath = resolve(cwd(), "docs/archive/legacy-root/phase3.6.1-failure-analysis.md");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as ChordDripCorpusManifest;
 const definitions = adaptChordDripManifest(manifest);
 const cases: EvaluationCaseInput[] = await Promise.all(definitions.map(async (definition) => ({

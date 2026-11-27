@@ -147,21 +147,6 @@ test("4+5: the save row has no 「?」 list and no explanation sentences", async
   await page.screenshot({ path: "p89-generated/P24-07/T-save-row-1440.png" });
 });
 
-test("6: 「詳細編集」 is hidden where no inspector opens (manual candidate editor)", async ({ page }) => {
-  test.setTimeout(120_000);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await openTextCapture(page);
-  await inputOf(page).fill("| Cmaj7 Dm7 |");
-  await captureOf(page).getByTestId("text-progression-convert").click();
-  const editor = page.getByTestId("manual-candidate-editor");
-  await expect(editor).toBeVisible();
-  await editor.getByRole("button", { name: "すばやく編集" }).first().click();
-  const quick = page.locator("[data-quick-chord-editor]");
-  await expect(quick).toBeVisible();
-  await expect(quick.getByText("詳細編集")).toHaveCount(0);
-  await page.screenshot({ path: "p89-generated/P24-07/Q-quick-editor-manual-1440.png" });
-});
-
 test("6: 「詳細編集」 is hidden in the correction workspace too", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 900 });

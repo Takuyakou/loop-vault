@@ -8,7 +8,7 @@ import { analyzeMidi as analyzeLegacy } from "../src/domain/midi/legacy";
 import { analyzeMidiLegacyBoundaryRerank, defaultLegacyBoundaryRerankerThresholds } from "../src/domain/midi/legacyBoundaryReranker";
 
 const manifestPath = resolve(cwd(), "docs/loop-vault-evaluation-corpus/manifest.json");
-const outputDir = resolve(cwd(), "artifacts/midi-reranker-tuning");
+const outputDir = resolve(cwd(), "docs/archive/artifacts/midi-reranker-tuning");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as ChordDripCorpusManifest;
 const definitions = adaptChordDripManifest(manifest);
 const cases = await Promise.all(definitions.map(async (definition) => ({

@@ -46,6 +46,8 @@ export interface PianoKeyboardVisualizerProps {
   dojoHeight?: number;
   /** P23-51 (dojo only): a mark per MIDI note after a wrong answer (see PianoKey's `resultMark`). Absent: as before. */
   resultMarks?: ReadonlyMap<number, "hit" | "wrong" | "miss">;
+  /** P25-10 I4: the play-along marks (default appearance only). */
+  playAlongMarks?: ReadonlyMap<number, "ok" | "wrong">;
   /**
    * P23-23a B2: MIDI note numbers to draw as foreign (`held-foreign`), key by key, when the caller knows which
    * pressed keys are wrong. Absent: the picture is exactly what it was.
@@ -101,6 +103,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   dojoHeight = 128,
   foreignNotes,
   resultMarks,
+  playAlongMarks,
 }: PianoKeyboardVisualizerProps) {
   const text = copy.ja;
   const range = useMemo(
@@ -259,6 +262,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 markScale={markScale}
                 missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
                 resultMark={appearance === "dojo" ? resultMarks?.get(key.note) : undefined}
+                playAlongMark={appearance === "dojo" ? undefined : playAlongMarks?.get(key.note)}
               />
             ))}
           </g>
@@ -293,6 +297,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 markScale={markScale}
                 missingGuide={appearance === "dojo" && matchState === "wrong" && guide.has(key.note) && !held.has(key.note)}
                 resultMark={appearance === "dojo" ? resultMarks?.get(key.note) : undefined}
+                playAlongMark={appearance === "dojo" ? undefined : playAlongMarks?.get(key.note)}
               />
             ))}
           </g>

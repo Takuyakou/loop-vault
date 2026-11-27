@@ -103,7 +103,7 @@ source-performance preservation path. LF-MIDI-001 Families A and B are closed
 by their separate default-on fixes. Family C was studied in P5.39 but was not
 promoted: its final `SUSPICIOUS = 1` is a local harmonic identity/ranking
 mismatch after a necessary temporal split. The separate follow-up research
-boundary is in [`P5.39-closeout.md`](../phase5.39/P5.39-closeout.md).
+boundary is in [`P5.39-closeout.md`](../archive/phases/phase5.39/P5.39-closeout.md).
 
 ### Synthetic semantic examples (privacy-safe)
 

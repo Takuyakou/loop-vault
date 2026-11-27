@@ -55,7 +55,7 @@ test("C1/C2: the two columns, the resume band, the pictures and the right column
   await expect(go).toContainText("続ける");
   await expect(go).toContainText("Enter");
   const radius = await band.evaluate((element) => getComputedStyle(element).borderRadius);
-  expect(radius).toBe("14px");
+  expect(radius).toBe("16px"); // P25 V13
   expect(resume.height).toBeGreaterThanOrEqual(52);
   expect(resume.height).toBeLessThanOrEqual(80);
 
@@ -265,7 +265,8 @@ test("P23-31 C8: 続きから → the notice → the cards; the recents on one l
     expect(boxes.notice!.top, `${size.width}: the notice is under 続きから`).toBeGreaterThanOrEqual(boxes.resume!.bottom - 1);
     expect(boxes.body!.top, `${size.width}: the columns are under the notice`).toBeGreaterThanOrEqual(boxes.notice!.bottom - 1);
 
-    // D2: the other recent practices are one line of underlined buttons (220px at most, 44px tall, no wrap).
+    // D2: the other recent practices are one line of buttons (220px at most, no wrap).
+    // P25 V13: they are quiet round tags now (30px, no underline; Resume.dc.html).
     const recents = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[data-testid^='home-recent-']")]
       .map((element) => {
         const rect = element.getBoundingClientRect();
@@ -281,8 +282,8 @@ test("P23-31 C8: 続きから → the notice → the cards; the recents on one l
     for (const recent of recents) {
       expect(recent.whiteSpace).toBe("nowrap");
       expect(recent.width).toBeLessThanOrEqual(221);
-      expect(recent.height).toBeGreaterThanOrEqual(36);
-      expect(recent.decoration).toContain("underline");
+      expect(recent.height).toBe(30);
+      expect(recent.decoration).toBe("none");
       expect(recent.title, "the full name stays in the tooltip").toBeTruthy();
     }
 
@@ -431,7 +432,7 @@ test("P23-31b C1-C5: the four cards follow the mock at every size", async ({ pag
     expect(forms.count, `${size.width}: no Form buttons on the home`).toBe(0);
     expect(forms.skinny, `${size.width}: no one-character column`).toBe(0);
 
-    // C5: the other recent ones start at their left edge and are block buttons.
+    // C5: the other recent ones start at their left edge (P25 V13: round tags, the name then a muted ›).
     const others = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[data-testid^='home-recent-']")].map((button) => {
       const style = getComputedStyle(button);
       return { scrollLeft: button.scrollLeft, display: style.display, align: style.textAlign, left: button.getBoundingClientRect().left };
@@ -439,7 +440,7 @@ test("P23-31b C1-C5: the four cards follow the mock at every size", async ({ pag
     expect(others.length).toBeGreaterThanOrEqual(2);
     for (const other of others) {
       expect(other.scrollLeft).toBe(0);
-      expect(other.display).toBe("block");
+      expect(other.display).toBe("flex"); // inline-flex, blockified in the band's flex row
       expect(other.align).toBe("left");
       expect(other.left).toBeGreaterThan(0);
     }

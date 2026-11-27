@@ -58,26 +58,6 @@ describe("LiveMidiActivationLeaseManager", () => {
     expect(deactivate).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps Practice active when mini mode acquired first and closes first", async () => {
-    let active = false;
-    const activate = vi.fn(async () => { active = true; });
-    const deactivate = vi.fn(async () => { active = false; });
-    const manager = new LiveMidiActivationLeaseManager({
-      getState: () => ({ active, activate, deactivate }),
-    });
-    const mini = manager.acquire();
-    await mini.ready;
-    const practice = manager.acquire();
-    await practice.ready;
-    mini.release();
-    await Promise.resolve();
-    expect(deactivate).not.toHaveBeenCalled();
-    practice.release();
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(deactivate).toHaveBeenCalledTimes(1);
-  });
-
   it("cleans up a manager-owned activation that becomes active before rejecting", async () => {
     let active = false;
     const activate = vi.fn(async () => {

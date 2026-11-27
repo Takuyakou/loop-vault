@@ -8,7 +8,7 @@ import { reportShot } from "./helpers/reportShots";
  * P23-46: the guided practice hub and the Lv5 listen → play → retry-from-card flow. The basic Lv1–3
  * course is seeded as passed so the shared entry opens the advanced course.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

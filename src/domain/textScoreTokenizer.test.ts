@@ -11,7 +11,7 @@ import { BrowserMemoryVaultStorage } from "../storage/browserMemoryVaultStorage"
 import { createTextProgressionDraft, textProgressionDraftSavePayload } from "./textProgressionDraft";
 import { createVaultStore } from "../store/vaultStore";
 
-const fixture = (name: string) => readFileSync(new URL("../../docs/phase5.31/fixtures/" + name, import.meta.url), "utf8");
+const fixture = (name: string) => readFileSync(new URL("../../docs/contracts/phase5.31/fixtures/" + name, import.meta.url), "utf8");
 
 describe("P5.31 bounded score intake", () => {
   it("parses compact and expanded 16-bar scores to identical 34 attacks, slash identities and altered fifths", () => {

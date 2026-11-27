@@ -1009,7 +1009,7 @@ function SightQuestion(props: {
         <div className="gc-feedback" data-testid="advanced-feedback" role="status" aria-live="polite">
           <span data-testid="advanced-feedback-text" data-ok={feedback?.ok} data-result={feedback?.result}>{status}</span>
         </div>
-        {!connected ? <p className="gc-panel-warn" data-testid="advanced-sight-connection">MIDI 未接続です。譜面と拍の練習はできますが、正式な記録は接続して通した試行だけです。</p> : null}
+        {!connected ? <p className="gc-note" data-testid="advanced-sight-connection">MIDI 未接続です。譜面と拍の練習はできますが、正式な記録は接続して通した試行だけです。</p> : null}
       </section>
       <div className="gc-card-mid gc-keyboard">
         <div className="gc-keyboard-head"><b>鍵盤</b><span>{guideReference.length > 0 ? "見本の音名" : "押している音"}</span></div>

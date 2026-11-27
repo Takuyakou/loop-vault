@@ -18,7 +18,6 @@ pub fn run() {
     tauri::Builder::default()
         .manage(live_midi::LiveMidiState::default())
         .manage(midi_export::MidiExportState::default())
-        .manage(llm::LlmState::default())
         .manage(practice_storage::PracticeStorageState::default())
         .manage(chord_dojo_storage::ChordDojoStorageState::default())
         .setup(|app| {
@@ -40,13 +39,7 @@ pub fn run() {
             live_midi::commands::list_live_midi_inputs,
             live_midi::commands::open_live_midi_input,
             live_midi::commands::close_live_midi_input,
-            llm::commands::cancel_advisor_request,
-            llm::commands::list_local_llm_models,
-            llm::commands::test_local_llm_connection,
-            llm::commands::suggest_progression,
-            llm::commands::test_openai_llm_connection,
             llm::keychain::openai_api_key_status,
-            llm::keychain::set_openai_api_key,
             llm::keychain::delete_openai_api_key,
             practice_storage::load_practice_file,
             practice_storage::save_practice_file,

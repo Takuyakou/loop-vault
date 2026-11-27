@@ -8,7 +8,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * P23-50: the P23-49 stage on the advanced course (Lv4–8, 総合確認) and on free practice. The values are the
  * lead's (spec P23-50 §2). The basic Lv1–3 store is seeded as passed so the guide opens on Lv4.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

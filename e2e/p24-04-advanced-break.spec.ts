@@ -6,7 +6,7 @@ import { openDojo, type MidiControl } from "./helpers/p12";
  * P24-04: the advanced course's break screen now says what the first wrong answer was and offers the
  * same compare panel as Lv1–3. The words come from the stored evidence only; nothing here changes a result.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

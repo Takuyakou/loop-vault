@@ -92,7 +92,7 @@ describe("CorrectionModel (P10.0-02, display only)", () => {
     expect(long300[0]!.repeatCount).toBe(long300[1]!.repeatCount);
   });
 
-  it("counts the three review rules exactly as the P10.0-00 audit (docs/phase10.0/evidence)", () => {
+  it("counts the three review rules exactly as the P10.0-00 audit (docs/archive/phases/phase10.0/evidence)", () => {
     // No melody voice: the proposed rule, as in the audit baseline (3).
     expect(flagged(model("melody-in-piano-8"), "melody")).toBe(3);
     // With a melody voice the song-wide suggestion takes the role-based reasons (spec v2.2 6.5); the

@@ -36,72 +36,42 @@ for (const fixture of ["p11-identical", "p11-saved", "p11-one-hand"]) {
       await expect(left).toContainText("C4");
       await expect(right).not.toContainText("C4");
     }
-    await expect(page.getByRole("combobox", { name: "生成タイプ", exact: true })).toBeDisabled();
+    await expect(page.getByTestId("voicing-loop-shape-button")).toBeDisabled();
   });
 }
 
-test("P11 generated selector pointer/keyboard dismissal is independent of details and Range", async ({ page }) => {
+test("P11 the shape menu's pointer/keyboard dismissal is independent of Range (P25-08 L1)", async ({ page }) => {
   await page.goto("/?p527Status=p533-rules");
   await page.locator('[data-nav="voicing-loop"]').click();
-  const selector = page.getByRole("combobox", { name: "生成タイプ", exact: true });
-  const details = page.getByTestId("voicing-loop-generated-details");
+  const trigger = page.getByTestId("voicing-loop-shape-button");
+  const menu = page.getByTestId("voicing-loop-shape-menu");
   const cards = page.getByTestId("voicing-loop-event");
   await cards.nth(1).click({ button: "right" });
   const pending = page.getByTestId("voicing-loop-range-pending");
   await expect(pending).toBeVisible();
-  for (const value of ["骨組み", "基本", "骨組み", "基本"]) {
-    await details.locator("summary").click();
-    await selector.click();
-    await expect(details).not.toHaveAttribute("open", "");
-    await expect(selector).toHaveAttribute("aria-expanded", "true");
-    await page.getByRole("option", { name: value, exact: true }).click();
-    await expect(selector).toHaveAttribute("aria-expanded", "false");
-    await expect(selector).toContainText(value);
-    await expect(selector).toBeFocused();
-    await expect(page.getByTestId("voicing-loop-current-explanation")).toContainText(value === "基本" ? "Teacher Style" : "Family Core");
+  for (const [shape, label] of [["shell", "シェル"], ["basic", "基本"], ["quartal", "4 度積み"], ["basic", "基本"]] as const) {
+    await trigger.click();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await menu.locator(`[data-shape="${shape}"]`).click();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByTestId("voicing-loop-shape-label")).toHaveText(label);
+    await expect(trigger).toBeFocused();
     await expect(page.getByTestId("voicing-loop-next-move")).toBeVisible();
   }
-  await selector.press("Space");
-  await expect(selector).toHaveAttribute("aria-expanded", "true");
+  // P25 V25-8: Space starts the loop from anywhere; a focused button is pressed with Enter.
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Escape");
-  await expect(selector).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(pending).toBeVisible();
-  await expect(selector).toBeFocused();
-  await selector.press("Enter");
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("Enter");
-  await expect(selector).toContainText("骨組み");
-  await selector.click();
-  await details.locator("summary").click();
-  await expect(selector).toHaveAttribute("aria-expanded", "false");
-  await expect(details).toHaveAttribute("open", "");
-  await selector.click();
-  await expect(details).not.toHaveAttribute("open", "");
+  await expect(trigger).toBeFocused();
   await page.getByRole("button", { name: "元MIDI", exact: true }).click();
-  await expect(selector).toBeDisabled();
+  await expect(trigger).toBeDisabled();
   await page.getByRole("button", { name: "自動生成", exact: true }).click();
-  await selector.click();
-  await expect(selector).toHaveAttribute("aria-expanded", "true");
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
   const axe = await new AxeBuilder({ page: page as never }).include('[data-testid="voicing-loop-controls"]').analyze();
   expect(axe.violations.filter(issue => issue.impact === "serious" || issue.impact === "critical")).toEqual([]);
   await page.getByTestId("voicing-loop-current-panel").locator("h2").click();
-  await expect(selector).toHaveAttribute("aria-expanded", "false");
-});
-
-
-test("P11 advanced shape to primary type retains selector keyboard focus", async ({ page }) => {
-  await page.goto("/?p527Status=p533-rules");
-  await page.locator('[data-nav="voicing-loop"]').click();
-  const details = page.getByTestId("voicing-loop-generated-details");
-  await details.locator("summary").click();
-  await details.getByLabel("既存の形", { exact: true }).selectOption("basic-shell");
-  const selector = page.getByRole("combobox", { name: "生成タイプ", exact: true });
-  await selector.click();
-  await page.getByRole("option", { name: "基本", exact: true }).click();
-  await expect(selector).toBeFocused();
-  await expect(selector).toHaveAttribute("aria-expanded", "false");
-  await selector.press("Space");
-  await expect(selector).toHaveAttribute("aria-expanded", "true");
-  await page.keyboard.press("Escape");
-  await expect(selector).toBeFocused();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
 });

@@ -14,6 +14,7 @@
 @import "./styles/correction-workspace.css";
 @import "./styles/pre-analysis.css";
 @import "./styles/capture-entry.css";
+@import "./styles/motion.css";
 
 @tailwind base;
 @tailwind components;

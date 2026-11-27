@@ -199,8 +199,9 @@ test("P23-32 C5: no rule name is visible; the i carries it", async ({ page }) =>
   expect(text).not.toContain("ルール");
   const info = explanation.locator(".lv-vl-rule-info");
   await expect(info).toHaveAttribute("role", "img");
-  await expect(info).toHaveAttribute("aria-label", /^ルール P5\.33-GEN-[A-Z]+-MAJ7 · /);
-  await expect(info).toHaveAttribute("title", /^ルール P5\.33-GEN-/);
+  // P25-16 N5: the i now starts with the top note's meaning, then the rule's names.
+  await expect(info).toHaveAttribute("aria-label", /いちばん上の音:.*ルール P5\.33-GEN-[A-Z]+-MAJ7 · /);
+  await expect(info).toHaveAttribute("title", /いちばん上の音:[\s\S]*ルール P5\.33-GEN-/);
   expect(await info.innerText()).toBe("i");
 });
 

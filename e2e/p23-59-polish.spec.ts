@@ -269,31 +269,6 @@ test.describe("P23-59 polish: toasts, the folded memo, and the Vault's practice 
     await expect(page.getByTestId("progression-memo-add")).toHaveCount(0);
   });
 
-  test("S2b: at 1280×720 the folded memo leaves the same roll taller than P23-58's 163 px", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
-    await openApp(page);
-    await saveTextProgression(page, TAGS_SIX_PROGRESSION, "C major", "P23-59 ロール");
-    await openProgressionPage(page);
-    await expect(page.getByTestId("progression-memo-add")).toBeVisible();
-    const measured = await page.evaluate(() => {
-      const roll = document.querySelector(".lv-cw-roll")!.getBoundingClientRect();
-      const body = document.querySelector(".lv-cw-body")!.getBoundingClientRect();
-      const cards = document.querySelector(".lv-cw-cards")!.getBoundingClientRect();
-      const main = document.getElementById("main-content")!;
-      return {
-        visibleRollHeight: Math.round(Math.min(roll.bottom, body.bottom) - Math.max(roll.top, body.top)),
-        cardsHeight: Math.round(cards.height),
-        mainScrollOverflow: main.scrollHeight - main.clientHeight,
-        tagCount: document.querySelectorAll("[data-testid='progression-tags'] .lv-progression-tag:not([data-add])").length,
-      };
-    });
-    console.log("S2_ROLL_1280:", JSON.stringify(measured));
-    expect(measured.tagCount).toBe(6);
-    // P23-58's report: 163 px with the memo field always shown; the folded row is one row shorter.
-    expect(measured.visibleRollHeight).toBeGreaterThan(163);
-    expect(measured.mainScrollOverflow).toBe(0);
-  });
-
   test("S3: at 1280×720 and 1366×768 the six tags take two rows and the practice row is never cut; 1440×900 is unchanged", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await openApp(page);

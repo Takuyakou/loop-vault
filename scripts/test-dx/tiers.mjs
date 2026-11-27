@@ -3,23 +3,32 @@
  *
  * Design rules:
  * - Zero tests are deleted: every `e2e/*.spec.ts` belongs to exactly one bucket (`core`,
- *   `extendedLight`, or `extendedHeavy`).
+ *   `extendedLight`, `extendedHeavy`, or `extendedRealtimeAudio`).
+ * - `extendedRealtimeAudio` holds the real-time audio specs that run with `--workers=1` after the heavy pass.
  * - Every current product area (Home, Capture/Text/Correction, Vault/Progression, Voicing Loop,
  *   Bass Practice, Chord Dojo, Guided Course P23-40/42/44+, MIDI connection, Settings, Command
  *   Palette), visual baselines, accessibility, keyboard, responsive, reduced-motion, and all
  *   `criticalUiSpecs` remain in `core`.
  * - Guided-course specs (P23-42 and later) are excluded from `EXTENDED_ARCHIVE_SPECS` so every
  *   active guided-course screen is checked on every `test:full` run.
- * - `extendedHeavy` keeps the load-sensitive real-time audio/tempo/sweep specs that require
- *   `--workers=2`.
+ * - `extendedHeavy` keeps the load-sensitive tempo/sweep specs that require `--workers=2`.
  * - `extendedLight` holds multi-minute sweeps and superseded intermediate milestone specs whose
  *   current product contracts are already guarded by `core` specs (and still run on demand via
  *   `npm run test:e2e:extended`, `npm run test:full:all`, or `npm run test:feature`).
  */
 
-export const EXTENDED_HEAVY_SPECS = Object.freeze([
-  "e2e/preview-fade.spec.ts",
+/**
+ * P25 V41: real-time audio is measured or recorded as it plays, so these run one at a time after the heavy pass
+ * (two at once starved the audio thread).
+ */
+export const EXTENDED_REALTIME_AUDIO_SPECS = Object.freeze([
   "e2e/dojo-display-judge.spec.ts",
+  // P25 review 5: the synthetic microphone's analysis can pass 15s while other tests run.
+  "e2e/phase13-bass-practice.spec.ts",
+  "e2e/preview-fade.spec.ts",
+]);
+
+export const EXTENDED_HEAVY_SPECS = Object.freeze([
   "e2e/p12-master251-register.spec.ts",
   "e2e/p12-master251-ui-scheduler.spec.ts",
   "e2e/vl-14-resume-smooth.spec.ts",
@@ -81,7 +90,6 @@ export const EXTENDED_ARCHIVE_SPECS = Object.freeze([
   "e2e/p22-03-home.spec.ts",
   "e2e/p89-home-continue.spec.ts",
   "e2e/phase8.8.5-text-workspace.spec.ts",
-  "e2e/phase13-bass-practice.spec.ts",
   "e2e/vl-13-screens.spec.ts",
   "e2e/vl-13-voicing-loop.spec.ts",
   "e2e/vl-15-progression-picker.spec.ts",
@@ -111,8 +119,10 @@ const EXTENDED_PREFIX_RE = /^e2e\/(phase5\.|phase11-|p5-26-)/;
 
 const heavySet = new Set(EXTENDED_HEAVY_SPECS);
 const archiveSet = new Set(EXTENDED_ARCHIVE_SPECS);
+const realtimeAudioSet = new Set(EXTENDED_REALTIME_AUDIO_SPECS);
 
 export function classifyE2eSpec(specPath) {
+  if (realtimeAudioSet.has(specPath)) return "extendedRealtimeAudio";
   if (heavySet.has(specPath)) return "extendedHeavy";
   if (archiveSet.has(specPath) || EXTENDED_PREFIX_RE.test(specPath)) return "extendedLight";
   return "core";
@@ -122,11 +132,13 @@ export function partitionE2eSpecs(allSpecs) {
   const core = [];
   const extendedLight = [];
   const extendedHeavy = [];
+  const extendedRealtimeAudio = [];
   for (const spec of [...allSpecs].sort()) {
     const bucket = classifyE2eSpec(spec);
-    if (bucket === "extendedHeavy") extendedHeavy.push(spec);
+    if (bucket === "extendedRealtimeAudio") extendedRealtimeAudio.push(spec);
+    else if (bucket === "extendedHeavy") extendedHeavy.push(spec);
     else if (bucket === "extendedLight") extendedLight.push(spec);
     else core.push(spec);
   }
-  return { core, extendedLight, extendedHeavy };
+  return { core, extendedLight, extendedHeavy, extendedRealtimeAudio };
 }

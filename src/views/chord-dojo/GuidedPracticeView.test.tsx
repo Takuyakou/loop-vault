@@ -114,6 +114,8 @@ describe("P23-35-fix-2 the guide's audition adapter", () => {
       expect(notes).toEqual(["48 55 59 64", "52 55 59 60", "50 57 60 65", "55 59 62 65"]);
       await click(button(container, "guided-next"));
       expect(container.querySelector('[data-testid="guided-hidden-note"]')).not.toBeNull();
+      // P25 V1: no MIDI here, and the practice no longer says only that (the header and the Dojo home do).
+      expect(container.querySelector('[data-testid="guided-midi-off"]')).toBeNull();
       await click(button(container, "guided-next"));
       await click(button(container, "guided-next"));
       await click(button(container, "guided-next"));

@@ -120,7 +120,7 @@ test("4: the preview card and the input's characters select each other", async (
   await token.click();
   expect(await input.evaluate((element: HTMLTextAreaElement) => element.value.slice(element.selectionStart, element.selectionEnd))).toBe("Dm7");
   await expect(capture.getByTestId("text-preview-band").filter({ hasText: "Dm7" })).toHaveAttribute("data-selected", "true");
-  await expect(capture.getByTestId("text-progression-inspector-row")).toContainText("Dm7");
+  await expect(capture.getByTestId("text-card-dock").getByTestId("text-dock-name")).toContainText("Dm7");
 });
 
 test("5: the two errors are named, only H→B can be fixed, and the readable cards still play", async ({ page }) => {
@@ -141,7 +141,7 @@ test("5: the two errors are named, only H→B can be fixed, and the readable car
   // The unreadable card shows 「読めません」; the readable Fmaj7 next to it still plays.
   await expect(capture.getByTestId("text-preview-card-error").first()).toContainText("読めません");
   await capture.getByTestId("text-preview-band").filter({ hasText: "Fmaj7" }).first().click();
-  await expect(capture.getByTestId("text-progression-inspector-row")).toContainText("Fmaj7");
+  await expect(capture.getByTestId("text-card-dock").getByTestId("text-dock-name")).toContainText("Fmaj7");
   // 「ここへ移動」 selects the typed text.
   await items.nth(0).getByTestId("text-diagnostic-move").click();
   expect(await inputOf(page).evaluate((element: HTMLTextAreaElement) => element.value.slice(element.selectionStart, element.selectionEnd))).toBe("Xm7");
@@ -177,18 +177,17 @@ test("7: 3/4 can be chosen and saved", async ({ page }) => {
   await expect(page.getByText("保存しました")).toBeVisible();
 });
 
-test("8: 「音を細かく直す」 is offered only for 4/4 with 1, 2 or 4 chords in a bar", async ({ page }) => {
+test("8: P25-03 C12: 「音を細かく直す」 is gone for every way of writing", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const capture = await openTextCapture(page);
-  const convert = () => capture.getByTestId("text-progression-convert");
-  await inputOf(page).fill("| C Dm |");
-  await expect(convert()).toBeEnabled();
-  await inputOf(page).fill("| C Dm G7 |");
-  await expect(convert()).toBeDisabled();
-  await expect(convert()).toHaveAttribute("title", "この書き方では使えません(4/4 で 1 小節に 1・2・4 個の時に使えます)");
+  for (const text of ["| C Dm |", "| C Dm G7 |"]) {
+    await inputOf(page).fill(text);
+    await expect(capture.getByTestId("text-preview-band").first()).toBeVisible();
+    await expect(capture.getByTestId("text-progression-convert")).toHaveCount(0);
+  }
   await chooseTextSetting(capture, "text-progression-meter", "3/4");
   await inputOf(page).fill("| C |");
-  await expect(convert()).toBeDisabled();
+  await expect(capture.getByTestId("text-progression-convert")).toHaveCount(0);
 });
 
 test("the photos: empty, pasted, errors and the long chart at 1440x900 and 1280x800", async ({ page }) => {

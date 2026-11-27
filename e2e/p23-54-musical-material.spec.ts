@@ -10,7 +10,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * `materials.test.ts` and `lv4.test.ts`. The guide opens on the course map (P23-52), so every test
  * enters through `course-map-go`.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

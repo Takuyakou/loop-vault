@@ -6,6 +6,7 @@ export default tseslint.config(
     ignores: [
       "dist/**",
       "p12-generated/**",
+      "p89-generated/**",
       "src-tauri/**",
       "node_modules/**",
       "coverage/**",
@@ -18,7 +19,7 @@ export default tseslint.config(
     ],
   },
   {
-    files: ["scripts/phase85-pre/**/*.mjs"],
+    files: ["scripts/archive/phase85-pre/**/*.mjs"],
     languageOptions: {
       globals: { URL: "readonly", console: "readonly" },
     },
@@ -26,7 +27,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["docs/phase8.8.3-r/scripts/**/*.cjs"],
+    files: ["docs/archive/phases/phase8.8.3-r/scripts/**/*.cjs"],
     languageOptions: {
       globals: { require: "readonly", console: "readonly", Buffer: "readonly", process: "readonly" },
     },

@@ -212,7 +212,7 @@ describe("CaptureView result (the correction workspace, P10.0-07)", () => {
     const { result } = analyzeScenario(p10Scenario("plain-8"));
     const view = await renderCapture({ status: "done", result });
     expect(view.container.querySelector('[data-testid="correction-workspace"]')).toBeNull();
-    expect(view.container.textContent).toContain("この解析結果は修正作業場で開けません");
+    expect(view.container.textContent).toContain("この解析結果は進行エディタで開けません");
     expect(buttons(view.container, "MIDI を選び直す")).toHaveLength(1);
     await view.dispose();
   });

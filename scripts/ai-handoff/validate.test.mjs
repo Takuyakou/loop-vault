@@ -127,6 +127,12 @@ describe("ai-handoff validator — paths and privacy", () => {
     expect(result.issues.map((i) => i.check)).not.toContain("historical-path");
   });
 
+  it("treats docs/archive/phases/ as a historical phase location too", () => {
+    const result = run({ handoff: defaultHandoff + "\nSee `docs/archive/phases/phase9.9/README.md`.\n" });
+    expect(checks(result)).toContain("historical-path");
+    expect(result.issues.map((i) => i.check)).not.toContain("historical-path");
+  });
+
   it("fails a personal absolute path", () => {
     const result = run({ handoff: defaultHandoff + "\nSee C:\\Users\\alice\\take.json\n" });
     expect(checks(result)).toContain("personal-path");

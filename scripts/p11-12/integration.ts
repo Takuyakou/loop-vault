@@ -1,5 +1,5 @@
 import { parseChordLabel } from "../../src/domain/chords";
-import { resolveProgressionPracticeVoicings, type ProgressionVoicingPracticeSnapshot, type ProgressionVoicingSelection, type ResolveProgressionPracticeVoicingsOptions } from "../../src/domain/progressionVoicingPractice";
+import { resolveProgressionPracticeVoicings, type ProgressionVoicingPracticeSnapshot, type ProgressionVoicingSelection, type ResolveProgressionPracticeVoicingsOptions } from "../../src/domain/progressionVoicingPractice/index";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable } from "../../src/voicingPractice/fingeringDisplay";
 import { loadFingeringPreferences, savePersonalFingering, resetPersonalFingering, type FingeringPreferenceCollection } from "../../src/voicingPractice/fingeringPreferences";
 import { computeNextMoves, fixedFingerSlots } from "../../src/voicingPractice/nextMove";

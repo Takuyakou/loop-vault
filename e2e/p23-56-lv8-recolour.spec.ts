@@ -9,7 +9,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * played. Reached from the course map (P23-52): the Lv8 station, 「自由に練習する」, then the group's
  * 「進行の中で響きを足す」. The official counts are checked by the Vitest specs (levels, bank, review).
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

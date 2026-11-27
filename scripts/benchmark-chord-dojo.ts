@@ -5,7 +5,7 @@ import {
   buildPracticeChordRequirements,
   matchPerformance,
   type PracticeInputSnapshot,
-} from "../src/domain/practice";
+} from "../src/domain/practice/index";
 
 const requirements = [
   makeChordSymbol(0, "maj7"),

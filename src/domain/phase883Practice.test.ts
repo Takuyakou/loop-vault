@@ -13,7 +13,7 @@ interface FrozenRow {
   expectedProhibitedPitchClasses: number[];
 }
 const rows = (JSON.parse(readFileSync(
-  new URL("../../docs/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
+  new URL("../../docs/contracts/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
 )) as { rows: FrozenRow[] }).rows;
 
 function snapshotFor(label: string, textDerived = true) {

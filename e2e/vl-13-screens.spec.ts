@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /** VL-13 report screenshots. Daily runs (test:full included) write under p89-generated, which git does not track;
- * UPDATE_REPORT_SCREENSHOTS=1 writes into the tracked docs/reports folder instead (run it explicitly to refresh the report). */
-const dir = process.env.UPDATE_REPORT_SCREENSHOTS === "1" ? "docs/reports/vl-13" : "p89-generated/report-screenshots/vl-13";
+ * UPDATE_REPORT_SCREENSHOTS=1 writes into the tracked docs/archive/reports folder instead (run it explicitly to refresh the report). */
+const dir = process.env.UPDATE_REPORT_SCREENSHOTS === "1" ? "docs/archive/reports/vl-13" : "p89-generated/report-screenshots/vl-13";
 const PREFS = "loop-vault:live-midi-preferences:v1";
 const CONNECTION = "loop-vault:live-midi-connection:v1";
 

@@ -29,7 +29,7 @@ async function mount(): Promise<Harness> {
   const root = createRoot(container);
   const onSaveExtended = vi.fn(() => true);
   await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
-    onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
+    onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
   return {
     container,
     onSaveExtended,
@@ -65,6 +65,13 @@ async function writeTextarea(element: HTMLTextAreaElement, value: string) {
   });
 }
 
+/** P25-05 D: a key pressed on the page (the band listens on the document). */
+async function press(key: string, options: KeyboardEventInit = {}) {
+  await act(async () => {
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...options }));
+  });
+}
+
 const inputOf = (harness: Harness) => harness.container.querySelector<HTMLTextAreaElement>('[data-testid="text-progression-input"]')!;
 
 describe("P24-06 鍵盤で入れる", () => {
@@ -75,7 +82,7 @@ describe("P24-06 鍵盤で入れる", () => {
       expect(query(harness.container, "keyboard-entry-band")).toBeNull();
       await click(query<HTMLButtonElement>(harness.container, "text-keyboard-toggle"));
       expect(query(harness.container, "keyboard-entry-band")).not.toBeNull();
-      expect(harness.container.textContent).toContain("つながっていません");
+      expect(harness.container.textContent).toContain("MIDI 未接続");
       await click(query<HTMLButtonElement>(harness.container, "keyboard-connect"));
       expect(midiPanelStore.getState().open).toBe(true);
       closeMidiPanel();
@@ -99,14 +106,15 @@ describe("P24-06 鍵盤で入れる", () => {
       await hold([48, 52]);
       await release();
       expect(inputOf(harness).value).toBe("| Cmaj7 |");
-      const band = query(harness.container, "keyboard-entry-band");
       // fix-2 item 5: no 「押さえている」 word; the keyboard's aria-label still describes the held notes.
-      expect(band?.textContent).not.toContain("押さえている");
-      expect(band?.querySelector("svg")?.getAttribute("aria-label")).toContain("押さえている音");
-      // fix-2 item 1: the only card is this one, so its small mark is hidden; the chosen row still says it.
-      expect(query(harness.container, "text-preview-band")?.querySelector('[data-testid="text-progression-voicing-state"]')).toBeNull();
-      expect(query(harness.container, "text-progression-inspector-row")?.textContent).toContain("鍵盤で弾いた音");
-      expect(query(harness.container, "text-progression-inspector-row")?.textContent).toContain("Cmaj7");
+      // V20: the held chord's place stays, with 「—」 while nothing is held.
+      expect(query(harness.container, "keyboard-held-name")?.textContent).toBe("—");
+      expect(query(harness.container, "keyboard-keys")?.getAttribute("aria-label")).toContain("押さえている音");
+      // P25-03 C10: the card's dots say where the sound came from (the band stays away while the entry is on).
+      const card = query<HTMLElement>(harness.container, "text-preview-band");
+      expect(card?.getAttribute("title")).toBe("Cmaj7 · 鍵盤で弾いた音");
+      expect([...card!.querySelectorAll<HTMLElement>('[data-testid="text-card-dot"]')].map((dot) => Number(dot.dataset.note))).toEqual([48, 52, 55, 59]);
+      expect(harness.container.querySelector('[data-testid="text-card-dock"]')).toBeNull();
     } finally {
       await harness.unmount();
       defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
@@ -204,6 +212,146 @@ describe("P24-06 鍵盤で入れる", () => {
       expect(query<HTMLButtonElement>(harness.container, "keyboard-undo")?.disabled).toBe(true);
     } finally {
       await harness.unmount();
+      defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
+    }
+  });
+
+  it("P25-05 D: 1/2/3 pick the length, 0 adds a rest, Backspace takes one back and Esc stops", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const harness = await mount();
+    try {
+      const toggle = query<HTMLButtonElement>(harness.container, "text-keyboard-toggle")!;
+      // Turning the entry on keeps the focus on its own button (never moves it into the input).
+      toggle.focus();
+      await click(toggle);
+      expect(document.activeElement).toBe(toggle);
+      (document.activeElement as HTMLElement | null)?.blur();
+      const pressed = (value: string) =>
+        query<HTMLButtonElement>(harness.container, `keyboard-length-${value}`)?.getAttribute("aria-pressed");
+      await press("2");
+      expect(pressed("2")).toBe("true");
+      await press("3");
+      expect(pressed("1")).toBe("true");
+      await press("1");
+      expect(pressed("bar")).toBe("true");
+      // 0 fills the open bar with rests at the chosen length.
+      await press("0");
+      expect(inputOf(harness).value).toBe("| _ _ _ _ |");
+      // Backspace takes one step back instead of deleting a card.
+      await press("Backspace");
+      expect(inputOf(harness).value).toBe("");
+      await hold([48, 52, 55, 59]);
+      await release();
+      expect(inputOf(harness).value).toBe("| Cmaj7 |");
+      await press("Backspace");
+      expect(inputOf(harness).value).toBe("");
+      expect(query(harness.container, "text-preview-band")).toBeNull();
+      // Esc leaves the entry.
+      await press("Escape");
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
+      expect(query(harness.container, "keyboard-entry-band")).toBeNull();
+    } finally {
+      await harness.unmount();
+      defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
+    }
+  });
+
+  it("P25-05 D: a length the open bar cannot take is ignored, and the keys stay off in the input", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const harness = await mount();
+    try {
+      await click(query<HTMLButtonElement>(harness.container, "text-keyboard-toggle"));
+      await press("3");
+      await hold([48, 52, 55, 59]);
+      await release();
+      // Three beats are left, so 1 小節 (key 1) is disabled and pressing it changes nothing.
+      expect(query<HTMLButtonElement>(harness.container, "keyboard-length-bar")?.disabled).toBe(true);
+      await press("1");
+      expect(query<HTMLButtonElement>(harness.container, "keyboard-length-1")?.getAttribute("aria-pressed")).toBe("true");
+      // Two beats fit, so key 2 is taken; the last beat leaves only 1 拍.
+      await press("2");
+      expect(query<HTMLButtonElement>(harness.container, "keyboard-length-2")?.getAttribute("aria-pressed")).toBe("true");
+      await press("3");
+      // In an input the same keys do nothing.
+      const input = inputOf(harness);
+      input.focus();
+      await press("0");
+      expect(document.activeElement).toBe(input);
+      expect(input.value).toBe("");
+      // An odd numerator has no 2 拍 at all, so key 2 has nothing to choose.
+      input.blur();
+      await act(async () => {
+        harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-meter"]')!.click();
+      });
+      await act(async () => {
+        harness.container.querySelector<HTMLElement>('[data-testid="text-progression-meter-list"] [data-value="3/4"]')!.click();
+      });
+      expect(query(harness.container, "keyboard-length-2")).toBeNull();
+      await press("2");
+      expect(inputOf(harness).value).toBe("");
+    } finally {
+      await harness.unmount();
+      defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
+    }
+  });
+
+  it("P25-05 D: the band's buttons carry their key caps", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const harness = await mount();
+    try {
+      await click(query<HTMLButtonElement>(harness.container, "text-keyboard-toggle"));
+      const caps = (id: string) => [...query(harness.container, id)!.querySelectorAll("kbd")].map((key) => key.textContent);
+      expect(caps("keyboard-length-bar")).toEqual(["1"]);
+      expect(caps("keyboard-length-2")).toEqual(["2"]);
+      expect(caps("keyboard-length-1")).toEqual(["3"]);
+      expect(caps("keyboard-rest")).toEqual(["0"]);
+      expect(caps("keyboard-undo")).toEqual(["Back"]);
+      expect(query(harness.container, "keyboard-undo")?.textContent).toBe("Back戻す");
+    } finally {
+      await harness.unmount();
+      defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
+    }
+  });
+
+  it("V20: もう一度 (R) adds the chord before as `%`, the same as typing `%`; off with no chord before", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const harness = await mount();
+    const typed = await mount();
+    try {
+      await click(query<HTMLButtonElement>(harness.container, "text-keyboard-toggle"));
+      const repeat = () => query<HTMLButtonElement>(harness.container, "keyboard-repeat")!;
+      expect(repeat().disabled).toBe(true);
+      expect(repeat().textContent).toBe("Rもう一度");
+      await press("r");
+      expect(inputOf(harness).value).toBe("");
+      // The held chord is named the way a card's notes are read again; the place stays while nothing is held.
+      await hold([48, 52, 55, 58]);
+      expect(query(harness.container, "keyboard-held-name")?.textContent).toBe("C7");
+      expect(query(harness.container, "keyboard-held-notes")?.textContent).toBe("C3 · E3 · G3 · A♯3");
+      expect(query(harness.container, "keyboard-keys")?.querySelectorAll("[data-held]").length).toBe(4);
+      await release();
+      expect(query(harness.container, "keyboard-held-name")?.textContent).toBe("—");
+      expect(inputOf(harness).value).toBe("| C7 |");
+      expect(repeat().disabled).toBe(false);
+      await press("r");
+      expect(inputOf(harness).value).toBe("| C7 | % |");
+      // Two beats: the chord, then R in the same bar.
+      await click(query<HTMLButtonElement>(harness.container, "keyboard-length-2"));
+      await hold([50, 53, 57, 60]);
+      await release();
+      await click(repeat());
+      expect(inputOf(harness).value).toBe("| C7 | % | Dm7 % |");
+      await writeTextarea(inputOf(typed), "| C7 | % | Dm7 % |");
+      const faces = (h: Harness) => [...h.container.querySelectorAll('[data-testid="text-preview-band"]')].map((card) => card.textContent);
+      expect(faces(harness)).toEqual(faces(typed));
+      // × closes it like Esc.
+      await click(query<HTMLButtonElement>(harness.container, "keyboard-close"));
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 300)); });
+      expect(query(harness.container, "keyboard-entry-band")).toBeNull();
+      expect(query(harness.container, "text-keyboard-toggle")?.getAttribute("aria-pressed")).toBe("false");
+    } finally {
+      await harness.unmount();
+      await typed.unmount();
       defaultLiveMidiStore.setState({ active: original.active, notes: original.notes });
     }
   });

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { playbackController } from "../../audio/playbackController";
-import { MidiRequiredNotice } from "../../components/MidiRequiredNotice";
 import { usePreviewSound } from "../../components/PreviewSoundProvider";
 import {
   DRILL_KEY_NAMES, buildDrillKeySet, drillMismatch, drillSetById, drillSetRevision,
@@ -456,7 +455,6 @@ export function VoicingDrillPracticeView({ setId, onBack, initialKey, initialSta
           <RepeatToggle on={repeat} onToggle={toggleRepeat} testId="drill-repeat" />
         </PracticeConditions>
 
-        {!connected ? <MidiRequiredNotice compact view={view} description={view.busy ? undefined : "MIDI がないため、秒数は測らず記録もしません。答えを見て「弾けた」で進みます。"} /> : null}
         {audioState === "error" ? <p className="dojo-notice" role="alert">入力のピアノ音を開始できませんでした。判定は続けられます。<button type="button" onClick={retryAudio}>入力音をもう一度</button></p> : null}
         {records.error ? <p role="alert" data-testid="drill-record-error">{records.error}<button type="button" onClick={() => void voicingDrillRecordsStore.getState().retry()}>記録の保存を再試行</button></p> : null}
 

@@ -28,22 +28,31 @@ test("C1: the band, the help, the input's rules and the preview cards (V1-V4, V7
   await expect(capture.locator(".lv-text-topgroup[aria-label='試聴']")).toBeVisible();
   await expect(capture.getByTestId("text-capture-toolbar")).toContainText("読み方の設定");
   await expect(capture.getByTestId("text-capture-toolbar")).toContainText("試聴");
+  // P25-01 B: the 「?」 is a third child at the band's right end, on the two faces' row.
+  const bandBox = (await capture.getByTestId("text-capture-toolbar").boundingBox())!;
+  const helpBox = (await capture.getByTestId("text-help").boundingBox())!;
+  const listenBox = (await capture.locator(".lv-text-topgroup[aria-label='試聴']").boundingBox())!;
+  const modeBox = (await capture.locator(".lv-text-topgroup[aria-label='読み方の設定']").boundingBox())!;
+  // P25 V36: the 「?」 sits 12px in from the band's right end.
+  expect(Math.abs((bandBox.x + bandBox.width) - (helpBox.x + helpBox.width) - 12)).toBeLessThanOrEqual(2);
+  expect(Math.abs((helpBox.y + helpBox.height / 2) - (listenBox.y + listenBox.height / 2))).toBeLessThanOrEqual(2);
+  expect(Math.abs(modeBox.y - listenBox.y)).toBeLessThanOrEqual(1);
   await expect(capture.getByTestId("text-capture-toolbar").getByTestId("text-progression-name")).toHaveCount(0);
   await expect(capture.getByTestId("text-capture-toolbar").getByTestId("text-progression-save")).toHaveCount(0);
 
   // V3: the 「?」 face: the write rules and the key note; Esc closes it.
   await fill(page, "| Cmaj7 Dm7 |");
-  await expect(capture.getByTestId("text-help-face")).toHaveCount(0);
+  await expect(page.getByTestId("text-help-face")).toHaveCount(0);
   await capture.getByTestId("text-help").click();
-  // P24-05: the 6-line help of the one grammar (the old 4/4-only sentence is gone).
-  await expect(capture.getByTestId("text-help-face")).toContainText("1 小節に書いたコードは、小節を等しく分けて鳴ります");
-  await expect(capture.getByTestId("text-help-face")).toContainText("鳴らし直さずにのばす");
-  await expect(capture.getByTestId("text-help-face")).toContainText("# で始まる行はメモになります");
-  // P23-33: the key note describes the automatic mode.
-  await expect(capture.getByTestId("text-help-face")).toContainText("キーは自動で決まり");
-  await expect(capture.getByTestId("text-help-face")).toContainText("手で選んだキーが必要");
+  // P25 V19: the writing rules are one table (書く | 意味); the prose (the automatic key and the rest) is gone.
+  const writing = page.getByTestId("text-help-writing");
+  await expect(writing.locator("tbody tr")).toHaveCount(10); // P25 V37: + the {C3 G3 …} row
+  await expect(writing).toContainText("1 小節に 2 つ(等分)");
+  await expect(writing).toContainText("のばす");
+  await expect(writing).toContainText("行の頭に付けるとメモ");
+  await expect(page.getByTestId("text-help-face")).not.toContainText("キーは自動で決まり");
   await page.keyboard.press("Escape");
-  await expect(capture.getByTestId("text-help-face")).toHaveCount(0);
+  await expect(page.getByTestId("text-help-face")).toHaveCount(0);
 
   // V4: the rule line, the example and the empty screen's writing face.
   await fill(page, "");
@@ -72,7 +81,7 @@ test("C1: the band, the help, the input's rules and the preview cards (V1-V4, V7
   await expect(capture.getByTestId("text-preview-band").first()).toContainText("F♯m7♭5");
 });
 
-test("C1/C6/C7/C8: the card list is gone, the chosen card's row, the save line and the reset (V9-V11, V14)", async ({ page }) => {
+test("C1/C6/C7/C8: the card list is gone, the chosen card's band, the save line and the reset (V9-V11, V14)", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const capture = await openReader(page);
   await fill(page, "| Cmaj7 Dm7 | G7 |");
@@ -81,19 +90,19 @@ test("C1/C6/C7/C8: the card list is gone, the chosen card's row, the save line a
   await expect(capture.getByTestId("standard-text-card-details")).toHaveCount(0);
   await expect(capture.getByTestId("text-preview-band")).toHaveCount(3);
 
-  // V11: the chosen card's row under the preview, with the notes and 「音を細かく直す」.
-  await expect(capture.getByTestId("text-progression-inspector-row")).toHaveCount(1);
+  // P25-03 C1: with no card chosen the band is the one closed line; choosing a card opens the card's band (C12: the
+  // old row, 「音を細かく直す」 and 「保存予定音を再生」 are gone).
+  await expect(capture.getByTestId("text-card-dock-closed")).toContainText("カードを選ぶと、ここでそのカードの音を直せます");
   await capture.getByTestId("text-preview-band").nth(1).click();
-  const row = capture.getByTestId("text-progression-inspector-row");
-  await expect(row).toBeVisible();
-  await expect(row).toContainText("選んだカード: Dm7");
-  // fix-2 item 2: a text progression has no original MIDI, so the row says only the app's recommendation.
-  await expect(row).toContainText(/鳴らす音 .+\(アプリのおすすめの音\)/);
-  await expect(capture.getByTestId("text-progression-convert")).toHaveText("音を細かく直す");
-  // Opening the row shows the old contents.
-  await capture.getByTestId("text-progression-inspector").locator(":scope > summary").click();
-  await expect(capture.getByTestId("text-progression-preview")).toHaveText("保存予定音を再生");
-  await expect(capture.getByTestId("text-progression-auto-generated")).toContainText("生成スタイル:");
+  const dock = capture.getByTestId("text-card-dock");
+  await expect(dock).toBeVisible();
+  await expect(dock.getByTestId("text-dock-name")).toContainText("Dm7");
+  await expect(dock.getByTestId("text-dock-source")).toContainText("おすすめの形 · 基本");
+  // Leave the card: Delete removes the card under the pointer even while typing (P24-07 item 3).
+  await page.mouse.move(0, 0);
+  await expect(capture.getByTestId("text-progression-inspector-row")).toHaveCount(0);
+  await expect(capture.getByTestId("text-progression-convert")).toHaveCount(0);
+  await expect(capture.getByTestId("text-progression-preview")).toHaveCount(0);
 
   // V10: the save line — the name blocks the save and gives the reason; a save says so.
   await expect(capture.getByTestId("text-progression-save")).toContainText("Vault に保存");

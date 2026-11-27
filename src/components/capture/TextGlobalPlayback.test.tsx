@@ -37,7 +37,7 @@ it("routes Text audio through global Piano/EP and uses each Text transport BPM f
       <MetronomeProvider>
         <SoundSwitch /><GlobalMetronomeButton />
         <TextProgressionCapturePanel showRomanNumerals={false}
-          controller={controller} onConvert={vi.fn()} onPreview={vi.fn()}
+          controller={controller} onPreview={vi.fn()}
           onStop={() => controller.stop()} onSaveExtended={vi.fn()} />
       </MetronomeProvider>
     </PreviewSoundProvider>,

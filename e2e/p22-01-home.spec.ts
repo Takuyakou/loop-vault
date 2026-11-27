@@ -82,33 +82,27 @@ test.describe("P22-01 §2: one filled primary", () => {
 });
 
 test.describe("P22-01 §2: every card is one hit area", () => {
-  for (const mode of ["click", "Enter", "Space"] as const) {
-    test(`each whole-card hit area opens its own screen once (${mode})`, async ({ page }) => {
-      test.setTimeout(90_000);
-      await page.setViewportSize({ width: 1440, height: 900 });
-      await openDojo(page, "no-midi");
-      for (const card of cards) {
-        if (card.wholeCard === false) continue;
-        const primary = primaryOf(page, card);
-        await expect(primary, `${card.name}: the card has one primary`).toHaveCount(1);
-        if (mode === "click") await primary.click();
-        else {
-          await primary.focus();
-          await expect(primary).toBeFocused();
-          await page.keyboard.press(mode);
-        }
-        await expect(card.destination(page), `${card.name} (${mode}) opens its screen`).toBeVisible();
-        await expect(page.getByTestId("dojo-home"), `${card.name} (${mode}) leaves the home`).toHaveCount(0);
-        if (card.deeper) await expect(card.deeper(page), `${card.name} (${mode}) does not advance twice`).toHaveCount(0);
-        if (card.id === "home-today") {
-          await expect(page.locator("[data-dojo-cursor]"), "today's practice starts at its first task").toHaveAttribute("data-dojo-cursor", /^0:/);
-          await expect(page.locator(".dojo-result")).not.toContainText("合いました");
-        }
-        await page.getByTestId("dojo-back").click();
-        await expect(page.getByTestId("dojo-home"), `${card.name} (${mode}) returns to the home`).toBeVisible();
+  // P25 T3: click only. Every primary is a native <button>, so Enter and Space reach the same onClick.
+  test("each whole-card hit area opens its own screen once (click)", async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openDojo(page, "no-midi");
+    for (const card of cards) {
+      if (card.wholeCard === false) continue;
+      const primary = primaryOf(page, card);
+      await expect(primary, `${card.name}: the card has one primary`).toHaveCount(1);
+      await primary.click();
+      await expect(card.destination(page), `${card.name} opens its screen`).toBeVisible();
+      await expect(page.getByTestId("dojo-home"), `${card.name} leaves the home`).toHaveCount(0);
+      if (card.deeper) await expect(card.deeper(page), `${card.name} does not advance twice`).toHaveCount(0);
+      if (card.id === "home-today") {
+        await expect(page.locator("[data-dojo-cursor]"), "today's practice starts at its first task").toHaveAttribute("data-dojo-cursor", /^0:/);
+        await expect(page.locator(".dojo-result")).not.toContainText("合いました");
       }
-    });
-  }
+      await page.getByTestId("dojo-back").click();
+      await expect(page.getByTestId("dojo-home"), `${card.name} returns to the home`).toBeVisible();
+    }
+  });
 
   test("clicking the free part of a card (its description) opens the card", async ({ page }) => {
     test.setTimeout(90_000);
@@ -173,22 +167,16 @@ test.describe("P22-01 §2: the small links in a card", () => {
     },
   ] as const;
 
+  // P25 T3: click only. Each link is a native <button>, so Enter reaches the same onClick.
   for (const link of links) {
-    for (const mode of ["click", "Enter"] as const) {
-      test(`${link.name} goes to its own place (${mode})`, async ({ page }) => {
-        await page.setViewportSize({ width: 1440, height: 900 });
-        await openDojo(page, "no-midi");
-        const control = page.getByTestId(link.id);
-        await expect(control).toBeVisible();
-        if (mode === "click") await control.click();
-        else {
-          await control.focus();
-          await expect(control).toBeFocused();
-          await page.keyboard.press("Enter");
-        }
-        await link.check(page);
-      });
-    }
+    test(`${link.name} goes to its own place (click)`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await openDojo(page, "no-midi");
+      const control = page.getByTestId(link.id);
+      await expect(control).toBeVisible();
+      await control.click();
+      await link.check(page);
+    });
   }
 
   test("the card's own primary opens the standard list at the top, unlike the Jazz link", async ({ page }) => {
@@ -220,28 +208,21 @@ test("P23-47-fix-4: a bar has the shape of its number (segments for a count, a 1
   await expect(page.getByTestId("home-ear-last")).toHaveText("まだ");
 });
 
-test("P22-01 §2: the four practice cards have one height and one line-up", async ({ page }) => {
+test("P22-01 §2: the four practice cards make two rows", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openDojo(page, "no-midi");
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   });
-  const boxes = await page.evaluate(() => [...document.querySelectorAll(".dojo-home-p20-main > *")].map((element) => {
-    const card = element.getBoundingClientRect();
-    const name = element.querySelector(".dojo-card-primary")!.getBoundingClientRect();
-    const links = element.querySelector(".dojo-home-p20-links")!.getBoundingClientRect();
-    return { top: Math.round(card.top), height: Math.round(card.height), nameTop: Math.round(name.top), linksBottom: Math.round(links.bottom) };
-  }));
+  const boxes = await page.evaluate(() => [...document.querySelectorAll(".dojo-home-p20-main > *")].map((element) => ({
+    top: Math.round(element.getBoundingClientRect().top),
+  })));
   expect(boxes, "four practice cards (P23-47-fix-4: the guide is its own wide card under them)").toHaveLength(4);
-  // P23-27 H1: the four cards are a 2 × 2 grid; each row's cards share one height, one name line and one link line.
+  // P23-27 H1: the four cards are a 2 × 2 grid. The row height and the last line inside the card are
+  // p23-27-dojo-home.spec.ts "P23-31 C8" (row 1/2 is level, the last line stays inside the card).
   const tops = [...new Set(boxes.map((box) => box.top))];
   expect(tops, "the cards make two rows").toHaveLength(2);
-  for (const top of tops) {
-    const row = boxes.filter((box) => box.top === top);
-    expect(new Set(row.map((box) => box.height)).size, "the cards of a row share one height").toBe(1);
-  }
-  for (const box of boxes) expect(box.linksBottom).toBeLessThanOrEqual(box.top + box.height);
 });
 
 test("P22-01 §2: the eight card names are two sizes (the four big 17px, the four small 14px)", async ({ page }) => {
@@ -270,27 +251,4 @@ test("P22-01 §2: the eight card names are two sizes (the four big 17px, the fou
   // P23-31b: the four big card names are bold 17px; the four small ones stay regular 14px.
   expect(big.every((item) => item.fontWeight === "700"), `700 for the big cards ${JSON.stringify(big)}`).toBe(true);
   expect(small.every((item) => item.fontWeight === "400"), `400 for the small cards ${JSON.stringify(small)}`).toBe(true);
-});
-
-// The step's photos: the home with and without 続きから, at the two sizes the report has to show.
-test.describe("P22-01 §2 photos", () => {
-  for (const [width, height] of [[1440, 900], [1280, 720]] as const) {
-    test(`home ${width}x${height} with and without 続きから`, async ({ browser }, info) => {
-      for (const resume of [true, false]) {
-        const context = await browser.newContext({ viewport: { width, height }, baseURL: String(info.project.use.baseURL), locale: "ja-JP", timezoneId: "Asia/Tokyo", colorScheme: "dark" });
-        const page = await context.newPage();
-        try {
-          if (resume) await seedRecent(page, [{ kind: "standard", id: "ii-v-i-major", key: 0, random: false, at }]);
-          await openDojo(page, "no-midi");
-          await page.evaluate(async () => {
-            await document.fonts.ready;
-            await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-          });
-          await page.screenshot({ path: `p89-generated/p22-01-chord-dojo/after/home-${width}x${height}${resume ? "-resume" : ""}.png`, fullPage: true });
-        } finally {
-          await context.close();
-        }
-      }
-    });
-  }
 });

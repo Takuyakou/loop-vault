@@ -16,7 +16,7 @@ import { DojoKeyGrid } from "./DojoKeyGrid";
 import { keyDisplay } from "./presentation";
 import { Master251Card } from "./Master251View";
 import { completionOf, drillStageCounts, earHomeScore, newestDrillBest } from "./dojoHomeProgress";
-import { DOJO_STAGE_LABEL, dojoRecentLabels, dojoRecentStore, dojoRecentSubtitle, dojoRecentTitle, relativeDayLabel, type DojoRecentEntry } from "./dojoRecent";
+import { DOJO_STAGE_LABEL, dojoRecentLabels, dojoRecentStore, dojoRecentTitle, relativeDayLabel, type DojoRecentEntry } from "./dojoRecent";
 import { useHomeRecords } from "./useHomeRecords";
 import "./dojoHome.css";
 import { StandardArt, EarArt, DrillArt, ChevronRight } from "./dojoHomeArt";
@@ -245,7 +245,6 @@ export function DojoHome(props: DojoHomeProps) {
   }, [props.onResume]);
 
   const titleOf = (view: RecentView) => dojoRecentTitle(view);
-  const subOf = (view: RecentView) => dojoRecentSubtitle(view, view.entry.at);
   const statusText = (status: RecentView["status"]) => status === "loading" ? "読み込み中" : status === "error" ? "今は開けません" : "";
   const todayCounts = shortFlow.map((name, index) => ({ name, count: planRows[index]?.tasks.length ?? 0 }));
   const minutes = Math.max(1, Math.ceil(today.tasks.reduce((sum, task) => sum + task.seconds, 0) / 60));
@@ -299,9 +298,10 @@ export function DojoHome(props: DojoHomeProps) {
   return <div className="dojo-home-p20" data-testid="dojo-home" data-loading={!loaded && !waited ? "true" : undefined}>
     <ResumeBand screen="cd" testId="home-resume" label="続きから"
       title={main ? titleOf(main) : "まずは「ガイド練習」か「定番の進行」から"}
-      meta={main ? subOf(main) : "練習を始めると、ここから続けられます"}
+      tags={main?.item ? [main.item] : undefined}
+      when={main ? relativeDayLabel(main.entry.at) : "練習を始めると、ここから続けられます"}
       note={main !== undefined && main.status !== "ok" ? statusText(main.status) : undefined}
-      extra={others.length ? <div className="dojo-home-p20-others"><span>ほかの最近:</span>{others.map((view, index) => <button type="button" key={`${view.entry.kind}:${view.entry.id}`} data-testid={`home-recent-${index}`} data-focus-key={`home:recent:${index}`} data-focus-fallback="home:resume:go" disabled={view.status !== "ok"} title={titleOf(view)} onClick={() => props.onResume(view.entry)}>{view.practice}{view.item ? `・${view.item}` : ""}</button>)}</div> : undefined}>
+      extra={others.length ? <><span className="lv-resume-band-extra-label">ほかの最近</span>{others.map((view, index) => <button type="button" className="lv-resume-band-chip" key={`${view.entry.kind}:${view.entry.id}`} data-testid={`home-recent-${index}`} data-focus-key={`home:recent:${index}`} data-focus-fallback="home:resume:go" disabled={view.status !== "ok"} title={titleOf(view)} onClick={() => props.onResume(view.entry)}><span className="lv-resume-band-chip-text">{view.practice}{view.item ? ` · ${view.item}` : ""}</span></button>)}</> : undefined}>
       {main ? <ResumeGoButton label="続ける" data-testid="home-resume-go" data-primary="true" data-focus-key="home:resume:go" data-focus-fallback="home:standard:open" disabled={mainDisabled} onClick={() => props.onResume(main.entry)} />
         : <button type="button" className="dojo-home-p20-primary" data-primary="true" data-focus-key="home:resume:start" onClick={props.onGuide}>ガイド練習を始める</button>}
     </ResumeBand>

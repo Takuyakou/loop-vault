@@ -47,3 +47,28 @@ export function setAllEligibleCardsToSource<T extends PlaybackChoiceCard>(
   });
   return { cards: updated, changedCount };
 }
+
+/** P25 V33: every card back to the sound it was taken in with — a MIDI card to 元MIDI, a text card to its saved sound. 自分で直した音 (CUSTOM) stays. */
+export function restoreOriginalPlayback<T extends PlaybackChoiceCard>(cards: readonly T[]): { cards: T[]; changedCount: number; keptCustomCount: number } {
+  let changedCount = 0;
+  let keptCustomCount = 0;
+  const updated = cards.map((card) => {
+    const memory = card.voicingMemory;
+    if (!memory) return card;
+    if (memory.playbackChoice === "CUSTOM") { keptCustomCount += 1; return card; }
+    if (canChooseSource(card)) {
+      if (memory.playbackChoice === "SOURCE") return card;
+      if (memory.playbackChoice === undefined && memory.practiceVoicingOverride) return card;
+      changedCount += 1;
+      return { ...card, voicingMemory: { ...memory, playbackChoice: "SOURCE" as const } };
+    }
+    if (memory.practiceVoicingOverride && memory.playbackChoice === "GENERATED") {
+      changedCount += 1;
+      const { playbackChoice, ...rest } = memory;
+      void playbackChoice;
+      return { ...card, voicingMemory: rest };
+    }
+    return card;
+  });
+  return { cards: updated, changedCount, keptCustomCount };
+}

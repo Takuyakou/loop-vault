@@ -353,11 +353,15 @@ describe("P5.33 generalized study generator", () => {
   });
 
   it("fails closed when bounded hand spans cannot place the requested family", () => {
+    expect(generateStudyCandidates(parsed("Dmaj7"), "teacher", context, {
+      maxLeftHandSpanSemitones: 0, maxRightHandSpanSemitones: 0, modifiers: { color: false, open: false },
+    })).toEqual([]);
+    // P25-08 K12: 基本 then fills the card with the text intake's recommendation and marks it 「A」.
     expect(resolveProgressionPracticeVoicings(snapshot(["Dmaj7"]), {
       lessonStudyCategory: "teacher",
       maxLeftHandSpanSemitones: 0,
       maxRightHandSpanSemitones: 0,
-    }).events[0]).toMatchObject({ status: "UNSUPPORTED_RULE", reason: "no-approved-lesson-rule" });
+    }).events[0]).toMatchObject({ status: "SUPPORTED", autoFallbackTitle: expect.stringContaining("基本では作れない") });
   });
 
   it("keeps slash bass at one pitch/register while Open spreads only upper voices", () => {

@@ -135,6 +135,13 @@ export type ProgressionPracticeVoicingResolution =
         readonly from: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell" | "left-hand";
         readonly study: "teacher" | "core";
       };
+      /**
+       * P25-08: this card plays a nearer shape (K4) or, as 基本, the text intake's recommended sound (K12); the
+       * card shows today's 「A」 with this sentence.
+       */
+      readonly autoFallbackTitle?: string;
+      /** P25-08 K6: a sentence for the card's title only (no 「A」), e.g. the one ② order this chord places. */
+      readonly cardNote?: string;
       readonly reason?: never;
     }
   | {

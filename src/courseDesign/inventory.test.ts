@@ -6,7 +6,7 @@ import { LEVEL_QUALITIES, buildInventory } from "./inventory";
  * P23-39 §1: the inventory must be buildable from the public tables and must match the frozen copy.
  * The test also states the coverage/gap facts the Lv1–3 bank relies on.
  */
-const FROZEN = "docs/p23-39-contracts/inventory.json";
+const FROZEN = "docs/contracts/p23-39/inventory.json";
 
 describe("P23-39 §1 the material inventory", () => {
   it("is built from the public tables only and freezes one machine-readable copy", () => {

@@ -5,7 +5,7 @@ import { basename, join, relative } from "node:path";
  * Phase-docs validator library.
  *
  * The Phase workflow keeps three layers of canonical docs (see
- * docs/phase-workflow/README.md):
+ * docs/archive/phase-workflow/README.md):
  *   1. root AGENTS.md   — common safety rules for every phase
  *   2. docs/phaseX.Y/README.md — the single entry point for one phase
  *   3. the rest of docs/phaseX.Y/ — details, contracts, reports, evidence
@@ -48,6 +48,10 @@ const AUDIO_EXTENSIONS = new Set([
   ".aac",
   ".aiff",
 ]);
+
+// Personal absolute paths (for example a Windows user directory) must never be
+// committed. Shared with the docs-layout validator so both keep one rule.
+export const PERSONAL_PATH = /[A-Za-z]:[\\/]Users[\\/](?!<)[^\\/\s"'`)]+/;
 
 // A phase doc may legitimately *prohibit* a dangerous action; only an
 // affirmative directive is a violation. A line that carries any of these
@@ -370,7 +374,7 @@ export function validatePackage(pkgDir, { schema, repoRoot = pkgDir } = {}) {
     const lines = readText(file).split(/\r?\n/);
     lines.forEach((line, i) => {
       const where = `${file}:${i + 1}`;
-      if (/[A-Za-z]:[\\/]Users[\\/](?!<)[^\\/\s"'`)]+/.test(line)) {
+      if (PERSONAL_PATH.test(line)) {
         add("personal-path", file, `personal absolute path at line ${i + 1}: ${line.trim()}`);
       }
       if (isProhibition(line)) return; // prohibitions are allowed to name dangerous actions
@@ -424,7 +428,7 @@ export function discoverPhasePackages(repoRoot) {
  * phase package. Returns a structured result; issueCount === 0 means PASS.
  */
 export function validateRepository(repoRoot) {
-  const schemaPath = join(repoRoot, "docs/phase-workflow/execution-state.schema.json");
+  const schemaPath = join(repoRoot, "docs/archive/phase-workflow/execution-state.schema.json");
   const rel = (f) => relative(repoRoot, f).split("\\").join("/");
   const repoIssues = [];
 

@@ -112,7 +112,9 @@ describe("the Bass Practice home (P23-25a)", () => {
     const { container } = await mount({ resume: { mode: "bassline", whenLabel: "きのう 21:40" }, onOpen });
     const resume = container.querySelector("[data-testid='bass-home-resume']");
     expect(resume?.textContent).toContain("コード進行のベース");
-    expect(resume?.textContent).toContain("きのう 21:40 に弾きました");
+    // P25 V13: the title and 「続きから」 share one line; when it was played sits on the right.
+    expect(resume?.querySelector(".lv-resume-band-main")?.textContent).toBe("続きからコード進行のベース");
+    expect(resume?.querySelector(".lv-resume-band-when")?.textContent).toBe("きのう 21:40");
     await act(async () => container.querySelector<HTMLElement>("[data-testid='bass-home-resume-open']")?.click());
     expect(onOpen).toHaveBeenCalledWith("bassline");
     expect(onOpen).toHaveBeenCalledTimes(1);

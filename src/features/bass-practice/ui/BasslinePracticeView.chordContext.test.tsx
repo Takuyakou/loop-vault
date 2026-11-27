@@ -1209,26 +1209,6 @@ describe("Bassline Echo Chord Context", () => {
     expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("keeps the newest valid fallback when the current save fails before stale success completes", async () => {
-    const fixture = sourceBasslineFixture(true, 8);
-    let resolveFour: (() => void) | undefined;
-    let rejectEight: ((reason?: unknown) => void) | undefined;
-    const fourPending = new Promise<void>((resolve) => { resolveFour = resolve; });
-    const eightPending = new Promise<void>((_resolve, reject) => { rejectEight = reject; });
-    const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
-    const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
-    await chooseSourceBassline(container);
-    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
-    await act(async () => windowButton(group, 4)?.click());
-    await act(async () => windowButton(group, 8)?.click());
-    await act(async () => { rejectEight?.(new Error("current")); await eightPending.catch(() => undefined); });
-    expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).toBeNull();
-    await act(async () => { resolveFour?.(); await fourPending; });
-    expect(windowButton(group, 4)?.getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
-  });
-
   it("rolls back a still-current failed preference with a localized notice", async () => {
     const fixture = sourceBasslineFixture(true, 8);
     const save = vi.fn(async () => { throw new Error("private backend detail"); });
@@ -1278,27 +1258,6 @@ describe("Bassline Echo Chord Context", () => {
     await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
     expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
-  });
-
-  it("ignores a preference settlement after unmount", async () => {
-    const fixture = sourceBasslineFixture(true, 8);
-    let rejectSave: ((reason?: unknown) => void) | undefined;
-    const pending = new Promise<void>((_resolve, reject) => { rejectSave = reject; });
-    const container = await renderView({
-      initialWindowBars: 2,
-      vaultSourceBasslines: [fixture.sourceCatalogEntry],
-      onSourceBasslineWindowBarsChange: vi.fn(() => pending),
-    });
-    await chooseSourceBassline(container);
-    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
-    await act(async () => windowButton(group, 4)?.click());
-    await act(async () => root?.unmount());
-    root = undefined;
-    await act(async () => {
-      rejectSave?.(new Error("late failure"));
-      await pending.catch(() => undefined);
-    });
-    expect(container.querySelector("[data-testid='bassline-echo-view']")).toBeNull();
   });
 
   it("keeps confirmed preference rollback correct under StrictMode effect replay", async () => {

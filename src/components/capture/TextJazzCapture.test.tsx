@@ -21,20 +21,20 @@ describe("TXT-JAZZ Capture registration disclosure and audition", () => {
     const root = createRoot(container);
     const save = vi.fn(() => true), preview = vi.fn();
     await act(async () => root.render(<TextProgressionCapturePanel showRomanNumerals={false}
-      onConvert={vi.fn()} onPreview={preview} onStop={vi.fn()}
+      onPreview={preview} onStop={vi.fn()}
       onSaveStandard={save} onSaveExtended={save} />));
     const input = query<HTMLTextAreaElement>(container, "text-progression-input");
     await write(input, "| G7alt | G7alt/D |");
-    // P23-17 V3: the voicing note lives in the 「?」 face.
+    // V19: the 「?」 face is tables only; the voicing count is no longer in it.
     await click(query(container, "text-help"));
-    expect(query(container, "text-voicing-availability").textContent).toContain("1 / 2コード");
-    expect(query(container, "text-voicing-unavailable").textContent).toContain("G7alt/D");
+    expect(container.querySelector('[data-testid="text-voicing-availability"]')).toBeNull();
     // R-03: the per-version storage notice is no longer on the capture screen; the storage split itself is unchanged.
     expect(container.querySelector('[data-testid="text-storage-compatibility"]')).toBeNull();
     const cards = container.querySelectorAll<HTMLButtonElement>('[data-testid="text-preview-band"]');
     await click(cards[0]!); expect(preview).toHaveBeenCalledOnce();
     await click(cards[1]!); expect(preview).toHaveBeenCalledOnce();
-    expect(query<HTMLButtonElement>(container, "text-progression-preview").disabled).toBe(true);
+    // P25-03 C12: the selected card's band plays it; a card with no notes cannot be played.
+    expect(query<HTMLButtonElement>(container, "text-dock-play").disabled).toBe(true);
     await click(query(container, "text-progression-save"));
     expect(save).toHaveBeenCalledOnce();
     await write(input, "| G7alt | Unknown |");

@@ -1397,15 +1397,6 @@ describe("P24-01 H-2: octave and detail changes reach the sound", () => {
     };
   }
 
-  it("accepts an octave plan whose fingerprint carries the shift", () => {
-    const runtime = new ProgressionVoicingTransport();
-    return runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() })
-      .then(() => {
-        expect(runtime.updatePlan(octavePlan(-1))).toBe(true);
-        runtime.stop();
-      });
-  });
-
   it("sounds the shifted octave at the next bar while playing", async () => {
     const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);

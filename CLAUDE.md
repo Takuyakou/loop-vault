@@ -2,65 +2,70 @@
 
 This file orients Claude Code (and the Claude Agent SDK) in this repository. It
 is a pointer, not a second rulebook: the canonical safety rules live in
-[`AGENTS.md`](AGENTS.md) and the phase process lives in
-[`docs/phase-workflow/README.md`](docs/phase-workflow/README.md).
+[`AGENTS.md`](AGENTS.md), and the single entry point for the repository's
+documentation is [`docs/README.md`](docs/README.md).
 
 ## Roles at a glance
 
 - **`AGENTS.md`** — the single, tool-agnostic source of truth for safety rules
-  (git hygiene, merge/push policy, privacy, worktrees, stop conditions). Applies
-  to every agent, every phase. Read it first.
-- **`CLAUDE.md`** (this file) — Claude Code specifics: how to resume a phase and
-  a few repo commands. It never overrides `AGENTS.md`.
+  (git hygiene, merge/push policy, privacy, worktrees, repository/docs rules,
+  stop conditions). Applies to every agent. Read it first.
+- **`docs/README.md`** — the documentation index; `docs/current/` holds the live
+  five pages, `docs/designs/` the accepted design documents, `docs/contracts/`
+  the frozen data tests and the app read, and `docs/archive/` the past records.
+- **`CLAUDE.md`** (this file) — Claude Code specifics: how to start work and a
+  few repo commands. It never overrides `AGENTS.md`.
 
-## Resuming a phase
+## Starting work
 
 1. Read `AGENTS.md`.
-2. Read the target phase's single entry point, `docs/phaseX.Y/README.md`.
-3. Follow that README's required reading order.
+2. Read [`docs/README.md`](docs/README.md), then only the `docs/current/` pages
+   your task touches.
+3. Read the accepted design document for the version you are touching
+   (`docs/designs/`) and only the task-relevant files under `docs/contracts/`.
 4. Audit branch, worktree, HEAD, PR, and `git status --short`.
-5. Reconcile `execution-state.json` against Git; when they disagree, trust Git
-   and record the difference in a report.
-6. Resume from the first incomplete stage or gate.
-7. Do not advance to an unassigned stage, the next phase, or a push. Merge into local master only after the lead's review passes (AGENTS.md, "Merge / push").
+5. Inspect the actual code and tests before editing.
+6. Do not advance to unassigned work, the next version, or a push. Merge into
+   local master only after the lead's review passes (AGENTS.md, "Merge / push").
 
-The short prompt to paste at the start of a session lives in
-[`docs/phase-workflow/CODEX-START-PROMPT.md`](docs/phase-workflow/CODEX-START-PROMPT.md).
+The documentation is written in Japanese except where a page says otherwise.
 
 ## Repo commands
 
-- `npm run validate:phase-docs` — validate the phase-workflow template and every
-  phase package under `docs/`.
-- `npm test` — Vitest (includes the phase-docs validator tests).
+- `npm run validate:docs-layout` — check the docs/root layout, every `docs/...`
+  path in the code, the relative imports under `scripts/`, and the personal /
+  publish-word rules. Add `--release` for the full release check.
+- `npm run validate:phase-docs` — validate the historical phase packages.
+- `npm run validate:ai-handoff` — validate `docs/ai-handoff/`.
+- `npm test` — Vitest.
 - `npm run lint` — ESLint + Tailwind class lint.
 - `npm run build` — TypeScript typecheck + Vite production build.
+
+The test levels and the full gate list are in
+[`docs/current/development.md`](docs/current/development.md).
 
 ## Project shape (orientation only)
 
 Loop Vault is a Tauri v2 + React + TypeScript + Vite desktop app. Rust lives in
-`src-tauri/`, the web app in `src/`, evaluation and tooling scripts in
-`scripts/`, and phase documentation in `docs/`.
+`src-tauri/`, the web app in `src/`, the test runner and validators in
+`scripts/`, and the documentation in `docs/`. Evaluation and audit tooling that
+no command uses any more lives in `scripts/archive/`.
 
-For a cross-phase orientation, start at `docs/ai-handoff/README.md` (then
-`docs/ai-handoff/HANDOFF.md`); the phase process itself lives in
-`docs/phase-workflow/README.md`.
+For a cross-version orientation, start at [`docs/README.md`](docs/README.md),
+then [`docs/ai-handoff/README.md`](docs/ai-handoff/README.md) and
+[`docs/ai-handoff/HANDOFF.md`](docs/ai-handoff/HANDOFF.md).
 
-## Phase 8.9 autonomous stage runs
+## Historical phase contract (archive)
 
-Phase 8.9 stages are delivered as one zip per stage and run end to end without
-asking the human for approval. The rules live in
-[`docs/phase8.9/contracts/P8.9-autonomous-run.md`](docs/phase8.9/contracts/P8.9-autonomous-run.md);
-`AGENTS.md` still wins on any conflict.
+The phase-workflow template and the per-phase packages are historical now; they
+live under `docs/archive/phase-workflow/` and `docs/archive/phases/`. The Phase
+8.9 autonomous stage rules are historical too; that contract is at
+[`docs/archive/phases/phase8.9/contracts/P8.9-autonomous-run.md`](docs/archive/phases/phase8.9/contracts/P8.9-autonomous-run.md),
+and `AGENTS.md` still wins on any conflict.
 
-- Permissions: `.claude/settings.json` (shared, committed) and
-  `.claude/settings.local.json` (machine-local denies, never committed).
 - `.local-evaluation/`: only `test-logs/` and `gate-cache/` may be read — with
   the Read tool or with shell commands such as `cat`, `grep`, `find`. Never
   open anything else under it.
-- Tests: follow `docs/test-dx/README.md` — `npm run test:fast|feature|ui` while
-  working. Run `npm run test:full` only when the instruction for the stage says
-  to run it (it names the stages that end with a full run); otherwise the
-  checks listed in the instruction are the gate for the merge candidate.
 - Generated screenshots go to `p89-generated/` (ignored, never committed).
-- Stage reports are written in Japanese under `docs/phase8.9/reports/`.
-- When the lead's review passes, merge the candidate into local master; otherwise stop at the merge candidate. Push, tag and release only when the stage's instruction says so. Before publishing, show everything that will go out (commit, tag, release notes, asset checksums) once; after the user's single OK, run every publishing step to the end without asking per command. Stop only on the instruction's stop conditions. Never force-push.
+- Stage and release reports are written in Japanese; the release records live in
+  `docs/release/v3.x.0/`.

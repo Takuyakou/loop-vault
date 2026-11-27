@@ -7,7 +7,7 @@
 # every one comes in only through Tauri 2.11.x or tauri-plugin-opener. We cannot update them with `cargo update`
 # (nothing newer is published that is compatible). Revisit them all each time Tauri is upgraded:
 # delete the entry, run `cargo audit --file src-tauri/Cargo.lock` from the top, and keep it only
-# if the warning is still there. Details: docs/reports/rust-advisories-2026-11.md
+# if the warning is still there. Details: docs/archive/reports/rust-advisories-2026-11.md
 
 [advisories]
 ignore = [

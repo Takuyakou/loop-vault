@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { generateFingeringCandidates } from "../../src/domain/progressionFingering";
 import { handPositionCostModel } from "../../src/domain/handPositionFingering";
-import type { ProgressionVoicingPracticeSnapshot } from "../../src/domain/progressionVoicingPractice";
+import type { ProgressionVoicingPracticeSnapshot } from "../../src/domain/progressionVoicingPractice/index";
 import { rankPracticeHandFingerings } from "../../src/voicingPractice/rankPracticeFingerings";
 import { largeCases, type Case } from "../p11-12/fixtures";
 import { COMMON_TONE_BASE, commonToneCostModel } from "./commonTone";

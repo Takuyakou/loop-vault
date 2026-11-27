@@ -116,9 +116,12 @@ test("P23-61 §5: the keyboard stops growing at a piano's key shape and leaves t
     await closeToasts(page);
     await captureReportShot(page, `p23-61-assets/vl-${size.width}.png`);
   }
-  // 1440×900 keeps the height it had (141px); 1280×720 keeps its drawn 80px box.
+  // 1440×900: 147px after P25-16 N7 moved なめらかにつなぐ out of the row (was 141px); P25 V6 keeps the current panel's
+  // explanation row and 運指を編集 in place even when empty, so 128px now. 1280×720 keeps its drawn 80px box.
   await page.setViewportSize({ width: 1440, height: 900 });
-  expect(Math.abs((await keyboardMetrics(page)).height - 141)).toBeLessThanOrEqual(1.5);
+  const keys1440 = (await keyboardMetrics(page)).height;
+  console.log(`P23-61 §5 1440x900 keyboard ${keys1440}px`);
+  expect(Math.abs(keys1440 - 128.36)).toBeLessThanOrEqual(1.5);
   await closeToasts(page);
   await captureReportShot(page, "p23-61-assets/vl-1440.png");
   await page.setViewportSize({ width: 1280, height: 720 });

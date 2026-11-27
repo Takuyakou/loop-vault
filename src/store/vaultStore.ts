@@ -25,6 +25,7 @@ import {
   TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
+import { basicNotesValid, TEXT_HAND_EXTRACTOR_VERSION } from "../domain/textCardSound";
 import { SAMPLE_PROGRESSION_TAG, SAMPLE_PROGRESSIONS, buildSampleProgression } from "../domain/sampleProgressions";
 import { editProgressionMemo, splitProgressionMemo } from "../domain/progressionWorkspace/progressionWorkspace";
 import { parseExtendedTextChordLabel } from "../domain/extendedTextProgression";
@@ -1244,9 +1245,12 @@ function textPracticeVoicingForSave(
     || (
       practice.source !== "live-played"
       && !isTextProgressionStyleSnapshot(practice, chord)
+      // P25-03 C11: the dock's hand-edited notes cross the boundary too (checked as 2–10 distinct pitches).
+      && !(practice.source === "manual" && practice.extractorVersion === TEXT_HAND_EXTRACTOR_VERSION)
     )
     || practice.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(practice)
+    || (practice.source === "manual" && !practice.extractorVersion?.startsWith("text-style-v1:") && !basicNotesValid(practice.midiNotes))
     || voicingCompatibility(practice, chord) !== "compatible"
     || practice.source === "manual" && practice.extractorVersion?.startsWith("text-style-v1:")
       && !isUsablePracticeVoicing(practice, chord)

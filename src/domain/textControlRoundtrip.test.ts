@@ -17,7 +17,7 @@ import {
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "./types";
 
 const NOW = new Date("2026-09-14T00:00:00.000Z");
-const fixture = (name: string) => readFileSync(new URL(`../../docs/phase5.31/fixtures/${name}`, import.meta.url), "utf8");
+const fixture = (name: string) => readFileSync(new URL(`../../docs/contracts/phase5.31/fixtures/${name}`, import.meta.url), "utf8");
 
 function payloadFor(input: string) {
   const parsed = parseTextProgression(input);

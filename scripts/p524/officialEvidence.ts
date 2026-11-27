@@ -20,9 +20,9 @@ const execFileAsync = promisify(execFile);
 const freshnessPath = `${stage02OfficialSafetyDirectory}/p524-stage02-freshness.json`;
 const filesystemTimestampToleranceMs = 2_000;
 export const p524ScopedCandidatePaths = Object.freeze([
-  "docs/phase5.24/execution-state.json",
-  "docs/phase5.24/reports/P5.24-02-fragment-consolidator-shadow.md",
-  "docs/phase5.24/reports/P5.24-03-flagged-integration.md",
+  "docs/archive/phases/phase5.24/execution-state.json",
+  "docs/archive/phases/phase5.24/reports/P5.24-02-fragment-consolidator-shadow.md",
+  "docs/archive/phases/phase5.24/reports/P5.24-03-flagged-integration.md",
   "scripts/evaluate-voice-aware-reranker.ts",
   "scripts/p521/evaluateRoleV2Shadow.ts",
   "scripts/p521/measureRoleV2OfficialChordSafety.ts",

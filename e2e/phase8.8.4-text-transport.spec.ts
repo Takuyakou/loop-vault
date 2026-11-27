@@ -32,7 +32,7 @@ test("P8.8.4 Standard score seeks exact attacks and supports Pause/Resume/Stop a
   await expect(primary).toContainText(/一時停止/);
   await capture.getByTestId("text-transport-stop").click();
   await expect(primary).toContainText(/再生/);
-  await expect(capture.getByTestId("text-transport-position")).toHaveText(/^1 \/ 1 小節$/);
+  await expect(capture.locator("[data-testid='extended-text-bar'][data-playback-active='true']")).toHaveCount(0);
   await input.focus();
   await page.keyboard.press("Space");
   await expect(primary).toContainText(/再生/);
@@ -40,10 +40,10 @@ test("P8.8.4 Standard score seeks exact attacks and supports Pause/Resume/Stop a
   expect(errors).toEqual([]);
 });
 
-test("P8.8.4 Standard primary Vault save retains the advanced Draft path", async ({ page }) => {
+test("P8.8.4 Standard primary Vault save (P25-03 C12: no Draft path)", async ({ page }) => {
   const capture = await openTextCapture(page);
   await capture.getByTestId("text-progression-input").fill("| C Dm |");
-  await expect(capture.getByTestId("text-progression-convert")).toBeEnabled();
+  await expect(capture.getByTestId("text-progression-convert")).toHaveCount(0);
   await capture.getByTestId("text-progression-name").fill("Public text chart");
   await capture.getByTestId("text-progression-save").click();
   await expect(capture.getByText(/保存しました/, { exact: true })).toBeVisible();
@@ -60,8 +60,11 @@ test("P8.8.4 the one screen exposes the repeat card and bar targets without an a
   expect(await input.evaluate((element: HTMLTextAreaElement) =>
     element.value.slice(element.selectionStart, element.selectionEnd))).toBe("%");
   await intake.getByTestId("text-preview-bar-select").nth(1).click();
-  await expect(intake.getByTestId("text-transport-position")).toHaveText(/^2 \/ 2 小節$/);
-  const audit = await new AxeBuilder({ page: page as never }).include("[data-testid='text-progression-capture']").analyze();
+  await expect(intake.locator("[data-testid='extended-text-bar'][data-bar='2']")).toHaveAttribute("data-playhead-visible", "true");
+  // P25-03 C4: a shape the chord falls back from is faded to 0.55 by the design (the mock's value), so only
+  // those buttons are left out of the contrast check.
+  const audit = await new AxeBuilder({ page: page as never }).include("[data-testid='text-progression-capture']")
+    .exclude("[data-testid='text-card-dock'] [data-shape][data-direct='false']").analyze();
   expect(audit.violations.filter(item => item.impact === "critical" || item.impact === "serious")).toEqual([]);
 });
 

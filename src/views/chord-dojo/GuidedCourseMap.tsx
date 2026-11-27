@@ -36,6 +36,11 @@ const GROUPS: readonly (readonly [string, string])[] = [
   ["広げる", "響きを増やす"],
 ];
 
+/** P25 V21: a station's name breaks only between its phrases (after a particle), never inside a word. */
+export function namePhrases(name: string): string[] {
+  return name.split(/(?<=[とのでをて]|から|覚えた)(?=.)/);
+}
+
 export const STATION_META: readonly StationMeta[] = [
   {
     id: 1,
@@ -631,7 +636,7 @@ export function GuidedCourseMap(props: GuidedCourseMapProps) {
               >
                 <span className="gc-st-lv">{entry.shortLabel}</span>
                 <StationGlyph meta={entry} />
-                <span className="gc-st-nm">{entry.name}</span>
+                <span className="gc-st-nm">{namePhrases(entry.name).map((phrase, index) => <span key={index}>{phrase}</span>)}</span>
                 <span className="gc-tag" data-kind={st}>{STATE_TAG[st]}</span>
               </button>;
             })}

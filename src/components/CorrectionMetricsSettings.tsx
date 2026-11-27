@@ -24,7 +24,7 @@ export function CorrectionMetricsSettings() {
     : "まだ記録はありません。";
   return (
     <div className="lv-settings-divider" data-testid="settings-correction-metrics">
-      <h3 className="lv-settings-subtitle">修正作業場の計測</h3>
+      <h3 className="lv-settings-subtitle">進行エディタの計測</h3>
       <label className="lv-settings-check">
         <input
           type="checkbox"
@@ -44,7 +44,7 @@ export function CorrectionMetricsSettings() {
       <ConfirmDialog
         open={confirmClear}
         title="計測を消しますか？"
-        description="この端末に記録した修正作業場の計測をすべて消します。Vault の進行は消えません。"
+        description="この端末に記録した進行エディタの計測をすべて消します。Vault の進行は消えません。"
         confirmLabel="消す"
         cancelLabel="戻る"
         tone="danger"

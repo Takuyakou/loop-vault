@@ -145,7 +145,8 @@ test("C1/C2: the stage's columns, the big listen button and the score (S1-S4, S8
 
   // S1/S2/S3: 聴く is its own column with a 100 px wheel; in the first lap the button is R, the others wait.
   await expect(page.locator(".ear-listen .ear-zone-head")).toContainText("聴く");
-  await expect(page.locator(".ear-listen .ear-zone-head")).toContainText("何度でも。印は付きません");
+  // P25 V3: the heading is 「聴く」 alone.
+  await expect(page.locator(".ear-listen .ear-zone-head")).toHaveText("聴く");
   const orb = await page.getByTestId("ear-lap-again").boundingBox();
   expect(Math.round(orb!.width)).toBe(100);
   expect(Math.round(orb!.height)).toBe(100);

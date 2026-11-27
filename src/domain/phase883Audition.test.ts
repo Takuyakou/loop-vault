@@ -14,7 +14,7 @@ interface FrozenRow {
   expectedBassPitchClass: number | null;
 }
 const rows = (JSON.parse(readFileSync(
-  new URL("../../docs/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
+  new URL("../../docs/contracts/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
 )) as { rows: FrozenRow[] }).rows;
 const pcs = (notes: readonly number[]) => [...new Set(notes.map(note => note % 12))];
 

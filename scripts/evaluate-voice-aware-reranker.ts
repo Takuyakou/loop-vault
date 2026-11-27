@@ -21,7 +21,7 @@ import type { MidiProgressionAnalysis } from "../src/domain/types";
 
 const DEFAULT_CLEAN = "docs/loop-vault-evaluation-corpus/manifest.json";
 const DEFAULT_DIRTY = ".local-evaluation/phase3.6.5-dirty/manifest.json";
-const DEFAULT_REPORT = "artifacts/phase3.6.5-voice-aware";
+const DEFAULT_REPORT = "docs/archive/artifacts/phase3.6.5-voice-aware";
 
 const categories = [
   "clean",
@@ -515,7 +515,7 @@ async function determinismCheck(cases: readonly EvaluationCaseInput[]): Promise<
 async function readRealGoldCaseCount(): Promise<number> {
   try {
     const report = JSON.parse(
-      await readFile(resolve("artifacts/real-midi-evaluation/report.json"), "utf8"),
+      await readFile(resolve("docs/archive/artifacts/real-midi-evaluation/report.json"), "utf8"),
     ) as { datasets?: { realMidiGold?: { legacy?: { caseCount?: number } } } };
     return report.datasets?.realMidiGold?.legacy?.caseCount ?? 0;
   } catch {

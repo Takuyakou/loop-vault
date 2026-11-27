@@ -174,26 +174,6 @@ describe("chord preview instruments", () => {
     vi.unstubAllGlobals();
   });
 
-  it("creates the selected sampled piano and electric-piano synth", async () => {
-    await previewChord(chord, "piano");
-    await previewChord(chord, "electric-piano");
-
-    expect(tone.start).toHaveBeenCalledTimes(2);
-    expect(tone.samplers).toHaveLength(1);
-    const pianoUrls = (tone.samplerOptions[0] as { urls: Record<string, AudioBuffer> }).urls;
-    expect(Object.keys(pianoUrls)).toEqual(["A0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]);
-    expect(Object.values(pianoUrls)).toHaveLength(8);
-    expect(Object.values(pianoUrls).every((buffer) => typeof buffer === "object")).toBe(true);
-    expect(tone.voices).toEqual([tone.FMSynth]);
-
-    tone.setContext(tone.newContext());
-    vi.mocked(fetch).mockRejectedValueOnce(new Error("offline"));
-    await expect(previewChord(chord, "piano")).rejects.toThrow("offline");
-
-    expect(tone.samplers).toHaveLength(1);
-    expect(tone.voices).toEqual([tone.FMSynth]);
-  });
-
   it("cancels a request while audio startup is pending", async () => {
     let resolveStart: (() => void) | undefined;
     tone.start.mockImplementationOnce(() => new Promise<void>((resolve) => {

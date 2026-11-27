@@ -5,8 +5,10 @@ import {
   appendKeyboardBar,
   emptyKeyboardBar,
   flushKeyboardBar,
+  followedSuggestionBeats,
   keyboardBarTokens,
   pendingKeyboardBarText,
+  previousBarItems,
   type KeyboardBar,
   type KeyboardSlot,
 } from "./textKeyboardEntry";
@@ -156,5 +158,43 @@ describe("P24-06 writing the keyboard's chords as the score text", () => {
     expect(text).toBe("| Cmaj7 | Am7 Dm7 = | _ G7 = |");
     expect(soundedChords(parsed).map((entry) => [entry.label, entry.beats]))
       .toEqual([["Cmaj7", 3], ["Am7", 1], ["Dm7", 2], ["G7", 2]]);
+  });
+});
+
+describe("P25 V26-3 the palette's starting length follows the bar before", () => {
+  /** The lengths the palette would go through, adding a chord each time (a pick is not made). */
+  function walk(text: string, beatsPerBar = 4, count = 5): number[] {
+    const items = previousBarItems(parseUnifiedText(text, { beat: `${beatsPerBar}/4` }).slots);
+    const lengths: number[] = [];
+    let filled = 0;
+    let current = beatsPerBar;
+    for (let index = 0; index < count && filled < beatsPerBar; index += 1) {
+      current = followedSuggestionBeats(items, beatsPerBar, filled, current);
+      lengths.push(current);
+      filled += current;
+    }
+    return lengths;
+  }
+  it("takes the shape of the bar before (4/4)", () => {
+    expect(walk("| C |")).toEqual([4]);
+    expect(walk("| C G |")).toEqual([2, 2]);
+    expect(walk("| C = G F |")).toEqual([2, 1, 1]);
+    expect(walk("| C G Am F |")).toEqual([1, 1, 1, 1]);
+  });
+  it("starts with one bar when the text is empty", () => {
+    expect(followedSuggestionBeats(previousBarItems(parseUnifiedText("", {}).slots), 4, 0, 2)).toBe(4);
+  });
+  it("uses the longest length not longer than the chord, or stays where nothing starts (| C = = G |)", () => {
+    expect(walk("| C = = G |")).toEqual([2, 2]);
+  });
+  it("reads 3/4: | C G = | gives 1 beat then 2 beats", () => {
+    expect(walk("| C G = |", 3)).toEqual([1, 2]);
+  });
+  it("follows the last bar of the text", () => {
+    expect(walk("| C | C G |")).toEqual([2, 2]);
+  });
+  it("shrinks the length to what is left when nothing starts at the open beat", () => {
+    expect(followedSuggestionBeats([{ start: 0, beats: 4 }], 4, 2, 4)).toBe(2);
+    expect(followedSuggestionBeats([{ start: 0, beats: 2 }], 4, 3, 2)).toBe(1);
   });
 });

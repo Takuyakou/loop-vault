@@ -10,7 +10,6 @@ import { heldNotes } from "../../domain/liveMidi";
 import { judgeEarAnswer, type EarJudgement } from "../../domain/earPractice/judgement";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import { liveMidiService } from "../../liveMidi/liveMidiService";
-import { openMidiPanel } from "../../liveMidi/midiPanel";
 import type { MidiPreviewNote } from "../../audio/chordPreview";
 import { GrandStaff } from "../chord-dojo/GrandStaff";
 import { useDojoMidi } from "../chord-dojo/useDojoMidi";
@@ -515,9 +514,8 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
               className="ear-card"
               data-testid={`ear-card-${index}`}
               role="button"
-              aria-label={`${index + 1}つ目のコードを鳴らす`}
+              aria-label={`${index + 1}つ目のコードを鳴らす${phase === "play" ? "、押すと鳴ります" : ""}`}
               aria-disabled={phase !== "play" ? "true" : undefined}
-              title={phase === "play" ? "押すと鳴ります" : undefined}
               data-pressable={phase === "play" || undefined}
               data-pressed={pressed === index || undefined}
               data-degree={showInfo || undefined}
@@ -565,7 +563,7 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
 
       <div className="ear-stage">
         <section className="ear-zone ear-listen" aria-label="聴く">
-          <div className="ear-zone-head"><b>聴く</b><small>何度でも。印は付きません</small></div>
+          <div className="ear-zone-head"><b>聴く</b></div>
           <div className="ear-listen-body">
             <button type="button" className="ear-orb" data-testid={phase === "listen" ? "ear-lap-again" : "ear-listen-chord"}
               title={phase === "play" ? "今のコードを聴く(L)" : "全体をもう一度聴く(R)"}
@@ -594,12 +592,6 @@ export function EarRun({ question, settings, resultName, playback: injected, rec
         </section>
 
         <section className="ear-zone ear-answer" aria-label={phase === "listen" ? "まず聴く" : "答える"}>
-          {!connected ? (
-            <p className="ear-notice" role="status" data-testid="ear-no-midi">
-              MIDI キーボードがつながっていません。聴いて、自分で判定して進められます。
-              <button type="button" onClick={() => openMidiPanel()}>MIDI をつなぐ</button>
-            </p>
-          ) : null}
           {phase === "listen" ? (
             <>
               <div className="ear-zone-head"><b>まず聴く</b></div>
@@ -999,8 +991,7 @@ function EarResult({ session, records, playId, resultName, onAgain, onNext, onEx
                 className="ear-card ear-result-card"
                 key={card.index}
                 role="button"
-                aria-label={`${card.index + 1}つ目のコードを鳴らす`}
-                title="押すと鳴ります"
+                aria-label={`${card.index + 1}つ目のコードを鳴らす、押すと鳴ります`}
                 data-pressable
                 data-pressed={pressed === card.index || undefined}
                 data-degree={infos[card.index] ? true : undefined}

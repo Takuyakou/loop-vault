@@ -37,3 +37,4 @@ export type { SaveButtonState } from "./motion";
 export { ResumeBand } from "./ResumeBand";
 export { ResumeGoButton } from "./ResumeGoButton";
 export type { ResumeGoButtonProps } from "./ResumeGoButton";
+export { SelectMenuHost } from "./SelectMenuHost";

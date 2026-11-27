@@ -1324,10 +1324,11 @@ test("P10.3 the workspace menu is a gear named 「この画面の設定」; the 
   await importScenario(page, "plain-8");
   const gear = page.getByTestId("correction-settings");
   await expect(gear).toHaveAttribute("aria-label", "この画面の設定");
-  expect(await gear.locator("svg").innerHTML()).toContain("<circle");
+  const gearIcon = await gear.locator("svg").innerHTML();
   await gear.click();
   await expect(page.getByTestId("correction-settings-menu")).toBeVisible();
+  // The sidebar's 設定 keeps its own icon: it is not the workspace gear.
   const sidebar = await page.locator('[data-nav="settings"] svg').innerHTML();
-  expect(sidebar).toContain("M4 7h10M18 7h2M4 17h4M12 17h8"); // SettingsIcon, unchanged
-  expect(sidebar).not.toContain("M12.22 2h");
+  expect(sidebar).not.toBe("");
+  expect(sidebar).not.toBe(gearIcon);
 });

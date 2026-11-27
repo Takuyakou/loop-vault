@@ -10,7 +10,7 @@ import { makeIdea } from "./testFactory";
 import { buildProgressionVoicingPracticeSnapshot, buildProgressionPracticeClockSchedule, resolveProgressionPracticeVoicings } from "./progressionVoicingPractice";
 import type { ChordTimelineItem, SavedProgressionBlock } from "./types";
 
-const fixture = (name: string) => readFileSync(new URL("../../docs/phase5.31/fixtures/" + name, import.meta.url), "utf8");
+const fixture = (name: string) => readFileSync(new URL("../../docs/contracts/phase5.31/fixtures/" + name, import.meta.url), "utf8");
 const event = (label: string, start: number, durationBeats: number): ChordTimelineItem => ({
   bar: Math.floor(start / 4) + 1, beat: start % 4 + 1, durationBeats,
   chord: parseChordLabel(label)!, confidence: 0, alternatives: [], warnings: [],

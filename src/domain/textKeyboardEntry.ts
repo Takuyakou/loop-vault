@@ -138,3 +138,36 @@ export function keyboardLengthInBeats(length: 1 | 2 | "bar", beatsPerBar: number
 export function keyboardTextFits(text: string, addition: string): boolean {
   return text.length + addition.length + 4 <= EXTENDED_TEXT_LIMITS.maxInputCodeUnits;
 }
+
+/** P25 V26-3: one chord/rest of the bar before, as the preview's cards read it (a `=` holds the one before it). */
+export interface PreviousBarItem {
+  readonly start: number;
+  readonly beats: number;
+}
+
+/** The slots of the last bar in the text, merged the way the cards are (an attack, a repeat or a rest starts one; a hold lengthens it). */
+export function previousBarItems(slots: readonly { readonly bar: number; readonly startBeat: number; readonly durationBeats: number; readonly kind: string }[]): readonly PreviousBarItem[] {
+  const last = slots.length === 0 ? 0 : slots[slots.length - 1]!.bar;
+  const items: { start: number; beats: number }[] = [];
+  for (const slot of slots) {
+    if (slot.bar !== last) continue;
+    const previous = items[items.length - 1];
+    if (slot.kind === "hold" && previous !== undefined) previous.beats += slot.durationBeats;
+    else items.push({ start: slot.startBeat - 1, beats: slot.durationBeats });
+  }
+  return items;
+}
+
+/**
+ * P25 V26-3: the length the 「次のコード」 palette starts with: the bar before decides, beat by beat. The chord of the
+ * bar before that starts at the open bar's `filled` beat gives the length (the longest of the bar / 2 beats / 1 beat that
+ * is not longer and still fits); where none starts there, `current` stays (shrunk when it no longer fits).
+ */
+export function followedSuggestionBeats(items: readonly PreviousBarItem[], beatsPerBar: number, filled: number, current: number): number {
+  const remaining = beatsPerBar - filled;
+  const allowed = [...new Set([beatsPerBar, 2, 1])].filter((beats) => beats <= beatsPerBar).sort((a, b) => b - a);
+  if (items.length === 0) return filled === 0 ? beatsPerBar : Math.min(current, remaining);
+  const item = items.find((entry) => Math.abs(entry.start - filled) < 1e-6);
+  const wanted = Math.min(item === undefined ? current : item.beats, remaining);
+  return allowed.find((beats) => beats <= wanted + 1e-6) ?? 1;
+}

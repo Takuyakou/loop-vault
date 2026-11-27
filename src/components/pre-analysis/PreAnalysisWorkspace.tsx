@@ -647,7 +647,7 @@ export function PreAnalysisWorkspace({
         <ol className="lv-pa-steps" aria-label="取り込みの流れ">
           <li data-state="done">
             <span className="lv-pa-step-n" aria-hidden="true">✓</span>
-            MIDI を落とす
+            MIDI をドロップ
             <span className="sr-only">（済み）</span>
           </li>
           <li data-state="current" aria-current="step">

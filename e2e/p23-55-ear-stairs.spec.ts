@@ -8,7 +8,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * P23-55: the ear stairs in Lv7's practice (two-chord functions, the bass line before the chords).
  * Lv7 is reached from the course map (P23-52): its station, then 「自由に練習する」.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

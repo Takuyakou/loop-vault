@@ -9,7 +9,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..", "..");
 const validFixture = join(here, "__fixtures__", "phase9.9");
 const schema = JSON.parse(
-  readFileSync(join(repoRoot, "docs/phase-workflow/execution-state.schema.json"), "utf8"),
+  readFileSync(join(repoRoot, "docs/archive/phase-workflow/execution-state.schema.json"), "utf8"),
 );
 
 /** Copies the good fixture to a temp dir, applies `mutate`, validates, cleans up. */

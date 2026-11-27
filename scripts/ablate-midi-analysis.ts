@@ -9,8 +9,8 @@ import { buildHybridPipeline, defaultHybridFeatures, timelineFromHybridPipeline 
 import type { HybridFeatureFlags } from "../src/domain/midi/types";
 
 const manifestPath = resolve(cwd(), "docs/loop-vault-evaluation-corpus/manifest.json");
-const outputDir = resolve(cwd(), "artifacts/midi-ablation");
-const docsPath = resolve(cwd(), "docs/phase3.6.1-ablation-report.md");
+const outputDir = resolve(cwd(), "docs/archive/artifacts/midi-ablation");
+const docsPath = resolve(cwd(), "docs/archive/legacy-root/phase3.6.1-ablation-report.md");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as ChordDripCorpusManifest;
 const definitions = adaptChordDripManifest(manifest);
 const cases = await Promise.all(definitions.map(async (definition) => ({

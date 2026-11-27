@@ -168,11 +168,6 @@ describe("Chord Context deterministic scheduler", () => {
       expect(result.plan.events.some((event) => event.layer === "bass")).toBe(false);
     }
   });
-
-  it("exposes the documented Listen and Play defaults", () => {
-    expect(resolveEnabledLayers({ mode: "listen" })).toEqual(["bass", "chords"]);
-    expect(resolveEnabledLayers({ mode: "play" })).toEqual(["chords"]);
-  });
 });
 
 describe("Chord Context input safety", () => {

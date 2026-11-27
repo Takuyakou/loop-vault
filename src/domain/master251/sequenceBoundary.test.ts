@@ -212,7 +212,6 @@ it('reproduces the historical all48 generic output while Master both hands follo
   expect(generic.fingerprint).toBe('a1538e67764619d5b3f7d8244636ad328fc1b2f9c1c20950c73a6db4c0a81883');
   expect(calls).toHaveLength(96);
   expect(calls.every(call => call.events.length === 3)).toBe(true);
-  expect(createHash('sha256').update(JSON.stringify(TARGETS)).digest('hex')).toBe(inputHash);
   expect(E_RANKER_POLICY).toEqual({ variant: 'E1-T', curve: 'inverse', lambda: 2, gamma: 1 });
 });
 

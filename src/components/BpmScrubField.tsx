@@ -6,6 +6,7 @@ export function BpmScrubField({
   inputTestId,
   onExplicitInput,
   emptyWhenUnset = false,
+  unsetPlaceholder,
   disabled = false,
   dragLabel,
   label,
@@ -17,6 +18,8 @@ export function BpmScrubField({
   readonly inputTestId?: string;
   readonly onExplicitInput?: (value: number) => void;
   readonly emptyWhenUnset?: boolean;
+  /** P25 V32: what an empty field shows (the shared BPM in text import); 「—」 when not given. */
+  readonly unsetPlaceholder?: string;
   readonly disabled?: boolean;
   readonly dragLabel: string;
   readonly label: string;
@@ -158,7 +161,7 @@ export function BpmScrubField({
           aria-valuemax={240}
           aria-valuenow={value}
           value={editing ? draft : emptyWhenUnset ? "" : value}
-          placeholder={emptyWhenUnset ? "—" : undefined}
+          placeholder={emptyWhenUnset ? (unsetPlaceholder ?? "—") : undefined}
           onFocus={() => { setDraft(emptyWhenUnset ? "" : String(value)); setEditing(true); }}
           onChange={(event) => {
             const typed = Number(event.currentTarget.value);

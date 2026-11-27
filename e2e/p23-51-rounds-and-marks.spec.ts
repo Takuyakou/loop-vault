@@ -8,7 +8,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * P23-51: the wrong answer on the keyboard (mock ⑤), the five dots and the pause after each round of five
  * (mocks ③ ⑥), and the demo's comparison (mock ②). The values are the lead's (spec P23-51 §2).
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

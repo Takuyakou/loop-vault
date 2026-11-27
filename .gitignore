@@ -11,24 +11,28 @@ src-tauri/target-*/
 demo-data/*.json
 docs/loop-vault-evaluation-corpus/
 .local-evaluation/
-artifacts/midi-evaluation/
-artifacts/midi-failure-analysis/
-artifacts/midi-ablation/
-artifacts/midi-reranker-tuning/
-artifacts/midi-dataset-evaluation/
-artifacts/stored-progressions/
-artifacts/midi-difference-review/
-artifacts/correction-promotion/
-artifacts/midi-review-queue/
-artifacts/real-midi-evaluation/
+# Machine-local working files (for example the publish-word list) stay out of the repository.
+.local/
+# Worker logs stay out of the tracked tree.
+.work-logs/
+docs/archive/artifacts/midi-evaluation/
+docs/archive/artifacts/midi-failure-analysis/
+docs/archive/artifacts/midi-ablation/
+docs/archive/artifacts/midi-reranker-tuning/
+docs/archive/artifacts/midi-dataset-evaluation/
+docs/archive/artifacts/stored-progressions/
+docs/archive/artifacts/midi-difference-review/
+docs/archive/artifacts/correction-promotion/
+docs/archive/artifacts/midi-review-queue/
+docs/archive/artifacts/real-midi-evaluation/
 
 # Default-named diagnostic outputs; stage artifacts use their stage prefix.
-docs/phase4.0/label-reachability.json
-docs/phase4.0/normalized-baseline.json
-docs/phase4.0/dedup-collision-report.json
-docs/phase4.0/density-recall-report.json
-docs/phase4.0/block-score-diagnostic.json
-docs/phase4.0/candidate-selection-diagnostic.json
+docs/archive/phases/phase4.0/label-reachability.json
+docs/archive/phases/phase4.0/normalized-baseline.json
+docs/archive/phases/phase4.0/dedup-collision-report.json
+docs/archive/phases/phase4.0/density-recall-report.json
+docs/archive/phases/phase4.0/block-score-diagnostic.json
+docs/archive/phases/phase4.0/candidate-selection-diagnostic.json
 
 # Local-only evaluation input and generated Tauri schemas.
 #

@@ -4,6 +4,6 @@
 node scripts/check-staged-files.mjs || exit 1
 
 # Validate the Phase 11 documents whenever they are staged.
-if git diff --cached --name-only --diff-filter=ACMR | grep -q '^docs/phase11\.0/'; then
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '^docs/archive/phases/phase11\.0/'; then
   npm run validate:phase-docs || exit 1
 fi

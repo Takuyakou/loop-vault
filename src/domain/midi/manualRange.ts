@@ -11,7 +11,7 @@ import type { CandidateOccurrence } from "./occurrence";
 /**
  * Candidates built from a range a person chose.
  *
- * The measurement that motivates this (`docs/phase4.1.3/00-manual-repair-baseline.md`)
+ * The measurement that motivates this (`docs/archive/phases/phase4.1.3/00-manual-repair-baseline.md`)
  * found that in nine of ten regions where no automatic candidate matched, every
  * chord the user needed was already in the Full Timeline. The window generator
  * had simply never proposed that span. So the missing capability is not better

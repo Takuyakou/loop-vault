@@ -67,6 +67,10 @@
   --lv-motion-fast: 120ms;
   --lv-motion-normal: 180ms;
   --lv-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  /* P25-16 N3: coming out and settling / a little spring / going away. */
+  --lv-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --lv-ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --lv-ease-in: cubic-bezier(0.4, 0, 1, 1);
   --lv-z-sticky: 30;
   --lv-z-popover: 50;
   --lv-z-dialog: 70;

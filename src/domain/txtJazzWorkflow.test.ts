@@ -154,12 +154,13 @@ describe("TXT-JAZZ real save/reload/export/import to registered Dojo", () => {
       if (!built.ok) throw new Error("Expected synthetic snapshot");
       expect(built.snapshot.events[1]!.chord).toMatchObject({ altered: true, label: "G7alt" });
       const plan = resolveProgressionPracticeVoicings(built.snapshot);
-      expect(plan.events[1]!.status).toBe(selection === "saved" ? "SUPPORTED" : "UNSUPPORTED_RULE");
+      // P25-08 K12: 基本 (basic-full) fills G7alt with the text intake's recommendation.
+      expect(plan.events[1]!.status).toBe(selection === "saved" || selection === "basic-full" ? "SUPPORTED" : "UNSUPPORTED_RULE");
       for (const study of ["teacher", "core"] as const) for (const color of [false, true]) for (const open of [false, true]) {
         const studyPlan = resolveProgressionPracticeVoicings(built.snapshot, {
           lessonStudyCategory: study, lessonColorEnabled: color, lessonOpenEnabled: open, detailedFallbackStudy: "teacher",
         });
-        expect(studyPlan.events[1]!.status).toBe(selection === "saved" ? "SUPPORTED" : "UNSUPPORTED_RULE");
+        expect(studyPlan.events[1]!.status).toBe(selection === "saved" || selection === "basic-full" ? "SUPPORTED" : "UNSUPPORTED_RULE");
       }
     }
   });

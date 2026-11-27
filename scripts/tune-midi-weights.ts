@@ -7,7 +7,7 @@ import { adaptChordDripManifest, type ChordDripCorpusManifest } from "../src/dom
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "../src/domain/midi/weights";
 
 const manifestPath = resolve(cwd(), "docs/loop-vault-evaluation-corpus/manifest.json");
-const outputDir = resolve(cwd(), "artifacts/midi-tuning");
+const outputDir = resolve(cwd(), "docs/archive/artifacts/midi-tuning");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as ChordDripCorpusManifest;
 const definitions = adaptChordDripManifest(manifest);
 const cases = await Promise.all(definitions.map(async (definition) => ({

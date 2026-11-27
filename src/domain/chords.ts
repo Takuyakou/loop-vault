@@ -284,6 +284,16 @@ function foldTensions(quality: ChordQuality, tensions: readonly Tension[]): {
 }
 
 /** Legacy product/MIDI label vocabulary. Kept stable for detector baselines. */
+/**
+ * P25 V12: text keeps the letter the person typed for the slash bass (`F#m9/G#` stays `F#m9/G#`, not the
+ * pitch-only `F#m9/Ab`). Only a single accidental is kept; the root and everything else keep today's spelling.
+ */
+function keepTypedBass(label: string, chord: ChordSymbol, typedBass?: string): string {
+  if (typedBass === undefined || typedBass.length > 2 || chord.bass === undefined) return label;
+  const shownBass = `/${spell(chord.bass)}`;
+  return label.endsWith(shownBass) ? label.slice(0, label.length - shownBass.length) + `/${typedBass}` : label;
+}
+
 export function parseChordLabel(label: string): ChordSymbol | null {
   return parseChordLabelWithPolicy(label, false);
 }
@@ -370,7 +380,8 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
 
   const semantic = allowExtendedText
     ? applyTextSemanticPolicy(symbol, writtenQuality, parenthesized.tensions) : symbol;
-  return { ...semantic, label: allowExtendedText ? formatTextChordSymbol(semantic) : labelFromSymbol(semantic) };
+  if (!allowExtendedText) return { ...semantic, label: labelFromSymbol(semantic) };
+  return { ...semantic, label: keepTypedBass(formatTextChordSymbol(semantic), semantic, bassMatch?.[1]) };
 }
 
 /** Text-only semantic repair; the legacy Product/MIDI parser is untouched. */

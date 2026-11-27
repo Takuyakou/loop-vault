@@ -8,10 +8,10 @@ import { ProgressionVoicingPracticeView } from "../../src/views/ProgressionVoici
 import { PreviewSoundProvider } from "../../src/components/PreviewSoundProvider";
 import { MetronomeProvider } from "../../src/components/MetronomeProvider";
 import type { ProgressionVoicingTransportPort, ProgressionVoicingTransportStartOptions } from "../../src/practice/ProgressionVoicingTransport";
-import type { ProgressionVoicingSelection } from "../../src/domain/progressionVoicingPractice";
+import type { ProgressionVoicingSelection } from "../../src/domain/progressionVoicingPractice/index";
 import { loadFingeringPreferences, savePersonalFingering } from "../../src/voicingPractice/fingeringPreferences";
 import { generateFingeringCandidates } from "../../src/domain/progressionFingering";
-import { formatMidiNoteForDisplay } from "../../src/components/music-keyboard";
+import { formatMidiNoteForDisplay } from "../../src/components/music-keyboard/index";
 import { fixedFingerSlots } from "../../src/voicingPractice/nextMove";
 import { project, syntheticSnapshots, emptyPreferences } from "./integration";
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
@@ -49,10 +49,12 @@ it("measures actual card / keyboard / Next Move for normal, wrap, Source and sha
   for(const event of [0,3]){await act(async()=>container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']")[event]!.click());observe(container,model,event,selection);}
  }
  await act(async()=>button(container,"自動生成").click());
- const shape=container.querySelector<HTMLSelectElement>('[aria-label="既存の形"]')!;
- await act(async()=>{shape.value="basic-shell";shape.dispatchEvent(new Event("change",{bubbles:true}));});
+ // P25-08 L1: the shape is chosen in 「形 ▼」 (the old 既存の形 select is gone); シェル is the K shape.
+ await act(async()=>container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-shape-button']")!.click());
+ await act(async()=>container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-shape-menu'] [data-shape='shell']")!.click());
  await act(async()=>container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']")[0]!.click());
- observe(container,project(snapshots["basic-shell"]!,emptyPreferences,{detailedFallbackStudy:"teacher"}),0,"shape-basic-shell");
+ observe(container,project(snapshots["basic-full"]!,emptyPreferences,{lessonStudyCategory:"teacher",generatedShape:{shape:"shell",tension:false,spread:false,rootlessOrder:"auto"}}),0,"shape-shell");
+ window.localStorage.removeItem("loop-vault:voicing-loop-shape:v1");
 });
 it("measures Range selection without changing effective fingering",async()=>{
  const {container,snapshots}=await mount("source-midi");const model=project(snapshots["source-midi"]!);

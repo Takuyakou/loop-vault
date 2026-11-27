@@ -133,12 +133,13 @@ test("P24-02 I-1: the 続ける Enter buttons compute the same at three window s
 
   const sample = seen.cd!["1440x900"]!;
   // Inside the band's flex row `inline-flex` computes as `flex`, and the span as `block`.
+  // P25 V13: 「続ける」 in the band follows Resume.dc.html 「案」 (36px, 13px bold, the key a little apart).
   expect(sample.button).toMatchObject({
-    display: "flex", height: "36px", "padding-top": "0px", "padding-right": "12px", "border-radius": "10px",
-    "font-size": "12px", "font-weight": "500", "line-height": "16px",
+    display: "flex", height: "36px", "padding-top": "0px", "padding-right": "16px", "border-radius": "10px",
+    "font-size": "13px", "font-weight": "700", "line-height": "16px",
   });
   expect(sample.key).toMatchObject({
-    display: "block", "margin-left": "6px", "padding-left": "4px", "font-size": "10px", "font-weight": "700", "border-radius": "4px",
+    display: "block", "margin-left": "8px", "padding-left": "5px", "font-size": "10px", "font-weight": "600", "border-radius": "5px",
   });
 
   // The pointer changes the colour only, and never the values.

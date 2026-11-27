@@ -82,11 +82,16 @@ test("K3: manually chosen A minor is preserved without being overwritten by auto
   await expect(detailAfterNav.locator(".lv-progression-fact").first()).toHaveText("Aマイナー");
 });
 
-test("K4: ambiguous C Am F G stays 自動: 未確定 and saves without forcing a key", async ({ page }) => {
+test("K4: an undecidable C F# Bb E Ab stays 自動: 未確定 and saves without forcing a key", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openTextCapture(page);
   const capture = page.getByTestId("text-progression-capture");
+  // P25 V39: relative keys are settled by the first chord; C Am F G is C major now.
   await capture.getByTestId("text-progression-input").fill("C Am F G");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: C メジャー");
+  await capture.getByTestId("text-progression-input").fill("Am F C G");
+  await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: A マイナー");
+  await capture.getByTestId("text-progression-input").fill("C F# Bb E Ab");
   await expect(capture.getByTestId("text-progression-key")).toHaveAttribute("data-value","auto");
   await expect(capture.getByTestId("text-progression-key-value")).toHaveText("自動: 未確定");
   await capture.getByTestId("text-progression-name").fill("K4 未確定");

@@ -25,6 +25,11 @@ export function useNotify(): (input: NotifyInput) => number {
   return store.notify;
 }
 
+/** P25-03: the same, or undefined outside a Provider (parts that are also mounted alone in tests). */
+export function useOptionalNotify(): ((input: NotifyInput) => number) | undefined {
+  return useContext(NotificationContext)?.notify;
+}
+
 export interface UndoBinding {
   actions: UndoableAction[];
   onUndo: (id: string) => void;

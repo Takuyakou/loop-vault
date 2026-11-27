@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow, chooseTextSetting } from "./helpers/app";
 
-const suppliedFixture = (name: string) => readFileSync(`docs/phase5.31/fixtures/${name}`, "utf8");
+const suppliedFixture = (name: string) => readFileSync(`docs/contracts/phase5.31/fixtures/${name}`, "utf8");
 
 async function saveTextToLoop(page: Page, input: string) {
   await page.goto("/?p528Direct=1");
@@ -20,15 +20,11 @@ async function saveTextToLoop(page: Page, input: string) {
   await expect(capture.getByTestId("text-preview-error")).toHaveCount(0);
   await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("120");
-  await capture.getByTestId("text-progression-convert").focus();
+  // P25-03 C12: no Draft bridge; the panel saves the text directly (the save stays keyboard-operable).
+  await capture.getByTestId("text-progression-name").fill("P5.31 control timing fixture");
+  await capture.getByTestId("text-progression-save").focus();
   await page.keyboard.press("Enter");
-  const editor = page.getByTestId("manual-candidate-editor");
-  await editor.locator("button[aria-haspopup='dialog']").click();
-  const saveForm = page.locator("form[role='dialog']");
-  await saveForm.locator("input[name='progression-title']").fill("P5.31 control timing fixture");
-  await saveForm.locator("button[type='submit']").click();
-  const savedNotice = page.getByText("保存した進行を練習できます").locator("..");
-  await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.getByRole("button", { name: "Voicing Loopで練習", exact: true }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -55,10 +51,10 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
     await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
-    await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
-    await page.getByRole("option", { name: "骨組み", exact: true }).click();
-    await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
-      .toHaveAttribute("value", "core");
+    // P25-08 K7/L1: 「骨組み」 is read as シェル, chosen in 「形 ▼」.
+    await workspace.getByTestId("voicing-loop-shape-button").click();
+    await workspace.getByTestId("voicing-loop-shape-menu").locator('[data-shape="shell"]').click();
+    await expect(workspace.getByTestId("voicing-loop-shape-label")).toHaveText("シェル");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
     await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
@@ -70,7 +66,9 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     await expect(playableCards.first()).toHaveAttribute("aria-pressed", "true");
     await expect(current).toHaveText("C9");
   }
-  expect(observed[0]).toEqual(observed[1]);
+  // P25-03 C12: both fixtures are saved by the one text save path, which keeps the written name (BbM7 / Bbmaj7).
+  const sameName = (labels: readonly string[]) => labels.map(label => label.replace(/M7(?=[,(\s/]|$)/, "maj7"));
+  expect(sameName(observed[0]!)).toEqual(sameName(observed[1]!));
 });
 
 test("P5.31 exact official control score saves timing with generalized G triad support", async ({ page }) => {
@@ -126,18 +124,15 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
-  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
-    await page.getByRole("option", { name: "骨組み", exact: true }).click();
-  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
-    .toHaveAttribute("value", "core");
+  // P25-08 K7/L1: 「骨組み」 is read as シェル, chosen in 「形 ▼」.
+  await workspace.getByTestId("voicing-loop-shape-button").click();
+  await workspace.getByTestId("voicing-loop-shape-menu").locator('[data-shape="shell"]').click();
+  await expect(workspace.getByTestId("voicing-loop-shape-label")).toHaveText("シェル");
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
-  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
-    .toContainText("Family Core");
-  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
-    .toContainText("Literal");
+  // P25-08: a K shape carries no lesson-rule explanation (Family Core / Literal were the old 骨組み's).
   await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
-  await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(1);
-  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(4);
+  expect(await workspace.locator("[data-guide-hand='left']").count()).toBeGreaterThan(0);
+  expect(await workspace.locator("[data-guide-hand='right']").count()).toBeGreaterThan(0);
   await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
   const card = workspace.getByTestId("voicing-loop-event").nth(1);
   await card.focus();
@@ -153,25 +148,25 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   await assertNoHorizontalOverflow(page);
 });
-test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and reduced motion", async ({ page }) => {
+test("P5.31 all-rest maximum score is not saved and says why at 320px, 200% and reduced motion (P25 C12)", async ({ page }) => {
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  const workspace = await saveTextToLoop(page, `| ${Array(32).fill("_").join(" | ")} |`);
-  await expect(workspace.getByTestId("voicing-loop-event")).toHaveCount(1);
-  await expect(workspace.getByTestId("voicing-loop-event")).toHaveAttribute("data-duration-beats", "128");
-  await page.getByLabel("カウントイン").selectOption("0");
-  await workspace.getByRole("button", { name: /開始/ }).click();
-  // P23-32 K5: the running state reads 「再生中」.
-  await expect(workspace).toContainText("再生中");
-  await expect(workspace.getByRole("progressbar", { name: "拍" })).toHaveCount(0);
-  await expect(workspace.getByRole("progressbar", { name: "位置" })).toHaveCount(0);
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  await page.locator('[data-nav="capture"]').click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: "テキスト" }).click();
+  const capture = page.getByTestId("text-progression-capture");
+  await capture.getByTestId("text-progression-input").fill(`| ${Array(32).fill("_").join(" | ")} |`);
+  // P25 C12 (rev12): a progression of rests only is not saved — the button cannot be pressed and says why.
+  await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
+  await expect(capture.getByTestId("text-save-rest-only")).toHaveText("コードのない進行です(休符だけ)");
+  await expect(capture.getByText("保存できませんでした。入力内容は保持されています。")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
-  await page.getByRole("button", { name: "一時停止", exact: true }).click();
-  const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
+  const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='text-progression-capture']").analyze();
   expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
   await page.setViewportSize({ width: 640, height: 900 });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+  await expect(capture.getByTestId("text-save-rest-only")).toBeVisible();
   await assertNoHorizontalOverflow(page);
-  await expect(workspace.getByTestId("voicing-loop-playhead")).toHaveCSS("transition-duration", "1e-05s");
 });

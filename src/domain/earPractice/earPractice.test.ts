@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BUILTINS, buildBuiltin } from "../chordDojo/builtins";
 import { judgeChord } from "../chordDojo/judging";
 import { parseTextChordLabel } from "../chords";
@@ -10,6 +10,9 @@ import {
   type EarQuestionChord,
 } from "./index";
 import { parseDegreeToken } from "./degrees";
+
+// P25 V41: this file's work takes seconds by itself; under load it passed vitest's 5 s default (FULL already allows 30 s).
+vi.setConfig({ testTimeout: 30_000 });
 
 const KEYS = Array.from({ length: 12 }, (_, tonic) => tonic);
 const tokensOf = (bars: string[][]) => bars.flat();

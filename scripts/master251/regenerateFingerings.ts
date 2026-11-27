@@ -2,7 +2,7 @@ import { parseChordLabel } from '../../src/domain/chords';
 import {
   TARGETS, cellKey, type MasterTarget,
 } from '../../src/domain/master251/model';
-import type { ProgressionVoicingPracticeSnapshot } from '../../src/domain/progressionVoicingPractice';
+import type { ProgressionVoicingPracticeSnapshot } from '../../src/domain/progressionVoicingPractice/index';
 import { eRankerCostModel } from '../../src/domain/eRankerFingering';
 import { rankPracticeHandFingerings } from '../../src/voicingPractice/rankPracticeFingerings';
 

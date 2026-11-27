@@ -21,24 +21,25 @@ test("TXT-JAZZ the one text screen keeps the alt exact pitches through Capture, 
   await expect(input).toHaveAttribute("aria-invalid", "true");
   await expect(save).toBeDisabled();
   await input.fill(chart);
-  // P23-17 V3: the voicing note moved into the 「?」 face.
+  // P25 V19: the 「?」 face is tables only; the voicing count is no longer shown there.
   await capture.getByTestId("text-help").click();
-  await expect(capture.getByTestId("text-voicing-availability")).toContainText("3 / 4コード");
-  await expect(capture.getByTestId("text-voicing-unavailable")).toContainText("G7alt/D");
+  await expect(page.getByTestId("text-help-writing")).toBeVisible();
+  await expect(capture.getByTestId("text-voicing-availability")).toHaveCount(0);
+  // P25-01 B: the face now opens from the band's right end over the preview, so close it before choosing a card.
+  await capture.getByTestId("text-help").click();
   // R-03: the storage split is unchanged, but its notice is no longer shown on the capture screen.
   await expect(capture.getByTestId("text-storage-compatibility")).toHaveCount(0);
   await expect(save).toBeEnabled();
   const title = "合成 TXT-JAZZ";
   await capture.getByTestId("text-progression-name").fill(title);
   await capture.getByTestId("text-preview-band").filter({ hasText: /^G7alt/ }).first().click();
-  const inspector = capture.getByTestId("text-progression-inspector");
-  await inspector.locator(":scope > summary").click();
-  await inspector.getByTestId("text-progression-detail-expander").locator(":scope > summary").click();
-  const notes = await inspector.getByTestId("voicing-keyboard").locator("[data-active='true']")
-    .evaluateAll(keys => keys.map(key => Number((key as HTMLElement).dataset.midiNote)).sort((a, b) => a - b));
+  // P25-03 C3: the chosen card's band lights the notes it plays (基本 = the recommended notes).
+  const dock = capture.getByTestId("text-card-dock");
+  const notes = await dock.getByTestId("text-dock-key").evaluateAll(keys => keys
+    .filter(key => key.getAttribute("aria-pressed") === "true")
+    .map(key => Number((key as HTMLElement).dataset.note)).sort((a, b) => a - b));
   expect(notes).toEqual(altNotes);
-  await inspector.getByTestId("text-progression-preview").click();
-  await inspector.getByRole("button", { name: "停止", exact: true }).click();
+  await dock.getByTestId("text-dock-play").click();
   await save.click();
   await page.locator('[data-nav="vault"]').click();
   await page.locator("#vault-search").fill(title);

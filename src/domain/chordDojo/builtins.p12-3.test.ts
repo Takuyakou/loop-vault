@@ -8,7 +8,7 @@ import {emptyStore} from './store';
 /** P12.3 §2・§3: 25 progressions × 12 keys against the reference data, and the bass is always below the upper notes. */
 interface ExpectedKey {key:number;keyLabel:string;pointIsTheory:boolean;chords:{label:string;notes:number[];beats:number}[]}
 interface Expected {title:string|null;name:string;group:string;mode:string;layer:string;judge:string;degrees:string[];fullDegrees:string[];keys:ExpectedKey[]}
-const expected=JSON.parse(readFileSync(new URL('../../../docs/phase12.3/contracts/P12.3-builtins-expected.json',import.meta.url),'utf-8')) as {count:number;builtins:Record<string,Expected>};
+const expected=JSON.parse(readFileSync(new URL('../../../docs/contracts/phase12.3/P12.3-builtins-expected.json',import.meta.url),'utf-8')) as {count:number;builtins:Record<string,Expected>};
 const ids=Object.keys(expected.builtins);
 
 describe('P12.3 builtins match the reference data',()=>{

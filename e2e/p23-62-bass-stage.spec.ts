@@ -379,24 +379,29 @@ test.describe("with a microphone", () => {
   test("S7 the stage's shape at 1440×900, 1280×720, and 960×1032", async ({ page }) => {
     test.setTimeout(360_000);
     await stageMicrophone(page);
-    for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }]) {
+    // P25 T3: the four modes at 1440×900; 1280×720 and 960×1032 with one mode (root-motion: the rating row sits
+    // between the lane and the buttons, so its 段 3 is the tallest).
+    const runs = [
+      ...(["degree", "rhythm", "root-motion", "bassline"] as const).map((mode) => ({ mode, size: { width: 1440, height: 900 } })),
+      { mode: "root-motion" as const, size: { width: 1280, height: 720 } },
+      { mode: "root-motion" as const, size: { width: 960, height: 1032 } },
+    ];
+    for (const { mode, size } of runs) {
       await page.setViewportSize(size);
-      for (const mode of ["degree", "rhythm", "root-motion", "bassline"] as const) {
-        await openMode(page, mode);
-        await expectStageShape(page, mode, size, false);
-        // 段 3 too (the result), by the short self-rated way.
-        const view = viewOf(page, mode);
-        await listen(page, mode);
-        if (mode === "root-motion") await answerFirstMotion(view);
-        await view.getByRole("button", { name: "録らずに弾く" }).click();
-        await view.getByRole("button", { name: /弾けた・答えを見る/ }).click();
-        await expect(view).toHaveAttribute("data-stage-step", "2");
-        await expectStageShape(page, mode, size, true);
-        await page.locator('[data-nav="bass-practice"]').click();
-      }
+      await openMode(page, mode);
+      await expectStageShape(page, mode, size, false);
+      // 段 3 too (the result), by the short self-rated way.
+      const view = viewOf(page, mode);
+      await listen(page, mode);
+      if (mode === "root-motion") await answerFirstMotion(view);
+      await view.getByRole("button", { name: "録らずに弾く" }).click();
+      await view.getByRole("button", { name: /弾けた・答えを見る/ }).click();
+      await expect(view).toHaveAttribute("data-stage-step", "2");
+      await expectStageShape(page, mode, size, true);
+      await page.locator('[data-nav="bass-practice"]').click();
     }
-    // P23-64: MIDI のベースライン stage shape at 1440×900, 1280×720, and 960×1032 (段 1 and 段 3).
-    for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 960, height: 1032 }]) {
+    // P23-64: MIDI のベースライン stage shape at 1440×900 and 960×1032 (段 1 and 段 3).
+    for (const size of [{ width: 1440, height: 900 }, { width: 960, height: 1032 }]) {
       await page.setViewportSize(size);
       await openMidiPractice(page);
       await expect(midi(page)).toHaveAttribute("data-stage-step", "0");
@@ -721,35 +726,7 @@ test.describe("with a microphone", () => {
     await expect(ownRow).not.toContainText("抜け");
     await expect(ownRow).not.toContainText("＋");
     await captureReportShot(page, "p23-64-fix-1-assets/bassline-3-result-late-1440.png");
-  });
-
-  /** P23-64-fix-2: short 「遅い」 label inside merged late/early box so text fits cleanly without clipping. */
-  test("P23-64-fix-2 report screenshots", async ({ page }) => {
-    test.setTimeout(120_000);
-    await stageMicrophone(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await openMode(page, "bassline");
-    await expect(bassline(page)).toHaveAttribute("data-stage-step", "0");
-    await listenToTheEnd(page);
-    await openAllHints(page, "bassline");
-    const names = await noteNames(page, "bassline");
-    const bpm = await bpmOf(page, "bassline");
-    const bassPitches = names.map(midiOf);
-    const lateNoteSeconds = Math.max(0.28, (60 / bpm) - 0.17);
-    await setTakePlan(page, bassPitches.map((pitch, index) => ({
-      pitch: index === 2 ? pitch + 2 : pitch,
-      beat: index === 1 ? index + (0.16 * bpm) / 60 : index,
-      seconds: index === 1 ? lateNoteSeconds : 0.34,
-    })), bpm);
-    await bassline(page).locator("[data-testid='bassline-record']").click();
-    await expect(bassline(page)).toHaveAttribute("data-stage-step", "2", { timeout: 40_000 });
-    const ownRow = bassline(page).locator("[aria-label='自分の段']");
-    const lateBox = ownRow.locator(".bp-note[data-kind='late']");
-    await expect(lateBox).toHaveCount(1);
-    await expect(lateBox).toContainText("遅い");
-    await expect(lateBox).toHaveAttribute("aria-label", /大きく遅い .+\(判定の幅の外\)/);
-    await expect(ownRow).not.toContainText("抜け");
-    await expect(ownRow).not.toContainText("＋");
+    // P23-64-fix-2 (merged here in P25 T3): the same late take is that step's photo.
     await captureReportShot(page, "p23-64-fix-2-assets/bassline-3-result-late-1440.png");
   });
 });

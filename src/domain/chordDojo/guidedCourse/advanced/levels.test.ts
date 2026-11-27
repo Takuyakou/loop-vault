@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ADVANCED_LEVELS, PROGRESSION_FAMILIES, TWELVE_KEYS, advancedLevelSpec, isAdvancedLevel } from "./levels";
+import { PROGRESSION_FAMILIES, advancedLevelSpec, isAdvancedLevel } from "./levels";
 
 describe("P23-45 advanced course level contract", () => {
   it("keeps the published question counts and thresholds for Lv4–8 and the capstone", () => {
@@ -38,13 +38,11 @@ describe("P23-45 advanced course level contract", () => {
     ]);
   });
 
-  it("covers the six progression families and all twelve keys", () => {
+  it("covers the six progression families", () => {
     expect(PROGRESSION_FAMILIES).toHaveLength(6);
-    expect(TWELVE_KEYS).toHaveLength(12);
   });
 
   it("distinguishes numeric levels from the capstone", () => {
-    expect(ADVANCED_LEVELS.map((entry) => entry.level)).toEqual([4, 5, 6, 7, 8, "capstone"]);
     expect(isAdvancedLevel(4)).toBe(true);
     expect(isAdvancedLevel("capstone")).toBe(false);
     expect(() => advancedLevelSpec(9 as never)).toThrow();

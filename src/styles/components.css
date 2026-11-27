@@ -757,3 +757,28 @@ button.lv-resume-go.lv-resume-go .lv-resume-go-key {
   font-weight: 700;
   line-height: 16px;
 }
+
+/* P25 V34: the opened list of every <select>, in the app's look (the same as the text-intake 拍子/キー menus). */
+.lv-select-menu {
+  z-index: calc(var(--lv-z-toast) + 10); box-sizing: border-box; overflow-y: auto; padding: 4px; border-radius: 10px;
+  border: 1px solid var(--lv-border-strong); background: var(--lv-surface-raised); box-shadow: var(--lv-shadow-overlay);
+}
+.lv-select-menu-option {
+  display: flex; align-items: center; min-height: 32px; padding: 0 8px; border-radius: 6px;
+  font-size: 13px; color: var(--lv-text); cursor: pointer; white-space: nowrap;
+}
+.lv-select-menu-option[data-active="true"] { background: color-mix(in srgb, #42d8c6 12%, transparent); }
+.lv-select-menu-option[aria-selected="true"] { background: #123b3a; color: #42d8c6; }
+.lv-select-menu-option[aria-disabled="true"] { opacity: 0.45; cursor: default; }
+.lv-select-menu-group { padding: 6px 8px 2px; font-size: 10px; color: #7f90aa; }
+
+/* P25 V35: the list slides 4px from its select and fades in (120ms), and fades out (100ms). */
+.lv-select-menu, .lv-text-setting-menu { transition: opacity 120ms var(--lv-ease-out), transform 120ms var(--lv-ease-out); }
+.lv-select-menu[data-presence="enter"], .lv-text-setting-menu[data-presence="enter"] { opacity: 0; transform: translateY(-4px); }
+.lv-select-menu[data-side="above"][data-presence="enter"] { transform: translateY(4px); }
+.lv-select-menu[data-presence="exit"], .lv-text-setting-menu[data-presence="exit"] {
+  opacity: 0; pointer-events: none; transition: opacity 100ms var(--lv-ease-in);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-select-menu, .lv-text-setting-menu, .lv-select-menu[data-presence], .lv-text-setting-menu[data-presence] { transition: none; transform: none; }
+}

@@ -60,7 +60,7 @@
 
 /* Intentional wrap follows the actual Capture content width, including the app sidebar. */
 .lv-text-capture-root { container-type: inline-size; }
-.lv-text-capture-toolbar { flex-wrap: wrap; }
+.lv-text-capture-toolbar { display: flex; flex-wrap: wrap; }
 .lv-text-capture-toolbar > * { flex: none; }
 .lv-text-toolbar-key, .lv-text-toolbar-bpm, .lv-text-toolbar-meter {
   display: inline-flex;
@@ -151,7 +151,30 @@
 }
 /* P24-05: the one screen's card face (the design's hover brightens it; focus shows the ring). */
 .lv-text-card-face { cursor: pointer; }
-.lv-text-card-face:hover { filter: brightness(1.18); }
+/* P25 V31: the card answers hover/focus like Voicing Loop's cards (lift 2px, shadow, teal edge, timed). */
+.lv-text-card-face {
+  transition: transform 120ms var(--lv-ease-in), box-shadow 120ms var(--lv-ease-in),
+    border-color 120ms var(--lv-ease-in), background-color 120ms var(--lv-ease-in);
+}
+.lv-text-card-face:is(:hover, :focus-visible):not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 35%) !important;
+  transition: transform 140ms var(--lv-ease-out), box-shadow 140ms var(--lv-ease-out),
+    border-color 140ms var(--lv-ease-out), background-color 140ms var(--lv-ease-out);
+}
+.lv-text-card-face:is(:hover, :focus-visible):not(:disabled):not([aria-pressed="true"]):not([data-in-scope="true"]) {
+  border-right-color: rgb(66 216 198 / 55%) !important;
+  border-bottom-color: rgb(66 216 198 / 55%) !important;
+  border-left-color: rgb(66 216 198 / 55%) !important;
+  background-color: #132033 !important;
+}
+/* The selected card keeps its 2px ring under the shadow. */
+.lv-text-card-face[aria-pressed="true"]:is(:hover, :focus-visible):not(:disabled) {
+  box-shadow: 0 0 0 2px #42d8c6, 0 6px 14px rgb(0 0 0 / 35%) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-text-card-face:is(:hover, :focus-visible):not(:disabled) { transform: none; }
+}
 .lv-text-card-face:focus-visible {
   outline: 2px solid var(--lv-accent);
   outline-offset: -2px;
@@ -160,14 +183,32 @@
 
 .lv-text-toolbar-bpm > small, .lv-text-toolbar-bpm > span { font-size: 0.6875rem; }
 /* P23-17 V1/V3/V10: the top band is two light faces (読み方の設定 / 試聴) and the save line is one row at the bottom. */
-.lv-text-topbar { align-items: center; gap: 8px; padding-block: 6px; }
+/* P25-01 B: the top band is one flex row (the mock's `align-items: stretch`): the two faces share a height and
+   the 「?」 is pushed to the right end. */
+.lv-text-topbar { align-items: stretch; gap: 8px; padding-block: 6px; }
 .lv-text-topgroup { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--lv-border); border-radius: var(--lv-radius-md); background: var(--lv-bg-subtle); }
 .lv-text-toplabel { color: var(--lv-text-muted); font-size: 11px; white-space: nowrap; }
-.lv-text-top-help { position: relative; }
+/* P25-01 B: the "?" sits at the right end of the top band; its face opens downward, aligned right. */
+.lv-text-top-help { position: relative; flex: none; align-self: center; margin-left: auto; margin-right: 12px; }
 .lv-text-help-button { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--lv-border-strong); border-radius: 50%; background: transparent; color: var(--lv-text-secondary); font-size: 13px; font-weight: 700; }
 .lv-text-help-button:hover, .lv-text-help-button[aria-expanded="true"] { border-color: var(--lv-accent); color: var(--lv-accent); }
-.lv-text-help-face { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; display: grid; gap: 8px; width: min(440px, 86vw); padding: 12px 14px; border: 1px solid var(--lv-border-strong); border-radius: var(--lv-radius-md); background: var(--lv-surface); box-shadow: 0 12px 32px rgb(0 0 0 / 45%); }
-.lv-text-help-line { margin: 0; color: var(--lv-text-secondary); font-size: 12px; line-height: 1.6; }
+.lv-text-help-face { position: absolute; z-index: 30; top: 36px; right: 0; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box; width: 400px; max-width: 86vw; max-height: calc(100vh - 200px); overflow-y: auto; padding: 16px 18px; border: 1px solid rgb(150 170 195 / 28%); border-radius: 12px; background: #111b2a; box-shadow: 0 18px 48px rgb(0 0 0 / 50%); }
+.lv-text-help-section { display: grid; gap: 4px; }
+.lv-text-help-title { margin: 0 0 2px; color: #42d8c6; font-size: 11px; font-weight: 700; }
+.lv-text-help-line { margin: 0; color: #c9d3e2; font-size: 12px; line-height: 1.7; }
+.lv-text-help-note { margin-top: 6px; color: #a5b2c6; }
+.lv-text-help-keys { display: grid; }
+.lv-text-help-key-row { display: flex; align-items: center; gap: 10px; min-height: 28px; }
+.lv-text-help-key-caps { display: flex; flex: none; gap: 4px; width: 92px; }
+/* V19: the 「書き方」 table (書く | 意味), rows a little apart. */
+.lv-text-help-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.lv-text-help-table th { padding: 0 0 4px; color: #7f90aa; font-size: 10px; font-weight: 500; text-align: left; }
+.lv-text-help-table td { height: 28px; padding: 0; border-top: 1px solid rgb(150 170 195 / 10%); color: #c9d3e2; vertical-align: middle; }
+.lv-text-help-table td:first-child { width: 132px; white-space: nowrap; }
+.lv-text-help-table code { padding: 1px 5px; border-radius: 4px; background: #0a1019; color: #f2f6fc; font-family: 'Cascadia Mono', Consolas, ui-monospace, monospace; font-size: 12px; }
+.lv-text-help-or { color: #7f90aa; }
+.lv-text-help-key-label { color: #c9d3e2; font-size: 12px; }
+.lv-text-kbd { flex: none; padding: 0 5px; border: 1px solid rgb(150 170 195 / 28%); border-radius: 4px; color: #a5b2c6; font-family: inherit; font-size: 10px; line-height: 17px; }
 .lv-text-footer-name { white-space: nowrap; }
 /* P23-17 V11: the chosen card's row under the preview. */
 .lv-text-selected-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--lv-border); }
@@ -322,3 +363,72 @@
 
 /* P8.9-09b: the editor and preview headings share one height in both readers. */
 .lv-text-pane-head { min-height: 1.75rem; }
+
+/* P25-03 C: the selected card band's hover looks (the mock's .gh / .cd / .tk). */
+.lv-dock-ghost:not(:disabled):hover { border-color: #42d8c6 !important; color: #f2f6fc !important; }
+.lv-dock-card:hover { filter: brightness(1.18); }
+.lv-dock-step:hover { background: #162338 !important; }
+
+/* V18: the band's right side swaps its three rows for the MIDI face in one cell; nothing around it moves. */
+.lv-dock-face {
+  transition: opacity 180ms var(--lv-ease-out), visibility 0s;
+}
+.lv-dock-face[data-off] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms var(--lv-ease-in), visibility 0s 120ms;
+}
+
+/* V14 / V20: the band below the preview (and 「鍵盤で入れる」 below the input) takes its height by its row, so the
+   face above shrinks while the band rises, in the same time: 220ms out on the way in, 140ms in on the way out.
+   The floor keeps the closed line's height, so the face does not jump before the row grows. */
+.lv-text-rise-slot {
+  flex: none;
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  transition: grid-template-rows 220ms var(--lv-ease-out);
+}
+.lv-text-rise-slot[data-presence="enter"],
+.lv-text-rise-slot[data-presence="exit"] {
+  grid-template-rows: 0fr;
+}
+.lv-text-rise-slot[data-presence="exit"] {
+  transition: grid-template-rows 140ms var(--lv-ease-in);
+}
+.lv-text-rise-slot > * {
+  grid-area: 1 / 1;
+  align-self: end;
+  min-height: 0;
+}
+.lv-text-rise-slot > .lv-text-rise-floor { align-self: stretch; min-height: 44px; }
+.lv-text-rise-clip { display: flex; flex-direction: column; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .lv-dock-face,
+  .lv-dock-face[data-off],
+  .lv-text-rise-slot,
+  .lv-text-rise-slot[data-presence="exit"] { transition: none; }
+}
+
+/* P25 V23: the dotted next-chord cell and the palette above the preview. */
+.lv-suggestion-ghost { transition: border-color 120ms var(--lv-ease-out), background-color 120ms var(--lv-ease-out); }
+.lv-suggestion-ghost:hover { border-color: rgba(66,216,198,.8); background: rgba(66,216,198,.06); }
+.lv-suggestion-palette { animation: lv-suggestion-in 150ms var(--lv-ease-spring); }
+.lv-suggestion-palette[data-presence="enter"],
+.lv-suggestion-palette[data-presence="exit"] { opacity: 0; transform: translateY(-4px) scale(.98); }
+.lv-suggestion-palette[data-presence="exit"] { transition: opacity 120ms var(--lv-ease-in), transform 120ms var(--lv-ease-in); pointer-events: none; }
+@keyframes lv-suggestion-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.lv-suggestion-chip { transition: transform 120ms var(--lv-ease-out), border-color 120ms var(--lv-ease-out); }
+.lv-suggestion-chip:hover { transform: translateY(-1px); border-color: rgba(66,216,198,.55); }
+/* The hovered chip's transform makes it its own layer; lift it over the rows below so its tooltip is not painted under them. */
+.lv-suggestion-chip:hover, .lv-suggestion-chip:focus-within { position: relative; z-index: 5; }
+.lv-suggestion-chip:hover [data-testid="text-suggestion-preview"] { background: rgba(66,216,198,.07); }
+.lv-suggestion-chip [data-testid="text-suggestion-add"]:hover { background: #123b3a; color: #42d8c6; }
+@media (prefers-reduced-motion: reduce) {
+  .lv-suggestion-ghost, .lv-suggestion-palette, .lv-suggestion-chip { transition: none; animation: none; }
+  .lv-suggestion-chip:hover, .lv-suggestion-chip:active { transform: none; }
+}
+
+/* P25 V33: the empty face waits until the keyboard band has finished closing (140ms), then fades in where it ends up. */
+.lv-text-empty-face { animation: lv-motion-fade-in 160ms var(--lv-ease-out) 140ms both; }
+@media (prefers-reduced-motion: reduce) { .lv-text-empty-face { animation: none; } }

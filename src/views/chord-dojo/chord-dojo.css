@@ -380,7 +380,10 @@
 .dojo-builtin-group>h2 small,.dojo-jazz-group>h2 small {font-size:12px;font-weight:400;color:var(--dojo-muted);}
 .dojo-builtin-group .dojo-list,.dojo-jazz-group .dojo-list {margin-top:0;}
 .dojo-builtin-card,.dojo-jazz-card {display:grid;gap:6px;align-content:start;}
-.dojo-builtin-title {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.dojo-builtin-title {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px;}
+/* P25 V21: the name and its badge never fold; a name too long to share the row puts the badge on a second row. */
+.dojo-builtin-title .dojo-card-primary,.dojo-builtin-title>.dojo-badge {white-space:nowrap;}
+.dojo-builtin-title>.dojo-badge {margin-left:auto;}
 .dojo-builtin-title h2,.dojo-builtin-title h3 {margin:0;font-size:15px;font-weight:700;color:#f2f6fc;}
 .dojo-builtin-degrees {margin:0;font:13px/1.3 var(--font-mono);color:var(--dojo-secondary);}
 .dojo-builtin-chords {margin:0;font-size:12px;color:var(--dojo-muted);}

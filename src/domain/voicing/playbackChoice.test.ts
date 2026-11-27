@@ -4,7 +4,7 @@ import { DATA_PATH, JsonVaultRepository, createEmptyVault, type VaultStorage } f
 import { makeIdea } from "../testFactory";
 import type { ChordTimelineItem, VaultFile } from "../types";
 import { normalizedChordKey } from "./normalizeVoicing";
-import { migratePlaybackChoice, setAllEligibleCardsToSource } from "./playbackChoice";
+import { migratePlaybackChoice, restoreOriginalPlayback, setAllEligibleCardsToSource } from "./playbackChoice";
 import { createTimelineVoicingPlaybackPlan, resolveTimelineItemVoicing } from "./resolveVoicing";
 
 class MemoryStorage implements VaultStorage {
@@ -112,5 +112,57 @@ describe("P8.1 explicit source playback contract", () => {
     expect(bulk.changedCount).toBe(2);
     expect(bulk.cards.map(card => card.voicingMemory?.playbackChoice)).toEqual(["SOURCE", "SOURCE", "CUSTOM", "GENERATED"]);
     expect(cards[0]?.voicingMemory?.playbackChoice).toBeUndefined();
+  });
+
+  describe("P25 V33 restoreOriginalPlayback", () => {
+    /** A text card: it keeps the sound it was taken in with, and has no 元MIDI. */
+    function textCard(choice?: "SOURCE" | "GENERATED" | "CUSTOM"): ChordTimelineItem {
+      const card = item(1, choice);
+      const source = card.voicingMemory!.sourceVoicing!;
+      const { sourceVoicing, ...rest } = card.voicingMemory!;
+      void sourceVoicing;
+      card.voicingMemory = { ...rest, practiceVoicingOverride: { ...source, source: "manual", midiNotes: [50, 57, 60, 64] } };
+      return card;
+    }
+
+    it("takes a MIDI card back to 元MIDI and leaves 自分で直した音 alone", () => {
+      const generated = item(1, "GENERATED");
+      const unset = item(1);
+      const source = item(1, "SOURCE");
+      const custom = item(1, "CUSTOM");
+      const result = restoreOriginalPlayback([generated, unset, source, custom]);
+      expect(result.changedCount).toBe(2);
+      expect(result.keptCustomCount).toBe(1);
+      expect(result.cards.map(card => card.voicingMemory?.playbackChoice))
+        .toEqual(["SOURCE", "SOURCE", "SOURCE", "CUSTOM"]);
+      expect(generated.voicingMemory?.playbackChoice).toBe("GENERATED");
+    });
+
+    it("takes a text card back to its saved sound and leaves an unset one alone", () => {
+      const generated = textCard("GENERATED");
+      const unset = textCard();
+      const unchanged = textCard("SOURCE");
+      const result = restoreOriginalPlayback([generated, unset, unchanged]);
+      expect(result.changedCount).toBe(1);
+      expect(result.keptCustomCount).toBe(0);
+      expect(result.cards[0]?.voicingMemory).toEqual({ practiceVoicingOverride: generated.voicingMemory?.practiceVoicingOverride });
+      expect(result.cards[0]?.voicingMemory?.playbackChoice).toBeUndefined();
+      expect(result.cards[1]).toBe(unset);
+      expect(result.cards[2]).toBe(unchanged);
+    });
+
+    it("keeps a card that has both a 元MIDI and an unset choice as it is", () => {
+      const both = item(1);
+      both.voicingMemory!.practiceVoicingOverride = { ...both.voicingMemory!.sourceVoicing!, source: "manual", midiNotes: [41, 53, 56, 60] };
+      const result = restoreOriginalPlayback([both]);
+      expect(result.changedCount).toBe(0);
+      expect(result.cards[0]).toBe(both);
+    });
+
+    it("does nothing to a card with no memory", () => {
+      const bare: ChordTimelineItem = { ...item(1), voicingMemory: undefined };
+      const result = restoreOriginalPlayback([bare]);
+      expect(result).toEqual({ cards: [bare], changedCount: 0, keptCustomCount: 0 });
+    });
   });
 });

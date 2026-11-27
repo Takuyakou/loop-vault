@@ -182,7 +182,8 @@ test("P16-02: 最後まで弾くと結果が出て、一発の数・秒数の中
 
 test("P16-02: MIDI が無いときは「答え合わせ」→「弾けた(Y)/まだ(N)」で進められる", async ({ page }) => {
   await start(page, { mode: "no-midi" });
-  await expect(page.getByTestId("ear-no-midi")).toBeVisible();
+  // P25 V1: the practice no longer says only "not connected" (the header and the Dojo home say it).
+  await expect(page.getByTestId("ear-no-midi")).toHaveCount(0);
   await toPlay(page);
   await page.keyboard.press("Space");
   await expect(page.getByTestId("ear-self-yes")).toBeVisible();

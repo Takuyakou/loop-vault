@@ -41,7 +41,9 @@ test("P8.8.6 the shared status keeps empty, valid, invalid, and explicit BPM", a
   await expect(rows.locator(".lv-text-save-reason")).toHaveCount(0);
   await expect(rows.getByTestId("text-progression-save")).toBeDisabled();
   await expect(rows.locator(".lv-text-toolbar-bpm input")).toHaveValue("");
-  await expect(rows.locator(".lv-text-toolbar-bpm")).toContainText("試聴 120");
+  // P25 V32: an empty BPM field carries the shared BPM as its placeholder; the 「試聴」 note is gone.
+  await expect(rows.locator(".lv-text-toolbar-bpm input")).toHaveAttribute("placeholder", "120");
+  await expect(rows.locator(".lv-text-toolbar-bpm")).not.toContainText("試聴");
   await rows.getByTestId("text-progression-input").fill("| Cmaj7 Dm7 |");
   await expect(summary).toContainText("1 小節 · 2 コード · キー 未確定");
   const bpm = rows.locator(".lv-text-toolbar-bpm input");
@@ -49,7 +51,7 @@ test("P8.8.6 the shared status keeps empty, valid, invalid, and explicit BPM", a
   await bpm.press("Enter");
   await expect(summary).toContainText("BPM 120");
   await expect(bpm).toHaveValue("120");
-  await expect(rows.locator(".lv-text-toolbar-bpm")).not.toContainText("試聴 120");
+  await expect(rows.locator(".lv-text-toolbar-bpm")).not.toContainText("試聴");
   await rows.getByTestId("text-progression-input").fill("| Cmaj7 ??? |");
   // fix-1 item 3: the reason sentence is gone; the error count is the one line.
   await expect(rows.locator(".lv-text-save-reason")).toHaveCount(0);

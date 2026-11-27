@@ -128,7 +128,7 @@ describe("P15-02 gate (test 8): three ways on three synthetic songs", () => {
   });
 
   // The notes above the line are left out of the analysis (案4). With them as melody-weak the line gave
-  // exactly the result of 「分けない」 (docs/reports/P15-02-gate.md); left out, it reaches the chords-only result.
+  // exactly the result of 「分けない」 (docs/contracts/p15-02/P15-02-gate.md); left out, it reaches the chords-only result.
   it("far from the chords: the line beats 「分けない」", () => {
     const row = results.get(SONGS[0]!.name)!;
     expect(row["線で分ける"].label).toBeGreaterThan(row["分けない"].label);

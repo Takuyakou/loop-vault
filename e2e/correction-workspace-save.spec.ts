@@ -275,7 +275,7 @@ test("P10.3 §7: in Voicing Loop with 「保存した音」, the one chord witho
   await loop.getByRole("button", { name: "保存した音" }).click();
   const events = loop.getByTestId("voicing-loop-event");
   await expect(events).toHaveCount(97);
-  await expect(events.nth(96)).toHaveAttribute("aria-label", /自動生成で補完/);
-  const filled = await events.evaluateAll((items) => items.filter((item) => item.getAttribute("aria-label")?.includes("自動生成で補完")).length);
+  await expect(events.nth(96)).toHaveAttribute("aria-label", /代わりの形で鳴らしています/);
+  const filled = await events.evaluateAll((items) => items.filter((item) => item.getAttribute("aria-label")?.includes("代わりの形で鳴らしています")).length);
   expect(filled).toBe(1);
 });

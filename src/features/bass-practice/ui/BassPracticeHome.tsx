@@ -334,7 +334,7 @@ export function BassPracticeHome({ modes, info = {}, resume, instrument, onInstr
       {resumeShown ? (
         <ResumeBand screen="bp" testId="bass-home-resume" label="続きから"
           title={BASS_HOME_MODE_NAMES[resumeShown.mode]}
-          meta={`${resumeShown.whenLabel} に弾きました`}>
+          when={resumeShown.whenLabel}>
           <ResumeGoButton label="続ける" data-testid="bass-home-resume-open" onClick={() => onOpen(resumeShown.mode)} />
         </ResumeBand>
       ) : null}

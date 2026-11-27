@@ -2,6 +2,8 @@
 
 [日本語](README.md) | English
 
+[![Security and test gates](https://github.com/Takuyakou/loop-vault/actions/workflows/security.yml/badge.svg)](https://github.com/Takuyakou/loop-vault/actions/workflows/security.yml) [![Latest release](https://img.shields.io/github/v/release/Takuyakou/loop-vault)](https://github.com/Takuyakou/loop-vault/releases/latest) ![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-blue)
+
 **A Windows app that turns chord progressions you love into your own vocabulary.**
 
 Loop Vault is a Windows desktop songwriting companion for collecting and refining chord progressions from MIDI or text, internalising them through keyboard, bass and ear practice, and keeping them ready for your own tracks. All data stays on your PC.
@@ -11,6 +13,10 @@ Loop Vault is a Windows desktop songwriting companion for collecting and refinin
 ![Voicing Loop: current and next chord, hand fingerings, progression timeline, 88-key keyboard](docs/images/v3-voicing-loop.png)
 
 *Screenshots were captured with synthetic data created for this README. No personal Vault, MIDI or recordings are included.*
+
+![Demo: text to chord cards and a shape change → looping in Voicing Loop → one Chord Dojo question](docs/images/v3-demo.gif)
+
+*A 25-second demo without sound: text import → looping in Voicing Loop (playhead, fingerings, 88-key keyboard) → Chord Dojo. Everything shown uses synthetic data, so the workflow can be seen without running the `.exe`.*
 
 ---
 
@@ -43,15 +49,15 @@ Your daily hub for Loop Vault.
 
 ![Home: Today's Loop, Continue, recent progressions, capture and practice shortcuts](docs/images/v3-home.png)
 
-### Capture & Correction Workspace
+### Capture & Progression Editor
 
 Supports Standard MIDI Files (`.mid` / `.midi`) and text chord progressions.
 
 - **MIDI import**: Drag and drop one or multiple files, choose part roles (bass, harmony, melody) before analysis, and detect keys automatically
-- **Correction Workspace**: Exclude/restore notes, add or adjust pitches, rename chords, split/merge boundaries, and cut whole bars while listening. Original MIDI files are never modified
-- **Text import**: Type progressions such as `| Dm7 G7 | Cmaj7 | Am7 | F G |` or paste a chord sheet as it is, and audition them before saving. Lyric lines are skipped; meters, `%` re-attack, `_` rest, `=` hold and jazz notation such as `Cm(maj7)` and `G7alt` are supported. You can also add chords one at a time by playing them on a MIDI keyboard
+- **Progression Editor**: Exclude/restore notes, add or adjust pitches, rename chords, split/merge boundaries, and cut whole bars while listening. Original MIDI files are never modified
+- **Text import**: Type progressions such as `| Dm7 G7 | Cmaj7 | Am7 | F G |` or paste a chord sheet as it is, and audition them before saving. Lyric lines are skipped; meters, `%` re-attack, `_` rest, `=` hold, jazz notation such as `Cm(maj7)` and `G7alt`, and inline chords (`[C]lyrics`) are supported. Select a card to adjust its voicing (shape, inversion, octave) on the spot. You can also add chords one at a time by playing them on a MIDI keyboard
 
-![Correction Workspace: chord cards, piano roll, recommended ranges and saving to the Vault](docs/images/v3-correction-workspace.png)
+![Progression Editor: chord cards, piano roll, recommended ranges and saving to the Vault](docs/images/v3-correction-workspace.png)
 
 ### Vault
 
@@ -68,7 +74,8 @@ Your local library of saved progressions.
 Loop a saved progression while watching the voicings and hand movement (shown in the top screenshot).
 
 - **Everything in one view**: Large current chord, upcoming chords, left/right finger numbers, movement to the next chord, progression timeline and an 88-key keyboard
-- **Four voicing sources**: Switch between Saved, Source MIDI, Custom (your own registered notes) and Generated (Basic / Core or detailed shapes)
+- **Four voicing sources**: Switch between Saved, Source MIDI, Custom (your own registered notes) and Generated. Generated voicings start as "Basic" (the usual automatic notes); to practise a specific shape, pick shell, rootless A/B, shell with an upper triad, or quartal, with optional added tension and a two-hand spread
+- **Play-along**: Play with the loop on a MIDI keyboard and see right and wrong notes, and which chords you got, as you go
 - **Flexible looping**: Adjust BPM, key, octave and count-in, and set chord-level A–B section loops on the timeline. Pick progressions sorted by favourites and recent use
 
 ### Chord Dojo
@@ -125,19 +132,34 @@ Available under **Assets** on the [latest release](https://github.com/Takuyakou/
 
 - **Platform**: Windows (x64). Requires [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (included in Windows 11)
 - **Unsigned binaries**: Release executables are currently unsigned. If Windows shows a warning, confirm the download came from this repository's Releases page and verify against `SHA256SUMS`
-- **MIDI analysis**: Analysis is not a perfect automatic transcription; melodies, ornaments and dense harmonies may need review and adjustment in the Correction Workspace
+- **MIDI analysis**: Analysis is not a perfect automatic transcription; melodies, ornaments and dense harmonies may need review and adjustment in the Progression Editor
 - **Fingering & meter limits**: Finger numbers are practice guidance and can be customised per progression. Voicing Loop supports constant meters from 1/4 to 12/4
 
 ---
 
+## Architecture & engineering highlights
+
+| Layer | Stack |
+| --- | --- |
+| Desktop | Tauri 2 / Rust (file persistence, MIDI drag-and-drop into a DAW, MIDI keyboard input via midir) |
+| Front end | React 18 / TypeScript / Vite 7 / Tailwind CSS |
+| State & data contracts | Zustand / Zod (validation at the storage boundary and tests that load data from earlier versions) |
+| Audio | Tone.js (sampled piano and bass) |
+| Testing & CI | Vitest / Playwright / cargo test / GitHub Actions (Windows & Ubuntu) |
+
+- **A music core kept apart from the UI**: MIDI analysis, chord theory and transposition, text progression parsing, voicing shapes and progression-aware voicing choice, and practice judging live in plain TypeScript under `src/domain/`, with no React, DOM or audio runtime. Every change runs through 7,200+ Vitest tests, 1,400+ Playwright checks (screens, visuals, accessibility) and 49 Rust tests. Voicing shapes are pinned by a golden table of 4,320 cases.
+- **Smooth playback**: Voicing Loop uses `Tone.Transport` as its single clock and draws the playhead with `requestAnimationFrame`, outside React re-renders. Pause and stop fade the output briefly before releasing voices, so there are no clicks.
+- **Local-only data and verifiable releases**: No data leaves your PC. The repository runs automated privacy checks and npm / RustSec audits, and each release confirms that the published tree is the tree that passed the tests, with `SHA256SUMS` for the packaged files.
+- **Work shared with AI**: The author owns the requirements, the final calls and the acceptance criteria; design drafts, task instructions, implementation and verification are shared with AI. Test and check gates are set first, and only work that passes them goes in.
+
+See [docs/README.md](docs/README.md) for the design documents and records.
+
 ## Development & build
 
 <details>
-<summary>Tech stack and local setup / build / test commands</summary>
+<summary>Local setup / build / test commands</summary>
 
-### Stack & prerequisites
-
-Built with Tauri 2 / Rust, React 18 / TypeScript, Vite 7, Tone.js, Zustand and Zod.
+### Prerequisites
 
 - [Node.js](https://nodejs.org/en/download) 22.x and npm
 - [Rust / Cargo](https://rustup.rs/) (MSVC toolchain on Windows)
@@ -166,6 +188,7 @@ npm run lint
 npm test
 npm run test:e2e
 npm run security:scan
+npm run validate:docs-layout
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 ```
 
@@ -173,6 +196,7 @@ Use `npm run test:fast` during development, `npm run test:feature` for targeted 
 
 </details>
 
+- [Documentation index (docs)](docs/README.md)
 - [CHANGELOG](CHANGELOG.md)
 
 ## License

@@ -9,7 +9,6 @@ import { reportShot } from "./helpers/reportShots";
  */
 const AT = "2026-11-08T00:00:00.000Z";
 const CD_ACCENT = "rgb(66, 216, 198)";
-const BP_ACCENT = "rgb(167, 156, 255)";
 const CARDS = ["home-standard", "home-master", "home-ear", "home-drill", "home-guide"] as const;
 
 async function seedChordHome(page: Page, state: "many" | "theme" | "empty" = "many"): Promise<void> {
@@ -188,13 +187,14 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.screenshot({ path: reportShot("p23-41-assets/cd-home-1440.png") });
   await page.getByTestId("home-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", CD_ACCENT);
+  // P25 V13: the border lights in the accent at 45%.
+  await expect(page.getByTestId("home-resume")).toHaveCSS("border-top-color", /0\.45\)$/);
   await page.screenshot({ path: reportShot("p23-41-assets/cd-resume-hover-1440.png") });
   await page.getByTestId("home-resume-go").hover();
   await page.waitForTimeout(260);
   const cdButtonHover = await measure(["[data-testid='home-resume-go']"]);
   const cdEnter = await measure(["[data-testid='home-resume-go'] .lv-resume-go-key"]);
-  expect(cdEnter["[data-testid='home-resume-go'] .lv-resume-go-key"], "CD Enter hint").toMatchObject({ padding: "0px 4px", radius: "4px", font: "10px/16px 700" });
+  expect(cdEnter["[data-testid='home-resume-go'] .lv-resume-go-key"], "CD Enter hint").toMatchObject({ padding: "0px 5px", radius: "5px", font: "10px/16px 600" });
   await page.getByTestId("home-resume-go").focus();
   await page.keyboard.press("Tab");
   await page.keyboard.press("Shift+Tab");
@@ -223,7 +223,7 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.screenshot({ path: reportShot("p23-41-assets/bp-resume-1440.png") });
   await page.getByTestId("bass-home-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("bass-home-resume")).toHaveCSS("border-top-color", BP_ACCENT);
+  await expect(page.getByTestId("bass-home-resume")).toHaveCSS("border-top-color", /0\.45\)$/);
   await page.screenshot({ path: reportShot("p23-41-assets/bp-resume-hover-1440.png") });
   await page.getByTestId("bass-home-resume-open").hover();
   await page.waitForTimeout(260);
@@ -241,18 +241,23 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await page.screenshot({ path: reportShot("p23-41-assets/vl-resume-1440.png") });
   await page.getByTestId("voicing-loop-resume").hover();
   await page.waitForTimeout(260);
-  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("border-top-color", CD_ACCENT);
+  await expect(page.getByTestId("voicing-loop-resume")).toHaveCSS("border-top-color", /0\.45\)$/);
   await page.screenshot({ path: reportShot("p23-41-assets/vl-resume-hover-1440.png") });
 
-  // dimensions and Enter hint are shared
+  // dimensions and Enter hint are shared (P25 V13: Resume.dc.html 「案」)
   for (const [mode, values] of [["CD", cd], ["BP", bp], ["VL", vl]] as const) {
-    expect(values[".lv-resume-band-mark"], mode).toMatchObject({ width: 30, height: 30, radius: "8px", font: "11px/17.05px 700" });
-    expect(values["[data-testid='home-resume']"] ?? values["[data-testid='bass-home-resume']"] ?? values["[data-testid='voicing-loop-resume']"], mode)
-      .toMatchObject({ padding: "8px 12px", gap: "12px", radius: "14px" });
+    expect(values[".lv-resume-band-mark"]!.width, mode).toBeCloseTo(34, 1);
+    expect(values[".lv-resume-band-mark"]!.height, mode).toBeCloseTo(34, 1);
+    expect(values[".lv-resume-band-mark"], mode).toMatchObject({ radius: "10px", font: "12px/12px 800" });
+    const band = values["[data-testid='home-resume']"] ?? values["[data-testid='bass-home-resume']"] ?? values["[data-testid='voicing-loop-resume']"];
+    expect(band!.height, mode).toBeCloseTo(56, 1);
+    expect(band, mode)
+      .toMatchObject({ padding: "0px 12px 0px 18px", gap: "14px", radius: "16px" });
     const button = values["[data-testid='home-resume-go']"] ?? values["[data-testid='bass-home-resume-open']"] ?? values["[data-testid='voicing-loop-resume-go']"];
-    expect(button, mode).toMatchObject({ height: 36, padding: "0px 12px", radius: "10px", font: "12px/16px 500" });
+    expect(button!.height, mode).toBeCloseTo(36, 1);
+    expect(button, mode).toMatchObject({ padding: "0px 16px", radius: "10px", font: "13px/16px 700" });
     const enter = values[".lv-resume-go-key"] ?? values[".lv-resume-go-key"] ?? values[".lv-resume-go-key"];
-    expect(enter, mode).toMatchObject({ padding: "0px 4px", radius: "4px" });
+    expect(enter, mode).toMatchObject({ padding: "0px 5px", radius: "5px" });
     expect(enter!.font, mode).toContain("10px");
   }
   expect(cdButtonHover["[data-testid='home-resume-go']"]!.background).not.toBe(cd["[data-testid='home-resume-go']"]!.background);
@@ -265,9 +270,10 @@ test("P23-41 C: CD/BP/VL resume bands use the VL sizes, each with its own accent
   await expect(page.getByTestId("guided-course")).toBeVisible();
 });
 
-test("P23-41: four sizes have no sideways overflow, and the home state is captured", async ({ page }) => {
+test("P23-41: 960 and 768 have no sideways overflow, and the home state is captured", async ({ page }) => {
   test.setTimeout(90_000);
-  for (const size of [{ width: 1920, height: 1080 }, { width: 1440, height: 900 }, { width: 960, height: 1032 }, { width: 768, height: 640 }]) {
+  // P25 T3: 1920 and 1440 are covered by p23-27-dojo-home.spec.ts C4 and p12-dojo-home-layout.spec.ts.
+  for (const size of [{ width: 960, height: 1032 }, { width: 768, height: 640 }]) {
     await page.setViewportSize(size);
     await seedChordHome(page);
     await page.goto("/");

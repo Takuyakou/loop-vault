@@ -20,7 +20,6 @@ export function useTextScorePlayhead(
     let activeBar: HTMLElement | null = null;
     let activeBand: HTMLElement | null = null;
     let line: HTMLElement | null = null;
-    const positionLabel = document.querySelector<HTMLElement>("[data-testid='text-transport-position']");
     const clear = () => {
       if (activeBar) { activeBar.dataset.playbackActive = "false"; activeBar.dataset.playheadVisible = "false"; }
       if (activeBand) activeBand.dataset.playbackActive = "false";
@@ -30,13 +29,6 @@ export function useTextScorePlayhead(
       const position = transport.position();
       const barNumber = Math.min(bars, Math.max(1, Math.floor(position / beatsPerBar) + 1));
       const progress = Math.max(0, Math.min(1, (position - (barNumber - 1) * beatsPerBar) / beatsPerBar));
-      if (positionLabel) {
-        // P24-fix-1: the design's 「1 / 8 小節」 (never truncated); the exact position stays as the title.
-        const precise = `${barNumber}小節目 · ${position.toFixed(2)}拍`;
-        positionLabel.textContent = `${barNumber} / ${bars} 小節`;
-        positionLabel.title = precise;
-        positionLabel.setAttribute("aria-label", precise);
-      }
       if (!sourceMatches) { clear(); return; }
       if (!activeBar || Number(activeBar.dataset.bar) !== barNumber) {
         clear();
@@ -56,10 +48,6 @@ export function useTextScorePlayhead(
         activeBand = nextBand;
       }
       if (activeBand) activeBand.dataset.playbackActive = state.status === "playing" ? "true" : "false";
-      if (positionLabel && activeBand?.dataset.chord) {
-        positionLabel.title += ` · ${activeBand.dataset.chord}`;
-        positionLabel.setAttribute("aria-label", positionLabel.title);
-      }
     };
     const tick = () => { paint(); frame = requestAnimationFrame(tick); };
     paint();

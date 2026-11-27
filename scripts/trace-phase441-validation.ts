@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { cwd, stdout } from "node:process";
-import type { MelodyContaminationFilterOptions } from "../src/domain/voicing";
+import type { MelodyContaminationFilterOptions } from "../src/domain/voicing/index";
 import { VOICING_AUTO_USE_CONFIDENCE } from "../src/domain/voicing/extractionConfig";
 import {
   tracePhase441Validation,
@@ -13,22 +13,22 @@ const corpusDir = resolve(
   cwd(),
   ".local-evaluation/voicing-melody-contamination-gold-v1",
 );
-const frozenReportPath = resolve(cwd(), "docs/phase4.4/05-dev-results.json");
+const frozenReportPath = resolve(cwd(), "docs/archive/phases/phase4.4/05-dev-results.json");
 const traceJsonPath = resolve(
   cwd(),
-  "docs/phase4.4.1/00-validation-pipeline-trace.json",
+  "docs/archive/phases/phase4.4.1/00-validation-pipeline-trace.json",
 );
 const traceMarkdownPath = resolve(
   cwd(),
-  "docs/phase4.4.1/00-validation-pipeline-trace.md",
+  "docs/archive/phases/phase4.4.1/00-validation-pipeline-trace.md",
 );
 const classificationJsonPath = resolve(
   cwd(),
-  "docs/phase4.4.1/01-root-cause-classification.json",
+  "docs/archive/phases/phase4.4.1/01-root-cause-classification.json",
 );
 const classificationMarkdownPath = resolve(
   cwd(),
-  "docs/phase4.4.1/01-root-cause-classification.md",
+  "docs/archive/phases/phase4.4.1/01-root-cause-classification.md",
 );
 const frozenReport = JSON.parse(
   await readFile(frozenReportPath, "utf8"),

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ImportIcon } from "./icons";
 import { Button } from "./ui";
 
-const FLOW = ["MIDI を落とす", "パートを確かめる", "選んで保存"] as const;
+const FLOW = ["MIDI をドロップ", "パートを確かめる", "選んで保存"] as const;
 
 /** The one "nothing captured yet" guide shared by Home, Vault and the app's empty state. */
 export function FirstCaptureGuide({ onMidi, onText, onSamples, className = "" }: {

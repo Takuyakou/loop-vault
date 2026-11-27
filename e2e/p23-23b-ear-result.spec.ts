@@ -330,29 +330,21 @@ test("the photos: named, unnamed, one record, 16 bars and no MIDI, at 1440×900 
   }
 });
 
-test("P23-31b C12: the result's small notes stay small and the ring's count stays inside the ring", async ({ page }) => {
+test("P23-31b C12: the ring's count stays inside the ring", async ({ page }) => {
   test.setTimeout(240_000);
-  for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 768, height: 640 }]) {
+  // P25 T3: 1440×900 and 768×640 (the widest and the narrowest of the result's sizes).
+  for (const size of [{ width: 1440, height: 900 }, { width: 768, height: 640 }]) {
     await run(page, { size, level: 3, length: 8, source: "builtin" });
     const measured = await page.evaluate(() => {
-      const note = document.querySelector<HTMLElement>(".ear-summary-note")!;
-      const figure = [...document.querySelectorAll<HTMLElement>(".ear-summary dd")].find((item) => !item.classList.contains("ear-summary-note"))!;
-      const ring = document.querySelector<HTMLElement>(".ear-rate-ring")!;
+      const track = document.querySelector<SVGCircleElement>(".ear-rate-track")!;
       const count = document.querySelector<HTMLElement>(".ear-rate-center b")!;
-      const ringBox = ring.getBoundingClientRect();
       return {
-        noteSize: Number.parseFloat(getComputedStyle(note).fontSize),
-        noteFamily: getComputedStyle(note).fontFamily,
-        figureFamily: getComputedStyle(figure).fontFamily,
         countWidth: count.getBoundingClientRect().width,
-        inner: ringBox.width * (100 / 110),
+        // The track circle's own box (its centre line, without the stroke), measured on the page.
+        inner: track.getBoundingClientRect().width,
         text: count.textContent,
       };
     });
-    const small = size.width <= 1023 || size.height <= 780;
-    expect(measured.noteSize, `${size.width}: the note is 10.5px (10px in a narrow or short window) ${measured.text}`)
-      .toBeCloseTo(small ? 10 : 10.5, 1);
-    expect(measured.noteFamily, `${size.width}: not the figures' mono type`).not.toBe(measured.figureFamily);
     expect(measured.countWidth, `${size.width}: inside the ring (${measured.text})`).toBeLessThanOrEqual(measured.inner - 8);
     await page.screenshot({ path: `p89-generated/p23-31b/ear-result-${size.width}x${size.height}.png` });
   }

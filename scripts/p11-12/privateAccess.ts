@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import ts from "typescript";
 import * as product from "../../src/domain/progressionFingering";
 import { findPersonalFingering, type FingeringPreferenceCollection } from "../../src/voicingPractice/fingeringPreferences";
-import type { ProgressionVoicingPracticeSnapshot, ProgressionVoicingSelection } from "../../src/domain/progressionVoicingPractice";
+import type { ProgressionVoicingPracticeSnapshot, ProgressionVoicingSelection } from "../../src/domain/progressionVoicingPractice/index";
 import type { ProgressionFingeringHandTargets } from "../../src/voicingPractice/fingeringDisplay";
 
 type Group = Extract<product.FingeringCandidateResult, { status: "supported" }>;

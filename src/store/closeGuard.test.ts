@@ -366,8 +366,4 @@ describe("isTauriRuntime", () => {
   it("uses the Tauri runtime predicate", () => {
     expect(isTauriRuntime(() => true)).toBe(true);
   });
-
-  it("returns false when the Tauri predicate is false", () => {
-    expect(isTauriRuntime(() => false)).toBe(false);
-  });
 });

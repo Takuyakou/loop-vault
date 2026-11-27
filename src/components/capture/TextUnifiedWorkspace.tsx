@@ -37,6 +37,10 @@ interface Props {
   readonly transportState: TextTransportState;
   readonly harmonyFor?: (sourceStart: number, beat?: number) => PreviewHarmony | undefined;
   readonly selectedSourceStart?: number;
+  /** P25-03 C1: the card the band shows (its own characters); no card is chosen when undefined. */
+  readonly selectedCardStart?: number;
+  /** P25-03: any card that is pressed, rests included. */
+  readonly onSelectCardStart?: (start: number) => void;
   /** `# Key:` / `# BPM:` lines: the proposals the person can apply, and what is applied now. */
   readonly hints: TextIntakeHints;
   readonly appliedKey?: string;
@@ -58,6 +62,17 @@ interface Props {
   readonly pendingCards?: readonly PendingPreviewCard[];
   readonly selectedPendingIndex?: number;
   readonly onSelectPending?: (index: number) => void;
+  /** P25 V23: the dotted 「＋」 after the last bar and the palette's open pending bar (V24-6: one cell). */
+  readonly suggestion?: {
+    readonly number: number;
+    readonly open: boolean;
+    readonly beatsPerBar: number;
+    readonly pending: readonly { readonly label: string; readonly beats: number; readonly rest?: boolean }[];
+    readonly selectedPending?: number;
+    readonly onSelectPending?: (index: number) => void;
+    readonly onOpen: (rect: DOMRect) => void;
+    readonly onContextMenu: (event: React.MouseEvent) => void;
+  };
   readonly heldCard?: HeldPreviewCard;
   /** P24-06: bumped when a chord is added; the two panes follow the latest unless the person scrolled away. */
   readonly followTick?: number;
@@ -84,11 +99,11 @@ export interface HeldPreviewCard {
  */
 export function TextUnifiedWorkspace({
   input, result, unified, disabled, editorSelection, editorRef, onEditorSelection,
-  onInput, onSelectEvent, onSeekBar, transport, transportState, harmonyFor, selectedSourceStart, onCardHover, onCardMenu,
+  onInput, onSelectEvent, onSeekBar, transport, transportState, harmonyFor, selectedSourceStart, selectedCardStart, onSelectCardStart, onCardHover, onCardMenu,
   hints, appliedKey, appliedBpm, onApplyKey, onApplyBpm, onReadAsCode, hiddenLines,
   onMoveDiagnostic, onFixDiagnostic, fixOf, locationOf,
   keyboardOn = false, onToggleKeyboard, keyboardBand, pendingText, pendingCards = [], selectedPendingIndex,
-  onSelectPending, heldCard, followTick = 0,
+  onSelectPending, heldCard, followTick = 0, suggestion,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editor = editorRef ?? textareaRef;
@@ -112,6 +127,8 @@ export function TextUnifiedWorkspace({
   useLayoutEffect(() => { editor.current?.setSelectionRange(editorSelection.start, editorSelection.end); }, []);
   const previewRef = useRef<HTMLElement>(null);
   const previewItems = useMemo(() => buildUnifiedPreview(unified), [unified]);
+  /** P25 V23: the dotted ＋ belongs to the very last group only (a chart can have several headings). */
+  const lastGroupIndex = previewItems.reduce((last, item, index) => item.kind === "group" ? index : last, -1);
   const errors = unified.diagnostics.filter((diagnostic) => diagnostic.severity === "ERROR");
   const skipped = unified.normalized.skipped;
   const changes = unified.normalized.changes;
@@ -144,6 +161,7 @@ export function TextUnifiedWorkspace({
   }
 
   function selectToken(span: { start: number; end: number }) {
+    onSelectCardStart?.(span.start);
     setSelectedToken({ start: span.start, end: span.end });
     selectSource(span, true, span.start);
   }
@@ -155,6 +173,7 @@ export function TextUnifiedWorkspace({
   }
 
   function selectCard(card: UnifiedPreviewCard) {
+    onSelectCardStart?.(card.span.start);
     setSelectedToken({ start: card.span.start, end: card.span.end });
     selectSource(card.span, true, card.span.start);
   }
@@ -165,6 +184,8 @@ export function TextUnifiedWorkspace({
         return event === undefined ? { start: selectedSourceStart, end: selectedSourceStart } : { start: event.range.start, end: event.range.end };
       })());
   const showLegend = skipped.length > 0 || changes.length > 0;
+  // P25-03 C1: closing the band clears the ring in the input too.
+  useEffect(() => { if (selectedCardStart === undefined) setSelectedToken(undefined); }, [selectedCardStart]);
 
   return (
     <div className="lv-text-intake-workspace" data-testid="standard-text-workspace">
@@ -222,7 +243,6 @@ export function TextUnifiedWorkspace({
               </button>
             )}
           </div>
-          {keyboardOn ? keyboardBand : null}
           <TextUnifiedEditor input={input} disabled={disabled}
             placeholder={keyboardOn ? "" : STANDARD_TEXT_PLACEHOLDER} suppressEmptyFace={keyboardOn}
             normalized={unified.normalized} diagnostics={unified.diagnostics} slots={unified.slots}
@@ -246,6 +266,7 @@ export function TextUnifiedWorkspace({
               <span style={{ whiteSpace: "pre" }}>{pendingText}</span>
             </div>
           )}
+          {keyboardBand}
           {editorAway ? (
             <button type="button" data-testid="text-follow-latest-editor" onClick={() => {
               const editorNode = editor.current;
@@ -278,7 +299,7 @@ export function TextUnifiedWorkspace({
           <div className="lv-text-unified-head flex items-center gap-2.5 border-b border-[var(--lv-border)] px-3.5"
             style={{ flex: "none", height: 34 }}>
             <h2 style={{ margin: 0, flex: "none", whiteSpace: "nowrap", fontSize: 12, fontWeight: 700, color: "#a5b2c6" }}>{"プレビュー"}</h2>
-            <span style={{ flex: "none", whiteSpace: "nowrap", fontSize: 11, color: "#7f90aa" }}>{"カードを押すと鳴ります"}</span>
+            <span style={{ flex: "none", whiteSpace: "nowrap", fontSize: 11, color: "#7f90aa" }}>{"カードを選ぶと鳴ります"}</span>
             <span style={{ flex: 1 }} />
             <span style={{ flex: "none", whiteSpace: "nowrap", fontSize: 12, color: "#a5b2c6" }} data-testid="text-preview-count">
               {errors.length > 0
@@ -308,14 +329,15 @@ export function TextUnifiedWorkspace({
                       </div>
                     )}
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {chunk(item.group.bars, 4).map((row, rowIndex) => (
+                      {chunk(item.group.bars, 4).map((row, rowIndex, rows) => (
                         <div key={rowIndex} className="lv-text-intake-bars" data-testid="text-preview-row">
                           {row.map((bar) => <PreviewBarCard key={bar.number} bar={bar}
-                            selectedSourceStart={selectedSourceStart} selectedToken={selectedToken} disabled={disabled}
+                            selectedCardStart={selectedCardStart} disabled={disabled}
                             {...(harmonyFor === undefined ? {} : { harmonyFor })}
                             onSelect={selectCard} onBarSelect={(span) => { selectSource(span, false); onSeekBar(bar.number); }}
                             {...(onCardHover === undefined ? {} : { onHover: onCardHover })}
                             {...(onCardMenu === undefined ? {} : { onMenu: onCardMenu })} />)}
+                          {suggestion !== undefined && index === lastGroupIndex && rowIndex === rows.length - 1 ? <SuggestionCell suggestion={suggestion} /> : null}
                         </div>
                       ))}
                     </div>
@@ -349,6 +371,48 @@ const FOLLOW_LATEST = {
 } as const;
 
 /** P24-06: the open bar at the end of the preview (its chords are not in the text yet) and the held chord. */
+/** P25 V23: the dotted 「＋」 after the last bar (or in the palette's open pending bar). */
+function SuggestionCell({ suggestion }: { readonly suggestion: NonNullable<Props["suggestion"]> }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const rectOf = () => ref.current?.getBoundingClientRect();
+  const open = () => { const rect = rectOf(); if (rect !== undefined) suggestion.onOpen(rect); };
+  const openFromMenu = (event: React.MouseEvent) => { event.preventDefault(); open(); };
+  if (suggestion.pending.length > 0) {
+    const filled = suggestion.pending.reduce((total, card) => total + card.beats, 0);
+    const remaining = Math.max(0, suggestion.beatsPerBar - filled);
+    return <div data-testid="text-suggestion-ghost" style={{
+      minHeight: 112, height: "100%", boxSizing: "border-box", display: "flex", gap: 4, padding: 6,
+      border: "1.5px dashed rgba(66,216,198,.4)", borderRadius: 10, background: "transparent",
+    }}>
+      {suggestion.pending.map((card, index) => (
+        <div key={index} data-pending="true" data-testid={card.rest ? "text-preview-rest" : "text-preview-card"} style={{
+          flex: `${card.beats} 1 0`, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "center",
+          border: "1px solid rgba(150,170,195,.2)", borderTop: "2px solid #42d8c6", borderRadius: 8, background: "#111b2b",
+          color: "#f2f6fc", padding: "0 4px",
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {card.rest ? "休符" : displayChordLabel(card.label)}
+          </span>
+        </div>
+      ))}
+      <button ref={ref} type="button" aria-label="次のコードを足す" aria-expanded={suggestion.open} onClick={open} onContextMenu={openFromMenu}
+        className="lv-suggestion-ghost" style={{
+          flex: `${Math.max(0.5, remaining)} 1 0`, minWidth: 24, padding: 0, border: "1.5px dashed rgba(66,216,198,.4)",
+          borderRadius: 8, background: "rgba(66,216,198,.04)", color: "#42d8c6", fontSize: 20, fontWeight: 400, cursor: "pointer",
+        }}>{"+"}</button>
+    </div>;
+  }
+  return <button ref={ref} type="button" data-testid="text-suggestion-ghost" aria-label="次のコードを足す" aria-expanded={suggestion.open}
+    onClick={open} onContextMenu={openFromMenu} className="lv-suggestion-ghost" style={{
+      minHeight: 104, height: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "stretch",
+      padding: "6px 8px 8px", border: "1.5px dashed rgba(66,216,198,.4)", borderRadius: 10, background: "transparent",
+      color: "#9fb0c6", cursor: "pointer", font: "inherit",
+    }}>
+    <span style={{ fontSize: 15, alignSelf: "flex-start" }}>{suggestion.number}</span>
+    <span style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#42d8c6", fontSize: 26, fontWeight: 400 }}>{"+"}</span>
+  </button>;
+}
+
 function PendingBarCard({ number, cards, selectedIndex, onSelect, held }: {
   readonly number: number;
   readonly cards: readonly PendingPreviewCard[];
@@ -419,10 +483,9 @@ function chunk<T>(items: readonly T[], size: number): readonly (readonly T[])[] 
 }
 
 /** One bar's face: the bar number, then a card per chord (a rest card for `_`, a red one for unreadable text). */
-function PreviewBarCard({ bar, selectedSourceStart, selectedToken, disabled, harmonyFor, onSelect, onBarSelect, onHover, onMenu }: {
+function PreviewBarCard({ bar, selectedCardStart, disabled, harmonyFor, onSelect, onBarSelect, onHover, onMenu }: {
   readonly bar: UnifiedPreviewBar;
-  readonly selectedSourceStart?: number;
-  readonly selectedToken?: { readonly start: number; readonly end: number };
+  readonly selectedCardStart?: number;
   readonly disabled: boolean;
   readonly harmonyFor?: (sourceStart: number, beat?: number) => PreviewHarmony | undefined;
   readonly onSelect: (card: UnifiedPreviewCard) => void;
@@ -446,10 +509,7 @@ function PreviewBarCard({ bar, selectedSourceStart, selectedToken, disabled, har
     {bar.wholeError === undefined ? (
       <div style={{ flex: 1, display: "flex", gap: 4 }}>
         {bar.cards.map((card, index) => <CardFace key={index} card={card}
-          selected={selectedToken === undefined
-            ? selectedSourceStart !== undefined
-              && (card.spanStart === selectedSourceStart || card.span.start === selectedSourceStart)
-            : card.span.start === selectedToken.start}
+          selected={selectedCardStart !== undefined && card.span.start === selectedCardStart}
           harmony={card.rest || card.error !== undefined ? undefined : harmonyFor?.(card.spanStart, card.beat)}
           disabled={disabled} onSelect={onSelect} {...(onHover === undefined ? {} : { onHover })}
           {...(onMenu === undefined ? {} : { onMenu })} />)}
@@ -478,6 +538,16 @@ function CardFace({ card, selected, harmony, disabled, onSelect, onHover, onMenu
   readonly onHover?: (start?: number) => void;
   readonly onMenu?: (start: number, x: number, y: number) => void;
 }) {
+  // P25-16 review 3: the mark's short word follows the card's own width, like the Voicing Loop cards.
+  const [narrow, setNarrow] = useState(false);
+  const faceRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const element = faceRef.current;
+    if (element === null || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setNarrow(element.getBoundingClientRect().width < 132));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [card.span.start]);
   const cardMenu = (event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
     if (onMenu === undefined) return;
     event.preventDefault();
@@ -517,20 +587,24 @@ function CardFace({ card, selected, harmony, disabled, onSelect, onHover, onMenu
   const label = harmony?.name ?? card.label ?? card.written;
   const split = splitShownChord(label);
   const role = harmony?.role;
-  return <button type="button" data-testid="text-preview-band" className="lv-text-card-face" data-card-start={card.span.start}
+  return <button type="button" ref={faceRef} data-testid="text-preview-band" className="lv-text-card-face" data-card-start={card.span.start}
+    data-in-scope={harmony?.inScope ? "true" : undefined}
     onContextMenu={cardMenu} onKeyDown={cardKeys} {...hover}
     data-chord={card.written} data-source-start={card.span.start} data-source-end={card.span.end}
     data-selected={selected} data-role={role || undefined}
     data-left={String(card.left)} data-width={String(card.width)}
-    aria-pressed={selected} title={displayChordLabel(label)} disabled={disabled}
+    aria-pressed={selected} title={`${displayChordLabel(label)}${harmony?.dots === undefined ? "" : ` · ${harmony.dots.title}`}${harmony?.fallback ? ` · ${harmony.fallback}` : ""}`} disabled={disabled}
     onClick={() => onSelect(card)} style={{
+      position: "relative",
       flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start",
       justifyContent: "center", gap: 4, padding: "4px 8px", textAlign: "left",
-      border: `1px solid ${selected ? "#42d8c6" : "#2b3c50"}`,
+      border: `1px solid ${selected || harmony?.inScope ? "#42d8c6" : "#2b3c50"}`,
       borderTop: `2px solid ${roleColor(role)}`,
-      borderRadius: 8, background: selected ? "#16403f" : "#141f2c",
+      borderRadius: 8, background: selected ? "#16403f" : harmony?.inScope ? "#11292c" : "#141f2c",
       boxShadow: selected ? "0 0 0 2px #42d8c6" : "none", color: "#f2f6fc",
     }}>
+    {harmony?.fallback ? <span data-testid="text-preview-fallback" role="img" aria-label={harmony.fallback} title={harmony.fallback}
+      className="absolute top-0.5 rounded bg-amber-400/20 px-1 text-[9px] text-amber-200" style={{ right: 4 }}>{narrow ? "代" : "代わり"}</span> : null}
     <span data-testid="text-preview-degree" className="lv-text-card-degree" style={{
       fontSize: 11, fontWeight: 700, lineHeight: "13px", whiteSpace: "nowrap", color: roleColor(role),
     }}>{harmony?.degree ?? ""}</span>
@@ -539,14 +613,23 @@ function CardFace({ card, selected, harmony, disabled, onSelect, onHover, onMenu
       <span className="lv-text-card-quality" style={{ fontSize: 12, color: "#c9d3e2" }}>{split.quality}</span>
     </span>
     {harmony === undefined ? null : (
-      // fix-2 item 1: the line keeps its height even when the mark is hidden, so the card never changes size.
-      <span data-testid={harmony.voicing === undefined ? undefined : "text-progression-voicing-state"}
-        className="lv-text-card-voicing" style={{
-          minHeight: 11, fontSize: 9.5, lineHeight: "11px", color: "#a5b2c6", whiteSpace: "nowrap",
-          visibility: harmony.voicing === undefined ? "hidden" : "visible",
-        }}>{harmony.voicing ?? ""}</span>
+      // P25-03 C10: the sounding notes as dots (8px band + 3px gap = the old 11px line, so the card keeps its size).
+      <span aria-hidden="true" data-testid="text-card-dots" className="lv-text-card-voicing" style={{
+        position: "relative", display: "block", alignSelf: "stretch", height: 8, marginTop: 3, borderRadius: 4,
+        background: "rgb(150 170 195 / 13%)",
+      }}>
+        {(harmony.dots?.notes ?? []).map((note) => <span key={note} data-testid="text-card-dot" data-note={note} style={{
+          position: "absolute", top: 2, left: `${cardDotPercent(note)}%`, width: 4, height: 4, marginLeft: -2, borderRadius: "50%",
+          background: harmony.dots!.color,
+        }} />)}
+      </span>
     )}
   </button>;
+}
+
+/** C10: (note − 36) ÷ 48, notes outside 36–84 held at the ends. */
+export function cardDotPercent(note: number): number {
+  return Math.round(((Math.min(84, Math.max(36, note)) - 36) / 48) * 1000) / 10;
 }
 
 export function roleColor(role: string | undefined): string {
@@ -560,7 +643,7 @@ export function roleColor(role: string | undefined): string {
 }
 
 /** The shown chord split into the large root and the smaller quality (with the app's ♯/♭ symbols). */
-function splitShownChord(label: string): { root: string; quality: string } {
+export function splitShownChord(label: string): { root: string; quality: string } {
   const parts = splitChordLabel(label);
   if (parts === undefined) return { root: displayChordLabel(label), quality: "" };
   return { root: `${parts.letter}${parts.accidental}`, quality: parts.rest };

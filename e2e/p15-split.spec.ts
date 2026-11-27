@@ -40,7 +40,7 @@ function song(): Uint8Array {
   return Uint8Array.from(writeMidi({ header: { format: 0, numTracks: 1, ticksPerBeat: 480 }, tracks: [track] }));
 }
 
-test("線を引いて解析すると、線より上の音が「使わない」メロディとして修正作業場に出る", async ({ page }) => {
+test("線を引いて解析すると、線より上の音が「使わない」メロディとして進行エディタに出る", async ({ page }) => {
   await openApp(page);
   await openCapture(page);
   await dropMidi(page, song(), "chords-and-melody.mid");

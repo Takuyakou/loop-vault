@@ -5,6 +5,8 @@ import {type MidiControl,waitForP104Fixture} from './helpers/p12';
 import {homeFixture} from './helpers/p12DojoHome';
 
 async function layout(page:Page){
+ // P25 T3: measure the practice screen only once its parts are on the page (a screen change can still be under way).
+ for(const selector of ['.dojo-center,.master251-task','.dojo-score','.dojo-keyboard svg,.master251-keyboard svg','.dojo-center .dojo-actions,.master251-task>.dojo-actions'])await expect(page.locator(selector).first()).toBeAttached();
  const boxes=await page.evaluate(()=>{
   const rect=(selector:string)=>{const e=document.querySelector(selector)! as HTMLElement,r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,scrollTop:e.scrollTop,overflow:e.scrollHeight-e.clientHeight};};
   return {main:rect('#main-content'),task:rect('.dojo-center,.master251-task'),score:rect('.dojo-score'),keyboard:rect('.dojo-keyboard,.master251-keyboard'),keys:rect('.dojo-keyboard svg,.master251-keyboard svg'),actions:rect('.dojo-center .dojo-actions,.master251-task>.dojo-actions')};

@@ -152,3 +152,40 @@ describe("PracticeKeyboard", () => {
     expect(container.querySelector("svg")?.getAttribute("aria-label")).not.toContain("構成外");
   });
 });
+
+describe("P25-10 I4: the play-along marks", () => {
+  function renderMarks(marks?: ReadonlyMap<number, "ok" | "wrong">, appearance: "default" | "dojo" = "default"): HTMLElement {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(
+      <PracticeKeyboard range={{ minMidiNote: 48, maxMidiNote: 84 }} guideNotes={[60, 64, 67]} leftHandGuideNotes={[60]}
+        rightHandGuideNotes={[64, 67]} allowedPitchClasses={[0, 4, 7]} requiredPitchClasses={[0, 4, 7]} level={1}
+        matchState="partial" interactionMode="neutral-monitor" appearance={appearance}
+        {...(marks === undefined ? {} : { playAlongMarks: marks })} />,
+    ));
+    cleanups.push(() => { act(() => root.unmount()); container.remove(); });
+    return container;
+  }
+
+  it("draws a right key green with ● over its guide colour, and a wrong key red with ×", () => {
+    const container = renderMarks(new Map([[60, "ok"], [61, "wrong"]]));
+    const right = container.querySelector('[data-midi-note="60"] [data-play-along="ok"]')!;
+    expect(right.querySelector("rect")?.getAttribute("fill")).toBe("#36c990");
+    expect(right.querySelector("text")?.textContent).toBe("●");
+    expect(right.querySelector("text")?.getAttribute("font-size")).toBe("13");
+    expect(right.querySelector("text")?.getAttribute("fill")).toBe("#05271a");
+    const wrong = container.querySelector('[data-midi-note="61"] [data-play-along="wrong"]')!;
+    expect(wrong.querySelector("rect")?.getAttribute("fill")).toBe("#ee6b73");
+    expect(wrong.querySelector("text")?.textContent).toBe("×");
+    expect(wrong.querySelector("text")?.getAttribute("font-size")).toBe("11");
+    expect(wrong.querySelector("text")?.getAttribute("fill")).toBe("#2a0508");
+    // The guide (the hands' colours) and the finger marks stay as they are.
+    expect(container.querySelector('[data-midi-note="64"]')?.getAttribute("data-guide-hand")).toBe("right");
+  });
+
+  it("draws nothing new without marks, and nothing on the Chord Dojo appearance", () => {
+    expect(renderMarks().querySelector("[data-play-along]")).toBeNull();
+    expect(renderMarks(new Map([[60, "ok"]]), "dojo").querySelector("[data-play-along]")).toBeNull();
+  });
+});

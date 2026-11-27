@@ -259,6 +259,27 @@ test.describe("P23-58 finishing: micro-interactions, carryover fixes, and polish
     expect(b1.mainScrollOverflow).toBe(0);
     await captureReportShot(page, "p23-58-assets/b1-after-1280.png");
 
+    // P23-59 S2b (merged here in P25 T3): the memo is folded, and the folded row gives the roll its height back —
+    // taller than P23-58's 163 px with the memo field shown, and taller than the same page with the memo opened.
+    const memoAdd = page.getByTestId("progression-memo-add");
+    const memoInput = page.getByLabel("メモ", { exact: true });
+    await expect(memoAdd).toBeVisible();
+    await expect(memoInput).toHaveCount(0);
+    expect(b1.visibleRollHeight).toBeGreaterThan(163);
+    const visibleRoll = () => page.evaluate(() => {
+      const roll = document.querySelector(".lv-cw-roll")!.getBoundingClientRect();
+      const body = document.querySelector(".lv-cw-body")!.getBoundingClientRect();
+      return Math.round(Math.min(roll.bottom, body.bottom) - Math.max(roll.top, body.top));
+    });
+    await memoAdd.click();
+    await expect(memoInput).toBeVisible();
+    const openedRoll = await visibleRoll();
+    expect(b1.visibleRollHeight, "the folded memo leaves the roll taller than the opened memo").toBeGreaterThan(openedRoll);
+    await page.keyboard.press("Tab");
+    await expect(memoAdd).toBeVisible();
+    await expect(memoInput).toHaveCount(0);
+    await expect.poll(visibleRoll).toBe(b1.visibleRollHeight);
+
     // B2: Tags dialog
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.getByRole("button", { name: /＋ タグ/ }).click();

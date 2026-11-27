@@ -65,7 +65,10 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
       const needed = modeGroup.width + listenGroup.width + 8;
       if (needed <= contentWidth) {
         expect(Math.abs(modeGroup.y - listenGroup.y)).toBeLessThanOrEqual(1);
-        expect(Math.abs(before.name!.y - before.save!.y)).toBeLessThanOrEqual(1);
+        // The save row is centre-aligned and its two controls differ in height (the design's mock draws the
+        // name field at 34px and the save button at 36px), so one row means one centre line, not one top edge.
+        const centre = (box: { y: number; height: number }) => box.y + box.height / 2;
+        expect(Math.abs(centre(before.name!) - centre(before.save!))).toBeLessThanOrEqual(1);
       }
     }
     await primary.click();
@@ -91,11 +94,20 @@ test("interactive cards show hover/focus and a blocked save explains itself", as
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
   const band = capture.getByTestId("standard-text-preview").getByTestId("text-preview-band").first();
   await expect(band).toHaveCSS("cursor", "pointer");
-  // P24-05: the design's hover brightens the card (the mock's `.cd:hover{filter:brightness(1.18)}`).
-  const initial = await band.evaluate(element => getComputedStyle(element).filter);
+  // P25 V31: hover lifts the card like Voicing Loop's cards.
+  const before = await band.evaluate((element) => getComputedStyle(element).borderTopColor);
   await band.hover();
-  const hovered = await band.evaluate(element => getComputedStyle(element).filter);
-  expect(hovered).not.toBe(initial);
+  await page.waitForTimeout(250);
+  const hovered = await band.evaluate((element) => ({
+    transform: getComputedStyle(element).transform,
+    shadow: getComputedStyle(element).boxShadow,
+    borderLeft: getComputedStyle(element).borderLeftColor,
+    borderTop: getComputedStyle(element).borderTopColor,
+  }));
+  expect(hovered.transform).toBe("matrix(1, 0, 0, 1, 0, -2)");
+  expect(hovered.shadow).toContain("rgba(0, 0, 0, 0.35)");
+  expect(hovered.borderLeft).toBe("rgba(66, 216, 198, 0.55)");
+  expect(hovered.borderTop).toBe(before);
   await capture.getByTestId("standard-text-preview").getByTestId("text-preview-bar-select").first().focus();
   await page.keyboard.press("Tab");
   await expect(band).toBeFocused();

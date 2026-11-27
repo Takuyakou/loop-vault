@@ -49,9 +49,9 @@ test("1: the button shows the band, the connection state and opens the shared MI
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   const band = capture.getByTestId("keyboard-entry-band");
-  await expect(band).toContainText("つながっていません");
-  // fix-2 item 5: the band no longer prints 「押さえている」 (the keyboard's aria-label still says it).
-  await expect(band).not.toContainText("押さえている");
+  await expect(band).toContainText("MIDI 未接続");
+  // P25 V20: the held chord's place is always there, 「—」 while nothing is held.
+  await expect(band.getByTestId("keyboard-held-name")).toHaveText("—");
   await expect(band.getByTestId("keyboard-length-bar")).toHaveAttribute("aria-pressed", "true");
   await band.getByTestId("keyboard-connect").click();
   await expect(page.getByTestId("midi-panel")).toBeVisible();
@@ -64,8 +64,8 @@ test("2: the keys make one bar, the open bar waits in the preview, and closing f
   await expect(inputOf(page)).toHaveValue("| Cmaj7 |");
   expect(await inputOf(page).evaluate((element: HTMLTextAreaElement) => element.value)).toBe("| Cmaj7 |");
   await expect(captureOf(page).getByTestId("text-preview-band")).toHaveCount(1);
-  // The chosen card's row says the sound came from the keys.
-  await expect(captureOf(page).getByTestId("text-progression-inspector-row")).toContainText("鍵盤で弾いた音");
+  // P25-03 C10: the card says its sound came from the keys (the band itself waits while 「鍵盤で入れる」 is on).
+  await expect(captureOf(page).getByTestId("text-preview-band").first()).toHaveAttribute("title", /鍵盤で弾いた音/);
   // fix-2 item 1: every card was played on the keys, so the card's small mark stays hidden.
   await expect(captureOf(page).getByTestId("text-preview-band").getByTestId("text-progression-voicing-state")).toHaveCount(0);
   // A 2-beat chord stays in the open bar: faint after the text, a normal card in the preview.

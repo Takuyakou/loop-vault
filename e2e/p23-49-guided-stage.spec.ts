@@ -8,7 +8,7 @@ import { captureReportShot } from "./helpers/reportShots";
  * P23-49: the guide-course "stage" for the basic Lv1–3 demo and question screens. The measurements are the
  * lead's value table; the photos are the eleven mock states plus three unchanged screens.
  */
-const BANK = JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8")) as {
+const BANK = JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8")) as {
   version: string; policyVersion: string; pairId: string;
   items: { id: string; level: number; prompt: "name" | "ear"; quality: string; root: number; referenceNotes: number[] }[];
   sets: Record<string, { name: { sameDay: string[]; delay: string[] }; ear?: { items: string[] } }>;

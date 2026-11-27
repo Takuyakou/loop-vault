@@ -137,6 +137,13 @@ test("C4/E12: after one question the recent list has one card", async ({ page })
   await expect(card).toContainText(/レベル \d ・ \d+ 小節/);
   await expect(card).toContainText(/出題用の進行|定番の進行|自分の進行/);
   await expect(card.locator(".ear-recent-play-rate")).toHaveText(/^\d+$|^—$/);
+  // P25 V4: the row spans the box (inside its padding).
+  const fill = await card.evaluate((element) => {
+    const box = element.closest<HTMLElement>(".dojo-card")!;
+    const style = getComputedStyle(box);
+    return { row: element.getBoundingClientRect().width, inner: box.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) };
+  });
+  expect(Math.abs(fill.row - fill.inner)).toBeLessThanOrEqual(1);
 });
 
 test("C6/C8: the records screen — empty, and five cards from the same records", async ({ page }) => {

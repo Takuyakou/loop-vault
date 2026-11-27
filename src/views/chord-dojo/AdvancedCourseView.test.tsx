@@ -586,6 +586,8 @@ describe("P23-45 advanced course screen", () => {
     expect(view.container.querySelectorAll('[data-testid="advanced-sight-chart"] li')).toHaveLength(8);
     expect(view.container.querySelector('[data-testid="advanced-sight-start"]')!.textContent).toContain("拍の練習を始める");
     expect(view.container.querySelector('[data-testid="advanced-sight-connection"]')!.textContent).toContain("MIDI 未接続");
+    // P25 V1: one small line, like the other notes (it was a large warning panel).
+    expect(view.container.querySelector('[data-testid="advanced-sight-connection"]')!.className).toBe("gc-note");
     expect(view.container.querySelector('[data-testid="advanced-feedback-text"]')!.textContent).toContain("開始を押すと拍が進みます");
     await act(async () => {
       const select = view.container.querySelector('[data-testid="advanced-sight-tempo"]') as HTMLSelectElement;

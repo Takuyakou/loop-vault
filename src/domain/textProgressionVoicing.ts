@@ -2,8 +2,9 @@ import { voiceTextChordForAudition } from "./textChordTones";
 import { isValidVoicingSnapshot } from "./voicing/normalizeVoicing";
 import type { ChordSymbol, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { normalizedChordKey } from "./voicing";
+import { parseShapeExtractorVersion } from "./voicingShapes/shapeIds";
 import { validateTextChordNotes } from "./textChordValidation";
-import { supportsTextChord } from "./textChordConsumerCapabilities";
+import { supportsLegacyGeneratedChord } from "./textChordConsumerCapabilities";
 import {
   generateStyleVoicingPlan,
   type GeneratedVoicingStyleId,
@@ -54,7 +55,7 @@ function generateValidatedTextVoicing(
     const notes = voiceTextChordForAudition(chord);
     return validateTextChordNotes(chord, notes) ? [...notes] : undefined;
   }
-  if (!supportsTextChord("generated-loop", chord)) return undefined;
+  if (!supportsLegacyGeneratedChord(chord)) return undefined;
   const event: ChordTimelineItem = {
     eventId: "text-style-preview",
     bar: 1,
@@ -120,5 +121,7 @@ export function isTextProgressionStyleSnapshot(
   snapshot: VoicingSnapshot | undefined,
   chord: ChordSymbol,
 ): boolean {
-  return textProgressionStyleFromSnapshot(snapshot, chord) !== undefined;
+  // P25-03 K7: the new K shape snapshots (`text-shape-v1:`) are shapes too; hand-edited notes are not.
+  return textProgressionStyleFromSnapshot(snapshot, chord) !== undefined
+    || (snapshot?.source === "manual" && parseShapeExtractorVersion(snapshot.extractorVersion) !== undefined);
 }

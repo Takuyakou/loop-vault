@@ -12,6 +12,12 @@ export interface PreviewHarmony {
   readonly voicing?: string;
   /** The chord's own name (a written 「ii7」 in C major is 「Dm7」). */
   readonly name?: string;
+  /** P25-03 C10: the card's sounding notes, their colour and the words for the card's title. */
+  readonly dots?: { readonly notes: readonly number[]; readonly color: string; readonly title: string };
+  /** P25-03 C5: the card is inside the band's range (not the chosen card itself). */
+  readonly inScope?: boolean;
+  /** P25-16 review 3: the chart had to use a nearer shape; the words are the band's notice. */
+  readonly fallback?: string;
 }
 
 interface Props {

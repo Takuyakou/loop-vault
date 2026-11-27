@@ -9,6 +9,12 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     await page.goto("/?p527Status=p533-rules");
     await page.locator('[data-nav="voicing-loop"]').click();
     await page.evaluate(() => document.fonts.ready);
+    // P25-16 N3: the parts rise in; measure after their shown state (a state wait, not a pause).
+    await expect(page.getByTestId("voicing-loop-current-voicing")).toHaveAttribute("data-presence", "shown");
+    await expect(page.getByTestId("voicing-loop-current-learn")).toHaveAttribute("data-presence", "shown");
+    // …and after the 220ms rise itself (the parts carry a transform until then).
+    await expect(page.getByTestId("voicing-loop-current-learn")).toHaveCSS("transform", "none");
+    await expect(page.getByTestId("voicing-loop-current-voicing")).toHaveCSS("transform", "none");
     const measured = await page.evaluate(() => {
       const selectors = ["html", "body", "#root", ".lv-app-frame", ".lv-app-header", "#main-content", '[data-testid="voicing-loop-workspace"]', '[data-testid="voicing-loop-controls"]', '[data-testid="voicing-loop-current-next"]', '[data-testid="voicing-loop-current-panel"]', '[data-testid="voicing-loop-current-content"]', '[data-testid="voicing-loop-current-voicing"]', '[data-testid="voicing-loop-next-move"]', '[data-testid="voicing-loop-timeline"]', '[data-testid="voicing-loop-detail"]', '[data-testid="voicing-loop-transport"]', '[data-testid="voicing-loop-transport-midi-row"]', '[data-testid="voicing-loop-bottom-safe-area"]'];
       return selectors.flatMap(selector => {
@@ -23,13 +29,13 @@ for (const [width, height] of [[1920, 1080], [1440, 900], [960, 1032], [768, 640
     });
     writeFileSync(`${output}/${width}.json`, JSON.stringify(measured, null, 2));
     await page.screenshot({ path: `${output}/${width}.png`, fullPage: true });
-    const selector = page.getByLabel("生成タイプ", { exact: true });
+    // P25-08 L1: 「形 ▼」 is the one selector.
+    const selector = page.getByTestId("voicing-loop-shape-button");
     await selector.click();
     await expect(selector).toHaveAttribute("aria-expanded", "true");
     await page.screenshot({ path: `${output}/${width}-selector.png`, fullPage: true });
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
-    await expect(selector).toHaveAttribute("value", "core");
+    await page.getByTestId("voicing-loop-shape-menu").locator('[data-shape="shell"]').click();
+    await expect(page.getByTestId("voicing-loop-shape-label")).toHaveText("シェル");
     const panel = measured.find(area => area.selector.includes("current-panel"))!;
     const movement = measured.find(area => area.selector.includes("next-move"))!;
     expect(panel.scroll).toBeLessThanOrEqual(panel.client + 1);

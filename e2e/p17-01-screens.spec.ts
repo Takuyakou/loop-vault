@@ -3,8 +3,8 @@ import { buildScenarioMidi, p10Scenario } from "../src/testing/p10SyntheticSongs
 import { dropMidi, openApp, openCapture } from "./helpers/app";
 
 /** P17-01 report screenshots. Daily runs (test:full included) write under p89-generated, which git does not track;
- * UPDATE_REPORT_SCREENSHOTS=1 writes into the tracked docs/reports folder instead (run it explicitly to refresh the report). */
-const dir = process.env.UPDATE_REPORT_SCREENSHOTS === "1" ? "docs/reports/p17-01" : "p89-generated/report-screenshots/p17-01";
+ * UPDATE_REPORT_SCREENSHOTS=1 writes into the tracked docs/archive/reports folder instead (run it explicitly to refresh the report). */
+const dir = process.env.UPDATE_REPORT_SCREENSHOTS === "1" ? "docs/archive/reports/p17-01" : "p89-generated/report-screenshots/p17-01";
 
 async function capture(page: Page, id: string) {
   await openApp(page);

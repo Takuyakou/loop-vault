@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
+import { Presence } from "../motion/Presence";
 /**
  * P8.9-09b: the fields both text readers (通常 and 拡張) share, so they look and behave
  * the same. A field a reader cannot use is shown disabled with the reason as its tooltip.
@@ -137,8 +138,9 @@ export function TextSettingMenu({ testId, name, value, valueLabel, options, disa
         <span className="lv-text-setting-value" data-testid={`${testId}-value`}>{valueLabel}</span>
         <span className="lv-text-setting-arrow" aria-hidden="true">▾</span>
       </button>
-      {open ? (
+      <Presence show={open} exitMs={100}>{(presence) => (
         <div id={listId} data-testid={listId} role="listbox" aria-label={name} className="lv-text-setting-menu"
+          data-presence={presence.state} onTransitionEnd={presence.onTransitionEnd}
           aria-activedescendant={optionId(active)}>
           {options.map((option, index) => (
             <Fragment key={`${option.value}-${index}`}>
@@ -155,7 +157,7 @@ export function TextSettingMenu({ testId, name, value, valueLabel, options, disa
             </Fragment>
           ))}
         </div>
-      ) : null}
+      )}</Presence>
     </div>
   );
 }

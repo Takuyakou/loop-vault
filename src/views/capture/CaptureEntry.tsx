@@ -44,7 +44,7 @@ export function captureEntryProgressText(stage: CaptureAnalysisProgressStage | u
 }
 
 const STATUS_TEXT: Readonly<Record<Exclude<CaptureEntryState, "loading" | "error">, string>> = {
-  idle: "MIDI ファイルをここに落とす",
+  idle: "MIDIファイルをここにドロップ",
   over: "放すと読み込みます",
 };
 
@@ -105,12 +105,12 @@ export function CaptureEntry({
         <div className="lv-capture-story">
           <p className="lv-section-kicker">集める</p>
           <h2 id="capture-empty-title" className="lv-capture-title">MIDI から<br />コード進行を拾う</h2>
-          <p className="lv-capture-lead">曲の MIDI を落とすと、鳴っている音からコードを読み取ります。</p>
-          <p className="lv-capture-lead">気に入った所を、鳴っていた音のまま Vault に保存できます。</p>
+          <p className="lv-capture-lead">曲の MIDI をドロップすると鳴っている音からコードを読み取ります。</p>
+          <p className="lv-capture-lead">気に入った所をVaultに保存できます。</p>
           <p className="lv-capture-flow-caption" id="capture-flow-caption">取り込みの流れ</p>
           <ol className="lv-capture-flow" aria-labelledby="capture-flow-caption">
             <li className="lv-capture-step" data-step="1">
-              <span className="lv-capture-step-head"><span className="lv-capture-step-n" aria-hidden="true">1</span><span className="lv-capture-step-name">MIDI を落とす</span></span>
+              <span className="lv-capture-step-head"><span className="lv-capture-step-n" aria-hidden="true">1</span><span className="lv-capture-step-name">MIDI をドロップ</span></span>
               <span className="lv-capture-step-text">曲まるごとでも、数小節でも</span>
               <span className="lv-capture-step-pic" aria-hidden="true">
                 {ROLL_NOTES.map((note) => (
@@ -167,7 +167,7 @@ export function CaptureEntry({
               {state === "over" ? <p className="lv-capture-zone-help">.mid ・ .midi</p> : null}
               {state === "idle" ? (
                 <>
-                  <p className="lv-capture-zone-help">.mid / .midi ・ この画面のどこに落としても読み込みます</p>
+                  <p className="lv-capture-zone-help">.mid / .midi ・ この画面のどこにドロップしても読み込みます</p>
                   <Button variant="primary" className="lv-capture-zone-button" data-testid="capture-choose-midi" onClick={onChooseMidi}>
                     ファイルを選ぶ
                   </Button>

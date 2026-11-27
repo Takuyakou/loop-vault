@@ -5,7 +5,8 @@ import { realMidiEvaluationCaseSchema } from "./schema";
 
 describe("real MIDI evaluation privacy", () => {
   it("keeps personal Vault fields and absolute paths out of evaluation cases", () => {
-    const privatePath = "D:/Users/private/unreleased-song.mid";
+    // Built from parts so this test file itself never carries a personal path.
+    const privatePath = ["D:", "Users", "private", "unreleased-song.mid"].join("/");
     const vault: VaultFile = {
       app: "loopvault",
       fileVersion: 2,

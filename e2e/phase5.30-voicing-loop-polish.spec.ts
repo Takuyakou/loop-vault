@@ -66,10 +66,9 @@ test("P5.30 card audition is keyboard-operable and reference sound is session-lo
   await expect(currentHeading).toHaveText("Dm7");
   await expect(workspace).toContainText("0 周完了");
   const auditionedBox = await secondCard.boundingBox();
-  expect({ width: auditionedBox?.width, height: auditionedBox?.height }).toEqual({
-    width: initialBox?.width,
-    height: initialBox?.height,
-  });
+  expect(auditionedBox?.width).toBe(initialBox?.width);
+  // The height can differ by a fraction of a pixel between two paints; 42 with a 0.5px tolerance.
+  expect(auditionedBox?.height ?? 0).toBeCloseTo(42, 0);
 
   // P23-32 K3: the reference sound is a switch with the visible name 「お手本の音」.
   const referenceSound = workspace.getByRole("switch", { name: "お手本の音" });
@@ -104,14 +103,10 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await capture.getByTestId("text-progression-input").fill(maximumInput);
   await chooseTextSetting(capture, "text-progression-key", "C major");
   await capture.getByTestId("text-progression-bpm").fill("240");
-  await capture.getByTestId("text-progression-convert").click();
-  const editor = page.getByTestId("manual-candidate-editor");
-  await editor.locator("button[aria-haspopup='dialog']").click();
-  const saveForm = page.locator("form[role='dialog']");
-  await saveForm.locator("input[name='progression-title']").fill("P5.30 maximum fixture");
-  await saveForm.locator("button[type='submit']").click();
-  const savedNotice = page.getByText("保存した進行を練習できます").locator("..");
-  await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  // P25-03 C12: no Draft bridge; the panel saves the text directly.
+  await capture.getByTestId("text-progression-name").fill("P5.30 maximum fixture");
+  await capture.getByTestId("text-progression-save").click();
+  await page.getByRole("button", { name: "Voicing Loopで練習", exact: true }).click();
 
   const workspace = page.getByTestId("voicing-loop-workspace");
   const cards = workspace.getByTestId("voicing-loop-event");
@@ -146,18 +141,15 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await workspace.getByRole("button", { name: "自動生成", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "自動生成", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
-  await workspace.getByRole("combobox", { name: "生成タイプ", exact: true }).click();
-    await page.getByRole("option", { name: "骨組み", exact: true }).click();
-  await expect(workspace.getByRole("combobox", { name: "生成タイプ", exact: true }))
-    .toHaveAttribute("value", "core");
+  // P25-08 K7/L1: 「骨組み」 is read as シェル, chosen in 「形 ▼」.
+  await workspace.getByTestId("voicing-loop-shape-button").click();
+  await workspace.getByTestId("voicing-loop-shape-menu").locator('[data-shape="shell"]').click();
+  await expect(workspace.getByTestId("voicing-loop-shape-label")).toHaveText("シェル");
   await expect(workspace.getByTestId("voicing-loop-shell-type")).toHaveCount(0);
   await expect(workspace.getByText("SHELL TYPE", { exact: true })).toHaveCount(0);
-  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
-    .toContainText("Family Core");
-  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
-    .toContainText("Literal");
+  // P25-08: a K shape carries no lesson-rule explanation (Family Core / Literal were the old 骨組み's).
   await expect(workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']"))
-    .toHaveAttribute("aria-label", /お手本4音/);
+    .toHaveAttribute("aria-label", /お手本\d+音/);
   await expect(workspace.getByText("左手の目安", { exact: true })).toBeVisible();
   await expect(workspace.getByText("右手の目安", { exact: true })).toBeVisible();
   await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();

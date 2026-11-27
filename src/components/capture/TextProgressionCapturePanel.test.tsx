@@ -21,7 +21,6 @@ vi.mock("../../audio/midiInputPianoMonitor", () => ({
 }));
 
 import { TextProgressionCapturePanel } from "./TextProgressionCapturePanel";
-import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -30,7 +29,6 @@ type PanelProps = Parameters<typeof TextProgressionCapturePanel>[0];
 
 interface Harness {
   readonly container: HTMLElement;
-  readonly onConvert: ReturnType<typeof vi.fn>;
   readonly onPreview: ReturnType<typeof vi.fn>;
   readonly onStop: ReturnType<typeof vi.fn>;
   render(overrides?: Partial<PanelProps>): Promise<void>;
@@ -41,12 +39,10 @@ async function mount(overrides: Partial<PanelProps> = {}): Promise<Harness> {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  const onConvert = vi.fn();
   const onPreview = vi.fn();
   const onStop = vi.fn();
   let props: PanelProps = {
     showRomanNumerals: true,
-    onConvert,
     onPreview,
     onStop,
     ...overrides,
@@ -54,7 +50,6 @@ async function mount(overrides: Partial<PanelProps> = {}): Promise<Harness> {
 
   const harness: Harness = {
     container,
-    onConvert,
     onPreview,
     onStop,
     async render(next = {}) {
@@ -87,13 +82,6 @@ async function changeValue(
 }
 
 
-async function changeSelect(element: HTMLSelectElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
-  await act(async () => {
-    setter?.call(element, value);
-    element.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-}
 async function click(element: HTMLElement) {
   await act(async () => element.click());
 }
@@ -148,13 +136,6 @@ function button(harness: Harness, testId: string) {
   return element!;
 }
 
-function buttonByText(harness: Harness, label: string) {
-  const element = [...harness.container.querySelectorAll<HTMLButtonElement>("button")]
-    .find((candidate) => candidate.textContent === label || candidate.getAttribute("aria-label") === label);
-  expect(element).toBeDefined();
-  return element!;
-}
-
 describe("TextProgressionCapturePanel", () => {
   it("is one text screen with no syntax switch and no duplicate app heading", async () => {
     const harness = await mount();
@@ -177,24 +158,98 @@ describe("TextProgressionCapturePanel", () => {
     }
   });
 
-  it("renders accepted rest/hold cells honestly and converts an all-rest score without a chord inspector", async () => {
+  it("P25-01 B: puts the 「?」 at the right end of the top band with three headed sections", async () => {
+    const harness = await mount();
+    try {
+      const help = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-help"]')!;
+      expect(help.getAttribute("aria-label")).toBe("使い方とショートカット");
+      const toolbar = harness.container.querySelector('[data-testid="text-capture-toolbar"]')!;
+      // Last child of the band, outside the two groups (the band's flex row pushes it to the right edge).
+      expect([...toolbar.children].map((child) => child.getAttribute("aria-label") ?? child.className))
+        .toEqual(["読み方の設定", "試聴", "lv-text-top-help"]);
+      expect(help.closest(".lv-text-topgroup")).toBeNull();
+      await click(help);
+      const face = document.querySelector<HTMLElement>('[data-testid="text-help-face"]')!;
+      expect(face.getAttribute("role")).toBe("dialog");
+      expect([...face.querySelectorAll("h3")].map((node) => node.textContent)).toEqual(["書き方", "カードの音を直す", "鍵盤で入れる"]);
+      // V19: tables only — what to write and what it means, then the keys.
+      const writing = [...face.querySelectorAll("[data-testid='text-help-writing'] tbody tr")].map((row) => [...row.children].map((cell) => cell.textContent));
+      expect(writing).toEqual([
+        ["| C | Am |", "小節の区切り"], ["C G", "1 小節に 2 つ(等分)"], ["% か .", "前のコードをもう一度"], ["=", "のばす"], ["_", "休符"],
+        ["C, G・C-G", "カンマ・ダッシュでも区切れる"], ["[C]歌詞", "歌詞の中のコードも読む"], ["IIm7", "キーを選ぶと度数でも書ける"],
+        ["Cmaj7{C3 G3 E4 B4 D5}", "音を決める(C4 が真ん中のド)"], ["#", "行の頭に付けるとメモ"],
+      ]);
+      const rows = [...face.querySelectorAll(".lv-text-help-key-row")].map((row) => row.textContent);
+      expect(rows).toEqual(["←→前後のカード", "↑↓転回", "Shift↑↓高さ", "1–5形(1 = 基本)", "S前のコードに近づける",
+        "M" + "MIDI 鍵盤で弾いて入れる", "Enter鳴らす", "CtrlZ元に戻す(入力欄の外でも)", "Esc閉じる",
+        "123長さ", "Rもう一度", "0休符", "Backspace戻す", "Escやめる"]);
+      expect(face.querySelector(".lv-text-help-note")?.textContent).toBe("鍵盤を押すと、音を足す・外す。");
+      // The removed prose (the voicing count, the try-out sound, # Key:, the automatic key, 「ぜんぶ」).
+      for (const gone of ["コード", "# Key:", "自動", "ぜんぶ", "全角", "等しく分けて"]) {
+        if (gone === "コード") expect(face.querySelector("[data-testid='text-voicing-availability']")).toBeNull();
+        else expect(face.textContent).not.toContain(gone);
+      }
+    } finally {
+      await harness.unmount();
+    }
+  });
+
+  it("P25-06 E: reads the chords written inside 歌詞 and says how many lines it read", async () => {
+    const harness = await mount();
+    try {
+      await changeValue(input(harness), "[C]きょうも[G]あるく[Am]みちを[F]");
+      // One card per chord, one bar each.
+      expect(harness.container.querySelectorAll('[data-testid="text-preview-band"]')).toHaveLength(4);
+      const band = harness.container.querySelector('[data-testid="text-normalize-band"]')!;
+      expect(band.querySelector('[data-testid="text-lyric-chord-notice"]')?.textContent)
+        .toBe("歌詞の中のコード([C] の形)を 1 行読みました。長さは 1 コード 1 小節にしています。");
+      // 「整えたテキストに置き換える」 writes the bar form.
+      await click(band.querySelector<HTMLButtonElement>('[data-testid="text-normalize-replace"]')!);
+      expect(input(harness).value).toBe("| C | G | Am | F |");
+    } finally {
+      await harness.unmount();
+    }
+  });
+
+  it("P25-06 E2: reads the comma/dash separators, names a dot and a question mark", async () => {
+    const harness = await mount();
+    try {
+      await changeValue(input(harness), "C, G, Am, F");
+      expect(harness.container.querySelectorAll('[data-testid="text-preview-band"]')).toHaveLength(4);
+      const band = harness.container.querySelector('[data-testid="text-normalize-band"]')!;
+      expect(band.querySelector('[data-testid="text-separator-notice"]')?.textContent)
+        .toBe("カンマ・ダッシュの区切りを 1 行読みました。");
+      await click(band.querySelector<HTMLButtonElement>('[data-testid="text-normalize-replace"]')!);
+      expect(input(harness).value).toBe("C G Am F");
+      // The `.` and `?` places are named in the list, in the screen's own sentences.
+      await changeValue(input(harness), "., C");
+      expect(harness.container.textContent).toContain("「.」の前にコードがありません。");
+      await changeValue(input(harness), "C, ?, G");
+      expect(harness.container.textContent).toContain("「?」は読めません。");
+      // A line of only dots is not read.
+      await changeValue(input(harness), "...");
+      expect(harness.container.querySelectorAll('[data-testid="text-preview-band"]')).toHaveLength(0);
+    } finally {
+      await harness.unmount();
+    }
+  });
+
+  it("renders accepted rest/hold cells honestly and plays an all-rest score without a card band", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| Cmaj7 _ | % = |");
     expect(harness.container.querySelectorAll('[data-testid="text-preview-rest"]')).toHaveLength(1);
     expect(harness.container.querySelectorAll('[data-testid="text-preview-error"]')).toHaveLength(0);
     // P23-17 V3/V9: the hold (=) has no card of its own any more; the write rules in 「?」 say what it does.
     await click(harness.container.querySelector<HTMLButtonElement>('[data-testid="text-help"]')!);
-    expect(harness.container.querySelector('[data-testid="text-help-face"]')?.textContent).toContain("= は鳴らし直さずにのばす");
+    expect(document.querySelector('[data-testid="text-help-face"]')?.textContent).toContain("=のばす");
     await changeValue(input(harness), "| _ |");
-    expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
-    // V11: a rest-only score has no card, but 「音を細かく直す」 stays (the all-rest path must not be lost).
-    const convert = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-convert"]')!;
-    expect(convert.disabled).toBe(false);
-    expect(harness.container.querySelector<HTMLButtonElement>("[data-testid='text-transport-primary']")?.disabled).toBe(false);
-    await click(convert);
-    expect(harness.onConvert).toHaveBeenCalledOnce();
-    await changeValue(input(harness), "| _ = |");
+    // P25 C12: 「音を細かく直す」 is gone; the 「コードのない進行です」 words stand only beside the save button
+    // (rev12: a rest-only score is not saved); the rest-only score still plays.
     expect(harness.container.querySelector('[data-testid="text-progression-convert"]')).toBeNull();
+    expect(harness.container.textContent?.split("コードのない進行です")).toHaveLength(2);
+    expect(harness.container.querySelector('[data-testid="text-save-rest-only"]')?.textContent).toBe("コードのない進行です(休符だけ)");
+    expect(harness.container.querySelector<HTMLButtonElement>("[data-testid='text-transport-primary']")?.disabled).toBe(false);
+    await changeValue(input(harness), "| _ = |");
     expect(harness.container.querySelector('[data-testid="text-progression-diagnostics"]')).not.toBeNull();
     await harness.unmount();
   });
@@ -205,7 +260,7 @@ describe("TextProgressionCapturePanel", () => {
     await harness.unmount();
   });
 
-  it("groups valid 1/2/4-token bars into native selectable cards and updates the inspector", async () => {
+  it("groups valid 1/2/4-token bars into native selectable cards and opens the band on the chosen card", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| C | Dm7 G7 | C D E F |");
 
@@ -220,10 +275,10 @@ describe("TextProgressionCapturePanel", () => {
     );
     expect(cards).toHaveLength(7);
     expect(cards[0]).toBeInstanceOf(HTMLElement);
-    // P24-05: the inspector opens on the first card, and the preview now shows that same choice.
-    expect(cards[0]?.getAttribute("data-selected")).toBe("true");
-    // fix-2 item 1: every card uses the same sound, so no card prints its small mark.
-    expect(cards[0]?.querySelector('[data-testid="text-progression-voicing-state"]')).toBeNull();
+    // P25-03 C1: no card is chosen at first; the band's closed line invites the choice.
+    expect(cards[0]?.getAttribute("data-selected")).toBe("false");
+    expect(harness.container.querySelector('[data-testid="text-card-dock-closed"]')?.textContent)
+      .toBe("カードを選ぶと、ここでそのカードの音を直せます");
     // These are native buttons: focus/activation are keyboard reachable without
     // introducing a custom keyboard model. Browser key activation is covered by
     // the stage's Playwright accessibility gate.
@@ -239,8 +294,7 @@ describe("TextProgressionCapturePanel", () => {
       undefined,
       120,
     );
-    expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')?.textContent)
-      .toContain("Dm7");
+    expect(harness.container.querySelector('[data-testid="text-dock-name"]')?.textContent).toBe("Dm7");
     await harness.unmount();
   });
 
@@ -323,15 +377,14 @@ describe("TextProgressionCapturePanel", () => {
   it("enables degree input only after an explicit C major confirmation", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| ii7 V7 | Imaj7 |");
-    // V11: no card before the key is confirmed, so the convert button is not there yet.
-    expect(harness.container.querySelector('[data-testid="text-progression-convert"]')).toBeNull();
+    // No card before the key is confirmed.
+    expect(harness.container.querySelectorAll('[data-testid="text-preview-band"]')).toHaveLength(0);
 
     expect((await keyOptions(harness)).find((option) => option.value === "C major")?.label).toBe("C メジャー");
     await chooseKey(harness, "C major");
 
     expect(harness.container.querySelector('[data-testid="text-progression-key-state"]')?.textContent)
       .toContain("確定: C major");
-    expect(button(harness, "text-progression-convert").disabled).toBe(false);
     const cards = harness.container.querySelectorAll<HTMLElement>(
       '[data-testid="text-preview-band"]',
     );
@@ -382,7 +435,7 @@ describe("TextProgressionCapturePanel", () => {
     )!);
 
     expect(harness.onStop).toHaveBeenCalledTimes(4);
-    await click(button(harness, "text-progression-preview"));
+    await click(button(harness, "text-dock-play"));
     expect(harness.onPreview).toHaveBeenCalledWith(
       expect.objectContaining({ canonical: "C" }),
       undefined,
@@ -390,20 +443,8 @@ describe("TextProgressionCapturePanel", () => {
     );
 
     await harness.unmount();
-    expect(harness.onStop).toHaveBeenCalledTimes(5);
-  });
-
-  it("does not offer source-MIDI recovery for text entry", async () => {
-    const harness = await mount();
-    await changeValue(input(harness), "| C |");
-
-    expect(harness.container.textContent).not.toContain("Extract from source MIDI");
-    expect(harness.container.textContent).not.toContain("The source MIDI file was not found.");
-    const sourceChip = harness.container.querySelector<HTMLElement>('[data-testid="detail-voicing-source-chip"]');
-    expect(sourceChip?.textContent).toContain("自動");
-    expect(sourceChip?.getAttribute("title")).toBe("テキスト入力から自動生成したボイシングです。");
-    expect(sourceChip?.getAttribute("title")).not.toContain("source MIDI");
-    await harness.unmount();
+    // The band's 「鳴らす」 stops the previous card first.
+    expect(harness.onStop).toHaveBeenCalledTimes(6);
   });
 
   it("keeps a long invalid token breakable in a compact 320px container", async () => {
@@ -421,35 +462,6 @@ describe("TextProgressionCapturePanel", () => {
       .toContain("[overflow-wrap:anywhere]");
     await harness.unmount();
   });
-  it("closes the recording panel when conversion unmounts the Inspector, and leaves the shared MIDI connection alone", async () => {
-    const original = defaultLiveMidiStore.getState();
-    const activate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: true }); });
-    const deactivate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: false }); });
-    defaultLiveMidiStore.setState({ active: false, activate, deactivate });
-    const harness = await mount();
-
-    try {
-      await changeValue(input(harness), "| C | ");
-      await click(buttonByText(harness, "鍵盤で記録"));
-      await act(async () => { await Promise.resolve(); });
-      expect(activate).not.toHaveBeenCalled(); // P14 §5: the panel never opens the input itself
-      expect(harness.container.querySelector("[data-voicing-panel]")).not.toBeNull();
-
-      await harness.render({ draftActive: true });
-      await act(async () => { await Promise.resolve(); });
-      expect(harness.container.querySelector("[data-testid=\"text-progression-inspector\"]")).toBeNull();
-      expect(harness.container.querySelector("[data-voicing-panel]")).toBeNull();
-      expect(deactivate).not.toHaveBeenCalled();
-    } finally {
-      await harness.unmount();
-      defaultLiveMidiStore.setState({
-        active: original.active,
-        activate: original.activate,
-        deactivate: original.deactivate,
-      });
-    }
-  });
-
   it("locks all text controls after conversion makes the Draft authoritative", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| C |");
@@ -465,193 +477,6 @@ describe("TextProgressionCapturePanel", () => {
     )?.disabled).toBe(true);
     expect(harness.container.querySelector('[data-testid="text-draft-authoritative"]')).not.toBeNull();
     await harness.unmount();
-  });
-  it("selects a generated voicing style and uses the same notes for the card audition and Draft save", async () => {
-    const harness = await mount();
-    await changeValue(input(harness), "| Cmaj7 Dm7 |");
-
-    const selector = harness.container.querySelector<HTMLSelectElement>(
-      '[data-testid="voicing-style-selector"]',
-    );
-    expect(selector).not.toBeNull();
-    expect([...selector!.options].map((option) => option.textContent)).toEqual([
-      "標準クローズ",
-      "シェル 1–7",
-      "オープン 1–7",
-      "ルートレス A/B",
-    ]);
-
-    await changeSelect(selector!, "open-17");
-    const savedNotes = harness.container.querySelector<HTMLElement>(
-      '[data-testid="voicing-saved-notes"]',
-    );
-    expect(savedNotes?.textContent).toContain("このコードの保存予定音");
-    expect(savedNotes?.textContent).toContain("MIDIノート:");
-    expect(harness.container.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
-      .toContain("オープン 1–7");
-
-    const firstCard = harness.container.querySelector<HTMLButtonElement>(
-      '[data-testid="text-preview-band"]',
-    )!;
-    await click(firstCard);
-    const previewMemory = harness.onPreview.mock.calls[harness.onPreview.mock.calls.length - 1]?.[1];
-    const previewNotes = previewMemory?.practiceVoicingOverride?.midiNotes;
-    expect(previewMemory?.practiceVoicingOverride).toMatchObject({
-      source: "manual",
-      extractorVersion: "text-style-v1:open-17",
-      userVerified: true,
-    });
-    expect(savedNotes?.textContent).toContain(previewNotes.join(", "));
-
-    await click(button(harness, "text-progression-convert"));
-    const converted = harness.onConvert.mock.calls[0]?.[0];
-    expect(converted.draft.events[0]?.source.voicingMemory?.practiceVoicingOverride?.midiNotes)
-      .toEqual(previewNotes);
-    await harness.unmount();
-  });
-
-  it("stops an owned keyboard capture when the selected card changes", async () => {
-    const original = defaultLiveMidiStore.getState();
-    const activate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: true }); });
-    const deactivate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: false }); });
-    defaultLiveMidiStore.setState({
-      active: false,
-      activate,
-      deactivate,
-      notes: {
-        held: new Map(),
-        sustained: new Set(),
-        pedalByChannel: new Map(),
-      },
-    });
-    const harness = await mount();
-
-    try {
-      await changeValue(input(harness), "| Cmaj7 Cmaj7 |");
-      await click(buttonByText(harness, "鍵盤で記録"));
-      expect(activate).not.toHaveBeenCalled();
-
-      const cards = harness.container.querySelectorAll<HTMLButtonElement>(
-        '[data-testid="text-preview-band"]',
-      );
-      await click(cards[1]!);
-      await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-      expect(deactivate).not.toHaveBeenCalled();
-      expect(harness.container.querySelector('[data-testid="voicing-capture-confirmation"]'))
-        .toBeNull();
-    } finally {
-      await harness.unmount();
-      await act(async () => { await Promise.resolve(); });
-      defaultLiveMidiStore.setState({
-        active: original.active,
-        activate: original.activate,
-        deactivate: original.deactivate,
-        notes: original.notes,
-      });
-    }
-  });
-  it("latches released keyboard notes, monitors them as piano, and confirms the exact saved voicing", async () => {
-    vi.useFakeTimers();
-    pianoMonitor.create.mockClear();
-    pianoMonitor.updateNotes.mockClear();
-    pianoMonitor.stop.mockClear();
-    pianoMonitor.dispose.mockClear();
-    const original = defaultLiveMidiStore.getState();
-    const activate = vi.fn(async () => undefined);
-    const deactivate = vi.fn(async () => undefined);
-    defaultLiveMidiStore.setState({
-      active: true,
-      activate,
-      deactivate,
-      notes: {
-        held: new Map(),
-        sustained: new Set(),
-        pedalByChannel: new Map(),
-      },
-    });
-    const harness = await mount();
-
-    try {
-      await changeValue(input(harness), "| Cmaj7 |");
-      await click(buttonByText(harness, "鍵盤で記録"));
-      await act(async () => { await Promise.resolve(); });
-      expect(pianoMonitor.create).toHaveBeenCalledOnce();
-      await act(async () => {
-        defaultLiveMidiStore.setState({
-          notes: {
-            held: new Map([
-              ["0:48", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
-              ["0:52", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
-              ["0:55", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
-              ["0:59", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
-            ]),
-            sustained: new Set(),
-            pedalByChannel: new Map(),
-          },
-        });
-      });
-      await act(async () => vi.advanceTimersByTime(100));
-      expect(pianoMonitor.updateNotes).toHaveBeenCalledWith([48, 52, 55, 59]);
-
-      for (const remaining of [
-        [48, 52, 55],
-        [48, 52],
-        [48],
-        [],
-      ]) {
-        await act(async () => {
-          defaultLiveMidiStore.setState({
-            notes: {
-              held: new Map(remaining.map((note) => [
-                `0:${note}`,
-                { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 },
-              ])),
-              sustained: new Set(),
-              pedalByChannel: new Map(),
-            },
-          });
-        });
-        await act(async () => vi.advanceTimersByTime(120));
-      }
-      expect(pianoMonitor.updateNotes).toHaveBeenLastCalledWith([]);
-      expect(harness.container.textContent).toContain("確認する音: C3  E3  G3  B3");
-      const confirmButton = buttonByText(harness, "この音を保存予定にする");
-      expect(confirmButton.disabled).toBe(false);
-      await click(confirmButton);
-      expect(pianoMonitor.dispose).toHaveBeenCalled();
-
-      const confirmation = harness.container.querySelector<HTMLElement>(
-        '[data-testid="voicing-capture-confirmation"]',
-      );
-      expect(confirmation?.textContent).toContain("鍵盤入力を記録しました。");
-      expect(confirmation?.textContent).toContain("C3");
-      expect(harness.container.querySelector('[data-testid="voicing-saved-notes"]')?.textContent)
-        .toContain("48, 52, 55, 59");
-      expect(harness.container.querySelector<HTMLSelectElement>(
-        '[data-testid="voicing-style-selector"]',
-      )?.value).toBe("live-custom");
-
-      await click(button(harness, "text-progression-convert"));
-      const converted = harness.onConvert.mock.calls[0]?.[0];
-      expect(converted.draft.events[0]?.source.voicingMemory?.practiceVoicingOverride).toMatchObject({
-        source: "live-played",
-        midiNotes: [48, 52, 55, 59],
-        bassNote: 48,
-        userVerified: true,
-      });
-    } finally {
-      await harness.unmount();
-      defaultLiveMidiStore.setState({
-        active: original.active,
-        activate: original.activate,
-        deactivate: original.deactivate,
-        notes: original.notes,
-      });
-      vi.useRealTimers();
-    }
   });
 });
 
@@ -714,12 +539,169 @@ describe("TextProgressionCapturePanel P23-33 automatic key", () => {
     await harness.unmount();
   });
 
+  it("V32 takes the key, BPM and meter from the sheet's setting lines", async () => {
+    const harness = await mount();
+    const sheet = (meter: string) => [
+      "Key: D minor",
+      "BPM: 108",
+      `Time Signature: ${meter}`,
+      "",
+      "--- A Section ---",
+      "",
+      "| Dm11 | Em11 |",
+      "| Dm11 | Bbmaj9(#11) |",
+      "| Gm9 | Abm9 |",
+      "| Am11 | A7(#9,b13) |",
+      "",
+      "--- B Section ---",
+      "",
+      "| Dm9 | Fmaj9/E |",
+    ].join("\n");
+    await changeValue(input(harness), sheet("4/4"));
+    expect(keyInput(harness).dataset.value).toBe("auto");
+    expect((await keyOptions(harness)).find((option) => option.value === "auto")?.label).toBe("譜面: D マイナー");
+    expect(bpmInput(harness).value).toBe("108");
+    expect(harness.container.querySelector('[data-testid="text-progression-meter-value"]')?.textContent).toBe("4/4");
+    expect(harness.container.textContent).toContain("キー D マイナー");
+    // A changed time signature reaches the meter; the key and BPM stay as they were.
+    await changeValue(input(harness), sheet("3/4"));
+    expect(harness.container.querySelector('[data-testid="text-progression-meter-value"]')?.textContent).toBe("3/4");
+    expect(bpmInput(harness).value).toBe("108");
+    await harness.unmount();
+  });
+
   it("draws the preview degrees from the effective key before a manual pick", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| Cmaj7 | Fmaj7 | G7 |");
     const degrees = [...harness.container.querySelectorAll<HTMLElement>('[data-testid="text-preview-degree"]')]
       .map((element) => element.textContent);
     expect(degrees).toEqual(["Ⅰmaj7", "Ⅳmaj7", "Ⅴ7"]);
+    await harness.unmount();
+  });
+});
+
+describe('P25 V23 next-chord palette', () => {
+  function ghost(h: Harness) {
+    return h.container.querySelector<HTMLElement>("[data-testid='text-suggestion-ghost']");
+  }
+  function palette(h: Harness) {
+    void h;
+    return document.querySelector<HTMLElement>("[role='dialog'][aria-label='次のコード']");
+  }
+  it('offers the palette after the last bar, adds one bar and Ctrl+Z takes it back', async () => {
+    const h = await mount();
+    await changeValue(input(h), '| Cmaj7 | Am7 |');
+    expect(ghost(h)).not.toBeNull();
+    await click(ghost(h)!);
+    expect(palette(h)).not.toBeNull();
+    const add = palette(h)!.querySelector<HTMLElement>("[data-testid='text-suggestion-add']")!;
+    const label = add.getAttribute('aria-label')!.replace(' を末尾に足す', '');
+    await click(add);
+    expect(input(h).value).toBe('| Cmaj7 | Am7 | ' + label + ' |');
+    await act(async () => { palette(h)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })); });
+    expect(input(h).value).toBe('| Cmaj7 | Am7 |');
+    await h.unmount();
+  });
+
+  it('closes with Escape and leaves the text unchanged', async () => {
+    const h = await mount();
+    await changeValue(input(h), '| Cmaj7 |');
+    await click(ghost(h)!);
+    expect(palette(h)).not.toBeNull();
+    await act(async () => { palette(h)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 220)); });
+    expect(palette(h)).toBeNull();
+    expect(input(h).value).toBe('| Cmaj7 |');
+    await h.unmount();
+  });
+
+  it('shows no ghost for an unreadable chart', async () => {
+    const h = await mount();
+    await changeValue(input(h), '| Cmaj7 | ??? |');
+    expect(ghost(h)).toBeNull();
+    await h.unmount();
+  });
+
+  it('keeps a half-filled bar in the open palette and appends it when filled', async () => {
+    const h = await mount();
+    await changeValue(input(h), '| Cmaj7 |');
+    await click(ghost(h)!);
+    await click(Array.from(palette(h)!.querySelectorAll<HTMLElement>('button')).find((button) => button.textContent === '2 拍 2')!);
+    await click(palette(h)!.querySelector<HTMLElement>("[data-testid='text-suggestion-add']")!);
+    expect(input(h).value).toBe('| Cmaj7 |');
+    expect(h.container.querySelector("[data-testid='text-suggestion-ghost'] [data-pending='true']")).not.toBeNull();
+    await click(palette(h)!.querySelector<HTMLElement>("[data-testid='text-suggestion-add']")!);
+    expect(input(h).value).toMatch(/^\| Cmaj7 \| .+ \|$/);
+    await h.unmount();
+  });
+
+  it('V26-3 starts with the length of the bar before, a pick is kept, and a new opening follows again', async () => {
+    const h = await mount();
+    await changeValue(input(h), '| C G |');
+    await click(ghost(h)!);
+    const pressed = () => Array.from(palette(h)!.querySelectorAll<HTMLElement>('button[aria-pressed="true"]')).map((button) => button.textContent);
+    expect(pressed()).toEqual(['2 拍 2']);
+    await click(palette(h)!.querySelector<HTMLElement>("[data-testid='text-suggestion-add']")!);
+    await click(palette(h)!.querySelector<HTMLElement>("[data-testid='text-suggestion-add']")!);
+    expect(input(h).value).toMatch(/^\| C G \| \S+ \S+ \|$/);
+    expect(pressed()).toEqual(['2 拍 2']);
+    await click(Array.from(palette(h)!.querySelectorAll<HTMLElement>('button')).find((button) => button.textContent === '1 拍 3')!);
+    expect(pressed()).toEqual(['1 拍 3']);
+    await act(async () => { palette(h)!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 220)); });
+    await click(ghost(h)!);
+    expect(pressed()).toEqual(['2 拍 2']);
+    await h.unmount();
+  });
+});
+
+describe("P25 V37 the notes written in { }", () => {
+  const SHEET = "| Cmaj7{C3 G3 E4 B4 D5} | Dm7 | G7{F3 B3 E4 A4} | Cmaj7 |";
+  const cards = (h: Harness) => [...h.container.querySelectorAll<HTMLElement>('[data-testid="text-preview-band"]')];
+  /** The band's keyboard keys that sound for the chosen card. */
+  const bandNotes = (h: Harness) => [...h.container.querySelectorAll<HTMLButtonElement>('[data-testid="text-dock-key"]')]
+    .filter((key) => key.getAttribute("aria-pressed") === "true")
+    .map((key) => Number(key.dataset.note))
+    .sort((left, right) => left - right);
+
+  it("gives the card the notes of its braces and follows a rewrite", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), SHEET);
+    await click(cards(harness)[0]!);
+    expect(bandNotes(harness)).toEqual([48, 55, 64, 71, 74]);
+    // The text keeps the braces as they were typed (nothing is written back).
+    expect(input(harness).value).toContain("Cmaj7{C3 G3 E4 B4 D5}");
+    await changeValue(input(harness), SHEET.replace("{C3 G3 E4 B4 D5}", "{C3 G3 E4 A4 D5}"));
+    await click(cards(harness)[0]!);
+    expect(bandNotes(harness)).toEqual([48, 55, 64, 69, 74]);
+    await harness.unmount();
+  });
+
+  it("keeps the band's own edit until that card's braces change", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), SHEET);
+    await click(cards(harness)[0]!);
+    const first = [...harness.container.querySelectorAll<HTMLButtonElement>('[data-testid="text-dock-key"]')]
+      .find((key) => key.getAttribute("aria-pressed") === "true")!;
+    await click(first);
+    const edited = bandNotes(harness);
+    expect(edited).toHaveLength(4);
+    // Rewriting another card's braces leaves this card with the band's sound.
+    await changeValue(input(harness), SHEET.replace("| Dm7 |", "| Dm7{E2 A2 D3 F3} |"));
+    await click(cards(harness)[0]!);
+    expect(bandNotes(harness)).toEqual(edited);
+    await harness.unmount();
+  });
+
+  it("brings the chord's own sound back when the braces go, if the band was not edited", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), SHEET);
+    await click(cards(harness)[0]!);
+    expect(bandNotes(harness)).toEqual([48, 55, 64, 71, 74]);
+    await changeValue(input(harness), SHEET.replace("{C3 G3 E4 B4 D5}", ""));
+    await click(cards(harness)[0]!);
+    expect(bandNotes(harness)).not.toEqual([48, 55, 64, 71, 74]);
+    expect(bandNotes(harness).length).toBeGreaterThan(0);
     await harness.unmount();
   });
 });

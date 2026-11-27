@@ -180,6 +180,20 @@
     .lv-cw-bar[data-review] .lv-cw-chip-long { display: none; }
     .lv-cw-bar[data-review] .lv-cw-chip-short { display: inline; }
   }
+  /* P25-07 F1: at 1280×720 with the sidebar open the bar has 966px inside. With the 要確認 buttons, or with the
+     range chip, the words above still do not fit: the groups give up their padding, the position leaves (the
+     playhead and the notice still say where it is) and the counts shrink. Every button stays. 1440 and 1920 keep
+     the width they had (1126px and 1606px inside the bar), so nothing changes there. */
+  @container (max-width: 1000px) {
+    .lv-cw-bar .lv-cw-group { padding: 0 3px; }
+    .lv-cw-bar .lv-cw-seg button { padding: 0 5px; }
+    .lv-cw-bar .lv-cw-seg small { display: none; }
+    .lv-cw-bar .lv-cw-btn { padding-inline: 4px; }
+    .lv-cw-bar .lv-cw-time { display: none; }
+    .lv-cw-bar .lv-cw-nav-count { font-size: 10px; }
+    .lv-cw-bar .lv-cw-range-chip { margin-left: 4px; padding: 0 2px 0 6px; }
+    .lv-cw-bar .lv-cw-notice { flex: 1 1 0px; }
+  }
   /* P5.26.1: a very narrow bar wraps the lead group (and what is inside a group) instead of pushing the page sideways. */
   @container (max-width: 520px) {
     .lv-cw-bar-lead { flex-wrap: wrap; max-width: 100%; row-gap: 6px; }

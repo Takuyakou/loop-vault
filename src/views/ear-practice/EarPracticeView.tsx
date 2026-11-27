@@ -248,13 +248,13 @@ export function EarPracticeView({ ideas, onExit, initialView }: { ideas: readonl
   return (
     <section className="dojo ear" data-testid="ear-practice" data-screen="choose">
       <div className="ear-choose">
+        {/* P25 V4: the title row spans both columns, so 「問題」 and 「腕試し」 start on the same line. */}
+        <div className="dojo-page-head ear-choose-head">
+          <DojoBackButton label={HOME_NAME} onBack={onExit} />
+          <h1>耳で弾く</h1>
+          <p className="ear-head-note">進行を1周聴いて、1コードずつ鍵盤で弾き返します。名前は弾いて合うと出ます。</p>
+        </div>
         <div className="ear-choose-main">
-          <div className="dojo-page-head ear-choose-head">
-            <DojoBackButton label={HOME_NAME} onBack={onExit} />
-            <h1>耳で弾く</h1>
-            <p className="ear-head-note">進行を1周聴いて、1コードずつ鍵盤で弾き返します。名前は弾いて合うと出ます。</p>
-          </div>
-
           {/* E2: one face for the question. */}
           <section className="ear-face" aria-labelledby="ear-problem-title">
             <h2 id="ear-problem-title" className="ear-face-title">問題</h2>

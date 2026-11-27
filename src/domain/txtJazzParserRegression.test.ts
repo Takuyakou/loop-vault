@@ -8,8 +8,8 @@ import { parseExtendedTextChordLabel, parseExtendedTextProgression } from "./ext
 
 interface BaselineRecord { sha256: string; fn: string; args: unknown[]; output: unknown; threw: boolean; calls: number }
 interface ApprovedDifference { recordSha256: string; reason: "new-text-alias" | "approved-text-minor-major-display"; expectedOutputSha256: string }
-const baselineUrl = new URL("../../docs/txt-jazz/evidence/parser-regression-before.json",import.meta.url);
-const ledgerUrl = new URL("../../docs/txt-jazz/evidence/stage01/parser-approved-differences.json",import.meta.url);
+const baselineUrl = new URL("../../docs/contracts/txt-jazz/evidence/parser-regression-before.json",import.meta.url);
+const ledgerUrl = new URL("../../docs/contracts/txt-jazz/evidence/stage01/parser-approved-differences.json",import.meta.url);
 const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 function restore(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(restore);

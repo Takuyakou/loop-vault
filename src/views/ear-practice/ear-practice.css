@@ -11,17 +11,18 @@
 @media (max-width: 1023px) { .ear { --ear-card-h: 62px; } }
 
 /* ---- choosing ---- */
-.ear-choose { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; padding: 13px 32px 28px; align-items: start; }
+.ear-choose { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px 24px; padding: 13px 32px 28px; align-items: start; }
 /* P23-31b O4: under 880px the right column goes under the levels (it used to overlap them). */
 @container (max-width: 879px) {
   .ear-choose { grid-template-columns: minmax(0, 1fr); }
 }
 .ear-choose-main { display: grid; gap: 14px; min-width: 0; }
 /* P23-21 E1: the page title and its one-line explanation share the top row. */
-.ear-choose-head { flex-wrap: wrap; align-items: baseline; }
+.ear-choose-head { grid-column: 1 / -1; flex-wrap: wrap; align-items: baseline; }
 .ear-head-note { margin: 0; color: var(--lv-text-muted); font-size: 12.5px; }
 /* E2/E3/E6/E7: each group is one face. */
-.ear-face { border-radius: var(--lv-radius-md); background: var(--lv-surface); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+/* P25 V4: the right column's boxes take the same face (corner, ground, no edge, padding). */
+.ear-face, .ear-side .dojo-card { border: 0; border-radius: var(--lv-radius-md); background: var(--lv-surface); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
 .ear-face-title { margin: 0; color: var(--lv-text-secondary); font-size: 12px; font-weight: 600; }
 .ear-problem-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .ear-problem-row .ear-hint { margin-left: auto; }
@@ -70,8 +71,9 @@
 /* E14: on a short window the choosing screen tightens so 「始める」 needs no scroll (the rows keep their 46px). */
 @media (max-height: 780px) {
   .ear-choose { padding-top: 8px; padding-bottom: 10px; }
+  .ear-choose { row-gap: 6px; }
   .ear-choose-main { gap: 6px; }
-  .ear-face { padding: 6px 12px; gap: 6px; }
+  .ear-face, .ear-side .dojo-card { padding: 6px 12px; gap: 6px; }
   .ear-startband { padding: 10px 14px; }
 }
 .dojo .ear-start { flex: none; width: 170px; height: 48px; padding: 0; font-size: 15px; border-radius: var(--lv-radius-sm); }
@@ -520,7 +522,8 @@
 .ear-weeks-head h2 { margin: 0; }
 .ear-weeks-head .ear-filter { margin: 0 0 0 auto; }
 .ear-bench-result { height: auto; padding: 20px 28px; max-width: 760px; margin: 0 auto; }
-.ear-side .dojo-card { display: grid; gap: 8px; justify-items: start; }
+.ear-side .dojo-card { justify-items: start; }
+.ear-side .ear-recent-plays { justify-self: stretch; }
 .ear-side .dojo-card h2 { width: 100%; margin-bottom: 0; }
 
 /* ---- P16-04: the score of the whole progression (result screen) ---- */
@@ -555,7 +558,16 @@
 /* ---- P16-06: degree and function under the chord name, pressing a card ---- */
 .ear-card[role="button"] { cursor: default; }
 .ear-card[data-pressable] { cursor: pointer; }
-.ear-card[data-pressable]:hover::after { content: "押すと鳴ります"; position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 9.5px; color: var(--dojo-accent); background: var(--dojo-surface); pointer-events: none; }
+/* P25 V2: a card that sounds when pressed lifts like a Voicing Loop card (N3b): 2px up, a teal edge and a shadow.
+   A current, pressed or listening card keeps its own edge and ground (it only lifts, with the shadow). */
+.ear-card[data-pressable] { transition: transform 120ms var(--lv-ease-in), border-color 120ms var(--lv-ease-in), background-color 120ms var(--lv-ease-in), box-shadow 120ms var(--lv-ease-in); }
+.ear-card[data-pressable]:is(:hover, :focus-visible) { transform: translateY(-2px); box-shadow: 0 6px 14px rgb(0 0 0 / 35%); transition: transform 140ms var(--lv-ease-out), border-color 140ms var(--lv-ease-out), background-color 140ms var(--lv-ease-out), box-shadow 140ms var(--lv-ease-out); }
+.ear-card[data-pressable]:is(:hover, :focus-visible):not([data-current], [data-pressed], [data-lap]) { border-color: rgb(66 216 198 / 55%); background-color: #132033; }
+.ear-card[data-pressable][data-current]:is(:hover, :focus-visible) { box-shadow: 0 0 0 1px var(--dojo-accent), 0 6px 14px rgb(0 0 0 / 35%); }
+.ear-card[data-pressable][data-pressed]:is(:hover, :focus-visible) { box-shadow: 0 0 0 1px #8bd7ff, 0 6px 14px rgb(0 0 0 / 35%); }
+@media (prefers-reduced-motion: reduce) {
+  .ear-card[data-pressable]:is(:hover, :focus-visible) { transform: none; }
+}
 .ear-card[data-pressed] { border-color: #8bd7ff; box-shadow: 0 0 0 1px #8bd7ff; background: rgb(139 215 255 / 12%); }
 .ear-card-degree, .ear-card-fn { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 /* The degree is the main thing the card adds: 12px, the ordinary text colour, heavier than the function's size. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import corpus from "../../docs/phase8.5-pre/extended-v1-canonical-v1.json";
+import corpus from "../../docs/contracts/phase8.5-pre/extended-v1-canonical-v1.json";
 import { parseExtendedTextProgression } from "./extendedTextProgression";
 
 const semanticErratum = new Set([

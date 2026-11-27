@@ -205,6 +205,9 @@ test("without MIDI the answer is shown, 弾けた advances, and nothing is timed
   await openDrill(page, SET, "no-midi");
   await expect(page.getByTestId("dojo-drill")).toHaveAttribute("data-drill-manual", "true");
   await expect(page.getByTestId("drill-status")).toContainText("秒数は測らず記録もしません");
+  // P25 V1: the big "not connected" notice is gone; only this one small line says what changes without MIDI.
+  await expect(page.getByTestId("midi-required-notice")).toHaveCount(0);
+  expect((await page.getByTestId("drill-status").boundingBox())!.height).toBeLessThanOrEqual(24);
   await expect(page.locator(".dojo-score [data-score-midi]")).toHaveCount(cards()[0]!.left.length + cards()[0]!.right.length);
   for (let index = 0; index < cards().length; index += 1) await page.getByTestId("drill-yes").click();
   await expect(page.getByTestId("drill-result")).toBeVisible();

@@ -15,10 +15,10 @@
  *      同一ファイル内の const・`fixture("...")`・`example(...)`・
  *      `extendedTextSyntheticChart(n)`)。
  *   2. 画面に出る例(`STANDARD_TEXT_PLACEHOLDER` / `EXTENDED_TEXT_PLACEHOLDER`)。
- *   3. 凍結コーパス `docs/phase8.5-pre/extended-v1-canonical-v1.json` の rawText。
- *   4. `docs/phase8.8.3/product-supported-matrix.json` の writtenLabel
+ *   3. 凍結コーパス `docs/contracts/phase8.5-pre/extended-v1-canonical-v1.json` の rawText。
+ *   4. `docs/contracts/phase8.8.3/product-supported-matrix.json` の writtenLabel
  *      (`| <label> |` の形でテストが渡している)。
- *   5. `docs/phase5.31/fixtures/*.txt`(`fixture("...")` で読まれる物)。
+ *   5. `docs/contracts/phase5.31/fixtures/*.txt`(`fixture("...")` で読まれる物)。
  *
  * 解けなかった呼び出し(変数・テンプレートの埋め込みなど)は
  * `corpus.unresolved` に file:line 付きで残す(推測で埋めない)。
@@ -141,9 +141,9 @@ function resolveAll(expression: ts.Expression, context: FileContext): string[] {
   return single === undefined ? [] : [single];
 }
 
-/** `fixture("rechord-user-example.txt")` は `docs/phase5.31/fixtures/` から読む。 */
+/** `fixture("rechord-user-example.txt")` は `docs/contracts/phase5.31/fixtures/` から読む。 */
 function readFrozenFixture(name: string): string | undefined {
-  const path = join(ROOT, "docs/phase5.31/fixtures", name);
+  const path = join(ROOT, "docs/contracts/phase5.31/fixtures", name);
   return existsSync(path) ? readFileSync(path, "utf8") : undefined;
 }
 
@@ -307,30 +307,30 @@ function collectFixtureCorpus(): Candidate[] {
 
   // 凍結コーパス(拡張の正準フィクスチャ)。
   const canonical = JSON.parse(
-    readFileSync(join(ROOT, "docs/phase8.5-pre/extended-v1-canonical-v1.json"), "utf8"),
+    readFileSync(join(ROOT, "docs/contracts/phase8.5-pre/extended-v1-canonical-v1.json"), "utf8"),
   ) as { fixtures: Array<{ fixtureId: string; rawText: string }> };
   for (const fixture of canonical.fixtures) {
     candidates.push({
       source: fixture.rawText,
-      origin: `docs/phase8.5-pre/extended-v1-canonical-v1.json ${fixture.fixtureId}`,
+      origin: `docs/contracts/phase8.5-pre/extended-v1-canonical-v1.json ${fixture.fixtureId}`,
     });
   }
 
   // 製品対応マトリクスの writtenLabel(`| <label> |` でテストが渡している)。
   const matrix = JSON.parse(
-    readFileSync(join(ROOT, "docs/phase8.8.3/product-supported-matrix.json"), "utf8"),
+    readFileSync(join(ROOT, "docs/contracts/phase8.8.3/product-supported-matrix.json"), "utf8"),
   ) as { rows: Array<{ rowId: string; writtenLabel: string }> };
   for (const row of matrix.rows) {
     candidates.push({
       source: `| ${row.writtenLabel} |`,
-      origin: `docs/phase8.8.3/product-supported-matrix.json ${row.rowId} (| ${row.writtenLabel} |)`,
+      origin: `docs/contracts/phase8.8.3/product-supported-matrix.json ${row.rowId} (| ${row.writtenLabel} |)`,
     });
   }
 
   // `fixture()` で読まれるテキスト。
   for (const name of ["rechord-user-example.txt", "rechord-user-example-expanded.txt", "rechord-control-example.txt"]) {
     const text = readFrozenFixture(name);
-    if (text !== undefined) candidates.push({ source: text, origin: `docs/phase5.31/fixtures/${name}` });
+    if (text !== undefined) candidates.push({ source: text, origin: `docs/contracts/phase5.31/fixtures/${name}` });
   }
 
   // 合成チャート(テストが使う小節数)。

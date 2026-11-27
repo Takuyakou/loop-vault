@@ -1,25 +1,22 @@
 import { expect, test } from "@playwright/test";
 
-test("P11 unsupported detailed shapes visibly substitute the selected Basic/Core and preserve desktop panel fit", async ({ page }) => {
+test("P11 a K shape a chord cannot make plays a nearer shape with today's 「代わり」, and the panel still fits", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?p527Status=p11-generated-fallback");
   await page.locator('[data-nav="voicing-loop"]').click();
-  const details = page.getByTestId("voicing-loop-generated-details");
-  for (const study of ["基本", "骨組み"]) {
-    await page.getByLabel("生成タイプ", { exact: true }).click();
-    await page.getByRole("option", { name: study, exact: true }).click();
-    for (const shape of ["basic-shell", "rootless-shell", "full-shell", "left-hand"]) {
-      await details.locator("summary").click();
-      await details.getByLabel("既存の形", { exact: true }).selectOption(shape);
-      await expect(page.getByTestId("voicing-loop-auto-fallback")).toHaveCount(2);
-      await expect(page.getByTestId("voicing-loop-auto-fallback").first()).toHaveAttribute("title", `この形では作れないため「${study}」で鳴らしています`);
-      await expect(page.getByTestId("voicing-loop-shape-fallback-summary")).toHaveText(`2コードは${study}で代替`);
-      await expect(page.getByRole("button", { name: "開始", exact: true })).toBeEnabled();
-      await page.getByTestId("voicing-loop-event").nth(2).click();
-      await expect(page.getByTestId("voicing-loop-left-hand")).toContainText("L5");
-      await expect(page.getByTestId("voicing-loop-right-hand")).toContainText(/R1.*R3.*R5/);
-    }
+  await page.getByRole("button", { name: "自動生成", exact: true }).click();
+  // P25-08 K4 / L4: シェル+上の三和音 falls back on some of these cards; each such card shows 「代わり」 with what it plays.
+  await page.getByTestId("voicing-loop-shape-button").click();
+  await page.getByTestId("voicing-loop-shape-menu").locator('[data-shape="triad"]').click();
+  const marks = page.getByTestId("voicing-loop-auto-fallback");
+  expect(await marks.count()).toBeGreaterThan(0);
+  for (const text of await marks.evaluateAll((items) => items.map((item) => item.textContent))) {
+    expect(text === "代わり" || text === "代", `the card reads 代わり (or 代 when narrow): ${text}`).toBe(true);
   }
+  for (const title of await marks.evaluateAll((items) => items.map((item) => item.getAttribute("title")))) {
+    expect(title).toMatch(/^(この形では作れないため「.+」で鳴らしています|このコードは形で作れないので、今までの作り方の音で鳴らしています)$/);
+  }
+  await expect(page.getByRole("button", { name: "開始", exact: true })).toBeEnabled();
   for (const [width, height] of [[1920, 1080], [1440, 900]]) {
     await page.setViewportSize({ width, height });
     const panel = page.getByTestId("voicing-loop-current-panel");

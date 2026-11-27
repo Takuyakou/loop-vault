@@ -69,7 +69,7 @@ test("C1 A1/A4/A5/A6: the steps, the strip above the roll, the chips and the lea
   // A1: the three steps, the third one is where we are.
   const steps = workspace(page).locator(".lv-pa-steps li");
   await expect(steps).toHaveCount(3);
-  await expect(steps.nth(0)).toContainText("MIDI を落とす");
+  await expect(steps.nth(0)).toContainText("MIDI をドロップ");
   await expect(steps.nth(1)).toContainText("パートを確かめる");
   // P23-31 P1 (form B): 「（今ここ）」 is not shown any more; the current step is the accent pill instead.
   await expect(steps.nth(1)).not.toContainText("（今ここ）");
@@ -161,7 +161,7 @@ test("C3: one part, and two files keep their own headings", async ({ page }) => 
   await expect(workspace(page).locator(".lv-pa-source-name").first()).toContainText(".mid");
 });
 
-test("C1 A3/C4: hovering a part lights its notes and fades the others, and leaving restores the picture", async ({ page }) => {
+test("C1 A3/C4: hovering a part lights its notes and fades the others, leaving restores the picture, and pressing a part does not dim the others", async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await openWorkspace(page, 5);
@@ -188,6 +188,26 @@ test("C1 A3/C4: hovering a part lights its notes and fades the others, and leavi
   const after = await rolePixels(page);
   expect(after.bright).toBe(before.bright);
   expect(after.chord).toBe(before.chord);
+
+  // P23-31 C4 (merged here in P25 T3): pressing a part does not dim the others; only the pointer does.
+  // Open the selected part with the mouse (its details open), then take the pointer off the row.
+  const selected = page.locator(".lv-pa-part[data-selected]").first();
+  await selected.click();
+  await expect(selected.getByTestId("pre-analysis-part-detail")).toHaveCount(1);
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(120);
+  const afterPress = await rolePixels(page);
+  expect(afterPress.bright).toBe(before.bright);
+  expect(afterPress.chord).toBe(before.chord);
+
+  // Hovering is still the only thing that fades the other parts.
+  await parts(page).first().hover();
+  await page.waitForTimeout(120);
+  const hoveredAgain = await rolePixels(page);
+  expect(hoveredAgain.bright).toBeLessThan(before.bright);
+  await page.mouse.move(5, 5);
+  await page.waitForTimeout(120);
+  expect((await rolePixels(page)).bright).toBe(before.bright);
 });
 
 test("C2/C5: four sizes keep the page still, the roll keeps its height, axe is clean and the keys work", async ({ page }) => {
@@ -318,33 +338,6 @@ test("P23-31 C1/C2/C3/C6: the steps, the mixed row, the roles and the bottom ban
   });
   expect(gap).toBeGreaterThanOrEqual(0);
   expect(gap).toBeLessThanOrEqual(16);
-});
-
-test("P23-31 C4: pressing a part does not dim the others; only the pointer does", async ({ page }) => {
-  test.setTimeout(120_000);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await openWorkspace(page, 5);
-  const before = await rolePixels(page);
-  expect(before.bright).toBeGreaterThan(0);
-
-  // Open the selected part with the mouse (its details open), then take the pointer off the row.
-  const selected = page.locator(".lv-pa-part[data-selected]").first();
-  await selected.click();
-  await expect(selected.getByTestId("pre-analysis-part-detail")).toHaveCount(1);
-  await page.mouse.move(5, 5);
-  await page.waitForTimeout(120);
-  const afterPress = await rolePixels(page);
-  expect(afterPress.bright).toBe(before.bright);
-  expect(afterPress.chord).toBe(before.chord);
-
-  // Hovering is still the only thing that fades the other parts.
-  await parts(page).first().hover();
-  await page.waitForTimeout(120);
-  const hovered = await rolePixels(page);
-  expect(hovered.bright).toBeLessThan(before.bright);
-  await page.mouse.move(5, 5);
-  await page.waitForTimeout(120);
-  expect((await rolePixels(page)).bright).toBe(before.bright);
 });
 
 test("P23-31 photos: the pre-analysis screen at four sizes, and one row hovered", async ({ page }) => {

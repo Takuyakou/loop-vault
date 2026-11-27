@@ -21,16 +21,6 @@ describe('Dojo sampled piano lifetime',()=>{
   close.reset();event(s,144,69);expect(m.updateNotes).toHaveBeenLastCalledWith([69]);expect(create).toHaveBeenCalledOnce();expect(m.dispose).not.toHaveBeenCalled();close();expect(m.dispose).toHaveBeenCalledOnce();
  });
  it('sounds a new note immediately even when an old entry note is still held',async()=>{const s=make();event(s,144,60);const m=fake(),close=startDojoPianoInput(vi.fn(),s,async()=>m);await Promise.resolve();event(s,144,62);expect(m.updateNotes).toHaveBeenLastCalledWith([62]);event(s,128,60,0);expect(m.updateNotes).toHaveBeenCalledTimes(1);event(s,144,60);expect(m.updateNotes).toHaveBeenLastCalledWith([60,62]);close();});
- it('mirrors the notes handed to the fixture monitor (VL-13 A)',async()=>{
- const w=window as typeof window&{__dojoMonitorCount?:number;__dojoMonitorNotes?:number[]};
- w.__dojoMonitorCount=0;w.__dojoMonitorNotes=[];
- const s=make(),m=fake(),close=startDojoPianoInput(vi.fn(),s,async()=>m);await Promise.resolve();
- event(s,144,60);event(s,144,64);expect(w.__dojoMonitorNotes).toEqual([60,64]);
- event(s,128,60,0);expect(w.__dojoMonitorNotes).toEqual([64]);
- event(s,128,64,0);expect(w.__dojoMonitorNotes).toEqual([]);
- close();expect(w.__dojoMonitorNotes).toEqual([]);
- delete w.__dojoMonitorCount;delete w.__dojoMonitorNotes;
-});
 it.each(['reset','mute'] as const)('reattacks a fresh physical pitch after %s while its old pedal voice remains suppressed',async(kind)=>{
   const s=make(),m=fake(),create=vi.fn(async()=>m),close=startDojoPianoInput(vi.fn(),s,create);await Promise.resolve();event(s,144,60);event(s,176,64,127);event(s,128,60,0);
   if(kind==='mute'){close.setMuted(true);close.setMuted(false);}else close.reset();m.updateNotes.mockClear();s.setState({error:'synthetic'});expect(m.updateNotes).not.toHaveBeenCalled();

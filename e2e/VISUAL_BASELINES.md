@@ -10,7 +10,7 @@ written below `test-results/`, which is ignored by Git.
 
 - `e2e/visual.spec.ts-snapshots/` contains assertion baselines used by
   `expect(page).toHaveScreenshot`. These are reviewed source artifacts.
-- `artifacts/phase5.13*/before/` and `artifacts/phase5.13*/after/` are frozen
+- `docs/archive/artifacts/phase5.13*/before/` and `docs/archive/artifacts/phase5.13*/after/` are frozen
   historical phase evidence. Tests may read them but never write them.
 
 ## Updating baselines

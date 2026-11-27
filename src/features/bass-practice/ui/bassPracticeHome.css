@@ -37,59 +37,9 @@
 }
 
 /* ---- 続きから ---- */
-/* P24-07 item 7: the shared band spans both grid columns (the cards stay in column 1). */
+/* P24-07 item 7: the shared band spans both grid columns (the cards stay in column 1).
+   P25 V13: its look (the purple line and wash) is the shared band's; this screen only sets the accent. */
 .lv-bh > .lv-resume-band { grid-column: 1 / -1; }
-.lv-bh-resume {
-  display: flex;
-  min-height: 56px;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 10px 8px 14px;
-  border-radius: 14px;
-  background: linear-gradient(100deg, #1c1840, #101a26 55%);
-}
-
-.lv-bh-mark {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  place-items: center;
-  border-radius: 7px;
-  background: var(--bh-accent);
-  color: var(--bh-on-accent);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.lv-bh-resume-body {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-}
-
-.lv-bh-resume-kicker {
-  color: var(--bh-accent);
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.lv-bh-resume-line {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 8px;
-  color: var(--lv-text-secondary);
-  font-size: 12.5px;
-}
-
-.lv-bh-resume-line > b {
-  color: var(--lv-text);
-  font-size: 15px;
-}
-
 /* ---- The cards ---- */
 .lv-bh-group {
   display: flex;
@@ -112,7 +62,9 @@
 .lv-bh-card {
   display: grid;
   min-height: 172px;
-  grid-template-columns: 148px minmax(0, 1fr);
+  /* P25 V21: the text keeps room for the longest name on one line (「コード進行のベース」 and its chevron); on a narrow card
+     the picture gives way instead (148px down to 56px), so the cards keep their size and count per row. */
+  grid-template-columns: minmax(56px, 148px) minmax(180px, 1fr);
   gap: 14px;
   padding: 12px;
   border-radius: 14px;
@@ -167,6 +119,8 @@
   gap: 8px;
   font-size: 17px;
   font-weight: 700;
+  /* P25 V21: a card's name and its 「まだ弾いていません」 never fold (the description is prose and may run on). */
+  white-space: nowrap;
 }
 
 .lv-bh-chevron {
@@ -206,8 +160,10 @@
 
 .lv-bh-card-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 4px 10px;
+  white-space: nowrap;
   margin-top: auto;
   padding-top: 8px;
   color: var(--lv-text-secondary);
@@ -460,21 +416,10 @@
   }
 }
 
-/* P23-41: the resume band uses the Voicing Loop's sizes; its hover/focus is the Bass purple. */
-.lv-bh-resume {min-height:0;padding:8px 12px;gap:12px;box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .18s ease;}
-.lv-bh-resume:hover,.lv-bh-resume:focus-within {box-shadow:inset 0 0 0 1px var(--bh-accent),inset 0 0 0 999px rgb(255 255 255 / 3%);}
-.lv-bh-mark {width:30px;height:30px;border-radius:8px;font-size:11px;font-weight:700;}
-.lv-bh-resume-kicker {font-size:12px;line-height:1.55;}
-.lv-bh-resume-line > b {font-size:14px;line-height:20px;}
-.lv-bh-resume {border:1px solid transparent;transition:border-color .18s ease,box-shadow .18s ease;}
-.lv-bh-resume:hover,.lv-bh-resume:focus-within {border-color:var(--bh-accent);}
-.lv-bh-mark {line-height:1.55;}
-
 /* P23-43: the resume band is a full-width row, from column 1's left edge to the instrument panel's right edge.
    When there is no resume, the two-row layout leaves no empty row. */
 .lv-bh { grid-template-rows: auto 1fr; }
 .lv-bh[data-resume="false"] { grid-template-rows: 1fr; }
-.lv-bh-resume { grid-column: 1 / -1; grid-row: 1; width: 100%; min-width: 0; }
 .lv-bh-main { grid-column: 1; grid-row: 2; }
 .lv-bh-aside { grid-column: 2; grid-row: 2; }
 .lv-bh[data-resume="false"] .lv-bh-main,
@@ -482,7 +427,7 @@
 
 @media (max-width: 1199px) {
   .lv-bh { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
-  .lv-bh-resume, .lv-bh-main, .lv-bh-aside { grid-column: 1; grid-row: auto; }
+  .lv-bh-main, .lv-bh-aside { grid-column: 1; grid-row: auto; }
   .lv-bh[data-resume="false"] .lv-bh-main,
   .lv-bh[data-resume="false"] .lv-bh-aside { grid-column: 1; grid-row: auto; }
 }

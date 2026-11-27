@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { mergeNormalizeChanges, type NormalizeResult } from "../../domain/textNormalize";
 import type { UnifiedDiagnostic, UnifiedTextResult } from "../../domain/textUnified";
 
@@ -23,8 +23,8 @@ const BAR_WIDTH = 3;
 const GAP = 8;
 const TEXT_LEFT = GUTTER_WIDTH + GAP + BAR_WIDTH + GAP;
 
-/** The design's row colours: code, skipped (lyrics), heading, error. */
-const ROW_COLOR = { code: "#42d8c6", skipped: "#3a4a60", heading: "#4a4290", error: "#ee6b73" } as const;
+/** The design's row colours: code, skipped (lyrics), heading, error, setting (V32). */
+const ROW_COLOR = { code: "#42d8c6", skipped: "#3a4a60", heading: "#4a4290", error: "#ee6b73", setting: "rgb(66 216 198 / 45%)" } as const;
 
 interface Props {
   readonly input: string;
@@ -82,15 +82,31 @@ export function TextUnifiedEditor({
     if (diagnostic.severity === "ERROR") errorLines.add(lineOf(diagnostic.rawSpan.start) + 1);
   }
   // The tag zone is drawn for lines that carry one; the editor's own text never reaches it in practice.
-  const rowKindOf = (lineNumber: number): "code" | "skipped" | "heading" | "comment" | "blank" => {
+  const rowKindOf = (lineNumber: number): "code" | "skipped" | "heading" | "comment" | "blank" | "setting" => {
     const entry = normalized.lines[lineNumber - 1];
     return entry?.kind ?? "blank";
   };
+  /** P25 V32: the vertical scrollbar's width, so the row tags sit left of it instead of under it. */
+  const [scrollbarWidth, setScrollbarWidth] = useState(0);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => {
+      const width = Math.max(0, element.offsetWidth - element.clientWidth);
+      setScrollbarWidth((current) => (current === width ? current : width));
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
+    observer?.observe(element);
+    return () => observer?.disconnect();
+  }, [input, ref]);
 
   function syncScroll(element: HTMLTextAreaElement) {
     const top = element.scrollTop;
+    // P25 V47: the layers follow the textarea sideways too, so a long line scrolled to its end does not
+    // draw the text twice (the textarea's own selection text and the layer's copy).
     for (const layer of [underInner.current, overInner.current]) {
-      if (layer) layer.style.transform = `translateY(${-top}px)`;
+      if (layer) layer.style.transform = `translate(${-element.scrollLeft}px, ${-top}px)`;
     }
     onScroll?.();
   }
@@ -113,10 +129,12 @@ export function TextUnifiedEditor({
     const bar = isError ? ROW_COLOR.error
       : kind === "skipped" ? ROW_COLOR.skipped
         : kind === "heading" ? ROW_COLOR.heading
-          : kind === "code" ? ROW_COLOR.code : "transparent";
+          : kind === "setting" ? ROW_COLOR.setting
+            : kind === "code" ? ROW_COLOR.code : "transparent";
     const textColor = isError ? "#ffb3b8"
       : kind === "heading" ? "#c9b7ff"
-        : kind === "skipped" ? "#7f90aa" : "#f2f6fc";
+        : kind === "setting" ? "#a5b2c6"
+          : kind === "skipped" ? "#7f90aa" : "#f2f6fc";
     const marks = marksOfLine(lineNumber, raw);
     return (
       <div key={lineNumber} data-line={lineNumber} data-line-kind={kind}
@@ -187,7 +205,7 @@ export function TextUnifiedEditor({
       }}
       onMouseLeave={() => setHoveredLine(undefined)}>
       <div aria-hidden="true" className="lv-text-editor-layer" data-testid="text-intake-decorations"
-        data-layer="under" style={{ ...LAYER_STYLE, zIndex: 0 }}>
+        data-layer="under" style={{ ...LAYER_STYLE, right: scrollbarWidth, zIndex: 0 }}>
         <div ref={underInner} style={{ paddingTop: PAD_TOP, willChange: "transform" }}>
           {lines.map((_line, index) => renderRow(index + 1, "under"))}
         </div>
@@ -208,7 +226,7 @@ export function TextUnifiedEditor({
           whiteSpace: "pre", overflow: "auto", tabSize: 2,
         }} />
       <div className="lv-text-editor-layer" data-layer="over" data-testid="text-intake-marks"
-        style={{ ...LAYER_STYLE, zIndex: 2 }}>
+        style={{ ...LAYER_STYLE, right: scrollbarWidth, zIndex: 2 }}>
         <div ref={overInner} style={{ paddingTop: PAD_TOP, willChange: "transform" }}>
           {lines.map((_line, index) => renderRow(index + 1, "over"))}
         </div>
@@ -235,6 +253,9 @@ function RowTag({ kind }: { readonly kind: string }) {
   }
   if (kind === "heading") {
     return <span style={TAG_STYLE("#4a4290", "#c9b7ff")}>{"見出し"}</span>;
+  }
+  if (kind === "setting") {
+    return <span style={TAG_STYLE("rgb(66 216 198 / 45%)", "#42d8c6")}>{"設定"}</span>;
   }
   return null;
 }
@@ -317,7 +338,7 @@ function segment(length: number, marks: readonly Mark[]): Array<{ start: number;
 
 /** The empty input's face: the drawing, the two lines. No button (the design has none). */
 function EmptyFace() {
-  return <div aria-hidden="true" style={{
+  return <div aria-hidden="true" className="lv-text-empty-face" style={{
     position: "absolute", inset: 0, zIndex: 3, display: "flex", flexDirection: "column",
     alignItems: "center", justifyContent: "center", gap: 18, paddingBottom: 40, pointerEvents: "none",
   }}>

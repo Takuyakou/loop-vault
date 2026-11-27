@@ -163,7 +163,8 @@ export function VoicingLoopPicker({
       {resumeCandidate ? (
         <ResumeBand screen="vl" testId="voicing-loop-resume" label={text.resumeTitle}
           title={resumeCandidate.title}
-          meta={resumeFacts(resumeCandidate, lastPractice, text)}>
+          tags={resumeTags(resumeCandidate, text)}
+          when={lastPractice ? dayLabel(lastPractice.at, text) : undefined}>
           <ResumeGoButton label={text.resumeGo} data-testid="voicing-loop-resume-go" onClick={() => onPractice(resumeCandidate)} />
         </ResumeBand>
       ) : null}
@@ -480,12 +481,11 @@ function dayOf(candidate: VoicingLoopVaultCandidate, lastPractice: LastVoicingPr
   return dayLabel(lastPractice.at, text);
 }
 
-function resumeFacts(candidate: VoicingLoopVaultCandidate, lastPractice: LastVoicingPractice | undefined, text: VoicingLoopText): string {
+function resumeTags(candidate: VoicingLoopVaultCandidate, text: VoicingLoopText): string[] {
   return [
     candidate.key ? displayChordLabel(displayKey(candidate.key) || "") : undefined,
     candidate.lengthBars === undefined ? undefined : text.barsCount(candidate.lengthBars),
-    lastPractice ? `${dayLabel(lastPractice.at, text)}練習` : undefined,
-  ].filter(Boolean).join(" ・ ");
+  ].filter((fact): fact is string => Boolean(fact));
 }
 
 /** 「きょう」「きのう」「n 日前」「先週」「M/D」 from an ISO instant (the local calendar). */

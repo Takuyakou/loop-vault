@@ -5,7 +5,7 @@ import { validateTextChordNotes } from "./textChordValidation";
 import { createTextProgressionStyleSnapshot, textProgressionVoicingNotes } from "./textProgressionVoicing";
 import { textPreviewNotes, textVoicingAvailability } from "./textVoicingAvailability";
 import { chordPitchClasses, voiceChordForPreview } from "./chordVoicing";
-import { supportsTextChord } from "./textChordConsumerCapabilities";
+import { supportsLegacyGeneratedChord, supportsTextChord } from "./textChordConsumerCapabilities";
 import { isUsablePracticeVoicing } from "./voicing/compatibility";
 import { normalizedChordKey } from "./voicing/normalizeVoicing";
 import { parseTextChordLabel } from "./chords";
@@ -80,12 +80,15 @@ describe("TXT-JAZZ recommended pitches and safety", () => {
   });
 
   it("does not treat an unknown consumer, legacy preview or generated style as alt-aware", () => {
-    for (const consumer of ["unknown", "chord-context", "root-motion", "bass-practice", "generated-loop"]) {
+    for (const consumer of ["unknown", "chord-context", "root-motion", "bass-practice"]) {
       expect(supportsTextChord(consumer, alt)).toBe(false);
     }
-    for (const consumer of ["vault-save", "chord-dojo", "voicing-memory", "text-audition"]) {
+    // P25-08 K9-5: the generated loop accepts alt (the K shapes make it); today's generators still do not.
+    for (const consumer of ["vault-save", "chord-dojo", "voicing-memory", "text-audition", "generated-loop"]) {
       expect(supportsTextChord(consumer, alt)).toBe(true);
     }
+    expect(supportsLegacyGeneratedChord(alt)).toBe(false);
+    expect(supportsLegacyGeneratedChord({ ...alt, altered: undefined })).toBe(true);
     expect(chordPitchClasses(alt)).toEqual([]);
     expect(voiceChordForPreview(alt).notes).toEqual([]);
     for (const style of ["shell-17", "open-17", "rootless-ab"] as const) {

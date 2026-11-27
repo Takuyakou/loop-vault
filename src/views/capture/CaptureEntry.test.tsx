@@ -44,7 +44,7 @@ describe("the first screen of 取り込む (P23-11)", () => {
     const hero = container.querySelector<HTMLElement>(".lv-capture-hero")!;
     expect(hero.getAttribute("data-zone-state")).toBe("idle");
     expect(hero.getAttribute("data-drop-target-state")).toBe("idle");
-    expect(statusText(container)).toBe("MIDI ファイルをここに落とす");
+    expect(statusText(container)).toBe("MIDIファイルをここにドロップ");
     await act(async () => container.querySelector<HTMLElement>("[data-testid='capture-choose-midi']")?.click());
     expect(props.onChooseMidi).toHaveBeenCalledTimes(1);
     expect(container.querySelector("[role='alert']")).toBeNull();
@@ -104,7 +104,7 @@ describe("the first screen of 取り込む (P23-11)", () => {
     const steps = [...container.querySelectorAll("ol.lv-capture-flow > li")];
     expect(steps).toHaveLength(3);
     expect(steps.map((step) => step.querySelector(".lv-capture-step-name")?.textContent))
-      .toEqual(["MIDI を落とす", "パートを確かめる", "選んで保存"]);
+      .toEqual(["MIDI をドロップ", "パートを確かめる", "選んで保存"]);
   });
 
   it("U7 opens the text entry, and closes it while a draft is open", async () => {

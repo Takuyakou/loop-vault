@@ -77,7 +77,7 @@ describe("P5.32 Stage00 integrated baseline", () => {
 
   it("loads the supplied guide fixtures as bounded one-hand physical voicings", () => {
     const golden = JSON.parse(readFileSync(
-      new URL("../../docs/phase5.32/fixtures/fingering-golden-fixtures.json", import.meta.url),
+      new URL("../../docs/contracts/phase5.32/fingering-golden-fixtures.json", import.meta.url),
       "utf8",
     )) as Record<string, Array<{ hand: "right" | "left"; midi: number[]; preferred: number[] }>>;
     const entries = Object.values(golden).flat();

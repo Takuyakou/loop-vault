@@ -263,8 +263,8 @@ describe("P23-39 §3 the Lv1–3 bank and policy (v3)", () => {
 
   it("freezes the JSON copies without drift", () => {
     const bank = buildBank(2338);
-    expect(JSON.parse(readFileSync("docs/p23-39-contracts/bank-lv1-3-v3.json", "utf8"))).toEqual(bank);
-    expect(JSON.parse(readFileSync("docs/p23-39-contracts/policy-lv1-3-v3.json", "utf8"))).toEqual(POLICY);
+    expect(JSON.parse(readFileSync("docs/contracts/p23-39/bank-lv1-3-v3.json", "utf8"))).toEqual(bank);
+    expect(JSON.parse(readFileSync("docs/contracts/p23-39/policy-lv1-3-v3.json", "utf8"))).toEqual(POLICY);
   });
 
   it("never passes an incomplete sheet: missing quality, denominators, duplicates and coverage all fail", () => {

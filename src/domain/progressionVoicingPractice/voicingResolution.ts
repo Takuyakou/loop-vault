@@ -1,5 +1,15 @@
 import type { ChordSymbol } from "../types";
-import { supportsTextChord } from "../textChordConsumerCapabilities";
+import {
+  buildShapeVoicing, pickShapeForm, placementNotes,
+  type GeneratedShapeOptions, type ShapeVoicingPlacement, type ShapeVoicingResult, type VoicingShapeOptions,
+} from "../voicingShapes";
+import { optimizeShapeProgression } from "../voicingShapes/optimize";
+import { buildBasicWithParts } from "../voicingShapes/basicParts";
+import { usedShapeName } from "../voicingShapes/names";
+import { build as buildRecipe } from "../voicingShapes/recipe";
+import { recChordOf } from "../voicingShapes";
+import { textProgressionVoicingNotes } from "../textProgressionVoicing";
+import { supportsLegacyGeneratedChord } from "../textChordConsumerCapabilities";
 import { labelFromSymbol } from "../chords";
 import { chordPitchClasses } from "../chordVoicing";
 import {
@@ -54,6 +64,11 @@ export interface ResolveProgressionPracticeVoicingsOptions {
   readonly lessonContext?: VoicingRuleContext;
   /** Session-only octave displacement. The detached source snapshot stays unchanged. */
   readonly octaveShift?: -2 | -1 | 0 | 1 | 2;
+  /**
+   * P25-08 L1: the 「形」 chosen for 自動生成 (`basic-full`). 基本 keeps today's rules (its parts follow K11);
+   * the four K shapes are built by `buildShapeVoicing` (K3 / K6). Absent = today's behaviour.
+   */
+  readonly generatedShape?: GeneratedShapeOptions;
 }
 
 /**
@@ -94,26 +109,39 @@ export function resolveProgressionPracticeVoicings(
     return applyOctaveShift(freezePlan(snapshot, mixed), options.octaveShift ?? 0);
   }
 
-  if (options.lessonStudyCategory && selection !== "left-hand") {
+  const octave = options.octaveShift ?? 0;
+  const shape = selection === "basic-full" ? options.generatedShape : undefined;
+  if (shape !== undefined && shape.shape !== "basic") {
     return applyOctaveShift(
+      resolveShapeVoicings(snapshot, shape as VoicingShapeOptions, options.lessonProgressionOptimization ?? true),
+      octave,
+    );
+  }
+  const parts = shape !== undefined && (shape.tension || shape.spread) ? { tension: shape.tension, spread: shape.spread } : undefined;
+  // K12: a 基本 card today's rules cannot make is filled with the text intake's recommendation; K11: the parts.
+  const finishBasic = (plan: ProgressionPracticeVoicingPlan): ProgressionPracticeVoicingPlan =>
+    applyOctaveShift(selection === "basic-full" ? fillBasicGaps(snapshot, slashBassToGaps(snapshot, plan), parts) : plan, octave);
+
+  if (options.lessonStudyCategory && selection !== "left-hand") {
+    return finishBasic(
       resolveStudyVoicings(
         snapshot,
         options.lessonStudyCategory,
         options.lessonContext ?? { bass: "self-played", top: "normal-voicing-top" },
         {
           ...candidateOptions,
-          color: options.lessonColorEnabled ?? false,
-          open: options.lessonOpenEnabled ?? false,
+          color: shape !== undefined ? false : options.lessonColorEnabled ?? false,
+          open: shape !== undefined ? false : options.lessonOpenEnabled ?? false,
           optimize: options.lessonProgressionOptimization ?? true,
           candidateIndexes: options.lessonCandidateIndexes,
+          ...(parts === undefined ? {} : { parts }),
         },
       ),
-      options.octaveShift ?? 0,
     );
   }
 
   if (selection === "basic-full" && snapshot.textDerivedPolicyId === "text-defining-basic-full-v1") {
-    return applyOctaveShift(resolveTextBasicFull(snapshot), options.octaveShift ?? 0);
+    return finishBasic(applyBasicParts(snapshot, resolveTextBasicFull(snapshot), parts));
   }
 
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
@@ -122,7 +150,7 @@ export function resolveProgressionPracticeVoicings(
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, index) => {
-    if (!supportsTextChord("generated-loop", event.chord)) {
+    if (!supportsLegacyGeneratedChord(event.chord)) {
       resolutions[index] = unsupportedRule(event.id);
       return;
     }
@@ -171,7 +199,7 @@ export function resolveProgressionPracticeVoicings(
       });
     }
   }
-  return applyOctaveShift(freezePlan(snapshot, resolutions), options.octaveShift ?? 0);
+  return finishBasic(applyBasicParts(snapshot, freezePlan(snapshot, resolutions), parts));
 }
 
 /**
@@ -180,7 +208,7 @@ export function resolveProgressionPracticeVoicings(
  * optimizer, so neighboring cards still influence voice leading.
  */
 function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): ProgressionPracticeVoicingPlan {
-  const supportedEvents = snapshot.events.filter(event => supportsTextChord("generated-loop", event.chord));
+  const supportedEvents = snapshot.events.filter(event => supportsLegacyGeneratedChord(event.chord));
   const groups = supportedEvents.map(event => {
     const chord = asChordSymbol(event.chord);
     const bassPc = pitchClass(chord.bass ?? chord.root);
@@ -204,7 +232,7 @@ function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): Pro
   const optimized = optimizeCandidateGroups(groups);
   const byEvent = new Map(supportedEvents.map((event, index) => [event.id, optimized[index]]));
   const resolutions = snapshot.events.map(event => {
-    if (!supportsTextChord("generated-loop", event.chord)) return unsupportedRule(event.id);
+    if (!supportsLegacyGeneratedChord(event.chord)) return unsupportedRule(event.id);
     const candidate = byEvent.get(event.id);
     if (!candidate) return generationError(event.id);
     const midiNotes = Object.freeze([...candidate.allNotes]);
@@ -267,6 +295,8 @@ function resolveStudyVoicings(
     readonly open: boolean;
     readonly optimize: boolean;
     readonly candidateIndexes?: Readonly<Record<string, number>>;
+    /** P25-08 K11: 基本's parts, put on each candidate before the optimizer chooses. */
+    readonly parts?: { readonly tension: boolean; readonly spread: boolean };
   },
 ): ProgressionPracticeVoicingPlan {
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
@@ -276,7 +306,7 @@ function resolveStudyVoicings(
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, eventIndex) => {
-    if (!supportsTextChord("generated-loop", event.chord)) {
+    if (!supportsLegacyGeneratedChord(event.chord)) {
       resolutions[eventIndex] = unsupportedRule(event.id);
       return;
     }
@@ -292,9 +322,14 @@ function resolveStudyVoicings(
         metadata.rule.rightDegrees,
       );
       if (!facts) return [];
-      metadataByCandidate.set(metadata.candidate, metadata);
-      factsByCandidate.set(metadata.candidate, facts);
-      return [metadata.candidate];
+      const symbol = asChordSymbol(event.chord);
+      if (!slashBassPlacementOk(symbol, metadata.candidate.leftHandNotes, metadata.candidate.rightHandNotes)) return [];
+      const parted = options.parts === undefined ? metadata.candidate
+        : withBasicParts(symbol, metadata.candidate, options.parts);
+      const candidate = slashBassPlacementOk(symbol, parted.leftHandNotes, parted.rightHandNotes) ? parted : metadata.candidate;
+      metadataByCandidate.set(candidate, metadata);
+      factsByCandidate.set(candidate, facts);
+      return [candidate];
     });
     if (resolved.length === 0) {
       resolutions[eventIndex] = unsupportedRule(event.id);
@@ -349,7 +384,8 @@ function supportedStudyResolution(
   const referenceBassNote = metadata.rule.requiredBassContext === "external-bass"
     ? separateBassRegister(event.chord.root, midiNotes)
     : undefined;
-  const addedDegrees = Object.freeze([...metadata.rule.addedDegrees]);
+  const partDegree = PARTS_ADDED.get(candidate);
+  const addedDegrees = Object.freeze(unique([...metadata.rule.addedDegrees, ...(partDegree === undefined ? [] : [partDegree])]));
   return freezeResolution({
     eventId: event.id,
     status: "SUPPORTED",
@@ -637,6 +673,183 @@ function supportedLessonResolution(
   });
 }
 
+// ---- P25-08: the K shapes, 基本's parts (K11) and 基本's filled cards (K12) ----
+
+const K12_TITLE = "このコードは基本では作れないので、テキスト取り込みのおすすめの音で鳴らしています";
+/** V11b: the recommendation broke the slash-bass rules, so K's close form sounds instead. */
+const K12_CLOSE_TITLE = "このコードは基本では作れないので、詰めた形で鳴らしています";
+const K4_LEGACY_TITLE = "このコードは形で作れないので、今までの作り方の音で鳴らしています";
+
+/** The added degree of a candidate that 基本's テンションを足す changed (K11), for its note facts. */
+const PARTS_ADDED = new WeakMap<StyleVoicingCandidate, string>();
+
+function withBasicParts(
+  chord: ChordSymbol,
+  candidate: StyleVoicingCandidate,
+  parts: { readonly tension: boolean; readonly spread: boolean },
+): StyleVoicingCandidate {
+  const built = buildBasicWithParts(chord, { left: candidate.leftHandNotes, right: candidate.rightHandNotes }, parts);
+  const next: StyleVoicingCandidate = {
+    ...candidate,
+    leftHandNotes: [...built.left],
+    rightHandNotes: [...built.right],
+    allNotes: [...built.left, ...built.right].sort((a, b) => a - b),
+  };
+  if (built.addedTension !== undefined) PARTS_ADDED.set(next, built.addedTension);
+  return next;
+}
+
+/** K11 on a plan whose cards were chosen without parts (the text 基本 and the generic generated paths). */
+function applyBasicParts(
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  plan: ProgressionPracticeVoicingPlan,
+  parts: { readonly tension: boolean; readonly spread: boolean } | undefined,
+): ProgressionPracticeVoicingPlan {
+  if (parts === undefined) return plan;
+  return freezePlan(snapshot, plan.events.map((resolution, index) => {
+    if (resolution.status !== "SUPPORTED") return resolution;
+    const event = snapshot.events[index]!;
+    return partsOnResolution(event, resolution, parts);
+  }));
+}
+
+function partsOnResolution(
+  event: ProgressionPracticeEvent,
+  resolution: Extract<ProgressionPracticeVoicingResolution, { status: "SUPPORTED" }>,
+  parts: { readonly tension: boolean; readonly spread: boolean },
+): ProgressionPracticeVoicingResolution {
+  const voicing = resolution.voicing;
+  const left = voicing.leftHandNotes ?? voicing.midiNotes.slice(0, 1);
+  const right = voicing.rightHandNotes ?? voicing.midiNotes.slice(1);
+  const built = buildBasicWithParts(asChordSymbol(event.chord), { left, right }, parts);
+  // V11b: parts that break the slash-bass rules are not put on (the card keeps the notes it had).
+  if (!slashBassPlacementOk(asChordSymbol(event.chord), built.left, built.right)) return resolution;
+  const midiNotes = Object.freeze([...built.left, ...built.right].sort((a, b) => a - b));
+  const added = Object.freeze(unique([...voicing.addedColorDegrees, ...(built.addedTension === undefined ? [] : [built.addedTension])]));
+  return freezeResolution({
+    ...resolution,
+    voicing: freezeVoicing({
+      ...voicing,
+      midiNotes,
+      leftHandNotes: Object.freeze([...built.left]),
+      rightHandNotes: Object.freeze([...built.right]),
+      ...(voicing.bassNote === undefined ? {} : { bassNote: built.left[0] ?? voicing.bassNote }),
+      addedColorDegrees: added,
+      notes: noteFacts(event.chord, midiNotes, added, built.left[0]),
+    }),
+  });
+}
+
+/** K12-1/2: the text intake's recommendation (2–10 notes), else K's close form (rec.py `close`). */
+function basicFillNotes(chord: ChordSymbol): { readonly left: readonly number[]; readonly right: readonly number[]; readonly from: "text" | "close" } | undefined {
+  const text = textProgressionVoicingNotes(chord, "generated-close");
+  if (text && text.length >= 2 && text.length <= 10) {
+    const notes = [...text].sort((a, b) => a - b);
+    if (slashBassPlacementOk(chord, notes.slice(0, 1), notes.slice(1))) return { left: notes.slice(0, 1), right: notes.slice(1), from: "text" };
+  }
+  try {
+    const close = buildRecipe(recChordOf(chord), ((chord.root % 12) + 12) % 12, "close")?.forms[0];
+    if (close) return { left: [...close.left], right: [...close.right], from: "close" };
+  } catch { /* nothing can be made: the card stays unsupported */ }
+  return undefined;
+}
+
+/** V11b: a 基本 card that breaks the slash-bass rules (any path: text, legacy, teacher) is filled like K12. */
+function slashBassToGaps(snapshot: ProgressionVoicingPracticeSnapshot, plan: ProgressionPracticeVoicingPlan): ProgressionPracticeVoicingPlan {
+  const broken = (resolution: ProgressionPracticeVoicingResolution, index: number): boolean => {
+    if (resolution.status !== "SUPPORTED") return false;
+    const voicing = resolution.voicing;
+    const left = voicing.leftHandNotes ?? voicing.midiNotes.slice(0, 1);
+    const right = voicing.rightHandNotes ?? voicing.midiNotes.slice(1);
+    return !slashBassPlacementOk(asChordSymbol(snapshot.events[index]!.chord), left, right);
+  };
+  if (!plan.events.some(broken)) return plan;
+  return freezePlan(snapshot, plan.events.map((resolution, index) => broken(resolution, index) ? unsupportedRule(resolution.eventId) : resolution));
+}
+
+/** K12: only UNSUPPORTED_RULE cards are filled; supported and GENERATION_ERROR cards stay as they are. */
+function fillBasicGaps(
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  plan: ProgressionPracticeVoicingPlan,
+  parts: { readonly tension: boolean; readonly spread: boolean } | undefined,
+): ProgressionPracticeVoicingPlan {
+  if (!plan.events.some((resolution) => resolution.status === "UNSUPPORTED_RULE")) return plan;
+  return freezePlan(snapshot, plan.events.map((resolution, index) => {
+    if (resolution.status !== "UNSUPPORTED_RULE") return resolution;
+    const event = snapshot.events[index]!;
+    const fill = basicFillNotes(asChordSymbol(event.chord));
+    if (fill === undefined) return resolution;
+    const midiNotes = Object.freeze([...fill.left, ...fill.right].sort((a, b) => a - b));
+    const filled = freezeResolution({
+      eventId: event.id,
+      status: "SUPPORTED" as const,
+      autoFallbackTitle: fill.from === "close" ? K12_CLOSE_TITLE : K12_TITLE,
+      voicing: freezeVoicing({
+        origin: "basic-full",
+        midiNotes,
+        bassNote: fill.left[0]!,
+        leftHandNotes: Object.freeze([...fill.left]),
+        rightHandNotes: Object.freeze([...fill.right]),
+        addedColorDegrees: Object.freeze([]),
+        notes: noteFacts(event.chord, midiNotes, [], fill.left[0]),
+      }),
+    });
+    return parts === undefined ? filled : partsOnResolution(event, filled, parts);
+  }));
+}
+
+/** K4: Voicing Loop's sound when no shape can be made — the same recommendation K12 fills with. */
+function loopLegacyPlacement(chord: ChordSymbol): ShapeVoicingPlacement | undefined {
+  const fill = basicFillNotes(chord);
+  return fill === undefined ? undefined : { left: fill.left, right: fill.right };
+}
+
+/** L1 / K3 / K6: the four K shapes for 自動生成. */
+function resolveShapeVoicings(
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  shape: VoicingShapeOptions,
+  optimize: boolean,
+): ProgressionPracticeVoicingPlan {
+  const results: ShapeVoicingResult[] = snapshot.events.map((event) =>
+    buildShapeVoicing(asChordSymbol(event.chord), shape, loopLegacyPlacement));
+  const placements = optimize
+    ? optimizeShapeProgression(results, shape.rootlessOrder)
+    : results.map((result) => pickShapeForm(result, shape.rootlessOrder)?.staticChoice ?? { left: [], right: [] });
+  const key = (placement: ShapeVoicingPlacement) => `${placement.left.join(",")}|${placement.right.join(",")}`;
+  return freezePlan(snapshot, snapshot.events.map((event, index) => {
+    const result = results[index]!;
+    const placement = placements[index]!;
+    const notes = placementNotes(placement);
+    if (result.forms.length === 0 || notes.length < 2) return unsupportedRule(event.id);
+    const form = result.forms.find((item) => item.candidates.some((candidate) => key(candidate) === key(placement)))?.form ?? null;
+    const midiNotes = Object.freeze(notes);
+    const added = Object.freeze(result.addedTension === undefined ? [] : [result.addedTension]);
+    // L3b: ② without 広げる (left hand 4 notes, no root) adds the root (or the slash bass) as the accompaniment bass.
+    const referenceBassNote = result.oneHand && result.used.startsWith("rootless")
+      ? separateBassRegister(event.chord.bass ?? event.chord.root, midiNotes) : undefined;
+    const orderMissing = shape.shape === "rootless" && shape.rootlessOrder !== "auto" && result.used.startsWith("rootless")
+      && !result.forms.some((item) => item.form === shape.rootlessOrder);
+    return freezeResolution({
+      eventId: event.id,
+      status: "SUPPORTED" as const,
+      ...(result.fellBack
+        ? { autoFallbackTitle: result.used === "legacy" ? K4_LEGACY_TITLE : `この形では作れないため「${usedShapeName(result.used)}」で鳴らしています` }
+        : {}),
+      ...(orderMissing ? { cardNote: `このコードは ${form ?? (shape.rootlessOrder === "A" ? "B" : "A")} の並びだけ置けます` } : {}),
+      voicing: freezeVoicing({
+        origin: "basic-full",
+        midiNotes,
+        ...(referenceBassNote === undefined ? {} : { referenceBassNote }),
+        leftHandNotes: Object.freeze([...placement.left]),
+        rightHandNotes: Object.freeze([...placement.right]),
+        ...(form === "A" || form === "B" ? { variant: form } : {}),
+        addedColorDegrees: added,
+        notes: noteFacts(event.chord, midiNotes, added),
+      }),
+    });
+  }));
+}
+
 /** Shared by reference playback, card audition and keyboard range, not targets. */
 export function progressionPracticePlaybackNotes(voicing: ResolvedProgressionPracticeVoicing): readonly number[] {
   if (voicing.referenceBassNote === undefined) return voicing.midiNotes;
@@ -737,6 +950,8 @@ function applyOctaveShift(
         eventId: resolution.eventId,
         status: "SUPPORTED" as const,
         ...(resolution.fallbackFrom ? { fallbackFrom: resolution.fallbackFrom } : {}),
+        ...(resolution.autoFallbackTitle ? { autoFallbackTitle: resolution.autoFallbackTitle } : {}),
+        ...(resolution.cardNote ? { cardNote: resolution.cardNote } : {}),
         voicing: freezeVoicing({
           ...voicing,
           midiNotes: shiftNotes(voicing.midiNotes, semitones),
@@ -848,4 +1063,21 @@ function generationError(eventId: string): ProgressionPracticeVoicingResolution 
 
 function isNumber(value: number | undefined): value is number {
   return value !== undefined;
+}
+
+/**
+ * V11b: the slash-bass rules of K (V11) that are about the sound, for every Voicing Loop placement: the bottom is the
+ * bass, no semitone right above it, a minor 9th against it only at 25 semitones or more, the hands not too far apart.
+ * The bass pitch class above (P26's own choice, K keeps it out itself) is not checked: the older 基本 tables keep it (P5.27).
+ */
+export function slashBassPlacementOk(chord: ChordSymbol, left: readonly number[], right: readonly number[]): boolean {
+  if (chord.bass === undefined || ((chord.bass - chord.root) % 12 + 12) % 12 === 0) return true;
+  const notes = [...left, ...right].sort((a, b) => a - b);
+  if (notes.length < 2) return true;
+  const bpc = ((chord.bass % 12) + 12) % 12;
+  if (notes[0]! % 12 !== bpc) return false;
+  if (notes[1]! - notes[0]! === 1) return false;
+  if (notes.slice(1).some((n) => (n - notes[0]!) % 12 === 1 && n - notes[0]! < 25)) return false;
+  if (left.length > 0 && right.length > 0 && Math.min(...right) - Math.max(...left) > (left.length === 1 ? 24 : 12)) return false;
+  return true;
 }

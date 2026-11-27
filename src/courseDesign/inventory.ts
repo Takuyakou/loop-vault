@@ -6,7 +6,7 @@ import earExtra from "../domain/earPractice/earProgressionsExtra.json";
 /**
  * P23-39 §1: the machine-readable inventory of the material the course may use. It is built from the
  * product's *public* tables only (built-ins, recipe presets, ear questions); no Vault, no private MIDI, no
- * generated answer is used as the only gold. `docs/p23-39-contracts/inventory.json` is the frozen copy and
+ * generated answer is used as the only gold. `docs/contracts/p23-39/inventory.json` is the frozen copy and
  * `inventory.test.ts` fails when the copy drifts.
  */
 export const LEVEL_QUALITIES = ["maj", "min", "maj7", "min7", "dom7", "min7b5"] as const;

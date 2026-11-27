@@ -3,7 +3,7 @@
  *
  * These describe recording as a mirror for self-review — never a grader. No
  * pitch, rhythm, or accuracy is ever represented here. See
- * docs/phase5.17/contracts for the binding rules.
+ * docs/archive/phases/phase5.17/contracts for the binding rules.
  */
 
 /** Input channel selection for multi-input interfaces (e.g. MOTU M4). */

@@ -6,7 +6,7 @@ import policyData from "./policy.json";
  *
  * The frozen JSON is copied into `src/domain/guidedCourse/` so the product bundle never imports the
  * design area (`src/courseDesign/`). `frozenFixture.test.ts` fails if this copy drifts from
- * `docs/p23-39-contracts/bank-lv1-3-v3.json` / `policy-lv1-3-v3.json`; nothing here generates answers.
+ * `docs/contracts/p23-39/bank-lv1-3-v3.json` / `policy-lv1-3-v3.json`; nothing here generates answers.
  */
 export type CourseLevel = 1 | 2 | 3;
 export type CoursePrompt = "name" | "ear";

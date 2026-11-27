@@ -23,7 +23,7 @@ import { shadowFactorizedRoot, type ShadowFactorizedRoot } from "./shadowFactori
  * expected outcome rather than a failure mode.
  *
  * Thresholds are read from the caller and were frozen before any override was
- * measured (`docs/stage-f/03-f2r-preregistered-thresholds.json`). Nothing here is
+ * measured (`docs/contracts/stage-f/03-f2r-preregistered-thresholds.json`). Nothing here is
  * connected to the product.
  */
 

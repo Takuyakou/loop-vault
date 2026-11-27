@@ -36,7 +36,7 @@ describe("FirstCaptureGuide (P23-03)", () => {
     expect(onText).toHaveBeenCalledOnce();
     const flow = host.querySelector('ol[aria-label="取り込みの流れ"]');
     expect([...flow!.querySelectorAll("li")].map((item) => item.textContent?.replace(/^\d/, ""))).toEqual([
-      "MIDI を落とす",
+      "MIDI をドロップ",
       "パートを確かめる",
       "選んで保存",
     ]);

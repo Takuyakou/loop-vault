@@ -3,7 +3,7 @@ import { generateFingeringCandidates, rankCyclicFingerings, type ProgressionFing
 import { handPositionCostModel, rankHandPositionFingerings } from "../../src/domain/handPositionFingering";
 import { rankPracticeHandFingerings } from "../../src/voicingPractice/rankPracticeFingerings";
 import { assignPracticeHandsAcrossProgression } from "../../src/voicingPractice/fingeringDisplay";
-import { resolveProgressionPracticeVoicings } from "../../src/domain/progressionVoicingPractice";
+import { resolveProgressionPracticeVoicings } from "../../src/domain/progressionVoicingPractice/index";
 import { syntheticSnapshots } from "../p11-12/integration";
 import { COMMON_TONE_BASE, commonToneCostModel } from "./commonTone";
 

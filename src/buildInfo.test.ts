@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { loopVaultBuildInfo } from "./buildInfo";
 
-const RELEASE_VERSION = "3.1.0";
+const RELEASE_VERSION = "3.2.0";
 const read = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
 describe("release version (REL-03 B3)", () => {

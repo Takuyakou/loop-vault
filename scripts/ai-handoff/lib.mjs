@@ -9,7 +9,7 @@ import { join, relative } from "node:path";
  * the same privacy regexes as `scripts/phase-docs/lib.mjs` rather than inventing
  * a second vocabulary.
  *
- * Verified-SHA semantics (see docs/phase-workflow and docs/ai-handoff):
+ * Verified-SHA semantics (see docs/archive/phase-workflow and docs/ai-handoff):
  *   - SHA is not a git object          -> FAIL
  *   - SHA exists and is a HEAD ancestor -> PASS
  *   - SHA exists but is not an ancestor -> WARN (rebase/squash may cut ancestry)
@@ -33,7 +33,9 @@ export const ARCHITECTURE_MAX_LINES = 350;
 
 // HARD = current implementation references. SOFT = historical phase references.
 const HARD_PREFIXES = ["src/", "scripts/", "docs/ai-handoff/"];
-const SOFT_PREFIX = "docs/phase";
+// Phase packages live under docs/archive/phases/ after the P25 repository cleanup;
+// docs/phase is kept for prose that still names the old package location.
+const SOFT_PREFIXES = ["docs/phase", "docs/archive/phases/"];
 
 const PERSONAL_PATH = /[A-Za-z]:[\\/]Users[\\/](?!<)[^\\/\s"'`)]+/;
 
@@ -97,7 +99,7 @@ function classifyPathToken(token) {
     for (const prefix of HARD_PREFIXES) {
       if (token.startsWith(prefix)) return "hard";
     }
-    if (token.startsWith(SOFT_PREFIX)) return "soft";
+    if (SOFT_PREFIXES.some((prefix) => token.startsWith(prefix))) return "soft";
     return "excluded";
   }
   return "excluded";

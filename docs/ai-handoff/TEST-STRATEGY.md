@@ -34,7 +34,7 @@ Only layers that actually exist are listed below.
 
 ## Running
 
-The current FAST / FEATURE / UI / FULL commands, product-contract selection and PASS cache rules are in [`docs/test-dx/README.md`](../test-dx/README.md). FAST and FEATURE are feedback loops; the final FULL gate runs fresh before merge.
+The current FAST / FEATURE / UI / FULL commands, product-contract selection and PASS cache rules are in [`docs/test-dx/README.md`](../archive/phases/test-dx/README.md). FAST and FEATURE are feedback loops; the final FULL gate runs fresh before merge.
 
 ```text
 npm test                       # Vitest (incl. validator tests)

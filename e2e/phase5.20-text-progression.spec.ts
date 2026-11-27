@@ -35,7 +35,7 @@ async function enterEligibleProgression(page: Page) {
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
 
   await capture.getByTestId("text-progression-bpm").fill("120");
-  await expect(capture.getByTestId("text-progression-convert")).toBeEnabled();
+  await expect(capture.getByTestId("text-progression-save")).toBeEnabled();
 }
 
 function parseDuration(value: string): number {
@@ -50,22 +50,20 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const pageErrors = await capturePageErrors(page);
   const capture = await openTextCapture(page);
   const textInput = capture.getByTestId("text-progression-input");
-  const convert = capture.getByTestId("text-progression-convert");
 
-  // P24-05: three chords in a bar are read now, so an unreadable bar is the case that stays visible
-  // and blocks the one-way Draft bridge.
+  // P24-05: three chords in a bar are read now, so an unreadable bar is the case that stays visible.
   await textInput.fill("| C///E |");
   await expect(textInput).toHaveAttribute("aria-invalid", "true");
   await expect(capture.getByTestId("text-progression-diagnostics")).toBeVisible();
   await expect(capture.getByTestId("text-preview-error")).toHaveCount(1);
-  // P23-17 V11: an invalid bar yields no card, so the 「音を細かく直す」 row is not there at all.
-  await expect(convert).toHaveCount(0);
+  // An invalid bar yields no card, so there is no card band either (P25-03 C1).
+  await expect(capture.getByTestId("text-card-dock")).toHaveCount(0);
+  await expect(capture.getByTestId("text-card-dock-closed")).toHaveCount(0);
 
   // Valid text is independently capable of Vault/Dojo even before the optional
   // Chord Context conditions have been confirmed.
   await textInput.fill("| C G |");
-  const inspector = capture.getByTestId("text-progression-inspector");
-  await expect(inspector).toBeVisible();
+  await expect(capture.getByTestId("text-card-dock-closed")).toBeVisible();
   // P24-07 item 4: the capability list (the 「?」) is no longer shown; the evaluator itself is tested in
   // its own unit tests.
   await expect(capture.getByTestId("text-progression-capabilities")).toHaveCount(0);
@@ -76,74 +74,36 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.getByTestId("pre-analysis-analyze")).toHaveCount(0);
   await expect(page.locator("[data-capture-midi-drop-zone]")).toHaveCount(0);
 
+  // P25-03 C: choosing a card opens its band; the shape buttons change the card's sound (K), and the band
+  // replaced the old style selector and the Draft bridge (C12).
   const cards = capture.getByTestId("text-preview-band");
   await cards.first().focus();
   await page.keyboard.press("Enter");
-  await inspector.locator(":scope > summary").click();
-  await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();
-  await expect(inspector).toBeVisible();
-  await expect(inspector.getByTestId("text-progression-auto-generated")).toContainText(/source MIDI|\u5143MIDI/);
-
-  const styleSelector = inspector.getByTestId("voicing-style-selector");
-  const inspectorSourceChip = inspector.getByTestId("detail-voicing-source-chip");
-  await expect(styleSelector).toHaveValue("generated-close");
-  await expect(inspectorSourceChip).toHaveAttribute("data-voicing-source", "generated");
-  expect(await inspector.evaluate((element) => {
-    const select = element.querySelector("[data-testid='voicing-style-selector']");
-    const chip = element.querySelector("[data-testid='detail-voicing-source-chip']");
-    return Boolean(select && chip && (select.compareDocumentPosition(chip) & Node.DOCUMENT_POSITION_FOLLOWING));
-  })).toBe(true);
-
-  const savedNotes = inspector.getByTestId("voicing-saved-notes");
-  const defaultSavedNotes = await savedNotes.textContent();
-  await styleSelector.selectOption("open-17");
-  await expect(styleSelector).toHaveValue("open-17");
-  await expect(savedNotes).not.toHaveText(defaultSavedNotes ?? "");
-  await expect(cards.first().getByTestId("text-progression-voicing-state")).toContainText(/Open|\u30aa\u30fc\u30d7\u30f3/);
-
-  const activeMidiNotes = await inspector.getByTestId("voicing-keyboard")
-    .locator("[data-active='true']")
-    .evaluateAll((keys) => keys.map((key) => Number((key as HTMLElement).dataset.midiNote)));
-  expect(activeMidiNotes.length).toBeGreaterThan(0);
-  for (const note of activeMidiNotes) {
-    await expect(savedNotes).toContainText(String(note));
-  }
+  const dock = capture.getByTestId("text-card-dock");
+  await expect(dock).toBeVisible();
+  await expect(dock.getByTestId("text-dock-source")).toContainText("おすすめの形 · 基本");
+  await expect(dock.locator("[data-shape='basic']")).toHaveAttribute("aria-pressed", "true");
+  const notes = dock.getByTestId("text-dock-notes");
+  const basicNotes = await notes.textContent();
+  await dock.locator("[data-shape='shell']").click();
+  await expect(dock.locator("[data-shape='shell']")).toHaveAttribute("aria-pressed", "true");
+  await expect(dock.getByTestId("text-dock-source")).toContainText("おすすめの形 · シェル");
+  expect(basicNotes).toBeTruthy();
+  const lit = await dock.getByTestId("text-dock-key").evaluateAll((keys) =>
+    keys.filter((key) => key.getAttribute("aria-pressed") === "true").map((key) => Number((key as HTMLElement).dataset.note)));
+  expect(lit.length).toBeGreaterThan(0);
+  await expect(capture.getByTestId("text-progression-convert")).toHaveCount(0);
+  await expect(page.getByTestId("manual-candidate-editor")).toHaveCount(0);
 
   // Selecting a card auditions the exact voicing currently planned for save.
   await cards.nth(1).dispatchEvent("click");
   await cards.first().dispatchEvent("click");
 
-  // Conversion is intentionally keyboard-operable and never starts MIDI analysis.
-  await convert.focus();
-  await page.keyboard.press("Enter");
-  const editor = page.getByTestId("manual-candidate-editor");
-  await expect(editor).toBeVisible();
-  await expect(editor.getByTestId("draft-source")).toContainText(/\u30c6\u30ad\u30b9\u30c8|text entry/);
-  const sourceChip = editor.getByTestId("capture-voicing-source-chip");
-  await expect(sourceChip).toHaveAttribute("data-voicing-source", "generated");
-  await expect(sourceChip).toHaveAttribute("title", /Auto-generated from this text entry|\u30c6\u30ad\u30b9\u30c8\u5165\u529b/);
-
-  // The existing Quick Editor is available after conversion, while text-owned
-  // timing remains protected by the text Draft adapter.
-  await editor.locator("[data-chord-card]").first().focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator("[data-quick-chord-editor]")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.locator("[data-quick-chord-editor]")).toBeHidden();
-  await editor.locator("[data-action='preview']").click();
-  await page.keyboard.press("Escape");
-
-  await editor.locator("button[aria-haspopup='dialog']").click();
-  const saveForm = page.locator("form[role='dialog']");
-  await expect(saveForm).toBeVisible();
-  await saveForm.locator("input[name='progression-title']").fill(textTitle);
-  await saveForm.locator("button[type='submit']").click();
-  await expect(saveForm).toBeHidden();
-  await expect(editor).toHaveCount(0);
-
-  await page.locator("#main-content")
-    .getByRole("button", { name: "Voicing Loop", exact: true })
-    .click();
+  // The panel's own save goes through the text save adapter and never starts MIDI analysis.
+  await capture.getByTestId("text-progression-name").fill(textTitle);
+  await capture.getByTestId("text-progression-save").click();
+  await expect(page.getByRole("button", { name: "Voicing Loopで練習", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Voicing Loopで練習", exact: true }).click();
   const voicingLoop = page.getByTestId("voicing-loop-workspace");
   await expect(voicingLoop).toBeVisible();
   await expect(voicingLoop.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();

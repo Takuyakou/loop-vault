@@ -12,7 +12,7 @@ interface FrozenRow {
   expectedBassPitchClass: number | null;
 }
 const fixture = JSON.parse(readFileSync(
-  new URL("../../docs/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
+  new URL("../../docs/contracts/phase8.8.3/product-supported-matrix.json", import.meta.url), "utf8",
 )) as { rows: FrozenRow[] };
 
 describe("P8.8.3 Product-supported text semantics", () => {

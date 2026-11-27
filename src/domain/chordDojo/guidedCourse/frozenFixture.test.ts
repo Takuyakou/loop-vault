@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { COURSE_BANK, COURSE_CONTRACT_VERSION, COURSE_LEVELS, COURSE_PAIR_ID, COURSE_POLICY, COURSE_POLICY_VERSION, COURSE_BANK_VERSION, courseItemById, courseLevelSets, coursePolicy } from "./bank";
 
-const FROZEN = "docs/p23-39-contracts";
+const FROZEN = "docs/contracts/p23-39";
 
 describe("P23-40 uses the P23-39 v3 frozen fixtures without reinterpretation", () => {
   it("matches the frozen bank and policy byte-for-byte (parsed)", () => {

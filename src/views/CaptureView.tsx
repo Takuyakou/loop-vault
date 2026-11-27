@@ -1,6 +1,5 @@
 import type { ToastFn } from "../components/notifications";
-import { voiceTextChordForAudition } from "../domain/textChordTones";
-import { resolveVoicingForUse } from "../domain/voicing";
+import { textPreviewNotes } from "../domain/textVoicingAvailability";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -29,7 +28,6 @@ import { type AppCopy } from "../i18n";
 import { appendRoleCorrectionLog } from "../storage/roleCorrectionLogStorage";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
-import { ManualCandidateEditor } from "../components/ManualCandidateEditor";
 import {
   CaptureInputModeSelector,
   type CaptureInputMode,
@@ -38,14 +36,9 @@ import {
   TextProgressionCapturePanel,
   type TextProgressionConvertedDraft,
 } from "../components/capture/TextProgressionCapturePanel";
-import {
-  textProgressionDraftEditable,
-  textProgressionDraftSavePayload,
-  textProgressionDraftTimeline,
-} from "../domain/textProgressionDraft";
-import { type ManualCandidateDraft } from "../domain/midi/manualDraft";
-import { PreAnalysisWorkspace } from "../components/pre-analysis/PreAnalysisWorkspace";
-import { Dumbbell, ExternalLink } from "lucide-react";
+import { textProgressionDraftSavePayload } from "../domain/textProgressionDraft";
+import type { TasteBlock } from "../domain/nextChordSuggestions/tasteProfile";import { PreAnalysisWorkspace } from "../components/pre-analysis/PreAnalysisWorkspace";
+import { useOptionalNotify } from "../components/notifications";
 import { Button, StatusMessage } from "../components/ui";
 import { useWorkspaceBassline } from "./capture/workspaceBassline";
 import { useCaptureIntake } from "./capture/useCaptureIntake";
@@ -72,14 +65,6 @@ import {
   stopCapturePlayback,
   type CaptureAnalysisProgressStage,
 } from "./capture/captureRuntime";
-
-interface TextDraftContext {
-  readonly initialTitle: string;
-  readonly bpm?: number;
-  readonly confirmedKey?: string;
-  /** P23-33: the effective key (manual, inherited or inferred) the save uses. */
-  readonly resolvedKey?: string;
-}
 
 interface CaptureViewProps {
   initialInputMode?: CaptureInputMode;
@@ -116,7 +101,6 @@ interface CaptureViewProps {
     ideaId: string,
     draft: TextProgressionIdeaDraft,
   ) => boolean | SavedTextProgressionTarget;
-  openSavedTextProgression?: (target: SavedTextProgressionTarget) => void;
   openSavedTextProgressionPractice?: (target: SavedTextProgressionTarget) => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   setToast: ToastFn;
@@ -209,6 +193,22 @@ function captureAnalysisRunCopy(
 
 export { captureAnalysisIdentity, isMidiFileName, stopCapturePlayback } from "./capture/captureRuntime";
 
+/** P25 V23 Stage 2: the Vault blocks the next-chord palette may learn from (the taste profile's input). */
+function tasteBlocksOf(ideas: readonly SongIdea[]): TasteBlock[] {
+  return ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => {
+    const key = block.detectedKey ?? idea.key;
+    return {
+      chords: block.chords.map((item) => item.chord),
+      ...(key === undefined ? {} : { key }),
+      ...(block.pinned ? { pinned: true } : {}),
+      ...(block.userVerified ? { userVerified: true } : {}),
+      ...(block.userEdited ? { userEdited: true } : {}),
+      ...(block.confidence === undefined ? {} : { confidence: block.confidence }),
+      ...(block.textSource !== undefined || block.analyzerVersion === "text-progression-v1" ? { text: true } : {}),
+    };
+  }));
+}
+
 export function CaptureView(props: CaptureViewProps) {
   const {
     ideas,
@@ -219,8 +219,6 @@ export function CaptureView(props: CaptureViewProps) {
     createIdeaFromDraft,
     appendBlockToIdea,
     createIdeaFromTextProgression,
-    appendTextProgressionToIdea,
-    openSavedTextProgression,
     openSavedTextProgressionPractice,
     updateIdea,
     setToast,
@@ -229,13 +227,9 @@ export function CaptureView(props: CaptureViewProps) {
     controller = playbackController,
     analysisInput,
   } = props;
-  // The text-progression draft (text capture); MIDI results open in the correction workspace.
-  const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
   const { sound: previewSound } = usePreviewSound();
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>(initialInputMode);
-  const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
-  const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
-  const [savedTextPracticeStatus, setSavedTextPracticeStatus] = useState<ExtendedTextPracticeStatus>();
+  const notify = useOptionalNotify();
   // 「線で分ける」 (P15-02): the lines (session-only), and what the last analysis left out of split parts.
   const [partSplits, setPartSplits] = useState<PartSplits>({});
   const [analysisSplit, setAnalysisSplit] = useState<AnalysisSplitState>();
@@ -266,7 +260,8 @@ export function CaptureView(props: CaptureViewProps) {
     setToast,
     copy,
     mountedRef: captureViewMountedRef,
-    onAnalysisReset: resetSelectionForNewAnalysis,
+    // P25-03 C12: the text draft screen is gone, so a new analysis has nothing of it to drop.
+    onAnalysisReset: () => undefined,
   });
   const { persistenceError, saveNew, appendExisting } = useCaptureSave({
     analysis,
@@ -333,38 +328,6 @@ export function CaptureView(props: CaptureViewProps) {
     ),
     [analysisSplit, preAnalysisSession, result?.sourceFingerprint],
   );
-  /** A new file or a new analysis drops the text draft (was inline in the intake code). */
-  function resetSelectionForNewAnalysis() {
-    setActiveDraft(null);
-  }
-
-  // A/B keys for the text-progression draft (B plays it, Escape stops).
-  useEffect(() => {
-    if (!activeDraft || activeDraft.source.type !== "text-progression") return undefined;
-    const keyboardDraft: ManualCandidateDraft = activeDraft;
-    function onKeyDown(event: KeyboardEvent) {
-      if (
-        event.defaultPrevented
-        || event.isComposing
-        || event.ctrlKey
-        || event.metaKey
-        || event.altKey
-        || isEditableKeyboardTarget(event.target)
-      ) return;
-      const key = event.key.toLowerCase();
-      if (key === "escape") {
-        if (controller.getState().source?.kind !== "capture") return;
-        event.preventDefault();
-        stopCapturePlayback(controller);
-      } else if (key === "b") {
-        event.preventDefault();
-        void previewTextProgressionDraft(keyboardDraft);
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeDraft, controller, previewSound, textDraftContext?.bpm]);
-
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
     const idea = ideas.find((entry) => entry.id === ideaId);
     if (!idea) {
@@ -385,7 +348,7 @@ export function CaptureView(props: CaptureViewProps) {
   }, [controller]);
 
   function changeCaptureInputMode(nextMode: CaptureInputMode) {
-    if (nextMode === captureInputMode || activeDraft !== null) return;
+    if (nextMode === captureInputMode) return;
     stopTextPlayback();
     setCaptureInputMode(nextMode);
   }
@@ -410,9 +373,7 @@ export function CaptureView(props: CaptureViewProps) {
       setToast(copy.capture.createFailed, "error");
       return false;
     }
-    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
-    setSavedTextPracticeStatus(evaluateExtendedTextPractice(result, result.metadata.bpm ?? 120));
-    setToast(copy.capture.savedToVault, "success");
+    announceSavedText(saved, evaluateExtendedTextPractice(result, result.metadata.bpm ?? 120));
     return true;
   }
 
@@ -426,84 +387,29 @@ export function CaptureView(props: CaptureViewProps) {
     });
     const saved = createIdeaFromTextProgression(payload);
     if (!saved) { setToast(copy.capture.createFailed, "error"); return false; }
-    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
-    setSavedTextPracticeStatus(undefined);
-    setToast(copy.capture.savedToVault, "success");
+    announceSavedText(saved, undefined);
     return true;
   }
 
-  function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
-    stopTextPlayback();
-    setSavedTextProgressionTarget(undefined);
-    setSavedTextPracticeStatus(undefined);
-    setActiveDraft(converted.draft);
-    setTextDraftContext({
-      initialTitle: converted.title,
-      ...(converted.bpm === undefined ? {} : { bpm: converted.bpm }),
-      ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
-      ...(converted.resolvedKey === undefined ? {} : { resolvedKey: converted.resolvedKey }),
-    });
-  }
-
-  function textDraftSavePayload(
-    draft: ManualCandidateDraft,
-    title: string,
-    nextAction: string,
-    userVerified: boolean,
-  ): TextProgressionIdeaDraft | undefined {
-    if (draft.source.type !== "text-progression" || !textDraftContext) return undefined;
-    return textProgressionDraftSavePayload(draft, {
-      title,
-      nextAction,
-      userVerified,
-      ...(textDraftContext.bpm === undefined ? {} : { bpm: textDraftContext.bpm }),
-      ...(textDraftContext.confirmedKey === undefined ? {} : { confirmedKey: textDraftContext.confirmedKey }),
-      ...(textDraftContext.resolvedKey === undefined ? {} : { resolvedKey: textDraftContext.resolvedKey }),
-    });
-  }
-
-  function saveTextProgressionDraft(
-    draft: ManualCandidateDraft,
-    title: string,
-    nextAction: string,
-    userVerified: boolean,
-  ): boolean {
-    const payload = textDraftSavePayload(draft, title, nextAction, userVerified);
-    if (!payload || !createIdeaFromTextProgression) {
-      setToast(copy.capture.createFailed, "error");
-      return false;
+  /** P25 V27: one bottom-right notice after a save (the old panel under the preview is gone). */
+  function announceSavedText(saved: unknown, status: ExtendedTextPracticeStatus | undefined) {
+    const target = typeof saved === "object" && saved !== null ? saved as SavedTextProgressionTarget : undefined;
+    const practice = target !== undefined ? openSavedTextProgressionPractice : undefined;
+    if (status?.ready === false) {
+      if (notify) notify({ tone: "info", message: "進行をVaultに保存しました。この進行は Voicing Loop では練習できません。", durationMs: 10000 });
+      else setToast("進行をVaultに保存しました。この進行は Voicing Loop では練習できません。", "info");
+      return;
     }
-    const saved = createIdeaFromTextProgression(payload);
-    if (!saved) {
-      setToast(copy.capture.createFailed, "error");
-      return false;
+    if (notify) {
+      if (practice !== undefined && target !== undefined) {
+        notify({ tone: "success", message: copy.capture.savedToVault, durationMs: 10000,
+          action: { label: "Voicing Loopで練習", onClick: () => practice(target) } });
+      } else {
+        notify({ tone: "success", message: copy.capture.savedToVault, durationMs: 10000 });
+      }
+    } else {
+      setToast(copy.capture.savedToVault, "success");
     }
-    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
-    setSavedTextPracticeStatus(undefined);
-    setToast(copy.capture.savedToVault, "success");
-    return true;
-  }
-
-  function appendTextProgressionDraft(
-    draft: ManualCandidateDraft,
-    ideaId: string,
-    userVerified: boolean,
-  ): boolean {
-    const payload = textDraftSavePayload(
-      draft,
-      textDraftContext?.initialTitle ?? "Text progression",
-      copy.capture.defaultNextAction,
-      userVerified,
-    );
-    if (!payload || !ideaId || !appendTextProgressionToIdea) {
-      setToast(ideaId ? copy.capture.appendFailed : copy.capture.chooseIdeaFirst, ideaId ? "error" : "info");
-      return false;
-    }
-    const appended = appendTextProgressionToIdea(ideaId, payload);
-    if (typeof appended === "object") setSavedTextProgressionTarget(appended);
-    setSavedTextPracticeStatus(undefined);
-    setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed, appended ? "success" : "error");
-    return Boolean(appended);
   }
 
   async function previewTextProgressionEvent(
@@ -513,11 +419,8 @@ export function CaptureView(props: CaptureViewProps) {
   ) {
     try {
       const eventId = `text-card:${event.bar}:${event.startBeat}:${event.durationBeats}:${event.canonical}`;
-      const notes = resolveVoicingForUse(
-        event.chord,
-        memory,
-        [...voiceTextChordForAudition(event.chord)],
-      ).midiNotes;
+      // P25-03: the same sound the card plays (its own notes, else the K ① シェル).
+      const notes = [...textPreviewNotes(event.chord, memory)];
       // A card audition is a one-event detached timeline. This makes the
       // explicit text BPM and 4/4 meter part of the controller request rather
       // than merely UI metadata, and avoids waiting through earlier text bars.
@@ -546,51 +449,14 @@ export function CaptureView(props: CaptureViewProps) {
     }
   }
 
-  async function previewTextProgressionDraft(draft: ManualCandidateDraft) {
-    if (draft.source.type !== "text-progression") return;
-    if (textDraftContext?.bpm === undefined) {
-      setToast("\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "error");
-      return;
-    }
-    try {
-      const timeline = textProgressionDraftTimeline(draft).map((item, index) => ({
-        ...item,
-        eventId: `text-draft:${draft.draftId}:${index}`,
-      }));
-      const explicitMidiNotesByEventId = Object.fromEntries(timeline.map((item) => [
-        item.eventId!,
-        resolveVoicingForUse(
-          item.chord,
-          item.voicingMemory,
-          [...voiceTextChordForAudition(item.chord)],
-        ).midiNotes,
-      ]));
-      await controller.toggle(
-        { kind: "capture", id: `capture-text-draft:${draft.draftId}` },
-        {
-          type: "timeline",
-          timeline,
-          bpm: textDraftContext.bpm,
-          sound: previewSound,
-          beatsPerBar: 4,
-          explicitMidiNotesByEventId,
-        },
-      );
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed, "error");
-    }
-  }
-
   if (captureInputMode === "text") {
-    const textDraft = activeDraft?.source.type === "text-progression" ? activeDraft : null;
     return (
       <CaptureModeFrame stage="text" value={captureInputMode}
-        disabled={textDraft !== null} onChange={changeCaptureInputMode}>
+        disabled={false} onChange={changeCaptureInputMode}>
         <div className="lv-capture-content lv-capture-text-content grid gap-5">
           <TextProgressionCapturePanel
             showRomanNumerals={showRomanNumerals}
-            draftActive={textDraft !== null}
-            onConvert={openTextProgressionDraft}
+            vaultTasteBlocks={tasteBlocksOf(ideas)}
             onSaveStandard={saveStandardTextProgression}
             onSaveExtended={saveExtendedTextProgression}
             controller={controller}
@@ -598,88 +464,6 @@ export function CaptureView(props: CaptureViewProps) {
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />
-          {!textDraft && savedTextProgressionTarget ? (
-            <StatusMessage
-              title={savedTextPracticeStatus?.ready === false
-                ? ("保存しました。Voicing Loopには対応していません")
-                : ("保存した進行を練習できます")}
-              tone="success"
-              action={(
-                <div className="flex min-w-0 flex-wrap gap-2">
-                  {openSavedTextProgressionPractice ? (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      onClick={() => openSavedTextProgressionPractice(savedTextProgressionTarget)}
-                      disabled={savedTextPracticeStatus?.ready === false}
-                      title={savedTextPracticeStatus?.reason}
-                    >
-                      <Dumbbell aria-hidden="true" size={16} />
-                      {savedTextPracticeStatus
-                        ? ("Voicing Loopで練習")
-                        : "Voicing Loop"}
-                    </Button>
-                  ) : null}
-                  {openSavedTextProgression ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => openSavedTextProgression(savedTextProgressionTarget)}
-                    >
-                      <ExternalLink aria-hidden="true" size={16} />
-                      {savedTextPracticeStatus
-                        ? ("進行を開く")
-                        : "保存した進行を見る"}
-                    </Button>
-                  ) : null}
-                </div>
-              )}
-            >
-              {savedTextPracticeStatus?.ready === false
-                ? ("練習制限: ") + savedTextPracticeStatus.reason
-                : "Vaultへ保存した内容から安全な練習用snapshotを作成します。"}
-            </StatusMessage>
-          ) : null}
-          {textDraft ? (
-            <ManualCandidateEditor
-              key={textDraft.draftId}
-              draft={textDraft}
-              timeline={textProgressionDraftTimeline(textDraft)}
-              totalBars={textDraft.lengthBars}
-              copy={copy}
-              {...(textDraftContext?.confirmedKey ? { keySignature: textDraftContext.confirmedKey } : {})}
-              allowRangeAdjustment={false}
-              allowStructuralEdits={false}
-              showConfidenceReview={false}
-              createEditable={textProgressionDraftEditable}
-              save={{
-                initialTitle: textDraftContext?.initialTitle ?? "Text progression",
-                ideas,
-                defaultNextAction: copy.capture.defaultNextAction,
-                onCreate: saveTextProgressionDraft,
-                onAppend: appendTextProgressionDraft,
-              }}
-              onPreview={(draft) => void previewTextProgressionDraft(draft)}
-              onChange={setActiveDraft}
-              onSave={() => {
-                stopTextPlayback();
-                setActiveDraft(null);
-                setTextDraftContext(undefined);
-              }}
-              onDiscard={() => {
-                stopTextPlayback();
-                setActiveDraft(null);
-                setTextDraftContext(undefined);
-              }}
-              onReselect={() => {
-                stopTextPlayback();
-                setActiveDraft(null);
-                setTextDraftContext(undefined);
-              }}
-            />
-          ) : null}
         </div>
       </CaptureModeFrame>
     );
@@ -691,7 +475,7 @@ export function CaptureView(props: CaptureViewProps) {
         ?? preAnalysisSession.sources[0];
       return (
         <CaptureModeFrame stage="pre-analysis" value={captureInputMode}
-          disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+          disabled={false} onChange={changeCaptureInputMode}>
           <div data-capture-midi-drop-zone {...dropHandlers}>
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <PreAnalysisWorkspace
@@ -752,7 +536,7 @@ export function CaptureView(props: CaptureViewProps) {
     }
     return (
       <CaptureModeFrame stage="empty" value={captureInputMode}
-        disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+        disabled={false} onChange={changeCaptureInputMode}>
         <div data-capture-midi-drop-zone {...dropHandlers}>
         <CaptureEntry
           state={isDraggingMidi
@@ -762,7 +546,7 @@ export function CaptureView(props: CaptureViewProps) {
               : intakeError || analysis.status === "error" ? "error" : "idle"}
           error={intakeError ?? analysis.error}
           progressStage={analysisProgress}
-          textDisabled={activeDraft !== null}
+          textDisabled={false}
           onChooseMidi={() => void chooseMidi(false)}
           onOpenText={() => changeCaptureInputMode("text")}
           onOpenLiveMidi={props.onOpenLiveMidi}
@@ -775,7 +559,7 @@ export function CaptureView(props: CaptureViewProps) {
   if (correctionModel) {
     return (
       <CaptureModeFrame stage="result" value={captureInputMode}
-        disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+        disabled={false} onChange={changeCaptureInputMode}>
         {persistenceError ? (
           <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
             {persistenceError}
@@ -842,7 +626,7 @@ export function CaptureView(props: CaptureViewProps) {
       <div className="lv-capture-content grid gap-5" data-capture-midi-drop-zone {...dropHandlers}>
         {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
         <StatusMessage
-          title="この解析結果は修正作業場で開けません"
+          title="この解析結果は進行エディタで開けません"
           tone="warning"
           action={<Button type="button" variant="primary" size="sm" onClick={() => void chooseMidi(false)}>MIDI を選び直す</Button>}
         >

@@ -51,7 +51,9 @@ test("Final Capture empty and populated states follow the single-toolbar contrac
   await expect(capture.getByTestId("text-progression-save")).toBeEnabled();
   await expect(capture.getByTestId("text-preview-band")).toHaveCount(4);
   await expect(capture.getByTestId("standard-text-card-details")).toHaveCount(0);
-  await expect(capture.getByTestId("text-progression-inspector")).toHaveCount(1);
+  // P25-03 C1: cards with none chosen show the band's one closed line (the old inspector is gone).
+  await expect(capture.getByTestId("text-progression-inspector")).toHaveCount(0);
+  await expect(capture.getByTestId("text-card-dock-closed")).toHaveCount(1);
   const name = (await capture.getByTestId("text-progression-name").boundingBox())!;
   const save = (await capture.getByTestId("text-progression-save").boundingBox())!;
   const leftGroup = (await capture.locator(".lv-text-topgroup[aria-label='読み方の設定']").boundingBox())!;

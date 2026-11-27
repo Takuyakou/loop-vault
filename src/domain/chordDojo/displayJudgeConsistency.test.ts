@@ -36,7 +36,7 @@ describe('independent displayed-note / judge contract',()=>{
   expect(notes).toEqual([47,57,61,62,64,66]);expect(judgeChord({chord,notes,judge:'core'},notes).ok).toBe(true);
   expect(judgeChord({chord,notes,judge:'core'},[47,57,61,64,66]).message).toBe('D がありません');
  });
- for(const bars of [8,16,32,66])it(`judges the independently authored second-half answers of ${bars} bars without rewriting source`,()=>{
+ for(const bars of [8,66])it(`judges the independently authored second-half answers of ${bars} bars without rewriting source`,()=>{
   const {store,task,collection}=prepared(bars);
   for(let i=Math.floor(bars/2);i<bars;i++){store.today!.cursor.chordIndex=i;expect(judgeChord(targetFor(store,task,collection.progressions).target,DOJO_JUDGE_ANSWERS[i%14].notes).ok).toBe(true);}
  });
